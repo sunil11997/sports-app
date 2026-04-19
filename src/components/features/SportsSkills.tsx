@@ -7,10 +7,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trophy, Save, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+
+const KABADDI_SKILLS = [
+  "Dubki", 
+  "Toe Touch", 
+  "Running Hand Touch", 
+  "Back Kick", 
+  "Lion Jump", 
+  "Sidekick", 
+  "Scorpion Kick", 
+  "Frog Jump", 
+  "Ankle Hold", 
+  "Thigh Hold", 
+  "Chain Tackle", 
+  "Dash", 
+  "Block", 
+  "Waist Hold", 
+  "Knee Hold"
+];
 
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
@@ -136,20 +155,46 @@ export function SportsSkills({ store }: { store: any }) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Input 
-                        placeholder="e.g. Spike" 
-                        className="rounded-lg"
-                        value={current.skill1}
-                        onChange={(e) => handleChange(player.id, 'skill1', e.target.value)}
-                      />
+                      {activeSport === 'Kabaddi' ? (
+                        <Select value={current.skill1} onValueChange={(val) => handleChange(player.id, 'skill1', val)}>
+                          <SelectTrigger className="rounded-lg">
+                            <SelectValue placeholder="Select Skill" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {KABADDI_SKILLS.map(skill => (
+                              <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input 
+                          placeholder="e.g. Spike" 
+                          className="rounded-lg"
+                          value={current.skill1}
+                          onChange={(e) => handleChange(player.id, 'skill1', e.target.value)}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Input 
-                        placeholder="e.g. Serve" 
-                        className="rounded-lg"
-                        value={current.skill2}
-                        onChange={(e) => handleChange(player.id, 'skill2', e.target.value)}
-                      />
+                      {activeSport === 'Kabaddi' ? (
+                        <Select value={current.skill2} onValueChange={(val) => handleChange(player.id, 'skill2', val)}>
+                          <SelectTrigger className="rounded-lg">
+                            <SelectValue placeholder="Select Skill" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {KABADDI_SKILLS.map(skill => (
+                              <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input 
+                          placeholder="e.g. Serve" 
+                          className="rounded-lg"
+                          value={current.skill2}
+                          onChange={(e) => handleChange(player.id, 'skill2', e.target.value)}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>
                       <Input 
