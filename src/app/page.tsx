@@ -24,7 +24,8 @@ import {
   Sparkles,
   School,
   Home,
-  History as HistoryIcon
+  History as HistoryIcon,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,12 +36,16 @@ export default function WaghambaApp() {
   if (!isEntered) {
     return (
       <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full text-center space-y-12">
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight uppercase leading-tight">
-              Government Secondary<br />Aashram School Waghamba
+        <div className="max-w-3xl w-full text-center space-y-12">
+          <div className="space-y-6">
+            <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight leading-tight">
+              शासकिय माध्यमिक आश्रम शाळा वाघांबा<br />
+              <span className="text-2xl md:text-3xl opacity-90 block mt-2">ता. सटाणा जि. नाशिक</span>
             </h1>
-            <p className="text-primary-foreground/80 text-lg md:text-xl font-medium tracking-wide">
+            <div className="bg-accent/20 py-3 px-6 rounded-full inline-block border border-primary-foreground/20">
+              <p className="text-primary-foreground text-xl font-bold">क्रिडा शिक्षक - सुनिल देशमुख</p>
+            </div>
+            <p className="text-primary-foreground/80 text-lg md:text-xl font-medium tracking-wide uppercase">
               SPORTS & HEALTH MANAGEMENT SYSTEM
             </p>
           </div>
@@ -59,13 +64,15 @@ export default function WaghambaApp() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground py-6 px-8 shadow-md border-b-4 border-accent">
-        <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <div className="bg-accent p-2 rounded-lg">
-            <School className="w-8 h-8 text-accent-foreground" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight uppercase">Aashram School Waghamba</h1>
-            <p className="text-sm font-medium text-primary-foreground/70">स्पोर्ट्स & हेल्थ पोर्टल</p>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-accent p-2 rounded-lg">
+              <School className="w-8 h-8 text-accent-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
+              <p className="text-sm font-medium text-primary-foreground/70">ता. सटाणा जि. नाशिक | क्रिडा शिक्षक - सुनिल देशमुख</p>
+            </div>
           </div>
         </div>
       </header>
@@ -113,11 +120,14 @@ export default function WaghambaApp() {
                     <School className="w-12 h-12 text-primary" />
                   </div>
                   <div className="space-y-4">
-                    <h2 className="text-4xl font-black text-primary uppercase">Welcome to the Portal</h2>
-                    <p className="text-xl text-muted-foreground font-medium max-w-2xl mx-auto">
-                      Select any tab from the menu above to manage registrations, track attendance, update fitness scores, or get AI-powered health advice for players.
-                    </p>
+                    <h2 className="text-4xl font-black text-primary">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
+                    <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest">ता. सटाणा जि. नाशिक</p>
+                    <div className="flex items-center justify-center gap-2 bg-primary/5 py-4 px-8 rounded-2xl border border-primary/10 w-fit mx-auto">
+                      <User className="w-6 h-6 text-primary" />
+                      <p className="text-2xl font-black text-primary">क्रिडा शिक्षक - सुनिल देशमुख</p>
+                    </div>
                   </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-8">
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Users className="w-8 h-8 text-primary mx-auto mb-3" />
@@ -126,8 +136,8 @@ export default function WaghambaApp() {
                     </div>
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <h3 className="font-black text-primary uppercase">Logs</h3>
-                      <p className="text-sm font-medium">Monthly Progress Tracked</p>
+                      <h3 className="font-black text-primary uppercase">History</h3>
+                      <p className="text-sm font-medium">Monthly Progress Logs</p>
                     </div>
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />

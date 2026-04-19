@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Waghamba Sports Health Hub',
-  description: 'School sports and health management system',
+  title: 'शासकिय माध्यमिक आश्रम शाळा वाघांबा',
+  description: 'Sports & Health Management System - Waghamba',
 };
 
 export default function RootLayout({
