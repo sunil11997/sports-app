@@ -14,6 +14,7 @@ import { AIAdvice } from '@/components/features/AIAdvice';
 import { History } from '@/components/features/History';
 import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
+import { Settings } from '@/components/features/Settings';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -33,7 +34,9 @@ import {
   ClipboardList,
   Wifi,
   WifiOff,
-  LogIn
+  LogIn,
+  Settings as SettingsIcon,
+  CloudUpload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -79,9 +82,9 @@ export default function WaghambaApp() {
           </Button>
           
           <div className="text-primary-foreground/60 text-sm">
-            <Badge variant="outline" className="border-primary-foreground/20 text-primary-foreground">
+            <div className="inline-flex items-center rounded-full border border-primary-foreground/20 px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
               Cloud Sync Active - Data Protected
-            </Badge>
+            </div>
           </div>
         </div>
       </div>
@@ -122,10 +125,10 @@ export default function WaghambaApp() {
                 <WifiOff className="w-3 h-3" /> OFFLINE
               </Badge>
             )}
-            {!user && (
-              <Button size="sm" variant="outline" className="text-primary border-white bg-white hover:bg-accent hover:text-accent-foreground">
-                <LogIn className="w-4 h-4 mr-1" /> Login
-              </Button>
+            {user?.isAnonymous && (
+              <Badge variant="outline" className="text-white border-white/40 flex items-center gap-1">
+                <CloudUpload className="w-3 h-3" /> GUEST SESSION
+              </Badge>
             )}
           </div>
         </div>
@@ -170,6 +173,9 @@ export default function WaghambaApp() {
             <TabsTrigger value="ai" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-bold">
               <Sparkles className="w-4 h-4 mr-2" /> AI Advice
             </TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <SettingsIcon className="w-4 h-4 mr-2" /> Settings
+            </TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
@@ -180,7 +186,7 @@ export default function WaghambaApp() {
                     <School className="w-12 h-12 text-primary" />
                   </div>
                   <div className="space-y-4">
-                    <h2 className="text-4xl font-black text-primary uppercase">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
+                    <h2 className="text-4xl font-black text-primary uppercase h2">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
                     <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest">ता. सटाणा जि. नाशिक</p>
                     <div className="flex items-center justify-center gap-2 bg-primary/5 py-4 px-8 rounded-2xl border border-primary/10 w-fit mx-auto">
                       <User className="w-6 h-6 text-primary" />
@@ -245,6 +251,9 @@ export default function WaghambaApp() {
             </TabsContent>
             <TabsContent value="ai">
               <AIAdvice store={schoolData} />
+            </TabsContent>
+            <TabsContent value="settings">
+              <Settings />
             </TabsContent>
           </div>
         </Tabs>

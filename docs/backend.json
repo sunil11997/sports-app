@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Player": {
@@ -228,7 +229,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google"
     ]
   },
   "firestore": {
@@ -346,6 +348,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure for the Waghamba Sports Health Hub is designed to ensure secure, scalable, and debuggable data management, specifically addressing the user's concern about data loss from local storage.\n\n**Core Design Decisions & Justification:**\n\n1.  **Top-level Collections:**\n    *   `players`: This is the central repository for all student player profiles. It's a top-level collection because player data is shared across the entire school and managed by any authorized staff member, rather than being "
+    "reasoning": "The Firestore structure for the Waghamba Sports Health Hub is designed to ensure secure, scalable, and debuggable data management, specifically addressing the user's concern about data loss from local storage."
   }
 }
