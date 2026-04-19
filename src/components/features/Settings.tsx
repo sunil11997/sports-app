@@ -1,20 +1,38 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
 import { initiateGoogleBackup, initiateSignOut } from '@/firebase/non-blocking-login';
-import { Settings as SettingsIcon, CloudUpload, LogOut, CheckCircle, ShieldCheck, Mail, Info } from 'lucide-react';
+import { Settings as SettingsIcon, CloudUpload, LogOut, CheckCircle, ShieldCheck, Mail, Info, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 export function Settings() {
   const { user } = useUser();
   const auth = useAuth();
+  const { toast } = useToast();
+  const [isBackupLoading, setIsBackupLoading] = useState(false);
 
-  const handleBackup = () => {
-    initiateGoogleBackup(auth);
+  const handleBackup = async () => {
+    setIsBackupLoading(true);
+    try {
+      initiateGoogleBackup(auth);
+      toast({
+        title: "Gmail Sync Initiated",
+        description: "Please follow the Google popup instructions to secure your data."
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Sync Failed",
+        description: "Could not connect to Google. Check your internet."
+      });
+    } finally {
+      setTimeout(() => setIsBackupLoading(false), 2000);
+    }
   };
 
   const handleLogout = () => {
@@ -60,9 +78,10 @@ export function Settings() {
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground italic">
-                  You can log in on any device with this Gmail account to recover your data.
-                </p>
+                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  <p className="text-xs font-bold text-primary uppercase">All records are Auto-Syncing</p>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -76,11 +95,16 @@ export function Settings() {
                   </div>
                 </div>
                 <Button 
+                  disabled={isBackupLoading}
                   onClick={handleBackup}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black h-16 rounded-2xl text-xl shadow-lg uppercase tracking-wider"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black h-16 rounded-2xl text-xl shadow-lg uppercase tracking-wider transition-all"
                 >
-                  <CloudUpload className="w-6 h-6 mr-3" />
-                  Backup with Gmail
+                  {isBackupLoading ? (
+                    <Loader2 className="w-6 h-6 animate-spin mr-3" />
+                  ) : (
+                    <CloudUpload className="w-6 h-6 mr-3" />
+                  )}
+                  {isBackupLoading ? "Connecting..." : "Backup with Gmail"}
                 </Button>
               </div>
             )}

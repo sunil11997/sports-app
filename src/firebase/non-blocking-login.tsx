@@ -13,7 +13,7 @@ import {
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance);
+  signInAnonymously(authInstance).catch(err => console.error("Anon sign-in failed", err));
 }
 
 /** Initiate email/password sign-up (non-blocking). */
@@ -33,12 +33,17 @@ export function initiateGoogleBackup(authInstance: Auth): void {
 
   if (currentUser && currentUser.isAnonymous) {
     // If user is currently anonymous, link their account to Google to prevent data loss
-    linkWithPopup(currentUser, provider).catch((error) => {
-      console.error("Linking failed, falling back to sign-in:", error);
-      signInWithPopup(authInstance, provider);
-    });
+    linkWithPopup(currentUser, provider)
+      .then(() => {
+        console.log("Account successfully linked with Google");
+      })
+      .catch((error) => {
+        // If account already exists or linking fails, fallback to direct sign-in
+        console.warn("Linking failed, falling back to sign-in:", error);
+        signInWithPopup(authInstance, provider);
+      });
   } else {
-    // Standard sign-in
+    // Standard sign-in for non-anonymous or new users
     signInWithPopup(authInstance, provider);
   }
 }
