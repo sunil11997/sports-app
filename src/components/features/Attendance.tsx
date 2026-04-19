@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -5,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
-import { CalendarCheck, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { CalendarCheck, ChevronLeft, ChevronRight, Save, Printer } from 'lucide-react';
 
 export function Attendance({ store }: { store: any }) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -21,19 +22,70 @@ export function Attendance({ store }: { store: any }) {
     store.setAttendance({ [key]: nextStatus });
   };
 
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Attendance Report - ${format(currentDate, 'MMMM yyyy')}</title>
+          <style>
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; }
+            h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #8AF075; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
+            .name-cell { text-align: left; font-weight: bold; width: 120px; }
+            .present { color: green; font-weight: bold; }
+            .absent { color: red; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Attendance: ${format(currentDate, 'MMMM yyyy')}</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>PLAYER</th>
+                ${days.map(d => `<th>${format(d, 'd')}</th>`).join('')}
+                <th>TOT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${store.data.players.map((p: any) => {
+                let total = 0;
+                const row = days.map(d => {
+                  const s = store.data.attendance[`${p.id}_${format(d, 'yyyy-MM-dd')}`];
+                  if (s === 'P') total++;
+                  return `<td class="${s === 'P' ? 'present' : s === 'A' ? 'absent' : ''}">${s || '-'}</td>`;
+                }).join('');
+                return `<tr><td class="name-cell">${p.name}</td>${row}<td>${total}</td></tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+    win?.print();
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Monthly Presence</h2>
-        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border">
-          <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="font-black text-primary uppercase min-w-[150px] text-center">
-            {format(currentDate, 'MMMM yyyy')}
-          </span>
-          <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}>
-            <ChevronRight className="w-5 h-5" />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border">
+            <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <span className="font-black text-primary uppercase min-w-[150px] text-center">
+              {format(currentDate, 'MMMM yyyy')}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}>
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </div>
+          <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 h-12 rounded-2xl font-bold">
+            <Printer className="w-4 h-4 mr-2" /> Print
           </Button>
         </div>
       </div>
@@ -67,7 +119,7 @@ export function Attendance({ store }: { store: any }) {
                       <TableCell className="sticky left-0 bg-white z-10 font-bold border-r">
                         <div className="flex flex-col">
                           <span>{player.name}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase">{player.sport}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase">{(player.sports || []).join(', ')}</span>
                         </div>
                       </TableCell>
                       {days.map(day => {

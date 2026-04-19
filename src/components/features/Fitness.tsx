@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -6,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Activity, CheckCircle2, AlertCircle, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function Fitness({ store }: { store: any }) {
@@ -37,11 +38,64 @@ export function Fitness({ store }: { store: any }) {
     toast({ title: "Assessment Saved", description: "Fitness data updated successfully." });
   };
 
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Physical Capability Report - Waghamba School</title>
+          <style>
+            body { font-family: Inter, sans-serif; padding: 30px; }
+            h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #f8f8f8; font-weight: bold; }
+            .fit { color: green; font-weight: bold; }
+            .training { color: red; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Fitness Assessment Roster</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>PLAYER</th><th>GENDER</th><th>FLEXIBILITY</th><th>ENDURANCE</th><th>SCORE</th><th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${store.data.players.map((p: any) => {
+                const fit = store.data.fitness[p.id] || {};
+                return `
+                  <tr>
+                    <td><strong>${p.name}</strong> (Std ${p.std})</td>
+                    <td>${p.gender}</td>
+                    <td>${fit.flexibility || '-'}</td>
+                    <td>${fit.endurance || '-'}</td>
+                    <td>${fit.score || '-'}</td>
+                    <td class="${fit.status === 'Fit' ? 'fit' : 'training'}">${fit.status || 'Pending'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+    win?.print();
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-black text-primary uppercase tracking-tight mb-6">Physical Capability</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Physical Capability</h2>
+        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 rounded-xl font-bold h-12">
+          <Printer className="w-4 h-4 mr-2" /> Print Roster
+        </Button>
+      </div>
 
-      <Card className="border-2 border-primary/10 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="border-2 border-primary/10 shadow-xl rounded-3xl overflow-hidden bg-white">
         <Table>
           <TableHeader className="bg-primary">
             <TableRow>

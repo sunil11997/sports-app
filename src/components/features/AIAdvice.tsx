@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap } from 'lucide-react';
+import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
 
@@ -24,8 +25,6 @@ export function AIAdvice({ store }: { store: any }) {
     try {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
       const fit = store.data.fitness[selectedPlayerId] || {};
-      
-      // For multiple sports, we'll join their names and optionally aggregate skills
       const primarySport = p.sports[0];
       const skill = store.data.sportSkills[`${selectedPlayerId}_${primarySport}`] || {};
       
@@ -67,6 +66,61 @@ export function AIAdvice({ store }: { store: any }) {
     }
   };
 
+  const handlePrint = () => {
+    if (!advice) return;
+    const player = store.data.players.find((p: any) => p.id === selectedPlayerId);
+    
+    const printContent = `
+      <html>
+        <head>
+          <title>AI Performance Advice - ${player?.name}</title>
+          <style>
+            body { font-family: Inter, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+            h1 { color: #235C36; border-bottom: 4px solid #8AF075; margin-bottom: 20px; }
+            h2 { color: #1b4b3a; margin-top: 30px; border-left: 5px solid #8AF075; padding-left: 15px; }
+            .summary { background: #f4fcf6; padding: 20px; border-radius: 10px; font-style: italic; font-weight: 500; }
+            section { margin-bottom: 40px; }
+            .player-info { background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 30px; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <h1>Performance Strategy: ${player?.name}</h1>
+          <div class="player-info">
+            Std: ${player?.std} | Age: ${player?.age} | Sports: ${player?.sports.join(', ')}
+          </div>
+          
+          <section>
+            <h2>Executive Summary</h2>
+            <div class="summary">${advice.summary}</div>
+          </section>
+
+          <section>
+            <h2>Training Blueprint</h2>
+            <div style="white-space: pre-wrap;">${advice.trainingPlan}</div>
+          </section>
+
+          <section>
+            <h2>Performance Boosters</h2>
+            <div style="white-space: pre-wrap;">${advice.performanceSuggestions}</div>
+          </section>
+
+          <section>
+            <h2>Health & Recovery Protocol</h2>
+            <div style="white-space: pre-wrap;">${advice.healthAdvice}</div>
+          </section>
+
+          <footer style="margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 10px; color: #888;">
+            AI generated report from Waghamba Sports Hub.
+          </footer>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+    win?.print();
+  };
+
   return (
     <div className="space-y-8">
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
@@ -104,11 +158,14 @@ export function AIAdvice({ store }: { store: any }) {
 
       {advice && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Card className="md:col-span-2 border-4 border-accent shadow-2xl rounded-[2.5rem] overflow-hidden">
-            <CardHeader className="bg-accent/10 border-b-2 border-accent/20">
+          <Card className="md:col-span-2 border-4 border-accent shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+            <CardHeader className="bg-accent/10 border-b-2 border-accent/20 flex flex-row justify-between items-center">
               <CardTitle className="text-2xl font-black text-primary flex items-center gap-3">
                 <Sparkles className="w-6 h-6 text-accent" /> EXECUTIVE SUMMARY
               </CardTitle>
+              <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-accent text-primary h-10">
+                <Printer className="w-4 h-4 mr-2" /> Print Full Report
+              </Button>
             </CardHeader>
             <CardContent className="p-8">
               <p className="text-xl font-medium leading-relaxed text-foreground/90 italic">
@@ -117,7 +174,7 @@ export function AIAdvice({ store }: { store: any }) {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem]">
+          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
             <CardHeader className="bg-primary/5">
               <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
                 <Dumbbell className="w-5 h-5" /> Training Blueprint
@@ -130,7 +187,7 @@ export function AIAdvice({ store }: { store: any }) {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem]">
+          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
             <CardHeader className="bg-primary/5">
               <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
                 <Zap className="w-5 h-5 text-accent" /> Performance Boosters

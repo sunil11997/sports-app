@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -57,7 +58,6 @@ export function Dashboard({ store }: { store: any }) {
         return;
       }
 
-      // Ensure age is updated based on potentially new DOB
       const age = differenceInYears(new Date(), new Date(editingPlayer.dob));
       
       store.updatePlayer({
@@ -81,22 +81,74 @@ export function Dashboard({ store }: { store: any }) {
     setEditingPlayer({ ...editingPlayer, sports: newSports });
   };
 
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Active Player Roster - Waghamba School</title>
+          <style>
+            body { font-family: Inter, sans-serif; padding: 20px; color: #333; }
+            h1 { color: #235C36; border-bottom: 3px solid #8AF075; padding-bottom: 10px; text-transform: uppercase; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+            th { background-color: #f4f4f4; font-weight: bold; font-size: 12px; }
+            .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; }
+          </style>
+        </head>
+        <body>
+          <h1>Active Player Roster</h1>
+          <p>Generated on ${new Date().toLocaleDateString()}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>SR</th><th>NAME</th><th>AGE</th><th>STD</th><th>SPORTS</th><th>FITNESS</th><th>BMI</th><th>ATTENDANCE</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredPlayers.map((p, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td><strong>${p.name}</strong></td>
+                  <td>${p.age}</td>
+                  <td>${p.std}</td>
+                  <td>${p.sports.join(', ')}</td>
+                  <td>${store.data.fitness[p.id]?.score || 'N/A'}</td>
+                  <td>${p.bmi}</td>
+                  <td>${calculateAttendance(p.id)}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+    win?.print();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
         <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Active Roster</h2>
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search by name or sport..." 
-            className="pl-10 rounded-2xl border-2"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search..." 
+              className="pl-10 rounded-2xl border-2 h-11"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 rounded-xl h-11 font-bold">
+            <Printer className="w-4 h-4 mr-2" /> Print Roster
+          </Button>
         </div>
       </div>
 
-      <Card className="border-2 border-primary/10 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="border-2 border-primary/10 shadow-xl rounded-3xl overflow-hidden bg-white">
         <Table>
           <TableHeader className="bg-primary hover:bg-primary">
             <TableRow>
@@ -200,7 +252,6 @@ export function Dashboard({ store }: { store: any }) {
           {editingPlayer && (
             <div className="grid gap-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Basic Info */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-name" className="font-bold">Full Name</Label>
@@ -307,7 +358,6 @@ export function Dashboard({ store }: { store: any }) {
                   </div>
                 </div>
 
-                {/* Sports and History */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="font-bold">Sports Participation</Label>

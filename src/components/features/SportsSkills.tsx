@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,9 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Save } from 'lucide-react';
+import { Trophy, Save, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
@@ -37,12 +37,60 @@ export function SportsSkills({ store }: { store: any }) {
     toast({ title: "Skills Saved", description: `${activeSport} skills updated.` });
   };
 
-  // Filter players who have this activeSport in their sports array
   const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
+
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>${activeSport} Skill Assessment - Waghamba School</title>
+          <style>
+            body { font-family: Inter, sans-serif; padding: 30px; }
+            h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #f8f8f8; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Skill Roster: ${activeSport}</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>PLAYER</th><th>PRIMARY SKILL</th><th>SECONDARY SKILL</th><th>OVERALL SCORE</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredPlayers.map((p: any) => {
+                const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
+                return `
+                  <tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${s.skill1 || '-'}</td>
+                    <td>${s.skill2 || '-'}</td>
+                    <td><strong>${s.score || '-'}</strong></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+    win?.print();
+  };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-black text-primary uppercase tracking-tight mb-6">Technical Expertise</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Technical Expertise</h2>
+        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 rounded-xl font-bold h-12">
+          <Printer className="w-4 h-4 mr-2" /> Print {activeSport} Roster
+        </Button>
+      </div>
       
       <div className="flex flex-wrap gap-2 p-2 bg-white rounded-2xl border shadow-sm mb-6">
         {sportsList.map(sport => (
