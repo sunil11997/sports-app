@@ -23,6 +23,7 @@ const PlayerRecommendationInputSchema = z.object({
   history: z.string().optional().describe('Whether the player has sport history (Yes/No).'),
   histDetail: z.string().optional().describe('Details of sport history, if any.'),
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
+  language: z.string().describe('The language for the output (English or Marathi).'),
   // Enhanced Fitness Test Results
   fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds.'),
   fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds.'),
@@ -66,6 +67,8 @@ const playerRecommendationPrompt = ai.definePrompt({
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
   prompt: `You are an expert school sports coach and health advisor. Your task is to analyze a player's aggregated data and provide personalized recommendations for their athletic development and well-being.
+
+IMPORTANT: You MUST provide all sections of your response in {{{language}}}.
 
 Player Profile:
 - Name: {{{name}}}

@@ -4,13 +4,14 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap, Printer } from 'lucide-react';
+import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap, Printer, Languages } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
 
 export function AIAdvice({ store }: { store: any }) {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
+  const [language, setLanguage] = useState("Marathi");
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
 
@@ -45,6 +46,7 @@ export function AIAdvice({ store }: { store: any }) {
         history: p.history,
         histDetail: p.histDetail || "None",
         medical: p.medical || "None",
+        language: language,
         // Granular Fitness Data
         fitnessShuttleRun: fit.shuttleRun || "N/A",
         fitnessRun50m: fit.run50m || "N/A",
@@ -144,20 +146,39 @@ export function AIAdvice({ store }: { store: any }) {
               <BrainCircuit className="w-10 h-10 text-accent" /> AI Performance Hub
             </h2>
             <p className="text-lg font-medium text-foreground/70">
-              Get personalized training plans and health advice powered by institutional AI analysis of your sports data.
+              Get personalized training plans and health advice powered by institutional AI analysis.
             </p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
-            <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
-              <SelectTrigger className="rounded-2xl border-2 h-14 text-lg font-bold bg-white">
-                <SelectValue placeholder="Select a player" />
-              </SelectTrigger>
-              <SelectContent>
-                {store.data.players.map((p: any) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-primary uppercase flex items-center gap-1">
+                <Languages className="w-3 h-3" /> Select Language
+              </label>
+              <Select onValueChange={setLanguage} value={language}>
+                <SelectTrigger className="rounded-2xl border-2 h-12 text-md font-bold bg-white">
+                  <SelectValue placeholder="Select Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="Marathi">Marathi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-primary uppercase">Select Player</label>
+              <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
+                <SelectTrigger className="rounded-2xl border-2 h-12 text-md font-bold bg-white">
+                  <SelectValue placeholder="Pick a student" />
+                </SelectTrigger>
+                <SelectContent>
+                  {store.data.players.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <Button 
               disabled={loading || !selectedPlayerId} 
               onClick={getAdvice}
