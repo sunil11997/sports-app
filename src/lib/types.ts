@@ -27,6 +27,7 @@ export interface FitnessAssessment {
   sitUps: string;       // Core
   score: string;
   status: string;
+  date?: string;        // Added for history
 }
 
 export interface SportSkill {
@@ -35,12 +36,27 @@ export interface SportSkill {
   score: string;
 }
 
+export interface BiometricLog {
+  playerId: string;
+  date: string;
+  height: string;
+  weight: string;
+  bmi: string;
+}
+
+export interface FitnessLog extends FitnessAssessment {
+  playerId: string;
+  date: string;
+}
+
 export interface AppState {
   players: Player[];
   attendance: AttendanceRecord;
   fitness: Record<string, FitnessAssessment>;
   sportSkills: Record<string, SportSkill>; // key: playerId_sportName
   healthIncidents: HealthIncident[];
+  biometricHistory: BiometricLog[];
+  fitnessHistory: FitnessLog[];
 }
 
 export interface HealthIncident {

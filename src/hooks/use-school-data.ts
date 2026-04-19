@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { Player, AppState, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident } from '@/lib/types';
+import type { Player, AppState, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, BiometricLog, FitnessLog } from '@/lib/types';
+import { format } from 'date-fns';
 
 const STORAGE_KEY = 'waghamba_sports_v1';
 
@@ -11,6 +12,8 @@ const initialData: AppState = {
   fitness: {},
   sportSkills: {},
   healthIncidents: [],
+  biometricHistory: [],
+  fitnessHistory: [],
 };
 
 export function useSchoolData() {
@@ -21,7 +24,13 @@ export function useSchoolData() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        setData(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setData({
+          ...initialData,
+          ...parsed,
+          biometricHistory: parsed.biometricHistory || [],
+          fitnessHistory: parsed.fitnessHistory || [],
+        });
       } catch (e) {
         console.error("Failed to load school data", e);
       }
@@ -36,20 +45,46 @@ export function useSchoolData() {
   }, [data, isLoaded]);
 
   const addPlayer = (player: Player) => {
-    setData(prev => ({ ...prev, players: [...prev.players, player] }));
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const bioLog: BiometricLog = {
+      playerId: player.id,
+      date: today,
+      height: player.height,
+      weight: player.weight,
+      bmi: player.bmi,
+    };
+
+    setData(prev => ({ 
+      ...prev, 
+      players: [...prev.players, player],
+      biometricHistory: [...prev.biometricHistory, bioLog]
+    }));
   };
 
   const updatePlayer = (player: Player) => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const bioLog: BiometricLog = {
+      playerId: player.id,
+      date: today,
+      height: player.height,
+      weight: player.weight,
+      bmi: player.bmi,
+    };
+
     setData(prev => ({
       ...prev,
-      players: prev.players.map(p => p.id === player.id ? player : p)
+      players: prev.players.map(p => p.id === player.id ? player : p),
+      biometricHistory: [...prev.biometricHistory, bioLog]
     }));
   };
 
   const deletePlayer = (id: string) => {
     setData(prev => ({
       ...prev,
-      players: prev.players.filter(p => p.id !== id)
+      players: prev.players.filter(p => p.id !== id),
+      biometricHistory: prev.biometricHistory.filter(h => h.playerId !== id),
+      fitnessHistory: prev.fitnessHistory.filter(h => h.playerId !== id),
+      healthIncidents: prev.healthIncidents.filter(h => h.playerId !== id),
     }));
   };
 
@@ -58,9 +93,17 @@ export function useSchoolData() {
   };
 
   const setFitness = (playerId: string, assessment: FitnessAssessment) => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const log: FitnessLog = {
+      ...assessment,
+      playerId,
+      date: today,
+    };
+
     setData(prev => ({
       ...prev,
-      fitness: { ...prev.fitness, [playerId]: assessment }
+      fitness: { ...prev.fitness, [playerId]: assessment },
+      fitnessHistory: [...prev.fitnessHistory, log]
     }));
   };
 

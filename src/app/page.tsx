@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -11,6 +10,7 @@ import { SportsSkills } from '@/components/features/SportsSkills';
 import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { Teams } from '@/components/features/Teams';
 import { AIAdvice } from '@/components/features/AIAdvice';
+import { History } from '@/components/features/History';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -23,7 +23,8 @@ import {
   UsersRound, 
   Sparkles,
   School,
-  Home
+  Home,
+  History as HistoryIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -78,6 +79,9 @@ export default function WaghambaApp() {
             <TabsTrigger value="dashboard" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
             </TabsTrigger>
+            <TabsTrigger value="history" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <HistoryIcon className="w-4 h-4 mr-2" /> History
+            </TabsTrigger>
             <TabsTrigger value="registration" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="w-4 h-4 mr-2" /> Registration
             </TabsTrigger>
@@ -114,11 +118,16 @@ export default function WaghambaApp() {
                       Select any tab from the menu above to manage registrations, track attendance, update fitness scores, or get AI-powered health advice for players.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-8">
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Users className="w-8 h-8 text-primary mx-auto mb-3" />
                       <h3 className="font-black text-primary uppercase">Roster</h3>
                       <p className="text-sm font-medium">{schoolData.data.players.length} Registered Players</p>
+                    </div>
+                    <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                      <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
+                      <h3 className="font-black text-primary uppercase">Logs</h3>
+                      <p className="text-sm font-medium">Monthly Progress Tracked</p>
                     </div>
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />
@@ -136,6 +145,9 @@ export default function WaghambaApp() {
             </TabsContent>
             <TabsContent value="dashboard">
               <Dashboard store={schoolData} />
+            </TabsContent>
+            <TabsContent value="history">
+              <History store={schoolData} />
             </TabsContent>
             <TabsContent value="registration">
               <Registration store={schoolData} />
