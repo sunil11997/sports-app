@@ -9,9 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
+
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -20,7 +23,7 @@ const formSchema = z.object({
   dob: z.string(),
   height: z.string(),
   weight: z.string(),
-  sport: z.string(),
+  sports: z.array(z.string()).min(1, "Select at least one sport"),
   history: z.enum(["Yes", "No"]),
   histDetail: z.string().optional(),
   medical: z.string().optional(),
@@ -37,7 +40,7 @@ export function Registration({ store }: { store: any }) {
       dob: "",
       height: "",
       weight: "",
-      sport: "Kabaddi",
+      sports: [],
       history: "No",
       histDetail: "",
       medical: "",
@@ -179,22 +182,47 @@ export function Registration({ store }: { store: any }) {
 
               <FormField
                 control={form.control}
-                name="sport"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-bold text-primary">Primary Sport</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="rounded-xl border-2">
-                          <SelectValue placeholder="Select sport" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'].map(s => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                name="sports"
+                render={() => (
+                  <FormItem className="md:col-span-3">
+                    <div className="mb-4">
+                      <FormLabel className="text-base font-bold text-primary">Sports Participation *</FormLabel>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-primary/5 p-6 rounded-2xl border-2 border-primary/10">
+                      {SPORTS_LIST.map((sport) => (
+                        <FormField
+                          key={sport}
+                          control={form.control}
+                          name="sports"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={sport}
+                                className="flex flex-row items-center space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(sport)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, sport])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== sport
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm font-medium leading-none cursor-pointer">
+                                  {sport}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

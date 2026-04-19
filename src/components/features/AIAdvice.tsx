@@ -24,7 +24,11 @@ export function AIAdvice({ store }: { store: any }) {
     try {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
       const fit = store.data.fitness[selectedPlayerId] || {};
-      const skill = store.data.sportSkills[`${selectedPlayerId}_${p.sport}`] || {};
+      
+      // For multiple sports, we'll join their names and optionally aggregate skills
+      const primarySport = p.sports[0];
+      const skill = store.data.sportSkills[`${selectedPlayerId}_${primarySport}`] || {};
+      
       const incidents = store.data.healthIncidents
         .filter((inc: any) => inc.playerId === selectedPlayerId)
         .map((inc: any) => `${inc.date}: ${inc.description}`)
@@ -39,7 +43,7 @@ export function AIAdvice({ store }: { store: any }) {
         height: p.height,
         weight: p.weight,
         bmi: p.bmi,
-        sport: p.sport,
+        sports: p.sports,
         history: p.history,
         histDetail: p.histDetail || "None",
         medical: p.medical || "None",

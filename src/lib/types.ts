@@ -8,7 +8,7 @@ export interface Player {
   height: string;
   weight: string;
   bmi: string;
-  sport: string;
+  sports: string[];
   history: 'Yes' | 'No';
   histDetail?: string;
   medical?: string;
@@ -31,18 +31,18 @@ export interface SportSkill {
   score: string;
 }
 
-export interface HealthIncident {
-  id: string;
-  playerId: string;
-  playerName: string;
-  date: string;
-  description: string;
-}
-
 export interface AppState {
   players: Player[];
   attendance: AttendanceRecord;
   fitness: Record<string, FitnessAssessment>;
   sportSkills: Record<string, SportSkill>; // key: playerId_sportName
   healthIncidents: HealthIncident[];
+}
+
+export interface HealthIncident {
+  id: string;
+  playerId: string;
+  playerName: string;
+  date: string;
+  description: string;
 }

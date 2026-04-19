@@ -37,7 +37,8 @@ export function SportsSkills({ store }: { store: any }) {
     toast({ title: "Skills Saved", description: `${activeSport} skills updated.` });
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => p.sport === activeSport);
+  // Filter players who have this activeSport in their sports array
+  const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
 
   return (
     <div className="space-y-6">

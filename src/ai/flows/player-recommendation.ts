@@ -19,7 +19,7 @@ const PlayerRecommendationInputSchema = z.object({
   height: z.string().optional().describe('Height of the player in cm.'),
   weight: z.string().optional().describe('Weight of the player in kg.'),
   bmi: z.string().optional().describe('Body Mass Index of the player.'),
-  sport: z.string().optional().describe('Primary sport of the player.'),
+  sports: z.array(z.string()).describe('List of sports the player participates in.'),
   history: z.string().optional().describe('Whether the player has sport history (Yes/No).'),
   histDetail: z.string().optional().describe('Details of sport history, if any.'),
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
@@ -27,9 +27,9 @@ const PlayerRecommendationInputSchema = z.object({
   fitnessEndurance: z.string().optional().describe('Endurance score from fitness test.'),
   fitnessScore: z.string().optional().describe('Overall fitness score.'),
   fitnessStatus: z.string().optional().describe('Fitness status (e.g., Fit, Need Training).'),
-  sportSkill1: z.string().optional().describe('First specific skill for their primary sport.'),
-  sportSkill2: z.string().optional().describe('Second specific skill for their primary sport.'),
-  sportSkillScore: z.string().optional().describe('Overall skill score for their primary sport.'),
+  sportSkill1: z.string().optional().describe('First specific skill for their primary/selected sport.'),
+  sportSkill2: z.string().optional().describe('Second specific skill for their primary/selected sport.'),
+  sportSkillScore: z.string().optional().describe('Overall skill score for their primary/selected sport.'),
   pastHealthIncidents: z.string().optional().describe('Summarized list of past health incidents for the player.'),
 });
 export type PlayerRecommendationInput = z.infer<typeof PlayerRecommendationInputSchema>;
@@ -60,7 +60,7 @@ Player Profile:
 - Height: {{{height}}} cm
 - Weight: {{{weight}}} kg
 - BMI: {{{bmi}}}
-- Primary Sport: {{{sport}}}
+- Participating Sports: {{#each sports}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 - Sport History: {{{history}}} {{{histDetail}}}
 - Medical Conditions: {{{medical}}}
 
@@ -70,14 +70,14 @@ Fitness Assessment:
 - Overall Fitness Score: {{{fitnessScore}}}
 - Fitness Status: {{{fitnessStatus}}}
 
-Sport-Specific Skills ({{sport}}):
+Skills Context (Focusing on first sport listed if data is available):
 - Skill 1: {{{sportSkill1}}}
 - Skill 2: {{{sportSkill2}}}
 - Skill Score: {{{sportSkillScore}}}
 
 Health Incidents: {{{pastHealthIncidents}}}
 
-Based on the above data, provide a comprehensive summary and personalized recommendations in the following categories. If any data point is missing or not applicable, state that in the summary or implicitly skip it in the recommendations.
+Based on the above data, provide a comprehensive summary and personalized recommendations in the following categories. If any data point is missing or not applicable, state that in the summary or implicitly skip it in the recommendations. Consider that the player participates in multiple sports and may need cross-training advice.
 `,
 });
 
