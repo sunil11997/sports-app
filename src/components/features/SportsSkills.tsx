@@ -53,13 +53,20 @@ const RUNNING_SKILLS = [
   "Balance", "Coordination", "Agility", "Flexibility", "Recovery technique"
 ];
 
+const SHOT_PUT_SKILLS = [
+  "Grip", "Stance", "Shot placement (neck position)", "Glide technique", "Rotation technique",
+  "Power position", "Leg drive", "Hip rotation", "Trunk rotation", "Arm extension",
+  "Release angle", "Release height", "Follow-through", "Balance", "Coordination",
+  "Timing", "Footwork", "Strength", "Explosive power", "Control"
+];
+
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
-  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball' || activeSport === 'Kho Kho' || activeSport === 'Running';
+  const isDetailedSport = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put'].includes(activeSport);
 
   const getDetailedSkillsList = (sport: string) => {
     switch (sport) {
@@ -68,6 +75,7 @@ export function SportsSkills({ store }: { store: any }) {
       case 'Handball': return HANDBALL_SKILLS;
       case 'Kho Kho': return KHO_KHO_SKILLS;
       case 'Running': return RUNNING_SKILLS;
+      case 'Shot Put': return SHOT_PUT_SKILLS;
       default: return [];
     }
   };
@@ -79,6 +87,7 @@ export function SportsSkills({ store }: { store: any }) {
       case 'Handball': return 280;
       case 'Kho Kho': return 200;
       case 'Running': return 200;
+      case 'Shot Put': return 200;
       default: return 20;
     }
   };
@@ -372,6 +381,7 @@ export function SportsSkills({ store }: { store: any }) {
             : activeSport === 'Handball' ? 'Handball: 28 technical skills scored out of 10 each (Total 280).'
             : activeSport === 'Kho Kho' ? 'Kho Kho: 20 technical skills scored out of 10 each (Total 200).'
             : activeSport === 'Running' ? 'Running: 20 technical skills scored out of 10 each (Total 200).'
+            : activeSport === 'Shot Put' ? 'Shot Put: 20 technical skills scored out of 10 each (Total 200).'
             : 'Each skill is marked out of 10 points (Total 20).'}
         </p>
         <div className="flex gap-4">
