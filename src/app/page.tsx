@@ -12,6 +12,7 @@ import { Teams } from '@/components/features/Teams';
 import { AIAdvice } from '@/components/features/AIAdvice';
 import { History } from '@/components/features/History';
 import { DailyReport } from '@/components/features/DailyReport';
+import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -27,7 +28,8 @@ import {
   Home,
   History as HistoryIcon,
   User,
-  FileText
+  FileText,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -90,6 +92,9 @@ export default function WaghambaApp() {
             </TabsTrigger>
             <TabsTrigger value="daily-report" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="w-4 h-4 mr-2" /> Daily Report
+            </TabsTrigger>
+            <TabsTrigger value="tournament" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <ClipboardList className="w-4 h-4 mr-2" /> Tournament
             </TabsTrigger>
             <TabsTrigger value="history" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <HistoryIcon className="w-4 h-4 mr-2" /> History
@@ -163,6 +168,9 @@ export default function WaghambaApp() {
             </TabsContent>
             <TabsContent value="daily-report">
               <DailyReport store={schoolData} />
+            </TabsContent>
+            <TabsContent value="tournament">
+              <TournamentRosters store={schoolData} />
             </TabsContent>
             <TabsContent value="history">
               <History store={schoolData} />
