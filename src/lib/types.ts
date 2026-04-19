@@ -19,8 +19,12 @@ export interface AttendanceRecord {
 }
 
 export interface FitnessAssessment {
-  flexibility: string;
-  endurance: string;
+  shuttleRun: string;   // 10*6 Shuttle Run
+  run50m: string;       // 50 Meter Run
+  run600m: string;      // 600 Meter Run
+  sitAndReach: string;  // Flexibility
+  boardJump: string;    // Power
+  sitUps: string;       // Core
   score: string;
   status: string;
 }

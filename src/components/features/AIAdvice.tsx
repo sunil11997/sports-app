@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -46,10 +45,16 @@ export function AIAdvice({ store }: { store: any }) {
         history: p.history,
         histDetail: p.histDetail || "None",
         medical: p.medical || "None",
-        fitnessFlexibility: fit.flexibility || "N/A",
-        fitnessEndurance: fit.endurance || "N/A",
+        // Granular Fitness Data
+        fitnessShuttleRun: fit.shuttleRun || "N/A",
+        fitnessRun50m: fit.run50m || "N/A",
+        fitnessRun600m: fit.run600m || "N/A",
+        fitnessSitAndReach: fit.sitAndReach || "N/A",
+        fitnessBoardJump: fit.boardJump || "N/A",
+        fitnessSitUps: fit.sitUps || "N/A",
         fitnessScore: fit.score || "N/A",
         fitnessStatus: fit.status || "N/A",
+        // Skill Data
         sportSkill1: skill.skill1 || "N/A",
         sportSkill2: skill.skill2 || "N/A",
         sportSkillScore: skill.score || "N/A",

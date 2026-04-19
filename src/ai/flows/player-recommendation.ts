@@ -23,10 +23,16 @@ const PlayerRecommendationInputSchema = z.object({
   history: z.string().optional().describe('Whether the player has sport history (Yes/No).'),
   histDetail: z.string().optional().describe('Details of sport history, if any.'),
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
-  fitnessFlexibility: z.string().optional().describe('Flexibility score from fitness test.'),
-  fitnessEndurance: z.string().optional().describe('Endurance score from fitness test.'),
+  // Enhanced Fitness Test Results
+  fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds.'),
+  fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds.'),
+  fitnessRun600m: z.string().optional().describe('600 Meter Run result.'),
+  fitnessSitAndReach: z.string().optional().describe('Flexibility / Sit and Reach in CM.'),
+  fitnessBoardJump: z.string().optional().describe('Power / Board Jump in CM.'),
+  fitnessSitUps: z.string().optional().describe('Core Strength / Sit Ups count.'),
   fitnessScore: z.string().optional().describe('Overall fitness score.'),
-  fitnessStatus: z.string().optional().describe('Fitness status (e.g., Fit, Need Training).'),
+  fitnessStatus: z.string().optional().describe('School Fitness Level (A/B/C/D).'),
+  // Skill Data
   sportSkill1: z.string().optional().describe('First specific skill for their primary/selected sport.'),
   sportSkill2: z.string().optional().describe('Second specific skill for their primary/selected sport.'),
   sportSkillScore: z.string().optional().describe('Overall skill score for their primary/selected sport.'),
@@ -50,7 +56,7 @@ const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
-  prompt: `You are an expert school sports coach and health advisor. Your task is to analyze a player's aggregated data and provide personalized recommendations for their athletic development and well-being. Focus on actionable advice for training, health, and performance improvement.
+  prompt: `You are an expert school sports coach and health advisor. Your task is to analyze a player's aggregated data and provide personalized recommendations for their athletic development and well-being.
 
 Player Profile:
 - Name: {{{name}}}
@@ -61,23 +67,26 @@ Player Profile:
 - Weight: {{{weight}}} kg
 - BMI: {{{bmi}}}
 - Participating Sports: {{#each sports}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-- Sport History: {{{history}}} {{{histDetail}}}
-- Medical Conditions: {{{medical}}}
+- Medical History: {{{medical}}}
 
-Fitness Assessment:
-- Flexibility: {{{fitnessFlexibility}}}
-- Endurance: {{{fitnessEndurance}}}
-- Overall Fitness Score: {{{fitnessScore}}}
-- Fitness Status: {{{fitnessStatus}}}
+Institutional Fitness Assessment:
+- 10x6 Shuttle Run: {{{fitnessShuttleRun}}}
+- 50 Meter Run: {{{fitnessRun50m}}}
+- 600 Meter Run: {{{fitnessRun600m}}}
+- Sit and Reach: {{{fitnessSitAndReach}}}
+- Board Jump: {{{fitnessBoardJump}}}
+- Sit Ups: {{{fitnessSitUps}}}
+- Overall Score: {{{fitnessScore}}}
+- School Fitness Level: {{{fitnessStatus}}}
 
 Skills Context (Focusing on first sport listed if data is available):
 - Skill 1: {{{sportSkill1}}}
 - Skill 2: {{{sportSkill2}}}
 - Skill Score: {{{sportSkillScore}}}
 
-Health Incidents: {{{pastHealthIncidents}}}
+Health Context: {{{pastHealthIncidents}}}
 
-Based on the above data, provide a comprehensive summary and personalized recommendations in the following categories. If any data point is missing or not applicable, state that in the summary or implicitly skip it in the recommendations. Consider that the player participates in multiple sports and may need cross-training advice.
+Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
 `,
 });
 
