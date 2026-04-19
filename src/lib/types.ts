@@ -37,7 +37,7 @@ export interface SportSkill {
   skill2: string;
   score2: string;
   score: string;
-  kabaddiSkills?: Record<string, string>; // Added for detailed Kabaddi scoring
+  detailedSkills?: Record<string, string>; // Generic field for detailed scoring
 }
 
 export interface BiometricLog {

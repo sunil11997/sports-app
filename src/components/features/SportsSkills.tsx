@@ -20,32 +20,14 @@ import { Label } from '@/components/ui/label';
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
 const KABADDI_SKILLS = [
-  "Dubki", 
-  "Toe Touch", 
-  "Running Hand Touch", 
-  "Back Kick", 
-  "Lion Jump", 
-  "Sidekick", 
-  "Scorpion Kick", 
-  "Frog Jump", 
-  "Ankle Hold", 
-  "Thigh Hold", 
-  "Chain Tackle", 
-  "Dash", 
-  "Block", 
-  "Waist Hold", 
-  "Knee Hold"
+  "Dubki", "Toe Touch", "Running Hand Touch", "Back Kick", "Lion Jump", 
+  "Sidekick", "Scorpion Kick", "Frog Jump", "Ankle Hold", "Thigh Hold", 
+  "Chain Tackle", "Dash", "Block", "Waist Hold", "Knee Hold"
 ];
 
 const VOLLEYBALL_SKILLS = [
-  "Serving",
-  "Passing (Bump)",
-  "Setting",
-  "Spiking (Attack)",
-  "Blocking",
-  "Digging (Defense)",
-  "Footwork / Movement",
-  "Communication"
+  "Serving", "Passing (Bump)", "Setting", "Spiking (Attack)", 
+  "Blocking", "Digging (Defense)", "Footwork / Movement", "Communication"
 ];
 
 const HANDBALL_SKILLS = [
@@ -54,6 +36,14 @@ const HANDBALL_SKILLS = [
   "Interception", "Goalkeeping", "Defensive stance", "Footwork", "Pivot play", "Positioning",
   "Support play", "Timing", "Coordination", "Communication", "Decision making", "Game awareness",
   "Reaction time", "Balance & body control"
+];
+
+const KHO_KHO_SKILLS = [
+  "Sitting posture", "Pole turning", "Giving kho", "Receiving kho", "Chasing",
+  "Dodging", "Zig-zag running", "Sudden direction change", "Fake (feint) movement",
+  "Touching (tagging)", "Diving", "Rolling", "Skidding", "Running speed",
+  "Reaction time", "Footwork", "Coordination", "Balance & body control",
+  "Awareness of court", "Team coordination"
 ];
 
 export function SportsSkills({ store }: { store: any }) {
@@ -123,8 +113,11 @@ export function SportsSkills({ store }: { store: any }) {
   const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
 
   const handlePrint = () => {
-    const isDetailed = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball';
-    const maxScore = activeSport === 'Kabaddi' ? 150 : activeSport === 'Volleyball' ? 80 : activeSport === 'Handball' ? 280 : 20;
+    const isDetailed = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball' || activeSport === 'Kho Kho';
+    const maxScore = activeSport === 'Kabaddi' ? 150 : 
+                    activeSport === 'Volleyball' ? 80 : 
+                    activeSport === 'Handball' ? 280 : 
+                    activeSport === 'Kho Kho' ? 200 : 20;
 
     const printContent = `
       <html>
@@ -186,7 +179,7 @@ export function SportsSkills({ store }: { store: any }) {
     win?.print();
   };
 
-  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball';
+  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball' || activeSport === 'Kho Kho';
 
   return (
     <div className="space-y-6">
@@ -312,7 +305,10 @@ export function SportsSkills({ store }: { store: any }) {
                       <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
                         <span className="font-black text-xl text-primary">{current.score || '0'}</span>
                         <span className="text-[10px] text-muted-foreground block font-bold">
-                          MAX {activeSport === 'Kabaddi' ? '150' : activeSport === 'Volleyball' ? '80' : activeSport === 'Handball' ? '280' : '20'}
+                          MAX {activeSport === 'Kabaddi' ? '150' : 
+                               activeSport === 'Volleyball' ? '80' : 
+                               activeSport === 'Handball' ? '280' : 
+                               activeSport === 'Kho Kho' ? '200' : '20'}
                         </span>
                       </div>
                     </TableCell>
@@ -348,17 +344,15 @@ export function SportsSkills({ store }: { store: any }) {
       
       <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-center justify-between">
         <p className="text-sm font-bold text-primary italic">
-          * {activeSport === 'Kabaddi' 
-            ? 'For Kabaddi, all 15 technical moves are scored out of 10 marks each for a total of 150.' 
-            : activeSport === 'Volleyball'
-            ? 'For Volleyball, 8 specific skills are scored out of 10 marks each for a total of 80.'
-            : activeSport === 'Handball'
-            ? 'For Handball, all 28 technical skills are scored out of 10 marks each for a total of 280.'
-            : 'Each skill is marked out of 10 points for a total institutional technical score of 20.'}
+          * {activeSport === 'Kabaddi' ? 'Kabaddi: 15 technical moves scored out of 10 each (Total 150).' 
+            : activeSport === 'Volleyball' ? 'Volleyball: 8 specific skills scored out of 10 each (Total 80).'
+            : activeSport === 'Handball' ? 'Handball: 28 technical skills scored out of 10 each (Total 280).'
+            : activeSport === 'Kho Kho' ? 'Kho Kho: 20 technical skills scored out of 10 each (Total 200).'
+            : 'Each skill is marked out of 10 points (Total 20).'}
         </p>
         <div className="flex gap-4">
           <Badge className="bg-accent text-accent-foreground font-black uppercase">
-            {activeSport === 'Kabaddi' ? 'Total: 150 Marks' : activeSport === 'Volleyball' ? 'Total: 80 Marks' : activeSport === 'Handball' ? 'Total: 280 Marks' : 'Total: 20 Marks'}
+            Total: {activeSport === 'Kabaddi' ? '150' : activeSport === 'Volleyball' ? '80' : activeSport === 'Handball' ? '280' : activeSport === 'Kho Kho' ? '200' : '20'} Marks
           </Badge>
         </div>
       </div>
@@ -383,14 +377,18 @@ export function SportsSkills({ store }: { store: any }) {
                   <p className="text-3xl font-black text-primary">
                     {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}
                     <span className="text-sm text-muted-foreground">
-                      /{editingDetailedPlayer.sport === 'Kabaddi' ? '150' : editingDetailedPlayer.sport === 'Volleyball' ? '80' : '280'}
+                      /{editingDetailedPlayer.sport === 'Kabaddi' ? '150' : 
+                        editingDetailedPlayer.sport === 'Volleyball' ? '80' : 
+                        editingDetailedPlayer.sport === 'Handball' ? '280' : '200'}
                     </span>
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 px-2">
-                {(editingDetailedPlayer.sport === 'Kabaddi' ? KABADDI_SKILLS : editingDetailedPlayer.sport === 'Volleyball' ? VOLLEYBALL_SKILLS : HANDBALL_SKILLS).map((skill) => {
+                {(editingDetailedPlayer.sport === 'Kabaddi' ? KABADDI_SKILLS : 
+                  editingDetailedPlayer.sport === 'Volleyball' ? VOLLEYBALL_SKILLS : 
+                  editingDetailedPlayer.sport === 'Handball' ? HANDBALL_SKILLS : KHO_KHO_SKILLS).map((skill) => {
                   const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
                   const score = skills[key]?.detailedSkills?.[skill] || '';
                   return (
