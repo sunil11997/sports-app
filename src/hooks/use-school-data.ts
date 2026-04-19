@@ -1,38 +1,38 @@
-
 "use client";
 
 import { useMemo } from 'react';
-import { collection, doc, query } from 'firebase/firestore';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, AppState } from '@/lib/types';
-import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function useSchoolData() {
   const db = useFirestore();
+  const { user } = useUser();
 
-  // Memoize collection references
-  const playersRef = useMemoFirebase(() => collection(db, 'players'), [db]);
+  // Memoize collection references - only provide the reference if the user is authenticated
+  // to avoid permission errors on the splash screen.
+  const playersRef = useMemoFirebase(() => user ? collection(db, 'players') : null, [db, user]);
   const { data: players, isLoading: playersLoading } = useCollection<Player>(playersRef);
 
-  // We'll aggregate subcollection data. For a large app, we'd fetch subcollections on demand.
-  // For this MVP, we fetch the main rosters.
-  const allIncidentsRef = useMemoFirebase(() => collection(db, 'all_health_incidents'), [db]);
+  const allIncidentsRef = useMemoFirebase(() => user ? collection(db, 'all_health_incidents') : null, [db, user]);
   const { data: healthIncidents } = useCollection<HealthIncident>(allIncidentsRef);
 
   // Helper to structure the state for the components
   const aggregatedData: AppState = useMemo(() => {
     return {
       players: players || [],
-      attendance: {}, // Managed via specific doc writes
-      fitness: {}, // Managed via specific doc writes
-      sportSkills: {}, // Managed via specific doc writes
+      attendance: {}, // Managed via specific doc writes in this MVP
+      fitness: {}, 
+      sportSkills: {}, 
       healthIncidents: healthIncidents || [],
-      biometricHistory: [], // These would typically be fetched per player in a real app
+      biometricHistory: [], 
       fitnessHistory: [],
     };
   }, [players, healthIncidents]);
 
   const addPlayer = (player: any) => {
+    if (!playersRef) return;
     const newDocRef = doc(playersRef, player.id);
     setDocumentNonBlocking(newDocRef, player, { merge: true });
   };
