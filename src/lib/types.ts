@@ -33,7 +33,9 @@ export interface FitnessAssessment {
 
 export interface SportSkill {
   skill1: string;
+  score1: string;
   skill2: string;
+  score2: string;
   score: string;
 }
 
