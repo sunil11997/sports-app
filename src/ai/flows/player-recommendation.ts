@@ -42,6 +42,7 @@ const PlayerRecommendationInputSchema = z.object({
   detailedKhoKhoSkills: z.record(z.string()).optional().describe('For Kho Kho, a list of technical moves and scores out of 10.'),
   detailedRunningSkills: z.record(z.string()).optional().describe('For Running, a list of technical moves and scores out of 10.'),
   detailedShotPutSkills: z.record(z.string()).optional().describe('For Shot Put, a list of technical moves and scores out of 10.'),
+  detailedJavlineSkills: z.record(z.string()).optional().describe('For Javelin Throw, a list of technical moves and scores out of 10.'),
   pastHealthIncidents: z.string().optional().describe('Summarized list of past health incidents for the player.'),
 });
 export type PlayerRecommendationInput = z.infer<typeof PlayerRecommendationInputSchema>;
@@ -123,10 +124,16 @@ Skills Context:
   * {{{@key}}}: {{{this}}}/10
 {{/each}}
 {{/if}}
+{{#if detailedJavlineSkills}}
+- Detailed Javelin Analysis:
+{{#each detailedJavlineSkills}}
+  * {{{@key}}}: {{{this}}}/10
+{{/each}}
+{{/if}}
 
 Health Context: {{{pastHealthIncidents}}}
 
-Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) or technical moves (for Kabaddi/Volleyball/Handball/Kho Kho/Running/Shot Put) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
+Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) or technical moves (for Kabaddi/Volleyball/Handball/Kho Kho/Running/Shot Put/Javline) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
 `,
 });
 

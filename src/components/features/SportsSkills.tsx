@@ -60,13 +60,20 @@ const SHOT_PUT_SKILLS = [
   "Timing", "Footwork", "Strength", "Explosive power", "Control"
 ];
 
+const JAVLINE_SKILLS = [
+  "Grip", "Carrying position", "Run-up", "Approach rhythm", "Withdrawal (drawing back)", 
+  "Cross steps", "Impulse stride", "Block (front leg action)", "Hip rotation", 
+  "Trunk rotation", "Arm action", "Release", "Release angle", "Follow-through", 
+  "Balance", "Coordination", "Timing", "Footwork", "Speed", "Strength", "Flexibility", "Control"
+];
+
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
-  const isDetailedSport = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put'].includes(activeSport);
+  const isDetailedSport = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline'].includes(activeSport);
 
   const getDetailedSkillsList = (sport: string) => {
     switch (sport) {
@@ -76,6 +83,7 @@ export function SportsSkills({ store }: { store: any }) {
       case 'Kho Kho': return KHO_KHO_SKILLS;
       case 'Running': return RUNNING_SKILLS;
       case 'Shot Put': return SHOT_PUT_SKILLS;
+      case 'Javline': return JAVLINE_SKILLS;
       default: return [];
     }
   };
@@ -88,6 +96,7 @@ export function SportsSkills({ store }: { store: any }) {
       case 'Kho Kho': return 200;
       case 'Running': return 200;
       case 'Shot Put': return 200;
+      case 'Javline': return 220;
       default: return 20;
     }
   };
@@ -382,6 +391,7 @@ export function SportsSkills({ store }: { store: any }) {
             : activeSport === 'Kho Kho' ? 'Kho Kho: 20 technical skills scored out of 10 each (Total 200).'
             : activeSport === 'Running' ? 'Running: 20 technical skills scored out of 10 each (Total 200).'
             : activeSport === 'Shot Put' ? 'Shot Put: 20 technical skills scored out of 10 each (Total 200).'
+            : activeSport === 'Javline' ? 'Javline: 22 technical skills scored out of 10 each (Total 220).'
             : 'Each skill is marked out of 10 points (Total 20).'}
         </p>
         <div className="flex gap-4">
