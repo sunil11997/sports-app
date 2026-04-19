@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -7,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -23,6 +22,7 @@ import { Player } from '@/lib/types';
 import { differenceInYears } from 'date-fns';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export function Dashboard({ store }: { store: any }) {
   const { toast } = useToast();
@@ -31,7 +31,8 @@ export function Dashboard({ store }: { store: any }) {
 
   const filteredPlayers = store.data.players.filter((p: any) => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase())))
+    (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))) ||
+    (p.bloodGroup && p.bloodGroup.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const calculateAttendance = (playerId: string) => {
@@ -47,7 +48,8 @@ export function Dashboard({ store }: { store: any }) {
   const handleEditClick = (player: Player) => {
     setEditingPlayer({ 
       ...player, 
-      sports: player.sports || [] 
+      sports: player.sports || [],
+      bloodGroup: player.bloodGroup || "O+"
     });
   };
 
@@ -101,7 +103,7 @@ export function Dashboard({ store }: { store: any }) {
           <table>
             <thead>
               <tr>
-                <th>SR</th><th>NAME</th><th>AGE</th><th>STD</th><th>SPORTS</th><th>FITNESS</th><th>BMI</th><th>ATTENDANCE</th>
+                <th>SR</th><th>NAME</th><th>AGE</th><th>STD</th><th>BLOOD</th><th>SPORTS</th><th>FITNESS</th><th>BMI</th><th>ATTENDANCE</th>
               </tr>
             </thead>
             <tbody>
@@ -111,6 +113,7 @@ export function Dashboard({ store }: { store: any }) {
                   <td><strong>${p.name}</strong></td>
                   <td>${p.age}</td>
                   <td>${p.std}</td>
+                  <td>${p.bloodGroup || 'N/A'}</td>
                   <td>${p.sports.join(', ')}</td>
                   <td>${store.data.fitness[p.id]?.score || 'N/A'}</td>
                   <td>${p.bmi}</td>
@@ -136,7 +139,7 @@ export function Dashboard({ store }: { store: any }) {
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Search..." 
+              placeholder="Search by name, sport or blood group..." 
               className="pl-10 rounded-2xl border-2 h-11"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -156,6 +159,7 @@ export function Dashboard({ store }: { store: any }) {
               <TableHead className="text-primary-foreground font-bold uppercase">Name</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Age</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Std</TableHead>
+              <TableHead className="text-primary-foreground font-bold uppercase text-center">Blood</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Sports</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Fitness</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">BMI</TableHead>
@@ -166,7 +170,7 @@ export function Dashboard({ store }: { store: any }) {
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-12 text-muted-foreground font-medium">
+                <TableCell colSpan={10} className="text-center py-12 text-muted-foreground font-medium">
                   No players found. Register some players first!
                 </TableCell>
               </TableRow>
@@ -182,6 +186,12 @@ export function Dashboard({ store }: { store: any }) {
                     <TableCell className="font-bold">{player.name}</TableCell>
                     <TableCell>{player.age}</TableCell>
                     <TableCell>{player.std}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-destructive font-black text-xs">
+                        <Droplet className="w-3 h-3" />
+                        {player.bloodGroup || 'N/A'}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1 max-w-[200px]">
                         {sports.map((s: string) => (
@@ -309,10 +319,20 @@ export function Dashboard({ store }: { store: any }) {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-bmi-display" className="font-bold">Current BMI</Label>
-                      <div className="h-10 flex items-center px-3 bg-muted rounded-xl font-mono font-bold">
-                        {editingPlayer.bmi}
-                      </div>
+                      <Label htmlFor="edit-blood-group" className="font-bold">Blood Group</Label>
+                      <Select 
+                        value={editingPlayer.bloodGroup || "O+"} 
+                        onValueChange={(val) => setEditingPlayer({ ...editingPlayer, bloodGroup: val })}
+                      >
+                        <SelectTrigger className="rounded-xl border-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BLOOD_GROUPS.map(group => (
+                            <SelectItem key={group} value={group}>{group}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

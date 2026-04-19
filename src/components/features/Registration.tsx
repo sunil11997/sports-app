@@ -15,6 +15,7 @@ import { UserPlus } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -23,6 +24,7 @@ const formSchema = z.object({
   dob: z.string(),
   height: z.string(),
   weight: z.string(),
+  bloodGroup: z.string(),
   sports: z.array(z.string()).min(1, "Select at least one sport"),
   history: z.enum(["Yes", "No"]),
   histDetail: z.string().optional(),
@@ -40,6 +42,7 @@ export function Registration({ store }: { store: any }) {
       dob: "",
       height: "",
       weight: "",
+      bloodGroup: "O+",
       sports: [],
       history: "No",
       histDetail: "",
@@ -175,6 +178,29 @@ export function Registration({ store }: { store: any }) {
                     <FormControl>
                       <Input type="number" placeholder="55" className="rounded-xl border-2" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="bloodGroup"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-bold text-primary">Blood Group</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="rounded-xl border-2">
+                          <SelectValue placeholder="Blood Group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BLOOD_GROUPS.map(group => (
+                          <SelectItem key={group} value={group}>{group}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

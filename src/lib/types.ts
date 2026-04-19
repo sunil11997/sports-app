@@ -8,6 +8,7 @@ export interface Player {
   height: string;
   weight: string;
   bmi: string;
+  bloodGroup?: string;
   sports: string[];
   history: 'Yes' | 'No';
   histDetail?: string;
