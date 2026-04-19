@@ -36,6 +36,7 @@ const PlayerRecommendationInputSchema = z.object({
   sportSkill1: z.string().optional().describe('First specific skill for their primary/selected sport.'),
   sportSkill2: z.string().optional().describe('Second specific skill for their primary/selected sport.'),
   sportSkillScore: z.string().optional().describe('Overall skill score for their primary/selected sport.'),
+  detailedKabaddiSkills: z.record(z.string()).optional().describe('For Kabaddi, a list of all technical moves and their scores out of 10.'),
   pastHealthIncidents: z.string().optional().describe('Summarized list of past health incidents for the player.'),
 });
 export type PlayerRecommendationInput = z.infer<typeof PlayerRecommendationInputSchema>;
@@ -79,14 +80,18 @@ Institutional Fitness Assessment:
 - Overall Score: {{{fitnessScore}}}
 - School Fitness Level: {{{fitnessStatus}}}
 
-Skills Context (Focusing on first sport listed if data is available):
-- Skill 1: {{{sportSkill1}}}
-- Skill 2: {{{sportSkill2}}}
-- Skill Score: {{{sportSkillScore}}}
+Skills Context:
+- Primary/Secondary Score: {{{sportSkillScore}}}
+{{#if detailedKabaddiSkills}}
+- Detailed Kabaddi Analysis:
+{{#each detailedKabaddiSkills}}
+  * {{{@key}}}: {{{this}}}/10
+{{/each}}
+{{/if}}
 
 Health Context: {{{pastHealthIncidents}}}
 
-Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
+Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) or technical moves (for Kabaddi) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
 `,
 });
 

@@ -6,9 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, Save, Printer } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Trophy, Save, Printer, ListChecks, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
@@ -34,6 +42,7 @@ export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
+  const [editingKabaddiPlayer, setEditingKabaddiPlayer] = useState<any>(null);
 
   const handleChange = (id: string, field: string, value: string) => {
     const key = `${id}_${activeSport}`;
@@ -44,12 +53,39 @@ export function SportsSkills({ store }: { store: any }) {
       [field]: value
     };
 
-    // Auto-calculate total score
     if (field === 'score1' || field === 'score2') {
       const s1 = parseFloat(updated.score1) || 0;
       const s2 = parseFloat(updated.score2) || 0;
       updated.score = (s1 + s2).toString();
     }
+
+    setSkills(prev => ({
+      ...prev,
+      [key]: updated
+    }));
+  };
+
+  const handleKabaddiSkillChange = (skill: string, value: string) => {
+    if (!editingKabaddiPlayer) return;
+    
+    const id = editingKabaddiPlayer.id;
+    const key = `${id}_Kabaddi`;
+    const current = skills[key] || { score: '0', kabaddiSkills: {} };
+    const currentKabaddiSkills = current.kabaddiSkills || {};
+    
+    const updatedKabaddiSkills = {
+      ...currentKabaddiSkills,
+      [skill]: value
+    };
+
+    // Calculate total score for Kabaddi (sum of all skills)
+    const total = Object.values(updatedKabaddiSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
+
+    const updated = {
+      ...current,
+      kabaddiSkills: updatedKabaddiSkills,
+      score: total.toString()
+    };
 
     setSkills(prev => ({
       ...prev,
@@ -64,6 +100,7 @@ export function SportsSkills({ store }: { store: any }) {
 
     store.setSportSkill(id, activeSport, skill);
     toast({ title: "Skills Saved", description: `${activeSport} technical report updated.` });
+    if (activeSport === 'Kabaddi') setEditingKabaddiPlayer(null);
   };
 
   const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
@@ -80,30 +117,41 @@ export function SportsSkills({ store }: { store: any }) {
             th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
             th { background-color: #f4fcf6; font-weight: bold; font-size: 12px; color: #1b4b3a; }
             .score-cell { font-weight: 900; color: #235C36; }
-            .total-row { background-color: #f9f9f9; }
+            .skills-list { font-size: 10px; color: #666; font-style: italic; }
           </style>
         </head>
         <body>
           <h1>Skill Roster: ${activeSport}</h1>
-          <p>Institutional Technical Performance Evaluation</p>
+          <p>Institutional Technical Performance Evaluation - Teacher Sunil Deshmukh</p>
           <table>
             <thead>
               <tr>
                 <th>PLAYER</th>
-                <th>PRIMARY SKILL (M)</th>
-                <th>SECONDARY SKILL (M)</th>
+                ${activeSport === 'Kabaddi' ? '<th>SKILLS BREAKDOWN</th>' : '<th>PRIMARY SKILL (10M)</th><th>SECONDARY SKILL (10M)</th>'}
                 <th>TOTAL SCORE</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
+                if (activeSport === 'Kabaddi') {
+                  const breakdown = Object.entries(s.kabaddiSkills || {})
+                    .map(([name, score]) => `${name}: ${score}`)
+                    .join(', ');
+                  return `
+                    <tr>
+                      <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
+                      <td class="skills-list">${breakdown || 'No skills scored yet'}</td>
+                      <td class="score-cell">${s.score || '0'} / 150</td>
+                    </tr>
+                  `;
+                }
                 return `
                   <tr>
                     <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
                     <td>${s.skill1 || '-'}${s.score1 ? ` (${s.score1})` : ''}</td>
                     <td>${s.skill2 || '-'}${s.score2 ? ` (${s.score2})` : ''}</td>
-                    <td class="score-cell">${s.score || '0'}</td>
+                    <td class="score-cell">${s.score || '0'} / 20</td>
                   </tr>
                 `;
               }).join('')}
@@ -148,9 +196,15 @@ export function SportsSkills({ store }: { store: any }) {
           <TableHeader className="bg-primary">
             <TableRow>
               <TableHead className="text-primary-foreground font-bold uppercase">Player</TableHead>
-              <TableHead className="text-primary-foreground font-bold uppercase min-w-[250px]">Primary Skill (Max 10)</TableHead>
-              <TableHead className="text-primary-foreground font-bold uppercase min-w-[250px]">Secondary Skill (Max 10)</TableHead>
-              <TableHead className="text-primary-foreground font-bold uppercase text-center">Total (20)</TableHead>
+              {activeSport === 'Kabaddi' ? (
+                <TableHead className="text-primary-foreground font-bold uppercase text-center">Skill Assessment</TableHead>
+              ) : (
+                <>
+                  <TableHead className="text-primary-foreground font-bold uppercase min-w-[250px]">Primary Skill (Max 10)</TableHead>
+                  <TableHead className="text-primary-foreground font-bold uppercase min-w-[250px]">Secondary Skill (Max 10)</TableHead>
+                </>
+              )}
+              <TableHead className="text-primary-foreground font-bold uppercase text-center">Total Score</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -164,7 +218,8 @@ export function SportsSkills({ store }: { store: any }) {
             ) : (
               filteredPlayers.map((player: any) => {
                 const key = `${player.id}_${activeSport}`;
-                const current = skills[key] || { skill1: '', score1: '0', skill2: '', score2: '0', score: '0' };
+                const current = skills[key] || { skill1: '', score1: '0', skill2: '', score2: '0', score: '0', kabaddiSkills: {} };
+                
                 return (
                   <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
                     <TableCell className="font-bold">
@@ -173,81 +228,93 @@ export function SportsSkills({ store }: { store: any }) {
                         <span className="text-[10px] text-muted-foreground font-mono">ID: {player.id}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {activeSport === 'Kabaddi' ? (
-                          <Select value={current.skill1} onValueChange={(val) => handleChange(player.id, 'skill1', val)}>
-                            <SelectTrigger className="rounded-lg flex-1">
-                              <SelectValue placeholder="Skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {KABADDI_SKILLS.map(skill => (
-                                <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input 
-                            placeholder="Primary Skill" 
-                            className="rounded-lg flex-1"
-                            value={current.skill1}
-                            onChange={(e) => handleChange(player.id, 'skill1', e.target.value)}
-                          />
-                        )}
-                        <Input 
-                          type="number"
-                          max="10"
-                          placeholder="Marks"
-                          className="w-20 rounded-lg text-center font-bold"
-                          value={current.score1}
-                          onChange={(e) => handleChange(player.id, 'score1', e.target.value)}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {activeSport === 'Kabaddi' ? (
-                          <Select value={current.skill2} onValueChange={(val) => handleChange(player.id, 'skill2', val)}>
-                            <SelectTrigger className="rounded-lg flex-1">
-                              <SelectValue placeholder="Skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {KABADDI_SKILLS.map(skill => (
-                                <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input 
-                            placeholder="Secondary Skill" 
-                            className="rounded-lg flex-1"
-                            value={current.skill2}
-                            onChange={(e) => handleChange(player.id, 'skill2', e.target.value)}
-                          />
-                        )}
-                        <Input 
-                          type="number"
-                          max="10"
-                          placeholder="Marks"
-                          className="w-20 rounded-lg text-center font-bold"
-                          value={current.score2}
-                          onChange={(e) => handleChange(player.id, 'score2', e.target.value)}
-                        />
-                      </div>
-                    </TableCell>
+                    
+                    {activeSport === 'Kabaddi' ? (
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Badge variant="outline" className="border-accent text-primary">
+                            {Object.keys(current.kabaddiSkills || {}).length} Skills Evaluated
+                          </Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-lg font-bold h-8"
+                            onClick={() => setEditingKabaddiPlayer(player)}
+                          >
+                            <ListChecks className="w-3 h-3 mr-1" /> Score Detailed Skills
+                          </Button>
+                        </div>
+                      </TableCell>
+                    ) : (
+                      <>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Primary Skill" 
+                              className="rounded-lg flex-1 h-9"
+                              value={current.skill1}
+                              onChange={(e) => handleChange(player.id, 'skill1', e.target.value)}
+                            />
+                            <Input 
+                              type="number"
+                              max="10"
+                              placeholder="Marks"
+                              className="w-20 rounded-lg text-center font-bold h-9"
+                              value={current.score1}
+                              onChange={(e) => handleChange(player.id, 'score1', e.target.value)}
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Secondary Skill" 
+                              className="rounded-lg flex-1 h-9"
+                              value={current.skill2}
+                              onChange={(e) => handleChange(player.id, 'skill2', e.target.value)}
+                            />
+                            <Input 
+                              type="number"
+                              max="10"
+                              placeholder="Marks"
+                              className="w-20 rounded-lg text-center font-bold h-9"
+                              value={current.score2}
+                              onChange={(e) => handleChange(player.id, 'score2', e.target.value)}
+                            />
+                          </div>
+                        </TableCell>
+                      </>
+                    )}
+
                     <TableCell className="text-center">
                       <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
                         <span className="font-black text-xl text-primary">{current.score || '0'}</span>
+                        <span className="text-[10px] text-muted-foreground block font-bold">
+                          MAX {activeSport === 'Kabaddi' ? '150' : '20'}
+                        </span>
                       </div>
                     </TableCell>
+                    
                     <TableCell className="text-right">
-                      <Button 
-                        size="sm" 
-                        className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black"
-                        onClick={() => handleSave(player.id)}
-                      >
-                        <Save className="w-4 h-4 mr-1" /> Save
-                      </Button>
+                      {activeSport !== 'Kabaddi' && (
+                        <Button 
+                          size="sm" 
+                          className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black"
+                          onClick={() => handleSave(player.id)}
+                        >
+                          <Save className="w-4 h-4 mr-1" /> Save
+                        </Button>
+                      )}
+                      {activeSport === 'Kabaddi' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-primary hover:bg-primary/5 rounded-lg font-bold"
+                          onClick={() => setEditingKabaddiPlayer(player)}
+                        >
+                          Update
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -258,13 +325,77 @@ export function SportsSkills({ store }: { store: any }) {
       </Card>
       
       <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-center justify-between">
-        <p className="text-sm font-bold text-primary italic">* Each skill is marked out of 10 points for a total institutional technical score of 20.</p>
+        <p className="text-sm font-bold text-primary italic">
+          * {activeSport === 'Kabaddi' 
+            ? 'For Kabaddi, all 15 technical moves are scored out of 10 marks each for a total of 150.' 
+            : 'Each skill is marked out of 10 points for a total institutional technical score of 20.'}
+        </p>
         <div className="flex gap-4">
-          <Badge className="bg-primary/20 text-primary border-primary/30">Primary: 10M</Badge>
-          <Badge className="bg-primary/20 text-primary border-primary/30">Secondary: 10M</Badge>
-          <Badge className="bg-accent text-accent-foreground font-black">Total: 20M</Badge>
+          <Badge className="bg-accent text-accent-foreground font-black uppercase">
+            {activeSport === 'Kabaddi' ? 'Total: 150 Marks' : 'Total: 20 Marks'}
+          </Badge>
         </div>
       </div>
+
+      <Dialog open={!!editingKabaddiPlayer} onOpenChange={(open) => !open && setEditingKabaddiPlayer(null)}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary uppercase flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-accent" /> Kabaddi Technical Assessment
+            </DialogTitle>
+          </DialogHeader>
+          
+          {editingKabaddiPlayer && (
+            <div className="py-4 space-y-6">
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex justify-between items-center">
+                <div>
+                  <h4 className="font-black text-primary uppercase">{editingKabaddiPlayer.name}</h4>
+                  <p className="text-xs text-muted-foreground font-bold">Standard: {editingKabaddiPlayer.std}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-primary uppercase">Current Score</p>
+                  <p className="text-3xl font-black text-primary">
+                    {skills[`${editingKabaddiPlayer.id}_Kabaddi`]?.score || '0'}<span className="text-sm text-muted-foreground">/150</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 px-2">
+                {KABADDI_SKILLS.map((skill) => {
+                  const key = `${editingKabaddiPlayer.id}_Kabaddi`;
+                  const score = skills[key]?.kabaddiSkills?.[skill] || '';
+                  return (
+                    <div key={skill} className="flex items-center justify-between group">
+                      <Label className="font-bold text-foreground/80 group-hover:text-primary transition-colors">{skill}</Label>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number"
+                          max="10"
+                          min="0"
+                          placeholder="0-10"
+                          className="w-20 text-center font-bold rounded-lg border-2 h-9"
+                          value={score}
+                          onChange={(e) => handleKabaddiSkillChange(skill, e.target.value)}
+                        />
+                        <span className="text-[10px] font-black text-muted-foreground">/ 10</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setEditingKabaddiPlayer(null)}>
+              Cancel
+            </Button>
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl font-bold px-8" onClick={() => handleSave(editingKabaddiPlayer.id)}>
+              <CheckCircle2 className="w-4 h-4 mr-2" /> Complete Assessment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
