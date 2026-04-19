@@ -11,8 +11,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter,
-  DialogTrigger 
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Trophy, Save, Printer, ListChecks, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,11 +37,22 @@ const KABADDI_SKILLS = [
   "Knee Hold"
 ];
 
+const VOLLEYBALL_SKILLS = [
+  "Serving",
+  "Passing (Bump)",
+  "Setting",
+  "Spiking (Attack)",
+  "Blocking",
+  "Digging (Defense)",
+  "Footwork / Movement",
+  "Communication"
+];
+
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
-  const [editingKabaddiPlayer, setEditingKabaddiPlayer] = useState<any>(null);
+  const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
   const handleChange = (id: string, field: string, value: string) => {
     const key = `${id}_${activeSport}`;
@@ -65,25 +75,25 @@ export function SportsSkills({ store }: { store: any }) {
     }));
   };
 
-  const handleKabaddiSkillChange = (skill: string, value: string) => {
-    if (!editingKabaddiPlayer) return;
+  const handleDetailedSkillChange = (skill: string, value: string) => {
+    if (!editingDetailedPlayer) return;
     
-    const id = editingKabaddiPlayer.id;
-    const key = `${id}_Kabaddi`;
-    const current = skills[key] || { score: '0', kabaddiSkills: {} };
-    const currentKabaddiSkills = current.kabaddiSkills || {};
+    const { player, sport } = editingDetailedPlayer;
+    const key = `${player.id}_${sport}`;
+    const current = skills[key] || { score: '0', detailedSkills: {} };
+    const currentDetailedSkills = current.detailedSkills || {};
     
-    const updatedKabaddiSkills = {
-      ...currentKabaddiSkills,
+    const updatedDetailedSkills = {
+      ...currentDetailedSkills,
       [skill]: value
     };
 
-    // Calculate total score for Kabaddi (sum of all skills)
-    const total = Object.values(updatedKabaddiSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
+    // Calculate total score for detailed sports
+    const total = Object.values(updatedDetailedSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
 
     const updated = {
       ...current,
-      kabaddiSkills: updatedKabaddiSkills,
+      detailedSkills: updatedDetailedSkills,
       score: total.toString()
     };
 
@@ -100,12 +110,15 @@ export function SportsSkills({ store }: { store: any }) {
 
     store.setSportSkill(id, activeSport, skill);
     toast({ title: "Skills Saved", description: `${activeSport} technical report updated.` });
-    if (activeSport === 'Kabaddi') setEditingKabaddiPlayer(null);
+    setEditingDetailedPlayer(null);
   };
 
   const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
 
   const handlePrint = () => {
+    const isDetailed = activeSport === 'Kabaddi' || activeSport === 'Volleyball';
+    const maxScore = activeSport === 'Kabaddi' ? 150 : activeSport === 'Volleyball' ? 80 : 20;
+
     const printContent = `
       <html>
         <head>
@@ -127,22 +140,22 @@ export function SportsSkills({ store }: { store: any }) {
             <thead>
               <tr>
                 <th>PLAYER</th>
-                ${activeSport === 'Kabaddi' ? '<th>SKILLS BREAKDOWN</th>' : '<th>PRIMARY SKILL (10M)</th><th>SECONDARY SKILL (10M)</th>'}
+                ${isDetailed ? '<th>SKILLS BREAKDOWN</th>' : '<th>PRIMARY SKILL (10M)</th><th>SECONDARY SKILL (10M)</th>'}
                 <th>TOTAL SCORE</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
-                if (activeSport === 'Kabaddi') {
-                  const breakdown = Object.entries(s.kabaddiSkills || {})
+                if (isDetailed) {
+                  const breakdown = Object.entries(s.detailedSkills || {})
                     .map(([name, score]) => `${name}: ${score}`)
                     .join(', ');
                   return `
                     <tr>
                       <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
                       <td class="skills-list">${breakdown || 'No skills scored yet'}</td>
-                      <td class="score-cell">${s.score || '0'} / 150</td>
+                      <td class="score-cell">${s.score || '0'} / ${maxScore}</td>
                     </tr>
                   `;
                 }
@@ -165,6 +178,8 @@ export function SportsSkills({ store }: { store: any }) {
     win?.document.close();
     win?.print();
   };
+
+  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball';
 
   return (
     <div className="space-y-6">
@@ -196,7 +211,7 @@ export function SportsSkills({ store }: { store: any }) {
           <TableHeader className="bg-primary">
             <TableRow>
               <TableHead className="text-primary-foreground font-bold uppercase">Player</TableHead>
-              {activeSport === 'Kabaddi' ? (
+              {isDetailedSport ? (
                 <TableHead className="text-primary-foreground font-bold uppercase text-center">Skill Assessment</TableHead>
               ) : (
                 <>
@@ -218,7 +233,7 @@ export function SportsSkills({ store }: { store: any }) {
             ) : (
               filteredPlayers.map((player: any) => {
                 const key = `${player.id}_${activeSport}`;
-                const current = skills[key] || { skill1: '', score1: '0', skill2: '', score2: '0', score: '0', kabaddiSkills: {} };
+                const current = skills[key] || { skill1: '', score1: '0', skill2: '', score2: '0', score: '0', detailedSkills: {} };
                 
                 return (
                   <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
@@ -229,17 +244,17 @@ export function SportsSkills({ store }: { store: any }) {
                       </div>
                     </TableCell>
                     
-                    {activeSport === 'Kabaddi' ? (
+                    {isDetailedSport ? (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Badge variant="outline" className="border-accent text-primary">
-                            {Object.keys(current.kabaddiSkills || {}).length} Skills Evaluated
+                            {Object.keys(current.detailedSkills || {}).length} Skills Evaluated
                           </Badge>
                           <Button 
                             variant="outline" 
                             size="sm" 
                             className="rounded-lg font-bold h-8"
-                            onClick={() => setEditingKabaddiPlayer(player)}
+                            onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
                           >
                             <ListChecks className="w-3 h-3 mr-1" /> Score Detailed Skills
                           </Button>
@@ -290,13 +305,13 @@ export function SportsSkills({ store }: { store: any }) {
                       <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
                         <span className="font-black text-xl text-primary">{current.score || '0'}</span>
                         <span className="text-[10px] text-muted-foreground block font-bold">
-                          MAX {activeSport === 'Kabaddi' ? '150' : '20'}
+                          MAX {activeSport === 'Kabaddi' ? '150' : activeSport === 'Volleyball' ? '80' : '20'}
                         </span>
                       </div>
                     </TableCell>
                     
                     <TableCell className="text-right">
-                      {activeSport !== 'Kabaddi' && (
+                      {!isDetailedSport && (
                         <Button 
                           size="sm" 
                           className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black"
@@ -305,12 +320,12 @@ export function SportsSkills({ store }: { store: any }) {
                           <Save className="w-4 h-4 mr-1" /> Save
                         </Button>
                       )}
-                      {activeSport === 'Kabaddi' && (
+                      {isDetailedSport && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           className="text-primary hover:bg-primary/5 rounded-lg font-bold"
-                          onClick={() => setEditingKabaddiPlayer(player)}
+                          onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
                         >
                           Update
                         </Button>
@@ -328,42 +343,47 @@ export function SportsSkills({ store }: { store: any }) {
         <p className="text-sm font-bold text-primary italic">
           * {activeSport === 'Kabaddi' 
             ? 'For Kabaddi, all 15 technical moves are scored out of 10 marks each for a total of 150.' 
+            : activeSport === 'Volleyball'
+            ? 'For Volleyball, 8 specific skills are scored out of 10 marks each for a total of 80.'
             : 'Each skill is marked out of 10 points for a total institutional technical score of 20.'}
         </p>
         <div className="flex gap-4">
           <Badge className="bg-accent text-accent-foreground font-black uppercase">
-            {activeSport === 'Kabaddi' ? 'Total: 150 Marks' : 'Total: 20 Marks'}
+            {activeSport === 'Kabaddi' ? 'Total: 150 Marks' : activeSport === 'Volleyball' ? 'Total: 80 Marks' : 'Total: 20 Marks'}
           </Badge>
         </div>
       </div>
 
-      <Dialog open={!!editingKabaddiPlayer} onOpenChange={(open) => !open && setEditingKabaddiPlayer(null)}>
+      <Dialog open={!!editingDetailedPlayer} onOpenChange={(open) => !open && setEditingDetailedPlayer(null)}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-[2rem]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-primary uppercase flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-accent" /> Kabaddi Technical Assessment
+              <Trophy className="w-6 h-6 text-accent" /> {editingDetailedPlayer?.sport} Technical Assessment
             </DialogTitle>
           </DialogHeader>
           
-          {editingKabaddiPlayer && (
+          {editingDetailedPlayer && (
             <div className="py-4 space-y-6">
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex justify-between items-center">
                 <div>
-                  <h4 className="font-black text-primary uppercase">{editingKabaddiPlayer.name}</h4>
-                  <p className="text-xs text-muted-foreground font-bold">Standard: {editingKabaddiPlayer.std}</p>
+                  <h4 className="font-black text-primary uppercase">{editingDetailedPlayer.player.name}</h4>
+                  <p className="text-xs text-muted-foreground font-bold">Standard: {editingDetailedPlayer.player.std}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold text-primary uppercase">Current Score</p>
                   <p className="text-3xl font-black text-primary">
-                    {skills[`${editingKabaddiPlayer.id}_Kabaddi`]?.score || '0'}<span className="text-sm text-muted-foreground">/150</span>
+                    {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}
+                    <span className="text-sm text-muted-foreground">
+                      /{editingDetailedPlayer.sport === 'Kabaddi' ? '150' : '80'}
+                    </span>
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 px-2">
-                {KABADDI_SKILLS.map((skill) => {
-                  const key = `${editingKabaddiPlayer.id}_Kabaddi`;
-                  const score = skills[key]?.kabaddiSkills?.[skill] || '';
+                {(editingDetailedPlayer.sport === 'Kabaddi' ? KABADDI_SKILLS : VOLLEYBALL_SKILLS).map((skill) => {
+                  const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
+                  const score = skills[key]?.detailedSkills?.[skill] || '';
                   return (
                     <div key={skill} className="flex items-center justify-between group">
                       <Label className="font-bold text-foreground/80 group-hover:text-primary transition-colors">{skill}</Label>
@@ -375,7 +395,7 @@ export function SportsSkills({ store }: { store: any }) {
                           placeholder="0-10"
                           className="w-20 text-center font-bold rounded-lg border-2 h-9"
                           value={score}
-                          onChange={(e) => handleKabaddiSkillChange(skill, e.target.value)}
+                          onChange={(e) => handleDetailedSkillChange(skill, e.target.value)}
                         />
                         <span className="text-[10px] font-black text-muted-foreground">/ 10</span>
                       </div>
@@ -387,10 +407,10 @@ export function SportsSkills({ store }: { store: any }) {
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setEditingKabaddiPlayer(null)}>
+            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setEditingDetailedPlayer(null)}>
               Cancel
             </Button>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl font-bold px-8" onClick={() => handleSave(editingKabaddiPlayer.id)}>
+            <Button className="bg-primary hover:bg-primary/90 rounded-xl font-bold px-8" onClick={() => handleSave(editingDetailedPlayer!.player.id)}>
               <CheckCircle2 className="w-4 h-4 mr-2" /> Complete Assessment
             </Button>
           </DialogFooter>

@@ -58,7 +58,8 @@ export function AIAdvice({ store }: { store: any }) {
         sportSkill1: skill.skill1 || "N/A",
         sportSkill2: skill.skill2 || "N/A",
         sportSkillScore: skill.score || "N/A",
-        detailedKabaddiSkills: skill.kabaddiSkills || undefined,
+        detailedKabaddiSkills: primarySport === 'Kabaddi' ? skill.detailedSkills : undefined,
+        detailedVolleyballSkills: primarySport === 'Volleyball' ? skill.detailedSkills : undefined,
         pastHealthIncidents: incidents || "No incidents recorded"
       };
 
