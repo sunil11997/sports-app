@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -29,13 +30,18 @@ import {
   History as HistoryIcon,
   User,
   FileText,
-  ClipboardList
+  ClipboardList,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePWA } from '@/components/providers/pwa-provider';
+import { Badge } from '@/components/ui/badge';
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const schoolData = useSchoolData();
+  const { isOnline } = usePWA();
 
   if (!isEntered) {
     return (
@@ -67,7 +73,7 @@ export default function WaghambaApp() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground py-6 px-8 shadow-md border-b-4 border-accent">
+      <header className="bg-primary text-primary-foreground py-6 px-8 shadow-md border-b-4 border-accent sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-accent p-2 rounded-lg">
@@ -77,6 +83,17 @@ export default function WaghambaApp() {
               <h1 className="text-2xl font-black tracking-tight uppercase">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
               <p className="text-sm font-medium text-primary-foreground/70">ता. सटाणा जि. नाशिक | क्रिडा शिक्षक - सुनिल देशमुख</p>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {isOnline ? (
+              <Badge className="bg-accent text-accent-foreground font-black flex items-center gap-1 px-3 py-1">
+                <Wifi className="w-3 h-3" /> ONLINE
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="font-black flex items-center gap-1 px-3 py-1">
+                <WifiOff className="w-3 h-3" /> OFFLINE
+              </Badge>
+            )}
           </div>
         </div>
       </header>

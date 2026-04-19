@@ -1,21 +1,33 @@
+
 "use client";
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap, Printer, Languages } from 'lucide-react';
+import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap, Printer, Languages, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
+import { usePWA } from '@/components/providers/pwa-provider';
 
 export function AIAdvice({ store }: { store: any }) {
   const { toast } = useToast();
+  const { isOnline } = usePWA();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [language, setLanguage] = useState("Marathi");
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
 
   const getAdvice = async () => {
+    if (!isOnline) {
+      toast({ 
+        title: "Offline Mode", 
+        description: "Internet connection is required for AI analysis. Please connect and try again.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     if (!selectedPlayerId) {
       toast({ title: "Select a player", description: "Please pick a player to analyze.", variant: "destructive" });
       return;
@@ -47,7 +59,6 @@ export function AIAdvice({ store }: { store: any }) {
         histDetail: p.histDetail || "None",
         medical: p.medical || "None",
         language: language,
-        // Granular Fitness Data
         fitnessShuttleRun: fit.shuttleRun || "N/A",
         fitnessRun50m: fit.run50m || "N/A",
         fitnessRun600m: fit.run600m || "N/A",
@@ -56,7 +67,6 @@ export function AIAdvice({ store }: { store: any }) {
         fitnessSitUps: fit.sitUps || "N/A",
         fitnessScore: fit.score || "N/A",
         fitnessStatus: fit.status || "N/A",
-        // Skill Data
         sportSkill1: skill.skill1 || "N/A",
         sportSkill2: skill.skill2 || "N/A",
         sportSkillScore: skill.score || "N/A",
@@ -139,6 +149,13 @@ export function AIAdvice({ store }: { store: any }) {
 
   return (
     <div className="space-y-8">
+      {!isOnline && (
+        <div className="bg-destructive/10 border-2 border-destructive text-destructive p-4 rounded-2xl flex items-center gap-3 font-bold">
+          <WifiOff className="w-6 h-6" />
+          Offline Mode: AI Advice generation is limited to existing cached reports. New advice requires internet.
+        </div>
+      )}
+
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
@@ -180,12 +197,14 @@ export function AIAdvice({ store }: { store: any }) {
             </div>
             
             <Button 
-              disabled={loading || !selectedPlayerId} 
+              disabled={loading || !selectedPlayerId || !isOnline} 
               onClick={getAdvice}
-              className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl h-14 font-black text-lg shadow-lg uppercase tracking-wider"
+              className={`rounded-2xl h-14 font-black text-lg shadow-lg uppercase tracking-wider transition-all ${
+                !isOnline ? 'bg-muted text-muted-foreground' : 'bg-accent text-accent-foreground hover:bg-accent/90'
+              }`}
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Sparkles className="w-6 h-6 mr-2" />}
-              Generate Advice
+              {loading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : isOnline ? <Sparkles className="w-6 h-6 mr-2" /> : <WifiOff className="w-6 h-6 mr-2" />}
+              {isOnline ? 'Generate Advice' : 'Go Online to Generate'}
             </Button>
           </div>
         </div>

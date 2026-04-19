@@ -1,10 +1,18 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { PWAProvider } from '@/components/providers/pwa-provider';
 
 export const metadata: Metadata = {
   title: 'शासकिय माध्यमिक आश्रम शाळा वाघांबा',
   description: 'Sports & Health Management System - Waghamba',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Waghamba Sports',
+  },
 };
 
 export default function RootLayout({
@@ -18,10 +26,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#235C36" />
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Toaster />
+        <PWAProvider>
+          {children}
+          <Toaster />
+        </PWAProvider>
       </body>
     </html>
   );
