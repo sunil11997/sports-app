@@ -65,6 +65,8 @@ export function AIAdvice({ store }: { store: any }) {
         detailedRunningSkills: primarySport === 'Running' ? skill.detailedSkills : undefined,
         detailedShotPutSkills: primarySport === 'Shot Put' ? skill.detailedSkills : undefined,
         detailedJavlineSkills: primarySport === 'Javline' ? skill.detailedSkills : undefined,
+        detailedLongJumpSkills: primarySport === 'Long Jump' ? skill.detailedSkills : undefined,
+        detailedHighJumpSkills: primarySport === 'High Jump' ? skill.detailedSkills : undefined,
         pastHealthIncidents: incidents || "No incidents recorded"
       };
 

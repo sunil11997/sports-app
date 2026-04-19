@@ -67,13 +67,29 @@ const JAVLINE_SKILLS = [
   "Balance", "Coordination", "Timing", "Footwork", "Speed", "Strength", "Flexibility", "Control"
 ];
 
+const LONG_JUMP_SKILLS = [
+  "Approach run", "Acceleration", "Rhythm control", "Take-off", "Take-off foot placement",
+  "Penultimate step", "Last step control", "Knee drive", "Arm swing",
+  "Flight technique (hang)", "Flight technique (hitch-kick)", "Body posture in air",
+  "Landing", "Leg extension", "Sand contact technique", "Balance", "Coordination",
+  "Timing", "Speed", "Strength", "Explosive power", "Flexibility", "Control"
+];
+
+const HIGH_JUMP_SKILLS = [
+  "Approach run", "Curve running", "J-approach", "Rhythm control", "Take-off",
+  "Take-off foot placement", "Penultimate step", "Last step", "Knee drive",
+  "Arm swing", "Body lean (inward)", "Bar clearance (Fosbury flop)", "Back arch",
+  "Hip lift", "Head position", "Landing (mat)", "Balance", "Coordination",
+  "Timing", "Speed", "Strength", "Explosive power", "Flexibility", "Control"
+];
+
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
-  const isDetailedSport = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline'].includes(activeSport);
+  const isDetailedSport = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'].includes(activeSport);
 
   const getDetailedSkillsList = (sport: string) => {
     switch (sport) {
@@ -84,6 +100,8 @@ export function SportsSkills({ store }: { store: any }) {
       case 'Running': return RUNNING_SKILLS;
       case 'Shot Put': return SHOT_PUT_SKILLS;
       case 'Javline': return JAVLINE_SKILLS;
+      case 'Long Jump': return LONG_JUMP_SKILLS;
+      case 'High Jump': return HIGH_JUMP_SKILLS;
       default: return [];
     }
   };
@@ -97,6 +115,8 @@ export function SportsSkills({ store }: { store: any }) {
       case 'Running': return 200;
       case 'Shot Put': return 200;
       case 'Javline': return 220;
+      case 'Long Jump': return 230;
+      case 'High Jump': return 240;
       default: return 20;
     }
   };
@@ -392,6 +412,8 @@ export function SportsSkills({ store }: { store: any }) {
             : activeSport === 'Running' ? 'Running: 20 technical skills scored out of 10 each (Total 200).'
             : activeSport === 'Shot Put' ? 'Shot Put: 20 technical skills scored out of 10 each (Total 200).'
             : activeSport === 'Javline' ? 'Javline: 22 technical skills scored out of 10 each (Total 220).'
+            : activeSport === 'Long Jump' ? 'Long Jump: 23 technical skills scored out of 10 each (Total 230).'
+            : activeSport === 'High Jump' ? 'High Jump: 24 technical skills scored out of 10 each (Total 240).'
             : 'Each skill is marked out of 10 points (Total 20).'}
         </p>
         <div className="flex gap-4">
