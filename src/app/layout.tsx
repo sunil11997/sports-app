@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { PWAProvider } from '@/components/providers/pwa-provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'शासकिय माध्यमिक आश्रम शाळा वाघांबा',
@@ -29,10 +30,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#235C36" />
       </head>
       <body className="font-body antialiased">
-        <PWAProvider>
-          {children}
-          <Toaster />
-        </PWAProvider>
+        <FirebaseClientProvider>
+          <PWAProvider>
+            {children}
+            <Toaster />
+          </PWAProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

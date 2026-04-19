@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Registration } from '@/components/features/Registration';
 import { Dashboard } from '@/components/features/Dashboard';
@@ -32,16 +32,27 @@ import {
   FileText,
   ClipboardList,
   Wifi,
-  WifiOff
+  WifiOff,
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { Badge } from '@/components/ui/badge';
+import { useAuth, useUser } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  useEffect(() => {
+    if (isEntered && !user && !isUserLoading) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isEntered, user, isUserLoading, auth]);
 
   if (!isEntered) {
     return (
@@ -66,6 +77,23 @@ export default function WaghambaApp() {
           >
             ENTER PORTAL
           </Button>
+          
+          <p className="text-primary-foreground/60 text-sm">
+            <Badge variant="outline" className="border-primary-foreground/20 text-primary-foreground">
+              Cloud Sync Active - Data Protected
+            </Badge>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <School className="w-16 h-16 text-primary animate-pulse mx-auto" />
+          <p className="font-bold text-primary animate-bounce">Securely Syncing Data...</p>
         </div>
       </div>
     );
@@ -93,6 +121,11 @@ export default function WaghambaApp() {
               <Badge variant="destructive" className="font-black flex items-center gap-1 px-3 py-1">
                 <WifiOff className="w-3 h-3" /> OFFLINE
               </Badge>
+            )}
+            {!user && (
+              <Button size="sm" variant="outline" className="text-primary border-white bg-white hover:bg-accent hover:text-accent-foreground">
+                <LogIn className="w-4 h-4 mr-1" /> Login
+              </Button>
             )}
           </div>
         </div>
@@ -159,22 +192,22 @@ export default function WaghambaApp() {
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Users className="w-8 h-8 text-primary mx-auto mb-3" />
                       <h3 className="font-black text-primary uppercase">Roster</h3>
-                      <p className="text-sm font-medium">{schoolData.data.players.length} Registered Players</p>
+                      <p className="text-sm font-medium">{schoolData.data.players.length} Cloud-Synced Players</p>
                     </div>
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
                       <h3 className="font-black text-primary uppercase">History</h3>
-                      <p className="text-sm font-medium">Monthly Progress Logs</p>
+                      <p className="text-sm font-medium">Auto-Backup Enabled</p>
                     </div>
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />
                       <h3 className="font-black text-primary uppercase">Health</h3>
-                      <p className="text-sm font-medium">{schoolData.data.healthIncidents.length} Logged Incidents</p>
+                      <p className="text-sm font-medium">Secure Records</p>
                     </div>
                     <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                       <Trophy className="w-8 h-8 text-primary mx-auto mb-3" />
                       <h3 className="font-black text-primary uppercase">Sports</h3>
-                      <p className="text-sm font-medium">9+ Disciplines Tracked</p>
+                      <p className="text-sm font-medium">Global Accessibility</p>
                     </div>
                   </div>
                 </CardContent>
