@@ -34,9 +34,10 @@ import {
   ClipboardList,
   Wifi,
   WifiOff,
-  LogIn,
   Settings as SettingsIcon,
-  CloudUpload
+  CloudUpload,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -46,6 +47,7 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
+  const [activeTab, setActiveTab] = useState("home");
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
   const { user, isUserLoading } = useUser();
@@ -102,15 +104,20 @@ export default function WaghambaApp() {
     );
   }
 
+  const navigateTo = (tab: string) => {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground py-6 px-8 shadow-md border-b-4 border-accent sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigateTo('home')}>
             <div className="bg-accent p-2 rounded-lg">
               <School className="w-8 h-8 text-accent-foreground" />
             </div>
-            <div>
+            <div className="hidden md:block">
               <h1 className="text-2xl font-black tracking-tight uppercase">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
               <p className="text-sm font-medium text-primary-foreground/70">ता. सटाणा जि. नाशिक | क्रिडा शिक्षक - सुनिल देशमुख</p>
             </div>
@@ -135,7 +142,7 @@ export default function WaghambaApp() {
       </header>
 
       <main className="max-w-7xl mx-auto p-4 md:p-8">
-        <Tabs defaultValue="home" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-primary/5 p-1 h-auto flex flex-wrap gap-1 border border-primary/10 rounded-2xl">
             <TabsTrigger value="home" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Home className="w-4 h-4 mr-2" /> Home
@@ -148,9 +155,6 @@ export default function WaghambaApp() {
             </TabsTrigger>
             <TabsTrigger value="tournament" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ClipboardList className="w-4 h-4 mr-2" /> Tournament
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <HistoryIcon className="w-4 h-4 mr-2" /> History
             </TabsTrigger>
             <TabsTrigger value="registration" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="w-4 h-4 mr-2" /> Registration
@@ -167,9 +171,6 @@ export default function WaghambaApp() {
             <TabsTrigger value="health" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Stethoscope className="w-4 h-4 mr-2" /> Health
             </TabsTrigger>
-            <TabsTrigger value="teams" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <UsersRound className="w-4 h-4 mr-2" /> Teams
-            </TabsTrigger>
             <TabsTrigger value="ai" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-bold">
               <Sparkles className="w-4 h-4 mr-2" /> AI Advice
             </TabsTrigger>
@@ -180,80 +181,186 @@ export default function WaghambaApp() {
 
           <div className="mt-6">
             <TabsContent value="home">
-              <Card className="border-4 border-primary/10 rounded-[3rem] shadow-2xl overflow-hidden bg-white">
-                <CardContent className="p-12 text-center space-y-8">
-                  <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto">
-                    <School className="w-12 h-12 text-primary" />
+              <div className="space-y-8">
+                <Card className="border-4 border-primary/10 rounded-[3rem] shadow-2xl overflow-hidden bg-white">
+                  <CardContent className="p-12 text-center space-y-8">
+                    <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto">
+                      <School className="w-12 h-12 text-primary" />
+                    </div>
+                    <div className="space-y-4">
+                      <h2 className="text-4xl font-black text-primary uppercase h2">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
+                      <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest">ता. सटाणा जि. नाशिक</p>
+                      <div className="flex items-center justify-center gap-2 bg-primary/5 py-4 px-8 rounded-2xl border border-primary/10 w-fit mx-auto">
+                        <User className="w-6 h-6 text-primary" />
+                        <p className="text-2xl font-black text-primary">क्रिडा शिक्षक - सुनिल देशमुख</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-8">
+                      <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                        <Users className="w-8 h-8 text-primary mx-auto mb-3" />
+                        <h3 className="font-black text-primary uppercase">Roster</h3>
+                        <p className="text-sm font-medium">{schoolData.data.players.length} Cloud-Synced Players</p>
+                      </div>
+                      <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                        <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
+                        <h3 className="font-black text-primary uppercase">History</h3>
+                        <p className="text-sm font-medium">Auto-Backup Enabled</p>
+                      </div>
+                      <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                        <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />
+                        <h3 className="font-black text-primary uppercase">Health</h3>
+                        <p className="text-sm font-medium">Secure Records</p>
+                      </div>
+                      <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                        <Trophy className="w-8 h-8 text-primary mx-auto mb-3" />
+                        <h3 className="font-black text-primary uppercase">Sports</h3>
+                        <p className="text-sm font-medium">Global Accessibility</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-black text-primary uppercase px-4 flex items-center gap-2">
+                    <ArrowRight className="w-6 h-6 text-accent" /> Quick Launch Actions
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Button 
+                      onClick={() => navigateTo('registration')}
+                      variant="outline"
+                      className="h-32 rounded-3xl border-4 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary/30 flex flex-col items-center justify-center gap-2 group transition-all"
+                    >
+                      <Users className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                      <span className="font-black text-primary uppercase">Register New Student</span>
+                    </Button>
+                    <Button 
+                      onClick={() => navigateTo('attendance')}
+                      variant="outline"
+                      className="h-32 rounded-3xl border-4 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary/30 flex flex-col items-center justify-center gap-2 group transition-all"
+                    >
+                      <CalendarCheck className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                      <span className="font-black text-primary uppercase">Take Today's Attendance</span>
+                    </Button>
+                    <Button 
+                      onClick={() => navigateTo('daily-report')}
+                      variant="outline"
+                      className="h-32 rounded-3xl border-4 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary/30 flex flex-col items-center justify-center gap-2 group transition-all"
+                    >
+                      <FileText className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                      <span className="font-black text-primary uppercase">Generate Daily Report</span>
+                    </Button>
                   </div>
-                  <div className="space-y-4">
-                    <h2 className="text-4xl font-black text-primary uppercase h2">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
-                    <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest">ता. सटाणा जि. नाशिक</p>
-                    <div className="flex items-center justify-center gap-2 bg-primary/5 py-4 px-8 rounded-2xl border border-primary/10 w-fit mx-auto">
-                      <User className="w-6 h-6 text-primary" />
-                      <p className="text-2xl font-black text-primary">क्रिडा शिक्षक - सुनिल देशमुख</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-8">
-                    <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                      <Users className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <h3 className="font-black text-primary uppercase">Roster</h3>
-                      <p className="text-sm font-medium">{schoolData.data.players.length} Cloud-Synced Players</p>
-                    </div>
-                    <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                      <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <h3 className="font-black text-primary uppercase">History</h3>
-                      <p className="text-sm font-medium">Auto-Backup Enabled</p>
-                    </div>
-                    <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                      <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <h3 className="font-black text-primary uppercase">Health</h3>
-                      <p className="text-sm font-medium">Secure Records</p>
-                    </div>
-                    <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                      <Trophy className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <h3 className="font-black text-primary uppercase">Sports</h3>
-                      <p className="text-sm font-medium">Global Accessibility</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>
+
             <TabsContent value="dashboard">
               <Dashboard store={schoolData} />
+              <div className="mt-12 flex justify-between gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
+                  <Home className="w-5 h-5 mr-2" /> Back to Home
+                </Button>
+                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('daily-report')}>
+                  Daily Report <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="daily-report">
               <DailyReport store={schoolData} />
+              <div className="mt-12 flex justify-start gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('dashboard')}>
+                  <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="tournament">
               <TournamentRosters store={schoolData} />
+              <div className="mt-12 flex justify-start gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
+                  <Home className="w-5 h-5 mr-2" /> Back to Home
+                </Button>
+              </div>
             </TabsContent>
-            <TabsContent value="history">
-              <History store={schoolData} />
-            </TabsContent>
+
             <TabsContent value="registration">
               <Registration store={schoolData} />
+              <div className="mt-12 flex justify-between gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
+                  <Home className="w-5 h-5 mr-2" /> Cancel
+                </Button>
+                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('attendance')}>
+                  Next: Attendance <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="attendance">
               <Attendance store={schoolData} />
+              <div className="mt-12 flex justify-between gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('registration')}>
+                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Registration
+                </Button>
+                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('fitness')}>
+                  Next: Fitness Test <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="fitness">
               <Fitness store={schoolData} />
+              <div className="mt-12 flex justify-between gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('attendance')}>
+                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Attendance
+                </Button>
+                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('sports')}>
+                  Next: Technical Skills <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="sports">
               <SportsSkills store={schoolData} />
+              <div className="mt-12 flex justify-between gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('fitness')}>
+                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Fitness
+                </Button>
+                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('health')}>
+                  Next: Health Log <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="health">
               <HealthIncidents store={schoolData} />
+              <div className="mt-12 flex justify-between gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('sports')}>
+                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Sports
+                </Button>
+                <Button size="lg" className="bg-accent text-accent-foreground rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('ai')}>
+                  Next: Get AI Advice <Sparkles className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </TabsContent>
-            <TabsContent value="teams">
-              <Teams store={schoolData} />
-            </TabsContent>
+
             <TabsContent value="ai">
               <AIAdvice store={schoolData} />
+              <div className="mt-12 flex justify-start gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('health')}>
+                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Health Log
+                </Button>
+              </div>
             </TabsContent>
+
             <TabsContent value="settings">
               <Settings />
+              <div className="mt-12 flex justify-start gap-4">
+                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
+                  <Home className="w-5 h-5 mr-2" /> Back to Home
+                </Button>
+              </div>
             </TabsContent>
           </div>
         </Tabs>
