@@ -78,11 +78,11 @@ export default function WaghambaApp() {
             ENTER PORTAL
           </Button>
           
-          <p className="text-primary-foreground/60 text-sm">
+          <div className="text-primary-foreground/60 text-sm">
             <Badge variant="outline" className="border-primary-foreground/20 text-primary-foreground">
               Cloud Sync Active - Data Protected
             </Badge>
-          </p>
+          </div>
         </div>
       </div>
     );
