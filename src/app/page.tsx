@@ -11,6 +11,7 @@ import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { Teams } from '@/components/features/Teams';
 import { AIAdvice } from '@/components/features/AIAdvice';
 import { History } from '@/components/features/History';
+import { DailyReport } from '@/components/features/DailyReport';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -25,7 +26,8 @@ import {
   School,
   Home,
   History as HistoryIcon,
-  User
+  User,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -70,7 +72,7 @@ export default function WaghambaApp() {
               <School className="w-8 h-8 text-accent-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
+              <h1 className="text-2xl font-black tracking-tight uppercase">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
               <p className="text-sm font-medium text-primary-foreground/70">ता. सटाणा जि. नाशिक | क्रिडा शिक्षक - सुनिल देशमुख</p>
             </div>
           </div>
@@ -85,6 +87,9 @@ export default function WaghambaApp() {
             </TabsTrigger>
             <TabsTrigger value="dashboard" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="daily-report" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <FileText className="w-4 h-4 mr-2" /> Daily Report
             </TabsTrigger>
             <TabsTrigger value="history" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <HistoryIcon className="w-4 h-4 mr-2" /> History
@@ -120,7 +125,7 @@ export default function WaghambaApp() {
                     <School className="w-12 h-12 text-primary" />
                   </div>
                   <div className="space-y-4">
-                    <h2 className="text-4xl font-black text-primary">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
+                    <h2 className="text-4xl font-black text-primary uppercase">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
                     <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest">ता. सटाणा जि. नाशिक</p>
                     <div className="flex items-center justify-center gap-2 bg-primary/5 py-4 px-8 rounded-2xl border border-primary/10 w-fit mx-auto">
                       <User className="w-6 h-6 text-primary" />
@@ -155,6 +160,9 @@ export default function WaghambaApp() {
             </TabsContent>
             <TabsContent value="dashboard">
               <Dashboard store={schoolData} />
+            </TabsContent>
+            <TabsContent value="daily-report">
+              <DailyReport store={schoolData} />
             </TabsContent>
             <TabsContent value="history">
               <History store={schoolData} />
