@@ -29,7 +29,7 @@ export function Dashboard({ store }: { store: any }) {
 
   const filteredPlayers = store.data.players.filter((p: any) => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   const calculateAttendance = (playerId: string) => {
@@ -43,12 +43,15 @@ export function Dashboard({ store }: { store: any }) {
   };
 
   const handleEditClick = (player: Player) => {
-    setEditingPlayer({ ...player });
+    setEditingPlayer({ 
+      ...player, 
+      sports: player.sports || [] 
+    });
   };
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      if (editingPlayer.sports.length === 0) {
+      if (!editingPlayer.sports || editingPlayer.sports.length === 0) {
         toast({ title: "Validation Error", description: "At least one sport must be selected.", variant: "destructive" });
         return;
       }
@@ -63,7 +66,7 @@ export function Dashboard({ store }: { store: any }) {
 
   const toggleSportInEdit = (sport: string) => {
     if (!editingPlayer) return;
-    const currentSports = editingPlayer.sports;
+    const currentSports = editingPlayer.sports || [];
     const newSports = currentSports.includes(sport)
       ? currentSports.filter(s => s !== sport)
       : [...currentSports, sport];
@@ -108,17 +111,20 @@ export function Dashboard({ store }: { store: any }) {
             ) : (
               filteredPlayers.map((player: any, index: number) => {
                 const attPercent = calculateAttendance(player.id);
+                const sports = Array.isArray(player.sports) ? player.sports : [];
+                
                 return (
                   <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
                     <TableCell className="font-bold text-primary">{index + 1}</TableCell>
                     <TableCell className="font-bold">{player.name}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {player.sports.map((s: string) => (
+                        {sports.map((s: string) => (
                           <Badge key={s} className="bg-accent text-accent-foreground font-bold text-[10px]">
                             {s}
                           </Badge>
                         ))}
+                        {sports.length === 0 && <span className="text-xs text-muted-foreground italic">None</span>}
                       </div>
                     </TableCell>
                     <TableCell>{player.std}</TableCell>
@@ -168,7 +174,6 @@ export function Dashboard({ store }: { store: any }) {
         </Table>
       </Card>
 
-      {/* Edit Dialog */}
       <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-3xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
@@ -193,7 +198,7 @@ export function Dashboard({ store }: { store: any }) {
                     <div key={sport} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`edit-sport-${sport}`}
-                        checked={editingPlayer.sports.includes(sport)}
+                        checked={(editingPlayer.sports || []).includes(sport)}
                         onCheckedChange={() => toggleSportInEdit(sport)}
                       />
                       <Label htmlFor={`edit-sport-${sport}`} className="text-sm font-medium cursor-pointer">{sport}</Label>

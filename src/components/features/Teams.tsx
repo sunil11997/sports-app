@@ -5,7 +5,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Printer, Download, UsersRound, Trophy } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function Teams({ store }: { store: any }) {
   const players = store.data.players;
@@ -46,7 +45,7 @@ export function Teams({ store }: { store: any }) {
             <h2>${cat} (${groups[cat].length} Players)</h2>
             <table>
               <thead>
-                <tr><th>Name</th><th>Std</th><th>Age</th><th>Primary Sport</th></tr>
+                <tr><th>Name</th><th>Std</th><th>Age</th><th>Sports</th></tr>
               </thead>
               <tbody>
                 ${groups[cat].map(p => `
@@ -54,7 +53,7 @@ export function Teams({ store }: { store: any }) {
                     <td>${p.name}</td>
                     <td>${p.std}</td>
                     <td>${p.age}</td>
-                    <td>${p.sport}</td>
+                    <td>${(p.sports || []).join(', ')}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -101,7 +100,7 @@ export function Teams({ store }: { store: any }) {
                     <tr className="text-left font-bold text-primary">
                       <th className="p-3">Player Name</th>
                       <th className="p-3">Std</th>
-                      <th className="p-3">Primary Sport</th>
+                      <th className="p-3">Sports</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -117,9 +116,13 @@ export function Teams({ store }: { store: any }) {
                           <td className="p-3 font-bold text-foreground/80">{p.name}</td>
                           <td className="p-3 text-muted-foreground">{p.std}</td>
                           <td className="p-3">
-                            <Badge variant="outline" className="text-[10px] font-bold uppercase border-accent text-primary">
-                              {p.sport}
-                            </Badge>
+                            <div className="flex flex-wrap gap-1">
+                              {(p.sports || []).map((s: string) => (
+                                <Badge key={s} variant="outline" className="text-[10px] font-bold uppercase border-accent text-primary">
+                                  {s}
+                                </Badge>
+                              ))}
+                            </div>
                           </td>
                         </tr>
                       ))
