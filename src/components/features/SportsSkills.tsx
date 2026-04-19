@@ -46,11 +46,42 @@ const KHO_KHO_SKILLS = [
   "Awareness of court", "Team coordination"
 ];
 
+const RUNNING_SKILLS = [
+  "Starting technique", "Acceleration", "Stride length", "Stride frequency", "Running posture",
+  "Arm action", "Foot placement", "Breathing control", "Pacing", "Endurance",
+  "Speed", "Sprinting technique", "Turning technique", "Finish (leaning)", "Reaction time",
+  "Balance", "Coordination", "Agility", "Flexibility", "Recovery technique"
+];
+
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
+
+  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball' || activeSport === 'Kho Kho' || activeSport === 'Running';
+
+  const getDetailedSkillsList = (sport: string) => {
+    switch (sport) {
+      case 'Kabaddi': return KABADDI_SKILLS;
+      case 'Volleyball': return VOLLEYBALL_SKILLS;
+      case 'Handball': return HANDBALL_SKILLS;
+      case 'Kho Kho': return KHO_KHO_SKILLS;
+      case 'Running': return RUNNING_SKILLS;
+      default: return [];
+    }
+  };
+
+  const getMaxScore = (sport: string) => {
+    switch (sport) {
+      case 'Kabaddi': return 150;
+      case 'Volleyball': return 80;
+      case 'Handball': return 280;
+      case 'Kho Kho': return 200;
+      case 'Running': return 200;
+      default: return 20;
+    }
+  };
 
   const handleChange = (id: string, field: string, value: string) => {
     const key = `${id}_${activeSport}`;
@@ -113,11 +144,8 @@ export function SportsSkills({ store }: { store: any }) {
   const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
 
   const handlePrint = () => {
-    const isDetailed = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball' || activeSport === 'Kho Kho';
-    const maxScore = activeSport === 'Kabaddi' ? 150 : 
-                    activeSport === 'Volleyball' ? 80 : 
-                    activeSport === 'Handball' ? 280 : 
-                    activeSport === 'Kho Kho' ? 200 : 20;
+    const detailed = isDetailedSport;
+    const maxScore = getMaxScore(activeSport);
 
     const printContent = `
       <html>
@@ -140,14 +168,14 @@ export function SportsSkills({ store }: { store: any }) {
             <thead>
               <tr>
                 <th>PLAYER</th>
-                ${isDetailed ? '<th>SKILLS BREAKDOWN</th>' : '<th>PRIMARY SKILL (10M)</th><th>SECONDARY SKILL (10M)</th>'}
+                ${detailed ? '<th>SKILLS BREAKDOWN</th>' : '<th>PRIMARY SKILL (10M)</th><th>SECONDARY SKILL (10M)</th>'}
                 <th>TOTAL SCORE</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
-                if (isDetailed) {
+                if (detailed) {
                   const breakdown = Object.entries(s.detailedSkills || {})
                     .map(([name, score]) => `${name}: ${score}`)
                     .join(', ');
@@ -178,8 +206,6 @@ export function SportsSkills({ store }: { store: any }) {
     win?.document.close();
     win?.print();
   };
-
-  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball' || activeSport === 'Kho Kho';
 
   return (
     <div className="space-y-6">
@@ -305,10 +331,7 @@ export function SportsSkills({ store }: { store: any }) {
                       <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
                         <span className="font-black text-xl text-primary">{current.score || '0'}</span>
                         <span className="text-[10px] text-muted-foreground block font-bold">
-                          MAX {activeSport === 'Kabaddi' ? '150' : 
-                               activeSport === 'Volleyball' ? '80' : 
-                               activeSport === 'Handball' ? '280' : 
-                               activeSport === 'Kho Kho' ? '200' : '20'}
+                          MAX {getMaxScore(activeSport)}
                         </span>
                       </div>
                     </TableCell>
@@ -348,11 +371,12 @@ export function SportsSkills({ store }: { store: any }) {
             : activeSport === 'Volleyball' ? 'Volleyball: 8 specific skills scored out of 10 each (Total 80).'
             : activeSport === 'Handball' ? 'Handball: 28 technical skills scored out of 10 each (Total 280).'
             : activeSport === 'Kho Kho' ? 'Kho Kho: 20 technical skills scored out of 10 each (Total 200).'
+            : activeSport === 'Running' ? 'Running: 20 technical skills scored out of 10 each (Total 200).'
             : 'Each skill is marked out of 10 points (Total 20).'}
         </p>
         <div className="flex gap-4">
           <Badge className="bg-accent text-accent-foreground font-black uppercase">
-            Total: {activeSport === 'Kabaddi' ? '150' : activeSport === 'Volleyball' ? '80' : activeSport === 'Handball' ? '280' : activeSport === 'Kho Kho' ? '200' : '20'} Marks
+            Total: {getMaxScore(activeSport)} Marks
           </Badge>
         </div>
       </div>
@@ -377,18 +401,14 @@ export function SportsSkills({ store }: { store: any }) {
                   <p className="text-3xl font-black text-primary">
                     {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}
                     <span className="text-sm text-muted-foreground">
-                      /{editingDetailedPlayer.sport === 'Kabaddi' ? '150' : 
-                        editingDetailedPlayer.sport === 'Volleyball' ? '80' : 
-                        editingDetailedPlayer.sport === 'Handball' ? '280' : '200'}
+                      /{getMaxScore(editingDetailedPlayer.sport)}
                     </span>
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 px-2">
-                {(editingDetailedPlayer.sport === 'Kabaddi' ? KABADDI_SKILLS : 
-                  editingDetailedPlayer.sport === 'Volleyball' ? VOLLEYBALL_SKILLS : 
-                  editingDetailedPlayer.sport === 'Handball' ? HANDBALL_SKILLS : KHO_KHO_SKILLS).map((skill) => {
+                {getDetailedSkillsList(editingDetailedPlayer.sport).map((skill) => {
                   const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
                   const score = skills[key]?.detailedSkills?.[skill] || '';
                   return (
