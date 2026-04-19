@@ -1,0 +1,146 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset implements a Database-level Access Control (DBAC) model. Access to the entire 
+     * sports management system is predicated on the user having a valid record in the 'staff_roles' 
+     * collection. This ensures that only verified school personnel can manage player health 
+     * and performance data.
+     *
+     * DATA STRUCTURE
+     * The database is organized into two primary segments:
+     * 1. Authorization: /staff_roles/{staffId} - Determines which authenticated users are staff.
+     * 2. Player Data: /players/{playerId}/... - A nested hierarchy containing profiles, attendance, 
+     *    fitness assessments, skill tracking, and health incidents.
+     *
+     * KEY SECURITY DECISIONS
+     * - Role-Based Access: All player data is protected by an `isStaff()` check, which 
+     *   verifies the existence of a staff document for the requesting user.
+     * - Path Consistency: We strictly enforce that internal ID fields (e.g., playerId) match 
+     *    the Firestore path variables during creation.
+     * - Immutability: Relational fields (like parent IDs) are made immutable after creation 
+     *   to prevent data corruption or accidental re-parenting of records.
+     * - No Public Access: There are no public read or write permissions.
+     *
+     * DENORMALIZATION FOR AUTHORIZATION
+     * While the system relies on a central staff role, the data model denormalizes the 'playerId' 
+     * into every subcollection document. This allows the rules to perform lightning-fast 
+     * integrity checks (comparing the path variable to the document data) without 
+     * needing additional 'get()' calls across the database tree.
+     */
+
+    // --- Helper Functions ---
+
+    /** Checks if the user is authenticated with Firebase Auth. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** 
+     * Checks if the authenticated user has a document in the staff_roles collection. 
+     * This acts as the primary gatekeeper for the application.
+     */
+    function isStaff() {
+      return isSignedIn() && exists(/databases/$(database)/documents/staff_roles/$(request.auth.uid));
+    }
+
+    /** Checks if the user's UID matches the document ID in question. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Combined check for staff status and existence of the document for updates/deletes. */
+    function isExistingStaff() {
+      return isStaff() && resource != null;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Controls which users are recognized as staff members.
+     * @path /staff_roles/{staffId}
+     * @allow (get) If the staff member is viewing their own role status.
+     * @deny (list, write) Staff roles are managed via admin systems, not client-side.
+     * @principle Restricts access to role metadata to the specific owner.
+     */
+    match /staff_roles/{staffId} {
+      allow get: if isOwner(staffId);
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Primary player profiles. Accessible only by school staff.
+     * @path /players/{playerId}
+     * @allow (create) If user is staff and data.id matches the document path.
+     * @deny (all) If the user is not a verified staff member.
+     * @principle Role-based access with path-to-data consistency enforcement.
+     */
+    match /players/{playerId} {
+      allow get, list: if isStaff();
+      allow create: if isStaff() && request.resource.data.id == playerId;
+      allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingStaff();
+
+      /**
+       * @description Records of player attendance.
+       * @path /players/{playerId}/attendance/{attendanceId}
+       * @allow (create) If user is staff and the internal playerId matches the path.
+       * @deny (all) If staff status is missing or playerId is mismatched.
+       * @principle Relational integrity through path validation.
+       */
+      match /attendance/{attendanceId} {
+        allow get, list: if isStaff();
+        allow create: if isStaff() && request.resource.data.playerId == playerId;
+        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
+        allow delete: if isExistingStaff();
+      }
+
+      /**
+       * @description Historical fitness assessments for players.
+       * @path /players/{playerId}/fitnessAssessments/{assessmentId}
+       * @allow (create) Staff creating record with correct parent playerId.
+       * @deny (update) If attempting to change the playerId reference.
+       * @principle Ensures sub-data remains correctly parented to the player.
+       */
+      match /fitnessAssessments/{assessmentId} {
+        allow get, list: if isStaff();
+        allow create: if isStaff() && request.resource.data.playerId == playerId;
+        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
+        allow delete: if isExistingStaff();
+      }
+
+      /**
+       * @description Sport-specific skill evaluations.
+       * @path /players/{playerId}/sportSkills/{sportSkillId}
+       * @allow (get, list) Any staff member can view performance history.
+       * @deny (write) Any user not in the staff_roles collection.
+       * @principle Authorization based on role existence.
+       */
+      match /sportSkills/{sportSkillId} {
+        allow get, list: if isStaff();
+        allow create: if isStaff() && request.resource.data.playerId == playerId;
+        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
+        allow delete: if isExistingStaff();
+      }
+
+      /**
+       * @description Tracking of injuries and health conditions.
+       * @path /players/{playerId}/healthIncidents/{incidentId}
+       * @allow (create) Staff documenting a new health event.
+       * @deny (update) If internal playerId is modified.
+       * @principle Protects sensitive health data with role-based restrictions.
+       */
+      match /healthIncidents/{incidentId} {
+        allow get, list: if isStaff();
+        allow create: if isStaff() && request.resource.data.playerId == playerId;
+        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
+        allow delete: if isExistingStaff();
+      }
+    }
+  }
+}

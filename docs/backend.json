@@ -1,0 +1,351 @@
+{
+  "entities": {
+    "Player": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Player",
+      "type": "object",
+      "description": "Represents a registered student player in the school sports and health management system, including personal details, physical measurements, and sport preferences.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Player entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the player."
+        },
+        "gender": {
+          "type": "string",
+          "description": "The gender of the player, either Male or Female."
+        },
+        "standard": {
+          "type": "string",
+          "description": "The current academic standard (grade) of the player, typically from 1 to 12."
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "The player's date of birth.",
+          "format": "date"
+        },
+        "age": {
+          "type": "number",
+          "description": "The calculated current age of the player based on their date of birth. This field is derivable."
+        },
+        "heightCm": {
+          "type": "number",
+          "description": "The player's height in centimeters."
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "The player's weight in kilograms."
+        },
+        "bmi": {
+          "type": "number",
+          "description": "The player's Body Mass Index (BMI), calculated from their height and weight. This field is derivable."
+        },
+        "preferredSport": {
+          "type": "string",
+          "description": "The primary sport the player prefers or is registered for."
+        },
+        "hasSportHistory": {
+          "type": "boolean",
+          "description": "Indicates whether the player has previous sport history."
+        },
+        "sportHistoryDetails": {
+          "type": "string",
+          "description": "Descriptive details about the player's past sport achievements or participation, if any."
+        },
+        "medicalConditions": {
+          "type": "string",
+          "description": "Information about any medical conditions, allergies, or emergency contact details relevant to the player's health."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "gender",
+        "standard",
+        "dateOfBirth",
+        "hasSportHistory"
+      ]
+    },
+    "Attendance": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Attendance",
+      "type": "object",
+      "description": "Records the attendance status of a player for a specific date.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Attendance record."
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the Player entity. (Relationship: Player 1:N Attendance)"
+        },
+        "attendanceDate": {
+          "type": "string",
+          "description": "The specific date for which the attendance is recorded.",
+          "format": "date"
+        },
+        "status": {
+          "type": "string",
+          "description": "The attendance status of the player for the given date.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "playerId",
+        "attendanceDate",
+        "status"
+      ]
+    },
+    "FitnessAssessment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FitnessAssessment",
+      "type": "object",
+      "description": "Stores various fitness assessment scores and the derived fitness status for a player on a particular date.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Fitness Assessment record."
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the Player entity. (Relationship: Player 1:N FitnessAssessment)"
+        },
+        "assessmentDate": {
+          "type": "string",
+          "description": "The date when the fitness assessment was conducted.",
+          "format": "date"
+        },
+        "flexibilityScore": {
+          "type": "number",
+          "description": "The score obtained for the player's flexibility test."
+        },
+        "enduranceScore": {
+          "type": "number",
+          "description": "The score obtained for the player's endurance test."
+        },
+        "overallScore": {
+          "type": "number",
+          "description": "The aggregate or overall fitness score for the player."
+        },
+        "status": {
+          "type": "string",
+          "description": "The derived fitness status, e.g., 'Fit' or 'Need Training'."
+        }
+      },
+      "required": [
+        "id",
+        "playerId",
+        "assessmentDate",
+        "flexibilityScore",
+        "enduranceScore",
+        "overallScore",
+        "status"
+      ]
+    },
+    "SportSkill": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SportSkill",
+      "type": "object",
+      "description": "Records specific skill descriptions and performance scores for a player in a particular sport.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Sport Skill record."
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the Player entity. (Relationship: Player 1:N SportSkill)"
+        },
+        "sportName": {
+          "type": "string",
+          "description": "The name of the sport to which these skills and scores pertain."
+        },
+        "skillOneDescription": {
+          "type": "string",
+          "description": "A description of the first specific skill evaluated for the player in this sport (e.g., 'spike' for volleyball)."
+        },
+        "skillTwoDescription": {
+          "type": "string",
+          "description": "A description of the second specific skill evaluated for the player in this sport."
+        },
+        "skillScore": {
+          "type": "number",
+          "description": "The score achieved by the player for the specific skills in this sport."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "The timestamp indicating when this sport skill record was last updated or assessed.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "playerId",
+        "sportName",
+        "skillOneDescription",
+        "skillScore"
+      ]
+    },
+    "HealthIncident": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "HealthIncident",
+      "type": "object",
+      "description": "Documents health-related incidents, injuries, or ongoing medical events reported for a player.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Health Incident record."
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the Player entity. (Relationship: Player 1:N HealthIncident)"
+        },
+        "incidentDate": {
+          "type": "string",
+          "description": "The date when the health incident occurred or was reported.",
+          "format": "date"
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the health incident, including symptoms, diagnosis, or actions taken."
+        }
+      },
+      "required": [
+        "id",
+        "playerId",
+        "incidentDate",
+        "description"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/players/{playerId}",
+        "definition": {
+          "entityName": "Player",
+          "schema": {
+            "$ref": "#/backend/entities/Player"
+          },
+          "description": "Stores individual player profiles, managed by authenticated school staff. The document ID (`playerId`) for each Player document MUST match its `id` field for consistent data references and simplified security rules. Includes denormalized 'age' and 'bmi' for quick access, calculated from 'dateOfBirth', 'heightCm', and 'weightKg'.",
+          "params": [
+            {
+              "name": "playerId",
+              "description": "Unique identifier for the Player entity, also serving as the document ID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/players/{playerId}/attendance/{attendanceId}",
+        "definition": {
+          "entityName": "Attendance",
+          "schema": {
+            "$ref": "#/backend/entities/Attendance"
+          },
+          "description": "Records daily attendance for a specific player. This subcollection directly associates attendance records with their parent Player document. Each Attendance document includes a denormalized 'playerId' field, which MUST match the parent path's `{playerId}` for robust data integrity and simplified security rule validation.",
+          "params": [
+            {
+              "name": "playerId",
+              "description": "Unique identifier of the parent Player."
+            },
+            {
+              "name": "attendanceId",
+              "description": "Unique identifier for an attendance record, often a date string or timestamp."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/players/{playerId}/fitnessAssessments/{assessmentId}",
+        "definition": {
+          "entityName": "FitnessAssessment",
+          "schema": {
+            "$ref": "#/backend/entities/FitnessAssessment"
+          },
+          "description": "Stores various fitness assessment scores and the derived fitness status for a player on a particular date. Each FitnessAssessment document includes a denormalized 'playerId' field, which MUST match the parent path's `{playerId}` for robust data integrity and simplified security rule validation.",
+          "params": [
+            {
+              "name": "playerId",
+              "description": "Unique identifier of the parent Player."
+            },
+            {
+              "name": "assessmentId",
+              "description": "Unique identifier for the fitness assessment record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/players/{playerId}/sportSkills/{sportSkillId}",
+        "definition": {
+          "entityName": "SportSkill",
+          "schema": {
+            "$ref": "#/backend/entities/SportSkill"
+          },
+          "description": "Records specific skill descriptions and performance scores for a player in a particular sport. Each SportSkill document includes a denormalized 'playerId' field, which MUST match the parent path's `{playerId}` for robust data integrity and simplified security rule validation.",
+          "params": [
+            {
+              "name": "playerId",
+              "description": "Unique identifier of the parent Player."
+            },
+            {
+              "name": "sportSkillId",
+              "description": "Unique identifier for the sport skill record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/players/{playerId}/healthIncidents/{incidentId}",
+        "definition": {
+          "entityName": "HealthIncident",
+          "schema": {
+            "$ref": "#/backend/entities/HealthIncident"
+          },
+          "description": "Documents health-related incidents, injuries, or ongoing medical events reported for a player. Each HealthIncident document includes a denormalized 'playerId' field, which MUST match the parent path's `{playerId}` for robust data integrity and simplified security rule validation.",
+          "params": [
+            {
+              "name": "playerId",
+              "description": "Unique identifier of the parent Player."
+            },
+            {
+              "name": "incidentId",
+              "description": "Unique identifier for the health incident record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/staff_roles/{staffId}",
+        "definition": {
+          "entityName": "StaffRole",
+          "schema": {
+            "$ref": "#/backend/entities/StaffRole"
+          },
+          "description": "Grants 'staff' role to authenticated users. The existence of a document at this path (where `staffId` matches `request.auth.uid`) allows full read/write access to all player data and their subcollections. This collection adheres to the DBAC principle, using existence over content for role assignment, and is crucial for authorization independence.",
+          "params": [
+            {
+              "name": "staffId",
+              "description": "The Firebase Authentication UID of a staff member."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for the Waghamba Sports Health Hub is designed to ensure secure, scalable, and debuggable data management, specifically addressing the user's concern about data loss from local storage.\n\n**Core Design Decisions & Justification:**\n\n1.  **Top-level Collections:**\n    *   `players`: This is the central repository for all student player profiles. It's a top-level collection because player data is shared across the entire school and managed by any authorized staff member, rather than being "
+  }
+}
