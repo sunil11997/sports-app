@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -117,10 +116,7 @@ export function Attendance({ store }: { store: any }) {
                   return (
                     <TableRow key={player.id}>
                       <TableCell className="sticky left-0 bg-white z-10 font-bold border-r">
-                        <div className="flex flex-col">
-                          <span>{player.name}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase">{(player.sports || []).join(', ')}</span>
-                        </div>
+                        <span>{player.name}</span>
                       </TableCell>
                       {days.map(day => {
                         const key = `${player.id}_${format(day, 'yyyy-MM-dd')}`;
