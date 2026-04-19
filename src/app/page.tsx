@@ -9,9 +9,7 @@ import { Attendance } from '@/components/features/Attendance';
 import { Fitness } from '@/components/features/Fitness';
 import { SportsSkills } from '@/components/features/SportsSkills';
 import { HealthIncidents } from '@/components/features/HealthIncidents';
-import { Teams } from '@/components/features/Teams';
 import { AIAdvice } from '@/components/features/AIAdvice';
-import { History } from '@/components/features/History';
 import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Settings } from '@/components/features/Settings';
@@ -24,7 +22,6 @@ import {
   Activity, 
   Trophy, 
   Stethoscope, 
-  UsersRound, 
   Sparkles,
   School,
   Home,
@@ -35,9 +32,7 @@ import {
   Wifi,
   WifiOff,
   Settings as SettingsIcon,
-  CloudUpload,
-  ArrowRight,
-  ArrowLeft
+  CloudUpload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -220,147 +215,47 @@ export default function WaghambaApp() {
                     </div>
                   </CardContent>
                 </Card>
-
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-primary uppercase px-4 flex items-center gap-2">
-                    <ArrowRight className="w-6 h-6 text-accent" /> Quick Launch Actions
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Button 
-                      onClick={() => navigateTo('registration')}
-                      variant="outline"
-                      className="h-32 rounded-3xl border-4 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary/30 flex flex-col items-center justify-center gap-2 group transition-all"
-                    >
-                      <Users className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
-                      <span className="font-black text-primary uppercase">Register New Student</span>
-                    </Button>
-                    <Button 
-                      onClick={() => navigateTo('attendance')}
-                      variant="outline"
-                      className="h-32 rounded-3xl border-4 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary/30 flex flex-col items-center justify-center gap-2 group transition-all"
-                    >
-                      <CalendarCheck className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
-                      <span className="font-black text-primary uppercase">Take Today's Attendance</span>
-                    </Button>
-                    <Button 
-                      onClick={() => navigateTo('daily-report')}
-                      variant="outline"
-                      className="h-32 rounded-3xl border-4 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary/30 flex flex-col items-center justify-center gap-2 group transition-all"
-                    >
-                      <FileText className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
-                      <span className="font-black text-primary uppercase">Generate Daily Report</span>
-                    </Button>
-                  </div>
-                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="dashboard">
               <Dashboard store={schoolData} />
-              <div className="mt-12 flex justify-between gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
-                  <Home className="w-5 h-5 mr-2" /> Back to Home
-                </Button>
-                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('daily-report')}>
-                  Daily Report <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="daily-report">
               <DailyReport store={schoolData} />
-              <div className="mt-12 flex justify-start gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('dashboard')}>
-                  <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="tournament">
               <TournamentRosters store={schoolData} />
-              <div className="mt-12 flex justify-start gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
-                  <Home className="w-5 h-5 mr-2" /> Back to Home
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="registration">
               <Registration store={schoolData} />
-              <div className="mt-12 flex justify-between gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
-                  <Home className="w-5 h-5 mr-2" /> Cancel
-                </Button>
-                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('attendance')}>
-                  Next: Attendance <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="attendance">
               <Attendance store={schoolData} />
-              <div className="mt-12 flex justify-between gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('registration')}>
-                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Registration
-                </Button>
-                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('fitness')}>
-                  Next: Fitness Test <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="fitness">
               <Fitness store={schoolData} />
-              <div className="mt-12 flex justify-between gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('attendance')}>
-                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Attendance
-                </Button>
-                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('sports')}>
-                  Next: Technical Skills <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="sports">
               <SportsSkills store={schoolData} />
-              <div className="mt-12 flex justify-between gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('fitness')}>
-                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Fitness
-                </Button>
-                <Button size="lg" className="bg-primary rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('health')}>
-                  Next: Health Log <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="health">
               <HealthIncidents store={schoolData} />
-              <div className="mt-12 flex justify-between gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('sports')}>
-                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Sports
-                </Button>
-                <Button size="lg" className="bg-accent text-accent-foreground rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('ai')}>
-                  Next: Get AI Advice <Sparkles className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="ai">
               <AIAdvice store={schoolData} />
-              <div className="mt-12 flex justify-start gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('health')}>
-                  <ArrowLeft className="w-5 h-5 mr-2" /> Back: Health Log
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="settings">
               <Settings />
-              <div className="mt-12 flex justify-start gap-4">
-                <Button variant="outline" size="lg" className="rounded-2xl font-bold h-14 px-8" onClick={() => navigateTo('home')}>
-                  <Home className="w-5 h-5 mr-2" /> Back to Home
-                </Button>
-              </div>
             </TabsContent>
           </div>
         </Tabs>
