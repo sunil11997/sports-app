@@ -48,6 +48,14 @@ const VOLLEYBALL_SKILLS = [
   "Communication"
 ];
 
+const HANDBALL_SKILLS = [
+  "Passing", "Catching", "Dribbling", "Shooting", "Jump shot", "Running shot", "Dive shot", "Spin shot",
+  "Feints (body fake)", "Break-through (1 vs 1 attack)", "Fast break", "Blocking", "Marking", "Tackling",
+  "Interception", "Goalkeeping", "Defensive stance", "Footwork", "Pivot play", "Positioning",
+  "Support play", "Timing", "Coordination", "Communication", "Decision making", "Game awareness",
+  "Reaction time", "Balance & body control"
+];
+
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
@@ -88,7 +96,6 @@ export function SportsSkills({ store }: { store: any }) {
       [skill]: value
     };
 
-    // Calculate total score for detailed sports
     const total = Object.values(updatedDetailedSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
 
     const updated = {
@@ -116,8 +123,8 @@ export function SportsSkills({ store }: { store: any }) {
   const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
 
   const handlePrint = () => {
-    const isDetailed = activeSport === 'Kabaddi' || activeSport === 'Volleyball';
-    const maxScore = activeSport === 'Kabaddi' ? 150 : activeSport === 'Volleyball' ? 80 : 20;
+    const isDetailed = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball';
+    const maxScore = activeSport === 'Kabaddi' ? 150 : activeSport === 'Volleyball' ? 80 : activeSport === 'Handball' ? 280 : 20;
 
     const printContent = `
       <html>
@@ -179,7 +186,7 @@ export function SportsSkills({ store }: { store: any }) {
     win?.print();
   };
 
-  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball';
+  const isDetailedSport = activeSport === 'Kabaddi' || activeSport === 'Volleyball' || activeSport === 'Handball';
 
   return (
     <div className="space-y-6">
@@ -305,7 +312,7 @@ export function SportsSkills({ store }: { store: any }) {
                       <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
                         <span className="font-black text-xl text-primary">{current.score || '0'}</span>
                         <span className="text-[10px] text-muted-foreground block font-bold">
-                          MAX {activeSport === 'Kabaddi' ? '150' : activeSport === 'Volleyball' ? '80' : '20'}
+                          MAX {activeSport === 'Kabaddi' ? '150' : activeSport === 'Volleyball' ? '80' : activeSport === 'Handball' ? '280' : '20'}
                         </span>
                       </div>
                     </TableCell>
@@ -345,17 +352,19 @@ export function SportsSkills({ store }: { store: any }) {
             ? 'For Kabaddi, all 15 technical moves are scored out of 10 marks each for a total of 150.' 
             : activeSport === 'Volleyball'
             ? 'For Volleyball, 8 specific skills are scored out of 10 marks each for a total of 80.'
+            : activeSport === 'Handball'
+            ? 'For Handball, all 28 technical skills are scored out of 10 marks each for a total of 280.'
             : 'Each skill is marked out of 10 points for a total institutional technical score of 20.'}
         </p>
         <div className="flex gap-4">
           <Badge className="bg-accent text-accent-foreground font-black uppercase">
-            {activeSport === 'Kabaddi' ? 'Total: 150 Marks' : activeSport === 'Volleyball' ? 'Total: 80 Marks' : 'Total: 20 Marks'}
+            {activeSport === 'Kabaddi' ? 'Total: 150 Marks' : activeSport === 'Volleyball' ? 'Total: 80 Marks' : activeSport === 'Handball' ? 'Total: 280 Marks' : 'Total: 20 Marks'}
           </Badge>
         </div>
       </div>
 
       <Dialog open={!!editingDetailedPlayer} onOpenChange={(open) => !open && setEditingDetailedPlayer(null)}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-[2rem]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-[2rem]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-primary uppercase flex items-center gap-2">
               <Trophy className="w-6 h-6 text-accent" /> {editingDetailedPlayer?.sport} Technical Assessment
@@ -374,14 +383,14 @@ export function SportsSkills({ store }: { store: any }) {
                   <p className="text-3xl font-black text-primary">
                     {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}
                     <span className="text-sm text-muted-foreground">
-                      /{editingDetailedPlayer.sport === 'Kabaddi' ? '150' : '80'}
+                      /{editingDetailedPlayer.sport === 'Kabaddi' ? '150' : editingDetailedPlayer.sport === 'Volleyball' ? '80' : '280'}
                     </span>
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 px-2">
-                {(editingDetailedPlayer.sport === 'Kabaddi' ? KABADDI_SKILLS : VOLLEYBALL_SKILLS).map((skill) => {
+                {(editingDetailedPlayer.sport === 'Kabaddi' ? KABADDI_SKILLS : editingDetailedPlayer.sport === 'Volleyball' ? VOLLEYBALL_SKILLS : HANDBALL_SKILLS).map((skill) => {
                   const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
                   const score = skills[key]?.detailedSkills?.[skill] || '';
                   return (

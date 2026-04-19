@@ -38,6 +38,7 @@ const PlayerRecommendationInputSchema = z.object({
   sportSkillScore: z.string().optional().describe('Overall skill score for their primary/selected sport.'),
   detailedKabaddiSkills: z.record(z.string()).optional().describe('For Kabaddi, a list of all technical moves and their scores out of 10.'),
   detailedVolleyballSkills: z.record(z.string()).optional().describe('For Volleyball, a list of technical moves like Spiking, Serving, etc., and their scores out of 10.'),
+  detailedHandballSkills: z.record(z.string()).optional().describe('For Handball, a list of technical moves like Shooting, Dribbling, etc., and their scores out of 10.'),
   pastHealthIncidents: z.string().optional().describe('Summarized list of past health incidents for the player.'),
 });
 export type PlayerRecommendationInput = z.infer<typeof PlayerRecommendationInputSchema>;
@@ -95,10 +96,16 @@ Skills Context:
   * {{{@key}}}: {{{this}}}/10
 {{/each}}
 {{/if}}
+{{#if detailedHandballSkills}}
+- Detailed Handball Analysis:
+{{#each detailedHandballSkills}}
+  * {{{@key}}}: {{{this}}}/10
+{{/each}}
+{{/if}}
 
 Health Context: {{{pastHealthIncidents}}}
 
-Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) or technical moves (for Kabaddi/Volleyball) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
+Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) or technical moves (for Kabaddi/Volleyball/Handball) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
 `,
 });
 
