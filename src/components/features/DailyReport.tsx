@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -70,7 +71,7 @@ export function DailyReport({ store }: { store: any }) {
         </head>
         <body>
           <div class="header">
-            <h1 class="school-name">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
+            <h1 class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</h1>
             <div class="report-title">Daily Sport & Health Activity Report</div>
           </div>
 

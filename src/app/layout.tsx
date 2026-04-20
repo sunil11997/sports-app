@@ -6,7 +6,7 @@ import { PWAProvider } from '@/components/providers/pwa-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'शासकिय माध्यमिक आश्रम शाळा वाघांबा',
+  title: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा',
   description: 'Sports & Health Management System - Waghamba',
   manifest: '/manifest.json',
   appleWebApp: {

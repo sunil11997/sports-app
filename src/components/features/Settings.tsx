@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -104,7 +105,7 @@ export function Settings() {
               icon={School} 
               color="bg-green-600" 
               label="School Name" 
-              value="वाघांबा आश्रम शाळा"
+              value="शासकीय माध्यमिक आश्रम शाळा वाघंबा"
             />
             <SettingsItem 
               icon={Award} 

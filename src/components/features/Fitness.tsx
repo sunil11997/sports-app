@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -86,7 +87,7 @@ export function Fitness({ store }: { store: any }) {
           </style>
         </head>
         <body>
-          <h1>Complete Fitness Assessment Roster</h1>
+          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा - Fitness Assessment</h1>
           <p>Generated on: ${new Date().toLocaleDateString()}</p>
           <table>
             <thead>

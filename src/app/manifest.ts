@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'शासकिय माध्यमिक आश्रम शाळा वाघांबा - Sports Hub',
+    name: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub',
     short_name: 'Waghamba Sports',
     description: 'Sports & Health Management System for Waghamba School',
     start_url: '/',
