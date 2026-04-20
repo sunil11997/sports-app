@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, AppState } from '@/lib/types';
+import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function useSchoolData() {
@@ -42,7 +43,7 @@ export function useSchoolData() {
       });
       unsubscribers.push(unsubAtt);
 
-      // Sync Fitness (Full History)
+      // Sync Fitness
       const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
       const unsubFit = onSnapshot(fitRef, (snapshot) => {
         const history: FitnessAssessment[] = [];
@@ -57,7 +58,7 @@ export function useSchoolData() {
       });
       unsubscribers.push(unsubFit);
 
-      // Sync Sport Skills (Full History per player)
+      // Sync Sport Skills
       const skillRef = collection(db, 'players', player.id, 'sportSkills');
       const unsubSkill = onSnapshot(skillRef, (snapshot) => {
         const playerSkills: Record<string, SportSkill> = {};
@@ -116,12 +117,8 @@ export function useSchoolData() {
   const setFitness = (playerId: string, assessment: FitnessAssessment) => {
     const timestamp = new Date().toISOString();
     const dateId = timestamp.split('T')[0];
-    
-    // Save to historical record
     const historyRef = doc(db, 'players', playerId, 'fitnessAssessments', dateId);
     setDocumentNonBlocking(historyRef, { ...assessment, playerId, updatedAt: timestamp }, { merge: true });
-    
-    // Update latest pointer
     const latestRef = doc(db, 'players', playerId, 'fitnessAssessments', 'latest');
     setDocumentNonBlocking(latestRef, { ...assessment, playerId, updatedAt: timestamp }, { merge: true });
   };
@@ -134,9 +131,25 @@ export function useSchoolData() {
   const addHealthIncident = (incident: HealthIncident) => {
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
     setDocumentNonBlocking(globalIncRef, incident, { merge: true });
-    
     const playerIncRef = doc(db, 'players', incident.playerId, 'healthIncidents', incident.id);
     setDocumentNonBlocking(playerIncRef, incident, { merge: true });
+  };
+
+  const exportBackupData = () => {
+    const backup = {
+      timestamp: new Date().toISOString(),
+      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+      data: aggregatedData
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `waghamba_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return {
@@ -148,6 +161,7 @@ export function useSchoolData() {
     setAttendance,
     setFitness,
     setSportSkill,
-    addHealthIncident
+    addHealthIncident,
+    exportBackupData
   };
 }

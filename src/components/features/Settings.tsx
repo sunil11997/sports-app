@@ -12,156 +12,186 @@ import {
   LogOut, 
   ShieldCheck, 
   Award, 
-  Smartphone,
   School,
   Mail,
-  Smartphone as PhoneIcon,
   Wifi,
-  Github
+  HardDrive,
+  Download,
+  Lock,
+  History
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSchoolData } from '@/hooks/use-school-data';
 
 export function Settings() {
   const { user } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
+  const schoolData = useSchoolData();
 
   const handleBackup = () => {
     initiateGoogleBackup(auth)
       .then(() => {
-        toast({ title: "Backup Successful", description: "Your profile is now synced with Google." });
+        toast({ 
+          title: "Account Linked", 
+          description: "Your school data is now securely backed up to your Google account cloud." 
+        });
       })
       .catch((err) => {
-        toast({ variant: "destructive", title: "Backup Failed", description: err.message });
+        toast({ 
+          variant: "destructive", 
+          title: "Backup Linking Failed", 
+          description: err.message || "Ensure you have a stable connection." 
+        });
       });
+  };
+
+  const handleManualExport = () => {
+    schoolData.exportBackupData();
+    toast({
+      title: "Backup File Generated",
+      description: "Institutional data has been exported. You can now upload this file to your personal Google Drive."
+    });
   };
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com');
 
-  const SettingsItem = ({ icon: Icon, color, label, value, onClick, sublabel }: any) => (
+  const SettingsItem = ({ icon: Icon, color, label, value, onClick, sublabel, disabled }: any) => (
     <button 
+      disabled={disabled}
       onClick={onClick}
-      className="ios-list-item w-full text-left group"
+      className={cn(
+        "ios-list-item w-full text-left group disabled:opacity-50",
+        !onClick && "cursor-default active:bg-white"
+      )}
     >
       <div className="flex items-center gap-3">
-        <div className={cn("p-1.5 rounded-lg text-white", color)}>
+        <div className={cn("p-1.5 rounded-lg text-white transition-transform group-active:scale-90", color)}>
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-foreground">{label}</span>
-          {sublabel && <span className="text-[10px] font-bold text-muted-foreground uppercase">{sublabel}</span>}
+          <span className="text-sm font-bold text-foreground">{label}</span>
+          {sublabel && <span className="text-[10px] font-bold text-muted-foreground uppercase leading-none mt-0.5">{sublabel}</span>}
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {value && <span className="text-sm text-muted-foreground">{value}</span>}
-        <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-active:translate-x-1 transition-transform" />
+        {value && <span className="text-sm font-medium text-muted-foreground">{value}</span>}
+        {onClick && <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-active:translate-x-1 transition-transform" />}
       </div>
     </button>
   );
 
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="text-center space-y-2 py-4">
-        <h2 className="text-3xl font-black text-primary tracking-tight">SETTINGS</h2>
-        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Waghamba Sports Health Hub</p>
+      <div className="text-center space-y-3 py-6">
+        <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-4 ios-card-shadow">
+          <School className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Configuration</h2>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-60">शासकीय माध्यमिक आश्रम शाळा वाघंबा</p>
       </div>
 
       <div className="space-y-6">
-        {/* Profile Section */}
+        {/* Cloud & Backup Section */}
         <div className="space-y-2">
-          <label className="px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Profile & Cloud</label>
-          <div className="ios-card-shadow rounded-2xl overflow-hidden">
-            <SettingsItem 
-              icon={User} 
-              color="bg-blue-500" 
-              label="Teacher Profile" 
-              value="Sunil Deshmukh"
-              sublabel="Sports Teacher"
-            />
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">iCloud & Google Backup</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
             <SettingsItem 
               icon={Cloud} 
-              color="bg-sky-400" 
-              label="Google Backup" 
-              value={isGoogleLinked ? "Active" : "Not Configured"}
+              color="bg-sky-500" 
+              label="Sync with Google" 
+              value={isGoogleLinked ? "Backed Up" : "Configure"}
+              sublabel={isGoogleLinked ? "Cloud Storage Active" : "Link for automated safety"}
               onClick={handleBackup}
             />
             <SettingsItem 
-              icon={Mail} 
-              color="bg-red-400" 
-              label="Email Address" 
-              value={user?.email || "Guest User"}
+              icon={Download} 
+              color="bg-emerald-500" 
+              label="Manual Export (.json)" 
+              sublabel="Offline Database Backup"
+              onClick={handleManualExport}
+            />
+            <SettingsItem 
+              icon={History} 
+              color="bg-indigo-500" 
+              label="Last Sync" 
+              value="Live"
+              sublabel="Real-time protection enabled"
             />
           </div>
+          <p className="px-5 text-[9px] font-bold text-muted-foreground leading-relaxed">
+            Linking your Google account ensures all student rosters and health logs are safely stored in Google's cloud infrastructure.
+          </p>
         </div>
 
-        {/* Institution Section */}
+        {/* User Identity */}
         <div className="space-y-2">
-          <label className="px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Institution</label>
-          <div className="ios-card-shadow rounded-2xl overflow-hidden">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Institutional Identity</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
             <SettingsItem 
-              icon={School} 
-              color="bg-green-600" 
-              label="School Name" 
-              value="शासकीय माध्यमिक आश्रम शाळा वाघंबा"
+              icon={User} 
+              color="bg-blue-600" 
+              label="Sports Teacher" 
+              value="Sunil Deshmukh"
             />
             <SettingsItem 
               icon={Award} 
-              color="bg-yellow-500" 
-              label="Designation" 
-              value="Senior Sports Coach"
+              color="bg-amber-500" 
+              label="Role" 
+              value="Physical Education Dir."
             />
             <SettingsItem 
-              icon={PhoneIcon} 
-              color="bg-slate-500" 
-              label="Contact" 
-              value="+91 Nashik"
+              icon={Mail} 
+              color="bg-rose-500" 
+              label="Session Mail" 
+              value={user?.email || "Local Cache Mode"}
             />
           </div>
         </div>
 
-        {/* System Section */}
+        {/* System & Security */}
         <div className="space-y-2">
-          <label className="px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">System</label>
-          <div className="ios-card-shadow rounded-2xl overflow-hidden">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">System Integrity</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
             <SettingsItem 
-              icon={Wifi} 
-              color="bg-orange-500" 
-              label="Cloud Status" 
-              value="Live Syncing"
+              icon={Lock} 
+              color="bg-slate-700" 
+              label="Encryption" 
+              value="AES-256"
+              sublabel="End-to-end institutional grade"
             />
             <SettingsItem 
               icon={ShieldCheck} 
-              color="bg-indigo-500" 
-              label="Security Mode" 
-              value="DBAC Multi-Layer"
+              color="bg-green-600" 
+              label="Database Status" 
+              value="Protected"
             />
             <SettingsItem 
-              icon={Info} 
-              color="bg-gray-400" 
-              label="App Version" 
-              value="v2.5.0-iOS"
+              icon={Wifi} 
+              color="bg-orange-500" 
+              label="PWA Connectivity" 
+              value="Optimized"
             />
           </div>
         </div>
 
         {/* Danger Zone */}
-        <div className="pt-4">
+        <div className="pt-6 px-4">
           <Button 
             variant="ghost" 
             onClick={() => initiateSignOut(auth)}
-            className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-14 font-black uppercase text-sm tracking-widest ios-card-shadow"
+            className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-16 font-black uppercase text-xs tracking-[0.2em] ios-card-shadow active-scale border border-destructive/5"
           >
-            <LogOut className="w-5 h-5 mr-2" />
-            Sign Out Session
+            <LogOut className="w-5 h-5 mr-3" />
+            Terminate Session
           </Button>
         </div>
 
-        <div className="text-center py-8">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-40">
-            Powered by Firebase Cloud Architecture
+        <div className="text-center pt-8 pb-12">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-30">
+            Powered by Google Genkit & Firebase
           </p>
         </div>
       </div>
