@@ -59,7 +59,7 @@ export default function WaghambaApp() {
         <div className="max-w-3xl w-full text-center space-y-12 animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight leading-tight">
-              शासकिय माध्यमिक आश्रम शाळा वाघांबा<br />
+              शासकीय माध्यमिक आश्रम शाळा वाघांबा<br />
               <span className="text-2xl md:text-3xl opacity-90 block mt-2">ता. सटाणा जि. नाशिक</span>
             </h1>
             <div className="bg-accent/20 py-3 px-6 rounded-full inline-block border border-primary-foreground/20">
@@ -169,7 +169,7 @@ export default function WaghambaApp() {
                       <School className="w-12 h-12 text-primary" />
                     </div>
                     <div className="space-y-4">
-                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">शासकीयम माध्यमिकआश्रम शाळा वाघंबा</h2>
+                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">शासकीय माध्यमिक आश्रम शाळा वाघांबा</h2>
                       <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">High Performance Institutional Portal</p>
                       <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-3xl border border-muted ios-card-shadow w-fit mx-auto active-scale">
                         <User className="w-6 h-6 text-primary" />
