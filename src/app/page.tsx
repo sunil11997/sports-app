@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -31,7 +30,7 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 
-// Dynamic imports for feature components to speed up initial server startup and page load
+// Dynamic imports for feature components
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
   loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
 });
@@ -71,6 +70,8 @@ export default function WaghambaApp() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
+  const SCHOOL_NAME = "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
+
   useEffect(() => {
     if (isEntered && !user && !isUserLoading) {
       initiateAnonymousSignIn(auth);
@@ -83,7 +84,7 @@ export default function WaghambaApp() {
         <div className="max-w-3xl w-full text-center space-y-12 animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight leading-tight">
-              शासकीय माध्यमिक आश्रम शाळा वाघंबा<br />
+              {SCHOOL_NAME}<br />
               <span className="text-2xl md:text-3xl opacity-90 block mt-2">ता. सटाणा जि. नाशिक</span>
             </h1>
             <div className="bg-accent/20 py-3 px-6 rounded-full inline-block border border-primary-foreground/20">
@@ -144,11 +145,6 @@ export default function WaghambaApp() {
                 <WifiOff className="w-3 h-3" /> OFFLINE
               </Badge>
             )}
-            {user?.isAnonymous && (
-              <Badge variant="outline" className="border-primary/20 text-primary font-black px-3 py-1 rounded-full text-[10px]">
-                GUEST
-              </Badge>
-            )}
           </div>
         </div>
       </header>
@@ -193,7 +189,7 @@ export default function WaghambaApp() {
                       <School className="w-12 h-12 text-primary" />
                     </div>
                     <div className="space-y-4">
-                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">शासकीय माध्यमिक आश्रम शाळा वाघंबा</h2>
+                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">{SCHOOL_NAME}</h2>
                       <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">High Performance Institutional Portal</p>
                       <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-3xl border border-muted ios-card-shadow w-fit mx-auto active-scale">
                         <User className="w-6 h-6 text-primary" />

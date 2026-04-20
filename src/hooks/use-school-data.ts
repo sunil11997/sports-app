@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { collection, doc, onSnapshot, query, limit } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, AppState } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -18,7 +17,7 @@ export function useSchoolData() {
   const allIncidentsRef = useMemoFirebase(() => user ? collection(db, 'all_health_incidents') : null, [db, user]);
   const { data: healthIncidents } = useCollection<HealthIncident>(allIncidentsRef);
 
-  // 2. Reactive State for Sub-collections (Attendance, Fitness, Skills)
+  // 2. Reactive State for Sub-collections
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
@@ -29,7 +28,6 @@ export function useSchoolData() {
 
     const unsubscribers: (() => void)[] = [];
 
-    // Sync sub-data for each player in the roster
     players.forEach(player => {
       // Sync Attendance
       const attRef = collection(db, 'players', player.id, 'attendance');
@@ -74,8 +72,6 @@ export function useSchoolData() {
       fitness,
       sportSkills,
       healthIncidents: healthIncidents || [],
-      biometricHistory: [], 
-      fitnessHistory: [],
     };
   }, [players, healthIncidents, attendance, fitness, sportSkills]);
 
