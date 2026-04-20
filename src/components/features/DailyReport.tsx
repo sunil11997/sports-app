@@ -6,12 +6,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Calendar, FileText, Activity, Users, Stethoscope } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Printer, 
+  Calendar, 
+  FileText, 
+  Activity, 
+  Users, 
+  Stethoscope, 
+  Cloud, 
+  Clock, 
+  Target,
+  Sun,
+  Umbrella,
+  CloudMoon
+} from 'lucide-react';
 import { format } from 'date-fns';
 
 export function DailyReport({ store }: { store: any }) {
   const [reportDate, setReportDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [activitySummary, setActivitySummary] = useState("");
+  const [weather, setWeather] = useState("Sunny");
+  const [sessionTime, setSessionTime] = useState("Morning");
+  const [duration, setDuration] = useState("90 Mins");
+  const [focusArea, setFocusArea] = useState("Skill Practice");
 
   const attendanceOnDate = store.data.players.map((p: any) => {
     const status = store.data.attendance[`${p.id}_${reportDate}`];
@@ -33,7 +51,7 @@ export function DailyReport({ store }: { store: any }) {
             .header { text-align: center; border-bottom: 4px solid #235C36; padding-bottom: 20px; margin-bottom: 30px; }
             .school-name { font-size: 24px; font-weight: 900; color: #235C36; margin: 0; }
             .report-title { font-size: 18px; font-weight: 700; text-transform: uppercase; margin-top: 5px; }
-            .meta { display: flex; justify-content: space-between; margin-bottom: 30px; font-weight: bold; }
+            .meta { display: flex; justify-content: space-between; margin-bottom: 30px; font-weight: bold; font-size: 14px; }
             h2 { color: #1b4b3a; border-left: 4px solid #8AF075; padding-left: 10px; margin-top: 30px; text-transform: uppercase; font-size: 16px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
@@ -43,6 +61,9 @@ export function DailyReport({ store }: { store: any }) {
             .stat-item { flex: 1; padding: 15px; background: #f4fcf6; border-radius: 8px; text-align: center; border: 1px solid #e0e0e0; }
             .stat-value { font-size: 20px; font-weight: 900; color: #235C36; }
             .stat-label { font-size: 10px; text-transform: uppercase; color: #666; }
+            .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 8px; }
+            .detail-row { font-size: 13px; }
+            .detail-label { font-weight: bold; color: #235C36; }
             .footer { margin-top: 50px; display: flex; justify-content: space-between; }
             .sign-box { border-top: 1px solid #333; width: 200px; text-align: center; padding-top: 5px; font-size: 12px; font-weight: bold; }
           </style>
@@ -56,6 +77,13 @@ export function DailyReport({ store }: { store: any }) {
           <div class="meta">
             <span>Date: ${format(new Date(reportDate), 'PPPP')}</span>
             <span>Teacher: सुनिल देशमुख</span>
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-row"><span class="detail-label">Weather:</span> ${weather}</div>
+            <div class="detail-row"><span class="detail-label">Session:</span> ${sessionTime}</div>
+            <div class="detail-row"><span class="detail-label">Duration:</span> ${duration}</div>
+            <div class="detail-row"><span class="detail-label">Primary Focus:</span> ${focusArea}</div>
           </div>
 
           <div class="stats">
@@ -84,9 +112,9 @@ export function DailyReport({ store }: { store: any }) {
           <table>
             <thead>
               <tr>
-                <th>Sr.</th>
+                <th style="width: 50px;">Sr.</th>
                 <th>Player Name</th>
-                <th>Status</th>
+                <th style="width: 100px; text-align: center;">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -94,7 +122,7 @@ export function DailyReport({ store }: { store: any }) {
                 <tr>
                   <td>${i + 1}</td>
                   <td>${a.name}</td>
-                  <td style="color: ${a.status === 'P' ? 'green' : 'red'}; font-weight: bold;">${a.status}</td>
+                  <td style="color: ${a.status === 'P' ? 'green' : 'red'}; font-weight: bold; text-align: center;">${a.status === 'P' ? 'PRESENT' : a.status === 'A' ? 'ABSENT' : '-'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -142,12 +170,12 @@ export function DailyReport({ store }: { store: any }) {
               <FileText className="w-10 h-10 text-accent" /> Daily Report Hub
             </h2>
             <p className="text-lg font-medium text-foreground/70">
-              Generate and print official daily summaries of attendance, training activities, and health logs.
+              Capture structured session details and print official daily summaries.
             </p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-primary uppercase">Select Report Date</label>
+              <label className="text-sm font-bold text-primary uppercase">Report Date</label>
               <Input 
                 type="date" 
                 value={reportDate} 
@@ -160,7 +188,7 @@ export function DailyReport({ store }: { store: any }) {
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl h-14 font-black text-lg shadow-lg uppercase tracking-wider"
             >
               <Printer className="w-6 h-6 mr-2" />
-              Print Report
+              Print Official Report
             </Button>
           </div>
         </div>
@@ -168,22 +196,89 @@ export function DailyReport({ store }: { store: any }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2.5rem] bg-white">
+          <Card className="border-2 border-primary/10 shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="bg-primary/5 border-b border-primary/10">
               <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
-                <Activity className="w-5 h-5" /> Today's Activity Summary
+                <Target className="w-5 h-5" /> Structured Session Details
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <Textarea 
-                placeholder="Write a brief summary of the sports activities conducted today, training modules covered, and any special observations..."
-                className="min-h-[200px] rounded-2xl border-2 p-4 text-lg"
-                value={activitySummary}
-                onChange={(e) => setActivitySummary(e.target.value)}
-              />
-              <p className="mt-4 text-sm text-muted-foreground italic">
-                * This summary will be included in the official printed daily report.
-              </p>
+            <CardContent className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+                    <Cloud className="w-3 h-3" /> Weather Condition
+                  </label>
+                  <Select value={weather} onValueChange={setWeather}>
+                    <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sunny">Sunny ☀️</SelectItem>
+                      <SelectItem value="Cloudy">Cloudy ☁️</SelectItem>
+                      <SelectItem value="Rainy">Rainy 🌧️</SelectItem>
+                      <SelectItem value="Windy">Windy 💨</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+                    <Clock className="w-3 h-3" /> Session Timing
+                  </label>
+                  <Select value={sessionTime} onValueChange={setSessionTime}>
+                    <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Morning">Morning Session</SelectItem>
+                      <SelectItem value="Evening">Evening Session</SelectItem>
+                      <SelectItem value="Special">Special Camp</SelectItem>
+                      <SelectItem value="Theory">Theory Session</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+                    <Activity className="w-3 h-3" /> Session Duration
+                  </label>
+                  <Input 
+                    value={duration} 
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g. 90 Mins"
+                    className="rounded-xl border-2 h-12 font-bold"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+                    <Target className="w-3 h-3" /> Primary Focus Area
+                  </label>
+                  <Select value={focusArea} onValueChange={setFocusArea}>
+                    <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Skill Practice">Skill Practice</SelectItem>
+                      <SelectItem value="Fitness Training">Fitness Training</SelectItem>
+                      <SelectItem value="Match Play">Match Play</SelectItem>
+                      <SelectItem value="Tactics & Strategy">Tactics & Strategy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-primary uppercase flex items-center gap-2">
+                  <FileText className="w-3 h-3" /> Detailed Activity Summary
+                </label>
+                <Textarea 
+                  placeholder="Describe drills, match scores, or specific player observations..."
+                  className="min-h-[180px] rounded-2xl border-2 p-4 text-lg"
+                  value={activitySummary}
+                  onChange={(e) => setActivitySummary(e.target.value)}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -206,7 +301,7 @@ export function DailyReport({ store }: { store: any }) {
                     <TableRow key={a.name}>
                       <TableCell className="font-medium">{a.name}</TableCell>
                       <TableCell className="text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
                           a.status === 'P' ? 'bg-green-100 text-green-700' : 
                           a.status === 'A' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-400'
                         }`}>
@@ -222,51 +317,74 @@ export function DailyReport({ store }: { store: any }) {
         </div>
 
         <div className="space-y-6">
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
+          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white overflow-hidden">
             <CardHeader className="bg-accent/10 border-b border-accent/20">
-              <CardTitle className="text-lg font-black text-primary uppercase">Daily Stats</CardTitle>
+              <CardTitle className="text-lg font-black text-primary uppercase">Consolidated Stats</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div className="flex justify-between items-center border-b pb-4">
-                <span className="text-muted-foreground font-bold">Total Players</span>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground font-bold text-sm">Roster Size</span>
+                </div>
                 <span className="text-2xl font-black text-primary">{store.data.players.length}</span>
               </div>
               <div className="flex justify-between items-center border-b pb-4">
-                <span className="text-muted-foreground font-bold">Present Today</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="text-muted-foreground font-bold text-sm">Present Today</span>
+                </div>
                 <span className="text-2xl font-black text-green-600">{presentCount}</span>
               </div>
               <div className="flex justify-between items-center border-b pb-4">
-                <span className="text-muted-foreground font-bold">Absent Today</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-destructive rounded-full" />
+                  <span className="text-muted-foreground font-bold text-sm">Absent Today</span>
+                </div>
                 <span className="text-2xl font-black text-destructive">{absentCount}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground font-bold">Health Incidents</span>
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-orange-600" />
+                  <span className="text-muted-foreground font-bold text-sm">Health Alerts</span>
+                </div>
                 <span className="text-2xl font-black text-orange-600">{incidentsOnDate.length}</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
+          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white overflow-hidden">
             <CardHeader className="bg-destructive/5 border-b border-destructive/10">
               <CardTitle className="text-lg font-black text-destructive uppercase flex items-center gap-2">
-                <Stethoscope className="w-5 h-5" /> Health Alerts
+                <Stethoscope className="w-5 h-5" /> Critical Health Logs
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               {incidentsOnDate.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic text-center py-8">No health incidents reported today.</p>
+                <div className="text-center py-8 space-y-2">
+                  <Target className="w-8 h-8 text-muted-foreground/20 mx-auto" />
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">No health alerts today</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {incidentsOnDate.map((inc: any) => (
                     <div key={inc.id} className="p-3 bg-destructive/5 rounded-xl border border-destructive/10">
-                      <p className="font-bold text-destructive text-sm uppercase">{inc.playerName}</p>
-                      <p className="text-xs text-foreground/70 mt-1">{inc.description}</p>
+                      <p className="font-black text-destructive text-[10px] uppercase">{inc.playerName}</p>
+                      <p className="text-xs text-foreground/70 mt-1 font-medium">{inc.description}</p>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
+
+          <div className="p-8 bg-primary rounded-[2rem] text-primary-foreground space-y-4 shadow-xl">
+            <Target className="w-10 h-10 text-accent" />
+            <h3 className="font-black text-xl uppercase tracking-tight">Institutional Standard</h3>
+            <p className="text-sm font-medium opacity-80 leading-relaxed">
+              This report adheres to the official Waghamba Sports Hub documentation guidelines for daily school sports management.
+            </p>
+          </div>
         </div>
       </div>
     </div>
