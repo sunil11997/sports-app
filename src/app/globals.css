@@ -23,7 +23,7 @@
     --border: 140 20% 85%;
     --input: 140 20% 85%;
     --ring: 140 45% 25%;
-    --radius: 1rem;
+    --radius: 1.25rem;
     --chart-1: 140 45% 25%;
     --chart-2: 110 80% 70%;
     --chart-3: 160 45% 35%;
@@ -60,5 +60,36 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .ios-spring {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .ios-blur {
+    @apply backdrop-blur-md bg-white/70;
+  }
+
+  .active-scale {
+    @apply active:scale-[0.97] transition-transform duration-200;
+  }
+}
+
+/* Custom animations for tab transitions */
+.tab-content-enter {
+  animation: tab-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
