@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 132 18% 95%;
+    --background: 210 20% 98%;
     --foreground: 140 45% 10%;
     --card: 0 0% 100%;
     --card-foreground: 140 45% 10%;
@@ -14,16 +14,16 @@
     --primary-foreground: 132 18% 98%;
     --secondary: 132 20% 90%;
     --secondary-foreground: 140 45% 20%;
-    --muted: 132 10% 90%;
-    --muted-foreground: 140 20% 40%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 210 10% 40%;
     --accent: 110 80% 70%;
     --accent-foreground: 140 45% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 140 20% 85%;
-    --input: 140 20% 85%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
     --ring: 140 45% 25%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
     --chart-1: 140 45% 25%;
     --chart-2: 110 80% 70%;
     --chart-3: 160 45% 35%;
@@ -66,27 +66,34 @@
 
 @layer utilities {
   .ios-spring {
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
   }
   
   .ios-blur {
-    @apply backdrop-blur-md bg-white/70;
+    @apply backdrop-blur-2xl bg-white/80;
+  }
+
+  .ios-card-shadow {
+    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
   }
 
   .active-scale {
-    @apply active:scale-[0.97] transition-transform duration-200;
+    @apply active:scale-[0.96] transition-transform duration-200;
+  }
+
+  .ios-list-item {
+    @apply flex items-center justify-between py-3 px-4 bg-white active:bg-muted/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl border-b last:border-b-0 border-muted;
   }
 }
 
-/* Custom animations for tab transitions */
 .tab-content-enter {
-  animation: tab-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ios-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes tab-enter {
+@keyframes ios-slide-up {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.99);
+    transform: translateY(20px) scale(0.98);
   }
   to {
     opacity: 1;

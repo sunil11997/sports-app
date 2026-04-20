@@ -11,6 +11,7 @@ import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { AIAdvice } from '@/components/features/AIAdvice';
 import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
+import { Settings } from '@/components/features/Settings';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -23,12 +24,12 @@ import {
   Sparkles,
   School,
   Home,
-  History as HistoryIcon,
-  User,
+  Settings as SettingsIcon,
   FileText,
   ClipboardList,
   Wifi,
-  WifiOff
+  WifiOff,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -84,7 +85,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <School className="w-16 h-16 text-primary animate-pulse mx-auto" />
-          <p className="font-bold text-primary animate-bounce">Securely Syncing Data...</p>
+          <p className="font-bold text-primary animate-bounce">Establishing Secure Link...</p>
         </div>
       </div>
     );
@@ -96,10 +97,10 @@ export default function WaghambaApp() {
   };
 
   return (
-    <div className="min-h-screen bg-background animate-in fade-in slide-in-from-right-20 duration-500">
-      <header className="ios-blur sticky top-0 z-50 border-b border-primary/10 py-4 px-6 md:px-8 shadow-sm">
+    <div className="min-h-screen bg-background ios-spring animate-in fade-in duration-500 pb-20 md:pb-8">
+      <header className="ios-blur sticky top-0 z-50 border-b border-muted py-3 px-6 md:px-8 ios-card-shadow">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 cursor-pointer active:scale-95 transition-transform" onClick={() => navigateTo('home')}>
+          <div className="flex items-center gap-4 cursor-pointer active-scale" onClick={() => navigateTo('home')}>
             <div className="bg-primary p-2 rounded-xl">
               <School className="w-6 h-6 text-primary-foreground" />
             </div>
@@ -110,12 +111,17 @@ export default function WaghambaApp() {
           </div>
           <div className="flex items-center gap-4">
             {isOnline ? (
-              <Badge className="bg-accent/20 text-accent-foreground border-accent/30 font-bold flex items-center gap-1 px-3 py-1 rounded-full">
+              <Badge className="bg-accent/20 text-accent-foreground border-accent/30 font-bold flex items-center gap-1 px-3 py-1 rounded-full text-[10px]">
                 <Wifi className="w-3 h-3" /> ONLINE
               </Badge>
             ) : (
-              <Badge variant="destructive" className="font-bold flex items-center gap-1 px-3 py-1 rounded-full">
+              <Badge variant="destructive" className="font-bold flex items-center gap-1 px-3 py-1 rounded-full text-[10px]">
                 <WifiOff className="w-3 h-3" /> OFFLINE
+              </Badge>
+            )}
+            {user?.isAnonymous && (
+              <Badge variant="outline" className="border-primary/20 text-primary font-black px-3 py-1 rounded-full text-[10px]">
+                GUEST
               </Badge>
             )}
           </div>
@@ -123,80 +129,68 @@ export default function WaghambaApp() {
       </header>
 
       <main className="max-w-7xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="overflow-x-auto pb-2 scrollbar-hide">
-            <TabsList className="bg-muted/50 p-1 h-auto flex gap-1 border border-primary/5 rounded-2xl min-w-max">
-              <TabsTrigger value="home" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <Home className="w-4 h-4 mr-2" /> Home
-              </TabsTrigger>
-              <TabsTrigger value="dashboard" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="daily-report" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <FileText className="w-4 h-4 mr-2" /> Report
-              </TabsTrigger>
-              <TabsTrigger value="tournament" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <ClipboardList className="w-4 h-4 mr-2" /> Tournament
-              </TabsTrigger>
-              <TabsTrigger value="registration" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <Users className="w-4 h-4 mr-2" /> Register
-              </TabsTrigger>
-              <TabsTrigger value="attendance" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <CalendarCheck className="w-4 h-4 mr-2" /> Presence
-              </TabsTrigger>
-              <TabsTrigger value="fitness" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <Activity className="w-4 h-4 mr-2" /> Fitness
-              </TabsTrigger>
-              <TabsTrigger value="sports" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <Trophy className="w-4 h-4 mr-2" /> Skills
-              </TabsTrigger>
-              <TabsTrigger value="health" className="rounded-xl py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all active:scale-95">
-                <Stethoscope className="w-4 h-4 mr-2" /> Health
-              </TabsTrigger>
-              <TabsTrigger value="ai" className="rounded-xl py-3 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-bold transition-all active:scale-95">
-                <Sparkles className="w-4 h-4 mr-2" /> AI
-              </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="overflow-x-auto pb-4 scrollbar-hide">
+            <TabsList className="bg-muted/80 backdrop-blur-md p-1.5 h-auto flex gap-1 rounded-2xl min-w-max border border-white/50 ios-card-shadow">
+              {[
+                { id: "home", label: "Home", icon: Home },
+                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+                { id: "daily-report", label: "Report", icon: FileText },
+                { id: "tournament", label: "Tournament", icon: ClipboardList },
+                { id: "registration", label: "Register", icon: User },
+                { id: "attendance", label: "Presence", icon: CalendarCheck },
+                { id: "fitness", label: "Fitness", icon: Activity },
+                { id: "sports", label: "Skills", icon: Trophy },
+                { id: "health", label: "Health", icon: Stethoscope },
+                { id: "ai", label: "AI Hub", icon: Sparkles, color: "active:bg-accent active:text-accent-foreground" },
+                { id: "settings", label: "Settings", icon: SettingsIcon },
+              ].map((tab) => (
+                <TabsTrigger 
+                  key={tab.id}
+                  value={tab.id} 
+                  className={cn(
+                    "rounded-xl px-5 py-2.5 font-bold text-sm transition-all active-scale data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-primary",
+                    tab.id === "ai" && "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
+                  )}
+                >
+                  <tab.icon className="w-4 h-4 mr-2" /> {tab.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-4">
             <TabsContent value="home" className="tab-content-enter">
               <div className="space-y-8">
-                <Card className="border-0 rounded-[3rem] shadow-2xl overflow-hidden bg-white/80 backdrop-blur-xl">
+                <Card className="border-0 rounded-[2.5rem] ios-card-shadow overflow-hidden bg-white/60 backdrop-blur-xl">
                   <CardContent className="p-12 text-center space-y-8">
-                    <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                    <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto animate-pulse">
                       <School className="w-12 h-12 text-primary" />
                     </div>
                     <div className="space-y-4">
-                      <h2 className="text-4xl font-black text-primary uppercase tracking-tight">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h2>
-                      <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest">Institutional Sports Hub</p>
-                      <div className="flex items-center justify-center gap-2 bg-primary/5 py-4 px-8 rounded-2xl border border-primary/10 w-fit mx-auto active:scale-95 transition-transform">
+                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">वाघांबा स्पोर्ट्स हेल्थ हब</h2>
+                      <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">High Performance Institutional Portal</p>
+                      <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-3xl border border-muted ios-card-shadow w-fit mx-auto active-scale">
                         <User className="w-6 h-6 text-primary" />
-                        <p className="text-2xl font-black text-primary">सुनिल देशमुख - क्रिडा शिक्षक</p>
+                        <p className="text-2xl font-black text-primary">सुनिल देशमुख</p>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-8">
-                      <div className="p-6 bg-white rounded-3xl border border-primary/5 shadow-sm active:scale-95 transition-transform">
-                        <Users className="w-8 h-8 text-primary mx-auto mb-3" />
-                        <h3 className="font-black text-primary uppercase text-sm">Roster</h3>
-                        <p className="text-xs font-bold text-muted-foreground">{schoolData.data.players.length} Players</p>
-                      </div>
-                      <div className="p-6 bg-white rounded-3xl border border-primary/5 shadow-sm active:scale-95 transition-transform">
-                        <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
-                        <h3 className="font-black text-primary uppercase text-sm">Sync</h3>
-                        <p className="text-xs font-bold text-muted-foreground">Auto-Cloud</p>
-                      </div>
-                      <div className="p-6 bg-white rounded-3xl border border-primary/5 shadow-sm active:scale-95 transition-transform">
-                        <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />
-                        <h3 className="font-black text-primary uppercase text-sm">Health</h3>
-                        <p className="text-xs font-bold text-muted-foreground">Active Logs</p>
-                      </div>
-                      <div className="p-6 bg-white rounded-3xl border border-primary/5 shadow-sm active:scale-95 transition-transform">
-                        <Trophy className="w-8 h-8 text-primary mx-auto mb-3" />
-                        <h3 className="font-black text-primary uppercase text-sm">Skills</h3>
-                        <p className="text-xs font-bold text-muted-foreground">Eval Ready</p>
-                      </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
+                      {[
+                        { icon: Users, label: "Roster", value: `${schoolData.data.players.length} Active`, color: "bg-blue-500" },
+                        { icon: Wifi, label: "Sync", value: "Cloud Live", color: "bg-green-500" },
+                        { icon: Stethoscope, label: "Health", value: "Active Logs", color: "bg-red-500" },
+                        { icon: Trophy, label: "Status", value: "Eval Ready", color: "bg-yellow-500" }
+                      ].map((stat, i) => (
+                        <div key={i} className="p-6 bg-white rounded-3xl border border-muted ios-card-shadow active-scale transition-all">
+                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3", stat.color + "/10")}>
+                            <stat.icon className={cn("w-6 h-6", stat.color.replace("bg-", "text-"))} />
+                          </div>
+                          <h3 className="font-bold text-foreground text-xs uppercase tracking-wider">{stat.label}</h3>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase mt-1">{stat.value}</p>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -238,10 +232,13 @@ export default function WaghambaApp() {
             <TabsContent value="ai" className="tab-content-enter">
               <AIAdvice store={schoolData} />
             </TabsContent>
+
+            <TabsContent value="settings" className="tab-content-enter">
+              <Settings />
+            </TabsContent>
           </div>
         </Tabs>
       </main>
     </div>
   );
 }
-
