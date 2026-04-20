@@ -22,7 +22,12 @@ import {
   WifiOff,
   User,
   Loader2,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Camera,
+  Contact,
+  HardDrive,
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -30,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 // Dynamic imports for feature components
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
@@ -68,11 +74,18 @@ const History = dynamic(() => import('@/components/features/History').then(mod =
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
+  const [permissionsGranted, setPermissionsGranted] = useState({
+    camera: false,
+    contacts: false,
+    storage: false
+  });
   const [activeTab, setActiveTab] = useState("home");
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const { toast } = useToast();
 
   const SCHOOL_NAME = "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
 
@@ -82,29 +95,126 @@ export default function WaghambaApp() {
     }
   }, [isEntered, user, isUserLoading, auth]);
 
+  const requestAllPermissions = async () => {
+    setShowPermissions(true);
+    
+    // Attempt Camera Access
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(track => track.stop());
+      setPermissionsGranted(prev => ({ ...prev, camera: true }));
+    } catch (e) {
+      console.warn("Camera permission rejected");
+    }
+
+    // Simulate/Request Contacts (Limited Web Support)
+    if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
+      setPermissionsGranted(prev => ({ ...prev, contacts: true }));
+    } else {
+      // Simulate for UI satisfaction as requested
+      setTimeout(() => setPermissionsGranted(prev => ({ ...prev, contacts: true })), 800);
+    }
+
+    // Simulate Storage Permission
+    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, storage: true })), 1500);
+  };
+
+  const handleFinalEnter = () => {
+    setIsEntered(true);
+    toast({
+      title: "Portal Authorized",
+      description: "Institutional features are now active.",
+    });
+  };
+
   if (!isEntered) {
     return (
       <div className="min-h-screen bg-primary flex items-center justify-center p-4 animate-in fade-in duration-1000">
-        <div className="max-w-3xl w-full text-center space-y-12 animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight leading-tight">
-              {SCHOOL_NAME}<br />
-              <span className="text-2xl md:text-3xl opacity-90 block mt-2">ता. सटाणा जि. नाशिक</span>
-            </h1>
-            <div className="bg-accent/20 py-3 px-6 rounded-full inline-block border border-primary-foreground/20">
-              <p className="text-primary-foreground text-xl font-bold">क्रिडा शिक्षक - सुनिल देशमुख</p>
+        <div className="max-w-2xl w-full text-center space-y-12 animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
+          {!showPermissions ? (
+            <div className="space-y-8">
+              <div className="space-y-6">
+                <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight leading-tight">
+                  {SCHOOL_NAME}<br />
+                  <span className="text-2xl md:text-3xl opacity-90 block mt-2">ता. सटाणा जि. नाशिक</span>
+                </h1>
+                <div className="bg-accent/20 py-3 px-6 rounded-full inline-block border border-primary-foreground/20">
+                  <p className="text-primary-foreground text-xl font-bold">क्रिडा शिक्षक - सुनिल देशमुख</p>
+                </div>
+                <p className="text-primary-foreground/80 text-lg md:text-xl font-medium tracking-wide uppercase">
+                  SPORTS & HEALTH MANAGEMENT SYSTEM
+                </p>
+              </div>
+              <Button 
+                onClick={requestAllPermissions}
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl px-16 py-8 rounded-full shadow-[0_12px_0_hsl(140,45%,15%)] active:translate-y-2 active:shadow-[0_4px_0_hsl(140,45%,15%)] transition-all border-2 border-primary-foreground/20 active:scale-95"
+              >
+                START PORTAL
+              </Button>
             </div>
-            <p className="text-primary-foreground/80 text-lg md:text-xl font-medium tracking-wide uppercase">
-              SPORTS & HEALTH MANAGEMENT SYSTEM
-            </p>
-          </div>
-          <Button 
-            onClick={() => setIsEntered(true)}
-            size="lg"
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl px-16 py-8 rounded-full shadow-[0_12px_0_hsl(140,45%,15%)] active:translate-y-2 active:shadow-[0_4px_0_hsl(140,45%,15%)] transition-all border-2 border-primary-foreground/20 active:scale-95"
-          >
-            ENTER PORTAL
-          </Button>
+          ) : (
+            <Card className="rounded-[3rem] border-0 ios-card-shadow bg-white/95 backdrop-blur-xl animate-in zoom-in-95 duration-500 overflow-hidden">
+              <CardContent className="p-10 space-y-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-4 bg-primary/10 rounded-3xl mb-2">
+                    <ShieldCheck className="w-12 h-12 text-primary" />
+                  </div>
+                  <h2 className="text-3xl font-black text-primary uppercase">Authorization Required</h2>
+                  <p className="text-muted-foreground font-medium">Please grant necessary phone permissions to proceed.</p>
+                </div>
+
+                <div className="space-y-4 max-w-sm mx-auto">
+                  <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-muted">
+                    <div className="flex items-center gap-4">
+                      <div className={cn("p-2 rounded-xl text-white", permissionsGranted.camera ? "bg-green-500" : "bg-primary")}>
+                        <Camera className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-sm">Camera Access</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Required for Player Photos</p>
+                      </div>
+                    </div>
+                    {permissionsGranted.camera ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
+                  </div>
+
+                  <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-muted">
+                    <div className="flex items-center gap-4">
+                      <div className={cn("p-2 rounded-xl text-white", permissionsGranted.contacts ? "bg-green-500" : "bg-primary")}>
+                        <Contact className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-sm">Contacts Access</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">For Emergency Alerts</p>
+                      </div>
+                    </div>
+                    {permissionsGranted.contacts ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
+                  </div>
+
+                  <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-muted">
+                    <div className="flex items-center gap-4">
+                      <div className={cn("p-2 rounded-xl text-white", permissionsGranted.storage ? "bg-green-500" : "bg-primary")}>
+                        <HardDrive className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-sm">Storage / Media</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">For Offline Sync & Reports</p>
+                      </div>
+                    </div>
+                    {permissionsGranted.storage ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
+                  </div>
+                </div>
+
+                <Button 
+                  disabled={!permissionsGranted.camera || !permissionsGranted.contacts || !permissionsGranted.storage}
+                  onClick={handleFinalEnter}
+                  className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black text-lg uppercase shadow-lg disabled:opacity-50 transition-all active-scale"
+                >
+                  Enter Management Hub
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );
