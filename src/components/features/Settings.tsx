@@ -1,12 +1,11 @@
-
 "use client";
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
-import { initiateGoogleBackup, initiateSignOut } from '@/firebase/non-blocking-login';
-import { Settings as SettingsIcon, CloudUpload, LogOut, CheckCircle, ShieldCheck, Mail, Info, Loader2 } from 'lucide-react';
+import { initiateGoogleBackup, initiateGoogleSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
+import { Settings as SettingsIcon, CloudUpload, LogOut, CheckCircle, ShieldCheck, Mail, Info, Loader2, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,23 +15,47 @@ export function Settings() {
   const { toast } = useToast();
   const [isBackupLoading, setIsBackupLoading] = useState(false);
 
-  const handleBackup = async () => {
+  const handleBackup = () => {
     setIsBackupLoading(true);
-    try {
-      initiateGoogleBackup(auth);
-      toast({
-        title: "Gmail Sync Initiated",
-        description: "Please follow the Google popup instructions to secure your data."
+    
+    // We call this directly (no await before the call) to satisfy browser popup requirements
+    initiateGoogleBackup(auth)
+      .then(() => {
+        toast({
+          title: "Gmail Sync Successful",
+          description: "Your data is now safely backed up to your Google account."
+        });
+      })
+      .catch((err: any) => {
+        if (err.code === 'auth/popup-blocked') {
+          toast({
+            variant: "destructive",
+            title: "Popup Blocked",
+            description: "Please allow popups for this site in your browser settings to continue."
+          });
+        } else if (err.code === 'auth/credential-already-in-use') {
+          // If the Google account is already linked to another user, we offer to sign in directly
+          toast({
+            variant: "destructive",
+            title: "Account Already Exists",
+            description: "This Google account is already associated with another profile. Please sign in directly.",
+            action: (
+              <Button variant="outline" size="sm" onClick={() => initiateGoogleSignIn(auth)}>
+                Sign In
+              </Button>
+            )
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Sync Failed",
+            description: err.message || "Could not connect to Google."
+          });
+        }
+      })
+      .finally(() => {
+        setIsBackupLoading(false);
       });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Sync Failed",
-        description: "Could not connect to Google. Check your internet."
-      });
-    } finally {
-      setTimeout(() => setIsBackupLoading(false), 2000);
-    }
   };
 
   const handleLogout = () => {
@@ -106,6 +129,9 @@ export function Settings() {
                   )}
                   {isBackupLoading ? "Connecting..." : "Backup with Gmail"}
                 </Button>
+                <p className="text-[10px] text-center text-muted-foreground uppercase font-bold">
+                  * Popups must be allowed in your browser settings.
+                </p>
               </div>
             )}
           </CardContent>

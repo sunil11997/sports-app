@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Auth,
@@ -26,26 +25,38 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
   signInWithEmailAndPassword(authInstance, email, password);
 }
 
-/** Initiate Google Sign-In or Linking (non-blocking). */
-export function initiateGoogleBackup(authInstance: Auth): void {
+/** 
+ * Initiate Google Sign-In or Linking.
+ * Note: To avoid popup-blocked errors, this should be called directly in an onClick handler.
+ */
+export function initiateGoogleBackup(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
   const currentUser = authInstance.currentUser;
 
   if (currentUser && currentUser.isAnonymous) {
-    // If user is currently anonymous, link their account to Google to prevent data loss
-    linkWithPopup(currentUser, provider)
+    // Attempt to link the current anonymous session to Google
+    return linkWithPopup(currentUser, provider)
       .then(() => {
         console.log("Account successfully linked with Google");
       })
       .catch((error) => {
-        // If account already exists or linking fails, fallback to direct sign-in
-        console.warn("Linking failed, falling back to sign-in:", error);
-        signInWithPopup(authInstance, provider);
+        // If account already exists or linking fails, we don't trigger another popup automatically
+        // to avoid browser "popup-blocked" errors. We throw to let the UI handle the next step.
+        console.warn("Linking failed:", error);
+        throw error;
       });
   } else {
     // Standard sign-in for non-anonymous or new users
-    signInWithPopup(authInstance, provider);
+    return signInWithPopup(authInstance, provider).then(() => {});
   }
+}
+
+/** 
+ * Direct Google Sign-In (ignores anonymous linking).
+ */
+export function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(authInstance, provider).then(() => {});
 }
 
 /** Sign out (non-blocking). */
