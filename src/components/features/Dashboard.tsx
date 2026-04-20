@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
 import { differenceInYears } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -95,6 +96,7 @@ export function Dashboard({ store }: { store: any }) {
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
             th { background-color: #f4f4f4; font-weight: bold; font-size: 12px; }
             .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; }
+            .photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
           </style>
         </head>
         <body>
@@ -103,13 +105,14 @@ export function Dashboard({ store }: { store: any }) {
           <table>
             <thead>
               <tr>
-                <th>SR</th><th>NAME</th><th>AGE</th><th>STD</th><th>BLOOD</th><th>SPORTS</th><th>FITNESS</th><th>BMI</th><th>ATTENDANCE</th>
+                <th>SR</th><th>PHOTO</th><th>NAME</th><th>AGE</th><th>STD</th><th>BLOOD</th><th>SPORTS</th><th>FITNESS</th><th>BMI</th><th>ATTENDANCE</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p, i) => `
                 <tr>
                   <td>${i + 1}</td>
+                  <td>${p.photoUrl ? `<img src="${p.photoUrl}" class="photo" />` : 'No Photo'}</td>
                   <td><strong>${p.name}</strong></td>
                   <td>${p.age}</td>
                   <td>${p.std}</td>
@@ -155,7 +158,8 @@ export function Dashboard({ store }: { store: any }) {
         <Table>
           <TableHeader className="bg-primary hover:bg-primary">
             <TableRow>
-              <TableHead className="text-primary-foreground font-bold uppercase">SR</TableHead>
+              <TableHead className="text-primary-foreground font-bold uppercase w-[60px]">SR</TableHead>
+              <TableHead className="text-primary-foreground font-bold uppercase w-[80px]">Photo</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Name</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Age</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase">Std</TableHead>
@@ -170,7 +174,7 @@ export function Dashboard({ store }: { store: any }) {
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-12 text-muted-foreground font-medium">
+                <TableCell colSpan={11} className="text-center py-12 text-muted-foreground font-medium">
                   No players found. Register some players first!
                 </TableCell>
               </TableRow>
@@ -183,6 +187,14 @@ export function Dashboard({ store }: { store: any }) {
                 return (
                   <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
                     <TableCell className="font-bold text-primary">{index + 1}</TableCell>
+                    <TableCell>
+                      <Avatar className="w-10 h-10 border-2 border-primary/10">
+                        <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
+                        <AvatarFallback className="bg-primary/5">
+                          <User className="w-5 h-5 text-primary/30" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </TableCell>
                     <TableCell className="font-bold">{player.name}</TableCell>
                     <TableCell>{player.age}</TableCell>
                     <TableCell>{player.std}</TableCell>

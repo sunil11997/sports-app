@@ -13,6 +13,7 @@ export interface Player {
   history: 'Yes' | 'No';
   histDetail?: string;
   medical?: string;
+  photoUrl?: string;
 }
 
 export interface AttendanceRecord {
