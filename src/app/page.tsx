@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -12,7 +11,6 @@ import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { AIAdvice } from '@/components/features/AIAdvice';
 import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
-import { Settings } from '@/components/features/Settings';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -30,9 +28,7 @@ import {
   FileText,
   ClipboardList,
   Wifi,
-  WifiOff,
-  Settings as SettingsIcon,
-  CloudUpload
+  WifiOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -77,12 +73,6 @@ export default function WaghambaApp() {
           >
             ENTER PORTAL
           </Button>
-          
-          <div className="text-primary-foreground/60 text-sm">
-            <div className="inline-flex items-center rounded-full border border-primary-foreground/20 px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
-              Cloud Sync Active - Data Protected
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -127,11 +117,6 @@ export default function WaghambaApp() {
                 <WifiOff className="w-3 h-3" /> OFFLINE
               </Badge>
             )}
-            {user?.isAnonymous && (
-              <Badge variant="outline" className="text-white border-white/40 flex items-center gap-1">
-                <CloudUpload className="w-3 h-3" /> GUEST SESSION
-              </Badge>
-            )}
           </div>
         </div>
       </header>
@@ -169,9 +154,6 @@ export default function WaghambaApp() {
             <TabsTrigger value="ai" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground font-bold">
               <Sparkles className="w-4 h-4 mr-2" /> AI Advice
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1 min-w-[120px] rounded-xl py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <SettingsIcon className="w-4 h-4 mr-2" /> Settings
-            </TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
@@ -195,12 +177,12 @@ export default function WaghambaApp() {
                       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                         <Users className="w-8 h-8 text-primary mx-auto mb-3" />
                         <h3 className="font-black text-primary uppercase">Roster</h3>
-                        <p className="text-sm font-medium">{schoolData.data.players.length} Cloud-Synced Players</p>
+                        <p className="text-sm font-medium">{schoolData.data.players.length} Registered Players</p>
                       </div>
                       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                         <HistoryIcon className="w-8 h-8 text-primary mx-auto mb-3" />
-                        <h3 className="font-black text-primary uppercase">History</h3>
-                        <p className="text-sm font-medium">Auto-Backup Enabled</p>
+                        <h3 className="font-black text-primary uppercase">Sync</h3>
+                        <p className="text-sm font-medium">Automatic Cloud Backup</p>
                       </div>
                       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                         <Stethoscope className="w-8 h-8 text-primary mx-auto mb-3" />
@@ -210,7 +192,7 @@ export default function WaghambaApp() {
                       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                         <Trophy className="w-8 h-8 text-primary mx-auto mb-3" />
                         <h3 className="font-black text-primary uppercase">Sports</h3>
-                        <p className="text-sm font-medium">Global Accessibility</p>
+                        <p className="text-sm font-medium">Institutional Hub</p>
                       </div>
                     </div>
                   </CardContent>
@@ -252,10 +234,6 @@ export default function WaghambaApp() {
 
             <TabsContent value="ai">
               <AIAdvice store={schoolData} />
-            </TabsContent>
-
-            <TabsContent value="settings">
-              <Settings />
             </TabsContent>
           </div>
         </Tabs>
