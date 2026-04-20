@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -168,7 +169,7 @@ export default function WaghambaApp() {
                       <School className="w-12 h-12 text-primary" />
                     </div>
                     <div className="space-y-4">
-                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">वाघांबा स्पोर्ट्स हेल्थ हब</h2>
+                      <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">शासकीयम माध्यमिकआश्रम शाळा वाघंबा</h2>
                       <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">High Performance Institutional Portal</p>
                       <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-3xl border border-muted ios-card-shadow w-fit mx-auto active-scale">
                         <User className="w-6 h-6 text-primary" />
