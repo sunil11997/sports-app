@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -43,7 +42,7 @@ export function Settings() {
         toast({ 
           variant: "destructive", 
           title: "Backup Linking Failed", 
-          description: err.message || "Ensure you have a stable connection." 
+          description: err.message || "Ensure you have a stable connection and Google Auth is enabled in Firebase Console." 
         });
       });
   };

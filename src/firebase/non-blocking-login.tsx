@@ -7,7 +7,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   linkWithPopup,
-  signOut
+  signOut,
+  AuthError
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -29,25 +30,29 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
  * Initiate Google Sign-In or Linking.
  * Note: To avoid popup-blocked errors, this should be called directly in an onClick handler.
  */
-export function initiateGoogleBackup(authInstance: Auth): Promise<void> {
+export async function initiateGoogleBackup(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
   const currentUser = authInstance.currentUser;
 
-  if (currentUser && currentUser.isAnonymous) {
-    // Attempt to link the current anonymous session to Google
-    return linkWithPopup(currentUser, provider)
-      .then(() => {
-        console.log("Account successfully linked with Google");
-      })
-      .catch((error) => {
-        // If account already exists or linking fails, we don't trigger another popup automatically
-        // to avoid browser "popup-blocked" errors. We throw to let the UI handle the next step.
-        console.warn("Linking failed:", error);
-        throw error;
-      });
-  } else {
-    // Standard sign-in for non-anonymous or new users
-    return signInWithPopup(authInstance, provider).then(() => {});
+  try {
+    if (currentUser && currentUser.isAnonymous) {
+      // Attempt to link the current anonymous session to Google
+      await linkWithPopup(currentUser, provider);
+      console.log("Account successfully linked with Google");
+    } else {
+      // Standard sign-in for non-anonymous or new users
+      await signInWithPopup(authInstance, provider);
+    }
+  } catch (error: any) {
+    const authError = error as AuthError;
+    if (authError.code === 'auth/operation-not-allowed') {
+      throw new Error("Google Sign-In is not enabled. Please enable it in the Firebase Console (Authentication > Sign-in method).");
+    }
+    if (authError.code === 'auth/credential-already-in-use') {
+      throw new Error("This Google account is already linked to another user. Please sign out and sign in with Google directly.");
+    }
+    console.warn("Auth operation failed:", error);
+    throw error;
   }
 }
 
