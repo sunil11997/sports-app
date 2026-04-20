@@ -1,18 +1,9 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
-import { Registration } from '@/components/features/Registration';
-import { Dashboard } from '@/components/features/Dashboard';
-import { Attendance } from '@/components/features/Attendance';
-import { Fitness } from '@/components/features/Fitness';
-import { SportsSkills } from '@/components/features/SportsSkills';
-import { HealthIncidents } from '@/components/features/HealthIncidents';
-import { AIAdvice } from '@/components/features/AIAdvice';
-import { DailyReport } from '@/components/features/DailyReport';
-import { TournamentRosters } from '@/components/features/TournamentRosters';
-import { Settings } from '@/components/features/Settings';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -30,7 +21,8 @@ import {
   ClipboardList,
   Wifi,
   WifiOff,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -38,6 +30,38 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
+
+// Dynamic imports for feature components to speed up initial server startup and page load
+const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(mod => mod.AIAdvice), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const TournamentRosters = dynamic(() => import('@/components/features/TournamentRosters').then(mod => mod.TournamentRosters), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
@@ -198,45 +222,47 @@ export default function WaghambaApp() {
               </div>
             </TabsContent>
 
-            <TabsContent value="dashboard" className="tab-content-enter">
-              <Dashboard store={schoolData} />
-            </TabsContent>
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+              <TabsContent value="dashboard" className="tab-content-enter">
+                <Dashboard store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="daily-report" className="tab-content-enter">
-              <DailyReport store={schoolData} />
-            </TabsContent>
+              <TabsContent value="daily-report" className="tab-content-enter">
+                <DailyReport store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="tournament" className="tab-content-enter">
-              <TournamentRosters store={schoolData} />
-            </TabsContent>
+              <TabsContent value="tournament" className="tab-content-enter">
+                <TournamentRosters store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="registration" className="tab-content-enter">
-              <Registration store={schoolData} />
-            </TabsContent>
+              <TabsContent value="registration" className="tab-content-enter">
+                <Registration store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="attendance" className="tab-content-enter">
-              <Attendance store={schoolData} />
-            </TabsContent>
+              <TabsContent value="attendance" className="tab-content-enter">
+                <Attendance store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="fitness" className="tab-content-enter">
-              <Fitness store={schoolData} />
-            </TabsContent>
+              <TabsContent value="fitness" className="tab-content-enter">
+                <Fitness store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="sports" className="tab-content-enter">
-              <SportsSkills store={schoolData} />
-            </TabsContent>
+              <TabsContent value="sports" className="tab-content-enter">
+                <SportsSkills store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="health" className="tab-content-enter">
-              <HealthIncidents store={schoolData} />
-            </TabsContent>
+              <TabsContent value="health" className="tab-content-enter">
+                <HealthIncidents store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="ai" className="tab-content-enter">
-              <AIAdvice store={schoolData} />
-            </TabsContent>
+              <TabsContent value="ai" className="tab-content-enter">
+                <AIAdvice store={schoolData} />
+              </TabsContent>
 
-            <TabsContent value="settings" className="tab-content-enter">
-              <Settings />
-            </TabsContent>
+              <TabsContent value="settings" className="tab-content-enter">
+                <Settings />
+              </TabsContent>
+            </Suspense>
           </div>
         </Tabs>
       </main>

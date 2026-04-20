@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+      allowedOrigins: ['localhost:9002', '*.cloudworkstations.dev'],
+    },
+  },
+  serverExternalPackages: ['wav'],
   images: {
     unoptimized: true, // Required for mobile packaging / static export
     remotePatterns: [
