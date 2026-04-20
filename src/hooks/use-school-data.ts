@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, AppState } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -20,7 +20,9 @@ export function useSchoolData() {
   // 2. Reactive State for Sub-collections
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
+  const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
+  const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
 
   // 3. Real-time Synchronization Loop
   useEffect(() => {
@@ -40,24 +42,33 @@ export function useSchoolData() {
       });
       unsubscribers.push(unsubAtt);
 
-      // Sync Fitness (Latest)
+      // Sync Fitness (Full History)
       const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
       const unsubFit = onSnapshot(fitRef, (snapshot) => {
-        const latestDoc = snapshot.docs.find(d => d.id === 'latest');
-        if (latestDoc) {
-          setFitnessData(prev => ({ ...prev, [player.id]: latestDoc.data() as FitnessAssessment }));
-        }
+        const history: FitnessAssessment[] = [];
+        snapshot.docs.forEach(d => {
+          const data = d.data() as FitnessAssessment;
+          if (d.id === 'latest') {
+            setFitnessData(prev => ({ ...prev, [player.id]: data }));
+          }
+          history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
+        });
+        setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
       });
       unsubscribers.push(unsubFit);
 
-      // Sync Sport Skills
+      // Sync Sport Skills (Full History per player)
       const skillRef = collection(db, 'players', player.id, 'sportSkills');
       const unsubSkill = onSnapshot(skillRef, (snapshot) => {
         const playerSkills: Record<string, SportSkill> = {};
+        const historyList: (SportSkill & { sportName: string })[] = [];
         snapshot.docs.forEach(doc => {
-          playerSkills[`${player.id}_${doc.id}`] = doc.data() as SportSkill;
+          const data = doc.data() as SportSkill;
+          playerSkills[`${player.id}_${doc.id}`] = data;
+          historyList.push({ ...data, sportName: doc.id });
         });
         setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
+        setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
       });
       unsubscribers.push(unsubSkill);
     });
@@ -65,15 +76,17 @@ export function useSchoolData() {
     return () => unsubscribers.forEach(unsub => unsub());
   }, [db, user, players]);
 
-  const aggregatedData: AppState = useMemo(() => {
+  const aggregatedData = useMemo(() => {
     return {
       players: players || [],
       attendance,
       fitness,
+      fitnessHistory,
       sportSkills,
+      skillsHistory,
       healthIncidents: healthIncidents || [],
     };
-  }, [players, healthIncidents, attendance, fitness, sportSkills]);
+  }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory]);
 
   const addPlayer = (player: any) => {
     if (!playersRef) return;
@@ -101,8 +114,16 @@ export function useSchoolData() {
   };
 
   const setFitness = (playerId: string, assessment: FitnessAssessment) => {
-    const fitRef = doc(db, 'players', playerId, 'fitnessAssessments', 'latest');
-    setDocumentNonBlocking(fitRef, { ...assessment, playerId, updatedAt: new Date().toISOString() }, { merge: true });
+    const timestamp = new Date().toISOString();
+    const dateId = timestamp.split('T')[0];
+    
+    // Save to historical record
+    const historyRef = doc(db, 'players', playerId, 'fitnessAssessments', dateId);
+    setDocumentNonBlocking(historyRef, { ...assessment, playerId, updatedAt: timestamp }, { merge: true });
+    
+    // Update latest pointer
+    const latestRef = doc(db, 'players', playerId, 'fitnessAssessments', 'latest');
+    setDocumentNonBlocking(latestRef, { ...assessment, playerId, updatedAt: timestamp }, { merge: true });
   };
 
   const setSportSkill = (playerId: string, sport: string, skill: SportSkill) => {

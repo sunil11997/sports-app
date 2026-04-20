@@ -21,7 +21,8 @@ import {
   Wifi,
   WifiOff,
   User,
-  Loader2
+  Loader2,
+  History as HistoryIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -59,6 +60,9 @@ const TournamentRosters = dynamic(() => import('@/components/features/Tournament
   loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
 });
 const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
+  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+});
+const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { 
   loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
 });
 
@@ -158,6 +162,7 @@ export default function WaghambaApp() {
                 { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
                 { id: "daily-report", label: "Report", icon: FileText },
                 { id: "tournament", label: "Tournament", icon: ClipboardList },
+                { id: "history", label: "History", icon: HistoryIcon },
                 { id: "registration", label: "Register", icon: User },
                 { id: "attendance", label: "Presence", icon: CalendarCheck },
                 { id: "fitness", label: "Fitness", icon: Activity },
@@ -229,6 +234,10 @@ export default function WaghambaApp() {
 
               <TabsContent value="tournament" className="tab-content-enter">
                 <TournamentRosters store={schoolData} />
+              </TabsContent>
+
+              <TabsContent value="history" className="tab-content-enter">
+                <History store={schoolData} />
               </TabsContent>
 
               <TabsContent value="registration" className="tab-content-enter">

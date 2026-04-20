@@ -2,21 +2,23 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { History as HistoryIcon, Printer, TrendingUp, Calendar, HeartPulse, Activity } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
-} from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  History as HistoryIcon, 
+  Printer, 
+  HeartPulse, 
+  Trophy, 
+  Activity, 
+  Calendar,
+  ChevronRight,
+  User,
+  Medal,
+  Stethoscope
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export function History({ store }: { store: any }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -26,102 +28,101 @@ export function History({ store }: { store: any }) {
     [selectedPlayerId, store.data.players]
   );
 
-  const monthlyData = useMemo(() => {
-    if (!selectedPlayerId) return [];
+  const playerIncidents = useMemo(() => 
+    store.data.healthIncidents.filter((inc: any) => inc.playerId === selectedPlayerId)
+      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [selectedPlayerId, store.data.healthIncidents]
+  );
 
-    // Last 12 months
-    const end = new Date();
-    const start = subMonths(end, 11);
-    const months = eachMonthOfInterval({ start, end });
+  const playerFitness = useMemo(() => 
+    (store.data.fitnessHistory[selectedPlayerId] || [])
+      .sort((a: any, b: any) => new Date(b.updatedAt || b.date).getTime() - new Date(a.updatedAt || a.date).getTime()),
+    [selectedPlayerId, store.data.fitnessHistory]
+  );
 
-    return months.map(monthDate => {
-      const monthStr = format(monthDate, 'yyyy-MM');
-      
-      // Attendance
-      const attRecords = Object.entries(store.data.attendance)
-        .filter(([key]) => key.startsWith(`${selectedPlayerId}_`) && key.includes(monthStr));
-      const presents = attRecords.filter(([, status]) => status === 'P').length;
-      const attendancePercent = attRecords.length > 0 ? Math.round((presents / attRecords.length) * 100) : 0;
-
-      // Health
-      const incidents = store.data.healthIncidents.filter((inc: any) => 
-        inc.playerId === selectedPlayerId && inc.date.startsWith(monthStr)
-      );
-
-      // Fitness
-      const fitnessLogs = store.data.fitnessHistory.filter((f: any) => 
-        f.playerId === selectedPlayerId && f.date.startsWith(monthStr)
-      );
-      const avgFitnessScore = fitnessLogs.length > 0 
-        ? (fitnessLogs.reduce((sum: number, f: any) => sum + parseFloat(f.score || 0), 0) / fitnessLogs.length).toFixed(1)
-        : null;
-
-      // Biometrics
-      const bioLogs = store.data.biometricHistory.filter((b: any) => 
-        b.playerId === selectedPlayerId && b.date.startsWith(monthStr)
-      );
-      const latestBio = bioLogs[bioLogs.length - 1];
-
-      return {
-        month: format(monthDate, 'MMM yyyy'),
-        monthRaw: monthStr,
-        attendance: attendancePercent,
-        incidentCount: incidents.length,
-        fitnessScore: avgFitnessScore ? parseFloat(avgFitnessScore) : null,
-        weight: latestBio ? parseFloat(latestBio.weight) : null,
-        height: latestBio ? parseFloat(latestBio.height) : null,
-        bmi: latestBio ? parseFloat(latestBio.bmi) : null,
-        incidents: incidents.map((i: any) => i.description).join('; ')
-      };
-    }).filter(d => d.attendance > 0 || d.incidentCount > 0 || d.fitnessScore !== null || d.weight !== null);
-  }, [selectedPlayerId, store.data]);
+  const playerSkills = useMemo(() => 
+    (store.data.skillsHistory[selectedPlayerId] || [])
+      .sort((a: any, b: any) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()),
+    [selectedPlayerId, store.data.skillsHistory]
+  );
 
   const handlePrint = () => {
     if (!player) return;
     const printContent = `
       <html>
         <head>
-          <title>Progress Report - ${player.name}</title>
+          <title>Institutional History - ${player.name}</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-            h1 { color: #235C36; border-bottom: 4px solid #8AF075; margin-bottom: 20px; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f8f8f8; font-weight: bold; }
-            .stat-box { background: #f4fcf6; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+            body { font-family: 'Inter', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+            h1 { color: #235C36; border-bottom: 4px solid #8AF075; margin-bottom: 10px; text-transform: uppercase; }
+            h2 { color: #1b4b3a; margin-top: 30px; border-left: 5px solid #8AF075; padding-left: 15px; text-transform: uppercase; font-size: 16px; }
+            .meta { background: #f4fcf6; padding: 15px; border-radius: 8px; margin-bottom: 30px; font-weight: bold; }
+            .item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+            .date { font-size: 11px; color: #666; font-weight: bold; }
+            .title { font-weight: bold; color: #235C36; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+            th { background: #f9f9f9; }
           </style>
         </head>
         <body>
-          <h1>Monthly Progress: ${player.name}</h1>
-          <div class="stat-box">
-            <strong>ID:</strong> ${player.id} | <strong>Std:</strong> ${player.std} | <strong>Sports:</strong> ${player.sports.join(', ')}
+          <h1>Institutional Performance & Health Dossier</h1>
+          <div class="meta">
+            PLAYER: ${player.name} | STD: ${player.std} | AGE: ${player.age} | GENDER: ${player.gender}
           </div>
+
+          <h2>Sports Skill Proficiency</h2>
           <table>
             <thead>
               <tr>
-                <th>MONTH</th>
-                <th>ATTENDANCE %</th>
-                <th>FITNESS SCORE</th>
-                <th>WEIGHT (KG)</th>
-                <th>BMI</th>
-                <th>HEALTH INCIDENTS</th>
+                <th>Sport</th>
+                <th>Overall Score</th>
+                <th>Last Assessment</th>
               </tr>
             </thead>
             <tbody>
-              ${monthlyData.map(d => `
+              ${playerSkills.map(s => `
                 <tr>
-                  <td>${d.month}</td>
-                  <td>${d.attendance}%</td>
-                  <td>${d.fitnessScore || '-'}</td>
-                  <td>${d.weight || '-'}</td>
-                  <td>${d.bmi || '-'}</td>
-                  <td>${d.incidents || 'None'}</td>
+                  <td><strong>${s.sportName}</strong></td>
+                  <td>${s.score}</td>
+                  <td>${format(new Date(s.lastUpdated), 'PPP')}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
-          <footer style="margin-top: 50px; font-size: 10px; color: #888; text-align: center;">
-            Waghamba Sports Hub - Institutional Progress Record
+
+          <h2>Fitness Evolution</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Total Score</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${playerFitness.map(f => `
+                <tr>
+                  <td>${format(new Date(f.updatedAt || f.date), 'PPP')}</td>
+                  <td>${f.score}</td>
+                  <td>${f.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <h2>Medical & Health Log</h2>
+          ${playerIncidents.map(inc => `
+            <div class="item">
+              <div class="date">${format(new Date(inc.date), 'PPP')}</div>
+              <div class="title">Incident Logged</div>
+              <div style="font-size: 12px;">${inc.description}</div>
+            </div>
+          `).join('')}
+          ${playerIncidents.length === 0 ? '<p>No health incidents on record.</p>' : ''}
+
+          <footer style="margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 10px; color: #888; text-align: center;">
+            Official Record from शासकीय माध्यमिक आश्रम शाळा वाघंबा - Teacher Sunil Deshmukh
           </footer>
         </body>
       </html>
@@ -138,151 +139,165 @@ export function History({ store }: { store: any }) {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <TrendingUp className="w-10 h-10 text-accent" /> Progress History
+              <HistoryIcon className="w-10 h-10 text-accent" /> History Hub
             </h2>
             <p className="text-lg font-medium text-foreground/70">
-              Track monthly variations in fitness, attendance, and health metrics to visualize development.
+              Access the complete institutional history for any student, including past performance and medical logs.
             </p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
             <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
-              <SelectTrigger className="rounded-2xl border-2 h-14 text-lg font-bold bg-white">
-                <SelectValue placeholder="Select a player" />
+              <SelectTrigger className="rounded-2xl border-2 h-14 text-lg font-bold bg-white shadow-sm">
+                <SelectValue placeholder="Select a student" />
               </SelectTrigger>
               <SelectContent>
                 {store.data.players.map((p: any) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button 
               disabled={!selectedPlayerId} 
               onClick={handlePrint}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl h-14 font-black text-lg shadow-lg uppercase tracking-wider"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl h-14 font-black text-lg shadow-lg uppercase tracking-wider transition-all active:scale-95"
             >
               <Printer className="w-6 h-6 mr-2" />
-              Print Report
+              Export Full Dossier
             </Button>
           </div>
         </div>
       </div>
 
       {!selectedPlayerId ? (
-        <Card className="border-dashed border-4 p-20 flex flex-col items-center justify-center text-muted-foreground rounded-[3rem] bg-white">
-          <HistoryIcon className="w-20 h-20 mb-6 opacity-10" />
-          <h3 className="text-2xl font-bold uppercase">Select a Player</h3>
-          <p className="font-medium">Please pick a student to view their historical progress data.</p>
+        <Card className="border-dashed border-4 p-20 flex flex-col items-center justify-center text-muted-foreground rounded-[3rem] bg-white/50">
+          <User className="w-20 h-20 mb-6 opacity-10" />
+          <h3 className="text-2xl font-black uppercase tracking-widest opacity-30">Selection Required</h3>
+          <p className="font-bold opacity-30 uppercase text-xs mt-2 text-center">Please pick a student from the list above to view records</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-700">
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-primary/5 border-b border-primary/10">
-              <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
-                <Activity className="w-5 h-5" /> Fitness & Weight Trend
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tick={{fontSize: 12, fontWeight: 'bold'}} />
-                  <YAxis yAxisId="left" tick={{fontSize: 12}} label={{ value: 'Score/Weight', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                  <Legend verticalAlign="top" height={36} />
-                  <Line yAxisId="left" type="monotone" dataKey="fitnessScore" name="Fitness Score" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6 }} activeDot={{ r: 8 }} />
-                  <Line yAxisId="left" type="monotone" dataKey="weight" name="Weight (kg)" stroke="hsl(var(--accent))" strokeWidth={4} dot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-primary/5 border-b border-primary/10">
-              <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
-                <Calendar className="w-5 h-5" /> Attendance Consistency (%)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tick={{fontSize: 12, fontWeight: 'bold'}} />
-                  <YAxis domain={[0, 100]} tick={{fontSize: 12}} />
-                  <Tooltip contentStyle={{borderRadius: '16px'}} />
-                  <Line type="stepAfter" dataKey="attendance" name="Attendance %" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" strokeWidth={4} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2 border-2 border-primary/10 shadow-2xl rounded-[3rem] overflow-hidden bg-white">
-            <CardHeader className="bg-primary text-primary-foreground p-8">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-2xl font-black uppercase tracking-tight">Complete Monthly Breakdown</CardTitle>
-                <div className="bg-white/20 px-4 py-2 rounded-full text-sm font-bold">
-                  {player.name} | STD {player.std}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          
+          {/* Health History */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 px-4">
+              <HeartPulse className="w-6 h-6 text-destructive" />
+              <h3 className="text-xl font-black text-primary uppercase tracking-tight">Health History</h3>
+            </div>
+            <div className="space-y-4">
+              {playerIncidents.length === 0 ? (
+                <div className="bg-white p-8 rounded-[2rem] border-2 border-primary/5 text-center italic text-muted-foreground">
+                  No medical records found
                 </div>
+              ) : (
+                playerIncidents.map((inc: any) => (
+                  <Card key={inc.id} className="border-2 border-primary/5 rounded-[1.5rem] bg-white overflow-hidden shadow-sm">
+                    <div className="p-5">
+                      <div className="flex justify-between items-center mb-2">
+                        <Badge variant="outline" className="text-[10px] font-black uppercase border-destructive/20 text-destructive">
+                          {format(new Date(inc.date), 'dd MMM yyyy')}
+                        </Badge>
+                        <Stethoscope className="w-4 h-4 text-muted-foreground/30" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground/80 leading-relaxed">
+                        {inc.description}
+                      </p>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Performance & Skills History */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 px-4">
+              <Medal className="w-6 h-6 text-accent" />
+              <h3 className="text-xl font-black text-primary uppercase tracking-tight">Game Skills</h3>
+            </div>
+            <div className="space-y-4">
+              {playerSkills.length === 0 ? (
+                <div className="bg-white p-8 rounded-[2rem] border-2 border-primary/5 text-center italic text-muted-foreground">
+                  No technical evaluations yet
+                </div>
+              ) : (
+                playerSkills.map((skill: any, idx: number) => (
+                  <Card key={idx} className="border-2 border-primary/5 rounded-[1.5rem] bg-white overflow-hidden shadow-sm group hover:border-accent/30 transition-all">
+                    <div className="p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-accent/10 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-primary">
+                          {skill.sportName[0]}
+                        </div>
+                        <div>
+                          <h4 className="font-black text-primary uppercase text-sm">{skill.sportName}</h4>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{format(new Date(skill.lastUpdated), 'MMM yyyy')}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-primary">{skill.score}</span>
+                        <Badge variant="ghost" className="block text-[8px] font-black uppercase opacity-50 p-0">Expertise</Badge>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Fitness Progression */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 px-4">
+              <Activity className="w-6 h-6 text-primary" />
+              <h3 className="text-xl font-black text-primary uppercase tracking-tight">Fitness Evaluation</h3>
+            </div>
+            <div className="space-y-4">
+              {playerFitness.length === 0 ? (
+                <div className="bg-white p-8 rounded-[2rem] border-2 border-primary/5 text-center italic text-muted-foreground">
+                  No fitness logs on record
+                </div>
+              ) : (
+                playerFitness.map((fit: any, idx: number) => (
+                  <Card key={idx} className="border-2 border-primary/5 rounded-[1.5rem] bg-white overflow-hidden shadow-sm">
+                    <div className="p-5">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-black text-primary uppercase text-xs">Institutional Test</h4>
+                        <span className="text-[10px] font-bold text-muted-foreground">{format(new Date(fit.updatedAt || fit.date), 'dd MMM yyyy')}</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">Fitness Level</p>
+                          <Badge className="bg-primary text-primary-foreground font-black text-[10px]">
+                            {fit.status || 'General'}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-3xl font-black text-primary">{fit.score}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground block uppercase">Avg Score</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {player && (
+        <div className="bg-primary p-12 rounded-[3rem] text-primary-foreground shadow-2xl relative overflow-hidden mt-12">
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 p-4 rounded-3xl">
+                <Medal className="w-10 h-10 text-white" />
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead className="font-bold text-primary uppercase p-6">Month</TableHead>
-                    <TableHead className="font-bold text-primary uppercase text-center">Attendance</TableHead>
-                    <TableHead className="font-bold text-primary uppercase text-center">Fitness Score</TableHead>
-                    <TableHead className="font-bold text-primary uppercase text-center">Biometrics</TableHead>
-                    <TableHead className="font-bold text-primary uppercase">Health Incidents</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium">
-                        No historical records found for this player.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    monthlyData.map((d, i) => (
-                      <TableRow key={d.monthRaw} className="hover:bg-primary/5 transition-colors">
-                        <TableCell className="font-black text-primary p-6">{d.month}</TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-24 bg-muted rounded-full h-2">
-                              <div className="bg-primary h-2 rounded-full" style={{width: `${d.attendance}%`}} />
-                            </div>
-                            <span className="font-bold text-xs">{d.attendance}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="font-black text-xl text-primary">{d.fitnessScore || '-'}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex flex-col gap-1 text-[10px] font-bold uppercase">
-                            <span>W: {d.weight ? `${d.weight}kg` : '-'}</span>
-                            <span>H: {d.height ? `${d.height}cm` : '-'}</span>
-                            <span className="text-accent">BMI: {d.bmi || '-'}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {d.incidentCount > 0 ? (
-                            <div className="flex items-center gap-2 text-destructive font-medium text-sm">
-                              <HeartPulse className="w-4 h-4" />
-                              <span className="max-w-[300px] truncate" title={d.incidents}>
-                                {d.incidentCount} Logged: {d.incidents}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm italic">Clear History</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+              <h3 className="text-3xl font-black uppercase tracking-tight leading-none">Institutional Heritage</h3>
+            </div>
+            <p className="text-lg font-medium opacity-80 leading-relaxed max-w-2xl">
+              Every log entry contributes to the lifelong athletic journey of {player.name}. This record is the official institutional memory of their development at **शासकीय माध्यमिक आश्रम शाळा वाघंबा**.
+            </p>
+          </div>
+          <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
         </div>
       )}
     </div>
