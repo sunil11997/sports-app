@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -11,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, CheckCircle2, RotateCw } from 'lucide-react';
+import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -41,6 +43,7 @@ export function Registration({ store }: { store: any }) {
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,12 +63,18 @@ export function Registration({ store }: { store: any }) {
     },
   });
 
-  const startCamera = async (currentMode: 'user' | 'environment' = facingMode) => {
-    // Stop any existing stream
-    stopCamera();
+  // Effect to handle attaching stream to video element whenever it's active
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(e => console.error("Video play failed", e));
+    }
+  }, [isCameraActive, stream]);
 
+  const startCamera = async (currentMode: 'user' | 'environment' = facingMode) => {
+    stopCamera();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const newStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: currentMode,
           width: { ideal: 1280 },
@@ -74,23 +83,16 @@ export function Registration({ store }: { store: any }) {
       });
       
       setHasCameraPermission(true);
+      setStream(newStream);
       setIsCameraActive(true);
       setCapturedPhoto(null);
-
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(e => console.error("Video play failed", e));
-        }
-      }, 100);
-
     } catch (error) {
       console.error('Error accessing camera:', error);
       setHasCameraPermission(false);
       toast({
         variant: 'destructive',
         title: 'Camera Access Denied',
-        description: 'Please enable camera permissions in your browser settings to use this feature.',
+        description: 'Please enable camera permissions in your browser settings.',
       });
     }
   };
@@ -98,17 +100,13 @@ export function Registration({ store }: { store: any }) {
   const toggleCamera = () => {
     const newMode = facingMode === 'user' ? 'environment' : 'user';
     setFacingMode(newMode);
-    if (isCameraActive) {
-      startCamera(newMode);
-    }
+    startCamera(newMode);
   };
 
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
     }
     setIsCameraActive(false);
   };
@@ -123,7 +121,6 @@ export function Registration({ store }: { store: any }) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Only mirror if it's the front camera
         if (facingMode === 'user') {
           context.translate(canvas.width, 0);
           context.scale(-1, 1);
@@ -138,8 +135,8 @@ export function Registration({ store }: { store: any }) {
         stopCamera();
         
         toast({
-          title: "Photo Captured",
-          description: "Student photo has been attached to the form.",
+          title: "Capture Success",
+          description: "Student identity photo has been saved.",
         });
       }
     }
@@ -169,8 +166,8 @@ export function Registration({ store }: { store: any }) {
 
     store.addPlayer(newPlayer);
     toast({ 
-      title: "Registration Successful", 
-      description: `${values.name} has been added to the institutional roster.` 
+      title: "Registration Complete", 
+      description: `${values.name} is now on the institutional roster.` 
     });
     form.reset();
     setCapturedPhoto(null);
@@ -194,28 +191,27 @@ export function Registration({ store }: { store: any }) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               
-              {/* Photo & Identity Section */}
               <div className="lg:col-span-4 space-y-6">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <FormLabel className="font-black text-primary uppercase text-xs tracking-widest flex items-center gap-2">
-                      <Camera className="w-4 h-4" /> Player Identity Photo
+                  <div className="flex items-center justify-between mb-2">
+                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                      <Camera className="w-4 h-4" /> Identity Preview
                     </FormLabel>
                     {isCameraActive && (
                       <Button 
                         type="button" 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm" 
                         onClick={toggleCamera}
-                        className="text-primary font-bold text-[10px] uppercase tracking-tighter"
+                        className="text-primary font-bold text-[10px] uppercase h-7 rounded-lg border-primary/20"
                       >
-                        <RotateCw className="w-3 h-3 mr-1" /> Switch Camera
+                        <RotateCw className="w-3 h-3 mr-1" /> Switch
                       </Button>
                     )}
                   </div>
-                  <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-inner group">
+                  <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-inner">
                     {capturedPhoto ? (
-                      <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover animate-in fade-in zoom-in-95 duration-500" />
+                      <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover animate-in fade-in zoom-in-95" />
                     ) : isCameraActive ? (
                       <video 
                         ref={videoRef} 
@@ -229,23 +225,21 @@ export function Registration({ store }: { store: any }) {
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
-                        <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center">
-                          <Camera className="w-10 h-10 text-primary/20" />
-                        </div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider leading-relaxed">
-                          Official photo required<br/>for tournament eligibility
+                        <Camera className="w-12 h-12 text-primary/20" />
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          Camera Standby
                         </p>
                       </div>
                     )}
                     
                     {isCameraActive && (
-                      <div className="absolute bottom-6 left-0 right-0 flex justify-center px-6 gap-3 animate-in slide-in-from-bottom-4">
+                      <div className="absolute bottom-6 left-0 right-0 flex justify-center px-6 gap-3">
                         <Button 
                           type="button" 
                           onClick={takePhoto} 
                           className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl h-14 px-8 shadow-2xl font-black uppercase text-xs tracking-widest active-scale"
                         >
-                          Capture Student
+                          Snap Photo
                         </Button>
                         <Button 
                           type="button" 
@@ -263,18 +257,18 @@ export function Registration({ store }: { store: any }) {
                     <Button 
                       type="button" 
                       onClick={() => startCamera()} 
-                      className="w-full bg-primary/5 text-primary hover:bg-primary/10 rounded-2xl h-14 border-2 border-primary/10 font-black uppercase text-xs tracking-widest active-scale"
+                      className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-lg"
                     >
-                      <Camera className="w-5 h-5 mr-2" /> Start Camera
+                      <Camera className="w-5 h-5 mr-2" /> Activate Camera
                     </Button>
                   )}
 
                   {capturedPhoto && (
-                    <div className="flex gap-3 animate-in fade-in duration-300">
+                    <div className="flex gap-3">
                       <Button 
                         type="button" 
                         onClick={() => startCamera()} 
-                        className="flex-1 bg-primary/5 text-primary hover:bg-primary/10 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale"
+                        className="flex-1 bg-primary/5 text-primary hover:bg-primary/10 rounded-2xl h-14 font-black uppercase text-xs tracking-widest border-2 border-primary/10"
                       >
                         <RefreshCw className="w-4 h-4 mr-2" /> Retake
                       </Button>
@@ -282,7 +276,7 @@ export function Registration({ store }: { store: any }) {
                         type="button" 
                         variant="ghost" 
                         onClick={clearPhoto} 
-                        className="flex-1 rounded-2xl h-14 text-destructive hover:bg-destructive/5 font-black uppercase text-xs tracking-widest active-scale"
+                        className="flex-1 rounded-2xl h-14 text-destructive hover:bg-destructive/5 font-black uppercase text-xs tracking-widest"
                       >
                         Remove
                       </Button>
@@ -290,11 +284,11 @@ export function Registration({ store }: { store: any }) {
                   )}
                   
                   {hasCameraPermission === false && (
-                    <Alert variant="destructive" className="rounded-2xl border-2">
-                      <AlertCircle className="h-5 w-5" />
-                      <AlertTitle className="font-black uppercase text-xs">Camera Blocked</AlertTitle>
-                      <AlertDescription className="text-xs font-medium">
-                        Institutional security requires camera access. Please check phone settings.
+                    <Alert variant="destructive" className="rounded-2xl">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle className="text-xs font-bold uppercase">Hardware Blocked</AlertTitle>
+                      <AlertDescription className="text-[10px]">
+                        Please allow camera access in browser settings.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -302,7 +296,6 @@ export function Registration({ store }: { store: any }) {
                 </div>
               </div>
 
-              {/* Core Details Section */}
               <div className="lg:col-span-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
@@ -310,9 +303,9 @@ export function Registration({ store }: { store: any }) {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Player Name *</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Student Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter student name" className="rounded-xl border-2 h-12 font-bold focus:border-accent transition-all" {...field} />
+                          <Input placeholder="Full Name" className="rounded-xl border-2 h-12 font-bold" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -328,7 +321,7 @@ export function Registration({ store }: { store: any }) {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
-                              <SelectValue placeholder="Select gender" />
+                              <SelectValue placeholder="Select" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -346,14 +339,14 @@ export function Registration({ store }: { store: any }) {
                     name="std"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard / Class</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
-                              <SelectValue placeholder="Select standard" />
+                              <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="max-h-60">
+                          <SelectContent>
                             {[...Array(12)].map((_, i) => (
                               <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
                             ))}
@@ -386,13 +379,12 @@ export function Registration({ store }: { store: any }) {
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Height (cm)</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="165" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                            <Input type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="weight"
@@ -400,7 +392,7 @@ export function Registration({ store }: { store: any }) {
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Weight (kg)</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="55" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                            <Input type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -417,7 +409,7 @@ export function Registration({ store }: { store: any }) {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
-                              <SelectValue placeholder="Select" />
+                              <SelectValue />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -433,7 +425,7 @@ export function Registration({ store }: { store: any }) {
                 </div>
 
                 <div className="space-y-4">
-                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest block">Sports Specialization *</FormLabel>
+                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest block">Sports Discipline *</FormLabel>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10">
                     {SPORTS_LIST.map((sport) => (
                       <FormField
@@ -441,22 +433,18 @@ export function Registration({ store }: { store: any }) {
                         control={form.control}
                         name="sports"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 hover:bg-white/50 rounded-xl transition-colors cursor-pointer">
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-1">
                             <FormControl>
                               <Checkbox
                                 checked={field.value?.includes(sport)}
                                 onCheckedChange={(checked) => {
                                   return checked
                                     ? field.onChange([...field.value, sport])
-                                    : field.onChange(
-                                        field.value?.filter(
-                                          (value) => value !== sport
-                                        )
-                                      )
+                                    : field.onChange(field.value?.filter((value) => value !== sport))
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="text-sm font-bold cursor-pointer text-foreground/70">
+                            <FormLabel className="text-sm font-bold text-foreground/80 cursor-pointer">
                               {sport}
                             </FormLabel>
                           </FormItem>
@@ -466,68 +454,16 @@ export function Registration({ store }: { store: any }) {
                   </div>
                   <FormMessage />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="history"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Past Sport History?</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="No">No History</SelectItem>
-                            <SelectItem value="Yes">Has History</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="histDetail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Achievement Details</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. District Winner 2023" className="rounded-xl border-2 h-12 font-bold" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="medical"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Critical Medical Info / Allergies</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Asthma, Dust Allergy" className="rounded-xl border-2 h-12 font-bold" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-primary/10">
+            <div className="flex justify-end pt-8 border-t">
               <Button 
                 type="submit" 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-16 py-8 rounded-2xl shadow-xl transition-all active-scale text-lg uppercase tracking-widest"
+                className="bg-primary hover:bg-primary/90 text-white font-black px-20 h-16 rounded-2xl shadow-xl transition-all active-scale text-lg uppercase tracking-widest"
               >
-                Complete Registration
+                Enroll Student
               </Button>
             </div>
           </form>
