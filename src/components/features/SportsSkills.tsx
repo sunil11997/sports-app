@@ -89,8 +89,6 @@ export function SportsSkills({ store }: { store: any }) {
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
-  const isDetailedSport = true;
-
   const getDetailedSkillsList = (sport: string) => {
     switch (sport) {
       case 'Kabaddi': return KABADDI_SKILLS;
@@ -154,54 +152,37 @@ export function SportsSkills({ store }: { store: any }) {
     if (!skill) return;
 
     store.setSportSkill(id, activeSport, skill);
-    toast({ title: "Skills Saved", description: `${activeSport} technical report updated.` });
+    toast({ title: "Scores Synced", description: "Technical spreadsheet updated." });
     setEditingDetailedPlayer(null);
   };
 
-  // ONLY SHOW ATHLETES
   const filteredPlayers = store.data.players.filter((p: any) => p.category === 'athlete' && p.sports.includes(activeSport));
 
   const handlePrint = () => {
     const maxScore = getMaxScore(activeSport);
-
     const printContent = `
       <html>
         <head>
-          <title>${activeSport} Skill Assessment - Waghamba School</title>
+          <title>${activeSport} Skill Sheet</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 30px; color: #333; }
-            h1 { color: #235C36; border-bottom: 4px solid #8AF075; text-transform: uppercase; margin-bottom: 20px; }
+            body { font-family: Inter, sans-serif; padding: 30px; }
+            h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f4fcf6; font-weight: bold; font-size: 12px; color: #1b4b3a; }
-            .score-cell { font-weight: 900; color: #235C36; }
-            .skills-list { font-size: 10px; color: #666; font-style: italic; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f8f8f8; font-weight: bold; }
           </style>
         </head>
         <body>
-          <h1>Skill Roster: ${activeSport}</h1>
-          <p>Institutional Technical Performance Evaluation - Teacher Sunil Deshmukh</p>
+          <h1>Skill Registry: ${activeSport}</h1>
           <table>
             <thead>
-              <tr>
-                <th>PLAYER</th>
-                <th>SKILLS BREAKDOWN</th>
-                <th>TOTAL SCORE</th>
-              </tr>
+              <tr><th>PLAYER</th><th>SKILLS</th><th>SCORE</th></tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
-                const breakdown = Object.entries(s.detailedSkills || {})
-                  .map(([name, score]) => `${name}: ${score}`)
-                  .join(', ');
-                return `
-                  <tr>
-                    <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
-                    <td class="skills-list">${breakdown || 'No skills scored yet'}</td>
-                    <td class="score-cell">${s.score || '0'} / ${maxScore}</td>
-                  </tr>
-                `;
+                const b = Object.entries(s.detailedSkills || {}).map(([n, sc]) => `${n}: ${sc}`).join(', ');
+                return `<tr><td>${p.name} (Std ${p.std})</td><td>${b}</td><td>${s.score || '0'} / ${maxScore}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -215,23 +196,24 @@ export function SportsSkills({ store }: { store: any }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Trophy className="w-8 h-8 text-accent" />
-          <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Technical Expertise</h2>
+          <Trophy className="w-6 h-6 text-accent" />
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Excel: Technical Skills Registry</h2>
         </div>
-        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 rounded-xl font-bold h-12">
-          <Printer className="w-4 h-4 mr-2" /> Print {activeSport} Roster
+        <Button onClick={handlePrint} size="sm" className="font-bold h-9">
+          <Printer className="w-4 h-4 mr-2" /> Print Sheet
         </Button>
       </div>
       
-      <div className="flex flex-wrap gap-2 p-2 bg-white rounded-2xl border shadow-sm mb-6">
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
         {sportsList.map(sport => (
           <Button
             key={sport}
             variant={activeSport === sport ? "default" : "ghost"}
-            className={`rounded-xl transition-all font-bold ${activeSport === sport ? 'bg-primary text-primary-foreground' : 'text-primary/70 hover:bg-primary/5'}`}
+            size="sm"
+            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeSport === sport ? '' : 'text-muted-foreground'}`}
             onClick={() => setActiveSport(sport)}
           >
             {sport}
@@ -239,70 +221,43 @@ export function SportsSkills({ store }: { store: any }) {
         ))}
       </div>
 
-      <Card className="border-2 border-primary/10 shadow-xl rounded-3xl overflow-hidden bg-white">
-        <Table>
-          <TableHeader className="bg-primary">
-            <TableRow>
-              <TableHead className="text-primary-foreground font-bold uppercase">Player</TableHead>
-              <TableHead className="text-primary-foreground font-bold uppercase text-center">Skill Assessment</TableHead>
-              <TableHead className="text-primary-foreground font-bold uppercase text-center">Total Score</TableHead>
-              <TableHead className="text-primary-foreground font-bold uppercase text-right">Actions</TableHead>
+      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+        <Table className="border-collapse min-w-max">
+          <TableHeader className="bg-muted/50 sticky top-0 z-20">
+            <TableRow className="border-b">
+              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase w-[200px]">Player Name</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[150px]">Status</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[120px]">Current Total</TableHead>
+              <TableHead className="h-9 px-2 font-black text-[10px] uppercase text-right w-[120px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                  No active athletes registered for {activeSport}.
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  No athletes found for {activeSport}.
                 </TableCell>
               </TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
                 const key = `${player.id}_${activeSport}`;
                 const current = skills[key] || { score: '0', detailedSkills: {} };
-                
                 return (
-                  <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
-                    <TableCell className="font-bold">
-                      <div className="flex flex-col">
-                        <span>{player.name}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">ID: {player.id}</span>
-                      </div>
+                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
+                    <TableCell className="border-r p-2 text-xs font-bold">
+                      {player.name} <span className="text-[9px] text-muted-foreground uppercase">(Std {player.std})</span>
                     </TableCell>
-                    
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Badge variant="outline" className="border-accent text-primary">
-                          {Object.keys(current.detailedSkills || {}).length} Skills Evaluated
-                        </Badge>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="rounded-lg font-bold h-8"
-                          onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
-                        >
-                          <ListChecks className="w-3 h-3 mr-1" /> Score Detailed Skills
-                        </Button>
-                      </div>
+                    <TableCell className="border-r p-2 text-center">
+                      <span className="text-[9px] font-bold uppercase text-muted-foreground">
+                        {Object.keys(current.detailedSkills || {}).length} Moves Scored
+                      </span>
                     </TableCell>
-
-                    <TableCell className="text-center">
-                      <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
-                        <span className="font-black text-xl text-primary">{current.score || '0'}</span>
-                        <span className="text-[10px] text-muted-foreground block font-bold">
-                          MAX {getMaxScore(activeSport)}
-                        </span>
-                      </div>
+                    <TableCell className="border-r p-2 text-center">
+                      <div className="font-black text-primary text-sm">{current.score || '0'} <span className="text-[9px] text-muted-foreground">/ {getMaxScore(activeSport)}</span></div>
                     </TableCell>
-                    
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-primary hover:bg-primary/5 rounded-lg font-bold"
-                        onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
-                      >
-                        Update
+                    <TableCell className="p-1 text-right">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold uppercase" onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}>
+                        Score Moves
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -311,63 +266,29 @@ export function SportsSkills({ store }: { store: any }) {
             )}
           </TableBody>
         </Table>
-      </Card>
-      
-      <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-center justify-between">
-        <p className="text-sm font-bold text-primary italic">
-          Technical moves scored out of 10 each for {activeSport}.
-        </p>
-        <div className="flex gap-4">
-          <Badge className="bg-accent text-accent-foreground font-black uppercase">
-            Total: {getMaxScore(activeSport)} Marks
-          </Badge>
-        </div>
       </div>
 
       <Dialog open={!!editingDetailedPlayer} onOpenChange={(open) => !open && setEditingDetailedPlayer(null)}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-[2rem]">
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-primary uppercase flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-accent" /> {editingDetailedPlayer?.sport} Technical Assessment
-            </DialogTitle>
+            <DialogTitle className="text-lg font-black uppercase text-primary">Technical Evaluation: {editingDetailedPlayer?.sport}</DialogTitle>
           </DialogHeader>
-          
           {editingDetailedPlayer && (
-            <div className="py-4 space-y-6">
-              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex justify-between items-center">
-                <div>
-                  <h4 className="font-black text-primary uppercase">{editingDetailedPlayer.player.name}</h4>
-                  <p className="text-xs text-muted-foreground font-bold">Standard: {editingDetailedPlayer.player.std}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-primary uppercase">Current Score</p>
-                  <p className="text-3xl font-black text-primary">
-                    {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}
-                    <span className="text-sm text-muted-foreground">
-                      /{getMaxScore(editingDetailedPlayer.sport)}
-                    </span>
-                  </p>
-                </div>
+            <div className="py-2 space-y-4">
+              <div className="flex justify-between items-center border-b pb-2">
+                <span className="font-black text-sm uppercase">{editingDetailedPlayer.player.name}</span>
+                <span className="text-lg font-black text-primary">Total: {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}/{getMaxScore(editingDetailedPlayer.sport)}</span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 px-2">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                 {getDetailedSkillsList(editingDetailedPlayer.sport).map((skill) => {
                   const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
                   const score = skills[key]?.detailedSkills?.[skill] || '';
                   return (
-                    <div key={skill} className="flex items-center justify-between group">
-                      <Label className="font-bold text-foreground/80 group-hover:text-primary transition-colors">{skill}</Label>
-                      <div className="flex items-center gap-2">
-                        <Input 
-                          type="number"
-                          max="10"
-                          min="0"
-                          placeholder="0-10"
-                          className="w-20 text-center font-bold rounded-lg border-2 h-9"
-                          value={score}
-                          onChange={(e) => handleDetailedSkillChange(skill, e.target.value)}
-                        />
-                        <span className="text-[10px] font-black text-muted-foreground">/ 10</span>
+                    <div key={skill} className="flex items-center justify-between border-b border-dashed py-1">
+                      <Label className="text-[11px] font-bold uppercase text-muted-foreground">{skill}</Label>
+                      <div className="flex items-center gap-1">
+                        <Input type="number" max="10" min="0" className="w-14 h-7 text-center text-xs font-bold" value={score} onChange={(e) => handleDetailedSkillChange(skill, e.target.value)} />
+                        <span className="text-[9px] font-bold text-muted-foreground">/10</span>
                       </div>
                     </div>
                   );
@@ -375,14 +296,9 @@ export function SportsSkills({ store }: { store: any }) {
               </div>
             </div>
           )}
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setEditingDetailedPlayer(null)}>
-              Cancel
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90 rounded-xl font-bold px-8" onClick={() => handleSave(editingDetailedPlayer!.player.id)}>
-              <CheckCircle2 className="w-4 h-4 mr-2" /> Complete Assessment
-            </Button>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEditingDetailedPlayer(null)}>Cancel</Button>
+            <Button size="sm" onClick={() => handleSave(editingDetailedPlayer!.player.id)}>Complete Evaluation</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

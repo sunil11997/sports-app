@@ -47,7 +47,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     let status = 'Logged';
 
     if (!isGeneral) {
-      // Logic: Calculate a total score based on provided institutional fitness fields
       const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps'];
       let filledCount = 0;
       let sum = 0;
@@ -63,14 +62,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       const calculatedScore = filledCount > 0 ? (sum / filledCount).toFixed(1) : "0";
       scoreNum = parseFloat(calculatedScore);
       
-      if (scoreNum >= 75) status = 'Level A (Excellent)';
-      else if (scoreNum >= 60) status = 'Level B (Fit)';
-      else if (scoreNum >= 45) status = 'Level C (Average)';
-      else if (scoreNum > 0) status = 'Level D (Needs Training)';
+      if (scoreNum >= 75) status = 'Level A';
+      else if (scoreNum >= 60) status = 'Level B';
+      else if (scoreNum >= 45) status = 'Level C';
+      else if (scoreNum > 0) status = 'Level D';
       
       current.score = calculatedScore;
     } else {
-      status = 'Monthly Log Updated';
+      status = 'Updated';
       current.score = current.examMarks || "0";
     }
 
@@ -79,8 +78,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setAssessments(prev => ({ ...prev, [id]: finalAssessment }));
     
     toast({ 
-      title: isGeneral ? "Monthly Log Saved" : "Assessment Updated", 
-      description: isGeneral ? "Monthly height, weight and marks updated." : `Fitness level: ${status}` 
+      title: "Log Saved", 
+      description: "Data successfully synced to spreadsheet." 
     });
   };
 
@@ -88,7 +87,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const printContent = `
       <html>
         <head>
-          <title>${isGeneral ? 'Monthly Growth Report' : 'Institutional Fitness Report'} - Waghamba School</title>
+          <title>${isGeneral ? 'Monthly Growth Report' : 'Fitness Report'} - Waghamba</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 30px; font-size: 12px; }
             h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
@@ -98,13 +97,13 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           </style>
         </head>
         <body>
-          <h1>${isGeneral ? 'MONTHLY GROWTH & EXAM TRACKER' : 'ATHLETE FITNESS ASSESSMENT'}</h1>
-          <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          <h1>${isGeneral ? 'MONTHLY GROWTH LOG' : 'ATHLETE FITNESS ASSESSMENT'}</h1>
+          <p>Generated: ${new Date().toLocaleDateString()}</p>
           <table>
             <thead>
               <tr>
-                <th>PLAYER</th>
-                ${isGeneral ? '<th>HEIGHT (CM)</th><th>WEIGHT (KG)</th><th>EXAM MARKS</th>' : '<th>10x6 SHUTTLE</th><th>50M RUN</th><th>600M RUN</th><th>SIT/REACH</th>'}
+                <th>STUDENT</th>
+                ${isGeneral ? '<th>HT (CM)</th><th>WT (KG)</th><th>EXAM</th>' : '<th>SHUTTLE</th><th>50M</th><th>600M</th><th>REACH</th>'}
                 <th>SCORE</th>
                 <th>STATUS</th>
               </tr>
@@ -114,7 +113,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 const fit = store.data.fitness[p.id] || {};
                 return `
                   <tr>
-                    <td><strong>${p.name}</strong><br/>Std ${p.std}</td>
+                    <td><strong>${p.name}</strong> (Std ${p.std})</td>
                     ${isGeneral ? 
                       `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : 
                       `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td>`
@@ -136,152 +135,106 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
-          {isGeneral ? <Scale className="w-8 h-8 text-primary" /> : <Activity className="w-8 h-8 text-accent" />}
-          <h2 className="text-3xl font-black text-primary uppercase tracking-tight">
-            {isGeneral ? 'Monthly Growth Registry' : 'Athlete Fitness Hub'}
+          {isGeneral ? <Scale className="w-6 h-6 text-primary" /> : <Activity className="w-6 h-6 text-accent" />}
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">
+            {isGeneral ? 'Excel: Monthly Growth Registry' : 'Excel: Athlete Fitness Registry'}
           </h2>
         </div>
-        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 rounded-xl font-bold h-12">
-          <Printer className="w-4 h-4 mr-2" /> Print {isGeneral ? 'Growth Report' : 'Fitness Roster'}
+        <Button onClick={handlePrint} size="sm" className="font-bold h-9">
+          <Printer className="w-4 h-4 mr-2" /> Print Sheet
         </Button>
       </div>
 
-      <Card className="border-2 border-primary/10 shadow-xl rounded-3xl overflow-hidden bg-white">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-primary">
-              <TableRow>
-                <TableHead className="text-primary-foreground font-bold uppercase min-w-[150px]">Student</TableHead>
-                {isGeneral ? (
-                  <>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">Height (cm)</TableHead>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">Weight (kg)</TableHead>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">Exam Marks</TableHead>
-                  </>
-                ) : (
-                  <>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">10x6 Shuttle</TableHead>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">50M Run</TableHead>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">600M Run</TableHead>
-                    <TableHead className="text-primary-foreground font-bold uppercase text-center">Sit/Reach</TableHead>
-                  </>
-                )}
-                <TableHead className="text-primary-foreground font-bold uppercase text-center">Status</TableHead>
-                <TableHead className="text-primary-foreground font-bold uppercase text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPlayers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
-                    No students found in this section.
-                  </TableCell>
-                </TableRow>
+      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+        <Table className="border-collapse min-w-max">
+          <TableHeader className="bg-muted/50 sticky top-0 z-20">
+            <TableRow className="border-b">
+              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase w-[200px]">Student Details</TableHead>
+              {isGeneral ? (
+                <>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[80px]">HT (cm)</TableHead>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[80px]">WT (kg)</TableHead>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[80px]">Exam</TableHead>
+                </>
               ) : (
-                filteredPlayers.map((player: any) => {
-                  const current = assessments[player.id] || { 
-                    shuttleRun: '', run50m: '', run600m: '', 
-                    sitAndReach: '', score: '', status: '',
-                    height: '', weight: '', examMarks: ''
-                  };
-                  return (
-                    <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
-                      <TableCell className="font-bold">
-                        <div className="flex flex-col">
-                          <span>{player.name}</span>
-                          <span className="text-[10px] text-muted-foreground">STD {player.std}</span>
-                        </div>
-                      </TableCell>
-                      
-                      {isGeneral ? (
-                        <>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="cm" 
-                              className="w-20 h-9 text-center mx-auto"
-                              value={current.height}
-                              onChange={(e) => handleChange(player.id, 'height', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="kg" 
-                              className="w-20 h-9 text-center mx-auto"
-                              value={current.weight}
-                              onChange={(e) => handleChange(player.id, 'weight', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="0-100" 
-                              className="w-20 h-9 text-center mx-auto font-black text-primary"
-                              value={current.examMarks}
-                              onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)}
-                            />
-                          </TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="Sec" 
-                              className="w-16 h-8 text-xs mx-auto text-center"
-                              value={current.shuttleRun}
-                              onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="Sec" 
-                              className="w-16 h-8 text-xs mx-auto text-center"
-                              value={current.run50m}
-                              onChange={(e) => handleChange(player.id, 'run50m', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="Min" 
-                              className="w-16 h-8 text-xs mx-auto text-center"
-                              value={current.run600m}
-                              onChange={(e) => handleChange(player.id, 'run600m', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              placeholder="CM" 
-                              className="w-16 h-8 text-xs mx-auto text-center"
-                              value={current.sitAndReach}
-                              onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)}
-                            />
-                          </TableCell>
-                        </>
-                      )}
-
-                      <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] whitespace-nowrap">
-                          {current.status || 'Pending Log'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          size="sm" 
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-bold"
-                          onClick={() => handleSave(player.id)}
-                        >
-                          <Calculator className="w-3 h-3 mr-1" /> Update Log
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                <>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[70px]">10x6</TableHead>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[70px]">50M</TableHead>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[70px]">600M</TableHead>
+                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[70px]">Reach</TableHead>
+                </>
               )}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[100px]">Status</TableHead>
+              <TableHead className="h-9 px-2 font-black text-[10px] uppercase text-right w-[100px]">Update</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredPlayers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  No records found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredPlayers.map((player: any) => {
+                const current = assessments[player.id] || { 
+                  shuttleRun: '', run50m: '', run600m: '', 
+                  sitAndReach: '', score: '', status: '',
+                  height: '', weight: '', examMarks: ''
+                };
+                return (
+                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
+                    <TableCell className="border-r p-2 text-xs font-bold">
+                      {player.name} <span className="text-[9px] text-muted-foreground uppercase">(Std {player.std})</span>
+                    </TableCell>
+                    
+                    {isGeneral ? (
+                      <>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.height} onChange={(e) => handleChange(player.id, 'height', e.target.value)} />
+                        </TableCell>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.weight} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} />
+                        </TableCell>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} />
+                        </TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-[10px] border-0 bg-transparent focus:bg-white" value={current.shuttleRun} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} />
+                        </TableCell>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-[10px] border-0 bg-transparent focus:bg-white" value={current.run50m} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} />
+                        </TableCell>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-[10px] border-0 bg-transparent focus:bg-white" value={current.run600m} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} />
+                        </TableCell>
+                        <TableCell className="border-r p-1">
+                          <Input className="h-7 text-center text-[10px] border-0 bg-transparent focus:bg-white" value={current.sitAndReach} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} />
+                        </TableCell>
+                      </>
+                    )}
+
+                    <TableCell className="border-r p-2 text-center">
+                      <span className="text-[10px] font-bold uppercase text-muted-foreground">{current.status || '-'}</span>
+                    </TableCell>
+                    <TableCell className="p-1 text-right">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold uppercase" onClick={() => handleSave(player.id)}>
+                        Sync
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
