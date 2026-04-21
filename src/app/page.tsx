@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -195,7 +194,7 @@ export default function WaghambaApp() {
               </div>
               <h3 className="text-3xl font-black text-primary uppercase mb-3">Student Registry</h3>
               <p className="text-muted-foreground font-medium text-lg leading-relaxed">
-                Vital institutional records for all school students. Attendance, basic fitness assessments, and health/medical logs.
+                Vital institutional records for all school students (Class 4-12). Attendance, monthly growth tracking, and exam logs.
               </p>
               <div className="mt-8 flex items-center text-primary font-black uppercase tracking-widest text-xs group-hover:gap-4 transition-all">
                 Access Registry <ChevronRight className="w-4 h-4 ml-2" />
@@ -340,10 +339,10 @@ export default function WaghambaApp() {
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12">
                       {[
-                        { icon: Users, label: "Total Students", value: `${schoolData.data.players.length} Registered`, color: "bg-blue-500" },
+                        { icon: Users, label: "Total Records", value: `${schoolData.data.players.filter(p => selectedSection === 'sports' ? p.category === 'athlete' : p.category === 'student').length} Registered`, color: "bg-blue-500" },
                         { icon: Wifi, label: "Cloud Backup", value: "Live Sync", color: "bg-green-500" },
                         { icon: Stethoscope, label: "Health Log", value: "Active", color: "bg-red-500" },
-                        { icon: Activity, label: "Fitness", value: "Assessment Ready", color: "bg-orange-500" }
+                        { icon: Activity, label: "Monthly Log", value: "Assessment Ready", color: "bg-orange-500" }
                       ].map((stat, i) => (
                         <div key={i} className="p-8 bg-white rounded-[2.5rem] border shadow-xl active-scale transition-all">
                           <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4", stat.color + "/10")}>
@@ -360,11 +359,11 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="dashboard" className="tab-content-enter">
-              <Dashboard store={schoolData} />
+              <Dashboard store={schoolData} section={selectedSection} />
             </TabsContent>
 
             <TabsContent value="daily-report" className="tab-content-enter">
-              <DailyReport store={schoolData} />
+              <DailyReport store={schoolData} section={selectedSection} />
             </TabsContent>
 
             {selectedSection === 'sports' && (
@@ -374,19 +373,19 @@ export default function WaghambaApp() {
             )}
 
             <TabsContent value="history" className="tab-content-enter">
-              <History store={schoolData} />
+              <History store={schoolData} section={selectedSection} />
             </TabsContent>
 
             <TabsContent value="registration" className="tab-content-enter">
-              <Registration store={schoolData} />
+              <Registration store={schoolData} section={selectedSection} />
             </TabsContent>
 
             <TabsContent value="attendance" className="tab-content-enter">
-              <Attendance store={schoolData} />
+              <Attendance store={schoolData} section={selectedSection} />
             </TabsContent>
 
             <TabsContent value="fitness" className="tab-content-enter">
-              <Fitness store={schoolData} />
+              <Fitness store={schoolData} section={selectedSection} />
             </TabsContent>
 
             {selectedSection === 'sports' && (
@@ -402,7 +401,7 @@ export default function WaghambaApp() {
             )}
 
             <TabsContent value="health" className="tab-content-enter">
-              <HealthIncidents store={schoolData} />
+              <HealthIncidents store={schoolData} section={selectedSection} />
             </TabsContent>
 
             <TabsContent value="settings" className="tab-content-enter">

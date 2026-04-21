@@ -89,7 +89,7 @@ export function SportsSkills({ store }: { store: any }) {
   const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
-  const isDetailedSport = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'].includes(activeSport);
+  const isDetailedSport = true;
 
   const getDetailedSkillsList = (sport: string) => {
     switch (sport) {
@@ -119,27 +119,6 @@ export function SportsSkills({ store }: { store: any }) {
       case 'High Jump': return 240;
       default: return 20;
     }
-  };
-
-  const handleChange = (id: string, field: string, value: string) => {
-    const key = `${id}_${activeSport}`;
-    const current = skills[key] || { skill1: '', score1: '0', skill2: '', score2: '0', score: '0' };
-    
-    const updated = {
-      ...current,
-      [field]: value
-    };
-
-    if (field === 'score1' || field === 'score2') {
-      const s1 = parseFloat(updated.score1) || 0;
-      const s2 = parseFloat(updated.score2) || 0;
-      updated.score = (s1 + s2).toString();
-    }
-
-    setSkills(prev => ({
-      ...prev,
-      [key]: updated
-    }));
   };
 
   const handleDetailedSkillChange = (skill: string, value: string) => {
@@ -179,10 +158,10 @@ export function SportsSkills({ store }: { store: any }) {
     setEditingDetailedPlayer(null);
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => p.sports.includes(activeSport));
+  // ONLY SHOW ATHLETES
+  const filteredPlayers = store.data.players.filter((p: any) => p.category === 'athlete' && p.sports.includes(activeSport));
 
   const handlePrint = () => {
-    const detailed = isDetailedSport;
     const maxScore = getMaxScore(activeSport);
 
     const printContent = `
@@ -206,31 +185,21 @@ export function SportsSkills({ store }: { store: any }) {
             <thead>
               <tr>
                 <th>PLAYER</th>
-                ${detailed ? '<th>SKILLS BREAKDOWN</th>' : '<th>PRIMARY SKILL (10M)</th><th>SECONDARY SKILL (10M)</th>'}
+                <th>SKILLS BREAKDOWN</th>
                 <th>TOTAL SCORE</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
-                if (detailed) {
-                  const breakdown = Object.entries(s.detailedSkills || {})
-                    .map(([name, score]) => `${name}: ${score}`)
-                    .join(', ');
-                  return `
-                    <tr>
-                      <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
-                      <td class="skills-list">${breakdown || 'No skills scored yet'}</td>
-                      <td class="score-cell">${s.score || '0'} / ${maxScore}</td>
-                    </tr>
-                  `;
-                }
+                const breakdown = Object.entries(s.detailedSkills || {})
+                  .map(([name, score]) => `${name}: ${score}`)
+                  .join(', ');
                 return `
                   <tr>
                     <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
-                    <td>${s.skill1 || '-'}${s.score1 ? ` (${s.score1})` : ''}</td>
-                    <td>${s.skill2 || '-'}${s.score2 ? ` (${s.score2})` : ''}</td>
-                    <td class="score-cell">${s.score || '0'} / 20</td>
+                    <td class="skills-list">${breakdown || 'No skills scored yet'}</td>
+                    <td class="score-cell">${s.score || '0'} / ${maxScore}</td>
                   </tr>
                 `;
               }).join('')}
@@ -275,14 +244,7 @@ export function SportsSkills({ store }: { store: any }) {
           <TableHeader className="bg-primary">
             <TableRow>
               <TableHead className="text-primary-foreground font-bold uppercase">Player</TableHead>
-              {isDetailedSport ? (
-                <TableHead className="text-primary-foreground font-bold uppercase text-center">Skill Assessment</TableHead>
-              ) : (
-                <>
-                  <TableHead className="text-primary-foreground font-bold uppercase min-w-[250px]">Primary Skill (Max 10)</TableHead>
-                  <TableHead className="text-primary-foreground font-bold uppercase min-w-[250px]">Secondary Skill (Max 10)</TableHead>
-                </>
-              )}
+              <TableHead className="text-primary-foreground font-bold uppercase text-center">Skill Assessment</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase text-center">Total Score</TableHead>
               <TableHead className="text-primary-foreground font-bold uppercase text-right">Actions</TableHead>
             </TableRow>
@@ -291,13 +253,13 @@ export function SportsSkills({ store }: { store: any }) {
             {filteredPlayers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                  No players registered for {activeSport}.
+                  No active athletes registered for {activeSport}.
                 </TableCell>
               </TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
                 const key = `${player.id}_${activeSport}`;
-                const current = skills[key] || { skill1: '', score1: '0', skill2: '', score2: '0', score: '0', detailedSkills: {} };
+                const current = skills[key] || { score: '0', detailedSkills: {} };
                 
                 return (
                   <TableRow key={player.id} className="hover:bg-primary/5 transition-colors">
@@ -308,62 +270,21 @@ export function SportsSkills({ store }: { store: any }) {
                       </div>
                     </TableCell>
                     
-                    {isDetailedSport ? (
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Badge variant="outline" className="border-accent text-primary">
-                            {Object.keys(current.detailedSkills || {}).length} Skills Evaluated
-                          </Badge>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-lg font-bold h-8"
-                            onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
-                          >
-                            <ListChecks className="w-3 h-3 mr-1" /> Score Detailed Skills
-                          </Button>
-                        </div>
-                      </TableCell>
-                    ) : (
-                      <>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Input 
-                              placeholder="Primary Skill" 
-                              className="rounded-lg flex-1 h-9"
-                              value={current.skill1}
-                              onChange={(e) => handleChange(player.id, 'skill1', e.target.value)}
-                            />
-                            <Input 
-                              type="number"
-                              max="10"
-                              placeholder="Marks"
-                              className="w-20 rounded-lg text-center font-bold h-9"
-                              value={current.score1}
-                              onChange={(e) => handleChange(player.id, 'score1', e.target.value)}
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Input 
-                              placeholder="Secondary Skill" 
-                              className="rounded-lg flex-1 h-9"
-                              value={current.skill2}
-                              onChange={(e) => handleChange(player.id, 'skill2', e.target.value)}
-                            />
-                            <Input 
-                              type="number"
-                              max="10"
-                              placeholder="Marks"
-                              className="w-20 rounded-lg text-center font-bold h-9"
-                              value={current.score2}
-                              onChange={(e) => handleChange(player.id, 'score2', e.target.value)}
-                            />
-                          </div>
-                        </TableCell>
-                      </>
-                    )}
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Badge variant="outline" className="border-accent text-primary">
+                          {Object.keys(current.detailedSkills || {}).length} Skills Evaluated
+                        </Badge>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-lg font-bold h-8"
+                          onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
+                        >
+                          <ListChecks className="w-3 h-3 mr-1" /> Score Detailed Skills
+                        </Button>
+                      </div>
+                    </TableCell>
 
                     <TableCell className="text-center">
                       <div className="bg-primary/5 py-2 px-3 rounded-lg border border-primary/10">
@@ -375,25 +296,14 @@ export function SportsSkills({ store }: { store: any }) {
                     </TableCell>
                     
                     <TableCell className="text-right">
-                      {!isDetailedSport && (
-                        <Button 
-                          size="sm" 
-                          className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black"
-                          onClick={() => handleSave(player.id)}
-                        >
-                          <Save className="w-4 h-4 mr-1" /> Save
-                        </Button>
-                      )}
-                      {isDetailedSport && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-primary hover:bg-primary/5 rounded-lg font-bold"
-                          onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
-                        >
-                          Update
-                        </Button>
-                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-primary hover:bg-primary/5 rounded-lg font-bold"
+                        onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}
+                      >
+                        Update
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
@@ -405,16 +315,7 @@ export function SportsSkills({ store }: { store: any }) {
       
       <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-center justify-between">
         <p className="text-sm font-bold text-primary italic">
-          * {activeSport === 'Kabaddi' ? 'Kabaddi: 15 technical moves scored out of 10 each (Total 150).' 
-            : activeSport === 'Volleyball' ? 'Volleyball: 8 specific skills scored out of 10 each (Total 80).'
-            : activeSport === 'Handball' ? 'Handball: 28 technical skills scored out of 10 each (Total 280).'
-            : activeSport === 'Kho Kho' ? 'Kho Kho: 20 technical skills scored out of 10 each (Total 200).'
-            : activeSport === 'Running' ? 'Running: 20 technical skills scored out of 10 each (Total 200).'
-            : activeSport === 'Shot Put' ? 'Shot Put: 20 technical skills scored out of 10 each (Total 200).'
-            : activeSport === 'Javline' ? 'Javline: 22 technical skills scored out of 10 each (Total 220).'
-            : activeSport === 'Long Jump' ? 'Long Jump: 23 technical skills scored out of 10 each (Total 230).'
-            : activeSport === 'High Jump' ? 'High Jump: 24 technical skills scored out of 10 each (Total 240).'
-            : 'Each skill is marked out of 10 points (Total 20).'}
+          Technical moves scored out of 10 each for {activeSport}.
         </p>
         <div className="flex gap-4">
           <Badge className="bg-accent text-accent-foreground font-black uppercase">

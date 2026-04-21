@@ -14,6 +14,8 @@ export interface Player {
   histDetail?: string;
   medical?: string;
   photoUrl?: string;
+  category: 'athlete' | 'student';
+  examMarks?: string;
 }
 
 export interface AttendanceRecord {
@@ -21,15 +23,21 @@ export interface AttendanceRecord {
 }
 
 export interface FitnessAssessment {
-  shuttleRun: string;   // 10*6 Shuttle Run
-  run50m: string;       // 50 Meter Run
-  run600m: string;      // 600 Meter Run
-  sitAndReach: string;  // Flexibility
-  boardJump: string;    // Power
-  sitUps: string;       // Core
+  shuttleRun?: string;   // 10*6 Shuttle Run
+  run50m?: string;       // 50 Meter Run
+  run600m?: string;      // 600 Meter Run
+  sitAndReach?: string;  // Flexibility
+  boardJump?: string;    // Power
+  sitUps?: string;       // Core
   score: string;
   status: string;
   date?: string;
+  updatedAt?: string;
+  playerId?: string;
+  // Registry specific monthly data
+  height?: string;
+  weight?: string;
+  examMarks?: string;
 }
 
 export interface SportSkill {
@@ -39,6 +47,9 @@ export interface SportSkill {
   score2: string;
   score: string;
   detailedSkills?: Record<string, string>;
+  lastUpdated?: string;
+  sportName?: string;
+  playerId?: string;
 }
 
 export interface AppState {

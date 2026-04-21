@@ -42,7 +42,7 @@ export function useSchoolData() {
       });
       unsubscribers.push(unsubAtt);
 
-      // Sync Fitness
+      // Sync Fitness / Monthly Logs
       const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
       const unsubFit = onSnapshot(fitRef, (snapshot) => {
         const history: FitnessAssessment[] = [];

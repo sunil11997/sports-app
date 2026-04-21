@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw } from 'lucide-react';
+import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
@@ -28,14 +27,15 @@ const formSchema = z.object({
   height: z.string(),
   weight: z.string(),
   bloodGroup: z.string(),
-  sports: z.array(z.string()).min(1, "Select at least one sport"),
+  sports: z.array(z.string()).optional(),
   history: z.enum(["Yes", "No"]),
   histDetail: z.string().optional(),
   medical: z.string().optional(),
   photoUrl: z.string().optional(),
+  examMarks: z.string().optional(),
 });
 
-export function Registration({ store }: { store: any }) {
+export function Registration({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -60,10 +60,10 @@ export function Registration({ store }: { store: any }) {
       histDetail: "",
       medical: "",
       photoUrl: "",
+      examMarks: "",
     },
   });
 
-  // Effect to handle attaching stream to video element whenever it's active
   useEffect(() => {
     if (isCameraActive && videoRef.current && stream) {
       videoRef.current.srcObject = stream;
@@ -162,27 +162,54 @@ export function Registration({ store }: { store: any }) {
       id: Math.random().toString(36).substr(2, 9),
       age,
       bmi: isNaN(parseFloat(bmi)) ? "0" : bmi,
+      category: section === 'sports' ? 'athlete' : 'student',
+      sports: section === 'sports' ? values.sports : [],
     };
 
     store.addPlayer(newPlayer);
+    
+    // Also set initial monthly log
+    store.setFitness(newPlayer.id, {
+      score: "0",
+      status: "Initial Log",
+      height: values.height,
+      weight: values.weight,
+      examMarks: values.examMarks || "0"
+    });
+
     toast({ 
-      title: "Registration Complete", 
-      description: `${values.name} is now on the institutional roster.` 
+      title: "Enrollment Successful", 
+      description: `${values.name} is now on the institutional ${section === 'sports' ? 'athlete roster' : 'student registry'}.` 
     });
     form.reset();
     setCapturedPhoto(null);
   };
 
+  const isGeneral = section === 'general';
+
   return (
-    <Card className="border-2 border-primary/10 shadow-xl overflow-hidden rounded-[2.5rem] bg-white">
-      <CardHeader className="bg-primary/5 border-b border-primary/10 py-8 px-8">
+    <Card className={cn(
+      "border-2 shadow-xl overflow-hidden rounded-[2.5rem] bg-white transition-all",
+      isGeneral ? "border-primary/20" : "border-accent/20"
+    )}>
+      <CardHeader className={cn(
+        "border-b py-8 px-8",
+        isGeneral ? "bg-primary/5" : "bg-accent/5"
+      )}>
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary rounded-2xl text-primary-foreground shadow-lg">
-            <UserPlus className="w-8 h-8" />
+          <div className={cn(
+            "p-3 rounded-2xl text-white shadow-lg",
+            isGeneral ? "bg-primary" : "bg-accent text-accent-foreground"
+          )}>
+            {isGeneral ? <GraduationCap className="w-8 h-8" /> : <Medal className="w-8 h-8" />}
           </div>
           <div>
-            <CardTitle className="text-3xl font-black text-primary uppercase tracking-tight">Player Registration</CardTitle>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Sports & Health Record</p>
+            <CardTitle className="text-3xl font-black text-primary uppercase tracking-tight">
+              {isGeneral ? 'General Student Enrollment' : 'Athlete Registration'}
+            </CardTitle>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+              {isGeneral ? 'Institutional Class 4-12 Registry' : 'Sports Excellence Program'}
+            </p>
           </div>
         </div>
       </CardHeader>
@@ -422,37 +449,62 @@ export function Registration({ store }: { store: any }) {
                       </FormItem>
                     )}
                   />
+                  
+                  {isGeneral && (
+                    <FormField
+                      control={form.control}
+                      name="examMarks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Physical Ed Exam Marks</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Out of 100" type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
 
-                <div className="space-y-4">
-                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest block">Sports Discipline *</FormLabel>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10">
-                    {SPORTS_LIST.map((sport) => (
-                      <FormField
-                        key={sport}
-                        control={form.control}
-                        name="sports"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-1">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(sport)}
-                                onCheckedChange={(checked) => {
-                                  return checked
-                                    ? field.onChange([...field.value, sport])
-                                    : field.onChange(field.value?.filter((value) => value !== sport))
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-bold text-foreground/80 cursor-pointer">
-                              {sport}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                {!isGeneral && (
+                  <div className="space-y-4">
+                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest block">Sports Discipline *</FormLabel>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10">
+                      {SPORTS_LIST.map((sport) => (
+                        <FormField
+                          key={sport}
+                          control={form.control}
+                          name="sports"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-1">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(sport)}
+                                  onCheckedChange={(checked) => {
+                                    const current = field.value || [];
+                                    return checked
+                                      ? field.onChange([...current, sport])
+                                      : field.onChange(current.filter((value: any) => value !== sport))
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-bold text-foreground/80 cursor-pointer">
+                                {sport}
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <FormMessage />
+                )}
+                
+                <div className="space-y-2">
+                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Medical Notes</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Any allergies or conditions" className="rounded-xl border-2 h-12 font-bold" {...form.register('medical')} />
+                  </FormControl>
                 </div>
               </div>
             </div>
@@ -461,7 +513,10 @@ export function Registration({ store }: { store: any }) {
               <Button 
                 type="submit" 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 text-white font-black px-20 h-16 rounded-2xl shadow-xl transition-all active-scale text-lg uppercase tracking-widest"
+                className={cn(
+                  "text-white font-black px-20 h-16 rounded-2xl shadow-xl transition-all active-scale text-lg uppercase tracking-widest",
+                  isGeneral ? "bg-primary hover:bg-primary/90" : "bg-accent hover:bg-accent/90"
+                )}
               >
                 Enroll Student
               </Button>

@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { CalendarCheck, ChevronLeft, ChevronRight, Save, Printer } from 'lucide-react';
 
-export function Attendance({ store }: { store: any }) {
+export function Attendance({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  const targetCategory = section === 'general' ? 'student' : 'athlete';
+  const filteredPlayers = store.data.players.filter((p: any) => p.category === targetCategory);
 
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}`;
@@ -32,12 +35,10 @@ export function Attendance({ store }: { store: any }) {
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             .name-cell { text-align: left; font-weight: bold; width: 120px; }
-            .present { color: green; font-weight: bold; }
-            .absent { color: red; font-weight: bold; }
           </style>
         </head>
         <body>
-          <h1>Attendance: ${format(currentDate, 'MMMM yyyy')}</h1>
+          <h1>Attendance (${section.toUpperCase()}): ${format(currentDate, 'MMMM yyyy')}</h1>
           <table>
             <thead>
               <tr>
@@ -47,12 +48,12 @@ export function Attendance({ store }: { store: any }) {
               </tr>
             </thead>
             <tbody>
-              ${store.data.players.map((p: any) => {
+              ${filteredPlayers.map((p: any) => {
                 let total = 0;
                 const row = days.map(d => {
                   const s = store.data.attendance[`${p.id}_${format(d, 'yyyy-MM-dd')}`];
                   if (s === 'P') total++;
-                  return `<td class="${s === 'P' ? 'present' : s === 'A' ? 'absent' : ''}">${s || '-'}</td>`;
+                  return `<td>${s || '-'}</td>`;
                 }).join('');
                 return `<tr><td class="name-cell">${p.name}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
@@ -94,7 +95,7 @@ export function Attendance({ store }: { store: any }) {
           <Table className="min-w-max">
             <TableHeader className="bg-primary">
               <TableRow>
-                <TableHead className="sticky left-0 bg-primary z-20 text-primary-foreground font-bold min-w-[200px]">PLAYER</TableHead>
+                <TableHead className="sticky left-0 bg-primary z-20 text-primary-foreground font-bold min-w-[200px]">NAME</TableHead>
                 {days.map(day => (
                   <TableHead key={day.toString()} className="text-primary-foreground font-bold text-center px-1">
                     {format(day, 'd')}
@@ -104,14 +105,14 @@ export function Attendance({ store }: { store: any }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {store.data.players.length === 0 ? (
+              {filteredPlayers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={days.length + 2} className="text-center py-12 text-muted-foreground">
-                    Register players to start tracking attendance.
+                    No students found for this section.
                   </TableCell>
                 </TableRow>
               ) : (
-                store.data.players.map((player: any) => {
+                filteredPlayers.map((player: any) => {
                   let monthlyTotal = 0;
                   return (
                     <TableRow key={player.id}>
@@ -148,18 +149,6 @@ export function Attendance({ store }: { store: any }) {
           </Table>
         </div>
       </Card>
-      
-      <div className="flex justify-between items-center bg-primary/5 p-4 rounded-2xl border-2 border-primary/10">
-        <div className="flex gap-4 text-xs font-bold uppercase text-primary/70">
-          <div className="flex items-center gap-2"><div className="w-4 h-4 bg-primary rounded"></div> Present (P)</div>
-          <div className="flex items-center gap-2"><div className="w-4 h-4 bg-destructive rounded"></div> Absent (A)</div>
-          <div className="flex items-center gap-2"><div className="w-4 h-4 bg-muted/30 rounded"></div> Not Set (-)</div>
-        </div>
-        <Button className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-bold">
-          <Save className="w-4 h-4 mr-2" />
-          Export Report
-        </Button>
-      </div>
     </div>
   );
 }
