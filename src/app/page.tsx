@@ -28,7 +28,9 @@ import {
   Contact,
   HardDrive,
   CheckCircle2,
-  ShieldCheck
+  ShieldCheck,
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -122,10 +124,10 @@ export default function WaghambaApp() {
     }
 
     // Simulate Contacts Access for institutional UI flow
-    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, contacts: true })), 800);
+    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, contacts: true })), 1200);
 
     // Simulate Storage Permission for institutional UI flow
-    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, storage: true })), 1500);
+    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, storage: true })), 2200);
   };
 
   const handleFinalEnter = () => {
@@ -138,88 +140,112 @@ export default function WaghambaApp() {
 
   if (!isEntered) {
     return (
-      <div className="min-h-screen bg-primary flex items-center justify-center p-4 animate-in fade-in duration-1000">
-        <div className="max-w-2xl w-full text-center space-y-12 animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
+      <div className="min-h-screen bg-[#113320] flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Abstract Background Elements */}
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
+        
+        <div className="max-w-xl w-full relative z-10">
           {!showPermissions ? (
-            <div className="space-y-8">
-              <div className="space-y-6">
-                <h1 className="text-4xl md:text-6xl font-black text-primary-foreground tracking-tight leading-tight">
-                  {SCHOOL_NAME}<br />
-                  <span className="text-2xl md:text-3xl opacity-90 block mt-2">ता. सटाणा जि. नाशिक</span>
-                </h1>
-                <div className="bg-accent/20 py-3 px-6 rounded-full inline-block border border-primary-foreground/20">
-                  <p className="text-primary-foreground text-xl font-bold">क्रिडा शिक्षक - सुनिल देशमुख</p>
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 text-center">
+              <div className="space-y-8">
+                <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/20 shadow-2xl">
+                  <School className="w-12 h-12 text-accent" />
                 </div>
-                <p className="text-primary-foreground/80 text-lg md:text-xl font-medium tracking-wide uppercase">
-                  SPORTS & HEALTH MANAGEMENT SYSTEM
+                
+                <div className="space-y-4">
+                  <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight px-4">
+                    {SCHOOL_NAME}
+                  </h1>
+                  <p className="text-accent font-black tracking-[0.2em] text-sm uppercase opacity-80">
+                    ता. सटाणा जि. नाशिक
+                  </p>
+                </div>
+
+                <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-md py-3 px-6 rounded-2xl border border-white/10">
+                  <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <p className="text-white text-lg font-bold">सुनिल देशमुख <span className="text-xs opacity-60 ml-1 font-medium">(क्रिडा शिक्षक)</span></p>
+                </div>
+              </div>
+
+              <div className="pt-8">
+                <Button 
+                  onClick={requestAllPermissions}
+                  className="w-full bg-accent hover:bg-accent/90 text-primary font-black text-xl h-20 rounded-[2rem] shadow-[0_15px_40px_-5px_rgba(138,240,117,0.3)] active:scale-95 transition-all group border-b-4 border-primary/20"
+                >
+                  START MANAGEMENT HUB
+                  <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <p className="mt-6 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
+                  Institutional Performance Version 2.5
                 </p>
               </div>
-              <Button 
-                onClick={requestAllPermissions}
-                size="lg"
-                className="bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl px-16 py-8 rounded-full shadow-[0_12px_0_hsl(140,45%,15%)] active:translate-y-2 active:shadow-[0_4px_0_hsl(140,45%,15%)] transition-all border-2 border-primary-foreground/20 active:scale-95"
-              >
-                START PORTAL
-              </Button>
             </div>
           ) : (
-            <Card className="rounded-[3rem] border-0 ios-card-shadow bg-white/95 backdrop-blur-xl animate-in zoom-in-95 duration-500 overflow-hidden">
-              <CardContent className="p-10 space-y-8">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="p-4 bg-primary/10 rounded-3xl mb-2">
+            <Card className="rounded-[3rem] border-0 ios-card-shadow bg-white/95 backdrop-blur-2xl animate-in zoom-in-95 duration-500 overflow-hidden">
+              <div className="h-2 w-full bg-accent/20">
+                <div 
+                  className="h-full bg-accent transition-all duration-1000" 
+                  style={{ width: `${(Object.values(permissionsGranted).filter(Boolean).length / 3) * 100}%` }}
+                />
+              </div>
+              <CardContent className="p-10 space-y-10">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-5 bg-primary/5 rounded-[2rem] mb-2">
                     <ShieldCheck className="w-12 h-12 text-primary" />
                   </div>
-                  <h2 className="text-3xl font-black text-primary uppercase">Authorization Required</h2>
-                  <p className="text-muted-foreground font-medium">Please grant necessary phone permissions to proceed.</p>
+                  <h2 className="text-2xl font-black text-primary uppercase tracking-tighter">System Authorization</h2>
+                  <p className="text-muted-foreground font-bold text-sm text-center leading-relaxed">
+                    Access to device sensors and storage is required for <br/> official student documentation.
+                  </p>
                 </div>
 
-                <div className="space-y-4 max-w-sm mx-auto">
-                  <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-muted">
-                    <div className="flex items-center gap-4">
-                      <div className={cn("p-2 rounded-xl text-white", permissionsGranted.camera ? "bg-green-500" : "bg-primary")}>
-                        <Camera className="w-6 h-6" />
+                <div className="space-y-3">
+                  {[
+                    { key: 'camera', label: 'Camera Access', sub: 'Student Photography', icon: Camera },
+                    { key: 'contacts', label: 'Contacts Access', sub: 'Emergency Relations', icon: Contact },
+                    { key: 'storage', label: 'Internal Storage', sub: 'Offline Database', icon: HardDrive }
+                  ].map((perm) => (
+                    <div 
+                      key={perm.key} 
+                      className={cn(
+                        "flex items-center justify-between p-5 rounded-3xl border transition-all duration-500",
+                        permissionsGranted[perm.key as keyof typeof permissionsGranted] 
+                          ? "bg-green-50/50 border-green-200" 
+                          : "bg-muted/30 border-muted"
+                      )}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "p-3 rounded-2xl transition-colors duration-500",
+                          permissionsGranted[perm.key as keyof typeof permissionsGranted] ? "bg-green-500 text-white" : "bg-primary/10 text-primary"
+                        )}>
+                          <perm.icon className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-black text-sm text-primary">{perm.label}</p>
+                          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{perm.sub}</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className="font-bold text-sm">Camera Access</p>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Required for Player Photos</p>
-                      </div>
+                      {permissionsGranted[perm.key as keyof typeof permissionsGranted] ? (
+                        <div className="bg-green-500 rounded-full p-1 animate-in zoom-in">
+                          <CheckCircle2 className="w-5 h-5 text-white" />
+                        </div>
+                      ) : (
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/30" />
+                      )}
                     </div>
-                    {permissionsGranted.camera ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
-                  </div>
-
-                  <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-muted">
-                    <div className="flex items-center gap-4">
-                      <div className={cn("p-2 rounded-xl text-white", permissionsGranted.contacts ? "bg-green-500" : "bg-primary")}>
-                        <Contact className="w-6 h-6" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-bold text-sm">Contacts Access</p>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">For Emergency Alerts</p>
-                      </div>
-                    </div>
-                    {permissionsGranted.contacts ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
-                  </div>
-
-                  <div className="flex items-center justify-between p-5 bg-muted/30 rounded-2xl border border-muted">
-                    <div className="flex items-center gap-4">
-                      <div className={cn("p-2 rounded-xl text-white", permissionsGranted.storage ? "bg-green-500" : "bg-primary")}>
-                        <HardDrive className="w-6 h-6" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-bold text-sm">Storage / Media</p>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">For Offline Sync & Reports</p>
-                      </div>
-                    </div>
-                    {permissionsGranted.storage ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
-                  </div>
+                  ))}
                 </div>
 
                 <Button 
                   disabled={!permissionsGranted.camera || !permissionsGranted.contacts || !permissionsGranted.storage}
                   onClick={handleFinalEnter}
-                  className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black text-lg uppercase shadow-lg disabled:opacity-50 transition-all active-scale"
+                  className="w-full bg-primary text-white hover:bg-primary/90 rounded-3xl h-16 font-black text-lg uppercase tracking-widest shadow-xl disabled:opacity-50 transition-all active-scale"
                 >
-                  Enter Management Hub
+                  Enter Portal
                 </Button>
               </CardContent>
             </Card>
@@ -231,10 +257,13 @@ export default function WaghambaApp() {
 
   if (isUserLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <School className="w-16 h-16 text-primary animate-pulse mx-auto" />
-          <p className="font-bold text-primary animate-bounce">Establishing Secure Link...</p>
+      <div className="min-h-screen bg-[#113320] flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="relative">
+            <School className="w-20 h-20 text-accent animate-pulse mx-auto" />
+            <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full" />
+          </div>
+          <p className="font-black text-accent tracking-[0.3em] uppercase text-xs animate-bounce">Establishing Secure Link...</p>
         </div>
       </div>
     );
@@ -307,15 +336,18 @@ export default function WaghambaApp() {
           <div className="mt-4">
             <TabsContent value="home" className="tab-content-enter">
               <div className="space-y-8">
-                <Card className="border-0 rounded-[2.5rem] ios-card-shadow overflow-hidden bg-white/60 backdrop-blur-xl">
-                  <CardContent className="p-12 text-center space-y-8">
-                    <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto animate-pulse">
+                <Card className="border-0 rounded-[3rem] ios-card-shadow overflow-hidden bg-white/60 backdrop-blur-xl relative">
+                  <div className="absolute top-0 right-0 p-8">
+                    <div className="w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+                  </div>
+                  <CardContent className="p-12 text-center space-y-8 relative z-10">
+                    <div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto animate-pulse border border-primary/5 shadow-inner">
                       <School className="w-12 h-12 text-primary" />
                     </div>
                     <div className="space-y-4">
                       <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">{SCHOOL_NAME}</h2>
                       <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">High Performance Institutional Portal</p>
-                      <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-3xl border border-muted ios-card-shadow w-fit mx-auto active-scale">
+                      <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-[2rem] border border-muted shadow-lg w-fit mx-auto active-scale">
                         <User className="w-6 h-6 text-primary" />
                         <p className="text-2xl font-black text-primary">सुनिल देशमुख</p>
                       </div>
