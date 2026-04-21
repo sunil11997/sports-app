@@ -24,7 +24,10 @@ import {
   User,
   Loader2,
   History as HistoryIcon,
-  ArrowRight
+  ArrowRight,
+  ChevronRight,
+  GraduationCap,
+  Medal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -49,6 +52,7 @@ import { History } from '@/components/features/History';
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
@@ -66,6 +70,12 @@ export default function WaghambaApp() {
 
   const handleStartHub = () => {
     setIsEntered(true);
+  };
+
+  const handleSectionSelect = (section: 'sports' | 'general') => {
+    setSelectedSection(section);
+    setActiveTab("home");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (!isEntered) {
@@ -136,10 +146,106 @@ export default function WaghambaApp() {
     );
   }
 
+  // Section Selection Screen
+  if (!selectedSection) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+        <div className="max-w-4xl w-full space-y-12">
+          <div className="text-center space-y-4">
+            <div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+              {LOGO ? (
+                <Image src={LOGO.imageUrl} alt="Logo" width={60} height={60} />
+              ) : (
+                <School className="w-10 h-10 text-primary" />
+              )}
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">
+              Select Management Section
+            </h2>
+            <p className="text-muted-foreground font-bold uppercase tracking-widest text-sm opacity-60">
+              {SCHOOL_NAME}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Sports Hub Option */}
+            <button 
+              onClick={() => handleSectionSelect('sports')}
+              className="group relative bg-white border-2 border-primary/10 rounded-[3rem] p-10 text-left transition-all hover:border-accent hover:shadow-2xl active:scale-[0.98] ios-card-shadow"
+            >
+              <div className="bg-accent/10 w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Medal className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-3xl font-black text-primary uppercase mb-3">Sports Hub</h3>
+              <p className="text-muted-foreground font-medium text-lg leading-relaxed">
+                Management of active school athletes, performance tracking, skill technical scores, and tournament entry rosters.
+              </p>
+              <div className="mt-8 flex items-center text-primary font-black uppercase tracking-widest text-xs group-hover:gap-4 transition-all">
+                Access Hub <ChevronRight className="w-4 h-4 ml-2" />
+              </div>
+            </button>
+
+            {/* General Student Option */}
+            <button 
+              onClick={() => handleSectionSelect('general')}
+              className="group relative bg-white border-2 border-primary/10 rounded-[3rem] p-10 text-left transition-all hover:border-primary/40 hover:shadow-2xl active:scale-[0.98] ios-card-shadow"
+            >
+              <div className="bg-primary/5 w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <GraduationCap className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-3xl font-black text-primary uppercase mb-3">Student Registry</h3>
+              <p className="text-muted-foreground font-medium text-lg leading-relaxed">
+                Vital institutional records for all school students. Attendance, basic fitness assessments, and health/medical logs.
+              </p>
+              <div className="mt-8 flex items-center text-primary font-black uppercase tracking-widest text-xs group-hover:gap-4 transition-all">
+                Access Registry <ChevronRight className="w-4 h-4 ml-2" />
+              </div>
+            </button>
+          </div>
+          
+          <div className="text-center pt-8">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-30">
+              शासकीय माध्यमिक आश्रम शाळा वाघंबा • Teacher Sunil Deshmukh
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const navigateTo = (tab: string) => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const sportsTabs = [
+    { id: "home", label: "Home", icon: Home },
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "daily-report", label: "Report", icon: FileText },
+    { id: "tournament", label: "Tourney", icon: ClipboardList },
+    { id: "history", label: "History", icon: HistoryIcon },
+    { id: "registration", label: "Register", icon: User },
+    { id: "attendance", label: "Presence", icon: CalendarCheck },
+    { id: "fitness", label: "Fitness", icon: Activity },
+    { id: "sports", label: "Skills", icon: Trophy },
+    { id: "health", label: "Health", icon: Stethoscope },
+    { id: "ai", label: "AI Hub", icon: Sparkles },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
+  ];
+
+  const generalTabs = [
+    { id: "home", label: "Home", icon: Home },
+    { id: "dashboard", label: "Registry", icon: LayoutDashboard },
+    { id: "daily-report", label: "Session", icon: FileText },
+    { id: "history", label: "Records", icon: HistoryIcon },
+    { id: "registration", label: "Enroll", icon: User },
+    { id: "attendance", label: "Log", icon: CalendarCheck },
+    { id: "fitness", label: "Physicals", icon: Activity },
+    { id: "health", label: "Medical", icon: Stethoscope },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
+  ];
+
+  const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
     <div className="min-h-screen bg-background ios-spring pb-20 md:pb-8">
@@ -153,12 +259,22 @@ export default function WaghambaApp() {
                 <School className="w-6 h-6 text-primary" />
               )}
             </div>
-            <div className="hidden md:block">
-              <h1 className="text-lg font-black tracking-tight uppercase text-primary leading-none">Waghamba Sports</h1>
+            <div>
+              <h1 className="text-lg font-black tracking-tight uppercase text-primary leading-none">
+                {selectedSection === 'sports' ? 'Waghamba Sports Hub' : 'Waghamba Student Registry'}
+              </h1>
               <p className="text-[9px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{SCHOOL_NAME}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setSelectedSection(null)}
+              className="hidden md:flex text-[10px] font-black text-primary uppercase tracking-widest"
+            >
+              Switch Section
+            </Button>
             {isOnline ? (
               <Badge className="bg-accent/20 text-accent-foreground border-accent/30 font-black flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] tracking-widest">
                 <Wifi className="w-3.5 h-3.5" /> ONLINE
@@ -176,20 +292,7 @@ export default function WaghambaApp() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="overflow-x-auto pb-4 scrollbar-hide">
             <TabsList className="bg-muted/50 backdrop-blur-md p-1.5 h-auto flex gap-1 rounded-[1.5rem] min-w-max border shadow-inner">
-              {[
-                { id: "home", label: "Home", icon: Home },
-                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-                { id: "daily-report", label: "Report", icon: FileText },
-                { id: "tournament", label: "Tourney", icon: ClipboardList },
-                { id: "history", label: "History", icon: HistoryIcon },
-                { id: "registration", label: "Register", icon: User },
-                { id: "attendance", label: "Presence", icon: CalendarCheck },
-                { id: "fitness", label: "Fitness", icon: Activity },
-                { id: "sports", label: "Skills", icon: Trophy },
-                { id: "health", label: "Health", icon: Stethoscope },
-                { id: "ai", label: "AI Hub", icon: Sparkles },
-                { id: "settings", label: "Settings", icon: SettingsIcon },
-              ].map((tab) => (
+              {currentTabs.map((tab) => (
                 <TabsTrigger 
                   key={tab.id}
                   value={tab.id} 
@@ -224,18 +327,23 @@ export default function WaghambaApp() {
                       <div className="h-2 w-32 bg-accent mx-auto rounded-full" />
                       <p className="text-xl font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-60">आदिवासी विकास विभाग • महाराष्ट्र शासन</p>
                       
-                      <div className="flex items-center justify-center gap-3 bg-white/90 py-5 px-12 rounded-[2.5rem] border shadow-2xl w-fit mx-auto active-scale">
-                        <User className="w-7 h-7 text-primary" />
-                        <p className="text-3xl font-black text-primary">सुनिल देशमुख</p>
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex items-center justify-center gap-3 bg-white/90 py-5 px-12 rounded-[2.5rem] border shadow-2xl w-fit active-scale">
+                          <User className="w-7 h-7 text-primary" />
+                          <p className="text-3xl font-black text-primary">सुनिल देशमुख</p>
+                        </div>
+                        <Badge className="bg-primary text-primary-foreground px-6 py-2 rounded-full font-black uppercase tracking-widest text-xs">
+                          {selectedSection === 'sports' ? 'Managing Active Athletes' : 'Managing Institutional Registry'}
+                        </Badge>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12">
                       {[
-                        { icon: Users, label: "Roster", value: `${schoolData.data.players.length} Active`, color: "bg-blue-500" },
-                        { icon: Wifi, label: "Sync", value: "Cloud Live", color: "bg-green-500" },
-                        { icon: Stethoscope, label: "Health", value: "Real-time", color: "bg-red-500" },
-                        { icon: Trophy, label: "Evals", value: "Ready", color: "bg-yellow-500" }
+                        { icon: Users, label: "Total Students", value: `${schoolData.data.players.length} Registered`, color: "bg-blue-500" },
+                        { icon: Wifi, label: "Cloud Backup", value: "Live Sync", color: "bg-green-500" },
+                        { icon: Stethoscope, label: "Health Log", value: "Active", color: "bg-red-500" },
+                        { icon: Activity, label: "Fitness", value: "Assessment Ready", color: "bg-orange-500" }
                       ].map((stat, i) => (
                         <div key={i} className="p-8 bg-white rounded-[2.5rem] border shadow-xl active-scale transition-all">
                           <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4", stat.color + "/10")}>
@@ -259,9 +367,11 @@ export default function WaghambaApp() {
               <DailyReport store={schoolData} />
             </TabsContent>
 
-            <TabsContent value="tournament" className="tab-content-enter">
-              <TournamentRosters store={schoolData} />
-            </TabsContent>
+            {selectedSection === 'sports' && (
+              <TabsContent value="tournament" className="tab-content-enter">
+                <TournamentRosters store={schoolData} />
+              </TabsContent>
+            )}
 
             <TabsContent value="history" className="tab-content-enter">
               <History store={schoolData} />
@@ -279,16 +389,20 @@ export default function WaghambaApp() {
               <Fitness store={schoolData} />
             </TabsContent>
 
-            <TabsContent value="sports" className="tab-content-enter">
-              <SportsSkills store={schoolData} />
-            </TabsContent>
+            {selectedSection === 'sports' && (
+              <>
+                <TabsContent value="sports" className="tab-content-enter">
+                  <SportsSkills store={schoolData} />
+                </TabsContent>
+
+                <TabsContent value="ai" className="tab-content-enter">
+                  <AIAdvice store={schoolData} />
+                </TabsContent>
+              </>
+            )}
 
             <TabsContent value="health" className="tab-content-enter">
               <HealthIncidents store={schoolData} />
-            </TabsContent>
-
-            <TabsContent value="ai" className="tab-content-enter">
-              <AIAdvice store={schoolData} />
             </TabsContent>
 
             <TabsContent value="settings" className="tab-content-enter">
@@ -297,6 +411,16 @@ export default function WaghambaApp() {
           </div>
         </Tabs>
       </main>
+      
+      {/* Mobile Switch Section Button */}
+      <div className="fixed bottom-24 right-6 md:hidden z-40">
+        <Button 
+          onClick={() => setSelectedSection(null)}
+          className="rounded-full w-14 h-14 bg-primary shadow-2xl flex items-center justify-center"
+        >
+          <ChevronRight className="w-6 h-6 rotate-180" />
+        </Button>
+      </div>
     </div>
   );
 }
