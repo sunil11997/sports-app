@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -33,6 +34,7 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 // Dynamic imports with SSR disabled to prevent server-side hangs on client-only logic
 const LoadingSpinner = () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -93,6 +95,7 @@ export default function WaghambaApp() {
   const { toast } = useToast();
 
   const SCHOOL_NAME = "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
+  const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
 
   useEffect(() => {
     if (isEntered && !user && !isUserLoading) {
@@ -122,8 +125,17 @@ export default function WaghambaApp() {
         </div>
         
         <div className="relative z-10 text-center space-y-12 animate-in zoom-in-95 fade-in duration-1000">
-          <div className="w-32 h-32 bg-white/10 backdrop-blur-3xl rounded-[3rem] border border-white/20 flex items-center justify-center mx-auto shadow-2xl animate-bounce">
-            <Zap className="w-16 h-16 text-accent" />
+          <div className="w-40 h-40 bg-white/10 backdrop-blur-3xl rounded-[3rem] border border-white/20 flex items-center justify-center mx-auto shadow-2xl overflow-hidden animate-bounce">
+            {LOGO && (
+              <Image 
+                src={LOGO.imageUrl} 
+                alt="Logo" 
+                width={120} 
+                height={120} 
+                className="object-contain p-4"
+                data-ai-hint={LOGO.imageHint}
+              />
+            )}
           </div>
           
           <div className="space-y-6">
@@ -156,8 +168,19 @@ export default function WaghambaApp() {
         <div className="max-w-xl w-full relative z-10">
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 text-center">
             <div className="space-y-8">
-              <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/20 shadow-2xl">
-                <School className="w-12 h-12 text-accent" />
+              <div className="w-32 h-32 bg-white/10 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/20 shadow-2xl overflow-hidden">
+                {LOGO ? (
+                  <Image 
+                    src={LOGO.imageUrl} 
+                    alt="Logo" 
+                    width={80} 
+                    height={80} 
+                    className="object-contain p-2"
+                    data-ai-hint={LOGO.imageHint}
+                  />
+                ) : (
+                  <School className="w-12 h-12 text-accent" />
+                )}
               </div>
               
               <div className="space-y-4">
@@ -165,7 +188,7 @@ export default function WaghambaApp() {
                   {SCHOOL_NAME}
                 </h1>
                 <p className="text-accent font-black tracking-[0.2em] text-sm uppercase opacity-80">
-                  ता. सटाणा जि. नाशिक
+                  आदिवासी विकास विभाग, महाराष्ट्र शासन
                 </p>
               </div>
 
@@ -200,7 +223,9 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-[#113320] flex items-center justify-center">
         <div className="text-center space-y-6">
           <div className="relative">
-            <School className="w-20 h-20 text-accent animate-pulse mx-auto" />
+            <div className="w-20 h-20 mx-auto bg-accent/20 rounded-3xl flex items-center justify-center animate-pulse overflow-hidden">
+              {LOGO && <Image src={LOGO.imageUrl} alt="Loading" width={40} height={40} data-ai-hint={LOGO.imageHint} />}
+            </div>
             <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full" />
           </div>
           <p className="font-black text-accent tracking-[0.3em] uppercase text-xs animate-bounce">Establishing Secure Link...</p>
@@ -219,8 +244,12 @@ export default function WaghambaApp() {
       <header className="ios-blur sticky top-0 z-50 border-b border-muted py-3 px-6 md:px-8 ios-card-shadow">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer active-scale" onClick={() => navigateTo('home')}>
-            <div className="bg-primary p-2 rounded-xl">
-              <School className="w-6 h-6 text-primary-foreground" />
+            <div className="bg-primary p-2 rounded-xl overflow-hidden w-10 h-10 flex items-center justify-center">
+              {LOGO ? (
+                <Image src={LOGO.imageUrl} alt="Logo" width={28} height={28} data-ai-hint={LOGO.imageHint} />
+              ) : (
+                <School className="w-6 h-6 text-primary-foreground" />
+              )}
             </div>
             <div className="hidden md:block">
               <h1 className="text-xl font-black tracking-tight uppercase text-primary">वाघंबा स्पोर्ट्स हब</h1>
@@ -281,12 +310,16 @@ export default function WaghambaApp() {
                     <div className="w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
                   </div>
                   <CardContent className="p-12 text-center space-y-8 relative z-10">
-                    <div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto animate-pulse border border-primary/5 shadow-inner">
-                      <School className="w-12 h-12 text-primary" />
+                    <div className="w-32 h-32 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mx-auto border border-primary/5 shadow-inner overflow-hidden">
+                      {LOGO ? (
+                        <Image src={LOGO.imageUrl} alt="Logo" width={80} height={80} data-ai-hint={LOGO.imageHint} />
+                      ) : (
+                        <School className="w-12 h-12 text-primary" />
+                      )}
                     </div>
                     <div className="space-y-4">
                       <h2 className="text-4xl md:text-5xl font-black text-primary uppercase tracking-tight leading-tight">{SCHOOL_NAME}</h2>
-                      <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">High Performance Institutional Portal</p>
+                      <p className="text-lg font-bold text-muted-foreground uppercase tracking-widest opacity-60">आदिवासी विकास विभाग | High Performance Portal</p>
                       <div className="flex items-center justify-center gap-2 bg-white/80 py-4 px-10 rounded-[2rem] border border-muted shadow-lg w-fit mx-auto active-scale">
                         <User className="w-6 h-6 text-primary" />
                         <p className="text-2xl font-black text-primary">सुनिल देशमुख</p>
