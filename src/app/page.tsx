@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -30,7 +29,8 @@ import {
   CheckCircle2,
   ShieldCheck,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -90,6 +90,7 @@ const History = dynamic(() => import('@/components/features/History').then(mod =
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const [showPermissions, setShowPermissions] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState({
     camera: false,
@@ -131,12 +132,50 @@ export default function WaghambaApp() {
   };
 
   const handleFinalEnter = () => {
-    setIsEntered(true);
-    toast({
-      title: "Portal Authorized",
-      description: "Institutional features are now active.",
-    });
+    setShowWelcomeMessage(true);
+    setTimeout(() => {
+      setShowWelcomeMessage(false);
+      setIsEntered(true);
+      toast({
+        title: "Portal Authorized",
+        description: "Institutional features are now active.",
+      });
+    }, 3000);
   };
+
+  // Welcome Animation Screen
+  if (showWelcomeMessage) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#113320] flex flex-col items-center justify-center p-8 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-accent/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-primary/30 rounded-full blur-[120px]" />
+        </div>
+        
+        <div className="relative z-10 text-center space-y-12 animate-in zoom-in-95 fade-in duration-1000">
+          <div className="w-32 h-32 bg-white/10 backdrop-blur-3xl rounded-[3rem] border border-white/20 flex items-center justify-center mx-auto shadow-2xl animate-bounce">
+            <Zap className="w-16 h-16 text-accent" />
+          </div>
+          
+          <div className="space-y-6">
+            <h2 className="text-white text-4xl md:text-6xl font-black uppercase tracking-tighter leading-tight">
+              Welcome to New Era of Sport <br/> 
+              <span className="text-accent">WAGHAMBA SCHOOL</span>
+            </h2>
+            <p className="text-white/60 font-bold uppercase tracking-[0.3em] text-sm">
+              शासकीय माध्यमिक आश्रम शाळा वाघंबा
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-2">
+            <div className="h-1 w-12 bg-accent rounded-full animate-pulse" />
+            <div className="h-1 w-12 bg-white/20 rounded-full" />
+            <div className="h-1 w-12 bg-white/20 rounded-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isEntered) {
     return (

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, CheckCircle2, RotateCw } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -39,6 +38,7 @@ export function Registration({ store }: { store: any }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
 
@@ -60,11 +60,14 @@ export function Registration({ store }: { store: any }) {
     },
   });
 
-  const startCamera = async () => {
+  const startCamera = async (currentMode: 'user' | 'environment' = facingMode) => {
+    // Stop any existing stream
+    stopCamera();
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: 'user',
+          facingMode: currentMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
         } 
@@ -74,7 +77,6 @@ export function Registration({ store }: { store: any }) {
       setIsCameraActive(true);
       setCapturedPhoto(null);
 
-      // We need to wait for the next tick to ensure the video element is rendered if it was hidden
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -90,6 +92,14 @@ export function Registration({ store }: { store: any }) {
         title: 'Camera Access Denied',
         description: 'Please enable camera permissions in your browser settings to use this feature.',
       });
+    }
+  };
+
+  const toggleCamera = () => {
+    const newMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newMode);
+    if (isCameraActive) {
+      startCamera(newMode);
     }
   };
 
@@ -110,17 +120,16 @@ export function Registration({ store }: { store: any }) {
       const context = canvas.getContext('2d');
       
       if (context) {
-        // Match canvas to video stream resolution
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Mirror if it's front camera
-        context.translate(canvas.width, 0);
-        context.scale(-1, 1);
+        // Only mirror if it's the front camera
+        if (facingMode === 'user') {
+          context.translate(canvas.width, 0);
+          context.scale(-1, 1);
+        }
         
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Reset transform
         context.setTransform(1, 0, 0, 1, 0, 0);
         
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
@@ -141,7 +150,6 @@ export function Registration({ store }: { store: any }) {
     form.setValue('photoUrl', '');
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => stopCamera();
   }, []);
@@ -189,9 +197,22 @@ export function Registration({ store }: { store: any }) {
               {/* Photo & Identity Section */}
               <div className="lg:col-span-4 space-y-6">
                 <div className="space-y-2">
-                  <FormLabel className="font-black text-primary uppercase text-xs tracking-widest flex items-center gap-2">
-                    <Camera className="w-4 h-4" /> Player Identity Photo
-                  </FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="font-black text-primary uppercase text-xs tracking-widest flex items-center gap-2">
+                      <Camera className="w-4 h-4" /> Player Identity Photo
+                    </FormLabel>
+                    {isCameraActive && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={toggleCamera}
+                        className="text-primary font-bold text-[10px] uppercase tracking-tighter"
+                      >
+                        <RotateCw className="w-3 h-3 mr-1" /> Switch Camera
+                      </Button>
+                    )}
+                  </div>
                   <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-inner group">
                     {capturedPhoto ? (
                       <img src={capturedPhoto} alt="Captured" className="w-full h-full object-cover animate-in fade-in zoom-in-95 duration-500" />
@@ -201,7 +222,10 @@ export function Registration({ store }: { store: any }) {
                         autoPlay 
                         playsInline 
                         muted 
-                        className="w-full h-full object-cover -scale-x-100" 
+                        className={cn(
+                          "w-full h-full object-cover",
+                          facingMode === 'user' && "-scale-x-100"
+                        )} 
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
@@ -238,7 +262,7 @@ export function Registration({ store }: { store: any }) {
                   {!isCameraActive && !capturedPhoto && (
                     <Button 
                       type="button" 
-                      onClick={startCamera} 
+                      onClick={() => startCamera()} 
                       className="w-full bg-primary/5 text-primary hover:bg-primary/10 rounded-2xl h-14 border-2 border-primary/10 font-black uppercase text-xs tracking-widest active-scale"
                     >
                       <Camera className="w-5 h-5 mr-2" /> Start Camera
@@ -249,7 +273,7 @@ export function Registration({ store }: { store: any }) {
                     <div className="flex gap-3 animate-in fade-in duration-300">
                       <Button 
                         type="button" 
-                        onClick={startCamera} 
+                        onClick={() => startCamera()} 
                         className="flex-1 bg-primary/5 text-primary hover:bg-primary/10 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale"
                       >
                         <RefreshCw className="w-4 h-4 mr-2" /> Retake
