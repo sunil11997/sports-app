@@ -208,7 +208,7 @@ export default function WaghambaApp() {
                 onClick={handleStartHub}
                 className="w-full bg-accent hover:bg-accent/90 text-primary font-black text-xl h-20 rounded-[2rem] shadow-[0_15px_40px_-5px_rgba(138,240,117,0.3)] active:scale-95 transition-all group border-b-4 border-primary/20"
               >
-                START MANAGEMENT HUB
+                ENTER
                 <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Button>
               <p className="mt-6 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
