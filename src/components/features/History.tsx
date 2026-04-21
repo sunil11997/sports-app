@@ -10,15 +10,12 @@ import {
   HeartPulse, 
   Trophy, 
   Activity, 
-  Calendar,
-  ChevronRight,
   User,
   Medal,
   Stethoscope
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 export function History({ store }: { store: any }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -38,7 +37,6 @@ export function Fitness({ store }: { store: any }) {
     if (!current) return;
 
     // Logic: Calculate a total score based on provided values
-    // This is a simplified institutional scoring model
     const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps'];
     let filledCount = 0;
     let sum = 0;

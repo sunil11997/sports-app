@@ -63,7 +63,7 @@ export function TournamentRosters({ store }: { store: any }) {
         </head>
         <body>
           <div class="header">
-            <h1 class="school-name">शासकिय माध्यमिक आश्रम शाळा वाघांबा</h1>
+            <h1 class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</h1>
             <div class="sheet-title">OFFICIAL TOURNAMENT ENTRY SHEET</div>
           </div>
           

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -6,21 +5,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Printer, 
-  Calendar, 
   FileText, 
   Activity, 
   Users, 
-  Stethoscope, 
   Cloud, 
   Clock, 
-  Target,
-  Sun,
-  Umbrella,
-  CloudMoon
+  Target
 } from 'lucide-react';
 import { format } from 'date-fns';
 

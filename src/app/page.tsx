@@ -23,12 +23,6 @@ import {
   User,
   Loader2,
   History as HistoryIcon,
-  Camera,
-  Contact,
-  HardDrive,
-  CheckCircle2,
-  ShieldCheck,
-  ChevronRight,
   ArrowRight,
   Zap
 } from 'lucide-react';
@@ -91,12 +85,6 @@ const History = dynamic(() => import('@/components/features/History').then(mod =
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
-  const [showPermissions, setShowPermissions] = useState(false);
-  const [permissionsGranted, setPermissionsGranted] = useState({
-    camera: false,
-    contacts: false,
-    storage: false
-  });
   const [activeTab, setActiveTab] = useState("home");
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
@@ -112,26 +100,7 @@ export default function WaghambaApp() {
     }
   }, [isEntered, user, isUserLoading, auth]);
 
-  const requestAllPermissions = async () => {
-    setShowPermissions(true);
-    
-    // Attempt Camera Access
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      stream.getTracks().forEach(track => track.stop());
-      setPermissionsGranted(prev => ({ ...prev, camera: true }));
-    } catch (e) {
-      console.warn("Camera permission rejected");
-    }
-
-    // Simulate Contacts Access for institutional UI flow
-    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, contacts: true })), 1200);
-
-    // Simulate Storage Permission for institutional UI flow
-    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, storage: true })), 2200);
-  };
-
-  const handleFinalEnter = () => {
+  const handleStartHub = () => {
     setShowWelcomeMessage(true);
     setTimeout(() => {
       setShowWelcomeMessage(false);
@@ -163,7 +132,7 @@ export default function WaghambaApp() {
               <span className="text-accent">WAGHAMBA SCHOOL</span>
             </h2>
             <p className="text-white/60 font-bold uppercase tracking-[0.3em] text-sm">
-              शासकीय माध्यमिक आश्रम शाळा वाघंबा
+              {SCHOOL_NAME}
             </p>
           </div>
 
@@ -185,110 +154,42 @@ export default function WaghambaApp() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
         
         <div className="max-w-xl w-full relative z-10">
-          {!showPermissions ? (
-            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 text-center">
-              <div className="space-y-8">
-                <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/20 shadow-2xl">
-                  <School className="w-12 h-12 text-accent" />
-                </div>
-                
-                <div className="space-y-4">
-                  <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight px-4">
-                    {SCHOOL_NAME}
-                  </h1>
-                  <p className="text-accent font-black tracking-[0.2em] text-sm uppercase opacity-80">
-                    ता. सटाणा जि. नाशिक
-                  </p>
-                </div>
-
-                <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-md py-3 px-6 rounded-2xl border border-white/10">
-                  <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <p className="text-white text-lg font-bold">सुनिल देशमुख <span className="text-xs opacity-60 ml-1 font-medium">(क्रिडा शिक्षक)</span></p>
-                </div>
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 text-center">
+            <div className="space-y-8">
+              <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/20 shadow-2xl">
+                <School className="w-12 h-12 text-accent" />
               </div>
-
-              <div className="pt-8">
-                <Button 
-                  onClick={requestAllPermissions}
-                  className="w-full bg-accent hover:bg-accent/90 text-primary font-black text-xl h-20 rounded-[2rem] shadow-[0_15px_40px_-5px_rgba(138,240,117,0.3)] active:scale-95 transition-all group border-b-4 border-primary/20"
-                >
-                  START MANAGEMENT HUB
-                  <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <p className="mt-6 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
-                  Institutional Performance Version 2.5
+              
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight px-4">
+                  {SCHOOL_NAME}
+                </h1>
+                <p className="text-accent font-black tracking-[0.2em] text-sm uppercase opacity-80">
+                  ता. सटाणा जि. नाशिक
                 </p>
               </div>
-            </div>
-          ) : (
-            <Card className="rounded-[3rem] border-0 ios-card-shadow bg-white/95 backdrop-blur-2xl animate-in zoom-in-95 duration-500 overflow-hidden">
-              <div className="h-2 w-full bg-accent/20">
-                <div 
-                  className="h-full bg-accent transition-all duration-1000" 
-                  style={{ width: `${(Object.values(permissionsGranted).filter(Boolean).length / 3) * 100}%` }}
-                />
+
+              <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-md py-3 px-6 rounded-2xl border border-white/10">
+                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <p className="text-white text-lg font-bold">सुनिल देशमुख <span className="text-xs opacity-60 ml-1 font-medium">(क्रिडा शिक्षक)</span></p>
               </div>
-              <CardContent className="p-10 space-y-10">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="p-5 bg-primary/5 rounded-[2rem] mb-2">
-                    <ShieldCheck className="w-12 h-12 text-primary" />
-                  </div>
-                  <h2 className="text-2xl font-black text-primary uppercase tracking-tighter">System Authorization</h2>
-                  <p className="text-muted-foreground font-bold text-sm text-center leading-relaxed">
-                    Access to device sensors and storage is required for <br/> official student documentation.
-                  </p>
-                </div>
+            </div>
 
-                <div className="space-y-3">
-                  {[
-                    { key: 'camera', label: 'Camera Access', sub: 'Student Photography', icon: Camera },
-                    { key: 'contacts', label: 'Contacts Access', sub: 'Emergency Relations', icon: Contact },
-                    { key: 'storage', label: 'Internal Storage', sub: 'Offline Database', icon: HardDrive }
-                  ].map((perm) => (
-                    <div 
-                      key={perm.key} 
-                      className={cn(
-                        "flex items-center justify-between p-5 rounded-3xl border transition-all duration-500",
-                        permissionsGranted[perm.key as keyof typeof permissionsGranted] 
-                          ? "bg-green-50/50 border-green-200" 
-                          : "bg-muted/30 border-muted"
-                      )}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "p-3 rounded-2xl transition-colors duration-500",
-                          permissionsGranted[perm.key as keyof typeof permissionsGranted] ? "bg-green-500 text-white" : "bg-primary/10 text-primary"
-                        )}>
-                          <perm.icon className="w-6 h-6" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-black text-sm text-primary">{perm.label}</p>
-                          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{perm.sub}</p>
-                        </div>
-                      </div>
-                      {permissionsGranted[perm.key as keyof typeof permissionsGranted] ? (
-                        <div className="bg-green-500 rounded-full p-1 animate-in zoom-in">
-                          <CheckCircle2 className="w-5 h-5 text-white" />
-                        </div>
-                      ) : (
-                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/30" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <Button 
-                  disabled={!permissionsGranted.camera || !permissionsGranted.contacts || !permissionsGranted.storage}
-                  onClick={handleFinalEnter}
-                  className="w-full bg-primary text-white hover:bg-primary/90 rounded-3xl h-16 font-black text-lg uppercase tracking-widest shadow-xl disabled:opacity-50 transition-all active-scale"
-                >
-                  Enter Portal
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+            <div className="pt-8">
+              <Button 
+                onClick={handleStartHub}
+                className="w-full bg-accent hover:bg-accent/90 text-primary font-black text-xl h-20 rounded-[2rem] shadow-[0_15px_40px_-5px_rgba(138,240,117,0.3)] active:scale-95 transition-all group border-b-4 border-primary/20"
+              >
+                START MANAGEMENT HUB
+                <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <p className="mt-6 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
+                Institutional Performance Version 2.5
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -323,7 +224,7 @@ export default function WaghambaApp() {
             </div>
             <div className="hidden md:block">
               <h1 className="text-xl font-black tracking-tight uppercase text-primary">वाघंबा स्पोर्ट्स हब</h1>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase">आश्रम शाळा वाघंबा | सुनिल देशमुख</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">{SCHOOL_NAME} | सुनिल देशमुख</p>
             </div>
           </div>
           <div className="flex items-center gap-4">

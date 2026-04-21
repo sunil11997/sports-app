@@ -7,14 +7,12 @@ import {
   Cloud, 
   ChevronRight, 
   User, 
-  Info, 
   LogOut, 
   ShieldCheck, 
   Award, 
   School,
   Mail,
   Wifi,
-  HardDrive,
   Download,
   Lock,
   History
@@ -133,7 +131,7 @@ export function Settings() {
               icon={User} 
               color="bg-blue-600" 
               label="Sports Teacher" 
-              value="Sunil Deshmukh"
+              value="सुनिल देशमुख"
             />
             <SettingsItem 
               icon={Award} 
