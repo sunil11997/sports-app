@@ -1,8 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,52 +34,18 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-const LoadingSpinner = () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-
-const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(mod => mod.AIAdvice), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const TournamentRosters = dynamic(() => import('@/components/features/TournamentRosters').then(mod => mod.TournamentRosters), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
-const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { 
-  ssr: false,
-  loading: LoadingSpinner 
-});
+// Standard imports to eliminate loading flicker on tab switch
+import { Registration } from '@/components/features/Registration';
+import { Dashboard } from '@/components/features/Dashboard';
+import { Attendance } from '@/components/features/Attendance';
+import { Fitness } from '@/components/features/Fitness';
+import { SportsSkills } from '@/components/features/SportsSkills';
+import { HealthIncidents } from '@/components/features/HealthIncidents';
+import { AIAdvice } from '@/components/features/AIAdvice';
+import { DailyReport } from '@/components/features/DailyReport';
+import { TournamentRosters } from '@/components/features/TournamentRosters';
+import { Settings } from '@/components/features/Settings';
+import { History } from '@/components/features/History';
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
@@ -158,7 +123,7 @@ export default function WaghambaApp() {
     );
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || !schoolData.isLoaded) {
     return (
       <div className="min-h-screen bg-[#113320] flex items-center justify-center">
         <div className="text-center space-y-6">
@@ -286,51 +251,49 @@ export default function WaghambaApp() {
               </div>
             </TabsContent>
 
-            <Suspense fallback={<LoadingSpinner />}>
-              <TabsContent value="dashboard" className="tab-content-enter">
-                <Dashboard store={schoolData} />
-              </TabsContent>
+            <TabsContent value="dashboard" className="tab-content-enter">
+              <Dashboard store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="daily-report" className="tab-content-enter">
-                <DailyReport store={schoolData} />
-              </TabsContent>
+            <TabsContent value="daily-report" className="tab-content-enter">
+              <DailyReport store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="tournament" className="tab-content-enter">
-                <TournamentRosters store={schoolData} />
-              </TabsContent>
+            <TabsContent value="tournament" className="tab-content-enter">
+              <TournamentRosters store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="history" className="tab-content-enter">
-                <History store={schoolData} />
-              </TabsContent>
+            <TabsContent value="history" className="tab-content-enter">
+              <History store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="registration" className="tab-content-enter">
-                <Registration store={schoolData} />
-              </TabsContent>
+            <TabsContent value="registration" className="tab-content-enter">
+              <Registration store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="attendance" className="tab-content-enter">
-                <Attendance store={schoolData} />
-              </TabsContent>
+            <TabsContent value="attendance" className="tab-content-enter">
+              <Attendance store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="fitness" className="tab-content-enter">
-                <Fitness store={schoolData} />
-              </TabsContent>
+            <TabsContent value="fitness" className="tab-content-enter">
+              <Fitness store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="sports" className="tab-content-enter">
-                <SportsSkills store={schoolData} />
-              </TabsContent>
+            <TabsContent value="sports" className="tab-content-enter">
+              <SportsSkills store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="health" className="tab-content-enter">
-                <HealthIncidents store={schoolData} />
-              </TabsContent>
+            <TabsContent value="health" className="tab-content-enter">
+              <HealthIncidents store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="ai" className="tab-content-enter">
-                <AIAdvice store={schoolData} />
-              </TabsContent>
+            <TabsContent value="ai" className="tab-content-enter">
+              <AIAdvice store={schoolData} />
+            </TabsContent>
 
-              <TabsContent value="settings" className="tab-content-enter">
-                <Settings />
-              </TabsContent>
-            </Suspense>
+            <TabsContent value="settings" className="tab-content-enter">
+              <Settings />
+            </TabsContent>
           </div>
         </Tabs>
       </main>
