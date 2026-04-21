@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -126,15 +127,17 @@ export default function WaghambaApp() {
         
         <div className="relative z-10 text-center space-y-12 animate-in zoom-in-95 fade-in duration-1000">
           <div className="w-40 h-40 bg-white/10 backdrop-blur-3xl rounded-[3rem] border border-white/20 flex items-center justify-center mx-auto shadow-2xl overflow-hidden animate-bounce">
-            {LOGO && (
+            {LOGO ? (
               <Image 
                 src={LOGO.imageUrl} 
-                alt="Logo" 
+                alt="Adivasi Vikas Vibhag Logo" 
                 width={120} 
                 height={120} 
                 className="object-contain p-4"
                 data-ai-hint={LOGO.imageHint}
               />
+            ) : (
+              <School className="w-20 h-20 text-accent" />
             )}
           </div>
           
@@ -172,7 +175,7 @@ export default function WaghambaApp() {
                 {LOGO ? (
                   <Image 
                     src={LOGO.imageUrl} 
-                    alt="Logo" 
+                    alt="Adivasi Vikas Vibhag Logo" 
                     width={80} 
                     height={80} 
                     className="object-contain p-2"
@@ -224,7 +227,11 @@ export default function WaghambaApp() {
         <div className="text-center space-y-6">
           <div className="relative">
             <div className="w-20 h-20 mx-auto bg-accent/20 rounded-3xl flex items-center justify-center animate-pulse overflow-hidden">
-              {LOGO && <Image src={LOGO.imageUrl} alt="Loading" width={40} height={40} data-ai-hint={LOGO.imageHint} />}
+              {LOGO ? (
+                <Image src={LOGO.imageUrl} alt="Loading" width={40} height={40} data-ai-hint={LOGO.imageHint} />
+              ) : (
+                <Loader2 className="w-10 h-10 animate-spin text-accent" />
+              )}
             </div>
             <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full" />
           </div>
@@ -246,7 +253,7 @@ export default function WaghambaApp() {
           <div className="flex items-center gap-4 cursor-pointer active-scale" onClick={() => navigateTo('home')}>
             <div className="bg-primary p-2 rounded-xl overflow-hidden w-10 h-10 flex items-center justify-center">
               {LOGO ? (
-                <Image src={LOGO.imageUrl} alt="Logo" width={28} height={28} data-ai-hint={LOGO.imageHint} />
+                <Image src={LOGO.imageUrl} alt="Adivasi Vikas Vibhag Logo" width={28} height={28} data-ai-hint={LOGO.imageHint} />
               ) : (
                 <School className="w-6 h-6 text-primary-foreground" />
               )}
@@ -312,7 +319,7 @@ export default function WaghambaApp() {
                   <CardContent className="p-12 text-center space-y-8 relative z-10">
                     <div className="w-32 h-32 bg-primary/5 rounded-[2.5rem] flex items-center justify-center mx-auto border border-primary/5 shadow-inner overflow-hidden">
                       {LOGO ? (
-                        <Image src={LOGO.imageUrl} alt="Logo" width={80} height={80} data-ai-hint={LOGO.imageHint} />
+                        <Image src={LOGO.imageUrl} alt="Adivasi Vikas Vibhag Logo" width={80} height={80} data-ai-hint={LOGO.imageHint} />
                       ) : (
                         <School className="w-12 h-12 text-primary" />
                       )}

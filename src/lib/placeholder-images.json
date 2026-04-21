@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "adivasi-vikas-logo",
+      "description": "Adivasi Vikas Vibhag Official Logo",
+      "imageUrl": "https://picsum.photos/seed/maharashtra-tribal/200/200",
+      "imageHint": "Tribal Logo"
+    }
+  ]
 }
