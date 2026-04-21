@@ -33,7 +33,6 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const LoadingSpinner = () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -90,7 +89,6 @@ export default function WaghambaApp() {
   const { isOnline } = usePWA();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const { toast } = useToast();
 
   const SCHOOL_NAME = "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
   const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
@@ -103,20 +101,16 @@ export default function WaghambaApp() {
 
   const handleStartHub = () => {
     setIsEntered(true);
-    toast({
-      title: "Portal Authorized",
-      description: "Institutional features are now active.",
-    });
   };
 
   if (!isEntered) {
     return (
       <div className="min-h-screen bg-[#113320] flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
         
         <div className="max-w-xl w-full relative z-10 text-center space-y-12">
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="space-y-8">
             <div className="w-36 h-36 bg-white/10 backdrop-blur-xl rounded-[3rem] flex items-center justify-center mx-auto border border-white/20 shadow-2xl overflow-hidden">
               {LOGO ? (
                 <Image 
@@ -147,7 +141,7 @@ export default function WaghambaApp() {
             </div>
           </div>
 
-          <div className="pt-8 animate-in fade-in duration-1000 delay-500">
+          <div className="pt-8">
             <Button 
               onClick={handleStartHub}
               className="w-full bg-accent hover:bg-accent/90 text-[#113320] font-black text-2xl h-24 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(138,240,117,0.4)] active:scale-95 transition-all group border-b-8 border-[#235C36]"
@@ -183,7 +177,7 @@ export default function WaghambaApp() {
   };
 
   return (
-    <div className="min-h-screen bg-background ios-spring animate-in fade-in duration-500 pb-20 md:pb-8">
+    <div className="min-h-screen bg-background ios-spring pb-20 md:pb-8">
       <header className="ios-blur sticky top-0 z-50 border-b border-muted py-4 px-6 md:px-8 ios-card-shadow">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer active-scale" onClick={() => navigateTo('home')}>
