@@ -145,8 +145,8 @@ export function DailyReport({ store }: { store: any }) {
                     <td>${inc.description}</td>
                   </tr>
                 `).join('')}
-              </tbody>
-            </table>
+            </tbody>
+          </table>
           ` : ''}
 
           <div class="footer">
@@ -282,39 +282,6 @@ export function DailyReport({ store }: { store: any }) {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-primary/5 border-b border-primary/10">
-              <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
-                <Users className="w-5 h-5" /> Daily Attendance Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow>
-                    <TableHead className="font-bold">Player Name</TableHead>
-                    <TableHead className="text-center font-bold">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attendanceOnDate.map((a: any) => (
-                    <TableRow key={a.name}>
-                      <TableCell className="font-medium">{a.name}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                          a.status === 'P' ? 'bg-green-100 text-green-700' : 
-                          a.status === 'A' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-400'
-                        }`}>
-                          {a.status === 'P' ? 'PRESENT' : a.status === 'A' ? 'ABSENT' : 'NOT SET'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-6">
@@ -353,39 +320,6 @@ export function DailyReport({ store }: { store: any }) {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white overflow-hidden">
-            <CardHeader className="bg-destructive/5 border-b border-destructive/10">
-              <CardTitle className="text-lg font-black text-destructive uppercase flex items-center gap-2">
-                <Stethoscope className="w-5 h-5" /> Critical Health Logs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {incidentsOnDate.length === 0 ? (
-                <div className="text-center py-8 space-y-2">
-                  <Target className="w-8 h-8 text-muted-foreground/20 mx-auto" />
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">No health alerts today</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {incidentsOnDate.map((inc: any) => (
-                    <div key={inc.id} className="p-3 bg-destructive/5 rounded-xl border border-destructive/10">
-                      <p className="font-black text-destructive text-[10px] uppercase">{inc.playerName}</p>
-                      <p className="text-xs text-foreground/70 mt-1 font-medium">{inc.description}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="p-8 bg-primary rounded-[2rem] text-primary-foreground space-y-4 shadow-xl">
-            <Target className="w-10 h-10 text-accent" />
-            <h3 className="font-black text-xl uppercase tracking-tight">Institutional Standard</h3>
-            <p className="text-sm font-medium opacity-80 leading-relaxed">
-              This report adheres to the official Waghamba Sports Hub documentation guidelines for daily school sports management.
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -37,39 +38,52 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-// Dynamic imports for feature components
+// Dynamic imports with SSR disabled to prevent server-side hangs on client-only logic
+const LoadingSpinner = () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(mod => mod.AIAdvice), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const TournamentRosters = dynamic(() => import('@/components/features/TournamentRosters').then(mod => mod.TournamentRosters), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { 
-  loading: () => <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> 
+  ssr: false,
+  loading: LoadingSpinner 
 });
 
 export default function WaghambaApp() {
@@ -107,15 +121,10 @@ export default function WaghambaApp() {
       console.warn("Camera permission rejected");
     }
 
-    // Simulate/Request Contacts (Limited Web Support)
-    if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
-      setPermissionsGranted(prev => ({ ...prev, contacts: true }));
-    } else {
-      // Simulate for UI satisfaction as requested
-      setTimeout(() => setPermissionsGranted(prev => ({ ...prev, contacts: true })), 800);
-    }
+    // Simulate Contacts Access for institutional UI flow
+    setTimeout(() => setPermissionsGranted(prev => ({ ...prev, contacts: true })), 800);
 
-    // Simulate Storage Permission
+    // Simulate Storage Permission for institutional UI flow
     setTimeout(() => setPermissionsGranted(prev => ({ ...prev, storage: true })), 1500);
   };
 
@@ -333,7 +342,7 @@ export default function WaghambaApp() {
               </div>
             </TabsContent>
 
-            <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+            <Suspense fallback={<LoadingSpinner />}>
               <TabsContent value="dashboard" className="tab-content-enter">
                 <Dashboard store={schoolData} />
               </TabsContent>

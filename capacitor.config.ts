@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.waghamba.sportshub',
-  appName: 'शासकीय माध्यमिक आश्रम शाळा वाघांबा',
+  appName: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा',
   webDir: 'out',
   server: {
     androidScheme: 'https',
