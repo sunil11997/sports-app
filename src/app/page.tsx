@@ -85,7 +85,6 @@ const History = dynamic(() => import('@/components/features/History').then(mod =
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
@@ -103,59 +102,12 @@ export default function WaghambaApp() {
   }, [isEntered, user, isUserLoading, auth]);
 
   const handleStartHub = () => {
-    setShowWelcomeMessage(true);
-    setTimeout(() => {
-      setShowWelcomeMessage(false);
-      setIsEntered(true);
-      toast({
-        title: "Portal Authorized",
-        description: "Institutional features are now active.",
-      });
-    }, 2500);
+    setIsEntered(true);
+    toast({
+      title: "Portal Authorized",
+      description: "Institutional features are now active.",
+    });
   };
-
-  if (showWelcomeMessage) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-[#113320] flex flex-col items-center justify-center p-8 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-accent/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-primary/30 rounded-full blur-[120px]" />
-        </div>
-        
-        <div className="relative z-10 text-center space-y-12 animate-in zoom-in-95 fade-in duration-1000">
-          <div className="w-44 h-44 bg-white/10 backdrop-blur-3xl rounded-[3.5rem] border border-white/20 flex items-center justify-center mx-auto shadow-2xl overflow-hidden animate-bounce">
-            {LOGO ? (
-              <Image 
-                src={LOGO.imageUrl} 
-                alt="Logo" 
-                width={130} 
-                height={130} 
-                className="object-contain p-4"
-                data-ai-hint={LOGO.imageHint}
-              />
-            ) : (
-              <School className="w-20 h-20 text-accent" />
-            )}
-          </div>
-          
-          <div className="space-y-6">
-            <h2 className="text-white text-4xl md:text-6xl font-black uppercase tracking-tighter leading-tight">
-              Welcome to the New Era <br/> 
-              <span className="text-accent">WAGHAMBA SPORTS</span>
-            </h2>
-            <p className="text-white/40 font-black uppercase tracking-[0.4em] text-xs">
-              आदिवासी विकास विभाग • महाराष्ट्र शासन
-            </p>
-          </div>
-
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-1.5 w-16 bg-accent rounded-full animate-pulse" />
-            <div className="h-1.5 w-16 bg-white/10 rounded-full" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!isEntered) {
     return (
@@ -185,7 +137,7 @@ export default function WaghambaApp() {
                 {SCHOOL_NAME}
               </h1>
               <p className="text-accent font-black tracking-[0.3em] text-[10px] uppercase opacity-80">
-                Adivasi Vikas Vibhag • Government of Maharashtra
+                आदिवासी विकास विभाग • महाराष्ट्र शासन
               </p>
             </div>
 
@@ -311,7 +263,7 @@ export default function WaghambaApp() {
                     <div className="space-y-6">
                       <h2 className="text-4xl md:text-6xl font-black text-primary uppercase tracking-tight leading-tight">{SCHOOL_NAME}</h2>
                       <div className="h-2 w-32 bg-accent mx-auto rounded-full" />
-                      <p className="text-xl font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-60">Adivasi Vikas Vibhag • Govt Project</p>
+                      <p className="text-xl font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-60">आदिवासी विकास विभाग • महाराष्ट्र शासन</p>
                       
                       <div className="flex items-center justify-center gap-3 bg-white/90 py-5 px-12 rounded-[2.5rem] border shadow-2xl w-fit mx-auto active-scale">
                         <User className="w-7 h-7 text-primary" />
