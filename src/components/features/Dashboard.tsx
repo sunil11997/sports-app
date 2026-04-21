@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
 import { differenceInYears } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -29,6 +30,7 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [viewingPhoto, setViewingPhoto] = useState<{ url: string, name: string } | null>(null);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
@@ -194,11 +196,21 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
               filteredPlayers.map((player: any, index: number) => (
                 <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
                   <TableCell className="border-r p-2 text-center text-xs font-bold text-primary">{index + 1}</TableCell>
-                  <TableCell className="border-r p-1 flex justify-center items-center">
-                    <Avatar className="w-8 h-8 border">
-                      <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
-                      <AvatarFallback className="text-[10px]"><User className="w-3 h-3" /></AvatarFallback>
-                    </Avatar>
+                  <TableCell className="border-r p-1">
+                    <div 
+                      className="flex justify-center items-center cursor-pointer hover:opacity-80 transition-opacity relative group"
+                      onClick={() => player.photoUrl && setViewingPhoto({ url: player.photoUrl, name: player.name })}
+                    >
+                      <Avatar className="w-8 h-8 border">
+                        <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
+                        <AvatarFallback className="text-[10px]"><User className="w-3 h-3" /></AvatarFallback>
+                      </Avatar>
+                      {player.photoUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Maximize2 className="w-4 h-4 text-white bg-black/40 rounded-full p-0.5" />
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="border-r p-2 text-xs font-bold">{player.name}</TableCell>
                   <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
@@ -243,6 +255,36 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
         </Table>
       </div>
 
+      {/* Photo Viewer Dialog */}
+      <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
+        <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[2rem] border-0 shadow-2xl">
+          <div className="relative w-full aspect-[3/4] bg-muted">
+            {viewingPhoto && (
+              <Image 
+                src={viewingPhoto.url} 
+                alt={viewingPhoto.name} 
+                fill 
+                className="object-cover"
+                unoptimized
+              />
+            )}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
+              <h3 className="text-xl font-black uppercase tracking-tight">{viewingPhoto?.name}</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70">Official Identity Photo</p>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute top-4 right-4 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 rounded-full h-10 w-10"
+              onClick={() => setViewingPhoto(null)}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Registry Dialog */}
       <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-xl">
           <DialogHeader>
