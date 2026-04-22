@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal } from 'lucide-react';
+import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -142,6 +144,28 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     }
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        setCapturedPhoto(dataUrl);
+        form.setValue('photoUrl', dataUrl);
+        stopCamera();
+        toast({
+          title: "Upload Success",
+          description: "Photo added from gallery.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerGallery = () => {
+    fileInputRef.current?.click();
+  };
+
   const clearPhoto = () => {
     setCapturedPhoto(null);
     form.setValue('photoUrl', '');
@@ -222,7 +246,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
                     <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                      <Camera className="w-4 h-4" /> Identity Preview
+                      <ImageIcon className="w-4 h-4" /> Identity Preview
                     </FormLabel>
                     {isCameraActive && (
                       <Button 
@@ -254,7 +278,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
                         <Camera className="w-12 h-12 text-primary/20" />
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                          Camera Standby
+                          Identity Standby
                         </p>
                       </div>
                     )}
@@ -281,13 +305,30 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                   </div>
 
                   {!isCameraActive && !capturedPhoto && (
-                    <Button 
-                      type="button" 
-                      onClick={() => startCamera()} 
-                      className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-lg"
-                    >
-                      <Camera className="w-5 h-5 mr-2" /> Activate Camera
-                    </Button>
+                    <div className="flex flex-col gap-3">
+                      <Button 
+                        type="button" 
+                        onClick={() => startCamera()} 
+                        className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-lg"
+                      >
+                        <Camera className="w-5 h-5 mr-2" /> Live Camera
+                      </Button>
+                      <Button 
+                        type="button" 
+                        onClick={triggerGallery} 
+                        variant="outline"
+                        className="w-full border-2 border-primary/20 text-primary rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-sm"
+                      >
+                        <Upload className="w-5 h-5 mr-2" /> Upload Gallery
+                      </Button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileUpload} 
+                        accept="image/*" 
+                        className="hidden" 
+                      />
+                    </div>
                   )}
 
                   {capturedPhoto && (
@@ -315,7 +356,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle className="text-xs font-bold uppercase">Hardware Blocked</AlertTitle>
                       <AlertDescription className="text-[10px]">
-                        Please allow camera access in browser settings.
+                        Please allow camera access or use the Upload option.
                       </AlertDescription>
                     </Alert>
                   )}
