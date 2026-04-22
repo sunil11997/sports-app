@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -51,7 +52,7 @@ import { History } from '@/components/features/History';
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState("registration");
   const [isTabChanging, setIsTabChanging] = useState(false);
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
@@ -74,7 +75,7 @@ export default function WaghambaApp() {
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
-    setActiveTab("home");
+    setActiveTab("registration");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -181,12 +182,12 @@ export default function WaghambaApp() {
   }
 
   const sportsTabs = [
+    { id: "registration", label: "Register", icon: User },
     { id: "home", label: "Home", icon: Home },
     { id: "dashboard", label: "Roster", icon: LayoutDashboard },
     { id: "tournament", label: "Tourney", icon: ClipboardList },
     { id: "daily-report", label: "Report", icon: FileText },
     { id: "archive", label: "History", icon: HistoryIcon },
-    { id: "registration", label: "Register", icon: User },
     { id: "attendance", label: "Presence", icon: CalendarCheck },
     { id: "fitness", label: "Fitness", icon: Activity },
     { id: "sports-skills", label: "Skills", icon: TrophyIcon },
@@ -196,11 +197,11 @@ export default function WaghambaApp() {
   ];
 
   const generalTabs = [
+    { id: "registration", label: "Enroll", icon: User },
     { id: "home", label: "Home", icon: Home },
     { id: "dashboard", label: "Registry", icon: LayoutDashboard },
     { id: "daily-report", label: "Session", icon: FileText },
     { id: "archive", label: "History", icon: HistoryIcon },
-    { id: "registration", label: "Enroll", icon: User },
     { id: "attendance", label: "Log", icon: CalendarCheck },
     { id: "fitness", label: "Physicals", icon: Activity },
     { id: "health", label: "Medical", icon: Stethoscope },
