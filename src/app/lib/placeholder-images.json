@@ -6,6 +6,12 @@
       "description": "Adivasi Vikas Vibhag Official Logo",
       "imageUrl": "https://picsum.photos/seed/maharashtra-tribal/200/200",
       "imageHint": "Tribal Logo"
+    },
+    {
+      "id": "school-sports-hero",
+      "description": "Students playing sports on school ground",
+      "imageUrl": "https://picsum.photos/seed/school-sports/800/400",
+      "imageHint": "School Sports"
     }
   ]
 }
