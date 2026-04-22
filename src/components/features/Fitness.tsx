@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,28 +7,53 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle2, AlertCircle, Printer, Calculator, Scale, Ruler, GraduationCap, Save, Loader2, Calendar } from 'lucide-react';
+import { Activity, CheckCircle2, AlertCircle, Printer, Calculator, Scale, Ruler, GraduationCap, Save, Loader2, Calendar, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
+const CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'boys-u14', label: 'Boys U14' },
+  { id: 'boys-u17', label: 'Boys U17' },
+  { id: 'boys-senior', label: 'Boys Senior' },
+  { id: 'girls-u14', label: 'Girls U14' },
+  { id: 'girls-u17', label: 'Girls U17' },
+  { id: 'girls-senior', label: 'Girls Senior' },
+];
+
 export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [assessments, setAssessments] = useState<Record<string, any>>(store.data.fitness);
+  const [activeCategory, setActiveCategory] = useState("all");
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
-  const filteredPlayers = store.data.players.filter((p: any) => p.category === targetCategory);
 
   const getPlayerCategory = (p: any) => {
+    const age = parseInt(p.age) || 0;
+    const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
+    let agePart = 'senior';
+    if (age < 14) agePart = 'u14';
+    else if (age < 17) agePart = 'u17';
+    return `${genderPart}-${agePart}`;
+  };
+
+  const getReadableCategory = (p: any) => {
     const age = parseInt(p.age) || 0;
     const genderLabel = p.gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${genderLabel} U14`;
     if (age < 17) return `${genderLabel} U17`;
     return `${genderLabel} Senior`;
   };
+
+  const filteredPlayers = store.data.players.filter((p: any) => {
+    const matchesTarget = p.category === targetCategory;
+    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
+    return matchesTarget && matchesTab;
+  });
 
   const handleChange = (id: string, field: string, value: string) => {
     setAssessments(prev => ({
@@ -107,10 +133,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
   const handlePrint = () => {
     const currentMonth = format(new Date(), 'MMMM yyyy');
+    const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
     const printContent = `
       <html>
         <head>
-          <title>${isGeneral ? 'Monthly Growth Report' : 'Fitness Report'} - Waghamba</title>
+          <title>${isGeneral ? 'Monthly Growth Report' : 'Fitness Report'} - ${categoryLabel}</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; color: #333; }
             .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #235C36; padding-bottom: 10px; }
@@ -127,7 +154,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         <body>
           <div class="header">
             <h1>${isGeneral ? 'MONTHLY STUDENT GROWTH LOG' : 'INSTITUTIONAL ATHLETE FITNESS'}</h1>
-            <div class="month-sub">Assessment Period: ${currentMonth}</div>
+            <div class="month-sub">Period: ${currentMonth} | Category: ${categoryLabel.toUpperCase()}</div>
           </div>
           <table>
             <thead>
@@ -145,7 +172,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness[p.id] || {};
-                const category = getPlayerCategory(p);
+                const category = getReadableCategory(p);
                 return `
                   <tr>
                     <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
@@ -177,6 +204,21 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
   return (
     <div className="space-y-4">
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
+        {CATEGORIES.map(cat => (
+          <Button
+            key={cat.id}
+            variant={activeCategory === cat.id ? "default" : "ghost"}
+            size="sm"
+            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {cat.label}
+          </Button>
+        ))}
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           {isGeneral ? <Scale className="w-6 h-6 text-primary" /> : <Activity className="w-6 h-6 text-accent" />}
@@ -185,7 +227,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               {isGeneral ? 'Monthly Growth Registry' : 'Athlete Fitness Registry'}
             </h2>
             <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
-              <Calendar className="w-3 h-3" /> Period: {format(new Date(), 'MMMM yyyy')}
+              <Calendar className="w-3 h-3" /> Filtered: {CATEGORIES.find(c => c.id === activeCategory)?.label} | {format(new Date(), 'MMM yyyy')}
             </p>
           </div>
         </div>
@@ -236,7 +278,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   height: '', weight: '', examMarks: ''
                 };
                 const isPulse = lastSavedId === player.id;
-                const playerCategory = getPlayerCategory(player);
+                const playerCategory = getReadableCategory(player);
                 
                 return (
                   <TableRow 

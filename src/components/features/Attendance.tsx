@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -5,16 +6,41 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
-import { CalendarCheck, ChevronLeft, ChevronRight, Save, Printer } from 'lucide-react';
+import { CalendarCheck, ChevronLeft, ChevronRight, Save, Printer, Filter } from 'lucide-react';
+
+const CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'boys-u14', label: 'Boys U14' },
+  { id: 'boys-u17', label: 'Boys U17' },
+  { id: 'boys-senior', label: 'Boys Senior' },
+  { id: 'girls-u14', label: 'Girls U14' },
+  { id: 'girls-u17', label: 'Girls U17' },
+  { id: 'girls-senior', label: 'Girls Senior' },
+];
 
 export function Attendance({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [activeCategory, setActiveCategory] = useState("all");
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const targetCategory = section === 'general' ? 'student' : 'athlete';
-  const filteredPlayers = store.data.players.filter((p: any) => p.category === targetCategory);
+
+  const getPlayerCategory = (p: any) => {
+    const age = parseInt(p.age) || 0;
+    const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
+    let agePart = 'senior';
+    if (age < 14) agePart = 'u14';
+    else if (age < 17) agePart = 'u17';
+    return `${genderPart}-${agePart}`;
+  };
+
+  const filteredPlayers = store.data.players.filter((p: any) => {
+    const matchesTarget = p.category === targetCategory;
+    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
+    return matchesTarget && matchesTab;
+  });
 
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}`;
@@ -25,13 +51,15 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   };
 
   const handlePrint = () => {
+    const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
     const printContent = `
       <html>
         <head>
           <title>Attendance Report - ${format(currentDate, 'MMMM yyyy')}</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; }
-            h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #8AF075; }
+            h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #8AF075; margin-bottom: 10px; }
+            .meta { font-weight: bold; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             .name-cell { text-align: left; font-weight: bold; width: 120px; }
@@ -39,6 +67,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </head>
         <body>
           <h1>Attendance (${section.toUpperCase()}): ${format(currentDate, 'MMMM yyyy')}</h1>
+          <div class="meta">Category: ${categoryLabel.toUpperCase()}</div>
           <table>
             <thead>
               <tr>
@@ -70,8 +99,26 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   return (
     <div className="space-y-4">
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
+        {CATEGORIES.map(cat => (
+          <Button
+            key={cat.id}
+            variant={activeCategory === cat.id ? "default" : "ghost"}
+            size="sm"
+            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {cat.label}
+          </Button>
+        ))}
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h2 className="text-xl font-black text-primary uppercase tracking-tight">Excel: Monthly Attendance</h2>
+        <div>
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Excel: Monthly Attendance</h2>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase">Filtered by: {CATEGORIES.find(c => c.id === activeCategory)?.label}</p>
+        </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-white p-1 rounded-lg border shadow-sm">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
@@ -107,7 +154,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             {filteredPlayers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={days.length + 2} className="text-center py-8 text-muted-foreground">
-                  No records found.
+                  No records found in this category.
                 </TableCell>
               </TableRow>
             ) : (
@@ -116,7 +163,10 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                 return (
                   <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
                     <TableCell className="border-r p-2 text-xs font-bold sticky left-0 bg-white z-10">
-                      {player.name}
+                      <div className="flex flex-col">
+                        <span>{player.name}</span>
+                        <span className="text-[8px] uppercase text-muted-foreground font-black">{player.gender}</span>
+                      </div>
                     </TableCell>
                     {days.map(day => {
                       const key = `${player.id}_${format(day, 'yyyy-MM-dd')}`;

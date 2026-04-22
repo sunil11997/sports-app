@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2 } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -27,21 +27,42 @@ import Image from 'next/image';
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
+const CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'boys-u14', label: 'Boys U14' },
+  { id: 'boys-u17', label: 'Boys U17' },
+  { id: 'boys-senior', label: 'Boys Senior' },
+  { id: 'girls-u14', label: 'Girls U14' },
+  { id: 'girls-u17', label: 'Girls U17' },
+  { id: 'girls-senior', label: 'Girls Senior' },
+];
+
 export function Dashboard({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string, name: string } | null>(null);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
 
+  const getPlayerCategory = (p: any) => {
+    const age = parseInt(p.age) || 0;
+    const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
+    let agePart = 'senior';
+    if (age < 14) agePart = 'u14';
+    else if (age < 17) agePart = 'u17';
+    return `${genderPart}-${agePart}`;
+  };
+
   const filteredPlayers = store.data.players.filter((p: any) => {
     const matchesCategory = p.category === targetCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))) ||
       (p.bloodGroup && p.bloodGroup.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
+    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
+    return matchesCategory && matchesSearch && matchesTab;
   });
 
   const calculateAttendance = (playerId: string) => {
@@ -94,14 +115,16 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
   };
 
   const handlePrint = () => {
+    const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
     const printContent = `
       <html>
         <head>
-          <title>${isGeneral ? 'Student Registry' : 'Active Player Roster'} - Waghamba School</title>
+          <title>${isGeneral ? 'Student Registry' : 'Active Player Roster'} - ${categoryLabel}</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 20px; color: #333; }
             h1 { color: #235C36; border-bottom: 3px solid #8AF075; padding-bottom: 10px; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            .meta { font-weight: bold; margin-bottom: 20px; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
             th { background-color: #f4f4f4; font-weight: bold; font-size: 12px; }
             .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; }
@@ -110,7 +133,7 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
         </head>
         <body>
           <h1>${isGeneral ? 'GENERAL STUDENT REGISTRY' : 'ACTIVE ATHLETE ROSTER'}</h1>
-          <p>Generated on ${new Date().toLocaleDateString()}</p>
+          <div class="meta">Category: ${categoryLabel.toUpperCase()} | Date: ${new Date().toLocaleDateString()}</div>
           <table>
             <thead>
               <tr>
@@ -144,18 +167,36 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
 
   return (
     <div className="space-y-4">
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
+        {CATEGORIES.map(cat => (
+          <Button
+            key={cat.id}
+            variant={activeCategory === cat.id ? "default" : "ghost"}
+            size="sm"
+            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {cat.label}
+          </Button>
+        ))}
+      </div>
+
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
         <div className="flex items-center gap-3">
           {isGeneral ? <GraduationCap className="w-6 h-6 text-primary" /> : <Medal className="w-6 h-6 text-accent" />}
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">
-            {isGeneral ? 'Excel: Student Registry' : 'Excel: Athlete Roster'}
-          </h2>
+          <div>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tight">
+              {isGeneral ? 'Excel: Student Registry' : 'Excel: Athlete Roster'}
+            </h2>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase">Filtered by: {CATEGORIES.find(c => c.id === activeCategory)?.label}</p>
+          </div>
         </div>
         <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Search..." 
+              placeholder="Search by name, blood, sport..." 
               className="pl-9 h-9 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -167,20 +208,20 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
         </div>
       </div>
 
-      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm">
-        <Table className="border-collapse">
+      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+        <Table className="border-collapse min-w-max">
           <TableHeader className="bg-muted/50 sticky top-0 z-20">
             <TableRow className="border-b">
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[50px] text-center">SR</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[60px] text-center">Photo</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase">Name</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[200px]">Name</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[60px]">Age</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[60px]">Std</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[70px]">Blood</TableHead>
               {isGeneral ? (
                 <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[100px] text-center">Exam</TableHead>
               ) : (
-                <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase">Sports</TableHead>
+                <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[150px]">Sports</TableHead>
               )}
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[80px]">BMI</TableHead>
               <TableHead className="h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">Actions</TableHead>
@@ -190,7 +231,7 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
             {filteredPlayers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                  No records found.
+                  No records found in this category.
                 </TableCell>
               </TableRow>
             ) : (
@@ -213,7 +254,12 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="border-r p-2 text-xs font-bold">{player.name}</TableCell>
+                  <TableCell className="border-r p-2 text-xs font-bold">
+                    <div className="flex flex-col">
+                      <span>{player.name}</span>
+                      <span className="text-[8px] uppercase text-muted-foreground font-black">{player.gender}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
                   <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
                   <TableCell className="border-r p-2 text-center">
@@ -306,19 +352,6 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
                   <Input type="date" value={editingPlayer.dob} onChange={(e) => setEditingPlayer({ ...editingPlayer, dob: e.target.value })} className="h-9 text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">Standard</Label>
-                  <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({ ...editingPlayer, std: val })}>
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...Array(12)].map((_, i) => (
-                        <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
                   <Label className="text-xs font-bold uppercase">Blood Group</Label>
                   <Select value={editingPlayer.bloodGroup || "O+"} onValueChange={(val) => setEditingPlayer({ ...editingPlayer, bloodGroup: val })}>
                     <SelectTrigger className="h-9 text-sm">
@@ -327,6 +360,19 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
                     <SelectContent>
                       {BLOOD_GROUPS.map(group => (
                         <SelectItem key={group} value={group}>{group}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase">Standard</Label>
+                  <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({ ...editingPlayer, std: val })}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...Array(12)].map((_, i) => (
+                        <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
