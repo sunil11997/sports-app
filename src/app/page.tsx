@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -184,8 +183,8 @@ export default function WaghambaApp() {
   const sportsTabs = [
     { id: "home", label: "Home", icon: Home },
     { id: "dashboard", label: "Roster", icon: LayoutDashboard },
-    { id: "daily-report", label: "Report", icon: FileText },
     { id: "tournament", label: "Tourney", icon: ClipboardList },
+    { id: "daily-report", label: "Report", icon: FileText },
     { id: "archive", label: "History", icon: HistoryIcon },
     { id: "registration", label: "Register", icon: User },
     { id: "attendance", label: "Presence", icon: CalendarCheck },
