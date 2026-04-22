@@ -205,37 +205,37 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                     {isGeneral ? (
                       <>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.height} onChange={(e) => handleChange(player.id, 'height', e.target.value)} />
+                          <Input className="h-10 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.weight} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} />
+                          <Input className="h-10 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white rounded-none" value={current.examMarks} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} />
+                          <Input className="h-10 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white rounded-none" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} />
                         </TableCell>
                       </>
                     ) : (
                       <>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="sec" value={current.shuttleRun} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="sec" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="sec" value={current.run50m} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="sec" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="min" value={current.run600m} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="min" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="cm" value={current.sitAndReach} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="cm" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="cm" value={current.boardJump} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="cm" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="count" value={current.sitUps} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="count" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="0-100" value={current.strengthScore} onChange={(e) => handleChange(player.id, 'strengthScore', e.target.value)} />
+                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="0-100" value={current.strengthScore || ''} onChange={(e) => handleChange(player.id, 'strengthScore', e.target.value)} />
                         </TableCell>
                       </>
                     )}
