@@ -16,7 +16,8 @@ import {
   Stethoscope,
   Scale,
   Ruler,
-  GraduationCap
+  GraduationCap,
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -45,12 +46,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
-  const playerSkills = useMemo(() => 
-    (store.data.skillsHistory[selectedPlayerId] || [])
-      .sort((a: any, b: any) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()),
-    [selectedPlayerId, store.data.skillsHistory]
-  );
-
   const handlePrint = () => {
     if (!player) return;
     const printContent = `
@@ -63,24 +58,48 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 11px; }
             th { background: #f4f4f4; font-weight: bold; }
+            .section-title { background: #e8f5e9; padding: 5px 10px; margin-top: 30px; border-radius: 4px; font-weight: 900; }
           </style>
         </head>
         <body>
           <h1>INSTITUTIONAL PROGRESS: ${player.name}</h1>
-          <p>Std: ${player.std} | Age: ${player.age}</p>
-          ${isGeneral ? `
-            <h2>Monthly Evolution</h2>
-            <table>
-              <thead><tr><th>Date</th><th>Ht (cm)</th><th>Wt (kg)</th><th>Exam</th><th>Status</th></tr></thead>
-              <tbody>${playerFitness.map(f => `<tr><td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td><td>${f.height || '-'}</td><td>${f.weight || '-'}</td><td>${f.examMarks || '-'}</td><td>${f.status}</td></tr>`).join('')}</tbody>
-            </table>
-          ` : `
-            <h2>Athletic Performance</h2>
-            <table>
-              <thead><tr><th>Date</th><th>Fitness Score</th><th>Status</th></tr></thead>
-              <tbody>${playerFitness.map(f => `<tr><td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td><td>${f.score}</td><td>${f.status}</td></tr>`).join('')}</tbody>
-            </table>
-          `}
+          <p>Std: ${player.std} | Age: ${player.age} | ${section.toUpperCase()} Division</p>
+          
+          <div class="section-title">DETAILED PERFORMANCE HISTORY</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                ${isGeneral ? 
+                  '<th>Ht (cm)</th><th>Wt (kg)</th><th>Exam</th>' : 
+                  '<th>10x6</th><th>50M</th><th>600M</th><th>Reach</th><th>Jump</th><th>Situps</th><th>Str</th>'
+                }
+                <th>Total Score</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${playerFitness.map(f => `
+                <tr>
+                  <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
+                  ${isGeneral ? 
+                    `<td>${f.height || '-'}</td><td>${f.weight || '-'}</td><td>${f.examMarks || '-'}</td>` : 
+                    `<td>${f.shuttleRun || '-'}</td><td>${f.run50m || '-'}</td><td>${f.run600m || '-'}</td><td>${f.sitAndReach || '-'}</td><td>${f.boardJump || '-'}</td><td>${f.sitUps || '-'}</td><td>${f.strengthScore || '-'}</td>`
+                  }
+                  <td><strong>${f.score}${isGeneral ? '' : '%'}</strong></td>
+                  <td>${f.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="section-title">MEDICAL & INCIDENT LOG</div>
+          <table>
+            <thead><tr><th>Date</th><th>Description</th></tr></thead>
+            <tbody>
+              ${playerIncidents.map(inc => `<tr><td>${format(new Date(inc.date), 'dd MMM yyyy')}</td><td>${inc.description}</td></tr>`).join('')}
+            </tbody>
+          </table>
         </body>
       </html>
     `;
@@ -114,57 +133,84 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
 
       {!selectedPlayerId ? (
         <div className="p-12 text-center text-muted-foreground border-2 border-dashed rounded-lg opacity-40">
-          <User className="w-12 h-12 mx-auto mb-2" />
-          <p className="font-bold uppercase text-[11px] tracking-widest">Select a student from archives</p>
+          <TrendingUp className="w-12 h-12 mx-auto mb-2" />
+          <p className="font-bold uppercase text-[11px] tracking-widest">Select a student to view monthly evolution</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm">
-            <div className="bg-muted/50 p-2 border-b font-black text-[11px] uppercase text-primary">Monthly Spread History</div>
-            <Table className="border-collapse">
+        <div className="space-y-6">
+          <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+            <div className="bg-primary/5 p-2 border-b font-black text-[11px] uppercase text-primary flex items-center justify-between">
+              <span>Monthly Progress Spread: {player?.name}</span>
+              <Badge variant="outline" className="text-[9px] font-black uppercase">Archive Data</Badge>
+            </div>
+            <Table className="border-collapse min-w-max">
               <TableHeader className="bg-muted/30 sticky top-0">
                 <TableRow className="border-b">
-                  <TableHead className="border-r h-8 px-2 text-[10px] uppercase font-black">Date</TableHead>
+                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black sticky left-0 bg-muted/30 z-10 w-[120px]">Date</TableHead>
                   {isGeneral ? (
                     <>
-                      <TableHead className="border-r h-8 px-2 text-[10px] uppercase font-black text-center">Ht</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[10px] uppercase font-black text-center">Wt</TableHead>
-                      <TableHead className="h-8 px-2 text-[10px] uppercase font-black text-center">Exam</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[60px]">Ht</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[60px]">Wt</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[60px]">Exam</TableHead>
                     </>
                   ) : (
                     <>
-                      <TableHead className="border-r h-8 px-2 text-[10px] uppercase font-black text-center">Score</TableHead>
-                      <TableHead className="h-8 px-2 text-[10px] uppercase font-black text-center">Status</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">10x6</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">50M</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">600M</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Reach</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Jump</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Situps</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Str</TableHead>
                     </>
                   )}
+                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[80px]">Score</TableHead>
+                  <TableHead className="h-8 px-2 text-[9px] uppercase font-black text-right w-[150px]">Status / Level</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {playerFitness.map((fit: any, idx: number) => (
-                  <TableRow key={idx} className="border-b even:bg-muted/30 h-9">
-                    <TableCell className="border-r p-2 text-[10px] font-bold">
-                      {format(new Date(fit.updatedAt || fit.date || new Date()), 'MMM yyyy')}
-                    </TableCell>
-                    {isGeneral ? (
-                      <>
-                        <TableCell className="border-r p-1 text-center text-[11px]">{fit.height || '-'}</TableCell>
-                        <TableCell className="border-r p-1 text-center text-[11px]">{fit.weight || '-'}</TableCell>
-                        <TableCell className="p-1 text-center text-[11px] font-black text-primary">{fit.examMarks || '0'}</TableCell>
-                      </>
-                    ) : (
-                      <>
-                        <TableCell className="border-r p-1 text-center text-[11px] font-black text-primary">{fit.score}</TableCell>
-                        <TableCell className="p-1 text-center text-[10px] font-bold uppercase text-muted-foreground">{fit.status}</TableCell>
-                      </>
-                    )}
-                  </TableRow>
-                ))}
+                {playerFitness.length === 0 ? (
+                  <TableRow><TableCell colSpan={15} className="text-center py-4 text-[11px] text-muted-foreground italic">No archive data found for this player.</TableCell></TableRow>
+                ) : (
+                  playerFitness.map((fit: any, idx: number) => (
+                    <TableRow key={idx} className="border-b even:bg-muted/30 h-9 hover:bg-primary/5 transition-colors">
+                      <TableCell className="border-r p-2 text-[10px] font-bold sticky left-0 bg-white z-10">
+                        {format(new Date(fit.updatedAt || fit.date || new Date()), 'MMM yyyy')}
+                      </TableCell>
+                      {isGeneral ? (
+                        <>
+                          <TableCell className="border-r p-1 text-center text-[11px]">{fit.height || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[11px]">{fit.weight || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[11px] font-black text-primary">{fit.examMarks || '0'}</TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.shuttleRun || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.run50m || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.run600m || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.sitAndReach || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.boardJump || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.sitUps || '-'}</TableCell>
+                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.strengthScore || '-'}</TableCell>
+                        </>
+                      )}
+                      <TableCell className="border-r p-1 text-center text-[11px] font-black text-primary bg-primary/5">
+                        {fit.score}{isGeneral ? '' : '%'}
+                      </TableCell>
+                      <TableCell className="p-1 text-right text-[9px] font-black uppercase text-muted-foreground/60 pr-4">
+                        {fit.status}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
 
           <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm">
-            <div className="bg-muted/50 p-2 border-b font-black text-[11px] uppercase text-destructive">Health & Incident Log</div>
+            <div className="bg-destructive/5 p-2 border-b font-black text-[11px] uppercase text-destructive flex items-center gap-2">
+              <Stethoscope className="w-4 h-4" /> Health & Medical Archives
+            </div>
             <div className="p-4 space-y-3">
               {playerIncidents.map((inc: any) => (
                 <div key={inc.id} className="border-l-4 border-destructive/30 pl-3 py-1">
@@ -172,7 +218,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                   <p className="text-xs font-medium leading-relaxed mt-1">{inc.description}</p>
                 </div>
               ))}
-              {playerIncidents.length === 0 && <p className="text-[11px] text-muted-foreground italic text-center py-4">No medical history logged.</p>}
+              {playerIncidents.length === 0 && <p className="text-[11px] text-muted-foreground italic text-center py-4">No medical history logged for this student.</p>}
             </div>
           </div>
         </div>
