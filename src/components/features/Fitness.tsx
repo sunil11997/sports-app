@@ -79,17 +79,21 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
   const handleSave = async (player: any) => {
     const id = player.id;
-    const current = assessments[id] || {};
+    const current = { ...(assessments[id] || {}) };
     setIsSaving(id);
     
     let scoreNum = 0;
     let status = 'Logged';
 
     if (!isGeneral) {
-      // Auto-Strength from Sit-ups (Approx)
+      // Auto-Strength from Sit-ups (Institutional Formula: 35 reps = 100%)
       const situps = parseInt(current.sitUps) || 0;
       const autoStrength = Math.min(100, Math.round((situps / 35) * 100));
-      if (!current.strengthScore) current.strengthScore = autoStrength.toString();
+      
+      // Update local and submission data with auto-strength if not manually overridden
+      if (!current.strengthScore || current.strengthScore === '') {
+        current.strengthScore = autoStrength.toString();
+      }
 
       const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps', 'strengthScore'];
       let sum = 0;
@@ -98,6 +102,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       fields.forEach(f => {
         const val = parseFloat(current[f]);
         if (!isNaN(val)) {
+          // Normalize values to 100 max for aggregate percentage
           sum += (val > 100 ? 100 : val);
           count++;
         }
@@ -163,7 +168,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 <th>CATEGORY</th>
                 ${isGeneral ? 
                   '<th>HT (CM)</th><th>WT (KG)</th><th>EXAM SC</th>' : 
-                  '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>STRENGTH %</th>'
+                  '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>STR RATING %</th>'
                 }
                 <th>TOTAL</th>
                 <th>LEVEL</th>
@@ -226,8 +231,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="font-bold h-9 border-2" onClick={() => window.location.hash = 'archive'}>
-            <History className="w-4 h-4 mr-2" /> View History Spread
+          <Button variant="outline" size="sm" className="font-bold h-9 border-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <History className="w-4 h-4 mr-2" /> Show Monthly Spread
           </Button>
           <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary hover:bg-primary/90">
             <Printer className="w-4 h-4 mr-2" /> Print Sheet
@@ -254,7 +259,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">Reach</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">Jump</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">Situps</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Str Rating</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Strength Rating</TableHead>
                 </>
               )}
               <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[120px]">Score / Level</TableHead>

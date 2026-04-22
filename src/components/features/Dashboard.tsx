@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -58,8 +59,12 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
   };
 
   const calculateAttendance = (playerId: string) => {
+    // Filter the global attendance object for keys matching this specific player
+    // and ensure we only count 'P' or 'A' records (valid entries)
     const records = Object.entries(store.data.attendance)
-      .filter(([key]) => key.startsWith(`${playerId}_`));
+      .filter(([key, status]) => 
+        key.startsWith(`${playerId}_`) && (status === 'P' || status === 'A')
+      );
     
     if (records.length === 0) return 0;
     

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident } from '@/lib/types';
@@ -24,57 +25,83 @@ export function useSchoolData() {
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
 
-  // 3. Real-time Synchronization Loop
+  // 3. Subscription Management to prevent flickering and redundant cloud calls
+  const unsubscribersRef = useRef<Record<string, (() => void)[]>>({});
+
   useEffect(() => {
-    if (!user || !players || players.length === 0) return;
+    if (!user || !players || players.length === 0) {
+      // Cleanup all if no players
+      Object.values(unsubscribersRef.current).forEach(unsubs => unsubs.forEach(u => u()));
+      unsubscribersRef.current = {};
+      return;
+    }
 
-    const unsubscribers: (() => void)[] = [];
-
-    players.forEach(player => {
-      // Sync Attendance
-      const attRef = collection(db, 'players', player.id, 'attendance');
-      const unsubAtt = onSnapshot(attRef, (snapshot) => {
-        const newAtt: AttendanceRecord = {};
-        snapshot.docs.forEach(doc => {
-          newAtt[`${player.id}_${doc.id}`] = doc.data().status;
-        });
-        setAttendanceData(prev => ({ ...prev, ...newAtt }));
-      });
-      unsubscribers.push(unsubAtt);
-
-      // Sync Fitness / Monthly Logs
-      const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
-      const unsubFit = onSnapshot(fitRef, (snapshot) => {
-        const history: FitnessAssessment[] = [];
-        snapshot.docs.forEach(d => {
-          const data = d.data() as FitnessAssessment;
-          if (d.id === 'latest') {
-            setFitnessData(prev => ({ ...prev, [player.id]: data }));
-          }
-          history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
-        });
-        setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
-      });
-      unsubscribers.push(unsubFit);
-
-      // Sync Sport Skills
-      const skillRef = collection(db, 'players', player.id, 'sportSkills');
-      const unsubSkill = onSnapshot(skillRef, (snapshot) => {
-        const playerSkills: Record<string, SportSkill> = {};
-        const historyList: (SportSkill & { sportName: string })[] = [];
-        snapshot.docs.forEach(doc => {
-          const data = doc.data() as SportSkill;
-          playerSkills[`${player.id}_${doc.id}`] = data;
-          historyList.push({ ...data, sportName: doc.id });
-        });
-        setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
-        setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
-      });
-      unsubscribers.push(unsubSkill);
+    const currentPlayerIds = new Set(players.map(p => p.id));
+    
+    // Remove unsubs for players no longer in list
+    Object.keys(unsubscribersRef.current).forEach(id => {
+      if (!currentPlayerIds.has(id)) {
+        unsubscribersRef.current[id].forEach(u => u());
+        delete unsubscribersRef.current[id];
+      }
     });
 
-    return () => unsubscribers.forEach(unsub => unsub());
-  }, [db, user, players]);
+    players.forEach(player => {
+      // Only start new listeners if we aren't already watching this player
+      if (!unsubscribersRef.current[player.id]) {
+        const unsubs: (() => void)[] = [];
+
+        // Sync Attendance
+        const attRef = collection(db, 'players', player.id, 'attendance');
+        const unsubAtt = onSnapshot(attRef, (snapshot) => {
+          const newAtt: AttendanceRecord = {};
+          snapshot.docs.forEach(doc => {
+            newAtt[`${player.id}_${doc.id}`] = doc.data().status;
+          });
+          setAttendanceData(prev => ({ ...prev, ...newAtt }));
+        });
+        unsubs.push(unsubAtt);
+
+        // Sync Fitness / Monthly Logs
+        const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
+        const unsubFit = onSnapshot(fitRef, (snapshot) => {
+          const history: FitnessAssessment[] = [];
+          snapshot.docs.forEach(d => {
+            const data = d.data() as FitnessAssessment;
+            if (d.id === 'latest') {
+              setFitnessData(prev => ({ ...prev, [player.id]: data }));
+            }
+            history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
+          });
+          setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
+        });
+        unsubs.push(unsubFit);
+
+        // Sync Sport Skills
+        const skillRef = collection(db, 'players', player.id, 'sportSkills');
+        const unsubSkill = onSnapshot(skillRef, (snapshot) => {
+          const playerSkills: Record<string, SportSkill> = {};
+          const historyList: (SportSkill & { sportName: string })[] = [];
+          snapshot.docs.forEach(doc => {
+            const data = doc.data() as SportSkill;
+            playerSkills[`${player.id}_${doc.id}`] = data;
+            historyList.push({ ...data, sportName: doc.id });
+          });
+          setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
+          setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
+        });
+        unsubs.push(unsubSkill);
+
+        unsubscribersRef.current[player.id] = unsubs;
+      }
+    });
+
+    // Cleanup logic for when component unmounts
+    return () => {
+      // We don't cleanup here to persist listeners across list renders 
+      // unless the players array actually changes (handled by the Set logic above)
+    };
+  }, [db, user, players]); // Stable triggers
 
   const aggregatedData = useMemo(() => {
     return {
