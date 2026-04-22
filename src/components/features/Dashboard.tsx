@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2, Filter } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2, Filter, Percent } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -57,15 +57,6 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
     return `${genderPart}-${agePart}`;
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => {
-    const matchesCategory = p.category === targetCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))) ||
-      (p.bloodGroup && p.bloodGroup.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
-    return matchesCategory && matchesSearch && matchesTab;
-  });
-
   const calculateAttendance = (playerId: string) => {
     const records = Object.entries(store.data.attendance)
       .filter(([key]) => key.startsWith(`${playerId}_`));
@@ -75,6 +66,15 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
     const presents = records.filter(([, status]) => status === 'P').length;
     return Math.round((presents / records.length) * 100);
   };
+
+  const filteredPlayers = store.data.players.filter((p: any) => {
+    const matchesCategory = p.category === targetCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))) ||
+      (p.bloodGroup && p.bloodGroup.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
+    return matchesCategory && matchesSearch && matchesTab;
+  });
 
   const handleEditClick = (player: Player) => {
     setEditingPlayer({ 
@@ -138,7 +138,7 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
           <table>
             <thead>
               <tr>
-                <th>SR</th><th>PHOTO</th><th>NAME</th><th>AGE</th><th>STD</th><th>BLOOD</th>${isGeneral ? '<th>EXAM MARKS</th>' : '<th>SPORTS</th>'}<th>LATEST BMI</th><th>ATTENDANCE</th>
+                <th>SR</th><th>PHOTO</th><th>NAME</th><th>GENDER</th><th>AGE</th><th>STD</th><th>BLOOD</th>${isGeneral ? '<th>EXAM MARKS</th>' : '<th>SPORTS</th>'}<th>BMI</th><th>ATTENDANCE %</th>
               </tr>
             </thead>
             <tbody>
@@ -147,6 +147,7 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                   <td>${i + 1}</td>
                   <td>${p.photoUrl ? `<img src="${p.photoUrl}" class="photo" />` : 'No Photo'}</td>
                   <td><strong>${p.name}</strong></td>
+                  <td>${p.gender}</td>
                   <td>${p.age}</td>
                   <td>${p.std}</td>
                   <td>${p.bloodGroup || 'N/A'}</td>
@@ -215,17 +216,17 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
             <TableRow className="border-b">
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[50px] text-center">SR</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[60px] text-center">{isMarathi ? 'फोटो' : 'Photo'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[200px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[60px]">{isMarathi ? 'वय' : 'Age'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[60px]">{isMarathi ? 'इयत्ता' : 'Std'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[70px]">{isMarathi ? 'रक्त' : 'Blood'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[180px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'वय' : 'Age'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'इयत्ता' : 'Std'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'उपस्थिती %' : 'Att %'}</TableHead>
               {isGeneral ? (
                 <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[100px] text-center">{isMarathi ? 'गुण' : 'Exam'}</TableHead>
               ) : (
                 <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[150px]">{isMarathi ? 'खेळ' : 'Sports'}</TableHead>
               )}
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[80px]">BMI</TableHead>
-              <TableHead className="h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'क्रिया' : 'Actions'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[70px]">BMI</TableHead>
+              <TableHead className="h-9 px-2 font-black text-[11px] uppercase text-center w-[90px]">{isMarathi ? 'क्रिया' : 'Actions'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -236,68 +237,74 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPlayers.map((player: any, index: number) => (
-                <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
-                  <TableCell className="border-r p-2 text-center text-xs font-bold text-primary">{index + 1}</TableCell>
-                  <TableCell className="border-r p-1">
-                    <div 
-                      className="flex justify-center items-center cursor-pointer hover:opacity-80 transition-opacity relative group"
-                      onClick={() => player.photoUrl && setViewingPhoto({ url: player.photoUrl, name: player.name })}
-                    >
-                      <Avatar className="w-8 h-8 border">
-                        <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
-                        <AvatarFallback className="text-[10px]"><User className="w-3 h-3" /></AvatarFallback>
-                      </Avatar>
-                      {player.photoUrl && (
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Maximize2 className="w-4 h-4 text-white bg-black/40 rounded-full p-0.5" />
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="border-r p-2 text-xs font-bold">
-                    <div className="flex flex-col">
-                      <span>{player.name}</span>
-                      <span className="text-[8px] uppercase text-muted-foreground font-black">{isMarathi ? (player.gender === 'Female' ? 'महिला' : 'पुरुष') : player.gender}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
-                  <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
-                  <TableCell className="border-r p-2 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold">
-                      <Droplet className="w-2.5 h-2.5 text-destructive" /> {player.bloodGroup || 'N/A'}
-                    </div>
-                  </TableCell>
-                  {isGeneral ? (
-                    <TableCell className="border-r p-2 text-center text-xs font-black text-primary">{player.examMarks || '0'}</TableCell>
-                  ) : (
-                    <TableCell className="border-r p-2">
-                      <div className="flex flex-wrap gap-1">
-                        {(player.sports || []).map((s: string) => (
-                          <span key={s} className="bg-accent/20 text-accent-foreground px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">
-                            {s}
-                          </span>
-                        ))}
+              filteredPlayers.map((player: any, index: number) => {
+                const attPercent = calculateAttendance(player.id);
+                return (
+                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
+                    <TableCell className="border-r p-2 text-center text-xs font-bold text-primary">{index + 1}</TableCell>
+                    <TableCell className="border-r p-1">
+                      <div 
+                        className="flex justify-center items-center cursor-pointer hover:opacity-80 transition-opacity relative group"
+                        onClick={() => player.photoUrl && setViewingPhoto({ url: player.photoUrl, name: player.name })}
+                      >
+                        <Avatar className="w-8 h-8 border">
+                          <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
+                          <AvatarFallback className="text-[10px]"><User className="w-3 h-3" /></AvatarFallback>
+                        </Avatar>
+                        {player.photoUrl && (
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Maximize2 className="w-4 h-4 text-white bg-black/40 rounded-full p-0.5" />
+                          </div>
+                        )}
                       </div>
                     </TableCell>
-                  )}
-                  <TableCell className="border-r p-2 text-center text-xs font-mono font-bold">
-                    {player.bmi}
-                  </TableCell>
-                  <TableCell className="p-1 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => handleEditClick(player)}>
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-destructive" onClick={() => {
-                        if(confirm(isMarathi ? `${player.name} काढून टाकायचे?` : `Delete ${player.name}?`)) store.deletePlayer(player.id);
-                      }}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell className="border-r p-2 text-xs font-bold">
+                      <div className="flex flex-col">
+                        <span>{player.name}</span>
+                        <span className="text-[8px] uppercase text-muted-foreground font-black">{isMarathi ? (player.gender === 'Female' ? 'महिला' : 'पुरुष') : player.gender}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
+                    <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
+                    <TableCell className="border-r p-2 text-center">
+                      <div className={cn(
+                        "flex items-center justify-center gap-1 text-[11px] font-black",
+                        attPercent >= 75 ? "text-primary" : attPercent >= 50 ? "text-orange-600" : "text-destructive"
+                      )}>
+                        {attPercent}%
+                      </div>
+                    </TableCell>
+                    {isGeneral ? (
+                      <TableCell className="border-r p-2 text-center text-xs font-black text-primary">{player.examMarks || '0'}</TableCell>
+                    ) : (
+                      <TableCell className="border-r p-2">
+                        <div className="flex flex-wrap gap-1">
+                          {(player.sports || []).map((s: string) => (
+                            <span key={s} className="bg-accent/20 text-accent-foreground px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                    )}
+                    <TableCell className="border-r p-2 text-center text-xs font-mono font-bold">
+                      {player.bmi}
+                    </TableCell>
+                    <TableCell className="p-1 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => handleEditClick(player)}>
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-destructive" onClick={() => {
+                          if(confirm(isMarathi ? `${player.name} काढून टाकायचे?` : `Delete ${player.name}?`)) store.deletePlayer(player.id);
+                        }}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -347,6 +354,18 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                 <div className="space-y-1">
                   <Label className="text-xs font-bold uppercase">{isMarathi ? 'पूर्ण नाव' : 'Full Name'}</Label>
                   <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })} className="h-9 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'लिंग' : 'Gender'}</Label>
+                  <Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({ ...editingPlayer, gender: val })}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">{isMarathi ? 'पुरुष' : 'Male'}</SelectItem>
+                      <SelectItem value="Female">{isMarathi ? 'महिला' : 'Female'}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-bold uppercase">{isMarathi ? 'जन्मतारीख' : 'DOB'}</Label>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -8,16 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { 
   History as HistoryIcon, 
   Printer, 
-  HeartPulse, 
-  Trophy, 
-  Activity, 
-  User,
-  Medal,
   Stethoscope,
-  Scale,
-  Ruler,
-  GraduationCap,
-  TrendingUp
+  TrendingUp,
+  Trophy
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +40,12 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
+  const playerSkills = useMemo(() => 
+    (store.data.skillsHistory[selectedPlayerId] || [])
+      .sort((a: any, b: any) => new Date(b.lastUpdated || 0).getTime() - new Date(a.lastUpdated || 0).getTime()),
+    [selectedPlayerId, store.data.skillsHistory]
+  );
+
   const handlePrint = () => {
     if (!player) return;
     const printContent = `
@@ -53,12 +53,12 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
         <head>
           <title>Progress Dossier - ${player.name}</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 40px; color: #333; }
-            h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 11px; }
+            body { font-family: Inter, sans-serif; padding: 40px; color: #333; line-height: 1.4; }
+            h1 { color: #235C36; border-bottom: 3px solid #8AF075; text-transform: uppercase; margin-bottom: 5px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
             th { background: #f4f4f4; font-weight: bold; }
-            .section-title { background: #e8f5e9; padding: 5px 10px; margin-top: 30px; border-radius: 4px; font-weight: 900; }
+            .section-title { background: #e8f5e9; padding: 8px 12px; margin-top: 25px; border-radius: 4px; font-weight: 900; font-size: 12px; }
           </style>
         </head>
         <body>
@@ -71,11 +71,11 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               <tr>
                 <th>Date</th>
                 ${isGeneral ? 
-                  '<th>Ht (cm)</th><th>Wt (kg)</th><th>Exam</th>' : 
-                  '<th>10x6</th><th>50M</th><th>600M</th><th>Reach</th><th>Jump</th><th>Situps</th><th>Str</th>'
+                  '<th>Ht (cm)</th><th>Wt (kg)</th><th>Exam SC</th>' : 
+                  '<th>10x6</th><th>50M</th><th>600M</th><th>Reach</th><th>Jump</th><th>Situps</th><th>Strength</th>'
                 }
                 <th>Total Score</th>
-                <th>Status</th>
+                <th>Status / Level</th>
               </tr>
             </thead>
             <tbody>
@@ -84,7 +84,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                   <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
                   ${isGeneral ? 
                     `<td>${f.height || '-'}</td><td>${f.weight || '-'}</td><td>${f.examMarks || '-'}</td>` : 
-                    `<td>${f.shuttleRun || '-'}</td><td>${f.run50m || '-'}</td><td>${f.run600m || '-'}</td><td>${f.sitAndReach || '-'}</td><td>${f.boardJump || '-'}</td><td>${f.sitUps || '-'}</td><td>${f.strengthScore || '-'}</td>`
+                    `<td>${f.shuttleRun || '-'}</td><td>${f.run50m || '-'}</td><td>${f.run600m || '-'}</td><td>${f.sitAndReach || '-'}</td><td>${f.boardJump || '-'}</td><td>${f.sitUps || '-'}</td><td>${f.strengthScore || '-'}%</td>`
                   }
                   <td><strong>${f.score}${isGeneral ? '' : '%'}</strong></td>
                   <td>${f.status}</td>
@@ -93,9 +93,26 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </tbody>
           </table>
 
+          <div class="section-title">TECHNICAL SKILL EVOLUTION</div>
+          <table>
+            <thead>
+              <tr><th>Sport</th><th>Technical Moves & Scores</th><th>Aggregate</th><th>Last Updated</th></tr>
+            </thead>
+            <tbody>
+              ${playerSkills.map(s => `
+                <tr>
+                  <td><strong>${s.sportName}</strong></td>
+                  <td>${Object.entries(s.detailedSkills || {}).map(([name, sc]) => `${name}: ${sc}/10`).join(', ')}</td>
+                  <td><strong>${s.score}</strong></td>
+                  <td>${format(new Date(s.lastUpdated || 0), 'PP')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
           <div class="section-title">MEDICAL & INCIDENT LOG</div>
           <table>
-            <thead><tr><th>Date</th><th>Description</th></tr></thead>
+            <thead><tr><th>Date</th><th>Incident Description & Suggested Treatment</th></tr></thead>
             <tbody>
               ${playerIncidents.map(inc => `<tr><td>${format(new Date(inc.date), 'dd MMM yyyy')}</td><td>${inc.description}</td></tr>`).join('')}
             </tbody>
@@ -161,7 +178,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                       <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Reach</TableHead>
                       <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Jump</TableHead>
                       <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Situps</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Str</TableHead>
+                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Str %</TableHead>
                     </>
                   )}
                   <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[80px]">Score</TableHead>
@@ -200,6 +217,44 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                       <TableCell className="p-1 text-right text-[9px] font-black uppercase text-muted-foreground/60 pr-4">
                         {fit.status}
                       </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+            <div className="bg-amber-50 p-2 border-b font-black text-[11px] uppercase text-amber-800 flex items-center gap-2">
+              <Trophy className="w-4 h-4" /> Technical Skill Archive
+            </div>
+            <Table className="border-collapse min-w-max">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-b">
+                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black w-[150px]">Sport Name</TableHead>
+                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black">Detailed Skill Evaluation</TableHead>
+                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[100px]">Aggregate</TableHead>
+                  <TableHead className="h-8 px-2 text-[9px] uppercase font-black text-right w-[150px]">Sync Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {playerSkills.length === 0 ? (
+                  <TableRow><TableCell colSpan={4} className="text-center py-4 text-[11px] text-muted-foreground italic">No technical skill data logged.</TableCell></TableRow>
+                ) : (
+                  playerSkills.map((skill: any, idx: number) => (
+                    <TableRow key={idx} className="border-b even:bg-muted/30 h-auto hover:bg-amber-50/30 transition-colors">
+                      <TableCell className="border-r p-2 text-[10px] font-black uppercase text-amber-700">{skill.sportName}</TableCell>
+                      <TableCell className="border-r p-2 text-[10px]">
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(skill.detailedSkills || {}).map(([name, sc]) => (
+                            <span key={name} className="bg-white border px-1.5 py-0.5 rounded-sm shadow-xs font-medium">
+                              {name}: <span className="font-black text-primary">{sc}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="border-r p-2 text-center text-sm font-black text-primary">{skill.score}</TableCell>
+                      <TableCell className="p-2 text-right text-[10px] font-medium text-muted-foreground">{format(new Date(skill.lastUpdated || 0), 'PP')}</TableCell>
                     </TableRow>
                   ))
                 )}

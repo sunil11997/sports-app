@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -41,36 +42,37 @@ export function DailyReport({ store }: { store: any }) {
         <head>
           <title>Daily Sport Report - ${format(new Date(reportDate), 'dd MMM yyyy')}</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-            .header { text-align: center; border-bottom: 4px solid #235C36; padding-bottom: 20px; margin-bottom: 30px; }
-            .school-name { font-size: 24px; font-weight: 900; color: #235C36; margin: 0; }
-            .report-title { font-size: 18px; font-weight: 700; text-transform: uppercase; margin-top: 5px; }
-            .meta { display: flex; justify-content: space-between; margin-bottom: 30px; font-weight: bold; font-size: 14px; }
-            h2 { color: #1b4b3a; border-left: 4px solid #8AF075; padding-left: 10px; margin-top: 30px; text-transform: uppercase; font-size: 16px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
-            th { background-color: #f4fcf6; }
-            .summary-box { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-top: 10px; white-space: pre-wrap; }
-            .stats { display: flex; gap: 20px; margin-bottom: 20px; }
-            .stat-item { flex: 1; padding: 15px; background: #f4fcf6; border-radius: 8px; text-align: center; border: 1px solid #e0e0e0; }
-            .stat-value { font-size: 20px; font-weight: 900; color: #235C36; }
-            .stat-label { font-size: 10px; text-transform: uppercase; color: #666; }
-            .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 8px; }
-            .detail-row { font-size: 13px; }
+            @media print {
+              body { padding: 0; margin: 0; }
+              @page { size: auto; margin: 1cm; }
+            }
+            body { font-family: Inter, sans-serif; padding: 20px; color: #333; line-height: 1.4; font-size: 12px; }
+            .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 20px; font-weight: 900; color: #235C36; margin: 0; }
+            .report-title { font-size: 14px; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+            .meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; font-size: 12px; }
+            h2 { color: #1b4b3a; border-left: 4px solid #8AF075; padding-left: 10px; margin-top: 20px; text-transform: uppercase; font-size: 14px; }
+            .summary-box { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-top: 5px; white-space: pre-wrap; min-height: 100px; }
+            .stats { display: flex; gap: 15px; margin-bottom: 15px; }
+            .stat-item { flex: 1; padding: 12px; background: #f4fcf6; border-radius: 8px; text-align: center; border: 1px solid #e0e0e0; }
+            .stat-value { font-size: 18px; font-weight: 900; color: #235C36; }
+            .stat-label { font-size: 9px; text-transform: uppercase; color: #666; font-weight: bold; }
+            .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; background: #fff; padding: 12px; border: 1px solid #eee; border-radius: 8px; }
+            .detail-row { font-size: 12px; }
             .detail-label { font-weight: bold; color: #235C36; }
-            .footer { margin-top: 50px; display: flex; justify-content: space-between; }
-            .sign-box { border-top: 1px solid #333; width: 200px; text-align: center; padding-top: 5px; font-size: 12px; font-weight: bold; }
+            .footer { margin-top: 40px; display: flex; justify-content: space-between; }
+            .sign-box { border-top: 1px solid #333; width: 180px; text-align: center; padding-top: 5px; font-size: 11px; font-weight: bold; }
           </style>
         </head>
         <body>
           <div class="header">
             <h1 class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</h1>
-            <div class="report-title">Daily Sport & Health Activity Report</div>
+            <div class="report-title">Daily Sport & Health Activity Summary</div>
           </div>
 
           <div class="meta">
             <span>Date: ${format(new Date(reportDate), 'PPPP')}</span>
-            <span>Teacher: सुनिल देशमुख</span>
+            <span>Ref: WGB/SPORTS/${format(new Date(reportDate), 'yyyy/MM/dd')}</span>
           </div>
 
           <div class="details-grid">
@@ -87,11 +89,11 @@ export function DailyReport({ store }: { store: any }) {
             </div>
             <div class="stat-item">
               <div class="stat-value">${presentCount}</div>
-              <div class="stat-label">Present</div>
+              <div class="stat-label">Total Present</div>
             </div>
             <div class="stat-item">
               <div class="stat-value">${absentCount}</div>
-              <div class="stat-label">Absent</div>
+              <div class="stat-label">Total Absent</div>
             </div>
             <div class="stat-item">
               <div class="stat-value">${incidentsOnDate.length}</div>
@@ -99,51 +101,22 @@ export function DailyReport({ store }: { store: any }) {
             </div>
           </div>
 
-          <h2>Activity Summary</h2>
+          <h2>Session Activity Summary</h2>
           <div class="summary-box">${activitySummary || 'No activity summary recorded for today.'}</div>
 
-          <h2>Attendance Log</h2>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 50px;">Sr.</th>
-                <th>Player Name</th>
-                <th style="width: 100px; text-align: center;">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${attendanceOnDate.map((a: any, i: number) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td>${a.name}</td>
-                  <td style="color: ${a.status === 'P' ? 'green' : 'red'}; font-weight: bold; text-align: center;">${a.status === 'P' ? 'PRESENT' : a.status === 'A' ? 'ABSENT' : '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
           ${incidentsOnDate.length > 0 ? `
-            <h2>Health & Medical Incidents</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Player</th>
-                  <th>Incident Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${incidentsOnDate.map((inc: any) => `
-                  <tr>
-                    <td><strong>${inc.playerName}</strong></td>
-                    <td>${inc.description}</td>
-                  </tr>
-                `).join('')}
-            </tbody>
-          </table>
+            <h2>Critical Health Logs (Count: ${incidentsOnDate.length})</h2>
+            <div style="background: #fff5f5; border: 1px solid #feb2b2; padding: 10px; border-radius: 8px; font-size: 11px;">
+              Please refer to the digital Health Registry for detailed medical observations reported today.
+            </div>
           ` : ''}
 
+          <p style="margin-top: 20px; font-size: 10px; color: #777; font-style: italic;">
+            * This is an institutional consolidated report. Individual attendance logs are maintained in the central digital registry.
+          </p>
+
           <div class="footer">
-            <div class="sign-box">Coach Signature</div>
+            <div class="sign-box">Physical Education Teacher</div>
             <div class="sign-box">Principal Signature</div>
           </div>
         </body>

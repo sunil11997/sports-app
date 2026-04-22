@@ -329,17 +329,23 @@ export default function WaghambaApp() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 mr-2">
-              <Languages className="w-4 h-4 text-muted-foreground" />
-              <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
-                <SelectTrigger className="h-9 w-32 rounded-full font-bold border-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Marathi">Marathi</SelectItem>
-                  <SelectItem value="English">English</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2 bg-primary/5 p-1 rounded-full border border-primary/10">
+              <Button 
+                variant={language === 'Marathi' ? "default" : "ghost"} 
+                size="sm" 
+                onClick={() => setLanguage('Marathi')}
+                className="h-8 rounded-full font-black text-[10px] px-4"
+              >
+                मराठी
+              </Button>
+              <Button 
+                variant={language === 'English' ? "default" : "ghost"} 
+                size="sm" 
+                onClick={() => setLanguage('English')}
+                className="h-8 rounded-full font-black text-[10px] px-4"
+              >
+                EN
+              </Button>
             </div>
             <Button 
               variant="ghost" 
