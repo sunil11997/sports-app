@@ -12,13 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon } from 'lucide-react';
+import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon, Languages } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -36,7 +36,7 @@ const formSchema = z.object({
   examMarks: z.string().optional(),
 });
 
-export function Registration({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function Registration({ store, section, language = 'Marathi' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,6 +47,34 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  const isMarathi = language === 'Marathi';
+
+  const t = {
+    title: isMarathi ? (section === 'general' ? 'सामान्य विद्यार्थी नावनोंदणी' : 'खेळाडू नोंदणी') : (section === 'general' ? 'General Student Enrollment' : 'Athlete Registration'),
+    subtitle: isMarathi ? (section === 'general' ? 'संस्थात्मक इयत्ता ४-१२ नोंदणी' : 'क्रीडा उत्कृष्टता कार्यक्रम') : (section === 'general' ? 'Institutional Class 4-12 Registry' : 'Sports Excellence Program'),
+    studentName: isMarathi ? 'विद्यार्थ्याचे नाव *' : 'Student Name *',
+    gender: isMarathi ? 'लिंग' : 'Gender',
+    male: isMarathi ? 'पुरुष' : 'Male',
+    female: isMarathi ? 'महिला' : 'Female',
+    std: isMarathi ? 'इयत्ता' : 'Standard',
+    dob: isMarathi ? 'जन्मतारीख' : 'Date of Birth',
+    height: isMarathi ? 'उंची (सेंमी)' : 'Height (cm)',
+    weight: isMarathi ? 'वजन (किग्रॅ)' : 'Weight (kg)',
+    bloodGroup: isMarathi ? 'रक्तगट' : 'Blood Group',
+    medical: isMarathi ? 'वैद्यकीय नोंदी' : 'Medical Notes',
+    examMarks: isMarathi ? 'शारीरिक शिक्षण परीक्षा गुण' : 'Physical Ed Exam Marks',
+    sportsDiscipline: isMarathi ? 'क्रीडा प्रकार *' : 'Sports Discipline *',
+    enrollBtn: isMarathi ? 'विद्यार्थ्याची नोंदणी करा' : 'Enroll Student',
+    photoPreview: isMarathi ? 'ओळखपत्राचे पूर्वावलोकन' : 'Identity Preview',
+    liveCamera: isMarathi ? 'लाइव्ह कॅमेरा' : 'Live Camera',
+    uploadGallery: isMarathi ? 'गॅलरीमधून अपलोड करा' : 'Upload Gallery',
+    snapPhoto: isMarathi ? 'फोटो काढा' : 'Snap Photo',
+    retake: isMarathi ? 'पुन्हा घ्या' : 'Retake',
+    remove: isMarathi ? 'काढून टाका' : 'Remove',
+    successTitle: isMarathi ? 'नोंदणी यशस्वी' : 'Enrollment Successful',
+    successDesc: (name: string) => isMarathi ? `${name} आता संस्थात्मक नोंदणीमध्ये समाविष्ट आहे.` : `${name} is now on the institutional registry.`
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,7 +84,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       dob: "",
       height: "",
       weight: "",
-      bloodGroup: "O+",
+      bloodGroup: "None",
       sports: [],
       history: "No",
       histDetail: "",
@@ -93,8 +121,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       setHasCameraPermission(false);
       toast({
         variant: 'destructive',
-        title: 'Camera Access Denied',
-        description: 'Please enable camera permissions in your browser settings.',
+        title: isMarathi ? 'कॅमेरा प्रवेश नाकारला' : 'Camera Access Denied',
+        description: isMarathi ? 'कृपया ब्राउझर सेटिंग्जमध्ये कॅमेरा परवानग्या सुरू करा.' : 'Please enable camera permissions in your browser settings.',
       });
     }
   };
@@ -137,8 +165,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         stopCamera();
         
         toast({
-          title: "Capture Success",
-          description: "Student identity photo has been saved.",
+          title: isMarathi ? "यशस्वीरित्या टिपले" : "Capture Success",
+          description: isMarathi ? "विद्यार्थ्याचा फोटो जतन केला आहे." : "Student identity photo has been saved.",
         });
       }
     }
@@ -154,8 +182,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         form.setValue('photoUrl', dataUrl);
         stopCamera();
         toast({
-          title: "Upload Success",
-          description: "Photo added from gallery.",
+          title: isMarathi ? "अपलोड यशस्वी" : "Upload Success",
+          description: isMarathi ? "गॅलरीमधून फोटो जोडला गेला." : "Photo added from gallery.",
         });
       };
       reader.readAsDataURL(file);
@@ -192,18 +220,17 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
     store.addPlayer(newPlayer);
     
-    // Also set initial monthly log
     store.setFitness(newPlayer.id, {
       score: "0",
-      status: "Initial Log",
+      status: isMarathi ? "सुरुवातीची नोंद" : "Initial Log",
       height: values.height,
       weight: values.weight,
       examMarks: values.examMarks || "0"
     });
 
     toast({ 
-      title: "Enrollment Successful", 
-      description: `${values.name} is now on the institutional ${section === 'sports' ? 'athlete roster' : 'student registry'}.` 
+      title: t.successTitle, 
+      description: t.successDesc(values.name) 
     });
     form.reset();
     setCapturedPhoto(null);
@@ -229,10 +256,10 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           </div>
           <div>
             <CardTitle className="text-3xl font-black text-primary uppercase tracking-tight">
-              {isGeneral ? 'General Student Enrollment' : 'Athlete Registration'}
+              {t.title}
             </CardTitle>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-              {isGeneral ? 'Institutional Class 4-12 Registry' : 'Sports Excellence Program'}
+              {t.subtitle}
             </p>
           </div>
         </div>
@@ -246,7 +273,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
                     <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4" /> Identity Preview
+                      <ImageIcon className="w-4 h-4" /> {t.photoPreview}
                     </FormLabel>
                     {isCameraActive && (
                       <Button 
@@ -256,7 +283,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         onClick={toggleCamera}
                         className="text-primary font-bold text-[10px] uppercase h-7 rounded-lg border-primary/20"
                       >
-                        <RotateCw className="w-3 h-3 mr-1" /> Switch
+                        <RotateCw className="w-3 h-3 mr-1" /> {isMarathi ? 'बदला' : 'Switch'}
                       </Button>
                     )}
                   </div>
@@ -278,7 +305,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
                         <Camera className="w-12 h-12 text-primary/20" />
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                          Identity Standby
+                          {isMarathi ? 'कॅमेरा स्टँडबाय' : 'Identity Standby'}
                         </p>
                       </div>
                     )}
@@ -290,7 +317,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           onClick={takePhoto} 
                           className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl h-14 px-8 shadow-2xl font-black uppercase text-xs tracking-widest active-scale"
                         >
-                          Snap Photo
+                          {t.snapPhoto}
                         </Button>
                         <Button 
                           type="button" 
@@ -311,7 +338,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         onClick={() => startCamera()} 
                         className="w-full bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-lg"
                       >
-                        <Camera className="w-5 h-5 mr-2" /> Live Camera
+                        <Camera className="w-5 h-5 mr-2" /> {t.liveCamera}
                       </Button>
                       <Button 
                         type="button" 
@@ -319,7 +346,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         variant="outline"
                         className="w-full border-2 border-primary/20 text-primary rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-sm"
                       >
-                        <Upload className="w-5 h-5 mr-2" /> Upload Gallery
+                        <Upload className="w-5 h-5 mr-2" /> {t.uploadGallery}
                       </Button>
                       <input 
                         type="file" 
@@ -338,7 +365,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         onClick={() => startCamera()} 
                         className="flex-1 bg-primary/5 text-primary hover:bg-primary/10 rounded-2xl h-14 font-black uppercase text-xs tracking-widest border-2 border-primary/10"
                       >
-                        <RefreshCw className="w-4 h-4 mr-2" /> Retake
+                        <RefreshCw className="w-4 h-4 mr-2" /> {t.retake}
                       </Button>
                       <Button 
                         type="button" 
@@ -346,7 +373,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         onClick={clearPhoto} 
                         className="flex-1 rounded-2xl h-14 text-destructive hover:bg-destructive/5 font-black uppercase text-xs tracking-widest"
                       >
-                        Remove
+                        {t.remove}
                       </Button>
                     </div>
                   )}
@@ -354,9 +381,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                   {hasCameraPermission === false && (
                     <Alert variant="destructive" className="rounded-2xl">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertTitle className="text-xs font-bold uppercase">Hardware Blocked</AlertTitle>
+                      <AlertTitle className="text-xs font-bold uppercase">{isMarathi ? 'हार्डवेअर ब्लॉक' : 'Hardware Blocked'}</AlertTitle>
                       <AlertDescription className="text-[10px]">
-                        Please allow camera access or use the Upload option.
+                        {isMarathi ? 'कृपया कॅमेरा प्रवेश द्या किंवा अपलोड पर्याय वापरा.' : 'Please allow camera access or use the Upload option.'}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -371,9 +398,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Student Name *</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.studentName}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Full Name" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                          <Input placeholder={isMarathi ? "पूर्ण नाव" : "Full Name"} className="rounded-xl border-2 h-12 font-bold" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -385,16 +412,16 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Gender</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.gender}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
-                              <SelectValue placeholder="Select" />
+                              <SelectValue placeholder={isMarathi ? "निवडा" : "Select"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Male">{t.male}</SelectItem>
+                            <SelectItem value="Female">{t.female}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -407,7 +434,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     name="std"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.std}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
@@ -430,7 +457,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     name="dob"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Date of Birth</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.dob}</FormLabel>
                         <FormControl>
                           <Input type="date" className="rounded-xl border-2 h-12 font-bold" {...field} />
                         </FormControl>
@@ -445,7 +472,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       name="height"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Height (cm)</FormLabel>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.height}</FormLabel>
                           <FormControl>
                             <Input type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
                           </FormControl>
@@ -458,7 +485,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       name="weight"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Weight (kg)</FormLabel>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.weight}</FormLabel>
                           <FormControl>
                             <Input type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
                           </FormControl>
@@ -473,7 +500,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     name="bloodGroup"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Blood Group</FormLabel>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.bloodGroup}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="rounded-xl border-2 h-12 font-bold">
@@ -482,7 +509,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           </FormControl>
                           <SelectContent>
                             {BLOOD_GROUPS.map(group => (
-                              <SelectItem key={group} value={group}>{group}</SelectItem>
+                              <SelectItem key={group} value={group}>{isMarathi && group === 'None' ? 'काहीही नाही' : group}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -497,9 +524,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       name="examMarks"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Physical Ed Exam Marks</FormLabel>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.examMarks}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Out of 100" type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                            <Input placeholder={isMarathi ? "१०० पैकी" : "Out of 100"} type="number" className="rounded-xl border-2 h-12 font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -510,7 +537,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
                 {!isGeneral && (
                   <div className="space-y-4">
-                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest block">Sports Discipline *</FormLabel>
+                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest block">{t.sportsDiscipline}</FormLabel>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10">
                       {SPORTS_LIST.map((sport) => (
                         <FormField
@@ -542,9 +569,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 )}
                 
                 <div className="space-y-2">
-                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Medical Notes</FormLabel>
+                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.medical}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Any allergies or conditions" className="rounded-xl border-2 h-12 font-bold" {...form.register('medical')} />
+                    <Input placeholder={isMarathi ? "कोणतीही ऍलर्जी किंवा आजार" : "Any allergies or conditions"} className="rounded-xl border-2 h-12 font-bold" {...form.register('medical')} />
                   </FormControl>
                 </div>
               </div>
@@ -559,7 +586,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                   isGeneral ? "bg-primary hover:bg-primary/90" : "bg-accent hover:bg-accent/90"
                 )}
               >
-                Enroll Student
+                {t.enrollBtn}
               </Button>
             </div>
           </form>

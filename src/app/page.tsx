@@ -30,7 +30,8 @@ import {
   Trophy as TrophyIcon,
   Star,
   Award,
-  Crown
+  Crown,
+  Languages
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -39,6 +40,7 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Feature Components
 import { Registration } from '@/components/features/Registration';
@@ -53,17 +55,99 @@ import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
 
+const translations = {
+  English: {
+    schoolName: "GOVT. SECONDARY ASHRAM SCHOOL WAGHAMBA",
+    sportsHub: "Sports Hub",
+    studentRegistry: "Student Registry",
+    switchHub: "Switch Hub",
+    online: "ONLINE",
+    offline: "OFFLINE",
+    home: "Home",
+    register: "Register",
+    roster: "Roster",
+    tourney: "Tourney",
+    report: "Report",
+    history: "History",
+    presence: "Presence",
+    fitness: "Fitness",
+    skills: "Skills",
+    health: "Health",
+    aiHub: "AI Hub",
+    settings: "Settings",
+    enroll: "Enroll",
+    registry: "Registry",
+    session: "Session",
+    physicals: "Physicals",
+    medical: "Medical",
+    performanceLeader: "PERFORMANCE LEADER",
+    studentExcellence: "Student Excellence",
+    congratulations: "Congratulations!",
+    excellenceDesc: "Outstanding performance in technical skills and physical assessment tests. Keeping the pride high!",
+    topSquadRanking: "Top Squad Ranking",
+    calculatedPerformanceHub: "Calculated Performance Hub",
+    loadingRegistry: "Syncing Registry...",
+    loadingHallOfFame: "Loading Hall of Fame...",
+    selectHub: "Select Management Section",
+    sportsHubDesc: "Manage athletes, performance scores, and tournament rosters.",
+    studentRegistryDesc: "Manage general student growth logs and physical registry.",
+    enter: "ENTER",
+    institutionalStack: "V3.0 INSTITUTIONAL STACK",
+    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन"
+  },
+  Marathi: {
+    schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+    sportsHub: "क्रीडा केंद्र",
+    studentRegistry: "विद्यार्थी नोंदणी",
+    switchHub: "हब बदला",
+    online: "ऑनलाइन",
+    offline: "ऑफलाइन",
+    home: "मुख्यपृष्ठ",
+    register: "नोंदणी",
+    roster: "यादी",
+    tourney: "स्पर्धा",
+    report: "अहवाल",
+    history: "इतिहास",
+    presence: "उपस्थिती",
+    fitness: "क्षमता",
+    skills: "कौशल्ये",
+    health: "आरोग्य",
+    aiHub: "AI केंद्र",
+    settings: "सेटिंग्ज",
+    enroll: "नावनोंदणी",
+    registry: "नोंदणी वही",
+    session: "सत्र",
+    physicals: "शारीरिक",
+    medical: "वैद्यकीय",
+    performanceLeader: "सर्वोत्कृष्ट खेळाडू",
+    studentExcellence: "विद्यार्थी उत्कृष्टता",
+    congratulations: "अभिनंदन!",
+    excellenceDesc: "तांत्रिक कौशल्ये आणि शारीरिक मूल्यमापन चाचण्यांमध्ये उत्कृष्ट कामगिरी. शाळेचा अभिमान उंचावला!",
+    topSquadRanking: "अव्वल संघ रँकिंग",
+    calculatedPerformanceHub: "कार्यप्रदर्शन केंद्र",
+    loadingRegistry: "रजिस्ट्री सिंक होत आहे...",
+    loadingHallOfFame: "हॉल ऑफ फेम लोड होत आहे...",
+    selectHub: "व्यवस्थापन विभाग निवडा",
+    sportsHubDesc: "खेळाडू, कामगिरीचे गुण आणि स्पर्धा रोस्टर व्यवस्थापित करा.",
+    studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि शारीरिक नोंदणी व्यवस्थापित करा.",
+    enter: "प्रवेश करा",
+    institutionalStack: "V3.0 संस्थात्मक स्टॅक",
+    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन"
+  }
+};
+
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
+  const [language, setLanguage] = useState<'English' | 'Marathi'>('Marathi');
   const [isTabChanging, setIsTabChanging] = useState(false);
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
-  const SCHOOL_NAME = "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
+  const t = translations[language];
   const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
 
   useEffect(() => {
@@ -89,14 +173,12 @@ export default function WaghambaApp() {
     setTimeout(() => setIsTabChanging(false), 200);
   };
 
-  // Hall of Fame Logic
   const topPerformers = useMemo(() => {
     if (!schoolData.data.players) return [];
     return [...schoolData.data.players].map(p => {
       const fitness = schoolData.data.fitness[p.id] || { score: '0' };
       const skills = Object.values(schoolData.data.sportSkills).filter(s => s.playerId === p.id);
       const maxSkill = skills.length > 0 ? Math.max(...skills.map(s => parseFloat(s.score) || 0)) : 0;
-      // Weighted performance score
       const performance = (parseFloat(fitness.score) || 0) + maxSkill;
       return { ...p, performance, fitnessScore: fitness.score, latestStatus: fitness.status };
     }).sort((a, b) => b.performance - a.performance);
@@ -126,10 +208,10 @@ export default function WaghambaApp() {
             
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight leading-tight px-4 uppercase">
-                {SCHOOL_NAME}
+                {t.schoolName}
               </h1>
               <p className="text-primary font-black tracking-[0.3em] text-[10px] uppercase opacity-80">
-                आदिवासी विकास विभाग • महाराष्ट्र शासन
+                {t.tribalLogoHint}
               </p>
             </div>
           </div>
@@ -139,11 +221,11 @@ export default function WaghambaApp() {
               onClick={handleStartHub}
               className="w-full bg-primary hover:bg-primary/90 text-white font-black text-2xl h-24 rounded-[2rem] shadow-xl transition-all"
             >
-              ENTER
+              {t.enter}
               <ArrowRight className="ml-3 w-8 h-8" />
             </Button>
             <p className="mt-8 text-primary/20 text-[9px] font-black uppercase tracking-[0.5em]">
-              V3.0 INSTITUTIONAL STACK
+              {t.institutionalStack}
             </p>
           </div>
         </div>
@@ -156,7 +238,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-6">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-          <p className="font-black text-primary tracking-[0.3em] uppercase text-xs">Syncing Registry...</p>
+          <p className="font-black text-primary tracking-[0.3em] uppercase text-xs">{t.loadingRegistry}</p>
         </div>
       </div>
     );
@@ -167,7 +249,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-[#E3F2FD] flex flex-col items-center justify-center p-6">
         <div className="max-w-4xl w-full space-y-12 text-center">
           <h2 className="text-3xl md:text-5xl font-black text-primary uppercase tracking-tight">
-            Select Management Section
+            {t.selectHub}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -176,9 +258,9 @@ export default function WaghambaApp() {
               className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary shadow-xl hover:shadow-2xl active:scale-95"
             >
               <Medal className="w-10 h-10 text-primary mb-6" />
-              <h3 className="text-3xl font-black text-primary uppercase mb-3">Sports Hub</h3>
+              <h3 className="text-3xl font-black text-primary uppercase mb-3">{t.sportsHub}</h3>
               <p className="text-muted-foreground font-medium text-lg">
-                Manage athletes, performance scores, and tournament rosters.
+                {t.sportsHubDesc}
               </p>
             </button>
 
@@ -187,9 +269,9 @@ export default function WaghambaApp() {
               className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary shadow-xl hover:shadow-2xl active:scale-95"
             >
               <GraduationCap className="w-10 h-10 text-primary mb-6" />
-              <h3 className="text-3xl font-black text-primary uppercase mb-3">Student Registry</h3>
+              <h3 className="text-3xl font-black text-primary uppercase mb-3">{t.studentRegistry}</h3>
               <p className="text-muted-foreground font-medium text-lg">
-                Manage general student growth logs and physical registry.
+                {t.studentRegistryDesc}
               </p>
             </button>
           </div>
@@ -199,30 +281,30 @@ export default function WaghambaApp() {
   }
 
   const sportsTabs = [
-    { id: "home", label: "Home", icon: Home, color: "text-blue-600 bg-blue-50" },
-    { id: "registration", label: "Register", icon: User, color: "text-emerald-600 bg-emerald-50" },
-    { id: "dashboard", label: "Roster", icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "tournament", label: "Tourney", icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
-    { id: "daily-report", label: "Report", icon: FileText, color: "text-rose-600 bg-rose-50" },
-    { id: "archive", label: "History", icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
-    { id: "attendance", label: "Presence", icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
-    { id: "fitness", label: "Fitness", icon: Activity, color: "text-orange-600 bg-orange-50" },
-    { id: "sports-skills", label: "Skills", icon: TrophyIcon, color: "text-yellow-600 bg-yellow-50" },
-    { id: "health", label: "Health", icon: Stethoscope, color: "text-red-600 bg-red-50" },
-    { id: "ai", label: "AI Hub", icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
-    { id: "settings", label: "Settings", icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
+    { id: "home", label: t.home, icon: Home, color: "text-blue-600 bg-blue-50" },
+    { id: "registration", label: t.register, icon: User, color: "text-emerald-600 bg-emerald-50" },
+    { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "tournament", label: t.tourney, icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
+    { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
+    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
+    { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
+    { id: "sports-skills", label: t.skills, icon: TrophyIcon, color: "text-yellow-600 bg-yellow-50" },
+    { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
+    { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
+    { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const generalTabs = [
-    { id: "home", label: "Home", icon: Home, color: "text-blue-600 bg-blue-50" },
-    { id: "registration", label: "Enroll", icon: User, color: "text-emerald-600 bg-emerald-50" },
-    { id: "dashboard", label: "Registry", icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "daily-report", label: "Session", icon: FileText, color: "text-rose-600 bg-rose-50" },
-    { id: "archive", label: "History", icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
-    { id: "attendance", label: "Log", icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
-    { id: "fitness", label: "Physicals", icon: Activity, color: "text-orange-600 bg-orange-50" },
-    { id: "health", label: "Medical", icon: Stethoscope, color: "text-red-600 bg-red-50" },
-    { id: "settings", label: "Settings", icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
+    { id: "home", label: t.home, icon: Home, color: "text-blue-600 bg-blue-50" },
+    { id: "registration", label: t.enroll, icon: User, color: "text-emerald-600 bg-emerald-50" },
+    { id: "dashboard", label: t.registry, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "daily-report", label: t.session, icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
+    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
+    { id: "fitness", label: t.physicals, icon: Activity, color: "text-orange-600 bg-orange-50" },
+    { id: "health", label: t.medical, icon: Stethoscope, color: "text-red-600 bg-red-50" },
+    { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
@@ -241,27 +323,39 @@ export default function WaghambaApp() {
             </div>
             <div>
               <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
-                {selectedSection === 'sports' ? 'Sports Hub' : 'Student Registry'}
+                {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
               </h1>
-              <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{SCHOOL_NAME}</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{t.schoolName}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 mr-2">
+              <Languages className="w-4 h-4 text-muted-foreground" />
+              <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
+                <SelectTrigger className="h-9 w-32 rounded-full font-bold border-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Marathi">Marathi</SelectItem>
+                  <SelectItem value="English">English</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setSelectedSection(null)}
               className="hidden md:flex text-[11px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-4"
             >
-              Switch Hub
+              {t.switchHub}
             </Button>
             {isOnline ? (
               <Badge className="bg-green-100 text-green-700 border-green-200 font-black px-4 py-1.5 rounded-full text-[10px] shadow-sm">
-                <Wifi className="w-3.5 h-3.5 mr-1" /> ONLINE
+                <Wifi className="w-3.5 h-3.5 mr-1" /> {t.online}
               </Badge>
             ) : (
               <Badge variant="destructive" className="font-black px-4 py-1.5 rounded-full text-[10px] shadow-sm">
-                <WifiOff className="w-3.5 h-3.5 mr-1" /> OFFLINE
+                <WifiOff className="w-3.5 h-3.5 mr-1" /> {t.offline}
               </Badge>
             )}
           </div>
@@ -316,7 +410,7 @@ export default function WaghambaApp() {
                         )}
                         <div className="absolute top-8 left-8">
                           <Badge className="bg-yellow-400 text-black font-black text-xs px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-black/10">
-                            <Crown className="w-4 h-4" /> PERFORMANCE LEADER
+                            <Crown className="w-4 h-4" /> {t.performanceLeader}
                           </Badge>
                         </div>
                       </div>
@@ -326,7 +420,7 @@ export default function WaghambaApp() {
                         </div>
                         
                         <div className="space-y-4">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">Student Excellence</h3>
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">{t.studentExcellence}</h3>
                           <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none">
                             {bestPlayer.name}
                           </h2>
@@ -348,10 +442,10 @@ export default function WaghambaApp() {
                             <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
                               <Award className="w-8 h-8 text-accent-foreground" />
                             </div>
-                            <h4 className="text-2xl font-black uppercase tracking-tight">Congratulations!</h4>
+                            <h4 className="text-2xl font-black uppercase tracking-tight">{t.congratulations}</h4>
                           </div>
                           <p className="text-white/80 font-medium text-lg leading-relaxed">
-                            Outstanding performance in technical skills and physical assessment tests. Keeping the pride of {SCHOOL_NAME} high!
+                            {t.excellenceDesc}
                           </p>
                         </div>
                       </div>
@@ -360,16 +454,16 @@ export default function WaghambaApp() {
                 ) : (
                   <Card className="border-0 rounded-[3rem] shadow-sm bg-muted/20 p-20 text-center">
                     <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-                    <p className="font-black text-primary uppercase">Loading Hall of Fame...</p>
+                    <p className="font-black text-primary uppercase">{t.loadingHallOfFame}</p>
                   </Card>
                 )}
 
                 <div className="space-y-8">
                   <div className="flex items-center justify-between px-4">
                     <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                      <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" /> Top Squad Ranking
+                      <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
                     </h3>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Calculated Performance Hub</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t.calculatedPerformanceHub}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2">
@@ -407,7 +501,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="dashboard">
-              <Dashboard store={schoolData} section={selectedSection} />
+              <Dashboard store={schoolData} section={selectedSection} language={language} />
             </TabsContent>
 
             <TabsContent value="daily-report">
@@ -423,7 +517,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="registration">
-              <Registration store={schoolData} section={selectedSection} />
+              <Registration store={schoolData} section={selectedSection} language={language} />
             </TabsContent>
 
             <TabsContent value="attendance">
