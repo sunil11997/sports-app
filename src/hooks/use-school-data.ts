@@ -2,10 +2,12 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot, FirestoreError } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export function useSchoolData() {
   const db = useFirestore();
@@ -18,6 +20,9 @@ export function useSchoolData() {
   const allIncidentsRef = useMemoFirebase(() => user ? collection(db, 'all_health_incidents') : null, [db, user]);
   const { data: healthIncidents } = useCollection<HealthIncident>(allIncidentsRef);
 
+  const drillsSyncRef = useMemoFirebase(() => user ? collection(db, 'drill_completions') : null, [db, user]);
+  const { data: drillComps } = useCollection(drillsSyncRef);
+
   // 2. Reactive State for Sub-collections
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
@@ -25,6 +30,15 @@ export function useSchoolData() {
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
+
+  // Sync Drills separately from players loop
+  useEffect(() => {
+    if (drillComps) {
+      const logs: Record<string, boolean> = {};
+      drillComps.forEach(d => { logs[d.id] = true; });
+      setDrillCompletions(logs);
+    }
+  }, [drillComps]);
 
   // 3. Subscription Management to prevent flickering and redundant cloud calls
   const unsubscribersRef = useRef<Record<string, (() => void)[]>>({});
@@ -54,62 +68,77 @@ export function useSchoolData() {
 
         // Sync Attendance
         const attRef = collection(db, 'players', player.id, 'attendance');
-        const unsubAtt = onSnapshot(attRef, (snapshot) => {
-          const newAtt: AttendanceRecord = {};
-          snapshot.docs.forEach(doc => {
-            newAtt[`${player.id}_${doc.id}`] = doc.data().status;
-          });
-          setAttendanceData(prev => ({ ...prev, ...newAtt }));
-        });
+        const unsubAtt = onSnapshot(attRef, 
+          (snapshot) => {
+            const newAtt: AttendanceRecord = {};
+            snapshot.docs.forEach(doc => {
+              newAtt[`${player.id}_${doc.id}`] = doc.data().status;
+            });
+            setAttendanceData(prev => ({ ...prev, ...newAtt }));
+          },
+          async (serverError) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: attRef.path,
+              operation: 'list'
+            } satisfies SecurityRuleContext));
+          }
+        );
         unsubs.push(unsubAtt);
 
         // Sync Fitness / Monthly Logs
         const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
-        const unsubFit = onSnapshot(fitRef, (snapshot) => {
-          const history: FitnessAssessment[] = [];
-          snapshot.docs.forEach(d => {
-            const data = d.data() as FitnessAssessment;
-            if (d.id === 'latest') {
-              setFitnessData(prev => ({ ...prev, [player.id]: data }));
-            }
-            history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
-          });
-          setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
-        });
+        const unsubFit = onSnapshot(fitRef, 
+          (snapshot) => {
+            const history: FitnessAssessment[] = [];
+            snapshot.docs.forEach(d => {
+              const data = d.data() as FitnessAssessment;
+              if (d.id === 'latest') {
+                setFitnessData(prev => ({ ...prev, [player.id]: data }));
+              }
+              history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
+            });
+            setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
+          },
+          async (serverError) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: fitRef.path,
+              operation: 'list'
+            } satisfies SecurityRuleContext));
+          }
+        );
         unsubs.push(unsubFit);
 
         // Sync Sport Skills
         const skillRef = collection(db, 'players', player.id, 'sportSkills');
-        const unsubSkill = onSnapshot(skillRef, (snapshot) => {
-          const playerSkills: Record<string, SportSkill> = {};
-          const historyList: (SportSkill & { sportName: string })[] = [];
-          snapshot.docs.forEach(doc => {
-            const data = doc.data() as SportSkill;
-            playerSkills[`${player.id}_${doc.id}`] = data;
-            historyList.push({ ...data, sportName: doc.id });
-          });
-          setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
-          setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
-        });
+        const unsubSkill = onSnapshot(skillRef, 
+          (snapshot) => {
+            const playerSkills: Record<string, SportSkill> = {};
+            const historyList: (SportSkill & { sportName: string })[] = [];
+            snapshot.docs.forEach(doc => {
+              const data = doc.data() as SportSkill;
+              playerSkills[`${player.id}_${doc.id}`] = data;
+              historyList.push({ ...data, sportName: doc.id });
+            });
+            setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
+            setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
+          },
+          async (serverError) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: skillRef.path,
+              operation: 'list'
+            } satisfies SecurityRuleContext));
+          }
+        );
         unsubs.push(unsubSkill);
 
         unsubscribersRef.current[player.id] = unsubs;
       }
     });
 
-    // Sync Drill completions (global scope for simplicity of sessions)
-    const drillsRef = collection(db, 'drill_completions');
-    const unsubDrills = onSnapshot(drillsRef, (snapshot) => {
-      const logs: Record<string, boolean> = {};
-      snapshot.docs.forEach(d => { logs[d.id] = true; });
-      setDrillCompletions(logs);
-    });
-
-    // Cleanup logic for when component unmounts
     return () => {
-      unsubDrills();
+      // Global cleanup handled by dependency array and ref logic
     };
-  }, [db, user, players]); // Stable triggers
+  }, [db, user, players]); 
 
   const aggregatedData = useMemo(() => {
     return {

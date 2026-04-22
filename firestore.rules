@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -43,15 +44,14 @@ service cloud.firestore {
      * @description Tracked drill completions.
      */
     match /drill_completions/{drillId} {
-      allow get, list: if isStaff();
-      allow write: if isStaff();
+      allow read, write: if isStaff();
     }
 
     /**
      * @description aggregated health incidents for quick dashboard access.
      */
     match /all_health_incidents/{incidentId} {
-      allow get, list: if isStaff();
+      allow read: if isStaff();
       allow create: if isStaff() && request.resource.data.id == incidentId;
       allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
       allow delete: if isExistingStaff();
@@ -61,34 +61,34 @@ service cloud.firestore {
      * @description Primary player profiles.
      */
     match /players/{playerId} {
-      allow get, list: if isStaff();
+      allow read: if isStaff();
       allow create: if isStaff() && request.resource.data.id == playerId;
       allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
       allow delete: if isExistingStaff();
 
       match /attendance/{attendanceId} {
-        allow get, list: if isStaff();
+        allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
         allow delete: if isExistingStaff();
       }
 
       match /fitnessAssessments/{assessmentId} {
-        allow get, list: if isStaff();
+        allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
         allow delete: if isExistingStaff();
       }
 
       match /sportSkills/{sportSkillId} {
-        allow get, list: if isStaff();
+        allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
         allow delete: if isExistingStaff();
       }
 
       match /healthIncidents/{incidentId} {
-        allow get, list: if isStaff();
+        allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
         allow delete: if isExistingStaff();
