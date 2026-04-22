@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle2, AlertCircle, Printer, Calculator, Scale, Ruler, GraduationCap, Save, Loader2 } from 'lucide-react';
+import { Activity, CheckCircle2, AlertCircle, Printer, Calculator, Scale, Ruler, GraduationCap, Save, Loader2, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
@@ -19,6 +20,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
   const filteredPlayers = store.data.players.filter((p: any) => p.category === targetCategory);
+
+  const getPlayerCategory = (p: any) => {
+    const age = parseInt(p.age) || 0;
+    const genderLabel = p.gender === 'Female' ? 'Girls' : 'Boys';
+    if (age < 14) return `${genderLabel} U14`;
+    if (age < 17) return `${genderLabel} U17`;
+    return `${genderLabel} Senior`;
+  };
 
   const handleChange = (id: string, field: string, value: string) => {
     setAssessments(prev => ({
@@ -97,49 +106,66 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   };
 
   const handlePrint = () => {
+    const currentMonth = format(new Date(), 'MMMM yyyy');
     const printContent = `
       <html>
         <head>
           <title>${isGeneral ? 'Monthly Growth Report' : 'Fitness Report'} - Waghamba</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; }
-            h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
+            body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; color: #333; }
+            .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #235C36; padding-bottom: 10px; }
+            h1 { color: #235C36; text-transform: uppercase; margin: 0; }
+            .month-sub { font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase; margin-top: 5px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 4px; text-align: left; }
-            th { background-color: #f8f8f8; font-weight: bold; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+            th { background-color: #f8f8f8; font-weight: bold; font-size: 9px; text-transform: uppercase; }
+            .cat-badge { font-size: 8px; font-weight: 900; background: #eee; padding: 2px 4px; border-radius: 3px; }
+            .score-cell { font-weight: 900; color: #235C36; }
+            .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; font-size: 10px; }
           </style>
         </head>
         <body>
-          <h1>${isGeneral ? 'MONTHLY GROWTH LOG' : 'ATHLETE FITNESS ASSESSMENT'}</h1>
+          <div class="header">
+            <h1>${isGeneral ? 'MONTHLY STUDENT GROWTH LOG' : 'INSTITUTIONAL ATHLETE FITNESS'}</h1>
+            <div class="month-sub">Assessment Period: ${currentMonth}</div>
+          </div>
           <table>
             <thead>
               <tr>
-                <th>STUDENT</th>
+                <th>STUDENT NAME</th>
+                <th>CATEGORY</th>
                 ${isGeneral ? 
-                  '<th>HT (CM)</th><th>WT (KG)</th><th>EXAM</th>' : 
+                  '<th>HT (CM)</th><th>WT (KG)</th><th>EXAM SC</th>' : 
                   '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>STR</th>'
                 }
-                <th>SCORE</th>
+                <th>TOTAL</th>
                 <th>LEVEL</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness[p.id] || {};
+                const category = getPlayerCategory(p);
                 return `
                   <tr>
-                    <td><strong>${p.name}</strong></td>
+                    <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
+                    <td><span class="cat-badge">${category}</span></td>
                     ${isGeneral ? 
                       `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : 
                       `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.strengthScore || '-'}</td>`
                     }
-                    <td>${fit.score || '-'}%</td>
-                    <td>${fit.status || 'Pending'}</td>
+                    <td class="score-cell">${fit.score || '0'}${isGeneral ? '' : '%'}</td>
+                    <td><strong>${fit.status || 'PENDING'}</strong></td>
                   </tr>
                 `;
               }).join('')}
             </tbody>
           </table>
+          <div class="footer">
+            <div style="border-top: 1px solid #000; width: 150px; text-align: center; padding-top: 5px;">Class Teacher</div>
+            <div style="border-top: 1px solid #000; width: 150px; text-align: center; padding-top: 5px;">Physical Ed Director</div>
+            <div style="border-top: 1px solid #000; width: 150px; text-align: center; padding-top: 5px;">Principal Signature</div>
+          </div>
         </body>
       </html>
     `;
@@ -154,9 +180,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           {isGeneral ? <Scale className="w-6 h-6 text-primary" /> : <Activity className="w-6 h-6 text-accent" />}
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">
-            {isGeneral ? 'Excel: Monthly Growth Registry' : 'Excel: Athlete Fitness Registry'}
-          </h2>
+          <div>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tight">
+              {isGeneral ? 'Monthly Growth Registry' : 'Athlete Fitness Registry'}
+            </h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
+              <Calendar className="w-3 h-3" /> Period: {format(new Date(), 'MMMM yyyy')}
+            </p>
+          </div>
         </div>
         <Button onClick={handlePrint} size="sm" className="font-bold h-9 ios-card-shadow bg-primary hover:bg-primary/90">
           <Printer className="w-4 h-4 mr-2" /> Print Sheet
@@ -205,6 +236,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   height: '', weight: '', examMarks: ''
                 };
                 const isPulse = lastSavedId === player.id;
+                const playerCategory = getPlayerCategory(player);
                 
                 return (
                   <TableRow 
@@ -216,8 +248,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   >
                     <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
                       <div className="flex flex-col">
-                        <span className="text-primary uppercase truncate w-[200px]">{player.name}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} • {player.gender}</span>
+                        <span className="text-primary uppercase truncate w-[180px]">{player.name}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Std {player.std}</span>
+                          <span className="text-[8px] font-black bg-accent/20 text-accent-foreground px-1 rounded uppercase">{playerCategory}</span>
+                        </div>
                       </div>
                     </TableCell>
                     
@@ -261,7 +296,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
                     <TableCell className="border-r p-1 text-center bg-primary/5">
                       <div className="flex flex-col items-center">
-                        <span className="text-[11px] font-black text-primary">{current.score || '0'}%</span>
+                        <span className="text-[11px] font-black text-primary">{current.score || '0'}{isGeneral ? '' : '%'}</span>
                         <span className="text-[8px] font-black uppercase text-muted-foreground truncate w-full">{current.status || 'Pending'}</span>
                       </div>
                     </TableCell>
