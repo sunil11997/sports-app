@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -258,6 +259,9 @@ export function Dashboard({ store, section }: { store: any, section: 'sports' | 
       {/* Photo Viewer Dialog */}
       <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
         <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[2rem] border-0 shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{viewingPhoto?.name || 'Student Photo'}</DialogTitle>
+          </DialogHeader>
           <div className="relative w-full aspect-[3/4] bg-muted">
             {viewingPhoto && (
               <Image 
