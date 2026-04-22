@@ -84,6 +84,16 @@
   .ios-list-item {
     @apply flex items-center justify-between py-3 px-4 bg-white active:bg-muted/50 transition-colors first:rounded-t-2xl last:rounded-b-2xl border-b last:border-b-0 border-muted;
   }
+
+  .animate-success-pulse {
+    animation: success-pulse 1s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+}
+
+@keyframes success-pulse {
+  0% { background-color: transparent; }
+  50% { background-color: hsl(var(--accent) / 0.3); }
+  100% { background-color: transparent; }
 }
 
 .tab-content-enter {

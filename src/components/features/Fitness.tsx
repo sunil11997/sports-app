@@ -1,17 +1,20 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle2, AlertCircle, Printer, Calculator, Scale, Ruler, GraduationCap, Save } from 'lucide-react';
+import { Activity, CheckCircle2, AlertCircle, Printer, Calculator, Scale, Ruler, GraduationCap, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
-  const [assessments, setAssessments] = React.useState<Record<string, any>>(store.data.fitness);
+  const [assessments, setAssessments] = useState<Record<string, any>>(store.data.fitness);
+  const [lastSavedId, setLastSavedId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<string | null>(null);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
@@ -40,15 +43,17 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     }));
   };
 
-  const handleSave = (id: string) => {
+  const handleSave = async (player: any) => {
+    const id = player.id;
     const current = assessments[id];
     if (!current) return;
 
+    setIsSaving(id);
+    
     let scoreNum = 0;
     let status = 'Logged';
 
     if (!isGeneral) {
-      // Logic for athletic fitness assessment
       const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps', 'strengthScore'];
       let filledCount = 0;
       let sum = 0;
@@ -57,13 +62,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         const val = parseFloat(current[f]);
         if (!isNaN(val)) {
           filledCount++;
-          // Normalized mock calculation for institutional points
-          // In real school system, this would use age/gender standardized percentiles
           sum += (val > 100 ? 100 : val); 
         }
       });
 
-      const calculatedScore = filledCount > 0 ? Math.round(sum / filledCount).toString() : "0";
+      const calculatedScore = filledCount > 0 ? Math.round(sum / fields.length).toString() : "0";
       scoreNum = parseInt(calculatedScore);
       
       if (scoreNum >= 85) status = 'Level A (Elite)';
@@ -73,7 +76,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       
       current.score = calculatedScore;
     } else {
-      // Logic for general registry monthly logs
       status = 'Updated';
       current.score = current.examMarks || "0";
     }
@@ -82,9 +84,15 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     store.setFitness(id, finalAssessment);
     setAssessments(prev => ({ ...prev, [id]: finalAssessment }));
     
+    // Trigger animation
+    setLastSavedId(id);
+    setTimeout(() => setLastSavedId(null), 1000);
+    setIsSaving(null);
+
     toast({ 
       title: "Data Synced", 
-      description: `Fitness record for ${id} has been archived in history.`,
+      description: `Fitness record for ${player.name} has been archived in history.`,
+      className: "bg-accent border-accent-foreground text-accent-foreground font-bold",
     });
   };
 
@@ -150,41 +158,41 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             {isGeneral ? 'Excel: Monthly Growth Registry' : 'Excel: Athlete Fitness Registry'}
           </h2>
         </div>
-        <Button onClick={handlePrint} size="sm" className="font-bold h-9">
+        <Button onClick={handlePrint} size="sm" className="font-bold h-9 ios-card-shadow bg-primary hover:bg-primary/90">
           <Printer className="w-4 h-4 mr-2" /> Print Sheet
         </Button>
       </div>
 
-      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+      <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm overflow-x-auto ios-card-shadow">
         <Table className="border-collapse min-w-max">
-          <TableHeader className="bg-muted/50 sticky top-0 z-20">
+          <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow className="border-b">
-              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase w-[180px] sticky left-0 bg-muted/50 z-30">Student Details</TableHead>
+              <TableHead className="border-r h-10 px-4 font-black text-[11px] uppercase w-[220px] sticky left-0 bg-muted/95 z-30">Student Details</TableHead>
               {isGeneral ? (
                 <>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[80px]">HT (cm)</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[80px]">WT (kg)</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[80px]">Exam</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">HT (cm)</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">WT (kg)</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Exam</TableHead>
                 </>
               ) : (
                 <>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">10x6</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">50M</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">600M</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
-                  <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[60px]">Str</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">10x6</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">50M</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">600M</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">Reach</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">Jump</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">Situps</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[70px]">Str</TableHead>
                 </>
               )}
-              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[120px]">Status / Level</TableHead>
-              <TableHead className="h-9 px-2 font-black text-[10px] uppercase text-right w-[80px] sticky right-0 bg-muted/50 z-30">Sync</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[140px]">Status / Level</TableHead>
+              <TableHead className="h-10 px-2 font-black text-[10px] uppercase text-right w-[90px] sticky right-0 bg-muted/95 z-30">Sync</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={15} className="text-center py-12 text-muted-foreground font-bold uppercase tracking-widest opacity-30">
                   No records found in this category.
                 </TableCell>
               </TableRow>
@@ -196,59 +204,76 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   score: '', status: '',
                   height: '', weight: '', examMarks: ''
                 };
+                const isPulse = lastSavedId === player.id;
+                
                 return (
-                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
-                    <TableCell className="border-r p-2 text-xs font-bold sticky left-0 bg-white z-10">
-                      <div className="truncate w-[160px]">{player.name}</div>
+                  <TableRow 
+                    key={player.id} 
+                    className={cn(
+                      "border-b even:bg-muted/20 hover:bg-primary/5 transition-all h-12",
+                      isPulse && "animate-success-pulse"
+                    )}
+                  >
+                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
+                      <div className="flex flex-col">
+                        <span className="text-primary uppercase truncate w-[200px]">{player.name}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} • {player.gender}</span>
+                      </div>
                     </TableCell>
                     
                     {isGeneral ? (
                       <>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} />
+                          <Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} />
+                          <Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white rounded-none" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} />
+                          <Input className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} />
                         </TableCell>
                       </>
                     ) : (
                       <>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="sec" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="sec" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="sec" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="sec" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="min" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="min" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="cm" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="cm" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="cm" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="cm" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="count" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="count" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} />
                         </TableCell>
                         <TableCell className="border-r p-0">
-                          <Input className="h-10 text-center text-[10px] border-0 bg-transparent focus:bg-white rounded-none" placeholder="0-100" value={current.strengthScore || ''} onChange={(e) => handleChange(player.id, 'strengthScore', e.target.value)} />
+                          <Input className="h-12 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white focus:ring-1 focus:ring-primary rounded-none" placeholder="0-100" value={current.strengthScore || ''} onChange={(e) => handleChange(player.id, 'strengthScore', e.target.value)} />
                         </TableCell>
                       </>
                     )}
 
                     <TableCell className="border-r p-1 text-center bg-primary/5">
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] font-black text-primary">{current.score || '0'}%</span>
-                        <span className="text-[8px] font-bold uppercase text-muted-foreground truncate w-full">{current.status || 'Pending'}</span>
+                        <span className="text-[11px] font-black text-primary">{current.score || '0'}%</span>
+                        <span className="text-[8px] font-black uppercase text-muted-foreground truncate w-full">{current.status || 'Pending'}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
-                      <Button variant="ghost" size="icon" className="h-10 w-full rounded-none hover:bg-primary/20" onClick={() => handleSave(player.id)}>
-                        <Save className="w-4 h-4 text-primary" />
+                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10 ios-blur">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-12 w-full rounded-none hover:bg-accent/30 text-primary transition-colors" 
+                        onClick={() => handleSave(player)}
+                        disabled={isSaving === player.id}
+                      >
+                        {isSaving === player.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       </Button>
                     </TableCell>
                   </TableRow>
