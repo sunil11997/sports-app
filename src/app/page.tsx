@@ -31,7 +31,8 @@ import {
   Star,
   Award,
   Crown,
-  Languages
+  Languages,
+  Dumbbell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -48,6 +49,7 @@ import { Dashboard } from '@/components/features/Dashboard';
 import { Attendance } from '@/components/features/Attendance';
 import { Fitness } from '@/components/features/Fitness';
 import { SportsSkills } from '@/components/features/SportsSkills';
+import { SportsDrills } from '@/components/features/SportsDrills';
 import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { AIAdvice } from '@/components/features/AIAdvice';
 import { DailyReport } from '@/components/features/DailyReport';
@@ -72,6 +74,7 @@ const translations = {
     presence: "Presence",
     fitness: "Fitness",
     skills: "Skills",
+    drills: "Drills",
     health: "Health",
     aiHub: "AI Hub",
     settings: "Settings",
@@ -111,6 +114,7 @@ const translations = {
     presence: "उपस्थिती",
     fitness: "क्षमता",
     skills: "कौशल्ये",
+    drills: "सराव",
     health: "आरोग्य",
     aiHub: "AI केंद्र",
     settings: "सेटिंग्ज",
@@ -162,7 +166,7 @@ export default function WaghambaApp() {
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
-    setActiveTab("home");
+    setActiveTab("registration");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -290,6 +294,7 @@ export default function WaghambaApp() {
     { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
     { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
     { id: "sports-skills", label: t.skills, icon: TrophyIcon, color: "text-yellow-600 bg-yellow-50" },
+    { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-600 bg-cyan-50" },
     { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
     { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
     { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
@@ -509,6 +514,10 @@ export default function WaghambaApp() {
 
             <TabsContent value="sports-skills">
               <SportsSkills store={schoolData} />
+            </TabsContent>
+
+            <TabsContent value="drills">
+              <SportsDrills store={schoolData} />
             </TabsContent>
 
             <TabsContent value="ai">

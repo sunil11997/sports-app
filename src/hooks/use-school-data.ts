@@ -24,6 +24,7 @@ export function useSchoolData() {
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
+  const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
   // 3. Subscription Management to prevent flickering and redundant cloud calls
   const unsubscribersRef = useRef<Record<string, (() => void)[]>>({});
@@ -96,10 +97,17 @@ export function useSchoolData() {
       }
     });
 
+    // Sync Drill completions (global scope for simplicity of sessions)
+    const drillsRef = collection(db, 'drill_completions');
+    const unsubDrills = onSnapshot(drillsRef, (snapshot) => {
+      const logs: Record<string, boolean> = {};
+      snapshot.docs.forEach(d => { logs[d.id] = true; });
+      setDrillCompletions(logs);
+    });
+
     // Cleanup logic for when component unmounts
     return () => {
-      // We don't cleanup here to persist listeners across list renders 
-      // unless the players array actually changes (handled by the Set logic above)
+      unsubDrills();
     };
   }, [db, user, players]); // Stable triggers
 
@@ -111,9 +119,10 @@ export function useSchoolData() {
       fitnessHistory,
       sportSkills,
       skillsHistory,
+      drillCompletions,
       healthIncidents: healthIncidents || [],
     };
-  }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory]);
+  }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions]);
 
   const addPlayer = (player: any) => {
     if (!playersRef) return;
@@ -154,6 +163,15 @@ export function useSchoolData() {
     setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, lastUpdated: new Date().toISOString() }, { merge: true });
   };
 
+  const setDrillCompletion = (drillId: string, completed: boolean) => {
+    const drillRef = doc(db, 'drill_completions', drillId);
+    if (completed) {
+      setDocumentNonBlocking(drillRef, { timestamp: new Date().toISOString() }, { merge: true });
+    } else {
+      deleteDocumentNonBlocking(drillRef);
+    }
+  };
+
   const addHealthIncident = (incident: HealthIncident) => {
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
     setDocumentNonBlocking(globalIncRef, incident, { merge: true });
@@ -187,6 +205,7 @@ export function useSchoolData() {
     setAttendance,
     setFitness,
     setSportSkill,
+    setDrillCompletion,
     addHealthIncident,
     exportBackupData
   };
