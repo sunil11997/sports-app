@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -13,20 +14,25 @@ import {
   School,
   Mail,
   Wifi,
+  WifiOff,
   Download,
   Lock,
-  History
+  History,
+  Languages,
+  CheckCircle2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSchoolData } from '@/hooks/use-school-data';
+import { usePWA } from '@/components/providers/pwa-provider';
 
-export function Settings() {
+export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
   const { user } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
   const schoolData = useSchoolData();
+  const { isOnline } = usePWA();
 
   const handleBackup = () => {
     initiateGoogleBackup(auth)
@@ -55,14 +61,13 @@ export function Settings() {
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com');
 
-  const SettingsItem = ({ icon: Icon, color, label, value, onClick, sublabel, disabled }: any) => (
-    <button 
-      disabled={disabled}
-      onClick={onClick}
+  const SettingsItem = ({ icon: Icon, color, label, value, onClick, sublabel, disabled, accessory }: any) => (
+    <div 
       className={cn(
         "ios-list-item w-full text-left group disabled:opacity-50",
         !onClick && "cursor-default active:bg-white"
       )}
+      onClick={onClick}
     >
       <div className="flex items-center gap-3">
         <div className={cn("p-1.5 rounded-lg text-white transition-transform group-active:scale-90", color)}>
@@ -75,9 +80,10 @@ export function Settings() {
       </div>
       <div className="flex items-center gap-2">
         {value && <span className="text-sm font-medium text-muted-foreground">{value}</span>}
-        {onClick && <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-active:translate-x-1 transition-transform" />}
+        {accessory && accessory}
+        {onClick && !accessory && <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-active:translate-x-1 transition-transform" />}
       </div>
-    </button>
+    </div>
   );
 
   return (
@@ -91,6 +97,46 @@ export function Settings() {
       </div>
 
       <div className="space-y-6">
+        {/* Connectivity & Language Section */}
+        <div className="space-y-2">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Preferences</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
+            <SettingsItem 
+              icon={Languages} 
+              color="bg-purple-500" 
+              label="App Language" 
+              sublabel="Select UI primary language"
+              accessory={
+                <div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10">
+                  <Button 
+                    variant={language === 'Marathi' ? "default" : "ghost"} 
+                    size="sm" 
+                    onClick={(e) => { e.stopPropagation(); setLanguage('Marathi'); }}
+                    className="h-7 rounded-full font-black text-[9px] px-3"
+                  >
+                    मराठी
+                  </Button>
+                  <Button 
+                    variant={language === 'English' ? "default" : "ghost"} 
+                    size="sm" 
+                    onClick={(e) => { e.stopPropagation(); setLanguage('English'); }}
+                    className="h-7 rounded-full font-black text-[9px] px-3"
+                  >
+                    EN
+                  </Button>
+                </div>
+              }
+            />
+            <SettingsItem 
+              icon={isOnline ? Wifi : WifiOff} 
+              color={isOnline ? "bg-green-500" : "bg-destructive"} 
+              label="System Status" 
+              value={isOnline ? "Synced & Online" : "Local Mode"}
+              sublabel={isOnline ? "Direct Cloud Sync Active" : "Data will sync when back online"}
+            />
+          </div>
+        </div>
+
         {/* Cloud & Backup Section */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">iCloud & Google Backup</label>
@@ -113,7 +159,7 @@ export function Settings() {
             <SettingsItem 
               icon={History} 
               color="bg-indigo-500" 
-              label="Last Sync" 
+              label="Sync Integrity" 
               value="Live"
               sublabel="Real-time protection enabled"
             />
@@ -164,12 +210,6 @@ export function Settings() {
               color="bg-green-600" 
               label="Database Status" 
               value="Protected"
-            />
-            <SettingsItem 
-              icon={Wifi} 
-              color="bg-orange-500" 
-              label="PWA Connectivity" 
-              value="Optimized"
             />
           </div>
         </div>

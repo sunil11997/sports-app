@@ -329,41 +329,14 @@ export default function WaghambaApp() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-primary/5 p-1 rounded-full border border-primary/10">
-              <Button 
-                variant={language === 'Marathi' ? "default" : "ghost"} 
-                size="sm" 
-                onClick={() => setLanguage('Marathi')}
-                className="h-8 rounded-full font-black text-[10px] px-4"
-              >
-                मराठी
-              </Button>
-              <Button 
-                variant={language === 'English' ? "default" : "ghost"} 
-                size="sm" 
-                onClick={() => setLanguage('English')}
-                className="h-8 rounded-full font-black text-[10px] px-4"
-              >
-                EN
-              </Button>
-            </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setSelectedSection(null)}
-              className="hidden md:flex text-[11px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-4"
+              className="text-[11px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-4"
             >
               {t.switchHub}
             </Button>
-            {isOnline ? (
-              <Badge className="bg-green-100 text-green-700 border-green-200 font-black px-4 py-1.5 rounded-full text-[10px] shadow-sm">
-                <Wifi className="w-3.5 h-3.5 mr-1" /> {t.online}
-              </Badge>
-            ) : (
-              <Badge variant="destructive" className="font-black px-4 py-1.5 rounded-full text-[10px] shadow-sm">
-                <WifiOff className="w-3.5 h-3.5 mr-1" /> {t.offline}
-              </Badge>
-            )}
           </div>
         </div>
       </header>
@@ -547,7 +520,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="settings">
-              <Settings />
+              <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
           </div>
         </Tabs>
