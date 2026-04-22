@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,7 +27,10 @@ import {
   ArrowRight,
   GraduationCap,
   Medal,
-  Trophy as TrophyIcon
+  Trophy as TrophyIcon,
+  Star,
+  Award,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -35,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { cn } from '@/lib/utils';
 
 // Feature Components
 import { Registration } from '@/components/features/Registration';
@@ -52,7 +56,7 @@ import { History } from '@/components/features/History';
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
-  const [activeTab, setActiveTab] = useState("registration");
+  const [activeTab, setActiveTab] = useState("home");
   const [isTabChanging, setIsTabChanging] = useState(false);
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();
@@ -61,7 +65,6 @@ export default function WaghambaApp() {
 
   const SCHOOL_NAME = "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
   const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
-  const HERO_IMAGE = PlaceHolderImages.find(img => img.id === 'school-sports-hero');
 
   useEffect(() => {
     if (isEntered && !user && !isUserLoading) {
@@ -75,7 +78,7 @@ export default function WaghambaApp() {
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
-    setActiveTab("registration");
+    setActiveTab("home");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -83,9 +86,23 @@ export default function WaghambaApp() {
     setIsTabChanging(true);
     setActiveTab(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Minimal timeout for consistent UX
     setTimeout(() => setIsTabChanging(false), 200);
   };
+
+  // Hall of Fame Logic
+  const topPerformers = useMemo(() => {
+    if (!schoolData.data.players) return [];
+    return [...schoolData.data.players].map(p => {
+      const fitness = schoolData.data.fitness[p.id] || { score: '0' };
+      const skills = Object.values(schoolData.data.sportSkills).filter(s => s.playerId === p.id);
+      const maxSkill = skills.length > 0 ? Math.max(...skills.map(s => parseFloat(s.score) || 0)) : 0;
+      // Weighted performance score
+      const performance = (parseFloat(fitness.score) || 0) + maxSkill;
+      return { ...p, performance, fitnessScore: fitness.score, latestStatus: fitness.status };
+    }).sort((a, b) => b.performance - a.performance);
+  }, [schoolData.data]);
+
+  const bestPlayer = topPerformers[0];
 
   if (!isEntered) {
     return (
@@ -156,7 +173,7 @@ export default function WaghambaApp() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <button 
               onClick={() => handleSectionSelect('sports')}
-              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary"
+              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary shadow-xl hover:shadow-2xl active:scale-95"
             >
               <Medal className="w-10 h-10 text-primary mb-6" />
               <h3 className="text-3xl font-black text-primary uppercase mb-3">Sports Hub</h3>
@@ -167,7 +184,7 @@ export default function WaghambaApp() {
 
             <button 
               onClick={() => handleSectionSelect('general')}
-              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary"
+              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary shadow-xl hover:shadow-2xl active:scale-95"
             >
               <GraduationCap className="w-10 h-10 text-primary mb-6" />
               <h3 className="text-3xl font-black text-primary uppercase mb-3">Student Registry</h3>
@@ -182,40 +199,40 @@ export default function WaghambaApp() {
   }
 
   const sportsTabs = [
-    { id: "registration", label: "Register", icon: User },
-    { id: "home", label: "Home", icon: Home },
-    { id: "dashboard", label: "Roster", icon: LayoutDashboard },
-    { id: "tournament", label: "Tourney", icon: ClipboardList },
-    { id: "daily-report", label: "Report", icon: FileText },
-    { id: "archive", label: "History", icon: HistoryIcon },
-    { id: "attendance", label: "Presence", icon: CalendarCheck },
-    { id: "fitness", label: "Fitness", icon: Activity },
-    { id: "sports-skills", label: "Skills", icon: TrophyIcon },
-    { id: "health", label: "Health", icon: Stethoscope },
-    { id: "ai", label: "AI Hub", icon: Sparkles },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
+    { id: "home", label: "Home", icon: Home, color: "text-blue-600 bg-blue-50" },
+    { id: "registration", label: "Register", icon: User, color: "text-emerald-600 bg-emerald-50" },
+    { id: "dashboard", label: "Roster", icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "tournament", label: "Tourney", icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
+    { id: "daily-report", label: "Report", icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "archive", label: "History", icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
+    { id: "attendance", label: "Presence", icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
+    { id: "fitness", label: "Fitness", icon: Activity, color: "text-orange-600 bg-orange-50" },
+    { id: "sports-skills", label: "Skills", icon: TrophyIcon, color: "text-yellow-600 bg-yellow-50" },
+    { id: "health", label: "Health", icon: Stethoscope, color: "text-red-600 bg-red-50" },
+    { id: "ai", label: "AI Hub", icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
+    { id: "settings", label: "Settings", icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const generalTabs = [
-    { id: "registration", label: "Enroll", icon: User },
-    { id: "home", label: "Home", icon: Home },
-    { id: "dashboard", label: "Registry", icon: LayoutDashboard },
-    { id: "daily-report", label: "Session", icon: FileText },
-    { id: "archive", label: "History", icon: HistoryIcon },
-    { id: "attendance", label: "Log", icon: CalendarCheck },
-    { id: "fitness", label: "Physicals", icon: Activity },
-    { id: "health", label: "Medical", icon: Stethoscope },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
+    { id: "home", label: "Home", icon: Home, color: "text-blue-600 bg-blue-50" },
+    { id: "registration", label: "Enroll", icon: User, color: "text-emerald-600 bg-emerald-50" },
+    { id: "dashboard", label: "Registry", icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "daily-report", label: "Session", icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "archive", label: "History", icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
+    { id: "attendance", label: "Log", icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
+    { id: "fitness", label: "Physicals", icon: Activity, color: "text-orange-600 bg-orange-50" },
+    { id: "health", label: "Medical", icon: Stethoscope, color: "text-red-600 bg-red-50" },
+    { id: "settings", label: "Settings", icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-8">
-      <header className="sticky top-0 z-50 bg-white border-b py-4 px-6">
+      <header className="sticky top-0 z-50 bg-white border-b py-4 px-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-primary/5 p-2 rounded-xl border w-11 h-11 flex items-center justify-center">
+            <div className="bg-primary/5 p-2 rounded-xl border w-11 h-11 flex items-center justify-center shadow-inner">
               {LOGO ? (
                 <Image src={LOGO.imageUrl} alt="Logo" width={32} height={32} />
               ) : (
@@ -223,10 +240,10 @@ export default function WaghambaApp() {
               )}
             </div>
             <div>
-              <h1 className="text-lg font-black uppercase text-primary leading-none">
+              <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? 'Sports Hub' : 'Student Registry'}
               </h1>
-              <p className="text-[9px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{SCHOOL_NAME}</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{SCHOOL_NAME}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -234,16 +251,16 @@ export default function WaghambaApp() {
               variant="ghost" 
               size="sm" 
               onClick={() => setSelectedSection(null)}
-              className="hidden md:flex text-[10px] font-black text-primary uppercase"
+              className="hidden md:flex text-[11px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-4"
             >
               Switch Hub
             </Button>
             {isOnline ? (
-              <Badge className="bg-green-100 text-green-700 border-green-200 font-black px-4 py-1.5 rounded-full text-[10px]">
+              <Badge className="bg-green-100 text-green-700 border-green-200 font-black px-4 py-1.5 rounded-full text-[10px] shadow-sm">
                 <Wifi className="w-3.5 h-3.5 mr-1" /> ONLINE
               </Badge>
             ) : (
-              <Badge variant="destructive" className="font-black px-4 py-1.5 rounded-full text-[10px]">
+              <Badge variant="destructive" className="font-black px-4 py-1.5 rounded-full text-[10px] shadow-sm">
                 <WifiOff className="w-3.5 h-3.5 mr-1" /> OFFLINE
               </Badge>
             )}
@@ -252,70 +269,141 @@ export default function WaghambaApp() {
       </header>
 
       <main className="max-w-7xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <div className="overflow-x-auto pb-2 scrollbar-hide">
-            <TabsList className="bg-muted/50 p-1 flex gap-1 rounded-xl min-w-max border">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
+          <div className="overflow-x-auto pb-4 scrollbar-hide">
+            <TabsList className="bg-muted/40 p-2 flex gap-3 rounded-2xl min-w-max border h-auto">
               {currentTabs.map((tab) => (
                 <TabsTrigger 
                   key={tab.id}
                   value={tab.id} 
-                  className="rounded-lg px-4 py-2 font-black text-[10px] data-[state=active]:bg-white data-[state=active]:text-primary uppercase tracking-wider"
+                  className={cn(
+                    "rounded-xl px-6 py-4 font-black text-[12px] uppercase tracking-wider transition-all shadow-sm flex flex-col items-center gap-1 min-w-[100px]",
+                    "data-[state=active]:shadow-lg data-[state=active]:scale-110",
+                    tab.color
+                  )}
                 >
-                  <tab.icon className="w-3.5 h-3.5 mr-1.5" /> {tab.label}
+                  <tab.icon className="w-5 h-5" /> {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
           </div>
 
-          <div className="relative min-h-[400px]">
+          <div className="relative min-h-[500px]">
             {isTabChanging && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-[3rem]">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
               </div>
             )}
 
             <TabsContent value="home">
-              <Card className="border-0 rounded-[2.5rem] shadow-sm bg-white overflow-hidden">
-                <div className="relative w-full h-64 md:h-96">
-                  {HERO_IMAGE && (
-                    <Image 
-                      src={HERO_IMAGE.imageUrl} 
-                      alt="Sports Hero" 
-                      fill 
-                      className="object-cover"
-                      data-ai-hint={HERO_IMAGE.imageHint}
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16">
-                    <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">{SCHOOL_NAME}</h2>
-                    <p className="text-white/80 font-bold uppercase tracking-[0.3em] mt-2">आदिवासी विकास विभाग • महाराष्ट्र शासन</p>
+              <div className="space-y-12">
+                {bestPlayer ? (
+                  <Card className="border-0 rounded-[3.5rem] shadow-2xl bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-700">
+                    <div className="grid grid-cols-1 lg:grid-cols-2">
+                      <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[400px]">
+                        {bestPlayer.photoUrl ? (
+                          <Image 
+                            src={bestPlayer.photoUrl} 
+                            alt={bestPlayer.name} 
+                            fill 
+                            className="object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <User className="w-32 h-32 text-muted-foreground opacity-20" />
+                          </div>
+                        )}
+                        <div className="absolute top-8 left-8">
+                          <Badge className="bg-yellow-400 text-black font-black text-xs px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-black/10">
+                            <Crown className="w-4 h-4" /> PERFORMANCE LEADER
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="p-10 lg:p-20 flex flex-col justify-center space-y-8 bg-gradient-to-br from-primary to-primary/90 text-white relative">
+                        <div className="absolute top-0 right-0 p-10 opacity-10">
+                          <Trophy className="w-64 h-64" />
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">Student Excellence</h3>
+                          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none">
+                            {bestPlayer.name}
+                          </h2>
+                          <div className="flex flex-wrap gap-3">
+                            <Badge variant="outline" className="text-white border-white/30 font-black uppercase px-4 py-1 rounded-full">
+                              Std {bestPlayer.std}
+                            </Badge>
+                            <Badge className="bg-accent text-accent-foreground font-black uppercase px-4 py-1 rounded-full">
+                              Score: {bestPlayer.performance.toFixed(0)}
+                            </Badge>
+                            <Badge className="bg-white/10 text-white font-black uppercase px-4 py-1 rounded-full border-0">
+                              Level: {bestPlayer.latestStatus || 'A'}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 space-y-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
+                              <Award className="w-8 h-8 text-accent-foreground" />
+                            </div>
+                            <h4 className="text-2xl font-black uppercase tracking-tight">Congratulations!</h4>
+                          </div>
+                          <p className="text-white/80 font-medium text-lg leading-relaxed">
+                            Outstanding performance in technical skills and physical assessment tests. Keeping the pride of {SCHOOL_NAME} high!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="border-0 rounded-[3rem] shadow-sm bg-muted/20 p-20 text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                    <p className="font-black text-primary uppercase">Loading Hall of Fame...</p>
+                  </Card>
+                )}
+
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between px-4">
+                    <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
+                      <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" /> Top Squad Ranking
+                    </h3>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Calculated Performance Hub</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2">
+                    {topPerformers.slice(1, 9).map((player, idx) => (
+                      <Card key={player.id} className="border-2 border-primary/10 rounded-[2.5rem] overflow-hidden hover:border-primary transition-all group active:scale-95 shadow-lg">
+                        <div className="relative aspect-square">
+                          {player.photoUrl ? (
+                            <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
+                          ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                              <User className="w-12 h-12 text-muted-foreground opacity-20" />
+                            </div>
+                          )}
+                          <div className="absolute top-4 left-4">
+                            <Badge className="bg-white/90 text-primary font-black shadow-md border-0 h-8 w-8 flex items-center justify-center p-0 rounded-full">
+                              #{idx + 2}
+                            </Badge>
+                          </div>
+                        </div>
+                        <CardContent className="p-6 bg-white space-y-4">
+                          <div className="space-y-1">
+                            <h4 className="font-black text-primary uppercase text-lg truncate">{player.name}</h4>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Std {player.std} • {player.latestStatus || 'B'}</p>
+                          </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-dashed">
+                            <span className="text-[9px] font-black text-muted-foreground uppercase">Fitness Score</span>
+                            <span className="text-lg font-black text-primary">{player.fitnessScore || '0'}%</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
-                <CardContent className="p-8 md:p-16 text-center space-y-10">
-                  <div className="flex flex-col md:flex-row items-center justify-center gap-10">
-                    <div className="w-32 h-32 bg-primary/5 rounded-[2.5rem] flex items-center justify-center border p-4">
-                      {LOGO ? (
-                        <Image src={LOGO.imageUrl} alt="Logo" width={80} height={80} />
-                      ) : (
-                        <School className="w-12 h-12 text-primary" />
-                      )}
-                    </div>
-                    <div className="space-y-4 text-left">
-                      <div className="bg-white border py-4 px-10 rounded-2xl shadow-md inline-block">
-                        <p className="text-2xl font-black text-primary uppercase">सुनिल देशमुख</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-primary text-white px-4 py-1.5 rounded-full font-black uppercase text-[10px]">
-                          Physical Education Director
-                        </Badge>
-                        <Badge variant="outline" className="border-primary text-primary px-4 py-1.5 rounded-full font-black uppercase text-[10px]">
-                          {selectedSection === 'sports' ? 'Sports Hub' : 'Registry Hub'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="dashboard">
