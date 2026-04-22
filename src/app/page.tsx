@@ -27,21 +27,13 @@ import {
   ArrowRight,
   ChevronRight,
   GraduationCap,
-  Medal,
-  ScrollText,
-  Library,
-  Play,
-  Newspaper,
-  Calendar,
-  PenTool,
-  Clock
+  Medal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 // Standard imports to eliminate loading flicker on tab switch
@@ -56,9 +48,6 @@ import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
-import { SportsLibrary } from '@/components/features/SportsLibrary';
-import { GamePlanning } from '@/components/features/GamePlanning';
-import { SportsKnowledge } from '@/components/features/SportsKnowledge';
 
 export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
@@ -121,7 +110,7 @@ export default function WaghambaApp() {
           <div className="pt-8">
             <Button 
               onClick={handleStartHub}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-black text-2xl h-24 rounded-[2rem] shadow-xl active:scale-95 transition-all group"
+              className="w-full bg-primary hover:bg-primary/90 text-white font-black text-2xl h-24 rounded-[2rem] shadow-xl transition-all"
             >
               ENTER
               <ArrowRight className="ml-3 w-8 h-8" />
@@ -146,7 +135,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // Section Selection Screen
   if (!selectedSection) {
     return (
       <div className="min-h-screen bg-[#E3F2FD] flex flex-col items-center justify-center p-6">
@@ -160,7 +148,7 @@ export default function WaghambaApp() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <button 
               onClick={() => handleSectionSelect('sports')}
-              className="group bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary hover:shadow-2xl active:scale-[0.98]"
+              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary hover:shadow-2xl"
             >
               <Medal className="w-10 h-10 text-primary mb-6" />
               <h3 className="text-3xl font-black text-primary uppercase mb-3">Sports Hub</h3>
@@ -171,7 +159,7 @@ export default function WaghambaApp() {
 
             <button 
               onClick={() => handleSectionSelect('general')}
-              className="group bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary hover:shadow-2xl active:scale-[0.98]"
+              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary hover:shadow-2xl"
             >
               <GraduationCap className="w-10 h-10 text-primary mb-6" />
               <h3 className="text-3xl font-black text-primary uppercase mb-3">Student Registry</h3>
@@ -193,13 +181,6 @@ export default function WaghambaApp() {
   const sportsTabs = [
     { id: "home", label: "Home", icon: Home },
     { id: "dashboard", label: "Roster", icon: LayoutDashboard },
-    { id: "rules", label: "Rules", icon: ScrollText },
-    { id: "drills", label: "Drills", icon: Library },
-    { id: "videos", label: "Videos", icon: Play },
-    { id: "news", label: "News", icon: Newspaper },
-    { id: "events", label: "Events", icon: Calendar },
-    { id: "planning", label: "Planning", icon: PenTool },
-    { id: "history-sports", label: "History", icon: Clock },
     { id: "daily-report", label: "Report", icon: FileText },
     { id: "tournament", label: "Tourney", icon: ClipboardList },
     { id: "archive", label: "Archives", icon: HistoryIcon },
@@ -312,34 +293,6 @@ export default function WaghambaApp() {
 
             <TabsContent value="dashboard">
               <Dashboard store={schoolData} section={selectedSection} />
-            </TabsContent>
-
-            <TabsContent value="rules">
-              <SportsLibrary type="rules" />
-            </TabsContent>
-
-            <TabsContent value="drills">
-              <SportsLibrary type="drills" />
-            </TabsContent>
-
-            <TabsContent value="videos">
-              <SportsLibrary type="videos" />
-            </TabsContent>
-
-            <TabsContent value="news">
-              <SportsKnowledge type="news" />
-            </TabsContent>
-
-            <TabsContent value="events">
-              <SportsKnowledge type="events" />
-            </TabsContent>
-
-            <TabsContent value="planning">
-              <GamePlanning />
-            </TabsContent>
-
-            <TabsContent value="history-sports">
-              <SportsKnowledge type="history" />
             </TabsContent>
 
             <TabsContent value="daily-report">
