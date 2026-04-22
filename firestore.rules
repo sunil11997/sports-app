@@ -40,6 +40,14 @@ service cloud.firestore {
     }
 
     /**
+     * @description Tracked drill completions.
+     */
+    match /drill_completions/{drillId} {
+      allow get, list: if isStaff();
+      allow write: if isStaff();
+    }
+
+    /**
      * @description aggregated health incidents for quick dashboard access.
      */
     match /all_health_incidents/{incidentId} {
