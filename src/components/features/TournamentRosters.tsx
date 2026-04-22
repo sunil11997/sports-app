@@ -62,7 +62,7 @@ export function TournamentRosters({ store }: { store: any }) {
 
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category];
-    const top12 = groupPlayers.slice(0, 12);
+    const topTwelve = groupPlayers.slice(0, 12);
 
     const printContent = `
       <html>
@@ -76,7 +76,7 @@ export function TournamentRosters({ store }: { store: any }) {
             .report-title { font-size: 16px; font-weight: 800; text-decoration: underline; margin-top: 10px; }
             .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; font-weight: bold; font-size: 13px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 11px; }
             th { background-color: #f2f2f2; text-transform: uppercase; font-weight: 800; }
             .footer { margin-top: 60px; display: flex; justify-content: space-between; }
             .signature-box { border-top: 1px solid #000; width: 200px; text-align: center; padding-top: 5px; font-weight: 800; font-size: 12px; }
@@ -89,7 +89,7 @@ export function TournamentRosters({ store }: { store: any }) {
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
             <div class="address">तालूका - सटाणा, जिल्हा - नाशिक (Tal. Satana, Dist. Nashik)</div>
-            <div class="report-title">TOURNAMENT ENTRY FORM (TOP 12 SQUAD)</div>
+            <div class="report-title">TOURNAMENT ENTRY FORM (OFFICIAL SQUAD)</div>
           </div>
 
           <div class="meta-grid">
@@ -107,33 +107,39 @@ export function TournamentRosters({ store }: { store: any }) {
                 <th class="std-col">STD</th>
                 <th>DATE OF BIRTH</th>
                 <th class="age-col">AGE</th>
-                <th>GAME POSITION / ROLE</th>
+                <th>AADHAR NUMBER</th>
               </tr>
             </thead>
             <tbody>
-              ${top12.map((p, i) => `
+              ${topTwelve.map((p, i) => `
                 <tr>
                   <td class="sr-col">${i + 1}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td class="std-col">${p.std}</td>
                   <td>${p.dob ? format(new Date(p.dob), 'dd/MM/yyyy') : '-'}</td>
                   <td class="age-col">${p.age}</td>
-                  <td>${selectedSport} Player</td>
+                  <td>${p.aadharNumber || '-'}</td>
                 </tr>
               `).join('')}
-              ${Array(Math.max(0, 12 - top12.length)).fill(0).map((_, i) => `
-                <tr><td class="sr-col">${top12.length + i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>
+              ${Array(Math.max(0, 12 - topTwelve.length)).fill(0).map((_, i) => `
+                <tr><td class="sr-col">${topTwelve.length + i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>
               `).join('')}
             </tbody>
           </table>
 
-          <div style="margin-top: 20px; font-size: 11px; font-style: italic;">
-            * This list is automatically generated based on the Institutional Performance & Skill Registry.
+          <div style="margin-top: 20px; font-size: 10px; font-style: italic;">
+            * Institutional validation: This list is generated from the central registry based on competitive performance scores.
           </div>
 
           <div class="footer">
-            <div class="signature-box">Physical Education Teacher</div>
-            <div class="signature-box">Principal Signature</div>
+            <div class="sign-box" style="text-align: center;">
+              <div style="height: 60px;"></div>
+              <div style="border-top: 1px solid #000; width: 180px; padding-top: 5px;">Physical Education Teacher</div>
+            </div>
+            <div class="sign-box" style="text-align: center;">
+              <div style="height: 60px;"></div>
+              <div style="border-top: 1px solid #000; width: 180px; padding-top: 5px;">Principal Signature</div>
+            </div>
           </div>
         </body>
       </html>
@@ -220,7 +226,7 @@ export function TournamentRosters({ store }: { store: any }) {
                               <div className="flex flex-col">
                                 <span className="uppercase text-sm">{p.name}</span>
                                 <span className="text-[9px] text-muted-foreground uppercase font-black tracking-wider mt-1">
-                                  Std {p.std} • DOB: {p.dob ? format(new Date(p.dob), 'dd/MM/yy') : '-'}
+                                  Std {p.std} • {p.aadharNumber ? `Aadhar: ${p.aadharNumber}` : 'No Aadhar'}
                                 </span>
                               </div>
                             </TableCell>

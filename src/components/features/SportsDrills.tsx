@@ -13,30 +13,46 @@ import {
   Target, 
   Info, 
   Search,
-  CheckCircle2
+  CheckCircle2,
+  X,
+  PlayCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 const DRILLS_DATA: Record<string, any[]> = {
   'Kabaddi': [
-    { id: 'k1', name: 'Toe Touch Sprint', skill: 'Toe Touch', equipment: 'Cones, Whistle', difficulty: 'Beginner', duration: '15 Mins', desc: 'Repeat short sprints touching cones representing defenders feet.' },
-    { id: 'k2', name: 'Lion Jump Box', skill: 'Lion Jump', equipment: 'Plyometric Box, Mats', difficulty: 'Advanced', duration: '20 Mins', desc: 'Explosive jumps over a box to simulate escaping a chain tackle.' },
-    { id: 'k3', name: 'Ankle Hold Reaction', skill: 'Ankle Hold', equipment: 'Mats', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Partner drill focused on timing the grip when raider steps back.' },
-    { id: 'k4', name: 'Dubki Low Crawl', skill: 'Dubki', equipment: 'Low Hurdle/Bar', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Diving under a horizontal bar while maintaining forward momentum.' },
+    { id: 'k1', name: 'Toe Touch Sprint', skill: 'Toe Touch', equipment: 'Cones, Whistle', difficulty: 'Beginner', duration: '15 Mins', desc: 'Repeat short sprints touching cones representing defenders feet.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'k2', name: 'Lion Jump Box', skill: 'Lion Jump', equipment: 'Plyometric Box, Mats', difficulty: 'Advanced', duration: '20 Mins', desc: 'Explosive jumps over a box to simulate escaping a chain tackle.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'k3', name: 'Ankle Hold Reaction', skill: 'Ankle Hold', equipment: 'Mats', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Partner drill focused on timing the grip when raider steps back.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'k4', name: 'Dubki Low Crawl', skill: 'Dubki', equipment: 'Low Hurdle/Bar', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Diving under a horizontal bar while maintaining forward momentum.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'k5', name: 'Chain Tackle Sync', skill: 'Chain Tackle', equipment: 'Partner, whistle', difficulty: 'Advanced', duration: '30 Mins', desc: 'Synchronized movement with a partner to block raider path.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   ],
   'Volleyball': [
-    { id: 'v1', name: 'Target Serve', skill: 'Serving', equipment: 'Balls, Target Hoops', difficulty: 'Beginner', duration: '20 Mins', desc: 'Aiming serves at specific court zones marked by hoops.' },
-    { id: 'v2', name: 'Wall Bump Drill', skill: 'Passing (Bump)', equipment: 'Ball, Wall', difficulty: 'Beginner', duration: '10 Mins', desc: 'Continuous passing against a wall to build forearm consistency.' },
-    { id: 'v3', name: 'Spike Power Hit', skill: 'Spiking (Attack)', equipment: 'Ball, High Net', difficulty: 'Advanced', duration: '30 Mins', desc: 'Focusing on vertical reach and wrist snap for powerful spikes.' },
+    { id: 'v1', name: 'Target Serve', skill: 'Serving', equipment: 'Balls, Target Hoops', difficulty: 'Beginner', duration: '20 Mins', desc: 'Aiming serves at specific court zones marked by hoops.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'v2', name: 'Wall Bump Drill', skill: 'Passing (Bump)', equipment: 'Ball, Wall', difficulty: 'Beginner', duration: '10 Mins', desc: 'Continuous passing against a wall to build forearm consistency.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'v3', name: 'Spike Power Hit', skill: 'Spiking (Attack)', equipment: 'Ball, High Net', difficulty: 'Advanced', duration: '30 Mins', desc: 'Focusing on vertical reach and wrist snap for powerful spikes.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'v4', name: 'Block Timing Jump', skill: 'Blocking', equipment: 'Net, Block board', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Jump timing drill against a simulated opponent spike.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   ],
   'Kho Kho': [
-    { id: 'kh1', name: 'Pole Turning Speed', skill: 'Pole turning', equipment: 'Poles', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Practicing the sharp 180-degree turn around the pole.' },
-    { id: 'kh2', name: 'Zig-Zag Escape', skill: 'Zig-zag running', equipment: 'Cones', difficulty: 'Beginner', duration: '20 Mins', desc: 'Improving dodging ability by weaving through tight cone patterns.' },
+    { id: 'kh1', name: 'Pole Turning Speed', skill: 'Pole turning', equipment: 'Poles', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Practicing the sharp 180-degree turn around the pole.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'kh2', name: 'Zig-Zag Escape', skill: 'Zig-zag running', equipment: 'Cones', difficulty: 'Beginner', duration: '20 Mins', desc: 'Improving dodging ability by weaving through tight cone patterns.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'kh3', name: 'Pole Dive Practice', skill: 'Diving', equipment: 'Sand Pit / Mats', difficulty: 'Advanced', duration: '30 Mins', desc: 'Full length dive from pole to touch running opponent.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+  ],
+  'Handball': [
+    { id: 'h1', name: 'Pivot Shot Accuracy', skill: 'Shooting', equipment: 'Handball, Goal Post', difficulty: 'Intermediate', duration: '20 Mins', desc: 'Turning 180 degrees at the goal line to shoot past keeper.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'h2', name: 'Wing Fast Break', skill: 'Speed', equipment: 'Balls, whistle', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Rapid transition from defense to attack along the sidelines.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'h3', name: 'Keeper Reaction', skill: 'Goalkeeping', equipment: 'Goal post, reaction balls', difficulty: 'Advanced', duration: '25 Mins', desc: 'Rapid saving practice for low and high shots.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   ],
   'Running': [
-    { id: 'r1', name: 'Block Start Reaction', skill: 'Starting technique', equipment: 'Starting Blocks, Clapper', difficulty: 'Advanced', duration: '15 Mins', desc: 'Explosive reaction drill for 100m/200m starts.' },
-    { id: 'r2', name: 'Endurance Pace', skill: 'Endurance', equipment: 'Stopwatch', difficulty: 'Intermediate', duration: '45 Mins', desc: 'Steady-state running at 70% max heart rate.' },
+    { id: 'r1', name: 'Block Start Reaction', skill: 'Starting technique', equipment: 'Starting Blocks, Clapper', difficulty: 'Advanced', duration: '15 Mins', desc: 'Explosive reaction drill for 100m/200m starts.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'r2', name: 'Endurance Pace', skill: 'Endurance', equipment: 'Stopwatch', difficulty: 'Intermediate', duration: '45 Mins', desc: 'Steady-state running at 70% max heart rate.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'r3', name: 'Interval Sprints', skill: 'Acceleration', equipment: 'Track, cones', difficulty: 'Advanced', duration: '20 Mins', desc: 'High intensity 50m sprints with 10s rest cycles.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+  ],
+  'Jumps': [
+    { id: 'j1', name: 'Penultimate Step', skill: 'Take-off', equipment: 'Sand pit', difficulty: 'Advanced', duration: '20 Mins', desc: 'Focus on the second-to-last step to lower center of gravity.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'j2', name: 'Arch Back High Jump', skill: 'Bar clearance', equipment: 'High jump mat', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Static back arching drills on mat to improve bar clearance.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   ]
 };
 
@@ -44,6 +60,7 @@ export function SportsDrills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState('Kabaddi');
   const [completedDrills, setCompletedDrills] = useState<Set<string>>(new Set());
+  const [activeVideo, setActiveVideo] = useState<any>(null);
 
   const handleToggleComplete = (drillId: string, drillName: string) => {
     const newCompleted = new Set(completedDrills);
@@ -69,24 +86,28 @@ export function SportsDrills({ store }: { store: any }) {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <Dumbbell className="w-10 h-10 text-cyan-600" /> AI Drill Hub
+              <Dumbbell className="w-10 h-10 text-cyan-600" /> Practice Hub
             </h2>
             <p className="text-lg font-medium text-foreground/70">
               Structured training exercises mapped to technical game skills.
             </p>
           </div>
           <div className="w-full md:w-80 space-y-2">
-            <label className="text-[10px] font-black text-primary uppercase ml-2">Select Discipline</label>
-            <Select value={activeSport} onValueChange={setActiveSport}>
-              <SelectTrigger className="h-14 text-lg font-black bg-white rounded-2xl border-2 border-primary/20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
+            <label className="text-[10px] font-black text-primary uppercase ml-2">Select Game / Discipline</label>
+            <div className="relative">
+              <select 
+                value={activeSport} 
+                onChange={(e) => setActiveSport(e.target.value)}
+                className="w-full h-14 rounded-2xl border-2 border-primary/20 bg-white px-4 font-black text-primary uppercase appearance-none shadow-sm focus:outline-none focus:border-primary"
+              >
                 {Object.keys(DRILLS_DATA).map(sport => (
-                  <SelectItem key={sport} value={sport}>{sport}</SelectItem>
+                  <option key={sport} value={sport}>{sport}</option>
                 ))}
-              </SelectContent>
-            </Select>
+              </select>
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l pl-3">
+                <Dumbbell className="w-4 h-4 text-primary opacity-30" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -96,15 +117,19 @@ export function SportsDrills({ store }: { store: any }) {
           const isDone = completedDrills.has(drill.id);
           return (
             <Card key={drill.id} className={cn(
-              "border-2 rounded-[2rem] overflow-hidden transition-all group",
+              "border-2 rounded-[2rem] overflow-hidden transition-all group relative",
               isDone ? "border-primary/40 bg-primary/5" : "hover:border-primary/30 bg-white"
             )}>
               <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden">
                 <Video className="w-12 h-12 text-primary/20 group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                  <Badge className="bg-white/20 backdrop-blur-md text-white border-0 font-bold">
-                    <Play className="w-3 h-3 mr-1 fill-white" /> AI VIDEO HINT
-                  </Badge>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setActiveVideo(drill)}
+                    className="bg-white/20 backdrop-blur-md text-white border-0 font-bold hover:bg-white/40 h-9"
+                  >
+                    <PlayCircle className="w-5 h-5 mr-2 fill-white text-primary" /> PLAY AI VIDEO
+                  </Button>
                 </div>
                 {isDone && (
                   <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center animate-in zoom-in duration-300">
@@ -158,6 +183,40 @@ export function SportsDrills({ store }: { store: any }) {
         })}
       </div>
 
+      <Dialog open={!!activeVideo} onOpenChange={(open) => !open && setActiveVideo(null)}>
+        <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-black rounded-[2rem] border-0">
+          <DialogHeader className="p-6 bg-white flex flex-row justify-between items-center border-b">
+            <DialogTitle className="text-xl font-black uppercase text-primary tracking-tight">
+              AI Training: {activeVideo?.name}
+            </DialogTitle>
+            <DialogClose className="rounded-full bg-muted/50 p-2 hover:bg-muted transition-colors">
+              <X className="w-5 h-5" />
+            </DialogClose>
+          </DialogHeader>
+          <div className="aspect-video bg-muted relative">
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src={activeVideo?.video || "https://www.youtube.com/embed/dQw4w9WgXcQ"} 
+              title="YouTube video player" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              allowFullScreen
+              className="absolute inset-0"
+            ></iframe>
+          </div>
+          <div className="p-8 bg-white space-y-4">
+            <div className="flex items-center gap-4">
+              <Badge className="bg-primary text-white font-black px-4 py-1">TECHNIQUE GUIDE</Badge>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">Duration: {activeVideo?.duration}</span>
+            </div>
+            <p className="text-sm font-medium leading-relaxed text-foreground/80">
+              {activeVideo?.desc} Ensuring proper form during this {activeVideo?.difficulty} drill is critical for competitive {activeSport} success.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Card className="border-2 border-dashed rounded-[2.5rem] bg-muted/20 p-12 text-center">
         <Info className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
         <h4 className="text-lg font-black text-muted-foreground uppercase">Institutional Coaching Policy</h4>
@@ -169,26 +228,3 @@ export function SportsDrills({ store }: { store: any }) {
     </div>
   );
 }
-
-// Minimal select components needed since I'm using raw exports or generic ones
-function Select({ children, value, onValueChange }: any) {
-  return (
-    <div className="relative">
-      <select 
-        value={value} 
-        onChange={(e) => onValueChange(e.target.value)}
-        className="w-full h-14 rounded-2xl border-2 border-primary/20 bg-white px-4 font-black text-primary uppercase appearance-none shadow-sm focus:outline-none focus:border-primary"
-      >
-        {children}
-      </select>
-      <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l pl-3">
-        <Dumbbell className="w-4 h-4 text-primary opacity-30" />
-      </div>
-    </div>
-  );
-}
-
-function SelectTrigger({ children, className }: any) { return <div className={className}>{children}</div>; }
-function SelectValue({ placeholder }: any) { return <span>{placeholder}</span>; }
-function SelectContent({ children }: any) { return <>{children}</>; }
-function SelectItem({ value, children }: any) { return <option value={value}>{children}</option>; }

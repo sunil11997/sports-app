@@ -166,7 +166,7 @@ export default function WaghambaApp() {
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
-    setActiveTab("registration");
+    setActiveTab("home"); // Home is default on entry
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

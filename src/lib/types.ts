@@ -9,6 +9,8 @@ export interface Player {
   weight: string;
   bmi: string;
   bloodGroup?: string;
+  aadharNumber?: string;
+  mobileNumber?: string;
   sports: string[];
   history: 'Yes' | 'No';
   histDetail?: string;

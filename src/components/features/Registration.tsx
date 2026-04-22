@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon, Languages } from 'lucide-react';
+import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon, Languages, Fingerprint, Phone } from 'lucide-react';
 import { differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,8 @@ const formSchema = z.object({
   height: z.string(),
   weight: z.string(),
   bloodGroup: z.string(),
+  aadharNumber: z.string().optional(),
+  mobileNumber: z.string().optional(),
   sports: z.array(z.string()).optional(),
   history: z.enum(["Yes", "No"]),
   histDetail: z.string().optional(),
@@ -61,6 +63,8 @@ export function Registration({ store, section, language = 'Marathi' }: { store: 
     height: isMarathi ? 'उंची (सेंमी)' : 'Height (cm)',
     weight: isMarathi ? 'वजन (किग्रॅ)' : 'Weight (kg)',
     bloodGroup: isMarathi ? 'रक्तगट' : 'Blood Group',
+    aadhar: isMarathi ? 'आधार कार्ड नंबर' : 'Aadhar Number',
+    mobile: isMarathi ? 'मोबाईल नंबर' : 'Mobile Number',
     medical: isMarathi ? 'वैद्यकीय नोंदी' : 'Medical Notes',
     examMarks: isMarathi ? 'शारीरिक शिक्षण परीक्षा गुण' : 'Physical Ed Exam Marks',
     sportsDiscipline: isMarathi ? 'क्रीडा प्रकार *' : 'Sports Discipline *',
@@ -85,6 +89,8 @@ export function Registration({ store, section, language = 'Marathi' }: { store: 
       height: "",
       weight: "",
       bloodGroup: "None",
+      aadharNumber: "",
+      mobileNumber: "",
       sports: [],
       history: "No",
       histDetail: "",
@@ -460,6 +466,38 @@ export function Registration({ store, section, language = 'Marathi' }: { store: 
                         <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">{t.dob}</FormLabel>
                         <FormControl>
                           <Input type="date" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="aadharNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                          <Fingerprint className="w-3 h-3" /> {t.aadhar}
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="12 Digit Aadhar" className="rounded-xl border-2 h-12 font-bold" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="mobileNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                          <Phone className="w-3 h-3" /> {t.mobile}
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="10 Digit Mobile" className="rounded-xl border-2 h-12 font-bold" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
