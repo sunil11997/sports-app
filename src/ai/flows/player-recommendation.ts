@@ -161,7 +161,30 @@ const playerRecommendationFlow = ai.defineFlow(
     outputSchema: PlayerRecommendationOutputSchema,
   },
   async (input) => {
-    const {output} = await playerRecommendationPrompt(input);
-    return output!;
+    let attempts = 0;
+    const maxAttempts = 3;
+    let lastError: any = null;
+
+    while (attempts < maxAttempts) {
+      try {
+        const {output} = await playerRecommendationPrompt(input);
+        return output!;
+      } catch (error: any) {
+        lastError = error;
+        attempts++;
+        // Check if error is transient (503, demand spikes, or generic unavailable)
+        const isTransient = 
+          error.message?.includes('503') || 
+          error.message?.includes('UNAVAILABLE') || 
+          error.message?.includes('demand');
+
+        if (!isTransient || attempts >= maxAttempts) {
+          throw error;
+        }
+        // Wait with simple exponential backoff: 1s, 2s, 3s...
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+      }
+    }
+    throw lastError || new Error('Failed to generate AI recommendations after multiple attempts.');
   },
 );
