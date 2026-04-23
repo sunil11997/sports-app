@@ -37,7 +37,8 @@ import {
   UsersRound,
   ChevronRight,
   LayoutGrid,
-  Zap
+  Zap,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -60,9 +61,9 @@ import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
-import { StandardRegistry } from '@/components/features/StandardRegistry';
 import { SchoolActivities } from '@/components/features/SchoolActivities';
 import { ClassesHub } from '@/components/features/ClassesHub';
+import { SchoolRegistration } from '@/components/features/SchoolRegistration';
 
 const translations = {
   English: {
@@ -232,6 +233,7 @@ export default function WaghambaApp() {
   const totalStudentCount = Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0);
 
   const bestPlayer = topPerformers[0];
+  const profile = schoolData.data.schoolProfile;
 
   if (!isEntered) {
     return (
@@ -255,7 +257,7 @@ export default function WaghambaApp() {
             
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight leading-tight px-4 uppercase">
-                {t.schoolName}
+                {profile?.schoolName || t.schoolName}
               </h1>
               <p className="text-primary font-black tracking-[0.3em] text-[10px] uppercase opacity-80">
                 {t.tribalLogoHint}
@@ -291,13 +293,23 @@ export default function WaghambaApp() {
     );
   }
 
+  // Mandatory Profile Setup
+  if (!profile) {
+    return <SchoolRegistration store={schoolData} />;
+  }
+
   if (!selectedSection) {
     return (
       <div className="min-h-screen bg-[#E3F2FD] flex flex-col items-center justify-center p-6">
         <div className="max-w-4xl w-full space-y-12 text-center">
-          <h2 className="text-3xl md:text-5xl font-black text-primary uppercase tracking-tight">
-            {t.selectHub}
-          </h2>
+          <div className="space-y-2">
+            <h2 className="text-3xl md:text-5xl font-black text-primary uppercase tracking-tight">
+              {t.selectHub}
+            </h2>
+            <div className="flex items-center justify-center gap-2 text-primary/60 font-black uppercase text-[10px] tracking-widest">
+              <MapPin className="w-3 h-3" /> {profile.taluka}, {profile.district} • {profile.teacherName}
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <button 
@@ -370,10 +382,14 @@ export default function WaghambaApp() {
               <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
               </h1>
-              <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{t.schoolName}</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{profile.schoolName}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end mr-4 text-right">
+              <span className="text-[10px] font-black text-primary uppercase leading-tight">{profile.teacherName}</span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase">{profile.taluka}, {profile.district}</span>
+            </div>
             <Button 
               variant="ghost" 
               size="sm" 

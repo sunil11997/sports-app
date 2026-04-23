@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, limit } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident } from '@/lib/types';
+import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -13,6 +13,10 @@ export function useSchoolData() {
   const { user } = useUser();
 
   // 1. Primary Collections
+  const schoolsRef = useMemoFirebase(() => user ? collection(db, 'schools') : null, [db, user]);
+  const { data: schoolsData, isLoading: schoolsLoading } = useCollection<SchoolProfile>(schoolsRef);
+  const schoolProfile = schoolsData && schoolsData.length > 0 ? schoolsData[0] : null;
+
   const playersRef = useMemoFirebase(() => user ? collection(db, 'players') : null, [db, user]);
   const { data: players, isLoading: playersLoading } = useCollection<Player>(playersRef);
 
@@ -72,11 +76,8 @@ export function useSchoolData() {
             });
             setAttendanceData(prev => ({ ...prev, ...newAtt }));
           },
-          async () => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: attRef.path,
-              operation: 'list'
-            } satisfies SecurityRuleContext));
+          async (error) => {
+            console.error("Attendance Sync Error", error);
           }
         );
         unsubs.push(unsubAtt);
@@ -95,11 +96,8 @@ export function useSchoolData() {
             });
             setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
           },
-          async () => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: fitRef.path,
-              operation: 'list'
-            } satisfies SecurityRuleContext));
+          async (error) => {
+            console.error("Fitness Sync Error", error);
           }
         );
         unsubs.push(unsubFit);
@@ -118,11 +116,8 @@ export function useSchoolData() {
             setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
             setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
           },
-          async () => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: skillRef.path,
-              operation: 'list'
-            } satisfies SecurityRuleContext));
+          async (error) => {
+            console.error("Skills Sync Error", error);
           }
         );
         unsubs.push(unsubSkill);
@@ -144,8 +139,16 @@ export function useSchoolData() {
       skillsHistory,
       drillCompletions,
       healthIncidents: healthIncidents || [],
+      schoolProfile
     };
-  }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions]);
+  }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
+
+  const saveSchoolProfile = (profile: any) => {
+    if (!schoolsRef) return;
+    const docId = user?.uid || 'default';
+    const profileRef = doc(db, 'schools', docId);
+    setDocumentNonBlocking(profileRef, { ...profile, id: docId, updatedAt: new Date().toISOString() }, { merge: true });
+  };
 
   const addPlayer = (player: any) => {
     if (!playersRef) return;
@@ -169,7 +172,6 @@ export function useSchoolData() {
       if (!playerId || !date) return;
       const attRef = doc(db, 'players', playerId, 'attendance', date);
       
-      // If status is falsy (cleared), delete the document to keep DB clean
       if (!status) {
         deleteDocumentNonBlocking(attRef);
       } else {
@@ -211,7 +213,7 @@ export function useSchoolData() {
   const exportBackupData = () => {
     const backup = {
       timestamp: new Date().toISOString(),
-      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+      schoolName: schoolProfile?.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
       data: aggregatedData
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -227,7 +229,8 @@ export function useSchoolData() {
 
   return {
     data: aggregatedData,
-    isLoaded: !playersLoading,
+    isLoaded: !playersLoading && !schoolsLoading,
+    saveSchoolProfile,
     addPlayer,
     updatePlayer,
     deletePlayer,

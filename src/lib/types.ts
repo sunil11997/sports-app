@@ -20,6 +20,18 @@ export interface Player {
   examMarks?: string;
 }
 
+export interface SchoolProfile {
+  id: string;
+  teacherName: string;
+  qualification: string;
+  role: string;
+  schoolName: string;
+  taluka: string;
+  district: string;
+  importantInfo?: string;
+  updatedAt: string;
+}
+
 export interface AttendanceRecord {
   [key: string]: 'P' | 'A' | undefined | null; // key: playerId_dateString (YYYY-MM-DD)
 }
