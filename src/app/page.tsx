@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -97,7 +98,7 @@ const translations = {
     selectHub: "Select Management Section",
     sportsHubDesc: "Manage athletes, performance scores, and tournament rosters.",
     studentRegistryDesc: "Manage general student growth logs and physical registry.",
-    enter: "ENTER",
+    enter: "ENTER HUB",
     institutionalStack: "V3.0 INSTITUTIONAL STACK",
     tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन",
     registrySummary: "Class Registry Overview",
@@ -231,45 +232,58 @@ export default function WaghambaApp() {
 
   if (!isEntered) {
     return (
-      <div className="min-h-screen bg-[#E3F2FD] flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="max-w-xl w-full text-center space-y-12">
-          <div className="space-y-8">
-            <div className="w-36 h-36 bg-white rounded-[3rem] flex items-center justify-center mx-auto border shadow-2xl overflow-hidden">
+      <div className="min-h-screen bg-[#F0F4F8] flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="max-w-2xl w-full text-center space-y-12 relative z-10">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="w-40 h-40 bg-white rounded-[3.5rem] flex items-center justify-center mx-auto border shadow-2xl overflow-hidden ios-card-shadow ios-spring">
               {LOGO ? (
                 <Image 
                   src={LOGO.imageUrl} 
                   alt="Adivasi Vikas Vibhag" 
-                  width={100} 
-                  height={100} 
-                  className="object-contain p-3"
+                  width={110} 
+                  height={110} 
+                  className="object-contain p-4"
                   data-ai-hint={LOGO.imageHint}
                 />
               ) : (
-                <School className="w-14 h-14 text-primary" />
+                <School className="w-16 h-16 text-primary" />
               )}
             </div>
             
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight leading-tight px-4 uppercase">
+            <div className="space-y-6">
+              <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tight leading-none px-4 uppercase">
                 {profile?.schoolName || t.schoolName}
               </h1>
-              <p className="text-primary font-black tracking-[0.3em] text-[10px] uppercase opacity-80">
-                {t.tribalLogoHint}
-              </p>
+              <div className="flex items-center justify-center gap-4">
+                <div className="h-px w-12 bg-primary/20" />
+                <p className="text-primary font-black tracking-[0.4em] text-[11px] uppercase opacity-90">
+                  {t.tribalLogoHint}
+                </p>
+                <div className="h-px w-12 bg-primary/20" />
+              </div>
             </div>
           </div>
 
-          <div className="pt-8">
+          <div className="pt-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
             <Button 
               onClick={handleStartHub}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-black text-2xl h-24 rounded-[2rem] shadow-xl transition-all"
+              className="group w-full bg-primary hover:bg-primary/95 text-white font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active:scale-[0.97]"
             >
               {t.enter}
-              <ArrowRight className="ml-3 w-8 h-8" />
+              <ArrowRight className="ml-4 w-10 h-10 group-hover:translate-x-2 transition-transform" />
             </Button>
-            <p className="mt-8 text-primary/20 text-[9px] font-black uppercase tracking-[0.5em]">
-              {t.institutionalStack}
-            </p>
+            <div className="mt-12 flex flex-col items-center gap-2">
+              <p className="text-primary/30 text-[10px] font-black uppercase tracking-[0.6em]">
+                {t.institutionalStack}
+              </p>
+              <div className="flex gap-1.5">
+                {[1, 2, 3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/10" />)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -279,9 +293,14 @@ export default function WaghambaApp() {
   if (isUserLoading || !schoolData.isLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-          <p className="font-black text-primary tracking-[0.3em] uppercase text-xs">{t.loadingRegistry}</p>
+        <div className="text-center space-y-8">
+          <div className="relative">
+            <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+            </div>
+          </div>
+          <p className="font-black text-primary tracking-[0.4em] uppercase text-xs animate-pulse">{t.loadingRegistry}</p>
         </div>
       </div>
     );
@@ -294,39 +313,59 @@ export default function WaghambaApp() {
 
   if (!selectedSection) {
     return (
-      <div className="min-h-screen bg-[#E3F2FD] flex flex-col items-center justify-center p-6">
-        <div className="max-w-4xl w-full space-y-12 text-center">
-          <div className="space-y-2">
-            <h2 className="text-3xl md:text-5xl font-black text-primary uppercase tracking-tight">
+      <div className="min-h-screen bg-[#F0F4F8] flex flex-col items-center justify-center p-6 relative">
+        <div className="max-w-5xl w-full space-y-16 text-center animate-in fade-in zoom-in-95 duration-700">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2 rounded-full border border-primary/10 text-primary font-black uppercase text-[10px] tracking-widest mb-4">
+              <MapPin className="w-3 h-3" /> {profile.taluka}, {profile.district} • {profile.schoolName}
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black text-primary uppercase tracking-tight leading-none">
               {t.selectHub}
             </h2>
-            <div className="flex items-center justify-center gap-2 text-primary/60 font-black uppercase text-[10px] tracking-widest">
-              <MapPin className="w-3 h-3" /> {profile.taluka}, {profile.district} • {profile.teacherName}
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <button 
               onClick={() => handleSectionSelect('sports')}
-              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary shadow-xl hover:shadow-2xl active:scale-95"
+              className="bg-white border-2 border-primary/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-accent hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
             >
-              <Medal className="w-10 h-10 text-primary mb-6" />
-              <h3 className="text-3xl font-black text-primary uppercase mb-3">{t.sportsHub}</h3>
-              <p className="text-muted-foreground font-medium text-lg">
-                {t.sportsHubDesc}
-              </p>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-accent rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:rotate-12 transition-transform">
+                  <Medal className="w-8 h-8 text-accent-foreground" />
+                </div>
+                <h3 className="text-4xl font-black text-primary uppercase mb-4 tracking-tight">{t.sportsHub}</h3>
+                <p className="text-muted-foreground font-semibold text-xl leading-relaxed opacity-80">
+                  {t.sportsHubDesc}
+                </p>
+                <div className="mt-8 flex items-center gap-2 text-accent font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
+                  Open Hub <ChevronRight className="w-5 h-5" />
+                </div>
+              </div>
             </button>
 
             <button 
               onClick={() => handleSectionSelect('general')}
-              className="bg-white border-2 border-primary/10 rounded-[2.5rem] p-10 text-left transition-all hover:border-primary shadow-xl hover:shadow-2xl active:scale-95"
+              className="bg-white border-2 border-primary/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-primary hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
             >
-              <GraduationCap className="w-10 h-10 text-primary mb-6" />
-              <h3 className="text-3xl font-black text-primary uppercase mb-3">{t.studentRegistry}</h3>
-              <p className="text-muted-foreground font-medium text-lg">
-                {t.studentRegistryDesc}
-              </p>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-primary rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:-rotate-12 transition-transform">
+                  <GraduationCap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-4xl font-black text-primary uppercase mb-4 tracking-tight">{t.studentRegistry}</h3>
+                <p className="text-muted-foreground font-semibold text-xl leading-relaxed opacity-80">
+                  {t.studentRegistryDesc}
+                </p>
+                <div className="mt-8 flex items-center gap-2 text-primary font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
+                  Access Registry <ChevronRight className="w-5 h-5" />
+                </div>
+              </div>
             </button>
+          </div>
+          
+          <div className="pt-8">
+            <p className="text-[10px] font-black text-primary/20 uppercase tracking-[0.8em]">ADMIN: {profile.teacherName}</p>
           </div>
         </div>
       </div>
@@ -361,19 +400,19 @@ export default function WaghambaApp() {
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-8">
-      <header className="sticky top-0 z-50 bg-white border-b py-4 px-6 shadow-sm">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 md:pb-8">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b py-4 px-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-primary/5 p-2 rounded-xl border w-11 h-11 flex items-center justify-center shadow-inner">
+            <div className="bg-primary p-2.5 rounded-2xl w-12 h-12 flex items-center justify-center shadow-lg active-scale">
               {LOGO ? (
                 <Image src={LOGO.imageUrl} alt="Logo" width={32} height={32} />
               ) : (
-                <School className="w-6 h-6 text-primary" />
+                <School className="w-7 h-7 text-white" />
               )}
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
+              <h1 className="text-2xl font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
               </h1>
               <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{profile.schoolName}</p>
@@ -382,13 +421,13 @@ export default function WaghambaApp() {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end mr-4 text-right">
               <span className="text-[10px] font-black text-primary uppercase leading-tight">{profile.teacherName}</span>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase">{profile.taluka}, {profile.district}</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase">{profile.taluka}, {profile.district}</span>
             </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setSelectedSection(null)}
-              className="text-[11px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-4"
+              className="text-[10px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-5 h-9"
             >
               {t.switchHub}
             </Button>
@@ -405,8 +444,8 @@ export default function WaghambaApp() {
                   key={tab.id}
                   value={tab.id} 
                   className={cn(
-                    "rounded-xl px-6 py-4 font-black text-[12px] uppercase tracking-wider transition-all shadow-sm flex flex-col items-center gap-1 min-w-[100px]",
-                    "data-[state=active]:shadow-lg data-[state=active]:scale-110",
+                    "rounded-xl px-6 py-4 font-black text-[12px] uppercase tracking-wider transition-all shadow-sm flex flex-col items-center gap-2 min-w-[110px]",
+                    "data-[state=active]:shadow-xl data-[state=active]:scale-110 data-[state=active]:z-10",
                     tab.color
                   )}
                 >
@@ -418,18 +457,18 @@ export default function WaghambaApp() {
 
           <div className="relative min-h-[500px]">
             {isTabChanging && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-[3rem]">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-md rounded-[3rem]">
+                <Loader2 className="w-16 h-16 animate-spin text-primary" />
               </div>
             )}
 
-            <TabsContent value="home">
+            <TabsContent value="home" className="mt-0">
               {selectedSection === 'sports' ? (
-                <div className="space-y-12">
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
                   {bestPlayer ? (
-                    <Card className="border-0 rounded-[3.5rem] shadow-2xl bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-700">
+                    <Card className="border-0 rounded-[4rem] shadow-2xl bg-white overflow-hidden ios-spring">
                       <div className="grid grid-cols-1 lg:grid-cols-2">
-                        <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[400px]">
+                        <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[450px]">
                           {bestPlayer.photoUrl ? (
                             <Image 
                               src={bestPlayer.photoUrl} 
@@ -443,89 +482,89 @@ export default function WaghambaApp() {
                               <User className="w-32 h-32 text-muted-foreground opacity-20" />
                             </div>
                           )}
-                          <div className="absolute top-8 left-8">
-                            <Badge className="bg-yellow-400 text-black font-black text-xs px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-black/10">
-                              <Crown className="w-4 h-4" /> {t.performanceLeader}
+                          <div className="absolute top-10 left-10">
+                            <Badge className="bg-yellow-400 text-black font-black text-xs px-8 py-3 rounded-full shadow-2xl flex items-center gap-3 border-4 border-white/20">
+                              <Crown className="w-5 h-5" /> {t.performanceLeader}
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-10 lg:p-20 flex flex-col justify-center space-y-8 bg-gradient-to-br from-primary to-primary/90 text-white relative">
-                          <div className="absolute top-0 right-0 p-10 opacity-10">
-                            <Trophy className="w-64 h-64" />
+                        <div className="p-12 lg:p-24 flex flex-col justify-center space-y-10 bg-gradient-to-br from-primary to-[#1B4B3A] text-white relative">
+                          <div className="absolute top-0 right-0 p-12 opacity-5">
+                            <Trophy className="w-80 h-80" />
                           </div>
                           
-                          <div className="space-y-4">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">{t.studentExcellence}</h3>
-                            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none">
+                          <div className="space-y-6 relative z-10">
+                            <h3 className="text-[12px] font-black uppercase tracking-[0.6em] text-accent">{t.studentExcellence}</h3>
+                            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tight leading-none">
                               {bestPlayer.name}
                             </h2>
-                            <div className="flex flex-wrap gap-3">
-                              <Badge variant="outline" className="text-white border-white/30 font-black uppercase px-4 py-1 rounded-full">
+                            <div className="flex flex-wrap gap-4 pt-4">
+                              <Badge variant="outline" className="text-white border-white/40 font-black uppercase text-sm px-6 py-2 rounded-full backdrop-blur-md">
                                 Std {bestPlayer.std}
                               </Badge>
-                              <Badge className="bg-accent text-accent-foreground font-black uppercase px-4 py-1 rounded-full">
+                              <Badge className="bg-accent text-accent-foreground font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg">
                                 Score: {bestPlayer.performance.toFixed(0)}
                               </Badge>
-                              <Badge className="bg-white/10 text-white font-black uppercase px-4 py-1 rounded-full border-0">
+                              <Badge className="bg-white/10 text-white font-black uppercase text-sm px-6 py-2 rounded-full border-0">
                                 Level: {bestPlayer.latestStatus || 'A'}
                               </Badge>
                             </div>
                           </div>
 
-                          <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 space-y-4">
-                            <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
-                                <Award className="w-8 h-8 text-accent-foreground" />
+                          <div className="bg-white/10 backdrop-blur-xl p-10 rounded-[3rem] border border-white/20 space-y-6 shadow-2xl relative z-10">
+                            <div className="flex items-center gap-5">
+                              <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center shadow-xl">
+                                <Award className="w-10 h-10 text-accent-foreground" />
                               </div>
-                              <h4 className="text-2xl font-black uppercase tracking-tight">{t.congratulations}</h4>
+                              <h4 className="text-3xl font-black uppercase tracking-tight">{t.congratulations}</h4>
                             </div>
-                            <p className="text-white/80 font-medium text-lg leading-relaxed">
-                              {t.excellenceDesc}
+                            <p className="text-white/80 font-semibold text-xl leading-relaxed italic opacity-90">
+                              "{t.excellenceDesc}"
                             </p>
                           </div>
                         </div>
                       </div>
                     </Card>
                   ) : (
-                    <Card className="border-0 rounded-[3rem] shadow-sm bg-muted/20 p-20 text-center">
-                      <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-                      <p className="font-black text-primary uppercase">{t.loadingHallOfFame}</p>
+                    <Card className="border-0 rounded-[4rem] shadow-sm bg-muted/20 p-32 text-center">
+                      <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
+                      <p className="font-black text-primary uppercase tracking-[0.4em] text-sm">{t.loadingHallOfFame}</p>
                     </Card>
                   )}
 
-                  <div className="space-y-8">
-                    <div className="flex items-center justify-between px-4">
-                      <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                        <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
+                  <div className="space-y-10">
+                    <div className="flex items-center justify-between px-6">
+                      <h3 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-4">
+                        <Star className="w-10 h-10 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
                       </h3>
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t.calculatedPerformanceHub}</p>
+                      <p className="hidden md:block text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em]">{t.calculatedPerformanceHub}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
                       {topPerformers.slice(1, 9).map((player, idx) => (
-                        <Card key={player.id} className="border-2 border-primary/10 rounded-[2.5rem] overflow-hidden hover:border-primary transition-all group active:scale-95 shadow-lg">
+                        <Card key={player.id} className="border-2 border-primary/5 rounded-[3.5rem] overflow-hidden hover:border-accent hover:shadow-2xl transition-all group active:scale-[0.95] shadow-xl bg-white">
                           <div className="relative aspect-square">
                             {player.photoUrl ? (
-                              <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
+                              <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <User className="w-12 h-12 text-muted-foreground opacity-20" />
+                                <User className="w-16 h-16 text-muted-foreground opacity-20" />
                               </div>
                             )}
-                            <div className="absolute top-4 left-4">
-                              <Badge className="bg-white/90 text-primary font-black shadow-md border-0 h-8 w-8 flex items-center justify-center p-0 rounded-full">
+                            <div className="absolute top-6 left-6">
+                              <Badge className="bg-white/95 text-primary font-black shadow-xl border-0 h-10 w-10 flex items-center justify-center p-0 rounded-2xl group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                                 #{idx + 2}
                               </Badge>
                             </div>
                           </div>
-                          <CardContent className="p-6 bg-white space-y-4">
+                          <CardContent className="p-8 space-y-5">
                             <div className="space-y-1">
-                              <h4 className="font-black text-primary uppercase text-lg truncate">{player.name}</h4>
-                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Std {player.std} • {player.latestStatus || 'B'}</p>
+                              <h4 className="font-black text-primary uppercase text-xl truncate">{player.name}</h4>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60">Std {player.std} • {player.latestStatus || 'B'}</p>
                             </div>
-                            <div className="flex justify-between items-center pt-2 border-t border-dashed">
-                              <span className="text-[9px] font-black text-muted-foreground uppercase">Fitness Score</span>
-                              <span className="text-lg font-black text-primary">{player.fitnessScore || '0'}%</span>
+                            <div className="flex justify-between items-center pt-4 border-t border-dashed border-primary/10">
+                              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fitness Index</span>
+                              <span className="text-2xl font-black text-primary">{player.fitnessScore || '0'}%</span>
                             </div>
                           </CardContent>
                         </Card>
@@ -534,72 +573,72 @@ export default function WaghambaApp() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-12 animate-in fade-in duration-700">
-                  <div className="bg-primary/5 p-12 rounded-[3.5rem] border-2 border-primary/10 shadow-lg relative overflow-hidden">
-                    <div className="relative z-10 space-y-6">
-                      <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center shadow-xl border border-primary/10">
-                          <UsersRound className="w-10 h-10 text-primary" />
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                  <div className="bg-gradient-to-br from-primary to-[#1B4B3A] p-16 rounded-[4rem] shadow-2xl relative overflow-hidden text-white">
+                    <div className="relative z-10 space-y-10">
+                      <div className="flex items-center gap-8">
+                        <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/20">
+                          <UsersRound className="w-12 h-12 text-accent" />
                         </div>
-                        <div className="space-y-1">
-                          <h2 className="text-5xl font-black text-primary uppercase tracking-tight">{t.registrySummary}</h2>
-                          <p className="text-lg font-medium text-muted-foreground">{t.registryDesc}</p>
+                        <div className="space-y-2">
+                          <h2 className="text-6xl font-black uppercase tracking-tight">{t.registrySummary}</h2>
+                          <p className="text-xl font-medium text-white/70 leading-relaxed max-w-xl">{t.registryDesc}</p>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-                        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5 space-y-2">
-                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t.totalStudents}</span>
-                          <p className="text-5xl font-black text-primary">{totalStudentCount}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="bg-white/5 backdrop-blur-md p-10 rounded-[3rem] border border-white/10 shadow-xl space-y-3">
+                          <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.4em]">{t.totalStudents}</span>
+                          <p className="text-6xl font-black text-white leading-none">{totalStudentCount}</p>
                         </div>
-                        <div className="bg-emerald-500 p-8 rounded-[2rem] shadow-lg text-white space-y-2">
-                          <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">{t.boysLabel}</span>
-                          <p className="text-5xl font-black">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
+                        <div className="bg-emerald-500/20 backdrop-blur-md p-10 rounded-[3rem] border border-emerald-400/20 shadow-xl space-y-3">
+                          <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.4em]">{t.boysLabel}</span>
+                          <p className="text-6xl font-black text-white leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
                         </div>
-                        <div className="bg-accent p-8 rounded-[2rem] shadow-lg text-accent-foreground space-y-2">
-                          <span className="text-[10px] font-black text-accent-foreground/70 uppercase tracking-widest">{t.girlsLabel}</span>
-                          <p className="text-5xl font-black">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
+                        <div className="bg-accent/20 backdrop-blur-md p-10 rounded-[3rem] border border-accent/20 shadow-xl space-y-3">
+                          <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.4em]">{t.girlsLabel}</span>
+                          <p className="text-6xl font-black text-white leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
                         </div>
                       </div>
                     </div>
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full translate-x-1/2 -translate-y-1/2" />
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full translate-x-1/3 -translate-y-1/3 blur-[100px]" />
                   </div>
 
-                  <div className="space-y-8">
-                    <div className="flex items-center justify-between px-6">
-                      <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                        <ClipboardList className="w-8 h-8 text-primary" /> {t.classWise}
+                  <div className="space-y-10">
+                    <div className="flex items-center justify-between px-8">
+                      <h3 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-4">
+                        <ClipboardList className="w-10 h-10 text-primary" /> {t.classWise}
                       </h3>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 px-2">
                       {Object.entries(classSummaries).map(([std, stats]) => (
                         <Card 
                           key={std} 
                           onClick={() => handleTabChange(`classes`)}
-                          className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden"
+                          className="border-2 border-primary/5 rounded-[3.5rem] p-10 hover:border-primary transition-all cursor-pointer group active:scale-[0.96] shadow-xl bg-white relative overflow-hidden ios-spring"
                         >
-                          <div className="relative z-10 space-y-6">
+                          <div className="relative z-10 space-y-8">
                             <div className="flex justify-between items-start">
-                              <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
-                                <GraduationCap className="w-8 h-8 text-primary group-hover:text-white" />
+                              <div className="bg-primary/5 p-5 rounded-[1.5rem] group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
+                                <GraduationCap className="w-10 h-10 text-primary group-hover:text-white" />
                               </div>
-                              <Badge className="bg-primary text-white font-black text-lg px-4 py-1 rounded-full">Std {std}</Badge>
+                              <Badge className="bg-primary text-white font-black text-2xl px-6 py-2 rounded-full shadow-lg">Std {std}</Badge>
                             </div>
                             
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-end border-b border-dashed pb-2">
-                                <span className="text-muted-foreground font-black text-[10px] uppercase">{t.totalStudents}</span>
-                                <span className="text-3xl font-black text-primary">{stats.total}</span>
+                            <div className="space-y-5">
+                              <div className="flex justify-between items-end border-b-2 border-dashed border-primary/5 pb-3">
+                                <span className="text-muted-foreground font-black text-[11px] uppercase tracking-widest">{t.totalStudents}</span>
+                                <span className="text-4xl font-black text-primary">{stats.total}</span>
                               </div>
-                              <div className="flex justify-between text-xs font-bold text-muted-foreground">
+                              <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
                                 <span>{stats.boys} {t.boysLabel}</span>
                                 <span>{stats.girls} {t.girlsLabel}</span>
                               </div>
                             </div>
                           </div>
-                          <div className="absolute bottom-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ChevronRight className="w-6 h-6 text-primary" />
+                          <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
+                            <ChevronRight className="w-8 h-8 text-primary" />
                           </div>
                         </Card>
                       ))}
