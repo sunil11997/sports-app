@@ -25,7 +25,7 @@ service cloud.firestore {
       return isSignedIn();
     }
 
-    /** Combined check for staff status and existence of the document for updates/deletes. */
+    /** Combined check for staff status and existence of the document for updates. */
     function isExistingStaff() {
       return isStaff() && resource != null;
     }
@@ -54,7 +54,7 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create: if isStaff() && request.resource.data.id == incidentId;
       allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingStaff();
+      allow delete: if isStaff();
     }
 
     /**
@@ -64,34 +64,34 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create: if isStaff() && request.resource.data.id == playerId;
       allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingStaff();
+      allow delete: if isStaff();
 
       match /attendance/{attendanceId} {
         allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isExistingStaff();
+        allow delete: if isStaff();
       }
 
       match /fitnessAssessments/{assessmentId} {
         allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isExistingStaff();
+        allow delete: if isStaff();
       }
 
       match /sportSkills/{sportSkillId} {
         allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isExistingStaff();
+        allow delete: if isStaff();
       }
 
       match /healthIncidents/{incidentId} {
         allow read: if isStaff();
         allow create: if isStaff() && request.resource.data.playerId == playerId;
         allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isExistingStaff();
+        allow delete: if isStaff();
       }
     }
   }

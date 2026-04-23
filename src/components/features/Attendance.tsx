@@ -5,8 +5,8 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
-import { CalendarCheck, ChevronLeft, ChevronRight, Save, Printer, Filter } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { CalendarCheck, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -45,7 +45,8 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}`;
     const currentStatus = store.data.attendance[key];
-    const nextStatus = currentStatus === 'P' ? 'A' : currentStatus === 'A' ? undefined : 'P';
+    // Cycle: undefined -> P -> A -> undefined
+    const nextStatus = currentStatus === 'P' ? 'A' : currentStatus === 'A' ? null : 'P';
     
     store.setAttendance({ [key]: nextStatus });
   };
