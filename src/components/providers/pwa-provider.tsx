@@ -25,7 +25,8 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     // Register Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js')
-        .then(() => console.log("SW Registered"));
+        .then(() => console.log("SW Registered"))
+        .catch(err => console.error("SW Registration failed", err));
     }
 
     // Online/Offline status
@@ -38,8 +39,11 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // Capture the installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
+      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
+      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
+      // Update UI notify the user they can install the PWA
       setIsInstallable(true);
     };
 
@@ -47,6 +51,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // Detection for already installed apps
     window.addEventListener('appinstalled', (evt) => {
+      console.log('App was installed');
       setIsInstallable(false);
       setDeferredPrompt(null);
     });
@@ -75,11 +80,17 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
+    // Show the install prompt
     deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
     deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
       }
+      // Reset the deferred prompt variable, since it can only be used once.
       setDeferredPrompt(null);
       setIsInstallable(false);
     });

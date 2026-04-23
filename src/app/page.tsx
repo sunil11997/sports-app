@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -61,7 +60,7 @@ import { ClassesHub } from '@/components/features/ClassesHub';
 
 const translations = {
   English: {
-    schoolName: "GOVT. SECONDARY ASHRAM SCHOOL WAGHAMBA",
+    schoolName: "MY SPORTS APP",
     sportsHub: "Sports Hub",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
@@ -98,8 +97,8 @@ const translations = {
     sportsHubDesc: "Manage athletes, performance scores, and tournament rosters.",
     studentRegistryDesc: "Manage general student growth logs and physical registry.",
     enter: "ENTER HUB",
-    institutionalStack: "V3.0 INSTITUTIONAL STACK",
-    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन",
+    institutionalStack: "PRO ATHLETIC STACK V3.0",
+    tribalLogoHint: "OFFICIAL SPORTS MANAGEMENT SYSTEM",
     registrySummary: "Class Registry Overview",
     registryDesc: "Consolidated institutional enrollment counts across all standards.",
     totalStudents: "Total Enrollment",
@@ -112,7 +111,7 @@ const translations = {
     installApp: "INSTALL AS MOBILE APP"
   },
   Marathi: {
-    schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+    schoolName: "माय स्पोर्ट्स ॲप",
     sportsHub: "क्रीडा केंद्र",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
@@ -149,8 +148,8 @@ const translations = {
     sportsHubDesc: "खेळाडू, कामगिरीचे गुण आणि स्पर्धा रोस्टर व्यवस्थापित करा.",
     studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि शारीरिक नोंदणी व्यवस्थापित करा.",
     enter: "प्रवेश करा",
-    institutionalStack: "V3.0 संस्थात्मक स्टॅक",
-    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन",
+    institutionalStack: "संस्थात्मक स्टॅक V3.0",
+    tribalLogoHint: "शासकीय क्रीडा व्यवस्थापन प्रणाली",
     registrySummary: "विद्यार्थी नोंदणी सारांश",
     registryDesc: "सर्व इयत्तांमधील एकत्रित नोंदणी संख्या.",
     totalStudents: "एकूण नावनोंदणी",
@@ -243,8 +242,8 @@ export default function WaghambaApp() {
 
   if (!isEntered) {
     return (
-      <div className="min-h-screen bg-[#F0F4F8] flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center p-6 relative overflow-hidden text-white">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
         <div className="max-w-2xl w-full text-center space-y-12 relative z-10">
@@ -253,27 +252,27 @@ export default function WaghambaApp() {
               {LOGO ? (
                 <Image 
                   src={LOGO.imageUrl} 
-                  alt="Adivasi Vikas Vibhag" 
+                  alt="My Sports App Logo" 
                   width={110} 
                   height={110} 
                   className="object-contain p-4"
-                  data-ai-hint={LOGO.imageHint}
+                  data-ai-hint="Sports Logo"
                 />
               ) : (
-                <School className="w-16 h-16 text-primary" />
+                <Trophy className="w-16 h-16 text-primary" />
               )}
             </div>
             
             <div className="space-y-6">
-              <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tight leading-none px-4 uppercase">
-                {profile.schoolName}
+              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none px-4 uppercase">
+                {t.schoolName}
               </h1>
               <div className="flex items-center justify-center gap-4">
-                <div className="h-px w-12 bg-primary/20" />
-                <p className="text-primary font-black tracking-[0.4em] text-[11px] uppercase opacity-90">
+                <div className="h-px w-12 bg-white/20" />
+                <p className="text-accent font-black tracking-[0.4em] text-[11px] uppercase opacity-90">
                   {t.tribalLogoHint}
                 </p>
-                <div className="h-px w-12 bg-primary/20" />
+                <div className="h-px w-12 bg-white/20" />
               </div>
             </div>
           </div>
@@ -281,7 +280,7 @@ export default function WaghambaApp() {
           <div className="pt-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 space-y-4">
             <Button 
               onClick={handleStartHub}
-              className="group w-full bg-primary hover:bg-primary/95 text-white font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active:scale-[0.97]"
+              className="group w-full bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active:scale-[0.97]"
             >
               {t.enter}
               <ArrowRight className="ml-4 w-10 h-10 group-hover:translate-x-2 transition-transform" />
@@ -291,19 +290,19 @@ export default function WaghambaApp() {
               <Button 
                 onClick={installApp}
                 variant="outline"
-                className="w-full border-2 border-primary/20 bg-white/50 backdrop-blur-md text-primary font-black text-sm h-14 rounded-2xl shadow-lg active:scale-[0.97] uppercase tracking-widest"
+                className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-md text-white font-black text-sm h-14 rounded-2xl shadow-lg active:scale-[0.97] uppercase tracking-widest hover:bg-white/10"
               >
-                <Smartphone className="mr-3 w-5 h-5" />
+                <Smartphone className="mr-3 w-5 h-5 text-accent" />
                 {t.installApp}
               </Button>
             )}
 
             <div className="mt-12 flex flex-col items-center gap-2">
-              <p className="text-primary/30 text-[10px] font-black uppercase tracking-[0.6em]">
+              <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.6em]">
                 {t.institutionalStack}
               </p>
               <div className="flex gap-1.5">
-                {[1, 2, 3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/10" />)}
+                {[1, 2, 3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-accent/20" />)}
               </div>
             </div>
           </div>
@@ -314,15 +313,15 @@ export default function WaghambaApp() {
 
   if (isUserLoading || !schoolData.isLoaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         <div className="text-center space-y-8">
           <div className="relative">
-            <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto" />
+            <Loader2 className="w-16 h-16 animate-spin text-accent mx-auto" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             </div>
           </div>
-          <p className="font-black text-primary tracking-[0.4em] uppercase text-xs animate-pulse">{t.loadingRegistry}</p>
+          <p className="font-black text-white tracking-[0.4em] uppercase text-xs animate-pulse">{t.loadingRegistry}</p>
         </div>
       </div>
     );
@@ -330,13 +329,13 @@ export default function WaghambaApp() {
 
   if (!selectedSection) {
     return (
-      <div className="min-h-screen bg-[#F0F4F8] flex flex-col items-center justify-center p-6 relative">
+      <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 relative text-white">
         <div className="max-w-5xl w-full space-y-16 text-center animate-in fade-in zoom-in-95 duration-700">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 bg-primary/5 px-6 py-2 rounded-full border border-primary/10 text-primary font-black uppercase text-[10px] tracking-widest mb-4">
+            <div className="inline-flex items-center gap-2 bg-white/5 px-6 py-2 rounded-full border border-white/10 text-accent font-black uppercase text-[10px] tracking-widest mb-4">
               <MapPin className="w-3 h-3" /> {profile.taluka}, {profile.district} • {profile.schoolName}
             </div>
-            <h2 className="text-5xl md:text-7xl font-black text-primary uppercase tracking-tight leading-none">
+            <h2 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tight leading-none">
               {t.selectHub}
             </h2>
           </div>
@@ -344,15 +343,15 @@ export default function WaghambaApp() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <button 
               onClick={() => handleSectionSelect('sports')}
-              className="bg-white border-2 border-primary/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-accent hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
+              className="bg-zinc-900 border-2 border-white/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-accent hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
               <div className="relative z-10">
                 <div className="w-16 h-16 bg-accent rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:rotate-12 transition-transform">
                   <Medal className="w-8 h-8 text-accent-foreground" />
                 </div>
-                <h3 className="text-4xl font-black text-primary uppercase mb-4 tracking-tight">{t.sportsHub}</h3>
-                <p className="text-muted-foreground font-semibold text-xl leading-relaxed opacity-80">
+                <h3 className="text-4xl font-black text-white uppercase mb-4 tracking-tight">{t.sportsHub}</h3>
+                <p className="text-zinc-400 font-semibold text-xl leading-relaxed opacity-80">
                   {t.sportsHubDesc}
                 </p>
                 <div className="mt-8 flex items-center gap-2 text-accent font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
@@ -363,18 +362,18 @@ export default function WaghambaApp() {
 
             <button 
               onClick={() => handleSectionSelect('general')}
-              className="bg-white border-2 border-primary/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-primary hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
+              className="bg-zinc-900 border-2 border-white/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-white/20 hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-primary rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:-rotate-12 transition-transform">
-                  <GraduationCap className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:-rotate-12 transition-transform">
+                  <GraduationCap className="w-8 h-8 text-black" />
                 </div>
-                <h3 className="text-4xl font-black text-primary uppercase mb-4 tracking-tight">{t.studentRegistry}</h3>
-                <p className="text-muted-foreground font-semibold text-xl leading-relaxed opacity-80">
+                <h3 className="text-4xl font-black text-white uppercase mb-4 tracking-tight">{t.studentRegistry}</h3>
+                <p className="text-zinc-400 font-semibold text-xl leading-relaxed opacity-80">
                   {t.studentRegistryDesc}
                 </p>
-                <div className="mt-8 flex items-center gap-2 text-primary font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
+                <div className="mt-8 flex items-center gap-2 text-white font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
                   Access Registry <ChevronRight className="w-5 h-5" />
                 </div>
               </div>
@@ -382,7 +381,7 @@ export default function WaghambaApp() {
           </div>
           
           <div className="pt-8">
-            <p className="text-[10px] font-black text-primary/20 uppercase tracking-[0.8em]">ADMIN: {profile.teacherName}</p>
+            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.8em]">ADMIN: {profile.teacherName}</p>
           </div>
         </div>
       </div>
@@ -390,59 +389,59 @@ export default function WaghambaApp() {
   }
 
   const sportsTabs = [
-    { id: "home", label: t.home, icon: Home, color: "text-blue-600 bg-blue-50" },
-    { id: "registration", label: t.register, icon: User, color: "text-emerald-600 bg-emerald-50" },
-    { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "tournament", label: t.tourney, icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
-    { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-600 bg-rose-50" },
-    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
-    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
-    { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
-    { id: "sports-skills", label: t.skills, icon: Trophy, color: "text-yellow-600 bg-yellow-50" },
-    { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-600 bg-cyan-50" },
-    { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
-    { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
+    { id: "home", label: t.home, icon: Home, color: "text-accent bg-accent/10" },
+    { id: "registration", label: t.register, icon: User, color: "text-emerald-400 bg-emerald-500/10" },
+    { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-400 bg-purple-500/10" },
+    { id: "tournament", label: t.tourney, icon: ClipboardList, color: "text-amber-400 bg-amber-500/10" },
+    { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-400 bg-rose-500/10" },
+    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-400 bg-indigo-500/10" },
+    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-400 bg-teal-500/10" },
+    { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-400 bg-orange-500/10" },
+    { id: "sports-skills", label: t.skills, icon: Trophy, color: "text-yellow-400 bg-yellow-500/10" },
+    { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-400 bg-cyan-500/10" },
+    { id: "health", label: t.health, icon: Stethoscope, color: "text-red-400 bg-red-500/10" },
+    { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-400 bg-fuchsia-500/10" },
   ];
 
   const generalTabs = [
-    { id: "home", label: t.home, icon: Home, color: "text-blue-600 bg-blue-50" },
-    { id: "registration", label: t.enroll, icon: User, color: "text-emerald-600 bg-emerald-50" },
-    { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
-    { id: "activities", label: t.activities, icon: Zap, color: "text-amber-600 bg-amber-50" },
-    { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "home", label: t.home, icon: Home, color: "text-accent bg-accent/10" },
+    { id: "registration", label: t.enroll, icon: User, color: "text-emerald-400 bg-emerald-500/10" },
+    { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-400 bg-indigo-500/10" },
+    { id: "activities", label: t.activities, icon: Zap, color: "text-amber-400 bg-amber-500/10" },
+    { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-400 bg-rose-500/10" },
   ];
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 md:pb-8">
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b py-4 px-6 shadow-sm">
+    <div className="min-h-screen bg-[#000000] pb-20 md:pb-8 text-white">
+      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10 py-4 px-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-primary p-2.5 rounded-2xl w-12 h-12 flex items-center justify-center shadow-lg active-scale">
+            <div className="bg-accent p-2.5 rounded-2xl w-12 h-12 flex items-center justify-center shadow-lg active-scale">
               {LOGO ? (
                 <Image src={LOGO.imageUrl} alt="Logo" width={32} height={32} />
               ) : (
-                <School className="w-7 h-7 text-white" />
+                <Trophy className="w-7 h-7 text-black" />
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase text-primary leading-none tracking-tight">
+              <h1 className="text-2xl font-black uppercase text-white leading-none tracking-tight">
                 {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
               </h1>
-              <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{profile.schoolName}</p>
+              <p className="text-[10px] font-black text-accent uppercase mt-1 tracking-widest">{profile.schoolName}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end mr-4 text-right">
-              <span className="text-[10px] font-black text-primary uppercase leading-tight">{profile.teacherName}</span>
-              <span className="text-[9px] font-bold text-muted-foreground uppercase">{profile.taluka}, {profile.district}</span>
+              <span className="text-[10px] font-black text-white uppercase leading-tight">{profile.teacherName}</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase">{profile.taluka}, {profile.district}</span>
             </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setSelectedSection(null)}
-              className="text-[10px] font-black text-primary uppercase bg-primary/5 hover:bg-primary/10 rounded-full px-5 h-9"
+              className="text-[10px] font-black text-white uppercase bg-white/5 hover:bg-white/10 rounded-full px-5 h-9 border border-white/10"
             >
               {t.switchHub}
             </Button>
@@ -453,15 +452,15 @@ export default function WaghambaApp() {
       <main className="max-w-7xl mx-auto p-4 md:p-8">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
           <div className="overflow-x-auto pb-4 scrollbar-hide">
-            <TabsList className="bg-muted/40 p-2 flex gap-3 rounded-2xl min-w-max border h-auto">
+            <TabsList className="bg-zinc-900/50 p-2 flex gap-3 rounded-2xl min-w-max border border-white/5 h-auto">
               {currentTabs.map((tab) => (
                 <TabsTrigger 
                   key={tab.id}
                   value={tab.id} 
                   className={cn(
                     "rounded-xl px-6 py-4 font-black text-[12px] uppercase tracking-wider transition-all shadow-sm flex flex-col items-center gap-2 min-w-[110px]",
-                    "data-[state=active]:shadow-xl data-[state=active]:scale-110 data-[state=active]:z-10",
-                    tab.color
+                    "data-[state=active]:shadow-xl data-[state=active]:scale-110 data-[state=active]:z-10 data-[state=active]:bg-accent data-[state=active]:text-black",
+                    !activeTab.includes(tab.id) && tab.color
                   )}
                 >
                   <tab.icon className="w-5 h-5" /> {tab.label}
@@ -472,8 +471,8 @@ export default function WaghambaApp() {
 
           <div className="relative min-h-[500px]">
             {isTabChanging && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-md rounded-[3rem]">
-                <Loader2 className="w-16 h-16 animate-spin text-primary" />
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-[3rem]">
+                <Loader2 className="w-16 h-16 animate-spin text-accent" />
               </div>
             )}
 
@@ -481,7 +480,7 @@ export default function WaghambaApp() {
               {selectedSection === 'sports' ? (
                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
                   {bestPlayer ? (
-                    <Card className="border-0 rounded-[4rem] shadow-2xl bg-white overflow-hidden ios-spring">
+                    <Card className="border-0 rounded-[4rem] shadow-2xl bg-zinc-900 overflow-hidden ios-spring">
                       <div className="grid grid-cols-1 lg:grid-cols-2">
                         <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[450px]">
                           {bestPlayer.photoUrl ? (
@@ -493,17 +492,17 @@ export default function WaghambaApp() {
                               unoptimized
                             />
                           ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                              <User className="w-32 h-32 text-muted-foreground opacity-20" />
+                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                              <User className="w-32 h-32 text-zinc-700 opacity-20" />
                             </div>
                           )}
                           <div className="absolute top-10 left-10">
-                            <Badge className="bg-yellow-400 text-black font-black text-xs px-8 py-3 rounded-full shadow-2xl flex items-center gap-3 border-4 border-white/20">
+                            <Badge className="bg-yellow-400 text-black font-black text-xs px-8 py-3 rounded-full shadow-2xl flex items-center gap-3 border-4 border-black/20">
                               <Crown className="w-5 h-5" /> {t.performanceLeader}
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-12 lg:p-24 flex flex-col justify-center space-y-10 bg-gradient-to-br from-primary to-[#1B4B3A] text-white relative">
+                        <div className="p-12 lg:p-24 flex flex-col justify-center space-y-10 bg-gradient-to-br from-zinc-900 to-black text-white relative">
                           <div className="absolute top-0 right-0 p-12 opacity-5">
                             <Trophy className="w-80 h-80" />
                           </div>
@@ -517,7 +516,7 @@ export default function WaghambaApp() {
                               <Badge variant="outline" className="text-white border-white/40 font-black uppercase text-sm px-6 py-2 rounded-full backdrop-blur-md">
                                 Std {bestPlayer.std}
                               </Badge>
-                              <Badge className="bg-accent text-accent-foreground font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg">
+                              <Badge className="bg-accent text-black font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg">
                                 Score: {bestPlayer.performance.toFixed(0)}
                               </Badge>
                               <Badge className="bg-white/10 text-white font-black uppercase text-sm px-6 py-2 rounded-full border-0">
@@ -526,14 +525,14 @@ export default function WaghambaApp() {
                             </div>
                           </div>
 
-                          <div className="bg-white/10 backdrop-blur-xl p-10 rounded-[3rem] border border-white/20 space-y-6 shadow-2xl relative z-10">
+                          <div className="bg-white/5 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl relative z-10">
                             <div className="flex items-center gap-5">
                               <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center shadow-xl">
-                                <Award className="w-10 h-10 text-accent-foreground" />
+                                <Award className="w-10 h-10 text-black" />
                               </div>
                               <h4 className="text-3xl font-black uppercase tracking-tight">{t.congratulations}</h4>
                             </div>
-                            <p className="text-white/80 font-semibold text-xl leading-relaxed italic opacity-90">
+                            <p className="text-zinc-400 font-semibold text-xl leading-relaxed italic opacity-90">
                               "{t.excellenceDesc}"
                             </p>
                           </div>
@@ -541,24 +540,24 @@ export default function WaghambaApp() {
                       </div>
                     </Card>
                   ) : (
-                    <Card className="border-0 rounded-[4rem] shadow-sm bg-muted/20 p-24 text-center space-y-6">
+                    <Card className="border-0 rounded-[4rem] shadow-sm bg-zinc-900/50 p-24 text-center space-y-6">
                       {schoolData.isLoaded ? (
                         <>
-                          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
-                            <UserPlus className="w-10 h-10 text-primary opacity-20" />
+                          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto">
+                            <UserPlus className="w-10 h-10 text-accent opacity-20" />
                           </div>
                           <div className="space-y-2">
-                            <h4 className="text-2xl font-black text-primary uppercase">{t.noAthletes}</h4>
-                            <p className="text-muted-foreground font-medium max-w-sm mx-auto">{t.registerFirst}</p>
+                            <h4 className="text-2xl font-black text-white uppercase">{t.noAthletes}</h4>
+                            <p className="text-zinc-500 font-medium max-w-sm mx-auto">{t.registerFirst}</p>
                           </div>
-                          <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary hover:bg-primary/90">
+                          <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-accent text-black font-black hover:bg-accent/90">
                             Go to Registration <ArrowRight className="ml-2 w-4 h-4" />
                           </Button>
                         </>
                       ) : (
                         <>
-                          <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
-                          <p className="font-black text-primary uppercase tracking-[0.4em] text-sm">{t.loadingHallOfFame}</p>
+                          <Loader2 className="w-16 h-16 animate-spin text-accent mx-auto mb-6" />
+                          <p className="font-black text-white uppercase tracking-[0.4em] text-sm">{t.loadingHallOfFame}</p>
                         </>
                       )}
                     </Card>
@@ -567,37 +566,37 @@ export default function WaghambaApp() {
                   {topPerformers.length > 0 && (
                     <div className="space-y-10">
                       <div className="flex items-center justify-between px-6">
-                        <h3 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-4">
-                          <Star className="w-10 h-10 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
+                        <h3 className="text-4xl font-black text-white uppercase tracking-tight flex items-center gap-4">
+                          <Star className="w-10 h-10 text-accent fill-accent" /> {t.topSquadRanking}
                         </h3>
-                        <p className="hidden md:block text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em]">{t.calculatedPerformanceHub}</p>
+                        <p className="hidden md:block text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em]">{t.calculatedPerformanceHub}</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
                         {topPerformers.slice(1, 9).map((player, idx) => (
-                          <Card key={player.id} className="border-2 border-primary/5 rounded-[3.5rem] overflow-hidden hover:border-accent hover:shadow-2xl transition-all group active:scale-[0.95] shadow-xl bg-white">
+                          <Card key={player.id} className="border-2 border-white/5 rounded-[3.5rem] overflow-hidden hover:border-accent hover:shadow-2xl transition-all group active:scale-[0.95] shadow-xl bg-zinc-900">
                             <div className="relative aspect-square">
                               {player.photoUrl ? (
                                 <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
                               ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <User className="w-16 h-16 text-muted-foreground opacity-20" />
+                                <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                  <User className="w-16 h-16 text-zinc-600 opacity-20" />
                                 </div>
                               )}
                               <div className="absolute top-6 left-6">
-                                <Badge className="bg-white/95 text-primary font-black shadow-xl border-0 h-10 w-10 flex items-center justify-center p-0 rounded-2xl group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                                <Badge className="bg-black/95 text-accent font-black shadow-xl border-0 h-10 w-10 flex items-center justify-center p-0 rounded-2xl group-hover:bg-accent group-hover:text-black transition-colors">
                                   #{idx + 2}
                                 </Badge>
                               </div>
                             </div>
                             <CardContent className="p-8 space-y-5">
                               <div className="space-y-1">
-                                <h4 className="font-black text-primary uppercase text-xl truncate">{player.name}</h4>
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60">Std {player.std} • {player.latestStatus || 'B'}</p>
+                                <h4 className="font-black text-white uppercase text-xl truncate">{player.name}</h4>
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] opacity-60">Std {player.std} • {player.latestStatus || 'B'}</p>
                               </div>
-                              <div className="flex justify-between items-center pt-4 border-t border-dashed border-primary/10">
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fitness Index</span>
-                                <span className="text-2xl font-black text-primary">{player.fitnessScore || '0'}%</span>
+                              <div className="flex justify-between items-center pt-4 border-t border-dashed border-white/10">
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Fitness Index</span>
+                                <span className="text-2xl font-black text-accent">{player.fitnessScore || '0'}%</span>
                               </div>
                             </CardContent>
                           </Card>
@@ -608,30 +607,30 @@ export default function WaghambaApp() {
                 </div>
               ) : (
                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                  <div className="bg-gradient-to-br from-primary to-[#1B4B3A] p-16 rounded-[4rem] shadow-2xl relative overflow-hidden text-white">
+                  <div className="bg-gradient-to-br from-zinc-900 to-black p-16 rounded-[4rem] shadow-2xl relative overflow-hidden text-white border border-white/5">
                     <div className="relative z-10 space-y-10">
                       <div className="flex items-center gap-8">
-                        <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/20">
+                        <div className="w-24 h-24 bg-white/5 backdrop-blur-xl rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/10">
                           <UsersRound className="w-12 h-12 text-accent" />
                         </div>
                         <div className="space-y-2">
                           <h2 className="text-6xl font-black uppercase tracking-tight">{t.registrySummary}</h2>
-                          <p className="text-xl font-medium text-white/70 leading-relaxed max-w-xl">{t.registryDesc}</p>
+                          <p className="text-xl font-medium text-zinc-400 leading-relaxed max-w-xl">{t.registryDesc}</p>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="bg-white/5 backdrop-blur-md p-10 rounded-[3rem] border border-white/10 shadow-xl space-y-3">
-                          <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.4em]">{t.totalStudents}</span>
+                          <span className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em]">{t.totalStudents}</span>
                           <p className="text-6xl font-black text-white leading-none">{totalStudentCount}</p>
                         </div>
-                        <div className="bg-emerald-500/20 backdrop-blur-md p-10 rounded-[3rem] border border-emerald-400/20 shadow-xl space-y-3">
-                          <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.4em]">{t.boysLabel}</span>
-                          <p className="text-6xl font-black text-white leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
+                        <div className="bg-emerald-500/10 backdrop-blur-md p-10 rounded-[3rem] border border-emerald-400/20 shadow-xl space-y-3">
+                          <span className="text-[11px] font-black text-emerald-400/50 uppercase tracking-[0.4em]">{t.boysLabel}</span>
+                          <p className="text-6xl font-black text-emerald-400 leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
                         </div>
-                        <div className="bg-accent/20 backdrop-blur-md p-10 rounded-[3rem] border border-accent/20 shadow-xl space-y-3">
-                          <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.4em]">{t.girlsLabel}</span>
-                          <p className="text-6xl font-black text-white leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
+                        <div className="bg-accent/10 backdrop-blur-md p-10 rounded-[3rem] border border-accent/20 shadow-xl space-y-3">
+                          <span className="text-[11px] font-black text-accent/50 uppercase tracking-[0.4em]">{t.girlsLabel}</span>
+                          <p className="text-6xl font-black text-accent leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
                         </div>
                       </div>
                     </div>
@@ -640,8 +639,8 @@ export default function WaghambaApp() {
 
                   <div className="space-y-10">
                     <div className="flex items-center justify-between px-8">
-                      <h3 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-4">
-                        <ClipboardList className="w-10 h-10 text-primary" /> {t.classWise}
+                      <h3 className="text-4xl font-black text-white uppercase tracking-tight flex items-center gap-4">
+                        <ClipboardList className="w-10 h-10 text-accent" /> {t.classWise}
                       </h3>
                     </div>
 
@@ -650,29 +649,29 @@ export default function WaghambaApp() {
                         <Card 
                           key={std} 
                           onClick={() => handleTabChange(`classes`)}
-                          className="border-2 border-primary/5 rounded-[3.5rem] p-10 hover:border-primary transition-all cursor-pointer group active:scale-[0.96] shadow-xl bg-white relative overflow-hidden ios-spring"
+                          className="border-2 border-white/5 rounded-[3.5rem] p-10 hover:border-accent transition-all cursor-pointer group active:scale-[0.96] shadow-xl bg-zinc-900 relative overflow-hidden ios-spring"
                         >
                           <div className="relative z-10 space-y-8">
                             <div className="flex justify-between items-start">
-                              <div className="bg-primary/5 p-5 rounded-[1.5rem] group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
-                                <GraduationCap className="w-10 h-10 text-primary group-hover:text-white" />
+                              <div className="bg-white/5 p-5 rounded-[1.5rem] group-hover:bg-accent group-hover:text-black transition-all shadow-inner">
+                                <GraduationCap className="w-10 h-10 text-white group-hover:text-black" />
                               </div>
-                              <Badge className="bg-primary text-white font-black text-2xl px-6 py-2 rounded-full shadow-lg">Std {std}</Badge>
+                              <Badge className="bg-accent text-black font-black text-2xl px-6 py-2 rounded-full shadow-lg">Std {std}</Badge>
                             </div>
                             
                             <div className="space-y-5">
-                              <div className="flex justify-between items-end border-b-2 border-dashed border-primary/5 pb-3">
-                                <span className="text-muted-foreground font-black text-[11px] uppercase tracking-widest">{t.totalStudents}</span>
-                                <span className="text-4xl font-black text-primary">{stats.total}</span>
+                              <div className="flex justify-between items-end border-b-2 border-dashed border-white/10 pb-3">
+                                <span className="text-zinc-500 font-black text-[11px] uppercase tracking-widest">{t.totalStudents}</span>
+                                <span className="text-4xl font-black text-white">{stats.total}</span>
                               </div>
-                              <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                              <div className="flex justify-between text-[11px] font-black text-zinc-500 uppercase tracking-widest opacity-60">
                                 <span>{stats.boys} {t.boysLabel}</span>
                                 <span>{stats.girls} {t.girlsLabel}</span>
                               </div>
                             </div>
                           </div>
                           <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
-                            <ChevronRight className="w-8 h-8 text-primary" />
+                            <ChevronRight className="w-8 h-8 text-accent" />
                           </div>
                         </Card>
                       ))}
