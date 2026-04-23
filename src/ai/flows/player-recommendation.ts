@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow for generating personalized recommendations for school sports players.
@@ -58,10 +59,7 @@ const PlayerRecommendationOutputSchema = z.object({
 });
 export type PlayerRecommendationOutput = z.infer<typeof PlayerRecommendationOutputSchema>;
 
-export async function playerRecommendation(input: PlayerRecommendationInput): Promise<PlayerRecommendationOutput> {
-  return playerRecommendationFlow(input);
-}
-
+// Define Prompt BEFORE the flow to ensure proper initialization during SSR/Action loading
 const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
   input: {schema: PlayerRecommendationInputSchema},
@@ -162,35 +160,43 @@ const playerRecommendationFlow = ai.defineFlow(
   },
   async (input) => {
     let attempts = 0;
-    const maxAttempts = 5;
+    const maxAttempts = 3; // Reduced to stay within server action limits
     let lastError: any = null;
+
+    console.log(`Starting AI Recommendation for ${input.name} (Attempt 1)`);
 
     while (attempts < maxAttempts) {
       try {
         const {output} = await playerRecommendationPrompt(input);
+        console.log(`AI Success for ${input.name} on attempt ${attempts + 1}`);
         return output!;
       } catch (error: any) {
         lastError = error;
         attempts++;
         
-        // Handle Gemini 503 and other transient errors by checking message contents
         const errorMsg = error?.message || String(error);
+        console.warn(`AI Attempt ${attempts} failed for ${input.name}: ${errorMsg}`);
+
         const isTransient = 
           errorMsg.includes('503') || 
           errorMsg.includes('UNAVAILABLE') || 
           errorMsg.includes('demand') ||
-          errorMsg.includes('overloaded');
+          errorMsg.includes('overloaded') ||
+          errorMsg.includes('Deadline Exceeded');
 
         if (!isTransient || attempts >= maxAttempts) {
-          // If not a transient error or we've hit the limit, re-throw immediately
           throw error;
         }
         
-        // Jittered exponential backoff: (2^attempts * 1000) + random jitter
+        // Jittered exponential backoff
         const delay = Math.pow(2, attempts) * 1000 + (Math.random() * 1000);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    throw lastError || new Error('Failed to generate AI recommendations after multiple attempts.');
+    throw lastError || new Error('Failed to generate AI recommendations after retries.');
   },
 );
+
+export async function playerRecommendation(input: PlayerRecommendationInput): Promise<PlayerRecommendationOutput> {
+  return playerRecommendationFlow(input);
+}

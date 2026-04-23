@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -13,17 +14,24 @@ import {
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance).catch(err => console.error("Anon sign-in failed", err));
+  signInAnonymously(authInstance)
+    .then(() => console.log("Anonymous sign-in successful"))
+    .catch(err => {
+      console.error("Anon sign-in failed:", err.message);
+      if (err.message.includes('unexpected response')) {
+        console.error("Critical: Domain may not be authorized in Firebase Console.");
+      }
+    });
 }
 
 /** Initiate email/password sign-up (non-blocking). */
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  createUserWithEmailAndPassword(authInstance, email, password);
+  createUserWithEmailAndPassword(authInstance, email, password).catch(err => console.error(err));
 }
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password);
+  signInWithEmailAndPassword(authInstance, email, password).catch(err => console.error(err));
 }
 
 /** 
@@ -66,5 +74,5 @@ export function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
 
 /** Sign out (non-blocking). */
 export function initiateSignOut(authInstance: Auth): void {
-  signOut(authInstance);
+  signOut(authInstance).catch(err => console.error(err));
 }

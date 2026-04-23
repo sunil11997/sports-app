@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2, Filter, Percent } from 'lucide-react';
+import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2, Filter, Percent, Phone, Fingerprint } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -38,7 +38,7 @@ const CATEGORIES = [
   { id: 'girls-senior', label: 'Girls Senior' },
 ];
 
-export function Dashboard({ store, section, language = 'Marathi' }: { store: any, section: 'sports' | 'general', language?: string }) {
+export function Dashboard({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -59,8 +59,6 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
   };
 
   const calculateAttendance = (playerId: string) => {
-    // Filter the global attendance object for keys matching this specific player
-    // and ensure we only count 'P' or 'A' records (valid entries)
     const records = Object.entries(store.data.attendance)
       .filter(([key, status]) => 
         key.startsWith(`${playerId}_`) && (status === 'P' || status === 'A')
@@ -76,7 +74,7 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
     const matchesCategory = p.category === targetCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))) ||
-      (p.bloodGroup && p.bloodGroup.toLowerCase().includes(searchTerm.toLowerCase()));
+      (p.aadharNumber && p.aadharNumber.includes(searchTerm));
     const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
     return matchesCategory && matchesSearch && matchesTab;
   });
@@ -86,7 +84,9 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
       ...player, 
       sports: player.sports || [],
       bloodGroup: player.bloodGroup || "None",
-      examMarks: player.examMarks || "0"
+      examMarks: player.examMarks || "0",
+      aadharNumber: player.aadharNumber || "",
+      mobileNumber: player.mobileNumber || ""
     });
   };
 
@@ -133,7 +133,6 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
             th { background-color: #f4f4f4; font-weight: bold; font-size: 12px; }
-            .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; }
             .photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
           </style>
         </head>
@@ -143,7 +142,7 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
           <table>
             <thead>
               <tr>
-                <th>SR</th><th>PHOTO</th><th>NAME</th><th>GENDER</th><th>AGE</th><th>STD</th><th>BLOOD</th>${isGeneral ? '<th>EXAM MARKS</th>' : '<th>SPORTS</th>'}<th>BMI</th><th>ATTENDANCE %</th>
+                <th>SR</th><th>PHOTO</th><th>NAME</th><th>GENDER</th><th>AGE</th><th>STD</th><th>AADHAR</th><th>MOBILE</th>${isGeneral ? '<th>EXAM MARKS</th>' : '<th>SPORTS</th>'}<th>ATT %</th>
               </tr>
             </thead>
             <tbody>
@@ -155,9 +154,9 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                   <td>${p.gender}</td>
                   <td>${p.age}</td>
                   <td>${p.std}</td>
-                  <td>${p.bloodGroup || 'N/A'}</td>
-                  <td>${isGeneral ? (p.examMarks || '0') : p.sports.join(', ')}</td>
-                  <td>${p.bmi}</td>
+                  <td>${p.aadharNumber || '-'}</td>
+                  <td>${p.mobileNumber || '-'}</td>
+                  <td>${isGeneral ? (p.examMarks || '0') : (p.sports || []).join(', ')}</td>
                   <td>${calculateAttendance(p.id)}%</td>
                 </tr>
               `).join('')}
@@ -203,7 +202,7 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder={isMarathi ? "शोध: नाव, रक्त, खेळ..." : "Search by name, blood, sport..."} 
+              placeholder={isMarathi ? "शोध: नाव, आधार, खेळ..." : "Search by name, aadhar, sport..."} 
               className="pl-9 h-9 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -224,13 +223,13 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[180px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'वय' : 'Age'}</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'इयत्ता' : 'Std'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'उपस्थिती %' : 'Att %'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'संपर्क' : 'Contact'}</TableHead>
               {isGeneral ? (
                 <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[100px] text-center">{isMarathi ? 'गुण' : 'Exam'}</TableHead>
               ) : (
                 <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[150px]">{isMarathi ? 'खेळ' : 'Sports'}</TableHead>
               )}
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[70px]">BMI</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'उपस्थिती' : 'Att %'}</TableHead>
               <TableHead className="h-9 px-2 font-black text-[11px] uppercase text-center w-[90px]">{isMarathi ? 'क्रिया' : 'Actions'}</TableHead>
             </TableRow>
           </TableHeader>
@@ -256,28 +255,20 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                           <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
                           <AvatarFallback className="text-[10px]"><User className="w-3 h-3" /></AvatarFallback>
                         </Avatar>
-                        {player.photoUrl && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Maximize2 className="w-4 h-4 text-white bg-black/40 rounded-full p-0.5" />
-                          </div>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell className="border-r p-2 text-xs font-bold">
                       <div className="flex flex-col">
                         <span>{player.name}</span>
-                        <span className="text-[8px] uppercase text-muted-foreground font-black">{isMarathi ? (player.gender === 'Female' ? 'महिला' : 'पुरुष') : player.gender}</span>
+                        <span className="text-[8px] uppercase text-muted-foreground font-black">
+                          {isMarathi ? (player.gender === 'Female' ? 'महिला' : 'पुरुष') : player.gender} • {player.aadharNumber || 'NO AADHAR'}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
                     <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
-                    <TableCell className="border-r p-2 text-center">
-                      <div className={cn(
-                        "flex items-center justify-center gap-1 text-[11px] font-black",
-                        attPercent >= 75 ? "text-primary" : attPercent >= 50 ? "text-orange-600" : "text-destructive"
-                      )}>
-                        {attPercent}%
-                      </div>
+                    <TableCell className="border-r p-2 text-center text-[10px] font-mono">
+                      {player.mobileNumber || '-'}
                     </TableCell>
                     {isGeneral ? (
                       <TableCell className="border-r p-2 text-center text-xs font-black text-primary">{player.examMarks || '0'}</TableCell>
@@ -292,8 +283,13 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                         </div>
                       </TableCell>
                     )}
-                    <TableCell className="border-r p-2 text-center text-xs font-mono font-bold">
-                      {player.bmi}
+                    <TableCell className="border-r p-2 text-center">
+                      <div className={cn(
+                        "flex items-center justify-center gap-1 text-[11px] font-black",
+                        attPercent >= 75 ? "text-primary" : attPercent >= 50 ? "text-orange-600" : "text-destructive"
+                      )}>
+                        {attPercent}%
+                      </div>
                     </TableCell>
                     <TableCell className="p-1 text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -373,21 +369,16 @@ export function Dashboard({ store, section, language = 'Marathi' }: { store: any
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'जन्मतारीख' : 'DOB'}</Label>
-                  <Input type="date" value={editingPlayer.dob} onChange={(e) => setEditingPlayer({ ...editingPlayer, dob: e.target.value })} className="h-9 text-sm" />
+                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'आधार कार्ड' : 'Aadhar'}</Label>
+                  <Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, aadharNumber: e.target.value })} className="h-9 text-sm" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'रक्तगट' : 'Blood Group'}</Label>
-                  <Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({ ...editingPlayer, bloodGroup: val })}>
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BLOOD_GROUPS.map(group => (
-                        <SelectItem key={group} value={group}>{isMarathi && group === 'None' ? 'काहीही नाही' : group}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'मोबाईल' : 'Mobile'}</Label>
+                  <Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, mobileNumber: e.target.value })} className="h-9 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'जन्मतारीख' : 'DOB'}</Label>
+                  <Input type="date" value={editingPlayer.dob} onChange={(e) => setEditingPlayer({ ...editingPlayer, dob: e.target.value })} className="h-9 text-sm" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-bold uppercase">{isMarathi ? 'इयत्ता' : 'Standard'}</Label>

@@ -12,7 +12,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
-      allowedOrigins: ['localhost:9002', '*.cloudworkstations.dev'],
+      // Added more broad patterns to ensure server actions work in dev and production environments
+      allowedOrigins: ['localhost:9002', '*.cloudworkstations.dev', '*.firebaseapp.com', '*.web.app'],
     },
   },
   serverExternalPackages: ['wav'],
