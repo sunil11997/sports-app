@@ -1,14 +1,38 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2, BrainCircuit, HeartPulse, Dumbbell, Zap, Printer, Languages, WifiOff } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Sparkles, 
+  Loader2, 
+  BrainCircuit, 
+  HeartPulse, 
+  Dumbbell, 
+  Zap, 
+  Printer, 
+  Languages, 
+  WifiOff,
+  MessageSquare,
+  Send,
+  User,
+  Bot
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
+import { coachChat } from '@/ai/flows/coach-chat';
 import { usePWA } from '@/components/providers/pwa-provider';
+import { cn } from '@/lib/utils';
+
+interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+}
 
 export function AIAdvice({ store }: { store: any }) {
   const { toast } = useToast();
@@ -17,12 +41,64 @@ export function AIAdvice({ store }: { store: any }) {
   const [language, setLanguage] = useState("English");
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
+  
+  // Chat States
+  const [activeTab, setActiveTab] = useState("report");
+  const [chatInput, setChatInput] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory, chatLoading]);
+
+  const getPlayerContext = () => {
+    if (!selectedPlayerId) return "";
+    const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
+    const fit = store.data.fitness[selectedPlayerId] || {};
+    const primarySport = p.sports?.[0] || "None";
+    const skill = store.data.sportSkills[`${selectedPlayerId}_${primarySport}`] || {};
+    
+    return `Player: ${p.name}, Std: ${p.std}, Age: ${p.age}, Sports: ${p.sports?.join(', ')}. 
+    Fitness Score: ${fit.score}%, Level: ${fit.status}. 
+    Primary Sport Skills: ${Object.entries(skill.detailedSkills || {}).map(([k, v]) => `${k}: ${v}/10`).join(', ')}`;
+  };
+
+  const handleSendChat = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    if (!isOnline) {
+      toast({ title: "Offline", description: "Internet required for AI Chat.", variant: "destructive" });
+      return;
+    }
+
+    const userMsg = chatInput;
+    setChatInput("");
+    setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
+    setChatLoading(true);
+
+    try {
+      const response = await coachChat({
+        message: userMsg,
+        history: chatHistory,
+        playerContext: getPlayerContext(),
+        language: language
+      });
+      setChatHistory(prev => [...prev, { role: 'model', content: response }]);
+    } catch (error) {
+      toast({ title: "Chat Error", description: "Could not get AI response.", variant: "destructive" });
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const getAdvice = async () => {
     if (!isOnline) {
       toast({ 
         title: "Offline Mode", 
-        description: "Internet connection is required for AI analysis. Please connect and try again.", 
+        description: "Internet connection is required for AI analysis.", 
         variant: "destructive" 
       });
       return;
@@ -37,7 +113,7 @@ export function AIAdvice({ store }: { store: any }) {
     try {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
       const fit = store.data.fitness[selectedPlayerId] || {};
-      const primarySport = p.sports[0];
+      const primarySport = p.sports?.[0] || "";
       const skill = store.data.sportSkills[`${selectedPlayerId}_${primarySport}`] || {};
       
       const incidents = store.data.healthIncidents
@@ -54,7 +130,7 @@ export function AIAdvice({ store }: { store: any }) {
         height: p.height,
         weight: p.weight,
         bmi: p.bmi,
-        sports: p.sports,
+        sports: p.sports || [],
         history: p.history,
         histDetail: p.histDetail || "None",
         medical: p.medical || "None",
@@ -112,7 +188,7 @@ export function AIAdvice({ store }: { store: any }) {
         <body>
           <h1>Performance Strategy: ${player?.name}</h1>
           <div class="player-info">
-            Std: ${player?.std} | Age: ${player?.age} | Sports: ${player?.sports.join(', ')}
+            Std: ${player?.std} | Age: ${player?.age} | Sports: ${player?.sports?.join(', ')}
           </div>
           
           <section>
@@ -148,11 +224,11 @@ export function AIAdvice({ store }: { store: any }) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {!isOnline && (
         <div className="bg-destructive/10 border-2 border-destructive text-destructive p-4 rounded-2xl flex items-center gap-3 font-bold">
           <WifiOff className="w-6 h-6" />
-          Offline Mode: AI Advice generation is limited to existing cached reports. New advice requires internet.
+          Offline Mode: AI Hub functions (Report & Chat) require an active internet connection.
         </div>
       )}
 
@@ -160,10 +236,10 @@ export function AIAdvice({ store }: { store: any }) {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <BrainCircuit className="w-10 h-10 text-accent" /> AI Performance Hub
+              <BrainCircuit className="w-10 h-10 text-accent" /> AI Hub
             </h2>
             <p className="text-lg font-medium text-foreground/70">
-              Get personalized training plans and health advice powered by institutional AI analysis.
+              Get personalized AI analysis and chat with your institutional sports assistant.
             </p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
@@ -183,7 +259,7 @@ export function AIAdvice({ store }: { store: any }) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase">Select Player</label>
+              <label className="text-xs font-bold text-primary uppercase">Context: Select Student</label>
               <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
                 <SelectTrigger className="rounded-2xl border-2 h-12 text-md font-bold bg-white">
                   <SelectValue placeholder="Pick a student" />
@@ -195,79 +271,210 @@ export function AIAdvice({ store }: { store: any }) {
                 </SelectContent>
               </Select>
             </div>
-            
-            <Button 
-              disabled={loading || !selectedPlayerId || !isOnline} 
-              onClick={getAdvice}
-              className={`rounded-2xl h-14 font-black text-lg shadow-lg uppercase tracking-wider transition-all ${
-                !isOnline ? 'bg-muted text-muted-foreground' : 'bg-accent text-accent-foreground hover:bg-accent/90'
-              }`}
-            >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : isOnline ? <Sparkles className="w-6 h-6 mr-2" /> : <WifiOff className="w-6 h-6 mr-2" />}
-              {isOnline ? 'Generate Advice' : 'Go Online to Generate'}
-            </Button>
           </div>
         </div>
       </div>
 
-      {advice && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Card className="md:col-span-2 border-4 border-accent shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-accent/10 border-b-2 border-accent/20 flex flex-row justify-between items-center">
-              <CardTitle className="text-2xl font-black text-primary flex items-center gap-3">
-                <Sparkles className="w-6 h-6 text-accent" /> EXECUTIVE SUMMARY
-              </CardTitle>
-              <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-accent text-primary h-10">
-                <Printer className="w-4 h-4 mr-2" /> Print Full Report
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-muted/40 p-2 h-auto gap-4 rounded-3xl border">
+          <TabsTrigger value="report" className="rounded-2xl py-3 px-8 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white shadow-sm">
+            <Sparkles className="w-4 h-4 mr-2" /> Comprehensive Report
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="rounded-2xl py-3 px-8 font-black uppercase text-xs tracking-widest data-[state=active]:bg-accent data-[state=active]:text-accent-foreground shadow-sm">
+            <MessageSquare className="w-4 h-4 mr-2" /> Live Coach Chat
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="report" className="mt-0 space-y-6">
+          {!advice && (
+            <div className="p-20 text-center border-4 border-dashed rounded-[3rem] bg-white/50 space-y-6">
+              <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
+                <BrainCircuit className="w-10 h-10 text-primary opacity-20" />
+              </div>
+              <p className="text-xl font-bold text-muted-foreground uppercase tracking-widest opacity-40">Select a student and generate performance advice</p>
+              <Button 
+                disabled={loading || !selectedPlayerId || !isOnline} 
+                onClick={getAdvice}
+                className="rounded-2xl h-16 px-12 font-black text-lg bg-primary hover:bg-primary/90 text-white shadow-xl uppercase tracking-widest transition-all active-scale"
+              >
+                {loading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <Zap className="w-6 h-6 mr-3" />}
+                Run AI Analysis
               </Button>
-            </CardHeader>
-            <CardContent className="p-8">
-              <p className="text-xl font-medium leading-relaxed text-foreground/90 italic">
-                "{advice.summary}"
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          )}
 
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
-            <CardHeader className="bg-primary/5">
-              <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
-                <Dumbbell className="w-5 h-5" /> Training Blueprint
-              </CardTitle>
+          {advice && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <Card className="md:col-span-2 border-4 border-accent shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+                <CardHeader className="bg-accent/10 border-b-2 border-accent/20 flex flex-row justify-between items-center">
+                  <CardTitle className="text-2xl font-black text-primary flex items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-accent" /> EXECUTIVE SUMMARY
+                  </CardTitle>
+                  <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-accent text-primary h-10">
+                    <Printer className="w-4 h-4 mr-2" /> Print Full Report
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <p className="text-xl font-medium leading-relaxed text-foreground/90 italic">
+                    "{advice.summary}"
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
+                    <Dumbbell className="w-5 h-5" /> Training Blueprint
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="prose prose-green prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                    {advice.trainingPlan}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-accent" /> Performance Boosters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="prose prose-green prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                    {advice.performanceSuggestions}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2 border-2 border-destructive/20 shadow-xl rounded-[2rem] bg-destructive/[0.02]">
+                <CardHeader className="bg-destructive/5">
+                  <CardTitle className="text-lg font-black text-destructive uppercase flex items-center gap-2">
+                    <HeartPulse className="w-5 h-5" /> Health & Recovery Protocol
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="prose prose-red prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                    {advice.healthAdvice}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="md:col-span-2 flex justify-center pt-8">
+                <Button variant="ghost" onClick={() => setActiveTab("chat")} className="font-black text-primary uppercase tracking-widest text-xs h-12 rounded-full border-2 border-primary/10 px-8">
+                  Ask AI specific questions about this student <MessageSquare className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="chat" className="mt-0">
+          <Card className="border-2 border-primary/10 shadow-2xl rounded-[3rem] overflow-hidden bg-white flex flex-col h-[650px]">
+            <CardHeader className="bg-accent/5 border-b p-6 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
+                  <Bot className="w-7 h-7 text-accent-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-black text-primary uppercase tracking-tight">Coach Assistant Chat</CardTitle>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live Institutional AI Support
+                  </p>
+                </div>
+              </div>
+              {selectedPlayerId && (
+                <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-4 py-1.5 rounded-full">
+                  Topic: {store.data.players.find((p: any) => p.id === selectedPlayerId)?.name}
+                </Badge>
+              )}
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="prose prose-green prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                {advice.trainingPlan}
+            
+            <CardContent className="flex-1 p-0 overflow-hidden relative flex flex-col bg-slate-50/50">
+              <ScrollArea className="flex-1 p-8">
+                <div className="space-y-6">
+                  {chatHistory.length === 0 && (
+                    <div className="py-20 text-center space-y-4 opacity-30">
+                      <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground" />
+                      <p className="font-black uppercase text-sm tracking-widest">Ask me anything about training or health</p>
+                    </div>
+                  )}
+                  {chatHistory.map((msg, idx) => (
+                    <div key={idx} className={cn(
+                      "flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2",
+                      msg.role === 'user' ? "flex-row-reverse" : "flex-row"
+                    )}>
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md",
+                        msg.role === 'user' ? "bg-primary text-white" : "bg-accent text-accent-foreground"
+                      )}>
+                        {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
+                      </div>
+                      <div className={cn(
+                        "max-w-[75%] p-5 rounded-3xl shadow-sm text-sm font-medium leading-relaxed",
+                        msg.role === 'user' 
+                          ? "bg-primary text-white rounded-tr-none" 
+                          : "bg-white border border-primary/5 text-foreground rounded-tl-none"
+                      )}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  {chatLoading && (
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Loader2 className="w-5 h-5 text-accent-foreground animate-spin" />
+                      </div>
+                      <div className="bg-white p-4 rounded-3xl rounded-tl-none border border-primary/5 shadow-sm">
+                        <div className="flex gap-1">
+                          <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={scrollRef} />
+                </div>
+              </ScrollArea>
+
+              <div className="p-8 bg-white border-t space-y-4">
+                <div className="flex gap-4">
+                  <Input 
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                    placeholder={language === 'Marathi' ? "कोचला प्रश्न विचारा..." : "Ask the coach a question..."}
+                    className="flex-1 h-14 rounded-2xl border-2 px-6 font-bold shadow-inner focus-visible:ring-accent"
+                  />
+                  <Button 
+                    onClick={handleSendChat}
+                    disabled={!chatInput.trim() || chatLoading || !isOnline}
+                    className="w-14 h-14 rounded-2xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg p-0 active-scale"
+                  >
+                    <Send className="w-6 h-6" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    language === 'Marathi' ? "तंदुरुस्ती कशी सुधारावी?" : "How to improve stamina?",
+                    language === 'Marathi' ? "दुखापत टाळण्यासाठी टिप्स" : "Injury prevention tips",
+                    language === 'Marathi' ? "डाइट प्लान सुचवा" : "Suggest a diet plan"
+                  ].map((suggestion, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setChatInput(suggestion)}
+                      className="text-[10px] font-black uppercase text-primary/50 hover:text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/5 transition-all"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
-            <CardHeader className="bg-primary/5">
-              <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
-                <Zap className="w-5 h-5 text-accent" /> Performance Boosters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="prose prose-green prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                {advice.performanceSuggestions}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2 border-2 border-destructive/20 shadow-xl rounded-[2rem] bg-destructive/[0.02]">
-            <CardHeader className="bg-destructive/5">
-              <CardTitle className="text-lg font-black text-destructive uppercase flex items-center gap-2">
-                <HeartPulse className="w-5 h-5" /> Health & Recovery Protocol
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="prose prose-red prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                {advice.healthAdvice}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
