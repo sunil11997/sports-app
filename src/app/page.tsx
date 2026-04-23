@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -57,6 +58,7 @@ import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { History } from '@/components/features/History';
 import { SchoolActivities } from '@/components/features/SchoolActivities';
 import { ClassesHub } from '@/components/features/ClassesHub';
+import { ClassesSection } from '@/components/features/ClassesSection';
 
 const translations = {
   English: {
@@ -104,6 +106,7 @@ const translations = {
     boysLabel: "Boys",
     girlsLabel: "Girls",
     classes: "Classes",
+    exam: "Exam",
     activities: "Activities",
     reports: "Reports",
     installApp: "INSTALL MOBILE APP",
@@ -154,6 +157,7 @@ const translations = {
     boysLabel: "मुले",
     girlsLabel: "मुली",
     classes: "वर्ग",
+    exam: "परीक्षा",
     activities: "शालेय उपक्रम",
     reports: "अहवाल",
     installApp: "मोबाईल ॲप इंस्टॉल करा",
@@ -378,8 +382,9 @@ export default function WaghambaApp() {
   const generalTabs = [
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.enroll, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
+    { id: "exam", label: t.exam, icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
     { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
-    { id: "activities", label: t.activities, icon: Zap, color: "text-amber-600 bg-amber-50" },
+    { id: "activities", label: t.activities, icon: Zap, color: "text-purple-600 bg-purple-50" },
     { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-600 bg-rose-50" },
   ];
 
@@ -709,6 +714,10 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="classes">
+              <ClassesSection store={schoolData} />
+            </TabsContent>
+
+            <TabsContent value="exam">
               <ClassesHub store={schoolData} />
             </TabsContent>
           </div>

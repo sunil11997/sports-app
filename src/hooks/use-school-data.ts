@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -35,7 +36,14 @@ export function useSchoolData() {
   const drillsSyncRef = useMemoFirebase(() => user ? collection(db, 'drill_completions') : null, [db, user]);
   const { data: drillComps } = useCollection(drillsSyncRef);
 
-  // 5. Reactive State for Sub-collections (Handled via internal local cache by Firestore automatically)
+  // 5. Global Activities Listener
+  const activitiesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(db, 'school_activities'), where('schoolId', '==', user.uid));
+  }, [db, user]);
+  const { data: activities } = useCollection(activitiesQuery);
+
+  // 6. Reactive State for Sub-collections (Handled via internal local cache by Firestore automatically)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
@@ -52,7 +60,7 @@ export function useSchoolData() {
     }
   }, [drillComps]);
 
-  // 6. Subscription Management for Player Sub-collections
+  // Subscription Management for Player Sub-collections
   const unsubscribersRef = useRef<Record<string, (() => void)[]>>({});
 
   useEffect(() => {
@@ -148,6 +156,7 @@ export function useSchoolData() {
       skillsHistory,
       drillCompletions,
       healthIncidents: healthIncidents || [],
+      activities: activities || [],
       schoolProfile: schoolProfile || {
         schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
         teacherName: "सुनिल देशमुख",
@@ -159,7 +168,7 @@ export function useSchoolData() {
         updatedAt: new Date().toISOString()
       }
     };
-  }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
+  }, [players, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
   const saveSchoolProfile = (profile: any) => {
     if (!user) return;
@@ -267,6 +276,21 @@ export function useSchoolData() {
     setDocumentNonBlocking(playerIncRef, { ...incident, schoolId: user.uid }, { merge: true });
   };
 
+  const addActivity = (activityData: any) => {
+    if (!user) return;
+    const activityRef = doc(db, 'school_activities', activityData.id);
+    setDocumentNonBlocking(activityRef, { 
+      ...activityData, 
+      schoolId: user.uid,
+      timestamp: new Date().toISOString() 
+    }, { merge: true });
+  };
+
+  const deleteActivity = (id: string) => {
+    const docRef = doc(db, 'school_activities', id);
+    deleteDocumentNonBlocking(docRef);
+  };
+
   const exportBackupData = () => {
     const backup = {
       timestamp: new Date().toISOString(),
@@ -296,6 +320,8 @@ export function useSchoolData() {
     setSportSkill,
     setDrillCompletion,
     addHealthIncident,
+    addActivity,
+    deleteActivity,
     exportBackupData
   };
 }

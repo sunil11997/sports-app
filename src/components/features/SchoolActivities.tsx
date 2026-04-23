@@ -178,7 +178,6 @@ export function SchoolActivities({ store }: { store: any }) {
   const [type, setType] = useState(ACTIVITY_TYPES[0]);
   const [duration, setDuration] = useState("30 Mins");
   const [summary, setSummary] = useState("");
-  const [activities, setActivities] = useState<any[]>([]);
 
   const currentGuidelines = useMemo(() => ACTIVITY_GUIDELINES[type], [type]);
 
@@ -195,10 +194,9 @@ export function SchoolActivities({ store }: { store: any }) {
       type,
       duration,
       summary,
-      timestamp: new Date().toISOString()
     };
 
-    setActivities([newActivity, ...activities]);
+    store.addActivity(newActivity);
     setSummary("");
     toast({ title: "Activity Logged", description: "Class activity record archived successfully." });
   };
@@ -261,6 +259,8 @@ export function SchoolActivities({ store }: { store: any }) {
     win?.document.close();
     win?.print();
   };
+
+  const activitiesList = store.data.activities.slice().sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
@@ -363,14 +363,14 @@ export function SchoolActivities({ store }: { store: any }) {
           </h3>
         </div>
 
-        {activities.length === 0 ? (
+        {activitiesList.length === 0 ? (
           <Card className="border-dashed border-4 p-20 flex flex-col items-center text-muted-foreground rounded-[3rem] bg-white/50 opacity-40">
             <Zap className="w-16 h-16 mb-4" />
             <p className="text-xl font-bold uppercase tracking-widest">No activity logs recorded yet</p>
           </Card>
         ) : (
           <div className="space-y-4">
-            {activities.map((act) => (
+            {activitiesList.map((act: any) => (
               <Card key={act.id} className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-lg group hover:border-primary/20 transition-all">
                 <div className="p-8">
                   <div className="flex justify-between items-start mb-6">
@@ -391,7 +391,7 @@ export function SchoolActivities({ store }: { store: any }) {
                       <Button variant="outline" size="icon" onClick={() => handlePrint(act)} className="h-10 w-10 border-2 rounded-xl text-primary hover:bg-primary/5">
                         <Printer className="w-5 h-5" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setActivities(activities.filter(a => a.id !== act.id))} className="h-10 w-10 text-destructive hover:bg-destructive/5 rounded-xl">
+                      <Button variant="ghost" size="icon" onClick={() => store.deleteActivity(act.id)} className="h-10 w-10 text-destructive hover:bg-destructive/5 rounded-xl">
                         <Trash2 className="w-5 h-5" />
                       </Button>
                     </div>
