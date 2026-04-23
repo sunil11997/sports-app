@@ -83,21 +83,21 @@ const translations = {
     performanceLeader: "PERFORMANCE LEADER",
     studentExcellence: "Student Excellence",
     congratulations: "Congratulations!",
-    excellenceDesc: "Outstanding performance in technical skills and physical assessment tests. Keeping the pride high!",
+    excellenceDesc: "Outstanding performance in technical skills and physical assessment tests.",
     topSquadRanking: "Top Squad Ranking",
-    calculatedPerformanceHub: "Calculated Performance Hub",
+    calculatedPerformanceHub: "Performance Analysis Hub",
     loadingRegistry: "Syncing Registry...",
     loadingHallOfFame: "Loading Hall of Fame...",
     noAthletes: "No athletes registered yet.",
-    registerFirst: "Please enroll students in the Register tab to see the Hall of Fame.",
-    selectHub: "Select Management Section",
-    sportsHubDesc: "Manage athletes, performance scores, and tournament rosters.",
-    studentRegistryDesc: "Manage general student growth logs and physical registry.",
-    enter: "ENTER HUB",
-    institutionalStack: "PRO ATHLETIC STACK V3.0",
-    tribalLogoHint: "OFFICIAL SPORTS MANAGEMENT SYSTEM",
-    registrySummary: "Class Registry Overview",
-    registryDesc: "Consolidated institutional enrollment counts across all standards.",
+    registerFirst: "Please enroll students in the Register tab.",
+    selectHub: "Management Portal",
+    sportsHubDesc: "Manage athletes, performance scores, and tournaments.",
+    studentRegistryDesc: "Manage academic registries and growth logs.",
+    enter: "GET STARTED",
+    institutionalStack: "V3.0 PERFORMANCE ENGINE",
+    tribalLogoHint: "OFFICIAL SPORTS SYSTEM",
+    registrySummary: "Institutional Registry",
+    registryDesc: "Consolidated enrollment counts across all standards.",
     totalStudents: "Total Enrollment",
     classWise: "Standard Breakdown",
     boysLabel: "Boys",
@@ -105,7 +105,7 @@ const translations = {
     classes: "Classes",
     activities: "Activities",
     reports: "Reports",
-    installApp: "INSTALL AS MOBILE APP"
+    installApp: "INSTALL MOBILE APP"
   },
   Marathi: {
     schoolName: "स्पोर्ट्स ॲप",
@@ -132,16 +132,16 @@ const translations = {
     performanceLeader: "सर्वोत्कृष्ट खेळाडू",
     studentExcellence: "विद्यार्थी उत्कृष्टता",
     congratulations: "अभिनंदन!",
-    excellenceDesc: "तांत्रिक कौशल्ये आणि शारीरिक मूल्यमापन चाचण्यांमध्ये उत्कृष्ट कामगिरी. शाळेचा अभिमान उंचावला!",
+    excellenceDesc: "तांत्रिक कौशल्ये आणि शारीरिक मूल्यमापन चाचण्यांमध्ये उत्कृष्ट कामगिरी.",
     topSquadRanking: "अव्वल संघ रँकिंग",
     calculatedPerformanceHub: "कार्यप्रदर्शन केंद्र",
     loadingRegistry: "रजिस्ट्री सिंक होत आहे...",
     loadingHallOfFame: "हॉल ऑफ फेम लोड होत आहे...",
     noAthletes: "अजून कोणतेही खेळाडू नोंदणीकृत नाहीत.",
-    registerFirst: "हॉल ऑफ फेम पाहण्यासाठी कृपया 'नोंदणी' टॅबमध्ये विद्यार्थी नोंदवा.",
+    registerFirst: "नोंदणी टॅबमध्ये विद्यार्थी नोंदवा.",
     selectHub: "व्यवस्थापन विभाग निवडा",
-    sportsHubDesc: "खेळाडू, कामगिरीचे गुण आणि स्पर्धा रोस्टर व्यवस्थापित करा.",
-    studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि शारीरिक नोंदणी व्यवस्थापित करा.",
+    sportsHubDesc: "खेळाडू, कामगिरीचे गुण आणि स्पर्धा व्यवस्थापित करा.",
+    studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि नोंदणी व्यवस्थापित करा.",
     enter: "प्रवेश करा",
     institutionalStack: "संस्थात्मक स्टॅक V3.0",
     tribalLogoHint: "शासकीय क्रीडा व्यवस्थापन प्रणाली",
@@ -154,7 +154,7 @@ const translations = {
     classes: "वर्ग",
     activities: "शालेय उपक्रम",
     reports: "अहवाल",
-    installApp: "मोबाईल ॲप म्हणून इंस्टॉल करा"
+    installApp: "मोबाईल ॲप इंस्टॉल करा"
   }
 };
 
@@ -178,9 +178,7 @@ export default function WaghambaApp() {
     }
   }, [isEntered, user, isUserLoading, auth]);
 
-  const handleStartHub = () => {
-    setIsEntered(true);
-  };
+  const handleStartHub = () => setIsEntered(true);
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
@@ -192,7 +190,7 @@ export default function WaghambaApp() {
     setIsTabChanging(true);
     setActiveTab(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setIsTabChanging(false), 200);
+    setTimeout(() => setIsTabChanging(false), 150);
   };
 
   const topPerformers = useMemo(() => {
@@ -225,76 +223,64 @@ export default function WaghambaApp() {
   }, [schoolData.data.players]);
 
   const totalStudentCount = Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0);
-
   const bestPlayer = topPerformers[0];
   const profile = schoolData.data.schoolProfile;
 
   if (!isEntered) {
     return (
-      <div className="min-h-screen bg-[#000000] flex items-center justify-center p-6 relative overflow-hidden text-white">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+      <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
-        <div className="max-w-2xl w-full text-center space-y-12 relative z-10">
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="w-40 h-40 bg-white rounded-[3.5rem] flex items-center justify-center mx-auto border shadow-2xl overflow-hidden ios-card-shadow ios-spring">
+        <div className="max-w-xl w-full text-center space-y-10 relative z-10">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto border-4 border-accent shadow-xl overflow-hidden active-scale">
               {LOGO ? (
                 <Image 
                   src={LOGO.imageUrl} 
                   alt="Sports App Logo" 
-                  width={110} 
-                  height={110} 
-                  className="object-contain p-4"
-                  data-ai-hint="Sports Logo"
+                  width={80} 
+                  height={80} 
+                  className="object-contain"
                 />
               ) : (
-                <Trophy className="w-16 h-16 text-primary" />
+                <Trophy className="w-12 h-12 text-primary" />
               )}
             </div>
             
-            <div className="space-y-6">
-              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none px-4 uppercase">
+            <div className="space-y-4">
+              <h1 className="text-5xl font-black text-primary tracking-tight leading-none px-4 uppercase">
                 {t.schoolName}
               </h1>
-              <div className="flex items-center justify-center gap-4">
-                <div className="h-px w-12 bg-white/20" />
-                <p className="text-accent font-black tracking-[0.4em] text-[11px] uppercase opacity-90">
-                  {t.tribalLogoHint}
-                </p>
-                <div className="h-px w-12 bg-white/20" />
-              </div>
+              <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">
+                {t.tribalLogoHint}
+              </p>
             </div>
           </div>
 
-          <div className="pt-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 space-y-4">
+          <div className="pt-8 animate-in fade-in slide-in-from-bottom-12 duration-700 delay-200 space-y-4">
             <Button 
               onClick={handleStartHub}
-              className="group w-full bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active-scale"
+              className="group w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xl h-20 rounded-[1.5rem] shadow-xl transition-all active-scale"
             >
               {t.enter}
-              <ArrowRight className="ml-4 w-10 h-10 group-hover:translate-x-2 transition-transform" />
+              <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </Button>
             
             {isInstallable && (
               <Button 
-                id="installBtn"
                 onClick={installApp}
                 variant="outline"
-                className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-md text-white font-black text-sm h-14 rounded-2xl shadow-lg active-scale uppercase tracking-widest hover:bg-white/10"
+                className="w-full border-2 border-primary/10 bg-white text-primary font-black text-xs h-12 rounded-xl active-scale uppercase tracking-widest hover:bg-muted"
               >
-                <Smartphone className="mr-3 w-5 h-5 text-accent" />
+                <Smartphone className="mr-2 w-4 h-4" />
                 {t.installApp}
               </Button>
             )}
 
-            <div className="mt-12 flex flex-col items-center gap-2">
-              <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.6em]">
-                {t.institutionalStack}
-              </p>
-              <div className="flex gap-1.5">
-                {[1, 2, 3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-accent/20" />)}
-              </div>
-            </div>
+            <p className="text-muted-foreground/30 text-[9px] font-black uppercase tracking-[0.5em] pt-8">
+              {t.institutionalStack}
+            </p>
           </div>
         </div>
       </div>
@@ -303,15 +289,10 @@ export default function WaghambaApp() {
 
   if (isUserLoading || !schoolData.isLoaded) {
     return (
-      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
-        <div className="text-center space-y-8">
-          <div className="relative">
-            <Loader2 className="w-16 h-16 animate-spin text-accent mx-auto" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            </div>
-          </div>
-          <p className="font-black text-white tracking-[0.4em] uppercase text-xs animate-pulse">{t.loadingRegistry}</p>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-accent mx-auto" />
+          <p className="font-black text-muted-foreground tracking-widest uppercase text-xs animate-pulse">{t.loadingRegistry}</p>
         </div>
       </div>
     );
@@ -319,59 +300,55 @@ export default function WaghambaApp() {
 
   if (!selectedSection) {
     return (
-      <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 relative text-white">
-        <div className="max-w-5xl w-full space-y-16 text-center animate-in fade-in zoom-in-95 duration-700">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 bg-white/5 px-6 py-2 rounded-full border border-white/10 text-accent font-black uppercase text-[10px] tracking-widest mb-4">
-              <MapPin className="w-3 h-3" /> {profile.taluka}, {profile.district} • {profile.schoolName}
+      <div className="min-h-screen bg-muted/20 flex flex-col items-center justify-center p-6 relative">
+        <div className="max-w-4xl w-full space-y-12 text-center animate-in fade-in zoom-in-95 duration-500">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-border text-primary font-black uppercase text-[10px] tracking-widest mb-2 shadow-sm">
+              <MapPin className="w-3 h-3 text-accent" /> {profile.taluka}, {profile.district} • {profile.schoolName}
             </div>
-            <h2 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tight leading-none">
+            <h2 className="text-4xl md:text-6xl font-black text-primary uppercase tracking-tight leading-none">
               {t.selectHub}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <button 
               onClick={() => handleSectionSelect('sports')}
-              className="bg-zinc-900 border-2 border-white/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-accent hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
+              className="bg-white border-2 border-transparent rounded-[2.5rem] p-10 text-left transition-all hover:border-accent hover:shadow-2xl active-scale shadow-lg group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-bl-[3rem] group-hover:scale-150 transition-transform" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-accent rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:rotate-12 transition-transform">
-                  <Medal className="w-8 h-8 text-accent-foreground" />
+                <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center mb-6 shadow-md group-hover:rotate-6 transition-transform">
+                  <Medal className="w-7 h-7 text-accent-foreground" />
                 </div>
-                <h3 className="text-4xl font-black text-white uppercase mb-4 tracking-tight">{t.sportsHub}</h3>
-                <p className="text-zinc-400 font-semibold text-xl leading-relaxed opacity-80">
+                <h3 className="text-3xl font-black text-primary uppercase mb-3 tracking-tight">{t.sportsHub}</h3>
+                <p className="text-muted-foreground font-medium text-sm leading-relaxed opacity-80">
                   {t.sportsHubDesc}
                 </p>
-                <div className="mt-8 flex items-center gap-2 text-accent font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
-                  Open Hub <ChevronRight className="w-5 h-5" />
+                <div className="mt-8 flex items-center gap-2 text-accent font-black uppercase text-[10px] tracking-widest">
+                  Open Portal <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
             </button>
 
             <button 
               onClick={() => handleSectionSelect('general')}
-              className="bg-zinc-900 border-2 border-white/5 rounded-[3.5rem] p-12 text-left transition-all hover:border-white/20 hover:shadow-2xl active:scale-[0.96] shadow-xl group relative overflow-hidden"
+              className="bg-white border-2 border-transparent rounded-[2.5rem] p-10 text-left transition-all hover:border-primary/20 hover:shadow-2xl active-scale shadow-lg group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-[4rem] group-hover:scale-150 transition-transform" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[3rem] group-hover:scale-150 transition-transform" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center mb-8 shadow-lg group-hover:-rotate-12 transition-transform">
-                  <GraduationCap className="w-8 h-8 text-black" />
+                <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-md group-hover:-rotate-6 transition-transform">
+                  <GraduationCap className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-4xl font-black text-white uppercase mb-4 tracking-tight">{t.studentRegistry}</h3>
-                <p className="text-zinc-400 font-semibold text-xl leading-relaxed opacity-80">
+                <h3 className="text-3xl font-black text-primary uppercase mb-3 tracking-tight">{t.studentRegistry}</h3>
+                <p className="text-muted-foreground font-medium text-sm leading-relaxed opacity-80">
                   {t.studentRegistryDesc}
                 </p>
-                <div className="mt-8 flex items-center gap-2 text-white font-black uppercase text-sm tracking-widest group-hover:gap-4 transition-all">
-                  Access Registry <ChevronRight className="w-5 h-5" />
+                <div className="mt-8 flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest">
+                  Access Registry <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
             </button>
-          </div>
-          
-          <div className="pt-8">
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.8em]">ADMIN: {profile.teacherName}</p>
           </div>
         </div>
       </div>
@@ -379,59 +356,59 @@ export default function WaghambaApp() {
   }
 
   const sportsTabs = [
-    { id: "home", label: t.home, icon: Home, color: "text-accent bg-accent/10" },
-    { id: "registration", label: t.register, icon: User, color: "text-emerald-400 bg-emerald-500/10" },
-    { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-400 bg-purple-500/10" },
-    { id: "tournament", label: t.tourney, icon: ClipboardList, color: "text-amber-400 bg-amber-500/10" },
-    { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-400 bg-rose-500/10" },
-    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-400 bg-indigo-500/10" },
-    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-400 bg-teal-500/10" },
-    { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-400 bg-orange-500/10" },
-    { id: "sports-skills", label: t.skills, icon: Trophy, color: "text-yellow-400 bg-yellow-500/10" },
-    { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-400 bg-cyan-500/10" },
-    { id: "health", label: t.health, icon: Stethoscope, color: "text-red-400 bg-red-500/10" },
-    { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-400 bg-fuchsia-500/10" },
+    { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
+    { id: "registration", label: t.register, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
+    { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "tournament", label: t.tourney, icon: Trophy, color: "text-amber-600 bg-amber-50" },
+    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
+    { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
+    { id: "sports-skills", label: t.skills, icon: Medal, color: "text-yellow-600 bg-yellow-50" },
+    { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-600 bg-cyan-50" },
+    { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
+    { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
+    { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
   ];
 
   const generalTabs = [
-    { id: "home", label: t.home, icon: Home, color: "text-accent bg-accent/10" },
-    { id: "registration", label: t.enroll, icon: User, color: "text-emerald-400 bg-emerald-500/10" },
-    { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-400 bg-indigo-500/10" },
-    { id: "activities", label: t.activities, icon: Zap, color: "text-amber-400 bg-amber-500/10" },
-    { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-400 bg-rose-500/10" },
+    { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
+    { id: "registration", label: t.enroll, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
+    { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
+    { id: "activities", label: t.activities, icon: Zap, color: "text-amber-600 bg-amber-50" },
+    { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-600 bg-rose-50" },
   ];
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="min-h-screen bg-[#000000] pb-20 md:pb-8 text-white">
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10 py-4 px-6 shadow-sm">
+    <div className="min-h-screen bg-muted/10 pb-12">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-border py-4 px-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-accent p-2.5 rounded-2xl w-12 h-12 flex items-center justify-center shadow-lg active-scale">
+            <div className="bg-accent p-2 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm">
               {LOGO ? (
-                <Image src={LOGO.imageUrl} alt="Logo" width={32} height={32} />
+                <Image src={LOGO.imageUrl} alt="Logo" width={28} height={28} />
               ) : (
-                <Trophy className="w-7 h-7 text-black" />
+                <Trophy className="w-6 h-6 text-black" />
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase text-white leading-none tracking-tight">
+              <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
               </h1>
-              <p className="text-[10px] font-black text-accent uppercase mt-1 tracking-widest">{profile.schoolName}</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest truncate max-w-[200px]">{profile.schoolName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col items-end mr-4 text-right">
-              <span className="text-[10px] font-black text-white uppercase leading-tight">{profile.teacherName}</span>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase">{profile.taluka}, {profile.district}</span>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex flex-col items-end text-right">
+              <span className="text-[10px] font-black text-primary uppercase">{profile.teacherName}</span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase">{profile.taluka}</span>
             </div>
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm" 
               onClick={() => setSelectedSection(null)}
-              className="text-[10px] font-black text-white uppercase bg-white/5 hover:bg-white/10 rounded-full px-5 h-9 border border-white/10"
+              className="text-[9px] font-black uppercase bg-white rounded-full h-8 px-4 border-border hover:bg-muted"
             >
               {t.switchHub}
             </Button>
@@ -439,40 +416,40 @@ export default function WaghambaApp() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8">
+      <main className="max-w-7xl mx-auto p-4 md:p-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
-          <div className="overflow-x-auto pb-4 scrollbar-hide">
-            <TabsList className="bg-zinc-900/50 p-2 flex gap-3 rounded-2xl min-w-max border border-white/5 h-auto">
+          <div className="overflow-x-auto pb-2 scrollbar-hide">
+            <TabsList className="bg-white p-1 flex gap-2 rounded-2xl min-w-max border border-border h-auto shadow-sm">
               {currentTabs.map((tab) => (
                 <TabsTrigger 
                   key={tab.id}
                   value={tab.id} 
                   className={cn(
-                    "rounded-xl px-6 py-4 font-black text-[12px] uppercase tracking-wider transition-all shadow-sm flex flex-col items-center gap-2 min-w-[110px]",
-                    "data-[state=active]:shadow-xl data-[state=active]:scale-110 data-[state=active]:z-10 data-[state=active]:bg-accent data-[state=active]:text-black",
+                    "rounded-xl px-4 py-3 font-black text-[11px] uppercase tracking-wider transition-all flex flex-col items-center gap-1.5 min-w-[90px]",
+                    "data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg active-scale",
                     !activeTab.includes(tab.id) && tab.color
                   )}
                 >
-                  <tab.icon className="w-5 h-5" /> {tab.label}
+                  <tab.icon className="w-4 h-4" /> {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
           </div>
 
-          <div className="relative min-h-[500px]">
+          <div className="relative">
             {isTabChanging && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-[3rem]">
-                <Loader2 className="w-16 h-16 animate-spin text-accent" />
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-[2rem]">
+                <Loader2 className="w-10 h-10 animate-spin text-accent" />
               </div>
             )}
 
             <TabsContent value="home" className="mt-0">
               {selectedSection === 'sports' ? (
-                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="space-y-8 animate-in fade-in duration-500">
                   {bestPlayer ? (
-                    <Card className="border-0 rounded-[4rem] shadow-2xl bg-zinc-900 overflow-hidden ios-spring">
+                    <Card className="border-0 rounded-[2.5rem] shadow-xl bg-white overflow-hidden ios-spring">
                       <div className="grid grid-cols-1 lg:grid-cols-2">
-                        <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[450px]">
+                        <div className="relative aspect-[4/3] lg:aspect-auto min-h-[350px]">
                           {bestPlayer.photoUrl ? (
                             <Image 
                               src={bestPlayer.photoUrl} 
@@ -482,47 +459,43 @@ export default function WaghambaApp() {
                               unoptimized
                             />
                           ) : (
-                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-                              <User className="w-32 h-32 text-zinc-700 opacity-20" />
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                              <User className="w-24 h-24 text-muted-foreground/20" />
                             </div>
                           )}
-                          <div className="absolute top-10 left-10">
-                            <Badge className="bg-yellow-400 text-black font-black text-xs px-8 py-3 rounded-full shadow-2xl flex items-center gap-3 border-4 border-black/20">
-                              <Crown className="w-5 h-5" /> {t.performanceLeader}
+                          <div className="absolute top-6 left-6">
+                            <Badge className="bg-accent text-black font-black text-[10px] px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-white/50">
+                              <Crown className="w-4 h-4" /> {t.performanceLeader}
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-12 lg:p-24 flex flex-col justify-center space-y-10 bg-gradient-to-br from-zinc-900 to-black text-white relative">
-                          <div className="absolute top-0 right-0 p-12 opacity-5">
-                            <Trophy className="w-80 h-80" />
-                          </div>
-                          
-                          <div className="space-y-6 relative z-10">
-                            <h3 className="text-[12px] font-black uppercase tracking-[0.6em] text-accent">{t.studentExcellence}</h3>
-                            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tight leading-none">
+                        <div className="p-10 lg:p-16 flex flex-col justify-center space-y-8 bg-white border-l border-border">
+                          <div className="space-y-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">{t.studentExcellence}</h3>
+                            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none text-primary">
                               {bestPlayer.name}
                             </h2>
-                            <div className="flex flex-wrap gap-4 pt-4">
-                              <Badge variant="outline" className="text-white border-white/40 font-black uppercase text-sm px-6 py-2 rounded-full backdrop-blur-md">
+                            <div className="flex flex-wrap gap-3 pt-2">
+                              <Badge variant="outline" className="text-primary border-primary/20 font-black uppercase text-[10px] px-4 py-1 rounded-full">
                                 Std {bestPlayer.std}
                               </Badge>
-                              <Badge className="bg-accent text-black font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg">
+                              <Badge className="bg-primary text-white font-black uppercase text-[10px] px-4 py-1 rounded-full shadow-sm">
                                 Score: {bestPlayer.performance.toFixed(0)}
                               </Badge>
-                              <Badge className="bg-white/10 text-white font-black uppercase text-sm px-6 py-2 rounded-full border-0">
+                              <Badge className="bg-muted text-muted-foreground font-black uppercase text-[10px] px-4 py-1 rounded-full border-0">
                                 Level: {bestPlayer.latestStatus || 'A'}
                               </Badge>
                             </div>
                           </div>
 
-                          <div className="bg-white/5 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl relative z-10">
-                            <div className="flex items-center gap-5">
-                              <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center shadow-xl">
-                                <Award className="w-10 h-10 text-black" />
+                          <div className="bg-muted/50 p-8 rounded-[2rem] border border-border space-y-4 shadow-inner">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center shadow-md">
+                                <Award className="w-7 h-7 text-black" />
                               </div>
-                              <h4 className="text-3xl font-black uppercase tracking-tight">{t.congratulations}</h4>
+                              <h4 className="text-2xl font-black uppercase tracking-tight text-primary">{t.congratulations}</h4>
                             </div>
-                            <p className="text-zinc-400 font-semibold text-xl leading-relaxed italic opacity-90">
+                            <p className="text-muted-foreground font-semibold text-lg leading-relaxed italic">
                               "{t.excellenceDesc}"
                             </p>
                           </div>
@@ -530,63 +503,54 @@ export default function WaghambaApp() {
                       </div>
                     </Card>
                   ) : (
-                    <Card className="border-0 rounded-[4rem] shadow-sm bg-zinc-900/50 p-24 text-center space-y-6">
-                      {schoolData.isLoaded ? (
-                        <>
-                          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto">
-                            <UserPlus className="w-10 h-10 text-accent opacity-20" />
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="text-2xl font-black text-white uppercase">{t.noAthletes}</h4>
-                            <p className="text-zinc-500 font-medium max-w-sm mx-auto">{t.registerFirst}</p>
-                          </div>
-                          <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-accent text-black font-black hover:bg-accent/90">
-                            Go to Registration <ArrowRight className="ml-2 w-4 h-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Loader2 className="w-16 h-16 animate-spin text-accent mx-auto mb-6" />
-                          <p className="font-black text-white uppercase tracking-[0.4em] text-sm">{t.loadingHallOfFame}</p>
-                        </>
-                      )}
+                    <Card className="border-2 border-dashed rounded-[2.5rem] shadow-sm bg-white p-20 text-center space-y-6">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                        <UserPlus className="w-8 h-8 text-muted-foreground/30" />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-xl font-black text-primary uppercase">{t.noAthletes}</h4>
+                        <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{t.registerFirst}</p>
+                      </div>
+                      <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary text-white font-black">
+                        Go to Registration
+                      </Button>
                     </Card>
                   )}
 
-                  {topPerformers.length > 0 && (
-                    <div className="space-y-10">
-                      <div className="flex items-center justify-between px-6">
-                        <h3 className="text-4xl font-black text-white uppercase tracking-tight flex items-center gap-4">
-                          <Star className="w-10 h-10 text-accent fill-accent" /> {t.topSquadRanking}
+                  {topPerformers.length > 1 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between px-4">
+                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
+                          <Star className="w-6 h-6 text-accent fill-accent" /> {t.topSquadRanking}
                         </h3>
-                        <p className="hidden md:block text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em]">{t.calculatedPerformanceHub}</p>
+                        <p className="hidden md:block text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">{t.calculatedPerformanceHub}</p>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
-                        {topPerformers.slice(1, 9).map((player, idx) => (
-                          <Card key={player.id} className="border-2 border-white/5 rounded-[3.5rem] overflow-hidden hover:border-accent hover:shadow-2xl transition-all group active:scale-[0.95] shadow-xl bg-zinc-900">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        {topPerformers.slice(1, 11).map((player, idx) => (
+                          <Card key={player.id} className="border-2 border-transparent rounded-[2rem] overflow-hidden hover:border-accent shadow-lg bg-white group active-scale">
                             <div className="relative aspect-square">
                               {player.photoUrl ? (
-                                <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
+                                <Image src={player.photoUrl} alt={player.name} fill className="object-cover" unoptimized />
                               ) : (
-                                <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-                                  <User className="w-16 h-16 text-zinc-600 opacity-20" />
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <User className="w-10 h-10 text-muted-foreground/20" />
                                 </div>
                               )}
-                              <div className="absolute top-6 left-6">
-                                <Badge className="bg-black/95 text-accent font-black shadow-xl border-0 h-10 w-10 flex items-center justify-center p-0 rounded-2xl group-hover:bg-accent group-hover:text-black transition-colors">
+                              <div className="absolute top-4 left-4">
+                                <Badge className="bg-black/80 text-accent font-black shadow-lg border-0 h-8 w-8 flex items-center justify-center p-0 rounded-lg">
                                   #{idx + 2}
                                 </Badge>
                               </div>
                             </div>
-                            <CardContent className="p-8 space-y-5">
-                              <div className="space-y-1">
-                                <h4 className="font-black text-white uppercase text-xl truncate">{player.name}</h4>
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] opacity-60">Std {player.std} • {player.latestStatus || 'B'}</p>
+                            <CardContent className="p-5 space-y-3">
+                              <div className="space-y-0.5">
+                                <h4 className="font-black text-primary uppercase text-sm truncate">{player.name}</h4>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase">Std {player.std} • {player.latestStatus || 'B'}</p>
                               </div>
-                              <div className="flex justify-between items-center pt-4 border-t border-dashed border-white/10">
-                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Fitness Index</span>
-                                <span className="text-2xl font-black text-accent">{player.fitnessScore || '0'}%</span>
+                              <div className="flex justify-between items-center pt-3 border-t border-muted">
+                                <span className="text-[8px] font-black text-muted-foreground uppercase">Fitness</span>
+                                <span className="text-sm font-black text-primary">{player.fitnessScore || '0'}%</span>
                               </div>
                             </CardContent>
                           </Card>
@@ -596,72 +560,61 @@ export default function WaghambaApp() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                  <div className="bg-gradient-to-br from-zinc-900 to-black p-16 rounded-[4rem] shadow-2xl relative overflow-hidden text-white border border-white/5">
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <div className="bg-white p-12 rounded-[2.5rem] shadow-xl relative overflow-hidden border border-border">
                     <div className="relative z-10 space-y-10">
-                      <div className="flex items-center gap-8">
-                        <div className="w-24 h-24 bg-white/5 backdrop-blur-xl rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/10">
-                          <UsersRound className="w-12 h-12 text-accent" />
+                      <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
+                          <UsersRound className="w-8 h-8 text-primary" />
                         </div>
-                        <div className="space-y-2">
-                          <h2 className="text-6xl font-black uppercase tracking-tight">{t.registrySummary}</h2>
-                          <p className="text-xl font-medium text-zinc-400 leading-relaxed max-w-xl">{t.registryDesc}</p>
+                        <div className="space-y-1">
+                          <h2 className="text-4xl font-black text-primary uppercase tracking-tight">{t.registrySummary}</h2>
+                          <p className="text-sm font-medium text-muted-foreground max-w-xl">{t.registryDesc}</p>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="bg-white/5 backdrop-blur-md p-10 rounded-[3rem] border border-white/10 shadow-xl space-y-3">
-                          <span className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em]">{t.totalStudents}</span>
-                          <p className="text-6xl font-black text-white leading-none">{totalStudentCount}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-muted/30 p-8 rounded-3xl border border-border shadow-inner space-y-2">
+                          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">{t.totalStudents}</span>
+                          <p className="text-5xl font-black text-primary leading-none">{totalStudentCount}</p>
                         </div>
-                        <div className="bg-emerald-500/10 backdrop-blur-md p-10 rounded-[3rem] border border-emerald-400/20 shadow-xl space-y-3">
-                          <span className="text-[11px] font-black text-emerald-400/50 uppercase tracking-[0.4em]">{t.boysLabel}</span>
-                          <p className="text-6xl font-black text-emerald-400 leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
+                        <div className="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 shadow-sm space-y-2">
+                          <span className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.3em]">{t.boysLabel}</span>
+                          <p className="text-5xl font-black text-emerald-700 leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
                         </div>
-                        <div className="bg-accent/10 backdrop-blur-md p-10 rounded-[3rem] border border-accent/20 shadow-xl space-y-3">
-                          <span className="text-[11px] font-black text-accent/50 uppercase tracking-[0.4em]">{t.girlsLabel}</span>
-                          <p className="text-6xl font-black text-accent leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
+                        <div className="bg-accent/10 p-8 rounded-3xl border border-accent/20 shadow-sm space-y-2">
+                          <span className="text-[9px] font-black text-accent uppercase tracking-[0.3em]">{t.girlsLabel}</span>
+                          <p className="text-5xl font-black text-primary leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
                         </div>
                       </div>
                     </div>
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full translate-x-1/3 -translate-y-1/3 blur-[100px]" />
                   </div>
 
-                  <div className="space-y-10">
-                    <div className="flex items-center justify-between px-8">
-                      <h3 className="text-4xl font-black text-white uppercase tracking-tight flex items-center gap-4">
-                        <ClipboardList className="w-10 h-10 text-accent" /> {t.classWise}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between px-4">
+                      <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
+                        <ClipboardList className="w-6 h-6 text-accent" /> {t.classWise}
                       </h3>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 px-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5 px-1">
                       {Object.entries(classSummaries).map(([std, stats]) => (
                         <Card 
                           key={std} 
                           onClick={() => handleTabChange(`classes`)}
-                          className="border-2 border-white/5 rounded-[3.5rem] p-10 hover:border-accent transition-all cursor-pointer group active:scale-[0.96] shadow-xl bg-zinc-900 relative overflow-hidden ios-spring"
+                          className="border-2 border-transparent rounded-[2rem] p-6 hover:border-primary shadow-lg bg-white transition-all cursor-pointer group active-scale"
                         >
-                          <div className="relative z-10 space-y-8">
+                          <div className="space-y-4">
                             <div className="flex justify-between items-start">
-                              <div className="bg-white/5 p-5 rounded-[1.5rem] group-hover:bg-accent group-hover:text-black transition-all shadow-inner">
-                                <GraduationCap className="w-10 h-10 text-white group-hover:text-black" />
+                              <div className="bg-muted p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-all">
+                                <GraduationCap className="w-6 h-6" />
                               </div>
-                              <Badge className="bg-accent text-black font-black text-2xl px-6 py-2 rounded-full shadow-lg">Std {std}</Badge>
+                              <Badge className="bg-accent text-black font-black text-lg px-3 py-0.5 rounded-lg shadow-sm">Std {std}</Badge>
                             </div>
-                            
-                            <div className="space-y-5">
-                              <div className="flex justify-between items-end border-b-2 border-dashed border-white/10 pb-3">
-                                <span className="text-zinc-500 font-black text-[11px] uppercase tracking-widest">{t.totalStudents}</span>
-                                <span className="text-4xl font-black text-white">{stats.total}</span>
-                              </div>
-                              <div className="flex justify-between text-[11px] font-black text-zinc-500 uppercase tracking-widest opacity-60">
-                                <span>{stats.boys} {t.boysLabel}</span>
-                                <span>{stats.girls} {t.girlsLabel}</span>
-                              </div>
+                            <div className="flex justify-between items-end border-b border-muted pb-2">
+                              <span className="text-[8px] font-black text-muted-foreground uppercase">Total</span>
+                              <span className="text-2xl font-black text-primary">{stats.total}</span>
                             </div>
-                          </div>
-                          <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
-                            <ChevronRight className="w-8 h-8 text-accent" />
                           </div>
                         </Card>
                       ))}

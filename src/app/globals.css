@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,11 +5,11 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --foreground: 0 0% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 10%;
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 96%;
@@ -24,26 +23,21 @@
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 0 0% 0%;
-    --radius: 1.5rem;
-    --chart-1: 0 0% 0%;
-    --chart-2: 0 0% 20%;
-    --chart-3: 0 0% 40%;
-    --chart-4: 0 0% 60%;
-    --chart-5: 0 0% 80%;
+    --radius: 1.25rem;
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 3%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 3%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
     --muted-foreground: 0 0% 65%;
     --accent: 75 100% 45%;
     --accent-foreground: 0 0% 0%;
@@ -67,48 +61,23 @@
 
 @layer utilities {
   .ios-spring {
-    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   }
   
   .ios-blur {
-    @apply backdrop-blur-2xl bg-white/80;
+    @apply backdrop-blur-2xl bg-white/90;
   }
 
   .ios-card-shadow {
-    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 5px 15px -5px rgba(0, 0, 0, 0.02);
   }
 
   .active-scale {
-    @apply active:scale-[0.96] transition-transform duration-200;
+    @apply active:scale-[0.97] transition-transform duration-150;
   }
 
   .ios-list-item {
-    @apply flex items-center justify-between py-5 px-6 bg-white active:bg-muted/50 transition-colors first:rounded-t-[2.5rem] last:rounded-b-[2.5rem] border-b last:border-b-0 border-muted;
-  }
-
-  .animate-success-pulse {
-    animation: success-pulse 1s cubic-bezier(0.4, 0, 0.6, 1);
-  }
-}
-
-@keyframes success-pulse {
-  0% { background-color: transparent; }
-  50% { background-color: hsl(var(--accent) / 0.3); }
-  100% { background-color: transparent; }
-}
-
-.tab-content-enter {
-  animation: ios-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes ios-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    @apply flex items-center justify-between py-4 px-5 bg-white active:bg-muted/50 transition-colors border-b last:border-b-0 border-muted;
   }
 }
 
