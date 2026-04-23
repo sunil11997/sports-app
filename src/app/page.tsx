@@ -33,7 +33,9 @@ import {
   Crown,
   Languages,
   Dumbbell,
-  GraduationCap as ClassIcon
+  GraduationCap as ClassIcon,
+  UsersRound,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -97,7 +99,13 @@ const translations = {
     studentRegistryDesc: "Manage general student growth logs and physical registry.",
     enter: "ENTER",
     institutionalStack: "V3.0 INSTITUTIONAL STACK",
-    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन"
+    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन",
+    registrySummary: "Class Registry Overview",
+    registryDesc: "Consolidated institutional enrollment counts across all standards.",
+    totalStudents: "Total Enrollment",
+    classWise: "Standard Breakdown",
+    boysLabel: "Boys",
+    girlsLabel: "Girls"
   },
   Marathi: {
     schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
@@ -137,7 +145,13 @@ const translations = {
     studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि शारीरिक नोंदणी व्यवस्थापित करा.",
     enter: "प्रवेश करा",
     institutionalStack: "V3.0 संस्थात्मक स्टॅक",
-    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन"
+    tribalLogoHint: "आदिवासी विकास विभाग • महाराष्ट्र शासन",
+    registrySummary: "विद्यार्थी नोंदणी सारांश",
+    registryDesc: "सर्व इयत्तांमधील एकत्रित नोंदणी संख्या.",
+    totalStudents: "एकूण नावनोंदणी",
+    classWise: "इयत्तावार माहिती",
+    boysLabel: "मुले",
+    girlsLabel: "मुली"
   }
 };
 
@@ -188,6 +202,24 @@ export default function WaghambaApp() {
       return { ...p, performance, fitnessScore: fitness.score, latestStatus: fitness.status };
     }).sort((a, b) => b.performance - a.performance);
   }, [schoolData.data]);
+
+  const classSummaries = useMemo(() => {
+    const summary: Record<string, { total: number, boys: number, girls: number }> = {};
+    for (let i = 1; i <= 12; i++) {
+      summary[i.toString()] = { total: 0, boys: 0, girls: 0 };
+    }
+    
+    schoolData.data.players.filter(p => p.category === 'student').forEach(p => {
+      if (summary[p.std]) {
+        summary[p.std].total++;
+        if (p.gender === 'Male') summary[p.std].boys++;
+        else summary[p.std].girls++;
+      }
+    });
+    return summary;
+  }, [schoolData.data.players]);
+
+  const totalStudentCount = Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0);
 
   const bestPlayer = topPerformers[0];
 
@@ -375,114 +407,189 @@ export default function WaghambaApp() {
             )}
 
             <TabsContent value="home">
-              <div className="space-y-12">
-                {bestPlayer ? (
-                  <Card className="border-0 rounded-[3.5rem] shadow-2xl bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-700">
-                    <div className="grid grid-cols-1 lg:grid-cols-2">
-                      <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[400px]">
-                        {bestPlayer.photoUrl ? (
-                          <Image 
-                            src={bestPlayer.photoUrl} 
-                            alt={bestPlayer.name} 
-                            fill 
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <User className="w-32 h-32 text-muted-foreground opacity-20" />
+              {selectedSection === 'sports' ? (
+                <div className="space-y-12">
+                  {bestPlayer ? (
+                    <Card className="border-0 rounded-[3.5rem] shadow-2xl bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-700">
+                      <div className="grid grid-cols-1 lg:grid-cols-2">
+                        <div className="relative w-full aspect-[4/3] lg:aspect-auto min-h-[400px]">
+                          {bestPlayer.photoUrl ? (
+                            <Image 
+                              src={bestPlayer.photoUrl} 
+                              alt={bestPlayer.name} 
+                              fill 
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                              <User className="w-32 h-32 text-muted-foreground opacity-20" />
+                            </div>
+                          )}
+                          <div className="absolute top-8 left-8">
+                            <Badge className="bg-yellow-400 text-black font-black text-xs px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-black/10">
+                              <Crown className="w-4 h-4" /> {t.performanceLeader}
+                            </Badge>
                           </div>
-                        )}
-                        <div className="absolute top-8 left-8">
-                          <Badge className="bg-yellow-400 text-black font-black text-xs px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-black/10">
-                            <Crown className="w-4 h-4" /> {t.performanceLeader}
-                          </Badge>
+                        </div>
+                        <div className="p-10 lg:p-20 flex flex-col justify-center space-y-8 bg-gradient-to-br from-primary to-primary/90 text-white relative">
+                          <div className="absolute top-0 right-0 p-10 opacity-10">
+                            <Trophy className="w-64 h-64" />
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">{t.studentExcellence}</h3>
+                            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none">
+                              {bestPlayer.name}
+                            </h2>
+                            <div className="flex flex-wrap gap-3">
+                              <Badge variant="outline" className="text-white border-white/30 font-black uppercase px-4 py-1 rounded-full">
+                                Std {bestPlayer.std}
+                              </Badge>
+                              <Badge className="bg-accent text-accent-foreground font-black uppercase px-4 py-1 rounded-full">
+                                Score: {bestPlayer.performance.toFixed(0)}
+                              </Badge>
+                              <Badge className="bg-white/10 text-white font-black uppercase px-4 py-1 rounded-full border-0">
+                                Level: {bestPlayer.latestStatus || 'A'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 space-y-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
+                                <Award className="w-8 h-8 text-accent-foreground" />
+                              </div>
+                              <h4 className="text-2xl font-black uppercase tracking-tight">{t.congratulations}</h4>
+                            </div>
+                            <p className="text-white/80 font-medium text-lg leading-relaxed">
+                              {t.excellenceDesc}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className="p-10 lg:p-20 flex flex-col justify-center space-y-8 bg-gradient-to-br from-primary to-primary/90 text-white relative">
-                        <div className="absolute top-0 right-0 p-10 opacity-10">
-                          <Trophy className="w-64 h-64" />
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">{t.studentExcellence}</h3>
-                          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none">
-                            {bestPlayer.name}
-                          </h2>
-                          <div className="flex flex-wrap gap-3">
-                            <Badge variant="outline" className="text-white border-white/30 font-black uppercase px-4 py-1 rounded-full">
-                              Std {bestPlayer.std}
-                            </Badge>
-                            <Badge className="bg-accent text-accent-foreground font-black uppercase px-4 py-1 rounded-full">
-                              Score: {bestPlayer.performance.toFixed(0)}
-                            </Badge>
-                            <Badge className="bg-white/10 text-white font-black uppercase px-4 py-1 rounded-full border-0">
-                              Level: {bestPlayer.latestStatus || 'A'}
-                            </Badge>
-                          </div>
-                        </div>
+                    </Card>
+                  ) : (
+                    <Card className="border-0 rounded-[3rem] shadow-sm bg-muted/20 p-20 text-center">
+                      <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                      <p className="font-black text-primary uppercase">{t.loadingHallOfFame}</p>
+                    </Card>
+                  )}
 
-                        <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 space-y-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
-                              <Award className="w-8 h-8 text-accent-foreground" />
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between px-4">
+                      <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
+                        <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
+                      </h3>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t.calculatedPerformanceHub}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2">
+                      {topPerformers.slice(1, 9).map((player, idx) => (
+                        <Card key={player.id} className="border-2 border-primary/10 rounded-[2.5rem] overflow-hidden hover:border-primary transition-all group active:scale-95 shadow-lg">
+                          <div className="relative aspect-square">
+                            {player.photoUrl ? (
+                              <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <User className="w-12 h-12 text-muted-foreground opacity-20" />
+                              </div>
+                            )}
+                            <div className="absolute top-4 left-4">
+                              <Badge className="bg-white/90 text-primary font-black shadow-md border-0 h-8 w-8 flex items-center justify-center p-0 rounded-full">
+                                #{idx + 2}
+                              </Badge>
                             </div>
-                            <h4 className="text-2xl font-black uppercase tracking-tight">{t.congratulations}</h4>
                           </div>
-                          <p className="text-white/80 font-medium text-lg leading-relaxed">
-                            {t.excellenceDesc}
-                          </p>
+                          <CardContent className="p-6 bg-white space-y-4">
+                            <div className="space-y-1">
+                              <h4 className="font-black text-primary uppercase text-lg truncate">{player.name}</h4>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Std {player.std} • {player.latestStatus || 'B'}</p>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t border-dashed">
+                              <span className="text-[9px] font-black text-muted-foreground uppercase">Fitness Score</span>
+                              <span className="text-lg font-black text-primary">{player.fitnessScore || '0'}%</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-12 animate-in fade-in duration-700">
+                  <div className="bg-primary/5 p-12 rounded-[3.5rem] border-2 border-primary/10 shadow-lg relative overflow-hidden">
+                    <div className="relative z-10 space-y-6">
+                      <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center shadow-xl border border-primary/10">
+                          <UsersRound className="w-10 h-10 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h2 className="text-5xl font-black text-primary uppercase tracking-tight">{t.registrySummary}</h2>
+                          <p className="text-lg font-medium text-muted-foreground">{t.registryDesc}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-primary/5 space-y-2">
+                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t.totalStudents}</span>
+                          <p className="text-5xl font-black text-primary">{totalStudentCount}</p>
+                        </div>
+                        <div className="bg-emerald-500 p-8 rounded-[2rem] shadow-lg text-white space-y-2">
+                          <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">{t.boysLabel}</span>
+                          <p className="text-5xl font-black">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p>
+                        </div>
+                        <div className="bg-accent p-8 rounded-[2rem] shadow-lg text-accent-foreground space-y-2">
+                          <span className="text-[10px] font-black text-accent-foreground/70 uppercase tracking-widest">{t.girlsLabel}</span>
+                          <p className="text-5xl font-black">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p>
                         </div>
                       </div>
                     </div>
-                  </Card>
-                ) : (
-                  <Card className="border-0 rounded-[3rem] shadow-sm bg-muted/20 p-20 text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-                    <p className="font-black text-primary uppercase">{t.loadingHallOfFame}</p>
-                  </Card>
-                )}
-
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between px-4">
-                    <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                      <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
-                    </h3>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t.calculatedPerformanceHub}</p>
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full translate-x-1/2 -translate-y-1/2" />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2">
-                    {topPerformers.slice(1, 9).map((player, idx) => (
-                      <Card key={player.id} className="border-2 border-primary/10 rounded-[2.5rem] overflow-hidden hover:border-primary transition-all group active:scale-95 shadow-lg">
-                        <div className="relative aspect-square">
-                          {player.photoUrl ? (
-                            <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
-                          ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                              <User className="w-12 h-12 text-muted-foreground opacity-20" />
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between px-6">
+                      <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
+                        <ClipboardList className="w-8 h-8 text-primary" /> {t.classWise}
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2">
+                      {Object.entries(classSummaries).map(([std, stats]) => (
+                        <Card 
+                          key={std} 
+                          onClick={() => handleTabChange(`std-${std}`)}
+                          className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden"
+                        >
+                          <div className="relative z-10 space-y-6">
+                            <div className="flex justify-between items-start">
+                              <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                                <GraduationCap className="w-8 h-8 text-primary group-hover:text-white" />
+                              </div>
+                              <Badge className="bg-primary text-white font-black text-lg px-4 py-1 rounded-full">Std {std}</Badge>
                             </div>
-                          )}
-                          <div className="absolute top-4 left-4">
-                            <Badge className="bg-white/90 text-primary font-black shadow-md border-0 h-8 w-8 flex items-center justify-center p-0 rounded-full">
-                              #{idx + 2}
-                            </Badge>
+                            
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-end border-b border-dashed pb-2">
+                                <span className="text-muted-foreground font-black text-[10px] uppercase">{t.totalStudents}</span>
+                                <span className="text-3xl font-black text-primary">{stats.total}</span>
+                              </div>
+                              <div className="flex justify-between text-xs font-bold text-muted-foreground">
+                                <span>{stats.boys} {t.boysLabel}</span>
+                                <span>{stats.girls} {t.girlsLabel}</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <CardContent className="p-6 bg-white space-y-4">
-                          <div className="space-y-1">
-                            <h4 className="font-black text-primary uppercase text-lg truncate">{player.name}</h4>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Std {player.std} • {player.latestStatus || 'B'}</p>
+                          <div className="absolute bottom-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ChevronRight className="w-6 h-6 text-primary" />
                           </div>
-                          <div className="flex justify-between items-center pt-2 border-t border-dashed">
-                            <span className="text-[9px] font-black text-muted-foreground uppercase">Fitness Score</span>
-                            <span className="text-lg font-black text-primary">{player.fitnessScore || '0'}%</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
 
             <TabsContent value="dashboard">
