@@ -32,5 +32,10 @@ service cloud.firestore {
     match /drill_completions/{document=**} {
       allow read, write: if isSignedIn();
     }
+
+    // Catch-all for any other authenticated access during development
+    match /{document=**} {
+      allow read, write: if isSignedIn();
+    }
   }
 }
