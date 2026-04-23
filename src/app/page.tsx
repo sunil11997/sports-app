@@ -144,7 +144,7 @@ export default function WaghambaApp() {
   const [isEntered, setIsEntered] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
-  const [language, setLanguage] = useState<'English' | 'Marathi'>('Marathi');
+  const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [isTabChanging, setIsTabChanging] = useState(false);
   const schoolData = useSchoolData();
   const { isOnline } = usePWA();

@@ -14,7 +14,7 @@ export function AIAdvice({ store }: { store: any }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
-  const [language, setLanguage] = useState("Marathi");
+  const [language, setLanguage] = useState("English");
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
 

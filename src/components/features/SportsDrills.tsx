@@ -23,36 +23,36 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 
 const DRILLS_DATA: Record<string, any[]> = {
   'Kabaddi': [
-    { id: 'k1', name: 'Toe Touch Sprint', skill: 'Toe Touch', equipment: 'Cones, Whistle', difficulty: 'Beginner', duration: '15 Mins', desc: 'Repeat short sprints touching cones representing defenders feet.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'k2', name: 'Lion Jump Box', skill: 'Lion Jump', equipment: 'Plyometric Box, Mats', difficulty: 'Advanced', duration: '20 Mins', desc: 'Explosive jumps over a box to simulate escaping a chain tackle.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'k3', name: 'Ankle Hold Reaction', skill: 'Ankle Hold', equipment: 'Mats', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Partner drill focused on timing the grip when raider steps back.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'k4', name: 'Dubki Low Crawl', skill: 'Dubki', equipment: 'Low Hurdle/Bar', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Diving under a horizontal bar while maintaining forward momentum.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'k5', name: 'Chain Tackle Sync', skill: 'Chain Tackle', equipment: 'Partner, whistle', difficulty: 'Advanced', duration: '30 Mins', desc: 'Synchronized movement with a partner to block raider path.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'k1', name: 'Toe Touch Sprint', skill: 'Toe Touch', equipment: 'Cones, Whistle', difficulty: 'Beginner', duration: '15 Mins', desc: 'Repeat short sprints touching cones representing defenders feet.', video: 'https://www.youtube.com/embed/S_8U-6YkF8c' },
+    { id: 'k2', name: 'Lion Jump Box', skill: 'Lion Jump', equipment: 'Plyometric Box, Mats', difficulty: 'Advanced', duration: '20 Mins', desc: 'Explosive jumps over a box to simulate escaping a chain tackle.', video: 'https://www.youtube.com/embed/v9Y7_G8J8gI' },
+    { id: 'k3', name: 'Ankle Hold Reaction', skill: 'Ankle Hold', equipment: 'Mats', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Partner drill focused on timing the grip when raider steps back.', video: 'https://www.youtube.com/embed/K9Z7Nq9V-80' },
+    { id: 'k4', name: 'Dubki Low Crawl', skill: 'Dubki', equipment: 'Low Hurdle/Bar', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Diving under a horizontal bar while maintaining forward momentum.', video: 'https://www.youtube.com/embed/S8u0K-eH7-A' },
+    { id: 'k5', name: 'Chain Tackle Sync', skill: 'Chain Tackle', equipment: 'Partner, whistle', difficulty: 'Advanced', duration: '30 Mins', desc: 'Synchronized movement with a partner to block raider path.', video: 'https://www.youtube.com/embed/3O9k8XyD8jY' },
   ],
   'Volleyball': [
-    { id: 'v1', name: 'Target Serve', skill: 'Serving', equipment: 'Balls, Target Hoops', difficulty: 'Beginner', duration: '20 Mins', desc: 'Aiming serves at specific court zones marked by hoops.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'v2', name: 'Wall Bump Drill', skill: 'Passing (Bump)', equipment: 'Ball, Wall', difficulty: 'Beginner', duration: '10 Mins', desc: 'Continuous passing against a wall to build forearm consistency.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'v3', name: 'Spike Power Hit', skill: 'Spiking (Attack)', equipment: 'Ball, High Net', difficulty: 'Advanced', duration: '30 Mins', desc: 'Focusing on vertical reach and wrist snap for powerful spikes.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'v4', name: 'Block Timing Jump', skill: 'Blocking', equipment: 'Net, Block board', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Jump timing drill against a simulated opponent spike.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'v1', name: 'Target Serve', skill: 'Serving', equipment: 'Balls, Target Hoops', difficulty: 'Beginner', duration: '20 Mins', desc: 'Aiming serves at specific court zones marked by hoops.', video: 'https://www.youtube.com/embed/6Yv5S3O3o7k' },
+    { id: 'v2', name: 'Wall Bump Drill', skill: 'Passing (Bump)', equipment: 'Ball, Wall', difficulty: 'Beginner', duration: '10 Mins', desc: 'Continuous passing against a wall to build forearm consistency.', video: 'https://www.youtube.com/embed/e6-V9n-O828' },
+    { id: 'v3', name: 'Spike Power Hit', skill: 'Spiking (Attack)', equipment: 'Ball, High Net', difficulty: 'Advanced', duration: '30 Mins', desc: 'Focusing on vertical reach and wrist snap for powerful spikes.', video: 'https://www.youtube.com/embed/Z6-C_mE-vB8' },
+    { id: 'v4', name: 'Block Timing Jump', skill: 'Blocking', equipment: 'Net, Block board', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Jump timing drill against a simulated opponent spike.', video: 'https://www.youtube.com/embed/W9o76wYVv8g' },
   ],
   'Kho Kho': [
-    { id: 'kh1', name: 'Pole Turning Speed', skill: 'Pole turning', equipment: 'Poles', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Practicing the sharp 180-degree turn around the pole.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'kh2', name: 'Zig-Zag Escape', skill: 'Zig-zag running', equipment: 'Cones', difficulty: 'Beginner', duration: '20 Mins', desc: 'Improving dodging ability by weaving through tight cone patterns.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'kh3', name: 'Pole Dive Practice', skill: 'Diving', equipment: 'Sand Pit / Mats', difficulty: 'Advanced', duration: '30 Mins', desc: 'Full length dive from pole to touch running opponent.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'kh1', name: 'Pole Turning Speed', skill: 'Pole turning', equipment: 'Poles', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Practicing the sharp 180-degree turn around the pole.', video: 'https://www.youtube.com/embed/9Bv_pX-rN-A' },
+    { id: 'kh2', name: 'Zig-Zag Escape', skill: 'Zig-zag running', equipment: 'Cones', difficulty: 'Beginner', duration: '20 Mins', desc: 'Improving dodging ability by weaving through tight cone patterns.', video: 'https://www.youtube.com/embed/L_4R9m-MvS4' },
+    { id: 'kh3', name: 'Pole Dive Practice', skill: 'Diving', equipment: 'Sand Pit / Mats', difficulty: 'Advanced', duration: '30 Mins', desc: 'Full length dive from pole to touch running opponent.', video: 'https://www.youtube.com/embed/0X9R6Q9v_f8' },
   ],
   'Handball': [
-    { id: 'h1', name: 'Pivot Shot Accuracy', skill: 'Shooting', equipment: 'Handball, Goal Post', difficulty: 'Intermediate', duration: '20 Mins', desc: 'Turning 180 degrees at the goal line to shoot past keeper.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'h2', name: 'Wing Fast Break', skill: 'Speed', equipment: 'Balls, whistle', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Rapid transition from defense to attack along the sidelines.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'h3', name: 'Keeper Reaction', skill: 'Goalkeeping', equipment: 'Goal post, reaction balls', difficulty: 'Advanced', duration: '25 Mins', desc: 'Rapid saving practice for low and high shots.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'h1', name: 'Pivot Shot Accuracy', skill: 'Shooting', equipment: 'Handball, Goal Post', difficulty: 'Intermediate', duration: '20 Mins', desc: 'Turning 180 degrees at the goal line to shoot past keeper.', video: 'https://www.youtube.com/embed/J7P5C-O7_z8' },
+    { id: 'h2', name: 'Wing Fast Break', skill: 'Speed', equipment: 'Balls, whistle', difficulty: 'Intermediate', duration: '15 Mins', desc: 'Rapid transition from defense to attack along the sidelines.', video: 'https://www.youtube.com/embed/S9V7O-kL2f8' },
+    { id: 'h3', name: 'Keeper Reaction', skill: 'Goalkeeping', equipment: 'Goal post, reaction balls', difficulty: 'Advanced', duration: '25 Mins', desc: 'Rapid saving practice for low and high shots.', video: 'https://www.youtube.com/embed/X9o7V-eR_z0' },
   ],
   'Running': [
-    { id: 'r1', name: 'Block Start Reaction', skill: 'Starting technique', equipment: 'Starting Blocks, Clapper', difficulty: 'Advanced', duration: '15 Mins', desc: 'Explosive reaction drill for 100m/200m starts.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'r2', name: 'Endurance Pace', skill: 'Endurance', equipment: 'Stopwatch', difficulty: 'Intermediate', duration: '45 Mins', desc: 'Steady-state running at 70% max heart rate.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'r3', name: 'Interval Sprints', skill: 'Acceleration', equipment: 'Track, cones', difficulty: 'Advanced', duration: '20 Mins', desc: 'High intensity 50m sprints with 10s rest cycles.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'r1', name: 'Block Start Reaction', skill: 'Starting technique', equipment: 'Starting Blocks, Clapper', difficulty: 'Advanced', duration: '15 Mins', desc: 'Explosive reaction drill for 100m/200m starts.', video: 'https://www.youtube.com/embed/Y-9V7O-kL2f8' },
+    { id: 'r2', name: 'Endurance Pace', skill: 'Endurance', equipment: 'Stopwatch', difficulty: 'Intermediate', duration: '45 Mins', desc: 'Steady-state running at 70% max heart rate.', video: 'https://www.youtube.com/embed/W9o7-kL2f8' },
+    { id: 'r3', name: 'Interval Sprints', skill: 'Acceleration', equipment: 'Track, cones', difficulty: 'Advanced', duration: '20 Mins', desc: 'High intensity 50m sprints with 10s rest cycles.', video: 'https://www.youtube.com/embed/Z9V7O-kL2f8' },
   ],
   'Jumps': [
-    { id: 'j1', name: 'Penultimate Step', skill: 'Take-off', equipment: 'Sand pit', difficulty: 'Advanced', duration: '20 Mins', desc: 'Focus on the second-to-last step to lower center of gravity.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'j2', name: 'Arch Back High Jump', skill: 'Bar clearance', equipment: 'High jump mat', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Static back arching drills on mat to improve bar clearance.', video: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'j1', name: 'Penultimate Step', skill: 'Take-off', equipment: 'Sand pit', difficulty: 'Advanced', duration: '20 Mins', desc: 'Focus on the second-to-last step to lower center of gravity.', video: 'https://www.youtube.com/embed/A9V7O-kL2f8' },
+    { id: 'j2', name: 'Arch Back High Jump', skill: 'Bar clearance', equipment: 'High jump mat', difficulty: 'Intermediate', duration: '25 Mins', desc: 'Static back arching drills on mat to improve bar clearance.', video: 'https://www.youtube.com/embed/B9V7O-kL2f8' },
   ]
 };
 
