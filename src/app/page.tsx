@@ -16,7 +16,6 @@ import {
   Sparkles,
   School,
   Home,
-  Settings as SettingsIcon,
   FileText,
   ClipboardList,
   User,
@@ -28,7 +27,6 @@ import {
   Star,
   Award,
   Crown,
-  Languages,
   Dumbbell,
   UsersRound,
   ChevronRight,
@@ -56,7 +54,6 @@ import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { AIAdvice } from '@/components/features/AIAdvice';
 import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
-import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
 import { SchoolActivities } from '@/components/features/SchoolActivities';
 import { ClassesHub } from '@/components/features/ClassesHub';
@@ -81,7 +78,6 @@ const translations = {
     drills: "Drills",
     health: "Health",
     aiHub: "AI Hub",
-    settings: "Settings",
     enroll: "Enroll",
     registry: "Registry",
     session: "Session",
@@ -131,7 +127,6 @@ const translations = {
     drills: "सराव",
     health: "आरोग्य",
     aiHub: "AI केंद्र",
-    settings: "सेटिंग्ज",
     enroll: "नावनोंदणी",
     registry: "नोंदणी वही",
     session: "सत्र",
@@ -399,7 +394,6 @@ export default function WaghambaApp() {
     { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-600 bg-cyan-50" },
     { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
     { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
-    { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const generalTabs = [
@@ -408,7 +402,6 @@ export default function WaghambaApp() {
     { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
     { id: "activities", label: t.activities, icon: Zap, color: "text-amber-600 bg-amber-50" },
     { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-600 bg-rose-50" },
-    { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
@@ -704,10 +697,6 @@ export default function WaghambaApp() {
 
             <TabsContent value="health">
               <HealthIncidents store={schoolData} />
-            </TabsContent>
-
-            <TabsContent value="settings">
-              <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
 
             <TabsContent value="activities">
