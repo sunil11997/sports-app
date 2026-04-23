@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -37,11 +38,15 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   };
 
   const getGrade = (total: number) => {
-    if (total >= 90) return 'A+';
-    if (total >= 75) return 'A';
-    if (total >= 60) return 'B';
-    if (total >= 45) return 'C';
-    return 'D';
+    if (total >= 91) return "अ-1";
+    if (total >= 81) return "अ-2";
+    if (total >= 71) return "ब-1";
+    if (total >= 61) return "ब-2";
+    if (total >= 51) return "क-1";
+    if (total >= 41) return "क-2";
+    if (total >= 31) return "ड";
+    if (total >= 21) return "ई-1";
+    return "ई-2";
   };
 
   const handleSave = async (player: any) => {
@@ -90,7 +95,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             <tbody>
               ${playersInStd.map((p: any, i: number) => {
                 const r = store.data.fitness[p.id] || {};
-                const total = (parseFloat(r.score) || 0);
+                const total = calculateTotal(p.id);
                 return `
                   <tr>
                     <td>${i + 1}</td>
@@ -108,7 +113,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                     <td>${r.chachani || '-'}</td>
                     <td>${r.swadhyay || '-'}</td>
                     <td><strong>${total}</strong></td>
-                    <td><strong>${r.status || '-'}</strong></td>
+                    <td><strong>${getGrade(total)}</strong></td>
                   </tr>
                 `;
               }).join('')}
