@@ -13,7 +13,6 @@ import {
   Trophy, 
   Stethoscope, 
   Sparkles,
-  School,
   Home,
   FileText,
   ClipboardList,
@@ -64,8 +63,6 @@ const translations = {
     sportsHub: "Sports Hub",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
-    online: "ONLINE",
-    offline: "OFFLINE",
     home: "Home",
     register: "Register",
     roster: "Roster",
@@ -115,8 +112,6 @@ const translations = {
     sportsHub: "क्रीडा केंद्र",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
-    online: "ऑनलाइन",
-    offline: "ऑफलाइन",
     home: "मुख्यपृष्ठ",
     register: "नोंदणी",
     roster: "यादी",
@@ -202,7 +197,6 @@ export default function WaghambaApp() {
 
   const topPerformers = useMemo(() => {
     if (!schoolData.data.players) return [];
-    // Only show athletes in sports hall of fame
     const filtered = schoolData.data.players.filter(p => p.category === 'athlete');
     
     return [...filtered].map(p => {
@@ -233,12 +227,7 @@ export default function WaghambaApp() {
   const totalStudentCount = Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0);
 
   const bestPlayer = topPerformers[0];
-  const profile = schoolData.data.schoolProfile || {
-    schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-    teacherName: "सुनिल देशमुख",
-    taluka: "सटाणा",
-    district: "नाशिक"
-  };
+  const profile = schoolData.data.schoolProfile;
 
   if (!isEntered) {
     return (
@@ -280,7 +269,7 @@ export default function WaghambaApp() {
           <div className="pt-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 space-y-4">
             <Button 
               onClick={handleStartHub}
-              className="group w-full bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active:scale-[0.97]"
+              className="group w-full bg-accent hover:bg-accent/90 text-accent-foreground font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active-scale"
             >
               {t.enter}
               <ArrowRight className="ml-4 w-10 h-10 group-hover:translate-x-2 transition-transform" />
@@ -288,9 +277,10 @@ export default function WaghambaApp() {
             
             {isInstallable && (
               <Button 
+                id="installBtn"
                 onClick={installApp}
                 variant="outline"
-                className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-md text-white font-black text-sm h-14 rounded-2xl shadow-lg active:scale-[0.97] uppercase tracking-widest hover:bg-white/10"
+                className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-md text-white font-black text-sm h-14 rounded-2xl shadow-lg active-scale uppercase tracking-widest hover:bg-white/10"
               >
                 <Smartphone className="mr-3 w-5 h-5 text-accent" />
                 {t.installApp}
