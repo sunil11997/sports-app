@@ -6,13 +6,13 @@ import { PWAProvider } from '@/components/providers/pwa-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा',
-  description: 'Sports & Health Management System - Waghamba',
+  title: 'My Sports App',
+  description: 'Professional Sports & Health Management System',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
-    title: 'Waghamba Sports',
+    statusBarStyle: 'black-translucent',
+    title: 'SportsApp',
   },
 };
 
@@ -27,7 +27,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <meta name="theme-color" content="#235C36" />
+        <meta name="theme-color" content="#000000" />
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
