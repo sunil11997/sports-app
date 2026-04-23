@@ -22,17 +22,10 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker using the specific file name requested
+    // Register Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('SW Registered with scope: ', registration.scope);
-          })
-          .catch((err) => {
-            console.log('SW Registration failed: ', err);
-          });
-      });
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log("SW Registered"));
     }
 
     // Online/Offline status
@@ -60,7 +53,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // iOS/Safari detection for installation
     const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone);
     
     if (isIOS && !isStandalone) {
       setIsInstallable(true);
