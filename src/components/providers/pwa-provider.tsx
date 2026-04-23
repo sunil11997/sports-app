@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -23,17 +22,16 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
+    // Register Service Worker using the specific file name requested
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(
-          (registration) => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          },
-          (err) => {
-            console.log('ServiceWorker registration failed: ', err);
-          }
-        );
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('SW Registered with scope: ', registration.scope);
+          })
+          .catch((err) => {
+            console.log('SW Registration failed: ', err);
+          });
       });
     }
 
@@ -47,10 +45,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // Capture the installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
-      console.log('Capture beforeinstallprompt event');
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
       setIsInstallable(true);
     };
@@ -59,7 +54,6 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // Detection for already installed apps
     window.addEventListener('appinstalled', (evt) => {
-      console.log('App successfully installed');
       setIsInstallable(false);
       setDeferredPrompt(null);
     });
@@ -84,21 +78,14 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
       if (isIOS) {
         alert("To install on iOS: Tap the Share button in Safari (square with arrow) and select 'Add to Home Screen'.");
-      } else {
-        console.warn('Installation prompt not available. Check browser compatibility and HTTPS.');
       }
       return;
     }
     
-    // Show the install prompt
     deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
     deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
       }
       setDeferredPrompt(null);
       setIsInstallable(false);
