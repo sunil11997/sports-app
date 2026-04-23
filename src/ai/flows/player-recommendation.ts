@@ -162,7 +162,7 @@ const playerRecommendationFlow = ai.defineFlow(
   },
   async (input) => {
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     let lastError: any = null;
 
     while (attempts < maxAttempts) {
@@ -172,17 +172,23 @@ const playerRecommendationFlow = ai.defineFlow(
       } catch (error: any) {
         lastError = error;
         attempts++;
-        // Check if error is transient (503, demand spikes, or generic unavailable)
+        
+        // Handle Gemini 503 and other transient errors by checking message contents
+        const errorMsg = error?.message || String(error);
         const isTransient = 
-          error.message?.includes('503') || 
-          error.message?.includes('UNAVAILABLE') || 
-          error.message?.includes('demand');
+          errorMsg.includes('503') || 
+          errorMsg.includes('UNAVAILABLE') || 
+          errorMsg.includes('demand') ||
+          errorMsg.includes('overloaded');
 
         if (!isTransient || attempts >= maxAttempts) {
+          // If not a transient error or we've hit the limit, re-throw immediately
           throw error;
         }
-        // Wait with simple exponential backoff: 1s, 2s, 3s...
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+        
+        // Jittered exponential backoff: (2^attempts * 1000) + random jitter
+        const delay = Math.pow(2, attempts) * 1000 + (Math.random() * 1000);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
     throw lastError || new Error('Failed to generate AI recommendations after multiple attempts.');

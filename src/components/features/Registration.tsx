@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -38,7 +37,7 @@ const formSchema = z.object({
   examMarks: z.string().optional(),
 });
 
-export function Registration({ store, section, language = 'Marathi' }: { store: any, section: 'sports' | 'general', language?: string }) {
+export function Registration({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
