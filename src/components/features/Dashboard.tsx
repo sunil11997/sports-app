@@ -1,13 +1,36 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, Search, Save, X, Activity, Printer, Droplet, User, Medal, GraduationCap, Maximize2, Filter, Percent, Phone, Fingerprint } from 'lucide-react';
+import { 
+  Trash2, 
+  Edit, 
+  Search, 
+  Save, 
+  X, 
+  Activity, 
+  Printer, 
+  Droplet, 
+  User, 
+  Medal, 
+  GraduationCap, 
+  Maximize2, 
+  Filter, 
+  Percent, 
+  Phone, 
+  Fingerprint,
+  Camera,
+  Upload,
+  RefreshCw,
+  XCircle,
+  RotateCw,
+  Image as ImageIcon
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -26,7 +49,6 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
-const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -44,6 +66,14 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
   const [activeCategory, setActiveCategory] = useState("all");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string, name: string } | null>(null);
+
+  // Camera States for Edit Dialog
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   const isMarathi = language === 'Marathi';
   const isGeneral = section === 'general';
@@ -80,6 +110,7 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
   });
 
   const handleEditClick = (player: Player) => {
+    stopCamera();
     setEditingPlayer({ 
       ...player, 
       sports: player.sports || [],
@@ -104,10 +135,73 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
         age
       });
       setEditingPlayer(null);
+      stopCamera();
       toast({
         title: isMarathi ? "रेकॉर्ड अपडेट केले" : "Record Updated",
         description: isMarathi ? `${editingPlayer.name} चे प्रोफाइल यशस्वीरित्या अपडेट केले गेले आहे.` : `${editingPlayer.name}'s profile has been updated successfully.`,
       });
+    }
+  };
+
+  // Camera Logic for Edit Modal
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(e => console.error("Video play failed", e));
+    }
+  }, [isCameraActive, stream]);
+
+  const startCamera = async (currentMode: 'user' | 'environment' = facingMode) => {
+    stopCamera();
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: currentMode, width: { ideal: 640 }, height: { ideal: 480 } } 
+      });
+      setStream(newStream);
+      setIsCameraActive(true);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not access device camera.' });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCameraActive(false);
+  };
+
+  const takePhoto = () => {
+    if (videoRef.current && canvasRef.current && editingPlayer) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      if (context) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        if (facingMode === 'user') {
+          context.translate(canvas.width, 0);
+          context.scale(-1, 1);
+        }
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        stopCamera();
+      }
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && editingPlayer) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
+        stopCamera();
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -173,7 +267,6 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
 
   return (
     <div className="space-y-4">
-      {/* Category Tabs */}
       <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
         {CATEGORIES.map(cat => (
           <Button
@@ -344,79 +437,133 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
       </Dialog>
 
       {/* Edit Registry Dialog */}
-      <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
-        <DialogContent className="sm:max-w-[600px] rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black uppercase text-primary">{isMarathi ? 'माहिती सुधारा' : 'Edit Record'}</DialogTitle>
+      <Dialog open={!!editingPlayer} onOpenChange={(open) => { if(!open) { stopCamera(); setEditingPlayer(null); } }}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-0 shadow-2xl bg-white">
+          <DialogHeader className="bg-primary/5 p-8 border-b">
+            <DialogTitle className="text-2xl font-black uppercase text-primary flex items-center gap-3">
+              <Edit className="w-6 h-6" /> {isMarathi ? 'माहिती सुधारा' : 'Edit Registry Record'}
+            </DialogTitle>
           </DialogHeader>
+          
           {editingPlayer && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'पूर्ण नाव' : 'Full Name'}</Label>
-                  <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })} className="h-9 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'लिंग' : 'Gender'}</Label>
-                  <Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({ ...editingPlayer, gender: val })}>
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">{isMarathi ? 'पुरुष' : 'Male'}</SelectItem>
-                      <SelectItem value="Female">{isMarathi ? 'महिला' : 'Female'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'आधार कार्ड' : 'Aadhar'}</Label>
-                  <Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, aadharNumber: e.target.value })} className="h-9 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'मोबाईल' : 'Mobile'}</Label>
-                  <Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, mobileNumber: e.target.value })} className="h-9 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'जन्मतारीख' : 'DOB'}</Label>
-                  <Input type="date" value={editingPlayer.dob} onChange={(e) => setEditingPlayer({ ...editingPlayer, dob: e.target.value })} className="h-9 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold uppercase">{isMarathi ? 'इयत्ता' : 'Standard'}</Label>
-                  <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({ ...editingPlayer, std: val })}>
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...Array(12)].map((_, i) => (
-                        <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {isGeneral ? (
-                  <div className="space-y-1">
-                    <Label className="text-xs font-bold uppercase">{isMarathi ? 'परीक्षा गुण' : 'Exam Marks'}</Label>
-                    <Input type="number" value={editingPlayer.examMarks || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, examMarks: e.target.value })} className="h-9 text-sm" />
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Photo Edit Section */}
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4" /> {isMarathi ? 'ओळख फोटो' : 'Identity Photo'}
+                    </Label>
+                    {isCameraActive && (
+                      <Button variant="outline" size="sm" onClick={() => startCamera(facingMode === 'user' ? 'environment' : 'user')} className="h-7 text-[10px] font-bold uppercase">
+                        <RotateCw className="w-3 h-3 mr-1" /> {isMarathi ? 'बदला' : 'Flip'}
+                      </Button>
+                    )}
                   </div>
-                ) : (
-                  <div className="col-span-2 space-y-1">
-                    <Label className="text-xs font-bold uppercase">{isMarathi ? 'खेळ' : 'Sports'}</Label>
-                    <div className="grid grid-cols-3 gap-2 p-3 bg-muted/30 rounded-lg">
-                      {SPORTS_LIST.map(sport => (
-                        <div key={sport} className="flex items-center space-x-2">
-                          <Checkbox id={`edit-${sport}`} checked={(editingPlayer.sports || []).includes(sport)} onCheckedChange={() => toggleSportInEdit(sport)} />
-                          <label htmlFor={`edit-${sport}`} className="text-[11px] font-bold cursor-pointer uppercase">{sport}</label>
-                        </div>
-                      ))}
+                  
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border-2 border-dashed border-primary/20 bg-muted/30">
+                    {isCameraActive ? (
+                      <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                    ) : editingPlayer.photoUrl ? (
+                      <img src={editingPlayer.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+                        <Camera className="w-8 h-8 mb-2 opacity-20" />
+                        <span className="text-[10px] font-bold uppercase tracking-tight">No Photo Set</span>
+                      </div>
+                    )}
+                    
+                    {isCameraActive && (
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
+                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-10 rounded-xl">SNAP</Button>
+                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {!isCameraActive && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button type="button" size="sm" onClick={() => startCamera()} className="bg-primary h-10 font-black text-[10px] uppercase rounded-xl">
+                        <Camera className="w-3 h-3 mr-1" /> {isMarathi ? 'कॅमेरा' : 'Camera'}
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="border-2 h-10 font-black text-[10px] uppercase rounded-xl">
+                        <Upload className="w-3 h-3 mr-1" /> {isMarathi ? 'अपलोड' : 'Upload'}
+                      </Button>
                     </div>
+                  )}
+                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+                  <canvas ref={canvasRef} className="hidden" />
+                </div>
+
+                {/* Form Fields Section */}
+                <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'पूर्ण नाव' : 'Full Name'}</Label>
+                    <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
                   </div>
-                )}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'लिंग' : 'Gender'}</Label>
+                    <Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({ ...editingPlayer, gender: val })}>
+                      <SelectTrigger className="h-11 font-bold rounded-xl border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">{isMarathi ? 'पुरुष' : 'Male'}</SelectItem>
+                        <SelectItem value="Female">{isMarathi ? 'महिला' : 'Female'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Fingerprint className="w-3 h-3" /> {isMarathi ? 'आधार कार्ड' : 'Aadhar'}</Label>
+                    <Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, aadharNumber: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> {isMarathi ? 'मोबाईल' : 'Mobile'}</Label>
+                    <Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, mobileNumber: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'जन्मतारीख' : 'DOB'}</Label>
+                    <Input type="date" value={editingPlayer.dob} onChange={(e) => setEditingPlayer({ ...editingPlayer, dob: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'इयत्ता' : 'Standard'}</Label>
+                    <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({ ...editingPlayer, std: val })}>
+                      <SelectTrigger className="h-11 font-bold rounded-xl border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...Array(12)].map((_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>{i + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {isGeneral ? (
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'परीक्षा गुण' : 'Exam Marks'}</Label>
+                      <Input type="number" value={editingPlayer.examMarks || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, examMarks: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
+                    </div>
+                  ) : (
+                    <div className="col-span-2 space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'क्रीडा प्रकार' : 'Participating Sports'}</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-4 bg-muted/30 rounded-2xl border-2 border-dashed">
+                        {SPORTS_LIST.map(sport => (
+                          <div key={sport} className="flex items-center space-x-2">
+                            <Checkbox id={`edit-${sport}`} checked={(editingPlayer.sports || []).includes(sport)} onCheckedChange={() => toggleSportInEdit(sport)} />
+                            <label htmlFor={`edit-${sport}`} className="text-[11px] font-bold cursor-pointer uppercase">{sport}</label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditingPlayer(null)}>{isMarathi ? 'रद्द करा' : 'Cancel'}</Button>
-            <Button size="sm" onClick={handleUpdatePlayer}>{isMarathi ? 'बदल जतन करा' : 'Save Changes'}</Button>
+          
+          <DialogFooter className="bg-muted/10 p-8 border-t">
+            <Button variant="ghost" size="lg" onClick={() => { stopCamera(); setEditingPlayer(null); }} className="font-black uppercase text-xs tracking-widest">{isMarathi ? 'रद्द करा' : 'Cancel'}</Button>
+            <Button size="lg" onClick={handleUpdatePlayer} className="bg-primary text-white px-12 font-black uppercase text-xs tracking-widest rounded-2xl h-14 shadow-lg">{isMarathi ? 'बदल जतन करा' : 'Update Roster'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
