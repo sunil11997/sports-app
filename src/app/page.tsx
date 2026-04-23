@@ -60,7 +60,6 @@ import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
 import { SchoolActivities } from '@/components/features/SchoolActivities';
 import { ClassesHub } from '@/components/features/ClassesHub';
-import { SchoolRegistration } from '@/components/features/SchoolRegistration';
 
 const translations = {
   English: {
@@ -232,12 +231,16 @@ export default function WaghambaApp() {
   const totalStudentCount = Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0);
 
   const bestPlayer = topPerformers[0];
-  const profile = schoolData.data.schoolProfile;
+  const profile = schoolData.data.schoolProfile || {
+    schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+    teacherName: "सुनिल देशमुख",
+    taluka: "सटाणा",
+    district: "नाशिक"
+  };
 
   if (!isEntered) {
     return (
       <div className="min-h-screen bg-[#F0F4F8] flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Background Decorative Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
@@ -260,7 +263,7 @@ export default function WaghambaApp() {
             
             <div className="space-y-6">
               <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tight leading-none px-4 uppercase">
-                {profile?.schoolName || t.schoolName}
+                {profile.schoolName}
               </h1>
               <div className="flex items-center justify-center gap-4">
                 <div className="h-px w-12 bg-primary/20" />
@@ -320,11 +323,6 @@ export default function WaghambaApp() {
         </div>
       </div>
     );
-  }
-
-  // Mandatory Profile Setup
-  if (!profile) {
-    return <SchoolRegistration store={schoolData} />;
   }
 
   if (!selectedSection) {

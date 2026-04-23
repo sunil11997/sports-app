@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -158,7 +159,16 @@ export function useSchoolData() {
       skillsHistory,
       drillCompletions,
       healthIncidents: healthIncidents || [],
-      schoolProfile: schoolProfile || null
+      schoolProfile: schoolProfile || {
+        schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+        teacherName: "सुनिल देशमुख",
+        taluka: "सटाणा",
+        district: "नाशिक",
+        id: "default",
+        qualification: "B.P.Ed / M.P.Ed",
+        role: "Physical Education Director",
+        updatedAt: new Date().toISOString()
+      }
     };
   }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 

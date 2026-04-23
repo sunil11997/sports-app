@@ -1,3 +1,4 @@
+
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -12,13 +13,13 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait',
     icons: [
       {
-        src: 'https://picsum.photos/seed/school/192/192',
+        src: 'https://placehold.co/192x192/235C36/white/png?text=WGB',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable'
       },
       {
-        src: 'https://picsum.photos/seed/school/512/512',
+        src: 'https://placehold.co/512x512/235C36/white/png?text=Waghamba',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any'

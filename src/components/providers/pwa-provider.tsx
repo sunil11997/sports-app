@@ -31,8 +31,9 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Install prompt logic
+    // Capture the installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
+      console.log('Capture beforeinstallprompt event');
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Stash the event so it can be triggered later.
@@ -42,18 +43,21 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Register service worker
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(
-          (registration) => {
-            console.log('SW registered: ', registration);
-          },
-          (registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          }
-        );
-      });
+    // Detection for already installed apps
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('App successfully installed');
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    });
+
+    // iOS/Safari detection for installation
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    
+    if (isIOS && !isStandalone) {
+      // On iOS, we can't trigger a prompt, but we can show instructions
+      // For this app, we'll mark it as installable if it's not standalone
+      setIsInstallable(true);
     }
 
     return () => {
@@ -64,7 +68,15 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const installApp = () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        alert("To install on iOS: Tap the Share button in Safari (square with arrow) and select 'Add to Home Screen'.");
+      } else {
+        console.warn('Installation prompt not available. Check browser compatibility and HTTPS.');
+      }
+      return;
+    }
     
     // Show the install prompt
     deferredPrompt.prompt();
