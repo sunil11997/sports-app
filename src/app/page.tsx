@@ -59,7 +59,7 @@ import { ClassesHub } from '@/components/features/ClassesHub';
 
 const translations = {
   English: {
-    schoolName: "MY SPORTS APP",
+    schoolName: "SPORTS APP",
     sportsHub: "Sports Hub",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
@@ -108,7 +108,7 @@ const translations = {
     installApp: "INSTALL AS MOBILE APP"
   },
   Marathi: {
-    schoolName: "माय स्पोर्ट्स ॲप",
+    schoolName: "स्पोर्ट्स ॲप",
     sportsHub: "क्रीडा केंद्र",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
@@ -241,7 +241,7 @@ export default function WaghambaApp() {
               {LOGO ? (
                 <Image 
                   src={LOGO.imageUrl} 
-                  alt="My Sports App Logo" 
+                  alt="Sports App Logo" 
                   width={110} 
                   height={110} 
                   className="object-contain p-4"

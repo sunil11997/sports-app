@@ -5,20 +5,20 @@ import { PWAProvider } from '@/components/providers/pwa-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'My Sports App',
+  title: 'Sports App',
   description: 'Professional Sports & Health Management System',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'My Sports App',
+    title: 'Sports App',
   },
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.Node;
 }>) {
   return (
     <html lang="en">
