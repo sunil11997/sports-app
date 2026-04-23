@@ -23,6 +23,20 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          (registration) => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          },
+          (err) => {
+            console.log('ServiceWorker registration failed: ', err);
+          }
+        );
+      });
+    }
+
     // Online/Offline status
     setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
@@ -51,12 +65,10 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     });
 
     // iOS/Safari detection for installation
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     
     if (isIOS && !isStandalone) {
-      // On iOS, we can't trigger a prompt, but we can show instructions
-      // For this app, we'll mark it as installable if it's not standalone
       setIsInstallable(true);
     }
 
