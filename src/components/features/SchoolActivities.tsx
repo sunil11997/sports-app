@@ -41,6 +41,48 @@ const ACTIVITY_GUIDELINES: Record<string, { rules: string[], instructions: strin
       "Conclude with 5 minutes of Shavasana for full body relaxation."
     ]
   },
+  "Mindfulness Meditation": {
+    rules: [
+      "Sit in a stable Sukhasana or Padmasana position.",
+      "Keep hands in Dhyana Mudra (palms up, one on top of other).",
+      "Eyes must be gently closed or focused on a fixed point on the ground.",
+      "Strict 'no-talking' rule for the entire duration."
+    ],
+    instructions: [
+      "Begin with 3 deep 'cleansing' breaths.",
+      "Instruct students to observe thoughts without judgment (like clouds passing).",
+      "Gently bring focus back to the present moment when the mind wanders.",
+      "Conclude by rubbing palms together and placing them over the eyes."
+    ]
+  },
+  "Breath Awareness Meditation": {
+    rules: [
+      "Keep the spine, neck, and head in a straight vertical line.",
+      "Mouth should be closed; breathing only through the nostrils.",
+      "Avoid leaning against walls or other students.",
+      "Maintain a calm and peaceful internal environment."
+    ],
+    instructions: [
+      "Focus attention solely on the touch of air at the entrance of the nostrils.",
+      "Observe the natural rhythm of incoming and outgoing breath.",
+      "Do not try to control the breath; just observe it as it is.",
+      "Perform for 10-15 minutes followed by a minute of quiet sitting."
+    ]
+  },
+  "OM Chanting Meditation": {
+    rules: [
+      "Uniform chanting speed across the entire class.",
+      "Proper pronunciation of 'A-U-M' sounds.",
+      "Listen to the resonance of the group chanting.",
+      "Sit in a circle formation for better energy flow."
+    ],
+    instructions: [
+      "Take a deep breath and start with the 'A' sound from the belly.",
+      "Transition to 'U' in the chest and 'M' in the head.",
+      "Feel the vibration in the body for 2 seconds after each chant.",
+      "Repeat for 21 cycles with eyes closed and focused on the brow point."
+    ]
+  },
   "Mass PT": {
     rules: [
       "Perfect synchronization with the drum beat or whistle command.",
