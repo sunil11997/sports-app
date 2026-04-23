@@ -32,7 +32,8 @@ import {
   UserPlus,
   User,
   Download,
-  X
+  X,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
