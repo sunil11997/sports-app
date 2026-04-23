@@ -6,7 +6,7 @@ service cloud.firestore {
      * FIRESTORE SECURITY RULES
      * 
      * Allows authenticated users to manage their school's records.
-     * Flat structure is used for the current prototype implementation.
+     * Uses recursive wildcards to ensure collection listing and sub-collection access.
      */
 
     function isSignedIn() {
@@ -14,38 +14,22 @@ service cloud.firestore {
     }
 
     // Allow authenticated users to manage school profiles
-    match /schools/{schoolId} {
+    match /schools/{document=**} {
       allow read, write: if isSignedIn();
     }
 
-    // Allow authenticated users to manage players and sub-collections
-    match /players/{playerId} {
+    // Allow authenticated users to manage players and all nested data (attendance, fitness, etc.)
+    match /players/{document=**} {
       allow read, write: if isSignedIn();
-      
-      match /attendance/{date} {
-        allow read, write: if isSignedIn();
-      }
-      
-      match /fitnessAssessments/{date} {
-        allow read, write: if isSignedIn();
-      }
-      
-      match /sportSkills/{sport} {
-        allow read, write: if isSignedIn();
-      }
-      
-      match /healthIncidents/{incidentId} {
-        allow read, write: if isSignedIn();
-      }
     }
 
     // Allow authenticated users to manage global incident logs
-    match /all_health_incidents/{incidentId} {
+    match /all_health_incidents/{document=**} {
       allow read, write: if isSignedIn();
     }
 
     // Allow authenticated users to manage drill completions
-    match /drill_completions/{drillId} {
+    match /drill_completions/{document=**} {
       allow read, write: if isSignedIn();
     }
   }

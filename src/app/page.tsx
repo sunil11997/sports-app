@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -19,21 +18,17 @@ import {
   Settings as SettingsIcon,
   FileText,
   ClipboardList,
-  Wifi,
-  WifiOff,
   User,
   Loader2,
   History as HistoryIcon,
   ArrowRight,
   GraduationCap,
   Medal,
-  Trophy as TrophyIcon,
   Star,
   Award,
   Crown,
   Languages,
   Dumbbell,
-  GraduationCap as ClassIcon,
   UsersRound,
   ChevronRight,
   LayoutGrid,
@@ -173,7 +168,6 @@ export default function WaghambaApp() {
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [isTabChanging, setIsTabChanging] = useState(false);
   const schoolData = useSchoolData();
-  const { isOnline } = usePWA();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
@@ -348,7 +342,7 @@ export default function WaghambaApp() {
     { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
     { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
     { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
-    { id: "sports-skills", label: t.skills, icon: TrophyIcon, color: "text-yellow-600 bg-yellow-50" },
+    { id: "sports-skills", label: t.skills, icon: Trophy, color: "text-yellow-600 bg-yellow-50" },
     { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-600 bg-cyan-50" },
     { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
     { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
@@ -620,7 +614,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="daily-report">
-              <DailyReport store={schoolData} section={selectedSection} />
+              <DailyReport store={schoolData} />
             </TabsContent>
 
             <TabsContent value="tournament">
@@ -656,7 +650,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="health">
-              <HealthIncidents store={schoolData} section={selectedSection} />
+              <HealthIncidents store={schoolData} />
             </TabsContent>
 
             <TabsContent value="settings">

@@ -5,8 +5,6 @@ import { collection, doc, onSnapshot, query, limit } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export function useSchoolData() {
   const db = useFirestore();
@@ -15,7 +13,12 @@ export function useSchoolData() {
   // 1. Primary Collections
   const schoolsRef = useMemoFirebase(() => user ? collection(db, 'schools') : null, [db, user]);
   const { data: schoolsData, isLoading: schoolsLoading } = useCollection<SchoolProfile>(schoolsRef);
-  const schoolProfile = schoolsData && schoolsData.length > 0 ? schoolsData[0] : null;
+  
+  // Find the profile belonging to this user or the first one available
+  const schoolProfile = useMemo(() => {
+    if (!schoolsData || schoolsData.length === 0) return null;
+    return schoolsData.find(s => s.id === user?.uid) || schoolsData[0];
+  }, [schoolsData, user]);
 
   const playersRef = useMemoFirebase(() => user ? collection(db, 'players') : null, [db, user]);
   const { data: players, isLoading: playersLoading } = useCollection<Player>(playersRef);
@@ -75,9 +78,6 @@ export function useSchoolData() {
               newAtt[`${player.id}_${doc.id}`] = doc.data().status;
             });
             setAttendanceData(prev => ({ ...prev, ...newAtt }));
-          },
-          async (error) => {
-            console.error("Attendance Sync Error", error);
           }
         );
         unsubs.push(unsubAtt);
@@ -95,9 +95,6 @@ export function useSchoolData() {
               history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
             });
             setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
-          },
-          async (error) => {
-            console.error("Fitness Sync Error", error);
           }
         );
         unsubs.push(unsubFit);
@@ -115,9 +112,6 @@ export function useSchoolData() {
             });
             setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
             setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
-          },
-          async (error) => {
-            console.error("Skills Sync Error", error);
           }
         );
         unsubs.push(unsubSkill);
@@ -144,8 +138,8 @@ export function useSchoolData() {
   }, [players, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
   const saveSchoolProfile = (profile: any) => {
-    if (!schoolsRef) return;
-    const docId = user?.uid || 'default';
+    if (!user) return;
+    const docId = user.uid;
     const profileRef = doc(db, 'schools', docId);
     setDocumentNonBlocking(profileRef, { ...profile, id: docId, updatedAt: new Date().toISOString() }, { merge: true });
   };
