@@ -49,6 +49,7 @@ export interface FitnessAssessment {
   date?: string;
   updatedAt?: string;
   playerId?: string;
+  term?: 'First' | 'Second';
   // Registry specific monthly data
   height?: string;
   weight?: string;

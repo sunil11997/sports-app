@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,16 @@ import {
   Scale, 
   Calendar,
   Clock,
-  Printer
+  Printer,
+  FileBarChart,
+  Target
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function StandardClassView({ store, std }: { store: any, std: string }) {
+  const [activeReportMode, setActiveReportMode] = useState<'First' | 'Yearly'>('First');
   const students = store.data.players.filter((p: any) => p.std === std && p.category === 'student');
   const classActivities = store.data.activities.filter((a: any) => a.std === std);
 
@@ -45,7 +50,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           </style>
         </head>
         <body>
-          <h1>Standard ${std} - Institutional Profile</h1>
+          <h1>Standard ${std} - Institutional Profile (${activeReportMode === 'First' ? 'Term 1' : 'Year-wise'})</h1>
           <p>Location: Satana, Nashik | Total Students: ${students.length}</p>
           
           <h2>Student Health & Fitness Registry</h2>
@@ -55,7 +60,8 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
             </thead>
             <tbody>
               ${students.map((s: any) => {
-                const fit = store.data.fitness[s.id] || {};
+                const fitHistory = store.data.fitnessHistory[s.id] || [];
+                const fit = fitHistory.find((h: any) => h.term === (activeReportMode === 'First' ? 'First' : 'Second')) || store.data.fitness[s.id] || {};
                 const currentBMI = calculateBMI(fit.height || s.height, fit.weight || s.weight);
                 return `
                   <tr>
@@ -103,9 +109,32 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
             </p>
           </div>
         </div>
-        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest shadow-lg">
-          <Printer className="w-5 h-5 mr-2" /> Print Class Profile
-        </Button>
+
+        <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
+          <Button 
+            variant={activeReportMode === 'First' ? "default" : "ghost"}
+            onClick={() => setActiveReportMode('First')}
+            className={cn(
+              "rounded-xl px-4 font-black uppercase text-[10px] tracking-wider",
+              activeReportMode === 'First' ? "bg-primary text-white" : "text-muted-foreground"
+            )}
+          >
+            Term 1 View
+          </Button>
+          <Button 
+            variant={activeReportMode === 'Yearly' ? "default" : "ghost"}
+            onClick={() => setActiveReportMode('Yearly')}
+            className={cn(
+              "rounded-xl px-4 font-black uppercase text-[10px] tracking-wider",
+              activeReportMode === 'Yearly' ? "bg-primary text-white" : "text-muted-foreground"
+            )}
+          >
+            Year-wise
+          </Button>
+          <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-4 font-black uppercase text-[10px] tracking-widest shadow-lg ml-2">
+            <Printer className="w-4 h-4 mr-2" /> Print
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -115,7 +144,9 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
               <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
                 <Scale className="w-5 h-5" /> Student Health Registry
               </CardTitle>
-              <Badge className="bg-accent text-black font-black uppercase text-[10px]">BMI & Fitness</Badge>
+              <Badge className="bg-accent text-black font-black uppercase text-[10px]">
+                {activeReportMode === 'First' ? 'Term 1 Analysis' : 'Annual Consolidated'}
+              </Badge>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table>
@@ -131,7 +162,8 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                 </TableHeader>
                 <TableBody>
                   {students.map((student: any) => {
-                    const fitnessData = store.data.fitness[student.id] || {};
+                    const fitHistory = store.data.fitnessHistory[student.id] || [];
+                    const fitnessData = fitHistory.find((h: any) => h.term === (activeReportMode === 'First' ? 'First' : 'Second')) || store.data.fitness[student.id] || {};
                     const h = fitnessData.height || student.height;
                     const w = fitnessData.weight || student.weight;
                     const bmi = calculateBMI(h, w);
@@ -195,11 +227,6 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                         </span>
                       </div>
                       <p className="text-[10px] font-medium text-foreground/70 line-clamp-2 italic">"{act.summary}"</p>
-                      <div className="flex items-center gap-2 pt-1">
-                         <span className="text-[8px] font-black text-muted-foreground uppercase bg-muted px-2 py-0.5 rounded-full flex items-center gap-1">
-                           <Clock className="w-2 h-2" /> {act.duration}
-                         </span>
-                      </div>
                     </div>
                   ))}
                 </div>

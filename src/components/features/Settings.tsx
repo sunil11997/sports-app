@@ -19,8 +19,9 @@ import {
   Lock,
   History,
   Languages,
-  Smartphone,
-  SmartphoneNfc
+  SmartphoneNfc,
+  Database,
+  Chrome
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -39,15 +40,15 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     initiateGoogleBackup(auth)
       .then(() => {
         toast({ 
-          title: "Account Linked", 
-          description: "Your school data is now securely backed up to your Google account cloud." 
+          title: "Google Account Linked", 
+          description: "Your school data is now securely backed up to your Google Drive cloud." 
         });
       })
       .catch((err) => {
         toast({ 
           variant: "destructive", 
           title: "Backup Linking Failed", 
-          description: err.message || "Ensure you have a stable connection and Google Auth is enabled in Firebase Console." 
+          description: "Ensure you have a stable connection and Google Drive Auth is enabled." 
         });
       });
   };
@@ -55,8 +56,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const handleManualExport = () => {
     schoolData.exportBackupData();
     toast({
-      title: "Backup File Generated",
-      description: "Institutional data has been exported. You can now upload this file to your personal Google Drive."
+      title: "JSON Backup Generated",
+      description: "Institutional data has been exported. Upload this to your official Google Drive."
     });
   };
 
@@ -98,6 +99,35 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
+        {/* Google Cloud & Backups */}
+        <div className="space-y-2">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Google Drive & Cloud Safety</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
+            <SettingsItem 
+              icon={Chrome} 
+              color="bg-sky-500" 
+              label="My Google Drive" 
+              value={isGoogleLinked ? "Active Sync" : "Not Linked"}
+              sublabel="Official institutional storage"
+              onClick={handleBackup}
+            />
+            <SettingsItem 
+              icon={Database} 
+              color="bg-emerald-500" 
+              label="Backup to Google Cloud" 
+              sublabel="Real-time registry protection"
+              onClick={handleBackup}
+            />
+            <SettingsItem 
+              icon={Download} 
+              color="bg-indigo-500" 
+              label="Export to Offline File" 
+              sublabel="Manual JSON Database Export"
+              onClick={handleManualExport}
+            />
+          </div>
+        </div>
+
         {/* Application Management */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Application Management</label>
@@ -106,7 +136,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               icon={SmartphoneNfc} 
               color="bg-primary" 
               label={language === 'Marathi' ? "फोनवर इंस्टॉल करा" : "Install on Phone"} 
-              sublabel={isInstallable ? "Available for offline use" : "Already installed or not supported"}
+              sublabel={isInstallable ? "Available for offline use" : "Already installed"}
               disabled={!isInstallable}
               onClick={isInstallable ? installApp : undefined}
             />
@@ -140,37 +170,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               icon={isOnline ? Wifi : WifiOff} 
               color={isOnline ? "bg-green-500" : "bg-destructive"} 
               label="System Status" 
-              value={isOnline ? "Synced & Online" : "Local Mode"}
-              sublabel={isOnline ? "Direct Cloud Sync Active" : "Data will sync when back online"}
-            />
-          </div>
-        </div>
-
-        {/* Cloud & Backup Section */}
-        <div className="space-y-2">
-          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">iCloud & Google Backup</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
-            <SettingsItem 
-              icon={Cloud} 
-              color="bg-sky-500" 
-              label="Sync with Google" 
-              value={isGoogleLinked ? "Backed Up" : "Configure"}
-              sublabel={isGoogleLinked ? "Cloud Storage Active" : "Link for automated safety"}
-              onClick={handleBackup}
-            />
-            <SettingsItem 
-              icon={Download} 
-              color="bg-emerald-500" 
-              label="Manual Export (.json)" 
-              sublabel="Offline Database Backup"
-              onClick={handleManualExport}
-            />
-            <SettingsItem 
-              icon={History} 
-              color="bg-indigo-500" 
-              label="Sync Integrity" 
-              value="Live"
-              sublabel="Real-time protection enabled"
+              value={isOnline ? "Online" : "Local"}
             />
           </div>
         </div>
@@ -179,44 +179,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Institutional Identity</label>
           <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
-            <SettingsItem 
-              icon={User} 
-              color="bg-blue-600" 
-              label="Sports Teacher" 
-              value="सुनिल देशमुख"
-            />
-            <SettingsItem 
-              icon={Award} 
-              color="bg-amber-500" 
-              label="Role" 
-              value="Physical Education Dir."
-            />
-            <SettingsItem 
-              icon={Mail} 
-              color="bg-rose-500" 
-              label="Session Mail" 
-              value={user?.email || "Local Cache Mode"}
-            />
-          </div>
-        </div>
-
-        {/* System & Security */}
-        <div className="space-y-2">
-          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">System Integrity</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
-            <SettingsItem 
-              icon={Lock} 
-              color="bg-slate-700" 
-              label="Encryption" 
-              value="AES-256"
-              sublabel="End-to-end institutional grade"
-            />
-            <SettingsItem 
-              icon={ShieldCheck} 
-              color="bg-green-600" 
-              label="Database Status" 
-              value="Protected"
-            />
+            <SettingsItem icon={User} color="bg-blue-600" label="Teacher" value="सुनिल देशमुख" />
+            <SettingsItem icon={Award} color="bg-amber-500" label="Role" value="PE Director" />
+            <SettingsItem icon={Mail} color="bg-rose-500" label="Session" value={user?.email || "Local Cache"} />
           </div>
         </div>
 
@@ -232,9 +197,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </Button>
         </div>
 
-        <div className="text-center pt-8 pb-12">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-30">
-            Powered by Google Genkit & Firebase
+        <div className="text-center pt-8 pb-12 opacity-30">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">
+            Institutional Performance Hub V3.0
           </p>
         </div>
       </div>
