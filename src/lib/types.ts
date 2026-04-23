@@ -41,6 +41,14 @@ export interface FitnessAssessment {
   height?: string;
   weight?: string;
   examMarks?: string;
+  // Marathi Academic Markers
+  nirikshan?: string;    // दैनंदिन निरीक्षण
+  tondikam?: string;     // तोंडीकाम
+  pratyashike?: string;  // प्रात्यक्षिके/प्रयोग
+  upkram?: string;       // उपक्रम/कृती
+  prakalp?: string;      // प्रकल्प
+  chachani?: string;     // चाचणी (लेखी)
+  swadhyay?: string;     // स्वाध्याय/वर्गकार्य
 }
 
 export interface SportSkill {

@@ -32,7 +32,8 @@ import {
   Award,
   Crown,
   Languages,
-  Dumbbell
+  Dumbbell,
+  GraduationCap as ClassIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -41,7 +42,6 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Feature Components
 import { Registration } from '@/components/features/Registration';
@@ -56,6 +56,7 @@ import { DailyReport } from '@/components/features/DailyReport';
 import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
+import { StandardRegistry } from '@/components/features/StandardRegistry';
 
 const translations = {
   English: {
@@ -166,7 +167,7 @@ export default function WaghambaApp() {
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
-    setActiveTab("home"); // Home is default on entry
+    setActiveTab("home"); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -303,12 +304,12 @@ export default function WaghambaApp() {
   const generalTabs = [
     { id: "home", label: t.home, icon: Home, color: "text-blue-600 bg-blue-50" },
     { id: "registration", label: t.enroll, icon: User, color: "text-emerald-600 bg-emerald-50" },
-    { id: "dashboard", label: t.registry, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "daily-report", label: t.session, icon: FileText, color: "text-rose-600 bg-rose-50" },
-    { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
-    { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
-    { id: "fitness", label: t.physicals, icon: Activity, color: "text-orange-600 bg-orange-50" },
-    { id: "health", label: t.medical, icon: Stethoscope, color: "text-red-600 bg-red-50" },
+    ...[...Array(12)].map((_, i) => ({
+      id: `std-${i + 1}`,
+      label: `Std ${i + 1}`,
+      icon: ClassIcon,
+      color: "text-indigo-600 bg-indigo-50"
+    })),
     { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
@@ -531,6 +532,13 @@ export default function WaghambaApp() {
             <TabsContent value="settings">
               <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
+
+            {/* Class-wise Standard Registry Contents */}
+            {[...Array(12)].map((_, i) => (
+              <TabsContent key={i} value={`std-${i + 1}`}>
+                <StandardRegistry store={schoolData} std={(i + 1).toString()} />
+              </TabsContent>
+            ))}
           </div>
         </Tabs>
       </main>
