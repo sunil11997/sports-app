@@ -35,7 +35,9 @@ import {
   Dumbbell,
   GraduationCap as ClassIcon,
   UsersRound,
-  ChevronRight
+  ChevronRight,
+  LayoutGrid,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -59,6 +61,8 @@ import { TournamentRosters } from '@/components/features/TournamentRosters';
 import { Settings } from '@/components/features/Settings';
 import { History } from '@/components/features/History';
 import { StandardRegistry } from '@/components/features/StandardRegistry';
+import { SchoolActivities } from '@/components/features/SchoolActivities';
+import { ClassesHub } from '@/components/features/ClassesHub';
 
 const translations = {
   English: {
@@ -105,7 +109,10 @@ const translations = {
     totalStudents: "Total Enrollment",
     classWise: "Standard Breakdown",
     boysLabel: "Boys",
-    girlsLabel: "Girls"
+    girlsLabel: "Girls",
+    classes: "Classes",
+    activities: "Activities",
+    reports: "Reports"
   },
   Marathi: {
     schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
@@ -151,7 +158,10 @@ const translations = {
     totalStudents: "एकूण नावनोंदणी",
     classWise: "इयत्तावार माहिती",
     boysLabel: "मुले",
-    girlsLabel: "मुली"
+    girlsLabel: "मुली",
+    classes: "वर्ग",
+    activities: "शालेय उपक्रम",
+    reports: "अहवाल"
   }
 };
 
@@ -336,12 +346,9 @@ export default function WaghambaApp() {
   const generalTabs = [
     { id: "home", label: t.home, icon: Home, color: "text-blue-600 bg-blue-50" },
     { id: "registration", label: t.enroll, icon: User, color: "text-emerald-600 bg-emerald-50" },
-    ...[...Array(12)].map((_, i) => ({
-      id: `std-${i + 1}`,
-      label: `Std ${i + 1}`,
-      icon: ClassIcon,
-      color: "text-indigo-600 bg-indigo-50"
-    })),
+    { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
+    { id: "activities", label: t.activities, icon: Zap, color: "text-amber-600 bg-amber-50" },
+    { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-600 bg-rose-50" },
     { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
@@ -559,7 +566,7 @@ export default function WaghambaApp() {
                       {Object.entries(classSummaries).map(([std, stats]) => (
                         <Card 
                           key={std} 
-                          onClick={() => handleTabChange(`std-${std}`)}
+                          onClick={() => handleTabChange(`classes`)}
                           className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden"
                         >
                           <div className="relative z-10 space-y-6">
@@ -640,12 +647,13 @@ export default function WaghambaApp() {
               <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
 
-            {/* Class-wise Standard Registry Contents */}
-            {[...Array(12)].map((_, i) => (
-              <TabsContent key={i} value={`std-${i + 1}`}>
-                <StandardRegistry store={schoolData} std={(i + 1).toString()} />
-              </TabsContent>
-            ))}
+            <TabsContent value="activities">
+              <SchoolActivities store={schoolData} />
+            </TabsContent>
+
+            <TabsContent value="classes">
+              <ClassesHub store={schoolData} />
+            </TabsContent>
           </div>
         </Tabs>
       </main>
