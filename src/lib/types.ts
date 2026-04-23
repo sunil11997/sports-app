@@ -21,7 +21,7 @@ export interface Player {
 }
 
 export interface AttendanceRecord {
-  [key: string]: 'P' | 'A'; // key: playerId_dateString (YYYY-MM-DD)
+  [key: string]: 'P' | 'A' | undefined | null; // key: playerId_dateString (YYYY-MM-DD)
 }
 
 export interface FitnessAssessment {

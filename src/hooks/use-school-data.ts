@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { collection, doc, onSnapshot, FirestoreError } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -31,7 +30,7 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
-  // Sync Drills separately from players loop
+  // Sync Drills separately
   useEffect(() => {
     if (drillComps) {
       const logs: Record<string, boolean> = {};
@@ -40,12 +39,11 @@ export function useSchoolData() {
     }
   }, [drillComps]);
 
-  // 3. Subscription Management to prevent flickering and redundant cloud calls
+  // 3. Subscription Management
   const unsubscribersRef = useRef<Record<string, (() => void)[]>>({});
 
   useEffect(() => {
     if (!user || !players || players.length === 0) {
-      // Cleanup all if no players
       Object.values(unsubscribersRef.current).forEach(unsubs => unsubs.forEach(u => u()));
       unsubscribersRef.current = {};
       return;
@@ -53,7 +51,6 @@ export function useSchoolData() {
 
     const currentPlayerIds = new Set(players.map(p => p.id));
     
-    // Remove unsubs for players no longer in list
     Object.keys(unsubscribersRef.current).forEach(id => {
       if (!currentPlayerIds.has(id)) {
         unsubscribersRef.current[id].forEach(u => u());
@@ -62,7 +59,6 @@ export function useSchoolData() {
     });
 
     players.forEach(player => {
-      // Only start new listeners if we aren't already watching this player
       if (!unsubscribersRef.current[player.id]) {
         const unsubs: (() => void)[] = [];
 
@@ -76,7 +72,7 @@ export function useSchoolData() {
             });
             setAttendanceData(prev => ({ ...prev, ...newAtt }));
           },
-          async (serverError) => {
+          async () => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: attRef.path,
               operation: 'list'
@@ -85,7 +81,7 @@ export function useSchoolData() {
         );
         unsubs.push(unsubAtt);
 
-        // Sync Fitness / Monthly Logs
+        // Sync Fitness
         const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
         const unsubFit = onSnapshot(fitRef, 
           (snapshot) => {
@@ -99,7 +95,7 @@ export function useSchoolData() {
             });
             setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
           },
-          async (serverError) => {
+          async () => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: fitRef.path,
               operation: 'list'
@@ -122,7 +118,7 @@ export function useSchoolData() {
             setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
             setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
           },
-          async (serverError) => {
+          async () => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: skillRef.path,
               operation: 'list'
@@ -135,9 +131,7 @@ export function useSchoolData() {
       }
     });
 
-    return () => {
-      // Global cleanup handled by dependency array and ref logic
-    };
+    return () => {};
   }, [db, user, players]); 
 
   const aggregatedData = useMemo(() => {
@@ -174,7 +168,13 @@ export function useSchoolData() {
       const [playerId, date] = key.split('_');
       if (!playerId || !date) return;
       const attRef = doc(db, 'players', playerId, 'attendance', date);
-      setDocumentNonBlocking(attRef, { status, playerId, date }, { merge: true });
+      
+      // If status is falsy (cleared), delete the document to keep DB clean
+      if (!status) {
+        deleteDocumentNonBlocking(attRef);
+      } else {
+        setDocumentNonBlocking(attRef, { status, playerId, date }, { merge: true });
+      }
     });
   };
 
