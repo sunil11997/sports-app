@@ -34,7 +34,8 @@ import {
   ChevronRight,
   LayoutGrid,
   Zap,
-  MapPin
+  MapPin,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -109,7 +110,8 @@ const translations = {
     girlsLabel: "Girls",
     classes: "Classes",
     activities: "Activities",
-    reports: "Reports"
+    reports: "Reports",
+    installApp: "INSTALL AS MOBILE APP"
   },
   Marathi: {
     schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
@@ -158,7 +160,8 @@ const translations = {
     girlsLabel: "मुली",
     classes: "वर्ग",
     activities: "शालेय उपक्रम",
-    reports: "अहवाल"
+    reports: "अहवाल",
+    installApp: "मोबाईल ॲप म्हणून इंस्टॉल करा"
   }
 };
 
@@ -170,6 +173,7 @@ export default function WaghambaApp() {
   const [isTabChanging, setIsTabChanging] = useState(false);
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
+  const { isInstallable, installApp } = usePWA();
   const auth = useAuth();
 
   const t = translations[language];
@@ -268,7 +272,7 @@ export default function WaghambaApp() {
             </div>
           </div>
 
-          <div className="pt-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
+          <div className="pt-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 space-y-4">
             <Button 
               onClick={handleStartHub}
               className="group w-full bg-primary hover:bg-primary/95 text-white font-black text-2xl h-28 rounded-[2.5rem] shadow-2xl transition-all active:scale-[0.97]"
@@ -276,6 +280,18 @@ export default function WaghambaApp() {
               {t.enter}
               <ArrowRight className="ml-4 w-10 h-10 group-hover:translate-x-2 transition-transform" />
             </Button>
+            
+            {isInstallable && (
+              <Button 
+                onClick={installApp}
+                variant="outline"
+                className="w-full border-2 border-primary/20 bg-white/50 backdrop-blur-md text-primary font-black text-sm h-14 rounded-2xl shadow-lg active:scale-[0.97] uppercase tracking-widest"
+              >
+                <Smartphone className="mr-3 w-5 h-5" />
+                {t.installApp}
+              </Button>
+            )}
+
             <div className="mt-12 flex flex-col items-center gap-2">
               <p className="text-primary/30 text-[10px] font-black uppercase tracking-[0.6em]">
                 {t.institutionalStack}

@@ -19,7 +19,8 @@ import {
   Lock,
   History,
   Languages,
-  CheckCircle2
+  Smartphone,
+  SmartphoneNfc
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const auth = useAuth();
   const { toast } = useToast();
   const schoolData = useSchoolData();
-  const { isOnline } = usePWA();
+  const { isOnline, isInstallable, installApp } = usePWA();
 
   const handleBackup = () => {
     initiateGoogleBackup(auth)
@@ -97,10 +98,18 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
-        {/* Connectivity & Language Section */}
+        {/* Application Management */}
         <div className="space-y-2">
-          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Preferences</label>
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Application Management</label>
           <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
+            <SettingsItem 
+              icon={SmartphoneNfc} 
+              color="bg-primary" 
+              label={language === 'Marathi' ? "फोनवर इंस्टॉल करा" : "Install on Phone"} 
+              sublabel={isInstallable ? "Available for offline use" : "Already installed or not supported"}
+              disabled={!isInstallable}
+              onClick={isInstallable ? installApp : undefined}
+            />
             <SettingsItem 
               icon={Languages} 
               color="bg-purple-500" 
@@ -164,9 +173,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               sublabel="Real-time protection enabled"
             />
           </div>
-          <p className="px-5 text-[9px] font-bold text-muted-foreground leading-relaxed">
-            Linking your Google account ensures all student rosters and health logs are safely stored in Google's cloud infrastructure.
-          </p>
         </div>
 
         {/* User Identity */}
