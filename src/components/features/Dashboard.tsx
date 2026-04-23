@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -28,7 +29,9 @@ import {
   RefreshCw,
   XCircle,
   RotateCw,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ArrowUpCircle,
+  Users
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -59,12 +62,14 @@ const CATEGORIES = [
   { id: 'girls-senior', label: 'Girls Senior' },
 ];
 
-export function Dashboard({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
+export function Dashboard({ store, section, language = 'English', t }: { store: any, section: 'sports' | 'general', language?: string, t: any }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string, name: string } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);
 
   // Camera States for Edit Dialog
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -108,6 +113,21 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
     return matchesCategory && matchesSearch && matchesTab;
   });
 
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredPlayers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredPlayers.map((p: any) => p.id)));
+    }
+  };
+
   const handleEditClick = (player: Player) => {
     stopCamera();
     setEditingPlayer({ 
@@ -140,6 +160,29 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
         description: isMarathi ? `${editingPlayer.name} चे प्रोफाइल यशस्वीरित्या अपडेट केले गेले आहे.` : `${editingPlayer.name}'s profile has been updated successfully.`,
       });
     }
+  };
+
+  const handlePromoteSelected = () => {
+    const playersToPromote = store.data.players.filter((p: any) => selectedIds.has(p.id));
+    
+    playersToPromote.forEach((p: any) => {
+      const currentStd = parseInt(p.std) || 0;
+      if (currentStd < 12) {
+        store.updatePlayer({ ...p, std: (currentStd + 1).toString() });
+      } else {
+        // Handle Std 12 graduation
+        if (confirm(isMarathi ? `${p.name} १२वी उत्तीर्ण झाले आहेत. त्यांना काढून टाकायचे?` : `${p.name} has finished Std 12. Remove from active roster?`)) {
+          store.deletePlayer(p.id);
+        }
+      }
+    });
+
+    toast({
+      title: isMarathi ? "प्रक्रिया पूर्ण झाली" : "Promotion Complete",
+      description: isMarathi ? "निवडलेल्या विद्यार्थ्यांना पुढील इयत्तेत वर्ग केले आहे." : "Selected students have been moved to the next standard.",
+    });
+    setSelectedIds(new Set());
+    setIsPromotionDialogOpen(false);
   };
 
   // Camera Logic for Edit Modal
@@ -239,7 +282,7 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
               </tr>
             </thead>
             <tbody>
-              ${filteredPlayers.map((p, i) => `
+              ${filteredPlayers.map((p: any, i: number) => `
                 <tr>
                   <td>${i + 1}</td>
                   <td>${p.photoUrl ? `<img src="${p.photoUrl}" class="photo" />` : 'No Photo'}</td>
@@ -291,6 +334,14 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          {selectedIds.size > 0 && (
+            <Button 
+              onClick={() => setIsPromotionDialogOpen(true)}
+              className="bg-accent text-accent-foreground font-black h-9 text-xs uppercase"
+            >
+              <ArrowUpCircle className="w-4 h-4 mr-2" /> {t.promoteNext} ({selectedIds.size})
+            </Button>
+          )}
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
@@ -310,6 +361,9 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
         <Table className="border-collapse min-w-max">
           <TableHeader className="bg-muted/50 sticky top-0 z-20">
             <TableRow className="border-b">
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[40px] text-center">
+                <Checkbox checked={selectedIds.size === filteredPlayers.length && filteredPlayers.length > 0} onCheckedChange={toggleSelectAll} />
+              </TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[50px] text-center">SR</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[60px] text-center">{isMarathi ? 'फोटो' : 'Photo'}</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[180px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
@@ -337,6 +391,9 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
                 const attPercent = calculateAttendance(player.id);
                 return (
                   <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
+                    <TableCell className="border-r p-1 text-center">
+                      <Checkbox checked={selectedIds.has(player.id)} onCheckedChange={() => toggleSelect(player.id)} />
+                    </TableCell>
                     <TableCell className="border-r p-2 text-center text-xs font-bold text-primary">{index + 1}</TableCell>
                     <TableCell className="border-r p-1">
                       <div 
@@ -402,6 +459,54 @@ export function Dashboard({ store, section, language = 'English' }: { store: any
           </TableBody>
         </Table>
       </div>
+
+      {/* Promotion Hub Dialog */}
+      <Dialog open={isPromotionDialogOpen} onOpenChange={setIsPromotionDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-0 shadow-2xl bg-white">
+          <DialogHeader className="bg-accent/10 p-8 border-b border-accent/20">
+            <DialogTitle className="text-2xl font-black uppercase text-primary flex items-center gap-3">
+              <ArrowUpCircle className="w-6 h-6 text-accent" /> {t.promotionHub}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-8 space-y-6">
+            <div className="flex items-center gap-4 bg-muted/30 p-6 rounded-2xl border border-dashed">
+              <Users className="w-8 h-8 text-primary opacity-40" />
+              <div>
+                <p className="text-sm font-black uppercase text-primary">{selectedIds.size} Students Selected</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t.promoteDesc}</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Promotion Preview</h4>
+              <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2">
+                {Array.from(selectedIds).map(id => {
+                  const p = store.data.players.find((player: any) => player.id === id);
+                  if (!p) return null;
+                  const nextStd = (parseInt(p.std) || 0) + 1;
+                  return (
+                    <div key={id} className="flex justify-between items-center py-2 border-b border-muted last:border-0">
+                      <span className="text-xs font-bold uppercase">{p.name}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">Std {p.std}</Badge>
+                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                        <Badge className="bg-primary text-white text-[10px]">
+                          {nextStd > 12 ? t.graduated : `Std ${nextStd}`}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="bg-muted/10 p-8 border-t">
+            <Button variant="ghost" onClick={() => setIsPromotionDialogOpen(false)} className="font-black uppercase text-xs tracking-widest">{isMarathi ? 'रद्द करा' : 'Cancel'}</Button>
+            <Button onClick={handlePromoteSelected} className="bg-primary text-white px-12 font-black uppercase text-xs tracking-widest rounded-2xl h-14 shadow-lg">
+              {isMarathi ? 'बदली करा' : 'Complete Transfer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Photo Viewer Dialog */}
       <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>

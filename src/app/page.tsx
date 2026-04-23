@@ -110,7 +110,12 @@ const translations = {
     activities: "Activities",
     reports: "Reports",
     installApp: "INSTALL MOBILE APP",
-    installBanner: "Install Sports App for a better experience"
+    installBanner: "Install Sports App for a better experience",
+    promotionHub: "Promotion Hub",
+    promoteNext: "Transfer to Next Std",
+    promoteDesc: "Move selected students to their next academic standard.",
+    selectAll: "Select All",
+    graduated: "Graduated"
   },
   Marathi: {
     schoolName: "स्पोर्ट्स ॲप",
@@ -161,7 +166,12 @@ const translations = {
     activities: "शालेय उपक्रम",
     reports: "अहवाल",
     installApp: "मोबाईल ॲप इंस्टॉल करा",
-    installBanner: "चांगल्या अनुभवासाठी स्पोर्ट्स ॲप इंस्टॉल करा"
+    installBanner: "चांगल्या अनुभवासाठी स्पोर्ट्स ॲप इंस्टॉल करा",
+    promotionHub: "बढती केंद्र",
+    promoteNext: "पुढील इयत्तेत वर्ग करा",
+    promoteDesc: "निवडलेल्या विद्यार्थ्यांना त्यांच्या पुढील शैक्षणिक इयत्तेत हलवा.",
+    selectAll: "सर्व निवडा",
+    graduated: "उत्तीर्ण / शाळा सोडली"
   }
 };
 
@@ -666,7 +676,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="dashboard">
-              <Dashboard store={schoolData} section={selectedSection} language={language} />
+              <Dashboard store={schoolData} section={selectedSection} language={language} t={t} />
             </TabsContent>
 
             <TabsContent value="daily-report">
