@@ -6,7 +6,6 @@ import { useSchoolData } from '@/hooks/use-school-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Users, 
   LayoutDashboard, 
   CalendarCheck, 
   Activity, 
@@ -15,8 +14,6 @@ import {
   Sparkles,
   Home,
   FileText,
-  ClipboardList,
-  User,
   Loader2,
   History as HistoryIcon,
   ArrowRight,
@@ -32,7 +29,10 @@ import {
   Zap,
   MapPin,
   Smartphone,
-  UserPlus
+  UserPlus,
+  User,
+  Download,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -105,7 +105,8 @@ const translations = {
     classes: "Classes",
     activities: "Activities",
     reports: "Reports",
-    installApp: "INSTALL MOBILE APP"
+    installApp: "INSTALL MOBILE APP",
+    installBanner: "Install Sports App for a better experience"
   },
   Marathi: {
     schoolName: "स्पोर्ट्स ॲप",
@@ -154,7 +155,8 @@ const translations = {
     classes: "वर्ग",
     activities: "शालेय उपक्रम",
     reports: "अहवाल",
-    installApp: "मोबाईल ॲप इंस्टॉल करा"
+    installApp: "मोबाईल ॲप इंस्टॉल करा",
+    installBanner: "चांगल्या अनुभवासाठी स्पोर्ट्स ॲप इंस्टॉल करा"
   }
 };
 
@@ -164,6 +166,8 @@ export default function WaghambaApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [isTabChanging, setIsTabChanging] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
+  
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
   const { isInstallable, installApp } = usePWA();
@@ -382,7 +386,38 @@ export default function WaghambaApp() {
 
   return (
     <div className="min-h-screen bg-muted/10 pb-12">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-border py-4 px-6 shadow-sm">
+      {isInstallable && showInstallBanner && (
+        <div className="bg-primary text-white p-3 flex justify-between items-center animate-in slide-in-from-top duration-500 sticky top-0 z-[60] shadow-lg">
+          <div className="flex items-center gap-3 ml-2">
+            <div className="bg-white/20 p-1.5 rounded-lg flex-shrink-0">
+              <Download className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-wider">{t.installBanner}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={installApp} 
+              size="sm" 
+              className="bg-white text-primary font-black text-[10px] h-8 px-5 rounded-full hover:bg-white/90 shadow-lg active-scale"
+            >
+              INSTALL
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowInstallBanner(false)} 
+              className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <header className={cn(
+        "sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-border py-4 px-6 shadow-sm transition-all",
+        isInstallable && showInstallBanner ? "top-[52px]" : "top-0"
+      )}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
             <div className="bg-accent p-2 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm">
