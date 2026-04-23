@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { collection, doc, onSnapshot, query, where, limit, Firestore } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where, Firestore } from 'firebase/firestore';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -36,7 +35,7 @@ export function useSchoolData() {
   const drillsSyncRef = useMemoFirebase(() => user ? collection(db, 'drill_completions') : null, [db, user]);
   const { data: drillComps } = useCollection(drillsSyncRef);
 
-  // 5. Reactive State for Sub-collections
+  // 5. Reactive State for Sub-collections (Handled via internal local cache by Firestore automatically)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
@@ -65,7 +64,6 @@ export function useSchoolData() {
 
     const currentPlayerIds = new Set(players.map(p => p.id));
     
-    // Cleanup unsubscribers for players no longer in the list
     Object.keys(unsubscribersRef.current).forEach(id => {
       if (!currentPlayerIds.has(id)) {
         unsubscribersRef.current[id].forEach(u => u());
@@ -79,7 +77,7 @@ export function useSchoolData() {
 
         // Sync Attendance
         const attRef = collection(db, 'players', player.id, 'attendance');
-        const unsubAtt = onSnapshot(attRef, 
+        const unsubAtt = onSnapshot(attRef, { includeMetadataChanges: true },
           (snapshot) => {
             const newAtt: AttendanceRecord = {};
             snapshot.docs.forEach(doc => {
@@ -88,17 +86,14 @@ export function useSchoolData() {
             setAttendanceData(prev => ({ ...prev, ...newAtt }));
           },
           (error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: attRef.path,
-              operation: 'list'
-            }));
+            console.error("Attendance Sync Error:", error);
           }
         );
         unsubs.push(unsubAtt);
 
         // Sync Fitness
         const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
-        const unsubFit = onSnapshot(fitRef, 
+        const unsubFit = onSnapshot(fitRef, { includeMetadataChanges: true },
           (snapshot) => {
             const history: FitnessAssessment[] = [];
             snapshot.docs.forEach(d => {
@@ -111,17 +106,14 @@ export function useSchoolData() {
             setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
           },
           (error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: fitRef.path,
-              operation: 'list'
-            }));
+            console.error("Fitness Sync Error:", error);
           }
         );
         unsubs.push(unsubFit);
 
         // Sync Sport Skills
         const skillRef = collection(db, 'players', player.id, 'sportSkills');
-        const unsubSkill = onSnapshot(skillRef, 
+        const unsubSkill = onSnapshot(skillRef, { includeMetadataChanges: true },
           (snapshot) => {
             const playerSkills: Record<string, SportSkill> = {};
             const historyList: (SportSkill & { sportName: string })[] = [];
@@ -134,10 +126,7 @@ export function useSchoolData() {
             setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
           },
           (error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: skillRef.path,
-              operation: 'list'
-            }));
+            console.error("Skills Sync Error:", error);
           }
         );
         unsubs.push(unsubSkill);
