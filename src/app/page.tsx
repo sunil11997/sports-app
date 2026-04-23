@@ -33,7 +33,8 @@ import {
   LayoutGrid,
   Zap,
   MapPin,
-  Smartphone
+  Smartphone,
+  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -91,6 +92,8 @@ const translations = {
     calculatedPerformanceHub: "Calculated Performance Hub",
     loadingRegistry: "Syncing Registry...",
     loadingHallOfFame: "Loading Hall of Fame...",
+    noAthletes: "No athletes registered yet.",
+    registerFirst: "Please enroll students in the Register tab to see the Hall of Fame.",
     selectHub: "Select Management Section",
     sportsHubDesc: "Manage athletes, performance scores, and tournament rosters.",
     studentRegistryDesc: "Manage general student growth logs and physical registry.",
@@ -140,6 +143,8 @@ const translations = {
     calculatedPerformanceHub: "कार्यप्रदर्शन केंद्र",
     loadingRegistry: "रजिस्ट्री सिंक होत आहे...",
     loadingHallOfFame: "हॉल ऑफ फेम लोड होत आहे...",
+    noAthletes: "अजून कोणतेही खेळाडू नोंदणीकृत नाहीत.",
+    registerFirst: "हॉल ऑफ फेम पाहण्यासाठी कृपया 'नोंदणी' टॅबमध्ये विद्यार्थी नोंदवा.",
     selectHub: "व्यवस्थापन विभाग निवडा",
     sportsHubDesc: "खेळाडू, कामगिरीचे गुण आणि स्पर्धा रोस्टर व्यवस्थापित करा.",
     studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि शारीरिक नोंदणी व्यवस्थापित करा.",
@@ -198,14 +203,17 @@ export default function WaghambaApp() {
 
   const topPerformers = useMemo(() => {
     if (!schoolData.data.players) return [];
-    return [...schoolData.data.players].map(p => {
+    // Only show athletes in sports hall of fame
+    const filtered = schoolData.data.players.filter(p => p.category === 'athlete');
+    
+    return [...filtered].map(p => {
       const fitness = schoolData.data.fitness[p.id] || { score: '0' };
       const skills = Object.values(schoolData.data.sportSkills).filter(s => s.playerId === p.id);
       const maxSkill = skills.length > 0 ? Math.max(...skills.map(s => parseFloat(s.score) || 0)) : 0;
       const performance = (parseFloat(fitness.score) || 0) + maxSkill;
       return { ...p, performance, fitnessScore: fitness.score, latestStatus: fitness.status };
     }).sort((a, b) => b.performance - a.performance);
-  }, [schoolData.data]);
+  }, [schoolData.data.players, schoolData.data.fitness, schoolData.data.sportSkills]);
 
   const classSummaries = useMemo(() => {
     const summary: Record<string, { total: number, boys: number, girls: number }> = {};
@@ -533,51 +541,70 @@ export default function WaghambaApp() {
                       </div>
                     </Card>
                   ) : (
-                    <Card className="border-0 rounded-[4rem] shadow-sm bg-muted/20 p-32 text-center">
-                      <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
-                      <p className="font-black text-primary uppercase tracking-[0.4em] text-sm">{t.loadingHallOfFame}</p>
+                    <Card className="border-0 rounded-[4rem] shadow-sm bg-muted/20 p-24 text-center space-y-6">
+                      {schoolData.isLoaded ? (
+                        <>
+                          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
+                            <UserPlus className="w-10 h-10 text-primary opacity-20" />
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="text-2xl font-black text-primary uppercase">{t.noAthletes}</h4>
+                            <p className="text-muted-foreground font-medium max-w-sm mx-auto">{t.registerFirst}</p>
+                          </div>
+                          <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary hover:bg-primary/90">
+                            Go to Registration <ArrowRight className="ml-2 w-4 h-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
+                          <p className="font-black text-primary uppercase tracking-[0.4em] text-sm">{t.loadingHallOfFame}</p>
+                        </>
+                      )}
                     </Card>
                   )}
 
-                  <div className="space-y-10">
-                    <div className="flex items-center justify-between px-6">
-                      <h3 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-4">
-                        <Star className="w-10 h-10 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
-                      </h3>
-                      <p className="hidden md:block text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em]">{t.calculatedPerformanceHub}</p>
-                    </div>
+                  {topPerformers.length > 0 && (
+                    <div className="space-y-10">
+                      <div className="flex items-center justify-between px-6">
+                        <h3 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-4">
+                          <Star className="w-10 h-10 text-yellow-500 fill-yellow-500" /> {t.topSquadRanking}
+                        </h3>
+                        <p className="hidden md:block text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em]">{t.calculatedPerformanceHub}</p>
+                      </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
-                      {topPerformers.slice(1, 9).map((player, idx) => (
-                        <Card key={player.id} className="border-2 border-primary/5 rounded-[3.5rem] overflow-hidden hover:border-accent hover:shadow-2xl transition-all group active:scale-[0.95] shadow-xl bg-white">
-                          <div className="relative aspect-square">
-                            {player.photoUrl ? (
-                              <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
-                            ) : (
-                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <User className="w-16 h-16 text-muted-foreground opacity-20" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
+                        {topPerformers.slice(1, 9).map((player, idx) => (
+                          <Card key={player.id} className="border-2 border-primary/5 rounded-[3.5rem] overflow-hidden hover:border-accent hover:shadow-2xl transition-all group active:scale-[0.95] shadow-xl bg-white">
+                            <div className="relative aspect-square">
+                              {player.photoUrl ? (
+                                <Image src={player.photoUrl} alt={player.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <User className="w-16 h-16 text-muted-foreground opacity-20" />
+                                </div>
+                              )}
+                              <div className="absolute top-6 left-6">
+                                <Badge className="bg-white/95 text-primary font-black shadow-xl border-0 h-10 w-10 flex items-center justify-center p-0 rounded-2xl group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                                  #{idx + 2}
+                                </Badge>
                               </div>
-                            )}
-                            <div className="absolute top-6 left-6">
-                              <Badge className="bg-white/95 text-primary font-black shadow-xl border-0 h-10 w-10 flex items-center justify-center p-0 rounded-2xl group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                                #{idx + 2}
-                              </Badge>
                             </div>
-                          </div>
-                          <CardContent className="p-8 space-y-5">
-                            <div className="space-y-1">
-                              <h4 className="font-black text-primary uppercase text-xl truncate">{player.name}</h4>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60">Std {player.std} • {player.latestStatus || 'B'}</p>
-                            </div>
-                            <div className="flex justify-between items-center pt-4 border-t border-dashed border-primary/10">
-                              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fitness Index</span>
-                              <span className="text-2xl font-black text-primary">{player.fitnessScore || '0'}%</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            <CardContent className="p-8 space-y-5">
+                              <div className="space-y-1">
+                                <h4 className="font-black text-primary uppercase text-xl truncate">{player.name}</h4>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-60">Std {player.std} • {player.latestStatus || 'B'}</p>
+                              </div>
+                              <div className="flex justify-between items-center pt-4 border-t border-dashed border-primary/10">
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fitness Index</span>
+                                <span className="text-2xl font-black text-primary">{player.fitnessScore || '0'}%</span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
