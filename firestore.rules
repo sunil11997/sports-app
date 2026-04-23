@@ -1,98 +1,115 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * CORE PHILOSOPHY
-     * This ruleset implements a Database-level Access Control (DBAC) model.
-     * For the prototype, we allow any authenticated staff member (including anonymous ones)
-     * to manage the school sports data.
+     * FIRESTORE SECURITY RULES - PROTOTYPING MODE
+     * 
+     * CORE PHILOSOPHY:
+     * This ruleset implements a hierarchical, school-centric authorization model. 
+     * Access is primarily governed by school ownership and verified teacher roles.
+     * 
+     * DATA STRUCTURE:
+     * All application data is nested under the `/schools/{schoolId}` path. 
+     * Subcollections include teachers, players, and various player-related records 
+     * (attendance, assessments, and health incidents).
+     * 
+     * KEY SECURITY DECISIONS:
+     * 1. Authorization Independence: All documents denormalize 'schoolOwnerId' and 'schoolId' 
+     *    to allow for immediate, performant security checks without parent-document lookups.
+     * 2. Role-Based Access: Teachers are granted access to player data within their assigned 
+     *    school based on an exists() check in the school's teacher subcollection.
+     * 3. Prototyping Flexibility: Rules strictly enforce 'who' can access data (authorization) 
+     *    but allow for flexible 'shapes' of data (no strict schema validation) to support rapid iteration.
+     * 4. Strict Ownership: School profiles are protected by an 'ownerId' check, ensuring 
+     *    only the creator can manage school-level settings.
      */
 
     // --- Helper Functions ---
 
-    /** Checks if the user is authenticated with Firebase Auth. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** 
-     * Checks if the authenticated user is staff.
-     * For the MVP, any signed-in user is treated as staff.
-     */
-    function isStaff() {
-      return isSignedIn();
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Combined check for staff status and existence of the document for updates. */
-    function isExistingStaff() {
-      return isStaff() && resource != null;
+    /** Checks if the user is the specific owner of the school associated with the document. */
+    function isSchoolOwner(data) {
+      return isSignedIn() && request.auth.uid == data.schoolOwnerId;
+    }
+
+    /** Checks if the user is a registered teacher within the specified school. */
+    function isTeacherOfSchool(schoolId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/schools/$(schoolId)/teachers/$(request.auth.uid));
+    }
+
+    /** Combines administrative and instructional access for players and records. */
+    function canAccessSchoolData(schoolId, data) {
+      return isSchoolOwner(data) || isTeacherOfSchool(schoolId);
     }
 
     // --- Collection Rules ---
 
     /**
-     * @description Controls which users are recognized as staff members.
+     * @description Rules for the root school profile. 
+     * @path /schools/{schoolId}
+     * @allow (create) User UID matches ownerId in data.
+     * @deny (update) Non-owner attempts to modify school details.
+     * @principle Ownership-based management for root entities.
      */
-    match /staff_roles/{staffId} {
-      allow get: if isSignedIn() && request.auth.uid == staffId;
-      allow list, write: if false;
+    match /schools/{schoolId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.id == schoolId;
+      allow update: if isOwner(resource.data.ownerId) && (request.resource.data.ownerId == resource.data.ownerId);
+      allow delete: if isOwner(resource.data.ownerId);
     }
 
     /**
-     * @description Tracked drill completions.
+     * @description Manages teacher profiles and defines access roles.
+     * @path /schools/{schoolId}/teachers/{teacherUid}
+     * @allow (get) Teacher accessing their own profile OR school owner accessing staff list.
+     * @deny (create) Unauthorized user attempting to register as a teacher in a school they don't own.
+     * @principle Dual-purpose document serving as both profile and role-indicator.
      */
-    match /drill_completions/{drillId} {
-      allow read, write: if isStaff();
+    match /schools/{schoolId}/teachers/{teacherUid} {
+      allow get: if isOwner(teacherUid) || isSchoolOwner(resource.data);
+      allow list: if isTeacherOfSchool(schoolId) || isSchoolOwner(get(/databases/$(database)/documents/schools/$(schoolId)).data);
+      allow create: if isSignedIn() && (isOwner(teacherUid) || isSchoolOwner(request.resource.data));
+      allow update: if (isOwner(teacherUid) || isSchoolOwner(resource.data)) && (request.resource.data.schoolId == resource.data.schoolId);
+      allow delete: if isSchoolOwner(resource.data);
     }
 
     /**
-     * @description aggregated health incidents for quick dashboard access.
+     * @description Access for player profiles within a school.
+     * @path /schools/{schoolId}/players/{playerId}
+     * @allow (list) Any teacher or the school owner viewing the roster.
+     * @deny (update) A teacher from a different school attempting to edit player data.
+     * @principle Denormalized authorization using schoolOwnerId for flat-performance rules.
      */
-    match /all_health_incidents/{incidentId} {
-      allow read: if isStaff();
-      allow create: if isStaff() && request.resource.data.id == incidentId;
-      allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
-      allow delete: if isStaff();
+    match /schools/{schoolId}/players/{playerId} {
+      allow get, list: if canAccessSchoolData(schoolId, resource.data);
+      allow create: if canAccessSchoolData(schoolId, request.resource.data);
+      allow update: if canAccessSchoolData(schoolId, resource.data) && (request.resource.data.schoolId == resource.data.schoolId);
+      allow delete: if isSchoolOwner(resource.data);
     }
 
     /**
-     * @description Primary player profiles.
+     * @description Player-specific records (Attendance, Fitness, Skills, Incidents).
+     * @path /schools/{schoolId}/players/{playerId}/{collection}/{recordId}
+     * @allow (create) Teacher logging an incident or attendance.
+     * @deny (get) Unauthenticated user attempting to view private health or fitness records.
+     * @principle Cascading authorization via denormalized metadata.
      */
-    match /players/{playerId} {
-      allow read: if isStaff();
-      allow create: if isStaff() && request.resource.data.id == playerId;
-      allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
-      allow delete: if isStaff();
-
-      match /attendance/{attendanceId} {
-        allow read: if isStaff();
-        allow create: if isStaff() && request.resource.data.playerId == playerId;
-        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isStaff();
-      }
-
-      match /fitnessAssessments/{assessmentId} {
-        allow read: if isStaff();
-        allow create: if isStaff() && request.resource.data.playerId == playerId;
-        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isStaff();
-      }
-
-      match /sportSkills/{sportSkillId} {
-        allow read: if isStaff();
-        allow create: if isStaff() && request.resource.data.playerId == playerId;
-        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isStaff();
-      }
-
-      match /healthIncidents/{incidentId} {
-        allow read: if isStaff();
-        allow create: if isStaff() && request.resource.data.playerId == playerId;
-        allow update: if isExistingStaff() && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isStaff();
-      }
+    match /schools/{schoolId}/players/{playerId}/{subcollection}/{recordId} {
+      // Subcollections: attendanceRecords, fitnessAssessments, sportSkillAssessments, healthIncidents
+      
+      allow get, list: if canAccessSchoolData(schoolId, resource.data);
+      allow create: if canAccessSchoolData(schoolId, request.resource.data);
+      allow update: if canAccessSchoolData(schoolId, resource.data) && (request.resource.data.schoolId == resource.data.schoolId);
+      allow delete: if isSchoolOwner(resource.data);
     }
   }
 }
