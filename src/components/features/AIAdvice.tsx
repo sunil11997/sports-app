@@ -378,9 +378,9 @@ export function AIAdvice({ store }: { store: any }) {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-black text-primary uppercase tracking-tight">Coach Assistant Chat</CardTitle>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live Institutional AI Support
-                  </p>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live Institutional AI Support
+                  </div>
                 </div>
               </div>
               {selectedPlayerId && (
