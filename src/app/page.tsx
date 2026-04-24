@@ -34,7 +34,8 @@ import {
   User,
   Download,
   X,
-  ClipboardList
+  ClipboardList,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -59,6 +60,7 @@ import { History } from '@/components/features/History';
 import { SchoolActivities } from '@/components/features/SchoolActivities';
 import { ClassesHub } from '@/components/features/ClassesHub';
 import { ClassesSection } from '@/components/features/ClassesSection';
+import { Settings } from '@/components/features/Settings';
 
 const translations = {
   English: {
@@ -78,6 +80,7 @@ const translations = {
     drills: "Drills",
     health: "Health",
     aiHub: "AI Hub",
+    settings: "Settings",
     enroll: "Enroll",
     registry: "Registry",
     session: "Session",
@@ -134,6 +137,7 @@ const translations = {
     drills: "सराव",
     health: "आरोग्य",
     aiHub: "AI केंद्र",
+    settings: "सेटिंग्ज",
     enroll: "नावनोंदणी",
     registry: "नोंदणी वही",
     session: "सत्र",
@@ -387,15 +391,18 @@ export default function WaghambaApp() {
     { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-600 bg-rose-50" },
     { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
     { id: "ai", label: t.aiHub, icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50" },
+    { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const generalTabs = [
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.enroll, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
+    { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
     { id: "exam", label: t.exam, icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
     { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
     { id: "activities", label: t.activities, icon: Zap, color: "text-purple-600 bg-purple-50" },
     { id: "daily-report", label: t.reports, icon: FileText, color: "text-rose-600 bg-rose-50" },
+    { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
@@ -729,6 +736,10 @@ export default function WaghambaApp() {
 
             <TabsContent value="exam">
               <ClassesHub store={schoolData} />
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
           </div>
         </Tabs>

@@ -31,7 +31,8 @@ import {
   RotateCw,
   Image as ImageIcon,
   ArrowUpCircle,
-  Users
+  Users,
+  ChevronRight
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -334,13 +335,17 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-          {selectedIds.size > 0 && (
+          {selectedIds.size > 0 ? (
             <Button 
               onClick={() => setIsPromotionDialogOpen(true)}
-              className="bg-accent text-accent-foreground font-black h-9 text-xs uppercase"
+              className="bg-accent text-accent-foreground font-black h-9 text-xs uppercase animate-in zoom-in-95"
             >
               <ArrowUpCircle className="w-4 h-4 mr-2" /> {t.promoteNext} ({selectedIds.size})
             </Button>
+          ) : (
+            <div className="hidden md:flex items-center px-4 bg-muted/30 rounded-lg border border-dashed text-[9px] font-black text-muted-foreground uppercase">
+              Select students to enable Promotion Hub
+            </div>
           )}
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -511,9 +516,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
       {/* Photo Viewer Dialog */}
       <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
         <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[2rem] border-0 shadow-2xl">
-          <DialogHeader className="sr-only">
-            <DialogTitle>{viewingPhoto?.name || 'Student Photo'}</DialogTitle>
-          </DialogHeader>
           <div className="relative w-full aspect-[3/4] bg-muted">
             {viewingPhoto && (
               <Image 
