@@ -37,18 +37,37 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const { isOnline, isInstallable, installApp } = usePWA();
 
   const handleBackup = () => {
+    if (!isOnline) {
+      toast({
+        variant: "destructive",
+        title: language === 'Marathi' ? "कनेक्शन नाही" : "No Connection",
+        description: language === 'Marathi' ? "गुगल बॅकअपसाठी इंटरनेट कनेक्शन आवश्यक आहे." : "An active internet connection is required for Google backup."
+      });
+      return;
+    }
+
     initiateGoogleBackup(auth)
       .then(() => {
         toast({ 
-          title: "Google Account Linked", 
-          description: "Your school data is now securely backed up to your Google Drive cloud." 
+          title: language === 'Marathi' ? "गुगल खाते लिंक झाले" : "Google Account Linked", 
+          description: language === 'Marathi' ? "तुमचा डेटा आता सुरक्षितपणे बॅकअप घेतला जात आहे." : "Your school data is now securely backed up to your Google account." 
         });
       })
-      .catch((err) => {
+      .catch((err: any) => {
+        console.error("Backup Error:", err);
+        let errorMsg = language === 'Marathi' ? "कृपया तुमचे इंटरनेट तपासा किंवा पुन्हा प्रयत्न करा." : "Please check your connection or try again.";
+        
+        // Handle specific Firebase Auth errors for better user guidance
+        if (err.code === 'auth/popup-blocked') {
+          errorMsg = language === 'Marathi' ? "ब्राउझरने पॉपअप ब्लॉक केले आहे. कृपया ते सुरू करा." : "Browser blocked the popup. Please enable popups for this site.";
+        } else if (err.code === 'auth/cancelled-popup-request') {
+          errorMsg = language === 'Marathi' ? "प्रक्रिया रद्द केली गेली." : "Operation was cancelled.";
+        }
+
         toast({ 
           variant: "destructive", 
-          title: "Backup Linking Failed", 
-          description: "Ensure you have a stable connection and Google Drive Auth is enabled." 
+          title: language === 'Marathi' ? "बॅकअप अयशस्वी" : "Backup Failed", 
+          description: errorMsg 
         });
       });
   };
@@ -206,3 +225,4 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     </div>
   );
 }
+
