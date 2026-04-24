@@ -47,7 +47,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
-import { differenceInYears } from 'date-fns';
+import { differenceInYears, isValid } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -67,10 +67,10 @@ const CATEGORIES = [
 const getBMIInfo = (hStr: string, wStr: string, isMarathi: boolean) => {
   const h = parseFloat(hStr) / 100;
   const w = parseFloat(wStr);
-  if (!h || !w || isNaN(h) || isNaN(w)) return { bmi: "-", label: isMarathi ? "उपलब्ध नाही" : "N/A", color: "text-muted-foreground bg-muted border-transparent" };
+  if (!h || !w || isNaN(h) || isNaN(w) || h <= 0) return { bmi: "-", label: isMarathi ? "उपलब्ध नाही" : "N/A", color: "text-muted-foreground bg-muted border-transparent" };
   
   const bmi = w / (h * h);
-  const bmiStr = bmi.toFixed(1);
+  const bmiStr = isNaN(bmi) ? "-" : bmi.toFixed(1);
   
   if (bmi < 18.5) return { bmi: bmiStr, label: isMarathi ? "कमी वजन" : "Underweight", color: "text-blue-600 bg-blue-50 border-blue-100" };
   if (bmi < 25) return { bmi: bmiStr, label: isMarathi ? "सामान्य" : "Normal", color: "text-green-600 bg-green-50 border-green-100" };
@@ -116,7 +116,8 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     if (records.length === 0) return 0;
     
     const presents = records.filter(([, status]) => status === 'P').length;
-    return Math.round((presents / records.length) * 100);
+    const result = Math.round((presents / records.length) * 100);
+    return isNaN(result) ? 0 : result;
   };
 
   const filteredPlayers = store.data.players.filter((p: any) => {
@@ -162,11 +163,12 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
         return;
       }
 
-      const age = differenceInYears(new Date(), new Date(editingPlayer.dob));
+      const dobDate = new Date(editingPlayer.dob);
+      const age = isValid(dobDate) ? differenceInYears(new Date(), dobDate) : (parseInt(editingPlayer.age as any) || 0);
       
       store.updatePlayer({
         ...editingPlayer,
-        age
+        age: isNaN(age) ? 0 : age
       });
       setEditingPlayer(null);
       stopCamera();
@@ -303,7 +305,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                   <td>${p.photoUrl ? `<img src="${p.photoUrl}" class="photo" />` : 'No Photo'}</td>
                   <td><strong>${p.name}</strong></td>
                   <td>${p.gender}</td>
-                  <td>${p.age}</td>
+                  <td>${p.age || 0}</td>
                   <td>${p.std}</td>
                   <td>${bmiInfo.bmi} (${bmiInfo.label})</td>
                   <td>${p.aadharNumber || '-'}</td>
@@ -436,7 +438,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
+                    <TableCell className="border-r p-2 text-center text-xs">{player.age || 0}</TableCell>
                     <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
                     <TableCell className="border-r p-2 text-center">
                       <div className="flex flex-col items-center gap-0.5">
@@ -450,7 +452,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                       {player.mobileNumber || '-'}
                     </TableCell>
                     {isGeneral ? (
-                      <TableCell className="border-r p-2 text-center text-xs font-black text-primary">{player.examMarks || '0'}</TableCell>
+                      <TableCell className="border-r p-2 text-center text-xs font-black text-primary">{String(player.examMarks || '0')}</TableCell>
                     ) : (
                       <TableCell className="border-r p-2">
                         <div className="flex flex-wrap gap-1">

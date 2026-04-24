@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon, Languages, Fingerprint, Phone } from 'lucide-react';
-import { differenceInYears } from 'date-fns';
+import { differenceInYears, isValid } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
@@ -209,16 +210,20 @@ export function Registration({ store, section, language = 'English' }: { store: 
   }, []);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const age = differenceInYears(new Date(), new Date(values.dob));
+    const dobDate = new Date(values.dob);
+    const ageRaw = isValid(dobDate) ? differenceInYears(new Date(), dobDate) : 0;
+    const age = isNaN(ageRaw) ? 0 : ageRaw;
+
     const h = parseFloat(values.height) / 100;
     const w = parseFloat(values.weight);
-    const bmi = (w / (h * h)).toFixed(1);
+    const bmiVal = (w / (h * h));
+    const bmi = isNaN(bmiVal) || bmiVal <= 0 ? "0.0" : bmiVal.toFixed(1);
 
     const newPlayer = {
       ...values,
       id: Math.random().toString(36).substr(2, 9),
       age,
-      bmi: isNaN(parseFloat(bmi)) ? "0" : bmi,
+      bmi,
       category: section === 'sports' ? 'athlete' : 'student',
       sports: section === 'sports' ? values.sports : [],
     };
