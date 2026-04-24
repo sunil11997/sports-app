@@ -44,6 +44,7 @@ export interface FitnessAssessment {
   boardJump?: string;    // Power / Broad Jump
   sitUps?: string;       // Core Strength
   strengthScore?: string; // Specific Strength Rating
+  enduranceScore?: string; // Specific Endurance Rating
   score: string;
   status: string;
   date?: string;

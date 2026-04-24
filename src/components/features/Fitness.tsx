@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -6,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Activity, Printer, Scale, Save, Loader2, Calendar, History } from 'lucide-react';
+import { Activity, Printer, Scale, Save, Loader2, Calendar, History, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -66,6 +65,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           boardJump: '', 
           sitUps: '', 
           strengthScore: '',
+          enduranceScore: '',
           score: '', 
           status: '',
           height: '',
@@ -77,8 +77,39 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     }));
   };
 
+  const calculateAutoScores = (id: string) => {
+    const current = assessments[id] || {};
+    
+    // Auto-Strength Score (Situps + Board Jump combined)
+    // Formula: (Situps / 35 * 60) + (Board Jump / 220 * 40)
+    const situps = parseInt(current.sitUps) || 0;
+    const boardJump = parseInt(current.boardJump) || 0;
+    const situpsRating = Math.min(60, (situps / 35) * 60);
+    const jumpRating = Math.min(40, (boardJump / 220) * 40);
+    const strength = Math.round(situpsRating + jumpRating);
+
+    // Auto-Endurance Score (600m Run)
+    // Formula: Elite < 2:10 (100%), Advanced < 2:30 (80%), etc.
+    // Simplifying: 130s = 100%. Score = 100 - (seconds - 130) * 0.5
+    const run600Parts = (current.run600m || "").split(':');
+    let run600Seconds = 0;
+    if (run600Parts.length === 2) {
+      run600Seconds = (parseInt(run600Parts[0]) * 60) + parseInt(run600Parts[1]);
+    } else {
+      run600Seconds = parseInt(run600Parts[0]) || 0;
+    }
+    
+    let endurance = 0;
+    if (run600Seconds > 0) {
+      endurance = Math.max(0, Math.min(100, Math.round(100 - (run600Seconds - 130) * 0.5)));
+    }
+
+    return { strength, endurance };
+  };
+
   const handleSave = async (player: any) => {
     const id = player.id;
+    const { strength, endurance } = calculateAutoScores(id);
     const current = { ...(assessments[id] || {}) };
     setIsSaving(id);
     
@@ -86,27 +117,26 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     let status = 'Logged';
 
     if (!isGeneral) {
-      // Auto-Strength from Sit-ups (Institutional Formula: 35 reps = 100%)
-      const situps = parseInt(current.sitUps) || 0;
-      const autoStrength = Math.min(100, Math.round((situps / 35) * 100));
-      
-      // Update local and submission data with auto-strength if not manually overridden
-      if (!current.strengthScore || current.strengthScore === '') {
-        current.strengthScore = autoStrength.toString();
-      }
+      current.strengthScore = strength.toString();
+      current.enduranceScore = endurance.toString();
 
-      const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps', 'strengthScore'];
+      const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps', 'strengthScore', 'enduranceScore'];
       let sum = 0;
       let count = 0;
 
       fields.forEach(f => {
+        if (f === 'run600m' || f === 'run50m' || f === 'shuttleRun') return; // Timings aren't 0-100 values
         const val = parseFloat(current[f]);
         if (!isNaN(val)) {
-          // Normalize values to 100 max for aggregate percentage
           sum += (val > 100 ? 100 : val);
           count++;
         }
       });
+      
+      // Add agility (shuttle) and speed (50m) to sum if possible
+      // (This is a simplified institutional grading)
+      sum += (strength + endurance);
+      count += 2;
 
       const calculatedScore = count > 0 ? Math.round(sum / count).toString() : "0";
       scoreNum = parseInt(calculatedScore);
@@ -131,8 +161,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setIsSaving(null);
 
     toast({ 
-      title: "Data Synced", 
-      description: `Fitness record for ${player.name} archived successfully.`,
+      title: "Performance Data Synced", 
+      description: `Endurance (${endurance}%) and Strength (${strength}%) archived for ${player.name}.`,
       className: "bg-accent border-accent-foreground text-accent-foreground font-black",
     });
   };
@@ -143,48 +173,43 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const printContent = `
       <html>
         <head>
-          <title>${isGeneral ? 'Monthly Growth Report' : 'Fitness Report'} - ${categoryLabel}</title>
+          <title>${isGeneral ? 'Growth Report' : 'Athletic Profile'} - ${categoryLabel}</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; color: #333; }
             .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #235C36; padding-bottom: 10px; }
             h1 { color: #235C36; text-transform: uppercase; margin: 0; }
-            .month-sub { font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase; margin-top: 5px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-            th { background-color: #f8f8f8; font-weight: bold; font-size: 9px; text-transform: uppercase; }
+            th { background-color: #f8f8f8; font-weight: bold; font-size: 8px; text-transform: uppercase; }
             .score-cell { font-weight: 900; color: #235C36; }
-            .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; font-size: 10px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>${isGeneral ? 'MONTHLY STUDENT GROWTH LOG' : 'INSTITUTIONAL ATHLETE FITNESS'}</h1>
-            <div class="month-sub">Period: ${currentMonth} | Category: ${categoryLabel.toUpperCase()}</div>
+            <h1>INSTITUTIONAL PERFORMANCE REGISTRY</h1>
+            <p>Period: ${currentMonth} | Category: ${categoryLabel.toUpperCase()}</p>
           </div>
           <table>
             <thead>
               <tr>
                 <th>STUDENT NAME</th>
-                <th>CATEGORY</th>
                 ${isGeneral ? 
-                  '<th>HT (CM)</th><th>WT (KG)</th><th>EXAM SC</th>' : 
-                  '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>STR RATING %</th>'
+                  '<th>HT</th><th>WT</th><th>EXAM SC</th>' : 
+                  '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>ENDURANCE %</th><th>STRENGTH %</th>'
                 }
-                <th>TOTAL</th>
+                <th>AGGREGATE</th>
                 <th>LEVEL</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness[p.id] || {};
-                const category = getReadableCategory(p);
                 return `
                   <tr>
-                    <td><strong>${p.name}</strong><br/><small>Std ${p.std}</small></td>
-                    <td>${category}</td>
+                    <td><strong>${p.name}</strong> (Std ${p.std})</td>
                     ${isGeneral ? 
                       `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : 
-                      `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.strengthScore || '-'}%</td>`
+                      `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.enduranceScore || '-'}%</td><td>${fit.strengthScore || '-'}%</td>`
                     }
                     <td class="score-cell">${fit.score || '0'}${isGeneral ? '' : '%'}</td>
                     <td><strong>${fit.status || 'PENDING'}</strong></td>
@@ -223,17 +248,19 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           {isGeneral ? <Scale className="w-6 h-6 text-primary" /> : <Activity className="w-6 h-6 text-accent" />}
           <div>
             <h2 className="text-xl font-black text-primary uppercase tracking-tight">
-              {isGeneral ? 'Monthly Growth Registry' : 'Athlete Fitness Registry'}
+              {isGeneral ? 'Monthly Growth Registry' : 'Advanced Athletic Hub'}
             </h2>
             <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
-              <Calendar className="w-3 h-3" /> Filtered: {CATEGORIES.find(c => c.id === activeCategory)?.label} | {format(new Date(), 'MMM yyyy')}
+              <Calendar className="w-3 h-3" /> {format(new Date(), 'MMMM yyyy')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="font-bold h-9 border-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <History className="w-4 h-4 mr-2" /> Show Monthly Spread
-          </Button>
+          {!isGeneral && (
+            <Badge variant="outline" className="bg-white border-2 border-accent text-accent-foreground font-black uppercase text-[9px] px-3 h-9 hidden md:flex items-center gap-2">
+              <ShieldAlert className="w-3 h-3" /> Auto-Scoring Engine Active
+            </Badge>
+          )}
           <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary hover:bg-primary/90">
             <Printer className="w-4 h-4 mr-2" /> Print Sheet
           </Button>
@@ -244,7 +271,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         <Table className="border-collapse min-w-max">
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow className="border-b">
-              <TableHead className="border-r h-10 px-4 font-black text-[11px] uppercase w-[200px] sticky left-0 bg-muted/95 z-30">Student Details</TableHead>
+              <TableHead className="border-r h-10 px-4 font-black text-[11px] uppercase w-[180px] sticky left-0 bg-muted/95 z-30">Athlete</TableHead>
               {isGeneral ? (
                 <>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">HT (cm)</TableHead>
@@ -253,17 +280,18 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 </>
               ) : (
                 <>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">10x6</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">50M</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">600M</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">Reach</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">Jump</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[65px]">Situps</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Strength Rating</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">10x6</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">50M</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[75px]">600M</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Endurance</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Strength</TableHead>
                 </>
               )}
-              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[120px]">Score / Level</TableHead>
-              <TableHead className="h-10 px-2 font-black text-[10px] uppercase text-right w-[80px] sticky right-0 bg-muted/95 z-30">Sync</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[120px]">Final Level</TableHead>
+              <TableHead className="h-10 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -275,26 +303,22 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               </TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
-                const current = assessments[player.id] || { 
-                  shuttleRun: '', run50m: '', run600m: '', 
-                  sitAndReach: '', boardJump: '', sitUps: '', strengthScore: '',
-                  score: '', status: '',
-                  height: '', weight: '', examMarks: ''
-                };
+                const current = assessments[player.id] || {};
+                const { strength, endurance } = !isGeneral ? calculateAutoScores(player.id) : { strength: 0, endurance: 0 };
                 const isPulse = lastSavedId === player.id;
                 
                 return (
                   <TableRow 
                     key={player.id} 
                     className={cn(
-                      "border-b even:bg-muted/20 hover:bg-primary/5 transition-all h-12",
+                      "border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-12",
                       isPulse && "animate-success-pulse"
                     )}
                   >
                     <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
                       <div className="flex flex-col">
-                        <span className="text-primary uppercase truncate w-[160px]">{player.name}</span>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Std {player.std} • {getReadableCategory(player)}</span>
+                        <span className="text-primary uppercase truncate w-[140px]">{player.name}</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Std {player.std}</span>
                       </div>
                     </TableCell>
                     
@@ -312,20 +336,31 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                       </>
                     ) : (
                       <>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-black text-primary border-0 bg-primary/5 focus:bg-white" placeholder="0-100" value={current.strengthScore || ''} onChange={(e) => handleChange(player.id, 'strengthScore', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="S" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="S" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="M:S" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="CM" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="CM" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="#" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0 text-center bg-accent/[0.03]">
+                          <span className={cn(
+                            "text-[10px] font-black",
+                            endurance >= 80 ? "text-green-600" : endurance >= 50 ? "text-orange-600" : "text-destructive"
+                          )}>{endurance}%</span>
+                        </TableCell>
+                        <TableCell className="border-r p-0 text-center bg-accent/[0.03]">
+                          <span className={cn(
+                            "text-[10px] font-black",
+                            strength >= 80 ? "text-green-600" : strength >= 50 ? "text-orange-600" : "text-destructive"
+                          )}>{strength}%</span>
+                        </TableCell>
                       </>
                     )}
 
                     <TableCell className="border-r p-1 text-center bg-primary/5">
                       <div className="flex flex-col items-center">
                         <span className="text-[11px] font-black text-primary">{current.score || '0'}{isGeneral ? '' : '%'}</span>
-                        <span className="text-[7px] font-black uppercase text-muted-foreground truncate w-full">{current.status || 'Pending'}</span>
+                        <span className="text-[7px] font-black uppercase text-muted-foreground truncate w-full px-1">{current.status || 'Pending'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="p-0 text-right sticky right-0 bg-white z-10 ios-blur">

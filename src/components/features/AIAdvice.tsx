@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -21,7 +20,8 @@ import {
   MessageSquare,
   Send,
   User,
-  Bot
+  Bot,
+  Apple
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
@@ -202,6 +202,11 @@ export function AIAdvice({ store }: { store: any }) {
           </section>
 
           <section>
+            <h2>Dietary & Nutrition Plan</h2>
+            <div style="white-space: pre-wrap;">${advice.dietPlan}</div>
+          </section>
+
+          <section>
             <h2>Performance Boosters</h2>
             <div style="white-space: pre-wrap;">${advice.performanceSuggestions}</div>
           </section>
@@ -324,6 +329,19 @@ export function AIAdvice({ store }: { store: any }) {
               <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
                 <CardHeader className="bg-primary/5">
                   <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
+                    <Apple className="w-5 h-5 text-emerald-600" /> Dietary Plan
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="prose prose-emerald prose-sm max-w-none text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                    {advice.dietPlan}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] bg-white">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="text-lg font-black text-primary uppercase flex items-center gap-2">
                     <Dumbbell className="w-5 h-5" /> Training Blueprint
                   </CardTitle>
                 </CardHeader>
@@ -347,10 +365,10 @@ export function AIAdvice({ store }: { store: any }) {
                 </CardContent>
               </Card>
 
-              <Card className="md:col-span-2 border-2 border-destructive/20 shadow-xl rounded-[2rem] bg-destructive/[0.02]">
+              <Card className="md:col-span-1 border-2 border-destructive/20 shadow-xl rounded-[2rem] bg-destructive/[0.02]">
                 <CardHeader className="bg-destructive/5">
                   <CardTitle className="text-lg font-black text-destructive uppercase flex items-center gap-2">
-                    <HeartPulse className="w-5 h-5" /> Health & Recovery Protocol
+                    <HeartPulse className="w-5 h-5" /> Health Protocol
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">

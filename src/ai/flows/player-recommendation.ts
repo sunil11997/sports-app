@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A Genkit flow for generating personalized recommendations for school sports players.
@@ -55,6 +54,7 @@ const PlayerRecommendationOutputSchema = z.object({
   summary: z.string().describe('A brief overall summary of the player\'s profile and key takeaways.'),
   trainingPlan: z.string().describe('Personalized training plan recommendations for the player.'),
   healthAdvice: z.string().describe('Health-related advice and suggestions for the player.'),
+  dietPlan: z.string().describe('A specific sports-oriented diet plan based on their BMI and physical test results.'),
   performanceSuggestions: z.string().describe('Specific suggestions for improving performance in their sport.'),
 });
 export type PlayerRecommendationOutput = z.infer<typeof PlayerRecommendationOutputSchema>;
@@ -89,66 +89,14 @@ Institutional Fitness Assessment:
 - Overall Score: {{{fitnessScore}}}
 - School Fitness Level: {{{fitnessStatus}}}
 
-Skills Context:
-- Primary/Secondary Score: {{{sportSkillScore}}}
-{{#if detailedKabaddiSkills}}
-- Detailed Kabaddi Analysis:
-{{#each detailedKabaddiSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedVolleyballSkills}}
-- Detailed Volleyball Analysis:
-{{#each detailedVolleyballSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedHandballSkills}}
-- Detailed Handball Analysis:
-{{#each detailedHandballSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedKhoKhoSkills}}
-- Detailed Kho Kho Analysis:
-{{#each detailedKhoKhoSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedRunningSkills}}
-- Detailed Running Analysis:
-{{#each detailedRunningSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedShotPutSkills}}
-- Detailed Shot Put Analysis:
-{{#each detailedShotPutSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedJavlineSkills}}
-- Detailed Javelin Analysis:
-{{#each detailedJavlineSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedLongJumpSkills}}
-- Detailed Long Jump Analysis:
-{{#each detailedLongJumpSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-{{#if detailedHighJumpSkills}}
-- Detailed High Jump Analysis:
-{{#each detailedHighJumpSkills}}
-  * {{{@key}}}: {{{this}}}/10
-{{/each}}
-{{/if}}
-
 Health Context: {{{pastHealthIncidents}}}
 
-Based on this granular data, provide highly specific recommendations. Analyze which specific tests (e.g., endurance vs agility) or technical moves (for the selected sports) need more work. Focus on actionable advice for training, health, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
+Based on this granular data, provide highly specific recommendations. 
+Analyze which specific tests (e.g., endurance vs agility) or technical moves (for the selected sports) need more work. 
+
+IMPORTANT: Provide a detailed DIET PLAN section that addresses their BMI category and energy requirements for their specific sports. If they are underweight, focus on healthy mass building. If they have low endurance (based on 600m run), focus on stamina-boosting foods.
+
+Focus on actionable advice for training, health, nutrition, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
 `,
 });
 
@@ -160,7 +108,7 @@ const playerRecommendationFlow = ai.defineFlow(
   },
   async (input) => {
     let attempts = 0;
-    const maxAttempts = 3; // Reduced to stay within server action limits
+    const maxAttempts = 3; 
     let lastError: any = null;
 
     console.log(`Starting AI Recommendation for ${input.name} (Attempt 1)`);
