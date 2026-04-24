@@ -2,24 +2,24 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { collection, doc, query, where, collectionGroup, onSnapshot } from 'firebase/firestore';
+import { collection, doc, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 /**
  * useSchoolData - Optimized Hook for Waghamba Sports Hub
- * Uses Collection Group Queries to minimize active listeners and maximize load speed.
+ * Uses Root-Level Collections to resolve index errors while maintaining high performance.
  */
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // 1. School Profile (Primary)
+  // 1. School Profile
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
-  // 2. Players (Primary)
+  // 2. Players
   const playersQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
@@ -34,24 +34,24 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
-  // 4. Global Collection Group Queries (One listener for ALL students)
+  // 4. Centralized Data Fetching (Using root collections instead of collectionGroup)
   useEffect(() => {
     if (!user) return;
 
     // A. Sync ALL Attendance records for this school
-    const attGroupQuery = query(collectionGroup(db, 'attendance'), where('schoolId', '==', user.uid));
-    const unsubAtt = onSnapshot(attGroupQuery, (snapshot) => {
+    const attQuery = query(collection(db, 'attendance_registry'), where('schoolId', '==', user.uid));
+    const unsubAtt = onSnapshot(attQuery, (snapshot) => {
       const newAtt: AttendanceRecord = {};
       snapshot.docs.forEach(doc => {
         const data = doc.data();
-        newAtt[`${data.playerId}_${doc.id}`] = data.status;
+        newAtt[`${data.playerId}_${data.date}`] = data.status;
       });
-      setAttendanceData(prev => ({ ...prev, ...newAtt }));
+      setAttendanceData(newAtt);
     });
 
     // B. Sync ALL Fitness assessments
-    const fitGroupQuery = query(collectionGroup(db, 'fitnessAssessments'), where('schoolId', '==', user.uid));
-    const unsubFit = onSnapshot(fitGroupQuery, (snapshot) => {
+    const fitQuery = query(collection(db, 'fitness_registry'), where('schoolId', '==', user.uid));
+    const unsubFit = onSnapshot(fitQuery, (snapshot) => {
       const latestMap: Record<string, FitnessAssessment> = {};
       const historyMap: Record<string, FitnessAssessment[]> = {};
 
@@ -60,21 +60,22 @@ export function useSchoolData() {
         const pId = data.playerId;
         if (!pId) return;
 
-        if (doc.id === 'latest') {
+        // Determine if this is the "latest" for this specific player (client-side logic to avoid complex indexes)
+        if (!latestMap[pId] || (data.updatedAt && latestMap[pId].updatedAt && data.updatedAt > latestMap[pId].updatedAt)) {
           latestMap[pId] = data;
         }
         
         if (!historyMap[pId]) historyMap[pId] = [];
-        historyMap[pId].push({ ...data, date: doc.id === 'latest' ? data.updatedAt : doc.id });
+        historyMap[pId].push({ ...data, date: data.date || data.updatedAt?.split('T')[0] });
       });
 
-      setFitnessData(prev => ({ ...prev, ...latestMap }));
-      setFitnessHistory(prev => ({ ...prev, ...historyMap }));
+      setFitnessData(latestMap);
+      setFitnessHistory(historyMap);
     });
 
     // C. Sync ALL Sport Skills
-    const skillsGroupQuery = query(collectionGroup(db, 'sportSkills'), where('schoolId', '==', user.uid));
-    const unsubSkills = onSnapshot(skillsGroupQuery, (snapshot) => {
+    const skillsQuery = query(collection(db, 'skills_registry'), where('schoolId', '==', user.uid));
+    const unsubSkills = onSnapshot(skillsQuery, (snapshot) => {
       const skillsMap: Record<string, SportSkill> = {};
       const historyMap: Record<string, (SportSkill & { sportName: string })[]> = {};
 
@@ -83,13 +84,13 @@ export function useSchoolData() {
         const pId = data.playerId;
         if (!pId) return;
 
-        skillsMap[`${pId}_${doc.id}`] = data;
+        skillsMap[`${pId}_${data.sportName}`] = data;
         if (!historyMap[pId]) historyMap[pId] = [];
-        historyMap[pId].push({ ...data, sportName: doc.id });
+        historyMap[pId].push({ ...data, sportName: data.sportName || 'Unknown' });
       });
 
-      setSportSkillsData(prev => ({ ...prev, ...skillsMap }));
-      setSkillsHistory(prev => ({ ...prev, ...historyMap }));
+      setSportSkillsData(skillsMap);
+      setSkillsHistory(historyMap);
     });
 
     return () => {
@@ -107,7 +108,7 @@ export function useSchoolData() {
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
   // 6. Drill Completions
-  const drillsSyncRef = useMemoFirebase(() => user ? collection(db, 'drill_completions') : null, [db, user]);
+  const drillsSyncRef = useMemoFirebase(() => user ? query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid)) : null, [db, user]);
   const { data: drillComps } = useCollection(drillsSyncRef);
 
   useEffect(() => {
@@ -147,7 +148,6 @@ export function useSchoolData() {
     }
   }), [players, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
-  // Persistence methods...
   const saveSchoolProfile = (profile: any) => {
     if (!user) return;
     const profileRef = doc(db, 'schools', user.uid);
@@ -175,7 +175,7 @@ export function useSchoolData() {
     Object.entries(records).forEach(([key, status]) => {
       const [playerId, date] = key.split('_');
       if (!playerId || !date) return;
-      const attRef = doc(db, 'players', playerId, 'attendance', date);
+      const attRef = doc(db, 'attendance_registry', `${playerId}_${date}`);
       if (!status) deleteDocumentNonBlocking(attRef);
       else setDocumentNonBlocking(attRef, { status, playerId, date, schoolId: user.uid }, { merge: true });
     });
@@ -185,15 +185,15 @@ export function useSchoolData() {
     if (!user) return;
     const timestamp = new Date().toISOString();
     const dateId = timestamp.split('T')[0];
-    const historyRef = doc(db, 'players', playerId, 'fitnessAssessments', dateId);
-    setDocumentNonBlocking(historyRef, { ...assessment, playerId, schoolId: user.uid, updatedAt: timestamp }, { merge: true });
-    const latestRef = doc(db, 'players', playerId, 'fitnessAssessments', 'latest');
-    setDocumentNonBlocking(latestRef, { ...assessment, playerId, schoolId: user.uid, updatedAt: timestamp }, { merge: true });
+    const refId = `${playerId}_${dateId}`;
+    const fitnessRef = doc(db, 'fitness_registry', refId);
+    setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: timestamp }, { merge: true });
   };
 
   const setSportSkill = (playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
-    const skillRef = doc(db, 'players', playerId, 'sportSkills', sport);
+    const refId = `${playerId}_${sport}`;
+    const skillRef = doc(db, 'skills_registry', refId);
     setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString() }, { merge: true });
   };
 
@@ -208,8 +208,6 @@ export function useSchoolData() {
     if (!user) return;
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
     setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid }, { merge: true });
-    const playerIncRef = doc(db, 'players', incident.playerId, 'healthIncidents', incident.id);
-    setDocumentNonBlocking(playerIncRef, { ...incident, schoolId: user.uid }, { merge: true });
   };
 
   const addActivity = (activityData: any) => {
