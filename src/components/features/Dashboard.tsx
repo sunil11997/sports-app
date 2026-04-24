@@ -29,10 +29,11 @@ import {
   RefreshCw,
   XCircle,
   RotateCw,
-  Image as ImageIcon,
+  ImageIcon,
   ArrowUpCircle,
   Users,
-  ChevronRight
+  ChevronRight,
+  Scale
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -63,6 +64,20 @@ const CATEGORIES = [
   { id: 'girls-senior', label: 'Girls Senior' },
 ];
 
+const getBMIInfo = (hStr: string, wStr: string, isMarathi: boolean) => {
+  const h = parseFloat(hStr) / 100;
+  const w = parseFloat(wStr);
+  if (!h || !w || isNaN(h) || isNaN(w)) return { bmi: "-", label: isMarathi ? "उपलब्ध नाही" : "N/A", color: "text-muted-foreground bg-muted border-transparent" };
+  
+  const bmi = w / (h * h);
+  const bmiStr = bmi.toFixed(1);
+  
+  if (bmi < 18.5) return { bmi: bmiStr, label: isMarathi ? "कमी वजन" : "Underweight", color: "text-blue-600 bg-blue-50 border-blue-100" };
+  if (bmi < 25) return { bmi: bmiStr, label: isMarathi ? "सामान्य" : "Normal", color: "text-green-600 bg-green-50 border-green-100" };
+  if (bmi < 30) return { bmi: bmiStr, label: isMarathi ? "जास्त वजन" : "Overweight", color: "text-orange-600 bg-orange-50 border-orange-100" };
+  return { bmi: bmiStr, label: isMarathi ? "लठ्ठपणा" : "Obese", color: "text-red-600 bg-red-50 border-red-100" };
+};
+
 export function Dashboard({ store, section, language = 'English', t }: { store: any, section: 'sports' | 'general', language?: string, t: any }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,7 +87,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);
 
-  // Camera States for Edit Dialog
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -171,7 +185,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
       if (currentStd < 12) {
         store.updatePlayer({ ...p, std: (currentStd + 1).toString() });
       } else {
-        // Handle Std 12 graduation
         if (confirm(isMarathi ? `${p.name} १२वी उत्तीर्ण झाले आहेत. त्यांना काढून टाकायचे?` : `${p.name} has finished Std 12. Remove from active roster?`)) {
           store.deletePlayer(p.id);
         }
@@ -186,7 +199,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     setIsPromotionDialogOpen(false);
   };
 
-  // Camera Logic for Edit Modal
   useEffect(() => {
     if (isCameraActive && videoRef.current && stream) {
       videoRef.current.srcObject = stream;
@@ -279,11 +291,13 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           <table>
             <thead>
               <tr>
-                <th>SR</th><th>PHOTO</th><th>NAME</th><th>GENDER</th><th>AGE</th><th>STD</th><th>AADHAR</th><th>MOBILE</th>${isGeneral ? '<th>EXAM MARKS</th>' : '<th>SPORTS</th>'}<th>ATT %</th>
+                <th>SR</th><th>PHOTO</th><th>NAME</th><th>GENDER</th><th>AGE</th><th>STD</th><th>BMI STATUS</th><th>AADHAR</th><th>MOBILE</th>${isGeneral ? '<th>EXAM MARKS</th>' : '<th>SPORTS</th>'}<th>ATT %</th>
               </tr>
             </thead>
             <tbody>
-              ${filteredPlayers.map((p: any, i: number) => `
+              ${filteredPlayers.map((p: any, i: number) => {
+                const bmiInfo = getBMIInfo(p.height, p.weight, isMarathi);
+                return `
                 <tr>
                   <td>${i + 1}</td>
                   <td>${p.photoUrl ? `<img src="${p.photoUrl}" class="photo" />` : 'No Photo'}</td>
@@ -291,12 +305,13 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                   <td>${p.gender}</td>
                   <td>${p.age}</td>
                   <td>${p.std}</td>
+                  <td>${bmiInfo.bmi} (${bmiInfo.label})</td>
                   <td>${p.aadharNumber || '-'}</td>
                   <td>${p.mobileNumber || '-'}</td>
                   <td>${isGeneral ? (p.examMarks || '0') : (p.sports || []).join(', ')}</td>
                   <td>${calculateAttendance(p.id)}%</td>
                 </tr>
-              `).join('')}
+              `}).join('')}
             </tbody>
           </table>
         </body>
@@ -374,6 +389,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[180px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'वय' : 'Age'}</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'इयत्ता' : 'Std'}</TableHead>
+              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[150px]">{isMarathi ? 'BMI स्टेटस' : 'BMI Status'}</TableHead>
               <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'संपर्क' : 'Contact'}</TableHead>
               {isGeneral ? (
                 <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[100px] text-center">{isMarathi ? 'गुण' : 'Exam'}</TableHead>
@@ -387,13 +403,14 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                   {isMarathi ? 'या श्रेणीत कोणतेही रेकॉर्ड सापडले नाहीत.' : 'No records found in this category.'}
                 </TableCell>
               </TableRow>
             ) : (
               filteredPlayers.map((player: any, index: number) => {
                 const attPercent = calculateAttendance(player.id);
+                const bmiInfo = getBMIInfo(player.height, player.weight, isMarathi);
                 return (
                   <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
                     <TableCell className="border-r p-1 text-center">
@@ -421,6 +438,14 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                     </TableCell>
                     <TableCell className="border-r p-2 text-center text-xs">{player.age}</TableCell>
                     <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
+                    <TableCell className="border-r p-2 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-[10px] font-black text-primary">{bmiInfo.bmi}</span>
+                        <Badge variant="outline" className={cn("text-[8px] font-black uppercase px-2 py-0 h-4 border", bmiInfo.color)}>
+                          {bmiInfo.label}
+                        </Badge>
+                      </div>
+                    </TableCell>
                     <TableCell className="border-r p-2 text-center text-[10px] font-mono">
                       {player.mobileNumber || '-'}
                     </TableCell>
@@ -465,7 +490,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
         </Table>
       </div>
 
-      {/* Promotion Hub Dialog */}
       <Dialog open={isPromotionDialogOpen} onOpenChange={setIsPromotionDialogOpen}>
         <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-0 shadow-2xl bg-white">
           <DialogHeader className="bg-accent/10 p-8 border-b border-accent/20">
@@ -513,7 +537,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
         </DialogContent>
       </Dialog>
 
-      {/* Photo Viewer Dialog */}
       <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
         <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[2rem] border-0 shadow-2xl">
           <div className="relative w-full aspect-[3/4] bg-muted">
@@ -542,7 +565,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
         </DialogContent>
       </Dialog>
 
-      {/* Edit Registry Dialog */}
       <Dialog open={!!editingPlayer} onOpenChange={(open) => { if(!open) { stopCamera(); setEditingPlayer(null); } }}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-0 shadow-2xl bg-white">
           <DialogHeader className="bg-primary/5 p-8 border-b">
@@ -554,7 +576,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           {editingPlayer && (
             <div className="p-8 space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Photo Edit Section */}
                 <div className="lg:col-span-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
@@ -601,7 +622,6 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                   <canvas ref={canvasRef} className="hidden" />
                 </div>
 
-                {/* Form Fields Section */}
                 <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'पूर्ण नाव' : 'Full Name'}</Label>
@@ -644,6 +664,16 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'उंची (सेंमी)' : 'Height (cm)'}</Label>
+                    <Input type="number" value={editingPlayer.height} onChange={(e) => setEditingPlayer({ ...editingPlayer, height: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'वजन (किग्रॅ)' : 'Weight (kg)'}</Label>
+                    <Input type="number" value={editingPlayer.weight} onChange={(e) => setEditingPlayer({ ...editingPlayer, weight: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
+                  </div>
+
                   {isGeneral ? (
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground">{isMarathi ? 'परीक्षा गुण' : 'Exam Marks'}</Label>
