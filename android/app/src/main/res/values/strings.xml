@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</string>
+    <string name="title_activity_main">शासकीय माध्यमिक आश्रम शाळा वाघंबा</string>
+    <string name="package_name">com.waghamba.sportshub</string>
+    <string name="custom_url_scheme">com.waghamba.sportshub</string>
+</resources>

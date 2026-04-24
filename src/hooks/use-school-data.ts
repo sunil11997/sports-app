@@ -1,49 +1,32 @@
 
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from 'react';
-import { collection, doc, onSnapshot, query, where, Firestore } from 'firebase/firestore';
-import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
+import { useMemo, useState, useEffect } from 'react';
+import { collection, doc, query, where, collectionGroup, onSnapshot } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
+/**
+ * useSchoolData - Optimized Hook for Waghamba Sports Hub
+ * Uses Collection Group Queries to minimize active listeners and maximize load speed.
+ */
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // 1. Specific School Profile Listener (Targets only current user's school)
+  // 1. School Profile (Primary)
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
-  // 2. Players Listener (Query by ownerId for security and performance)
+  // 2. Players (Primary)
   const playersQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
   }, [db, user]);
-  
   const { data: players, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
-  // 3. Global Incidents Listener
-  const incidentsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid));
-  }, [db, user]);
-  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
-
-  // 4. Drill Comps Listener
-  const drillsSyncRef = useMemoFirebase(() => user ? collection(db, 'drill_completions') : null, [db, user]);
-  const { data: drillComps } = useCollection(drillsSyncRef);
-
-  // 5. Global Activities Listener
-  const activitiesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(db, 'school_activities'), where('schoolId', '==', user.uid));
-  }, [db, user]);
-  const { data: activities } = useCollection(activitiesQuery);
-
-  // 6. Reactive State for Sub-collections (Handled via internal local cache by Firestore automatically)
+  // 3. Reactive State for high-volume data
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
@@ -51,7 +34,82 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
-  // Sync Drills separately
+  // 4. Global Collection Group Queries (One listener for ALL students)
+  useEffect(() => {
+    if (!user) return;
+
+    // A. Sync ALL Attendance records for this school
+    const attGroupQuery = query(collectionGroup(db, 'attendance'), where('schoolId', '==', user.uid));
+    const unsubAtt = onSnapshot(attGroupQuery, (snapshot) => {
+      const newAtt: AttendanceRecord = {};
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        newAtt[`${data.playerId}_${doc.id}`] = data.status;
+      });
+      setAttendanceData(prev => ({ ...prev, ...newAtt }));
+    });
+
+    // B. Sync ALL Fitness assessments
+    const fitGroupQuery = query(collectionGroup(db, 'fitnessAssessments'), where('schoolId', '==', user.uid));
+    const unsubFit = onSnapshot(fitGroupQuery, (snapshot) => {
+      const latestMap: Record<string, FitnessAssessment> = {};
+      const historyMap: Record<string, FitnessAssessment[]> = {};
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data() as FitnessAssessment;
+        const pId = data.playerId;
+        if (!pId) return;
+
+        if (doc.id === 'latest') {
+          latestMap[pId] = data;
+        }
+        
+        if (!historyMap[pId]) historyMap[pId] = [];
+        historyMap[pId].push({ ...data, date: doc.id === 'latest' ? data.updatedAt : doc.id });
+      });
+
+      setFitnessData(prev => ({ ...prev, ...latestMap }));
+      setFitnessHistory(prev => ({ ...prev, ...historyMap }));
+    });
+
+    // C. Sync ALL Sport Skills
+    const skillsGroupQuery = query(collectionGroup(db, 'sportSkills'), where('schoolId', '==', user.uid));
+    const unsubSkills = onSnapshot(skillsGroupQuery, (snapshot) => {
+      const skillsMap: Record<string, SportSkill> = {};
+      const historyMap: Record<string, (SportSkill & { sportName: string })[]> = {};
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data() as SportSkill;
+        const pId = data.playerId;
+        if (!pId) return;
+
+        skillsMap[`${pId}_${doc.id}`] = data;
+        if (!historyMap[pId]) historyMap[pId] = [];
+        historyMap[pId].push({ ...data, sportName: doc.id });
+      });
+
+      setSportSkillsData(prev => ({ ...prev, ...skillsMap }));
+      setSkillsHistory(prev => ({ ...prev, ...historyMap }));
+    });
+
+    return () => {
+      unsubAtt();
+      unsubFit();
+      unsubSkills();
+    };
+  }, [db, user]);
+
+  // 5. Global Health Incidents
+  const incidentsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid));
+  }, [db, user]);
+  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
+
+  // 6. Drill Completions
+  const drillsSyncRef = useMemoFirebase(() => user ? collection(db, 'drill_completions') : null, [db, user]);
+  const { data: drillComps } = useCollection(drillsSyncRef);
+
   useEffect(() => {
     if (drillComps) {
       const logs: Record<string, boolean> = {};
@@ -60,136 +118,46 @@ export function useSchoolData() {
     }
   }, [drillComps]);
 
-  // Subscription Management for Player Sub-collections
-  const unsubscribersRef = useRef<Record<string, (() => void)[]>>({});
+  // 7. Global Activities
+  const activitiesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(db, 'school_activities'), where('schoolId', '==', user.uid));
+  }, [db, user]);
+  const { data: activities } = useCollection(activitiesQuery);
 
-  useEffect(() => {
-    if (!user || !players || players.length === 0) {
-      Object.values(unsubscribersRef.current).forEach(unsubs => unsubs.forEach(u => u()));
-      unsubscribersRef.current = {};
-      return;
+  const aggregatedData = useMemo(() => ({
+    players: players || [],
+    attendance,
+    fitness,
+    fitnessHistory,
+    sportSkills,
+    skillsHistory,
+    drillCompletions,
+    healthIncidents: healthIncidents || [],
+    activities: activities || [],
+    schoolProfile: schoolProfile || {
+      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+      teacherName: "सुनिल देशमुख",
+      taluka: "सटाणा",
+      district: "नाशिक",
+      id: "default",
+      qualification: "B.P.Ed / M.P.Ed",
+      role: "Physical Education Director",
+      updatedAt: new Date().toISOString()
     }
+  }), [players, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
-    const currentPlayerIds = new Set(players.map(p => p.id));
-    
-    Object.keys(unsubscribersRef.current).forEach(id => {
-      if (!currentPlayerIds.has(id)) {
-        unsubscribersRef.current[id].forEach(u => u());
-        delete unsubscribersRef.current[id];
-      }
-    });
-
-    players.forEach(player => {
-      if (!unsubscribersRef.current[player.id]) {
-        const unsubs: (() => void)[] = [];
-
-        // Sync Attendance
-        const attRef = collection(db, 'players', player.id, 'attendance');
-        const unsubAtt = onSnapshot(attRef, { includeMetadataChanges: true },
-          (snapshot) => {
-            const newAtt: AttendanceRecord = {};
-            snapshot.docs.forEach(doc => {
-              newAtt[`${player.id}_${doc.id}`] = doc.data().status;
-            });
-            setAttendanceData(prev => ({ ...prev, ...newAtt }));
-          },
-          (error) => {
-            console.error("Attendance Sync Error:", error);
-          }
-        );
-        unsubs.push(unsubAtt);
-
-        // Sync Fitness
-        const fitRef = collection(db, 'players', player.id, 'fitnessAssessments');
-        const unsubFit = onSnapshot(fitRef, { includeMetadataChanges: true },
-          (snapshot) => {
-            const history: FitnessAssessment[] = [];
-            snapshot.docs.forEach(d => {
-              const data = d.data() as FitnessAssessment;
-              if (d.id === 'latest') {
-                setFitnessData(prev => ({ ...prev, [player.id]: data }));
-              }
-              history.push({ ...data, date: d.id === 'latest' ? data.updatedAt : d.id });
-            });
-            setFitnessHistory(prev => ({ ...prev, [player.id]: history }));
-          },
-          (error) => {
-            console.error("Fitness Sync Error:", error);
-          }
-        );
-        unsubs.push(unsubFit);
-
-        // Sync Sport Skills
-        const skillRef = collection(db, 'players', player.id, 'sportSkills');
-        const unsubSkill = onSnapshot(skillRef, { includeMetadataChanges: true },
-          (snapshot) => {
-            const playerSkills: Record<string, SportSkill> = {};
-            const historyList: (SportSkill & { sportName: string })[] = [];
-            snapshot.docs.forEach(doc => {
-              const data = doc.data() as SportSkill;
-              playerSkills[`${player.id}_${doc.id}`] = data;
-              historyList.push({ ...data, sportName: doc.id });
-            });
-            setSportSkillsData(prev => ({ ...prev, ...playerSkills }));
-            setSkillsHistory(prev => ({ ...prev, [player.id]: historyList }));
-          },
-          (error) => {
-            console.error("Skills Sync Error:", error);
-          }
-        );
-        unsubs.push(unsubSkill);
-
-        unsubscribersRef.current[player.id] = unsubs;
-      }
-    });
-
-    return () => {};
-  }, [db, user, players]); 
-
-  const aggregatedData = useMemo(() => {
-    return {
-      players: players || [],
-      attendance,
-      fitness,
-      fitnessHistory,
-      sportSkills,
-      skillsHistory,
-      drillCompletions,
-      healthIncidents: healthIncidents || [],
-      activities: activities || [],
-      schoolProfile: schoolProfile || {
-        schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-        teacherName: "सुनिल देशमुख",
-        taluka: "सटाणा",
-        district: "नाशिक",
-        id: "default",
-        qualification: "B.P.Ed / M.P.Ed",
-        role: "Physical Education Director",
-        updatedAt: new Date().toISOString()
-      }
-    };
-  }, [players, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
-
+  // Persistence methods...
   const saveSchoolProfile = (profile: any) => {
     if (!user) return;
-    const docId = user.uid;
-    const profileRef = doc(db, 'schools', docId);
-    setDocumentNonBlocking(profileRef, { 
-      ...profile, 
-      id: docId, 
-      ownerId: user.uid,
-      updatedAt: new Date().toISOString() 
-    }, { merge: true });
+    const profileRef = doc(db, 'schools', user.uid);
+    setDocumentNonBlocking(profileRef, { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
   };
 
   const addPlayer = (playerData: any) => {
     if (!user) return;
     const playerRef = doc(db, 'players', playerData.id);
-    setDocumentNonBlocking(playerRef, { 
-      ...playerData, 
-      ownerId: user.uid, 
-      schoolId: user.uid 
-    }, { merge: true });
+    setDocumentNonBlocking(playerRef, { ...playerData, ownerId: user.uid, schoolId: user.uid }, { merge: true });
   };
 
   const updatePlayer = (player: any) => {
@@ -208,17 +176,8 @@ export function useSchoolData() {
       const [playerId, date] = key.split('_');
       if (!playerId || !date) return;
       const attRef = doc(db, 'players', playerId, 'attendance', date);
-      
-      if (!status) {
-        deleteDocumentNonBlocking(attRef);
-      } else {
-        setDocumentNonBlocking(attRef, { 
-          status, 
-          playerId, 
-          date, 
-          schoolId: user.uid 
-        }, { merge: true });
-      }
+      if (!status) deleteDocumentNonBlocking(attRef);
+      else setDocumentNonBlocking(attRef, { status, playerId, date, schoolId: user.uid }, { merge: true });
     });
   };
 
@@ -227,45 +186,22 @@ export function useSchoolData() {
     const timestamp = new Date().toISOString();
     const dateId = timestamp.split('T')[0];
     const historyRef = doc(db, 'players', playerId, 'fitnessAssessments', dateId);
-    setDocumentNonBlocking(historyRef, { 
-      ...assessment, 
-      playerId, 
-      schoolId: user.uid,
-      updatedAt: timestamp 
-    }, { merge: true });
-    
+    setDocumentNonBlocking(historyRef, { ...assessment, playerId, schoolId: user.uid, updatedAt: timestamp }, { merge: true });
     const latestRef = doc(db, 'players', playerId, 'fitnessAssessments', 'latest');
-    setDocumentNonBlocking(latestRef, { 
-      ...assessment, 
-      playerId, 
-      schoolId: user.uid,
-      updatedAt: timestamp 
-    }, { merge: true });
+    setDocumentNonBlocking(latestRef, { ...assessment, playerId, schoolId: user.uid, updatedAt: timestamp }, { merge: true });
   };
 
   const setSportSkill = (playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
     const skillRef = doc(db, 'players', playerId, 'sportSkills', sport);
-    setDocumentNonBlocking(skillRef, { 
-      ...skill, 
-      playerId, 
-      sportName: sport, 
-      schoolId: user.uid,
-      lastUpdated: new Date().toISOString() 
-    }, { merge: true });
+    setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString() }, { merge: true });
   };
 
   const setDrillCompletion = (drillId: string, completed: boolean) => {
     if (!user) return;
     const drillRef = doc(db, 'drill_completions', drillId);
-    if (completed) {
-      setDocumentNonBlocking(drillRef, { 
-        schoolId: user.uid,
-        timestamp: new Date().toISOString() 
-      }, { merge: true });
-    } else {
-      deleteDocumentNonBlocking(drillRef);
-    }
+    if (completed) setDocumentNonBlocking(drillRef, { schoolId: user.uid, timestamp: new Date().toISOString() }, { merge: true });
+    else deleteDocumentNonBlocking(drillRef);
   };
 
   const addHealthIncident = (incident: HealthIncident) => {
@@ -279,11 +215,7 @@ export function useSchoolData() {
   const addActivity = (activityData: any) => {
     if (!user) return;
     const activityRef = doc(db, 'school_activities', activityData.id);
-    setDocumentNonBlocking(activityRef, { 
-      ...activityData, 
-      schoolId: user.uid,
-      timestamp: new Date().toISOString() 
-    }, { merge: true });
+    setDocumentNonBlocking(activityRef, { ...activityData, schoolId: user.uid, timestamp: new Date().toISOString() }, { merge: true });
   };
 
   const deleteActivity = (id: string) => {
@@ -292,11 +224,7 @@ export function useSchoolData() {
   };
 
   const exportBackupData = () => {
-    const backup = {
-      timestamp: new Date().toISOString(),
-      schoolName: schoolProfile?.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-      data: aggregatedData
-    };
+    const backup = { timestamp: new Date().toISOString(), schoolName: schoolProfile?.schoolName || "Backup", data: aggregatedData };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -305,23 +233,11 @@ export function useSchoolData() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return {
     data: aggregatedData,
     isLoaded: !playersLoading && !schoolsLoading,
-    saveSchoolProfile,
-    addPlayer,
-    updatePlayer,
-    deletePlayer,
-    setAttendance,
-    setFitness,
-    setSportSkill,
-    setDrillCompletion,
-    addHealthIncident,
-    addActivity,
-    deleteActivity,
-    exportBackupData
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
   };
 }
