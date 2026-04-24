@@ -384,7 +384,6 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.register, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "promotion", label: t.promotionHub, icon: ArrowUpCircle, color: "text-blue-600 bg-blue-50" },
     { id: "tournament", label: t.tourney, icon: Trophy, color: "text-amber-600 bg-amber-50" },
     { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
     { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
