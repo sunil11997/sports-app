@@ -35,6 +35,7 @@ import {
   Download,
   X,
   ClipboardList,
+  ArrowUpCircle,
   Settings as SettingsIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,7 @@ import { SchoolActivities } from '@/components/features/SchoolActivities';
 import { ClassesHub } from '@/components/features/ClassesHub';
 import { ClassesSection } from '@/components/features/ClassesSection';
 import { Settings } from '@/components/features/Settings';
+import { PromotionHub } from '@/components/features/PromotionHub';
 
 const translations = {
   English: {
@@ -382,6 +384,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.register, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "promotion", label: t.promotionHub, icon: ArrowUpCircle, color: "text-blue-600 bg-blue-50" },
     { id: "tournament", label: t.tourney, icon: Trophy, color: "text-amber-600 bg-amber-50" },
     { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
     { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
@@ -398,6 +401,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.enroll, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "promotion", label: t.promotionHub, icon: ArrowUpCircle, color: "text-blue-600 bg-blue-50" },
     { id: "exam", label: t.exam, icon: ClipboardList, color: "text-amber-600 bg-amber-50" },
     { id: "classes", label: t.classes, icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
     { id: "activities", label: t.activities, icon: Zap, color: "text-purple-600 bg-purple-50" },
@@ -684,6 +688,10 @@ export default function WaghambaApp() {
 
             <TabsContent value="dashboard">
               <Dashboard store={schoolData} section={selectedSection} language={language} t={t} />
+            </TabsContent>
+
+            <TabsContent value="promotion">
+              <PromotionHub store={schoolData} section={selectedSection} />
             </TabsContent>
 
             <TabsContent value="daily-report">
