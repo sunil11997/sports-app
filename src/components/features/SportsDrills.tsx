@@ -15,8 +15,8 @@ import {
   Clock,
   ClipboardCheck,
   History,
-  LayoutGrid,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -81,7 +81,7 @@ const DRILLS_DATA: Record<string, any[]> = {
   ],
   'Kho Kho': [
     { id: 'kh1', name: 'Square Sit', skill: 'Sitting posture', instructions: ['Low squat.', 'Heels flat.', 'Alert hands.'], equipment: 'None', duration: '10m' },
-    { id: 'kh2', name: 'Pole Pivot', skill: 'Pole turning', instructions: ['Inner hand grip.', 'Pivot low.', 'Accelerate out.'], equipment: 'Poles', duration: '15m' },
+    { id: 'kh2', name: 'Pole Pivot', skill: 'Pole turning', instructions: ['Inner hand grip.', 'Pole low.', 'Accelerate out.'], equipment: 'Poles', duration: '15m' },
     { id: 'kh3', name: 'Clear Kho', skill: 'Giving kho', instructions: ['Shoulder tap.', 'Loud "KHO".', 'Sit instantly.'], equipment: 'None', duration: '10m' },
     { id: 'kh4', name: 'Reactive Rise', skill: 'Receiving kho', instructions: ['Anticipate tap.', 'Explosive stand.', 'Immediate chase.'], equipment: 'None', duration: '10m' },
     { id: 'kh5', name: 'Direct Chase', skill: 'Chasing', instructions: ['Straight line.', 'Target runner.', 'Fast steps.'], equipment: 'None', duration: '15m' },
@@ -103,7 +103,7 @@ const DRILLS_DATA: Record<string, any[]> = {
   ],
   'Running': [
     { id: 'r1', name: 'Block Start', skill: 'Starting technique', instructions: ['Hips high.', 'Drive legs.', 'Stay low.'], equipment: 'Blocks', duration: '15m' },
-    { id: 'r2', name: 'Speed Phase', skill: 'Acceleration', instructions: ['Build tempo.', 'Arm action.', 'Lean forward.'], equipment: 'None', duration: '15m' },
+    { id: 'r2', name: 'Speed Phase', skill: 'Acceleration', instructions: ['Fast build.', 'High knees.', 'Strong arms.'], equipment: 'Track', duration: '15m' },
     { id: 'r3', name: 'Step Reach', skill: 'Stride length', instructions: ['Knee drive.', 'Full reach.', 'Back push.'], equipment: 'None', duration: '15m' },
     { id: 'r4', name: 'Fast Taps', skill: 'Stride frequency', instructions: ['High cadence.', 'Fast contact.', 'Quick lift.'], equipment: 'Metronome', duration: '15m' },
     { id: 'r5', name: 'Tall Posture', skill: 'Running posture', instructions: ['Head up.', 'Back straight.', 'Relax jaw.'], equipment: 'None', duration: '15m' },
@@ -226,26 +226,44 @@ export function SportsDrills({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState('Kabaddi');
   const [viewCompletedOnly, setViewCompletedMode] = useState(false);
-  const [completedDrills, setCompletedDrills] = useState<Set<string>>(new Set());
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
-  const handleToggleComplete = (drillId: string, drillName: string) => {
-    const newCompleted = new Set(completedDrills);
-    if (newCompleted.has(drillId)) {
-      newCompleted.delete(drillId);
-      toast({ title: "Drill Reset", description: `${drillName} unmarked for today.` });
-    } else {
-      newCompleted.add(drillId);
+  const completions = store.data.drillCompletions || {};
+
+  const handleToggleComplete = async (drillId: string, drillName: string) => {
+    const isDone = !!completions[drillId];
+    setIsProcessing(drillId);
+
+    try {
+      store.setDrillCompletion(drillId, !isDone);
+      
+      if (!isDone) {
+        toast({ 
+          title: "Session Logged", 
+          description: `${drillName} finished. Removed from active list.`,
+          className: "bg-accent border-accent-foreground text-accent-foreground font-black"
+        });
+      } else {
+        toast({ 
+          title: "Drill Reset", 
+          description: `${drillName} returned to active list.` 
+        });
+      }
+    } catch (error) {
       toast({ 
-        title: "Session Logged", 
-        description: `${drillName} synced to technical history.`,
-        className: "bg-accent border-accent-foreground text-accent-foreground font-black"
+        variant: "destructive",
+        title: "Sync Error", 
+        description: "Could not update drill status." 
       });
+    } finally {
+      setIsProcessing(null);
     }
-    setCompletedDrills(newCompleted);
   };
 
+  // Logic: Default view shows drills NOT in completions. 
+  // History view shows drills THAT ARE in completions.
   const currentDrills = (DRILLS_DATA[activeSport] || []).filter(d => 
-    viewCompletedOnly ? completedDrills.has(d.id) : true
+    viewCompletedOnly ? completions[d.id] : !completions[d.id]
   );
 
   return (
@@ -274,7 +292,7 @@ export function SportsDrills({ store }: { store: any }) {
               </select>
             </div>
             <div className="space-y-2 w-full md:w-64">
-              <label className="text-[10px] font-black text-primary uppercase ml-2">View Mode</label>
+              <label className="text-[10px] font-black text-primary uppercase ml-2">Training View</label>
               <Button 
                 variant={viewCompletedOnly ? "default" : "outline"} 
                 onClick={() => setViewCompletedMode(!viewCompletedOnly)}
@@ -283,7 +301,7 @@ export function SportsDrills({ store }: { store: any }) {
                   viewCompletedOnly ? "bg-accent text-accent-foreground border-accent" : "border-primary/20 bg-white text-primary"
                 )}
               >
-                {viewCompletedOnly ? <><History className="w-4 h-4 mr-2" /> Show All Drills</> : <><Filter className="w-4 h-4 mr-2" /> Show Completed Only</>}
+                {viewCompletedOnly ? <><Loader2 className="w-4 h-4 mr-2" /> Back to Pending</> : <><History className="w-4 h-4 mr-2" /> View History</>}
               </Button>
             </div>
           </div>
@@ -291,20 +309,29 @@ export function SportsDrills({ store }: { store: any }) {
       </div>
 
       {currentDrills.length === 0 ? (
-        <Card className="border-dashed border-4 p-20 flex flex-col items-center text-muted-foreground rounded-[2.5rem] bg-white/50">
+        <Card className="border-dashed border-4 p-20 flex flex-col items-center text-muted-foreground rounded-[3rem] bg-white/50">
           <Dumbbell className="w-16 h-16 mb-6 opacity-10" />
-          <p className="text-xl font-bold uppercase tracking-widest opacity-30">
-            {viewCompletedOnly ? 'No drills completed in this category today' : 'No drills found'}
+          <p className="text-xl font-bold uppercase tracking-widest opacity-30 text-center">
+            {viewCompletedOnly 
+              ? 'No training sessions archived yet' 
+              : 'Training Finished! All drills for this sport are completed.'}
           </p>
+          {!viewCompletedOnly && (
+            <Button variant="ghost" onClick={() => setViewCompletedMode(true)} className="mt-4 font-black uppercase text-xs tracking-widest">
+              Review Completed Drills
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {currentDrills.map((drill) => {
-            const isDone = completedDrills.has(drill.id);
+            const isDone = !!completions[drill.id];
+            const isLoading = isProcessing === drill.id;
+            
             return (
               <Card key={drill.id} className={cn(
                 "border-2 rounded-[2.5rem] overflow-hidden transition-all group relative",
-                isDone ? "border-primary/40 bg-primary/5" : "hover:border-primary/30 bg-white shadow-xl"
+                isDone ? "border-primary/40 bg-primary/5 opacity-80" : "hover:border-primary/30 bg-white shadow-xl"
               )}>
                 <div className="p-8 space-y-6">
                   <div className="flex justify-between items-start">
@@ -350,13 +377,16 @@ export function SportsDrills({ store }: { store: any }) {
                   <Button 
                     onClick={() => handleToggleComplete(drill.id, drill.name)}
                     variant={isDone ? "default" : "outline"}
+                    disabled={isLoading}
                     className={cn(
                       "w-full rounded-2xl font-black uppercase text-xs tracking-widest h-14 transition-all active-scale shadow-lg",
                       isDone ? "bg-primary hover:bg-primary/90" : "border-2 border-primary/20 hover:bg-primary/5"
                     )}
                   >
-                    {isDone ? (
-                      <><CheckCircle className="w-5 h-5 mr-2" /> SESSION COMPLETED</>
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : isDone ? (
+                      <><CheckCircle className="w-5 h-5 mr-2" /> RETURN TO ACTIVE LIST</>
                     ) : (
                       "MARK AS COMPLETED"
                     )}
@@ -368,13 +398,13 @@ export function SportsDrills({ store }: { store: any }) {
         </div>
       )}
 
-      <Card className="border-2 border-dashed rounded-[3rem] bg-muted/20 p-12 text-center">
+      <Card className="border-2 border-dashed rounded-[3rem] bg-muted/10 p-12 text-center">
         <div className="max-w-2xl mx-auto space-y-4">
           <Info className="w-16 h-16 text-muted-foreground/20 mx-auto" />
-          <h4 className="text-xl font-black text-muted-foreground uppercase tracking-tight">Technical Drill Standard</h4>
+          <h4 className="text-xl font-black text-muted-foreground uppercase tracking-tight">Institutional Drill Logic</h4>
           <p className="text-sm font-medium text-muted-foreground/60 leading-relaxed italic">
-            "Every completed drill recorded here serves as institutional evidence of technical progress. 
-            Ensure students maintain proper form to avoid injuries during high-intensity sessions."
+            "Once a technical drill is marked complete, it is archived to the session history to help the coach focus on remaining objectives. 
+            Archived drills can be reviewed and reset at any time via the Training View toggle."
           </p>
           <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">
             Approved by PE Department - Waghamba School
@@ -384,3 +414,4 @@ export function SportsDrills({ store }: { store: any }) {
     </div>
   );
 }
+
