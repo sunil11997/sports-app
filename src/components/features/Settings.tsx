@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth, useUser } from '@/firebase';
 import { initiateGoogleBackup, initiateSignOut } from '@/firebase/non-blocking-login';
 import { 
@@ -24,7 +24,8 @@ import {
   ShieldAlert,
   FileJson,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -39,10 +40,11 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const { toast } = useToast();
   const schoolData = useSchoolData();
   const { isOnline, isInstallable, installApp } = usePWA();
+  const [isBackupLoading, setIsBackupLoading] = useState(false);
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com');
 
-  const handleBackup = () => {
+  const handleBackup = async () => {
     if (!isOnline) {
       toast({
         variant: "destructive",
@@ -52,29 +54,39 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       return;
     }
 
-    initiateGoogleBackup(auth)
-      .then(() => {
-        toast({ 
-          title: language === 'Marathi' ? "गुगल खाते लिंक झाले" : "Google Account Linked", 
-          description: language === 'Marathi' ? "तुमचा डेटा आता सुरक्षितपणे बॅकअप घेतला जात आहे." : "Your school data is now securely backed up to your Google account." 
-        });
-      })
-      .catch((err: any) => {
-        console.error("Backup Error:", err);
-        let errorMsg = language === 'Marathi' ? "कृपया तुमचे इंटरनेट तपासा किंवा पुन्हा प्रयत्न करा." : "Please check your connection or try again.";
-        
-        if (err.code === 'auth/popup-blocked') {
-          errorMsg = language === 'Marathi' ? "ब्राउझरने पॉपअप ब्लॉक केले आहे. कृपया ते सुरू करा." : "Browser blocked the popup. Please enable popups for this site.";
-        } else if (err.code === 'auth/cancelled-popup-request') {
-          errorMsg = language === 'Marathi' ? "प्रक्रिया रद्द केली गेली." : "Operation was cancelled.";
-        }
+    if (isBackupLoading) return;
+    setIsBackupLoading(true);
 
-        toast({ 
-          variant: "destructive", 
-          title: language === 'Marathi' ? "बॅकअप अयशस्वी" : "Backup Failed", 
-          description: errorMsg 
-        });
+    try {
+      await initiateGoogleBackup(auth);
+      toast({ 
+        title: language === 'Marathi' ? "गुगल खाते लिंक झाले" : "Google Account Linked", 
+        description: language === 'Marathi' ? "तुमचा डेटा आता सुरक्षितपणे बॅकअप घेतला जात आहे." : "Your school data is now securely backed up to your Google account." 
       });
+    } catch (err: any) {
+      console.error("Backup Error:", err);
+      let errorMsg = language === 'Marathi' ? "कृपया तुमचे इंटरनेट तपासा किंवा पुन्हा प्रयत्न करा." : "Please check your connection or try again.";
+      let errorTitle = language === 'Marathi' ? "बॅकअप अयशस्वी" : "Backup Failed";
+      
+      if (err.code === 'auth/popup-blocked') {
+        errorMsg = language === 'Marathi' ? "ब्राउझरने पॉपअप ब्लॉक केले आहे. कृपया ते सुरू करा." : "Browser blocked the popup. Please enable popups for this site.";
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        errorMsg = language === 'Marathi' ? "प्रक्रिया रद्द केली गेली." : "Operation was cancelled.";
+      } else if (err.code === 'auth/credential-already-in-use') {
+        errorTitle = language === 'Marathi' ? "खाते आधीच वापरात आहे" : "Account Already In Use";
+        errorMsg = language === 'Marathi' 
+          ? "हे गुगल खाते आधीच दुसऱ्या सेशनशी लिंक केलेले आहे. कृपया लॉगआउट करून थेट साइन-इन करा." 
+          : "This Google account is already linked to another institutional session. Please sign out and sign in directly with Google.";
+      }
+
+      toast({ 
+        variant: "destructive", 
+        title: errorTitle, 
+        description: errorMsg 
+      });
+    } finally {
+      setIsBackupLoading(false);
+    }
   };
 
   const handleManualExport = () => {
@@ -89,9 +101,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     <div 
       className={cn(
         "ios-list-item w-full text-left group disabled:opacity-50",
-        !onClick && "cursor-default active:bg-white"
+        (!onClick || disabled) && "cursor-default active:bg-white"
       )}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
     >
       <div className="flex items-center gap-3">
         <div className={cn("p-1.5 rounded-lg text-white transition-transform group-active:scale-90", color)}>
@@ -105,7 +117,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       <div className="flex items-center gap-2">
         {value && <span className="text-sm font-medium text-muted-foreground">{value}</span>}
         {accessory && accessory}
-        {onClick && !accessory && <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-active:translate-x-1 transition-transform" />}
+        {onClick && !accessory && !disabled && <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-active:translate-x-1 transition-transform" />}
       </div>
     </div>
   );
@@ -133,8 +145,10 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               </p>
               <Button 
                 onClick={handleBackup}
+                disabled={isBackupLoading}
                 className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-10 px-6 font-black uppercase text-[10px] tracking-widest"
               >
+                {isBackupLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Link Google Now <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -167,8 +181,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               icon={Chrome} 
               color="bg-sky-500" 
               label="Google Drive Link" 
-              value={isGoogleLinked ? "Connected" : "Link Now"}
+              value={isBackupLoading ? "Syncing..." : (isGoogleLinked ? "Connected" : "Link Now")}
               sublabel="Secure institutional storage"
+              disabled={isBackupLoading}
               onClick={handleBackup}
             />
           </div>

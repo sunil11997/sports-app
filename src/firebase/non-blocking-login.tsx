@@ -14,18 +14,15 @@ import {
 export function initiateAnonymousSignIn(authInstance: Auth): void {
   // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** Initiate email/password sign-up (non-blocking). */
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly.
   createUserWithEmailAndPassword(authInstance, email, password);
 }
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly.
   signInWithEmailAndPassword(authInstance, email, password);
 }
 
@@ -43,12 +40,19 @@ export function initiateSignOut(authInstance: Auth): Promise<void> {
  */
 export async function initiateGoogleBackup(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
+  const currentUser = authInstance.currentUser;
   
-  if (authInstance.currentUser) {
-    // If already signed in (likely anonymously), link the account
-    await linkWithPopup(authInstance.currentUser, provider);
+  if (currentUser) {
+    // Check if already linked to Google to avoid redundant calls or errors
+    const isAlreadyLinked = currentUser.providerData.some(p => p.providerId === 'google.com');
+    if (isAlreadyLinked) {
+      return; 
+    }
+    
+    // If signed in anonymously, link the account
+    await linkWithPopup(currentUser, provider);
   } else {
-    // If not signed in, perform a standard sign-in
+    // If not signed in at all, perform a standard sign-in
     await signInWithPopup(authInstance, provider);
   }
 }
