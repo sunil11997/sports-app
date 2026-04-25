@@ -5,9 +5,13 @@ import { PWAProvider } from '@/components/providers/pwa-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'Waghamba Sports Hub',
+  title: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub',
   description: 'Professional Sports & Health Management System',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
