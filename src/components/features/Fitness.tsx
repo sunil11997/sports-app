@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Printer, Scale, Save, Loader2, Calendar, History, ShieldAlert } from 'lucide-react';
+import { Activity, Printer, Scale, Save, Loader2, Calendar, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { TableSkeleton } from '@/components/ui/loading-skeletons';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -38,14 +40,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     if (age < 14) agePart = 'u14';
     else if (age < 17) agePart = 'u17';
     return `${genderPart}-${agePart}`;
-  };
-
-  const getReadableCategory = (p: any) => {
-    const age = parseInt(p.age) || 0;
-    const genderLabel = p.gender === 'Female' ? 'Girls' : 'Boys';
-    if (age < 14) return `${genderLabel} U14`;
-    if (age < 17) return `${genderLabel} U17`;
-    return `${genderLabel} Senior`;
   };
 
   const filteredPlayers = store.data.players.filter((p: any) => {
@@ -80,24 +74,18 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
   const calculateAutoScores = (id: string) => {
     const current = assessments[id] || {};
-    
-    // Auto-Strength Score (Situps + Board Jump combined)
-    // Formula: (Situps / 35 * 60) + (Board Jump / 220 * 40)
     const situps = parseInt(current.sitUps) || 0;
     const boardJump = parseInt(current.boardJump) || 0;
     const situpsRating = Math.min(60, (situps / 35) * 60);
     const jumpRating = Math.min(40, (boardJump / 220) * 40);
     const strength = Math.round(situpsRating + jumpRating);
 
-    // Auto-Endurance Score (600m Run)
-    // Formula: Elite < 2:10 (100%), Advanced < 2:30 (80%), etc.
-    // Simplifying: 130s = 100%. Score = 100 - (seconds - 130) * 0.5
-    const run600Parts = (current.run600m || "").split(':');
+    const run60Parts = (current.run600m || "").split(':');
     let run600Seconds = 0;
-    if (run600Parts.length === 2) {
-      run600Seconds = (parseInt(run600Parts[0]) * 60) + parseInt(run600Parts[1]);
+    if (run60Parts.length === 2) {
+      run600Seconds = (parseInt(run60Parts[0]) * 60) + parseInt(run60Parts[1]);
     } else {
-      run600Seconds = parseInt(run600Parts[0]) || 0;
+      run600Seconds = parseInt(run60Parts[0]) || 0;
     }
     
     let endurance = 0;
@@ -114,7 +102,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const current = { ...(assessments[id] || {}) };
     setIsSaving(id);
     
-    let scoreNum = 0;
     let status = 'Logged';
 
     if (!isGeneral) {
@@ -126,7 +113,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       let count = 0;
 
       fields.forEach(f => {
-        if (f === 'run600m' || f === 'run50m' || f === 'shuttleRun') return; // Timings aren't 0-100 values
+        if (f === 'run600m' || f === 'run50m' || f === 'shuttleRun') return;
         const val = parseFloat(current[f]);
         if (!isNaN(val)) {
           sum += (val > 100 ? 100 : val);
@@ -134,13 +121,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         }
       });
       
-      // Add agility (shuttle) and speed (50m) to sum if possible
-      // (This is a simplified institutional grading)
       sum += (strength + endurance);
       count += 2;
 
       const calculatedScore = count > 0 ? Math.round(sum / count).toString() : "0";
-      scoreNum = parseInt(calculatedScore);
+      const scoreNum = parseInt(calculatedScore);
       
       if (scoreNum >= 85) status = 'Level A (Elite)';
       else if (scoreNum >= 70) status = 'Level B (Advanced)';
@@ -164,7 +149,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     toast({ 
       title: "Performance Data Synced", 
       description: `Endurance (${endurance}%) and Strength (${strength}%) archived for ${player.name}.`,
-      className: "bg-accent border-accent-foreground text-accent-foreground font-black",
     });
   };
 
@@ -182,7 +166,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
             th { background-color: #f8f8f8; font-weight: bold; font-size: 8px; text-transform: uppercase; }
-            .score-cell { font-weight: 900; color: #235C36; }
           </style>
         </head>
         <body>
@@ -194,10 +177,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             <thead>
               <tr>
                 <th>STUDENT NAME</th>
-                ${isGeneral ? 
-                  '<th>HT</th><th>WT</th><th>EXAM SC</th>' : 
-                  '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>ENDURANCE %</th><th>STRENGTH %</th>'
-                }
+                ${isGeneral ? '<th>HT</th><th>WT</th><th>EXAM SC</th>' : '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>ENDURANCE %</th><th>STRENGTH %</th>'}
                 <th>AGGREGATE</th>
                 <th>LEVEL</th>
               </tr>
@@ -208,11 +188,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 return `
                   <tr>
                     <td><strong>${p.name}</strong> (Std ${p.std})</td>
-                    ${isGeneral ? 
-                      `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : 
-                      `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.enduranceScore || '-'}%</td><td>${fit.strengthScore || '-'}%</td>`
-                    }
-                    <td class="score-cell">${fit.score || '0'}${isGeneral ? '' : '%'}</td>
+                    ${isGeneral ? `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.enduranceScore || '-'}%</td><td>${fit.strengthScore || '-'}%</td>`}
+                    <td>${fit.score || '0'}${isGeneral ? '' : '%'}</td>
                     <td><strong>${fit.status || 'PENDING'}</strong></td>
                   </tr>
                 `;
@@ -227,6 +204,10 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     win?.document.close();
     win?.print();
   };
+
+  if (!store.isLoaded) {
+    return <TableSkeleton rows={12} cols={10} />;
+  }
 
   return (
     <div className="space-y-4">

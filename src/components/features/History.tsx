@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -17,16 +18,16 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  Line
 } from 'recharts';
+import { ChartSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -48,7 +49,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
 
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory[selectedPlayerId] || [])
-      .sort((a: any, b: any) => new Date(a.updatedAt || a.date).getTime() - new Date(b.updatedAt || b.date).getTime()), // Chronological for chart
+      .sort((a: any, b: any) => new Date(a.updatedAt || a.date).getTime() - new Date(b.updatedAt || b.date).getTime()),
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
@@ -73,22 +74,16 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
             th { background: #f4f4f4; font-weight: bold; }
-            .section-title { background: #e8f5e9; padding: 8px 12px; margin-top: 25px; border-radius: 4px; font-weight: 900; font-size: 12px; }
           </style>
         </head>
         <body>
           <h1>INSTITUTIONAL PROGRESS: ${player.name}</h1>
           <p>Std: ${player.std} | Age: ${player.age} | ${section.toUpperCase()} Division</p>
-          
-          <div class="section-title">DETAILED PERFORMANCE HISTORY</div>
           <table>
             <thead>
               <tr>
                 <th>Date</th>
-                ${isGeneral ? 
-                  '<th>Ht (cm)</th><th>Wt (kg)</th><th>Exam SC</th>' : 
-                  '<th>10x6</th><th>50M</th><th>600M</th><th>Reach</th><th>Jump</th><th>Situps</th><th>Strength</th>'
-                }
+                ${isGeneral ? '<th>Ht (cm)</th><th>Wt (kg)</th><th>Exam SC</th>' : '<th>10x6</th><th>50M</th><th>600M</th><th>Reach</th><th>Jump</th><th>Situps</th><th>Strength</th>'}
                 <th>Total Score</th>
                 <th>Status / Level</th>
               </tr>
@@ -97,10 +92,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               ${[...playerFitness].reverse().map(f => `
                 <tr>
                   <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
-                  ${isGeneral ? 
-                    `<td>${f.height || '-'}</td><td>${f.weight || '-'}</td><td>${f.examMarks || '-'}</td>` : 
-                    `<td>${f.shuttleRun || '-'}</td><td>${f.run50m || '-'}</td><td>${f.run600m || '-'}</td><td>${f.sitAndReach || '-'}</td><td>${f.boardJump || '-'}</td><td>${f.sitUps || '-'}</td><td>${f.strengthScore || '-'}%</td>`
-                  }
+                  ${isGeneral ? `<td>${f.height || '-'}</td><td>${f.weight || '-'}</td><td>${f.examMarks || '-'}</td>` : `<td>${f.shuttleRun || '-'}</td><td>${f.run50m || '-'}</td><td>${f.run600m || '-'}</td><td>${f.sitAndReach || '-'}</td><td>${f.boardJump || '-'}</td><td>${f.sitUps || '-'}</td><td>${f.strengthScore || '-'}%</td>`}
                   <td><strong>${f.score}${isGeneral ? '' : '%'}</strong></td>
                   <td>${f.status}</td>
                 </tr>
@@ -115,6 +107,10 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     win?.document.close();
     win?.print();
   };
+
+  if (!store.isLoaded) {
+    return <DashboardHomeSkeleton />;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
@@ -152,41 +148,43 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-6">
-              <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
-                <CardHeader className="bg-muted/30 border-b p-6 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                    <ChartLine className="w-4 h-4 text-accent" /> Score Trend Analysis
-                  </CardTitle>
-                  <Badge className="bg-primary text-white font-black text-[9px] uppercase px-4 py-1">Standardized Index</Badge>
-                </CardHeader>
-                <CardContent className="p-8">
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
-                        <defs>
-                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#235C36" stopOpacity={0.1}/>
-                            <stop offset="95%" stopColor="#235C36" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
-                        <Tooltip 
-                          contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '15px' }}
-                        />
-                        <Area type="monotone" dataKey="score" stroke="#235C36" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
-                        {!isGeneral && (
-                          <>
-                            <Line type="monotone" dataKey="strength" stroke="#8AF075" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                            <Line type="monotone" dataKey="endurance" stroke="#F59E0B" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                          </>
-                        )}
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+              {!chartData.length ? <ChartSkeleton /> : (
+                <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
+                  <CardHeader className="bg-muted/30 border-b p-6 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                      <ChartLine className="w-4 h-4 text-accent" /> Score Trend Analysis
+                    </CardTitle>
+                    <Badge className="bg-primary text-white font-black text-[9px] uppercase px-4 py-1">Standardized Index</Badge>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData}>
+                          <defs>
+                            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#235C36" stopOpacity={0.1}/>
+                              <stop offset="95%" stopColor="#235C36" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '15px' }}
+                          />
+                          <Area type="monotone" dataKey="score" stroke="#235C36" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
+                          {!isGeneral && (
+                            <>
+                              <Line type="monotone" dataKey="strength" stroke="#8AF075" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                              <Line type="monotone" dataKey="endurance" stroke="#F59E0B" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                            </>
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm overflow-x-auto">
                 <Table className="border-collapse min-w-max">

@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { CalendarCheck, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/loading-skeletons';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -45,9 +46,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}`;
     const currentStatus = store.data.attendance[key];
-    // Cycle: undefined -> P -> A -> undefined
     const nextStatus = currentStatus === 'P' ? 'A' : currentStatus === 'A' ? null : 'P';
-    
     store.setAttendance({ [key]: nextStatus });
   };
 
@@ -98,9 +97,12 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     win?.print();
   };
 
+  if (!store.isLoaded) {
+    return <TableSkeleton rows={15} cols={10} />;
+  }
+
   return (
     <div className="space-y-4">
-      {/* Category Tabs */}
       <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
         {CATEGORIES.map(cat => (
           <Button

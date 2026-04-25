@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -59,10 +60,9 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell,
-  LineChart,
-  Line
+  Cell
 } from 'recharts';
+import { TableSkeleton, ChartSkeleton } from '@/components/ui/loading-skeletons';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
@@ -142,11 +142,8 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     return matchesCategory && matchesSearch && matchesTab;
   }), [store.data.players, targetCategory, searchTerm, activeCategory]);
 
-  // Performance Data for Charts
   const chartData = useMemo(() => {
     if (!filteredPlayers.length) return [];
-    
-    // Group by Std or Category for meaningful visualization
     const groups: Record<string, { name: string, count: number, avgFitness: number, totalFit: number }> = {};
     
     filteredPlayers.forEach((p: any) => {
@@ -360,6 +357,10 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     win?.print();
   };
 
+  if (!store.isLoaded) {
+    return <TableSkeleton rows={10} cols={8} />;
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
@@ -419,33 +420,37 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
       </div>
 
       {showCharts && (
-        <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-lg animate-in slide-in-from-top-4 duration-500">
-          <CardHeader className="bg-primary/5 border-b p-6">
-            <CardTitle className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> {isMarathi ? 'इयत्तावार सरासरी तंदुरुस्ती' : 'Standard-wise Average Fitness'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
-                  <Tooltip 
-                    cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                  />
-                  <Bar dataKey="avgFitness" radius={[4, 4, 0, 0]} barSize={40}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.avgFitness >= 70 ? '#235C36' : '#8AF075'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="animate-in slide-in-from-top-4 duration-500">
+          {!chartData.length ? <ChartSkeleton /> : (
+            <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-lg">
+              <CardHeader className="bg-primary/5 border-b p-6">
+                <CardTitle className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> {isMarathi ? 'इयत्तावार सरासरी तंदुरुस्ती' : 'Standard-wise Average Fitness'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
+                      <Tooltip 
+                        cursor={{ fill: 'transparent' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                      />
+                      <Bar dataKey="avgFitness" radius={[4, 4, 0, 0]} barSize={40}>
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.avgFitness >= 70 ? '#235C36' : '#8AF075'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm overflow-x-auto ios-card-shadow">

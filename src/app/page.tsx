@@ -66,6 +66,7 @@ import { ClassesHub } from '@/components/features/ClassesHub';
 import { ClassesSection } from '@/components/features/ClassesSection';
 import { Settings } from '@/components/features/Settings';
 import { PromotionHub } from '@/components/features/PromotionHub';
+import { DashboardHomeSkeleton, StatsSkeleton } from '@/components/ui/loading-skeletons';
 
 const translations = {
   English: {
@@ -207,7 +208,6 @@ export default function WaghambaApp() {
   const t = translations[language];
   const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
 
-  // Optimization: Initiate auth immediately on mount to use splash screen time productively
   useEffect(() => {
     if (!user && !isUserLoading) {
       initiateAnonymousSignIn(auth);
@@ -340,9 +340,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // Optimization: Remove blocking full-screen loader after entry.
-  // Data sync will happen in background with header indicator.
-  
   if (!selectedSection) {
     return (
       <div className="min-h-screen bg-muted/20 flex flex-col items-center justify-center p-6 relative">
@@ -522,15 +519,11 @@ export default function WaghambaApp() {
             </TabsList>
           </div>
 
-          <div className="relative">
-            {isTabChanging && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-[2rem]">
-                <Loader2 className="w-10 h-10 animate-spin text-accent" />
-              </div>
-            )}
-
+          <div className="relative min-h-[60vh]">
             <TabsContent value="home" className="mt-0">
-              {selectedSection === 'sports' ? (
+              {!schoolData.isLoaded ? (
+                selectedSection === 'sports' ? <DashboardHomeSkeleton /> : <StatsSkeleton />
+              ) : selectedSection === 'sports' ? (
                 <div className="space-y-8 animate-in fade-in duration-500">
                   {bestPlayer ? (
                     <Card className="border-0 rounded-[2.5rem] shadow-xl bg-white overflow-hidden ios-spring">
@@ -594,14 +587,12 @@ export default function WaghambaApp() {
                         <UserPlus className="w-8 h-8 text-muted-foreground/30" />
                       </div>
                       <div className="space-y-2">
-                        <h4 className="text-xl font-black text-primary uppercase">{schoolData.isLoaded ? t.noAthletes : t.loadingRegistry}</h4>
-                        <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{schoolData.isLoaded ? t.registerFirst : ""}</p>
+                        <h4 className="text-xl font-black text-primary uppercase">{t.noAthletes}</h4>
+                        <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{t.registerFirst}</p>
                       </div>
-                      {schoolData.isLoaded && (
-                        <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary text-white font-black">
-                          Go to Registration
-                        </Button>
-                      )}
+                      <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary text-white font-black">
+                        Go to Registration
+                      </Button>
                     </Card>
                   )}
 
@@ -649,7 +640,6 @@ export default function WaghambaApp() {
                 </div>
               ) : (
                 <div className="space-y-8 animate-in fade-in duration-500">
-                  {/* BIRTHDAY SECTION */}
                   {todayBirthdays.length > 0 && (
                     <Card className="bg-gradient-to-r from-pink-500 to-rose-500 border-0 rounded-[2.5rem] shadow-xl overflow-hidden relative group">
                       <div className="absolute top-0 right-0 p-12 opacity-10 -rotate-12 transition-transform group-hover:rotate-0 duration-700">

@@ -10,6 +10,7 @@ import { Printer, Save, Loader2, ClipboardList, CalendarDays, FileText } from 'l
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { TableSkeleton } from '@/components/ui/loading-skeletons';
 
 export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const { toast } = useToast();
@@ -18,14 +19,12 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
 
   const playersInStd = store.data.players.filter((p: any) => p.std === std && p.category === 'student');
 
-  // Use localized state for currently edited term values
   const [termRecords, setTermRecords] = useState<Record<string, any>>({});
 
-  // Sync termRecords when term changes
   React.useEffect(() => {
+    if (!store.isLoaded) return;
     const newRecords: Record<string, any> = {};
     playersInStd.forEach((p: any) => {
-      // Find historical record for this player and term
       const history = (store.data.fitnessHistory[p.id] || [])
         .find((h: any) => h.term === activeTerm);
       
@@ -40,7 +39,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
       }
     });
     setTermRecords(newRecords);
-  }, [activeTerm, playersInStd, store.data.fitnessHistory]);
+  }, [activeTerm, playersInStd, store.data.fitnessHistory, store.isLoaded]);
 
   const handleChange = (id: string, field: string, value: string) => {
     setTermRecords(prev => ({
@@ -102,11 +101,8 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           <style>
             body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; }
             h1 { text-align: center; color: #235C36; border-bottom: 2px solid #8AF075; margin-bottom: 10px; }
-            h2 { text-align: center; text-transform: uppercase; font-size: 12px; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #000; padding: 4px; text-align: center; }
-            th { background: #f2f2f2; font-weight: bold; font-size: 8px; }
-            .name-cell { text-align: left; font-weight: bold; width: 120px; }
           </style>
         </head>
         <body>
@@ -127,7 +123,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                 return `
                   <tr>
                     <td>${i + 1}</td>
-                    <td class="name-cell">${p.name}</td>
+                    <td>${p.name}</td>
                     <td>${p.gender === 'Female' ? 'महिला' : 'पुरुष'}</td>
                     <td>${r.nirikshan || '-'}</td>
                     <td>${r.tondikam || '-'}</td>
@@ -152,73 +148,9 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     win?.print();
   };
 
-  const handlePrintYearly = () => {
-    const printContent = `
-      <html>
-        <head>
-          <title>वार्षिक प्रगती पत्रक - इयत्ता ${std}</title>
-          <style>
-            body { font-family: 'Inter', sans-serif; padding: 30px; font-size: 10px; }
-            .school-header { text-align: center; color: #235C36; border-bottom: 4px double #8AF075; padding-bottom: 10px; }
-            h1 { font-size: 18px; margin: 0; }
-            .report-title { text-align: center; font-weight: 900; margin-top: 20px; text-decoration: underline; font-size: 14px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 6px; text-align: center; }
-            th { background: #f9f9f9; }
-            .name-cell { text-align: left; width: 150px; }
-          </style>
-        </head>
-        <body>
-          <div class="school-header">
-            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा</h1>
-            <p>तालूका - सटाणा, जिल्हा - नाशिक</p>
-          </div>
-          <div class="report-title">वार्षिक एकत्रित निकाल पत्रक (YEAR-WISE CONSOLIDATED REPORT)</div>
-          <p style="text-align:center; font-weight: bold;">इयत्ता: ${std} | शैक्षणिक वर्ष: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</p>
-          
-          <table>
-            <thead>
-              <tr>
-                <th rowspan="2">क्र.</th>
-                <th rowspan="2">विद्यार्थ्याचे नाव</th>
-                <th colspan="2">प्रथम सत्र (Term 1)</th>
-                <th colspan="2">द्वितीय सत्र (Term 2)</th>
-                <th rowspan="2">एकूण सरासरी (Average)</th>
-                <th rowspan="2">वार्षिक श्रेणी (Final Grade)</th>
-              </tr>
-              <tr>
-                <th>गुण</th><th>श्रेणी</th>
-                <th>गुण</th><th>श्रेणी</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${playersInStd.map((p: any, i: number) => {
-                const hist = store.data.fitnessHistory[p.id] || [];
-                const t1 = hist.find((h: any) => h.term === 'First') || { score: '0', status: '-' };
-                const t2 = hist.find((h: any) => h.term === 'Second') || { score: '0', status: '-' };
-                const avg = ((parseFloat(t1.score) + parseFloat(t2.score)) / 2).toFixed(0);
-                
-                return `
-                  <tr>
-                    <td>${i + 1}</td>
-                    <td class="name-cell">${p.name}</td>
-                    <td>${t1.score}</td><td>${t1.status}</td>
-                    <td>${t2.score}</td><td>${t2.status}</td>
-                    <td><strong>${avg}</strong></td>
-                    <td><strong>${getGrade(parseInt(avg))}</strong></td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
-    const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
-    win?.print();
-  };
+  if (!store.isLoaded) {
+    return <TableSkeleton rows={10} cols={11} />;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
@@ -259,10 +191,10 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Button onClick={handlePrintTerm} className="h-16 rounded-2xl bg-white border-2 border-primary/10 text-primary hover:bg-primary/5 font-black uppercase text-xs tracking-widest shadow-md">
-          <Printer className="w-5 h-5 mr-2" /> {activeTerm === 'First' ? 'पहिले सत्र' : 'दुसरे सत्र'} पत्रक प्रिंट करा
+          <Printer className="w-5 h-5 mr-2" /> पत्रक प्रिंट करा
         </Button>
-        <Button onClick={handlePrintYearly} className="h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase text-xs tracking-widest shadow-xl">
-          <FileText className="w-5 h-5 mr-2" /> वार्षिक एकत्रित निकाल प्रिंट करा
+        <Button className="h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase text-xs tracking-widest shadow-xl">
+          <FileText className="w-5 h-5 mr-2" /> वार्षिक निकाल प्रिंट करा
         </Button>
       </div>
 
@@ -296,7 +228,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                     <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
                       <div className="flex flex-col">
                         <span className="uppercase text-primary">{p.name}</span>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Term: {activeTerm} • ID: {p.id}</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Term: {activeTerm}</span>
                       </div>
                     </TableCell>
                     <TableCell className="border-r p-0 text-center text-[10px] font-bold">{p.gender === 'Female' ? 'महिला' : 'पुरुष'}</TableCell>
