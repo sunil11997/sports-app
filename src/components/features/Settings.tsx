@@ -1,104 +1,38 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth, useUser } from '@/firebase';
-import { initiateGoogleBackup, initiateSignOut } from '@/firebase/non-blocking-login';
+import { initiateSignOut } from '@/firebase/non-blocking-login';
 import { 
-  Cloud, 
   ChevronRight, 
-  User, 
   LogOut, 
   ShieldCheck, 
-  Award, 
   School,
-  Mail,
   Wifi,
   WifiOff,
-  Download,
-  Lock,
-  History,
-  Languages,
   SmartphoneNfc,
   Database,
-  Chrome,
   ShieldAlert,
   FileJson,
-  AlertTriangle,
-  ArrowRight,
-  Loader2
+  Languages
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { usePWA } from '@/components/providers/pwa-provider';
 
 export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
-  const { user } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
   const schoolData = useSchoolData();
   const { isOnline, isInstallable, installApp } = usePWA();
-  const [isBackupLoading, setIsBackupLoading] = useState(false);
-
-  const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com');
-
-  const handleBackup = async () => {
-    if (!isOnline) {
-      toast({
-        variant: "destructive",
-        title: language === 'Marathi' ? "कनेक्शन नाही" : "No Connection",
-        description: language === 'Marathi' ? "गुगल बॅकअपसाठी इंटरनेट कनेक्शन आवश्यक आहे." : "An active internet connection is required for Google backup."
-      });
-      return;
-    }
-
-    if (isBackupLoading) return;
-    setIsBackupLoading(true);
-
-    try {
-      await initiateGoogleBackup(auth);
-      toast({ 
-        title: language === 'Marathi' ? "गुगल खाते लिंक झाले" : "Google Account Linked", 
-        description: language === 'Marathi' ? "तुमचा डेटा आता सुरक्षितपणे बॅकअप घेतला जात आहे." : "Your school data is now securely backed up to your Google account." 
-      });
-    } catch (err: any) {
-      let errorMsg = language === 'Marathi' ? "कृपया तुमचे इंटरनेट तपासा किंवा पुन्हा प्रयत्न करा." : "Please check your connection or try again.";
-      let errorTitle = language === 'Marathi' ? "बॅकअप अयशस्वी" : "Backup Failed";
-      
-      if (err.code === 'auth/popup-blocked') {
-        errorMsg = language === 'Marathi' ? "ब्राउझरने पॉपअप ब्लॉक केले आहे. कृपया ते सुरू करा." : "Browser blocked the popup. Please enable popups for this site.";
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        errorMsg = language === 'Marathi' ? "प्रक्रिया रद्द केली गेली." : "Operation was cancelled.";
-      } else if (err.code === 'auth/credential-already-in-use') {
-        errorTitle = language === 'Marathi' ? "खाते आधीच वापरात आहे" : "Account Already In Use";
-        errorMsg = language === 'Marathi' 
-          ? "हे गुगल खाते आधीच दुसऱ्या सेशनशी लिंक केलेले आहे. कृपया लॉगआउट करून थेट साइन-इन करा." 
-          : "This Google account is already linked to another institutional session. Please sign out and sign in directly with Google.";
-        // Log as warning for known conflict
-        console.warn("Auth Link Conflict:", err.code);
-      } else if (err.code === 'auth/popup-closed-by-user') {
-        errorMsg = language === 'Marathi' ? "पॉपअप खिडकी बंद केली गेली." : "The login popup was closed before completion.";
-      } else {
-        console.error("Backup Error:", err);
-      }
-
-      toast({ 
-        variant: "destructive", 
-        title: errorTitle, 
-        description: errorMsg 
-      });
-    } finally {
-      setIsBackupLoading(false);
-    }
-  };
 
   const handleManualExport = () => {
     schoolData.exportBackupData();
     toast({
-      title: "Consolidated Registry Exported",
-      description: "A complete institutional JSON backup has been generated. Store this in your secure records."
+      title: language === 'Marathi' ? "डेटा एक्सपोर्ट झाला" : "Consolidated Registry Exported",
+      description: language === 'Marathi' ? "तुमच्या शाळेचा संपूर्ण डेटा JSON फाईलमध्ये जतन केला आहे." : "A complete institutional JSON backup has been generated. Store this in your secure records."
     });
   };
 
@@ -137,30 +71,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Ashram Shala Waghamba • v3.0 Production</p>
       </div>
 
-      {!isGoogleLinked && (
-        <Card className="border-2 border-amber-200 bg-amber-50 rounded-3xl overflow-hidden shadow-sm">
-          <CardContent className="p-6 flex gap-4">
-            <div className="bg-amber-100 p-3 rounded-2xl h-fit">
-              <AlertTriangle className="w-6 h-6 text-amber-600" />
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-black text-amber-900 uppercase text-xs tracking-widest">Guest Account Active</h3>
-              <p className="text-xs font-bold text-amber-800 leading-relaxed">
-                You are using a Guest Session. If you sign out without linking to Google, your local school data will be lost forever.
-              </p>
-              <Button 
-                onClick={handleBackup}
-                disabled={isBackupLoading}
-                className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-10 px-6 font-black uppercase text-[10px] tracking-widest"
-              >
-                {isBackupLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Link Google Now <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="space-y-6">
         {/* Institutional Data Safety */}
         <div className="space-y-2">
@@ -171,25 +81,16 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <SettingsItem 
               icon={FileJson} 
               color="bg-indigo-500" 
-              label="Consolidated Backup" 
-              sublabel="Full Database JSON Export"
+              label={language === 'Marathi' ? "संपूर्ण बॅकअप घ्या" : "Consolidated Backup"} 
+              sublabel={language === 'Marathi' ? "डेटा JSON फॉरमॅटमध्ये जतन करा" : "Full Database JSON Export"}
               onClick={handleManualExport}
             />
             <SettingsItem 
               icon={Database} 
               color="bg-emerald-500" 
-              label="Real-time Cloud Sync" 
-              value={isOnline ? "Active" : "Offline"}
-              sublabel="Encrypted registry protection"
-            />
-            <SettingsItem 
-              icon={Chrome} 
-              color="bg-sky-500" 
-              label="Google Drive Link" 
-              value={isBackupLoading ? "Syncing..." : (isGoogleLinked ? "Connected" : "Link Now")}
-              sublabel="Secure institutional storage"
-              disabled={isBackupLoading}
-              onClick={handleBackup}
+              label={language === 'Marathi' ? "क्लाउड सिंक" : "Real-time Cloud Sync"} 
+              value={isOnline ? (language === 'Marathi' ? "सुरू आहे" : "Active") : (language === 'Marathi' ? "बंद आहे" : "Offline")}
+              sublabel={language === 'Marathi' ? "सुरक्षित नोंदणी संरक्षण" : "Encrypted registry protection"}
             />
           </div>
         </div>
@@ -202,15 +103,15 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               icon={SmartphoneNfc} 
               color="bg-primary" 
               label={language === 'Marathi' ? "फोनवर इंस्टॉल करा" : "Install on Phone"} 
-              sublabel={isInstallable ? "Available for offline use" : "Ready for use"}
+              sublabel={isInstallable ? (language === 'Marathi' ? "ऑफलाईन वापरासाठी उपलब्ध" : "Available for offline use") : (language === 'Marathi' ? "वापरासाठी तयार" : "Ready for use")}
               disabled={!isInstallable}
               onClick={isInstallable ? installApp : undefined}
             />
             <SettingsItem 
               icon={Languages} 
               color="bg-purple-500" 
-              label="System Language" 
-              sublabel="Select primary interface language"
+              label={language === 'Marathi' ? "प्रणाली भाषा" : "System Language"} 
+              sublabel={language === 'Marathi' ? "प्राथमिक भाषा निवडा" : "Select primary interface language"}
               accessory={
                 <div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10">
                   <Button 
@@ -245,18 +146,14 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Button 
             variant="ghost" 
             onClick={() => {
-              if (!isGoogleLinked) {
-                if (confirm(language === 'Marathi' ? "तुमचे गुगल खाते लिंक केलेले नाही. लॉगआउट केल्यास तुमचा सर्व डेटा नष्ट होईल. पुढे जायचे?" : "WARNING: Your Google account is not linked. Logging out will delete all local data. Continue?")) {
-                  initiateSignOut(auth);
-                }
-              } else {
+              if (confirm(language === 'Marathi' ? "तुमचे सत्र संपवायचे आहे का? कृपया खात्री करा की तुम्ही तुमचा डेटा बॅकअप घेतला आहे." : "Do you want to end the current session? Please ensure you have exported your data if needed.")) {
                 initiateSignOut(auth);
               }
             }}
             className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-16 font-black uppercase text-xs tracking-[0.2em] ios-card-shadow active-scale border border-destructive/10"
           >
             <LogOut className="w-5 h-5 mr-3" />
-            End Institutional Session
+            {language === 'Marathi' ? "संस्थात्मक सत्र संपवा" : "End Institutional Session"}
           </Button>
         </div>
 
