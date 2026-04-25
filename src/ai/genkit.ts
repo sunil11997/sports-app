@@ -9,7 +9,7 @@ export const ai = genkit({
   plugins: [
     googleAI(),
   ],
-  // Use the standard string identifier for the model
+  // Use the standard identifier for the model
   model: 'googleai/gemini-2.5-flash',
 });
 

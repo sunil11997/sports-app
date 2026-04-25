@@ -1,11 +1,4 @@
-import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
-
-const ai = genkit({
-  plugins: [googleAI({ apiKey: "AIzaSyDHtj3zRNSu_0XpyqsJKFpr1oa2BTitIQQ" })],
-});
-
+// Legacy file - No longer used. AI functionality is handled in src/ai/genkit.ts
 export async function askAI(text) {
-  const res = await ai.generate(text);
-  return res.text;
+  return "AI Hub has migrated to the secure Genkit engine. Please use the AI Hub tab in the application.";
 }

@@ -59,7 +59,6 @@ const PlayerRecommendationOutputSchema = z.object({
 });
 export type PlayerRecommendationOutput = z.infer<typeof PlayerRecommendationOutputSchema>;
 
-// Define Prompt BEFORE the flow to ensure proper initialization during SSR/Action loading
 const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
   input: {schema: PlayerRecommendationInputSchema},
@@ -111,12 +110,11 @@ const playerRecommendationFlow = ai.defineFlow(
     const maxAttempts = 3; 
     let lastError: any = null;
 
-    console.log(`Starting AI Recommendation for ${input.name}`);
-
     while (attempts < maxAttempts) {
       try {
         const {output} = await playerRecommendationPrompt(input);
-        return output!;
+        if (!output) throw new Error('AI returned an empty response.');
+        return output;
       } catch (error: any) {
         lastError = error;
         attempts++;
@@ -124,21 +122,24 @@ const playerRecommendationFlow = ai.defineFlow(
         const errorMsg = error?.message || String(error);
         console.error(`AI Attempt ${attempts} failed:`, errorMsg);
 
-        // Retry on transient errors
-        const isTransient = 
+        // Check for specific retryable error codes/messages
+        const isRetryable = 
           errorMsg.includes('503') || 
+          errorMsg.includes('504') ||
+          errorMsg.includes('429') ||
           errorMsg.includes('UNAVAILABLE') || 
           errorMsg.includes('overloaded') ||
           errorMsg.includes('Deadline Exceeded');
 
-        if (!isTransient || attempts >= maxAttempts) {
-          throw new Error(`AI Service Error: ${errorMsg}`);
+        if (!isRetryable || attempts >= maxAttempts) {
+          throw new Error(`AI Service Busy (Attempt ${attempts}): ${errorMsg}`);
         }
         
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+        // Wait longer between each retry
+        await new Promise(resolve => setTimeout(resolve, 3000 * attempts));
       }
     }
-    throw lastError || new Error('Failed to generate AI recommendations after retries.');
+    throw lastError || new Error('Failed to generate recommendations.');
   },
 );
 
