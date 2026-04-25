@@ -36,7 +36,9 @@ import {
   X,
   ClipboardList,
   ArrowUpCircle,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Cake,
+  PartyPopper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -120,7 +122,10 @@ const translations = {
     promoteNext: "Transfer to Next Std",
     promoteDesc: "Move selected students to their next academic standard.",
     selectAll: "Select All",
-    graduated: "Graduated"
+    graduated: "Graduated",
+    birthdayToday: "Today's Birthdays",
+    happyBirthday: "Happy Birthday!",
+    noBirthdays: "No birthdays today."
   },
   Marathi: {
     schoolName: "स्पोर्ट्स ॲप",
@@ -177,7 +182,10 @@ const translations = {
     promoteNext: "पुढील इयत्तेत वर्ग करा",
     promoteDesc: "निवडलेल्या विद्यार्थ्यांना त्यांच्या पुढील शैक्षणिक इयत्तेत हलवा.",
     selectAll: "सर्व निवडा",
-    graduated: "उत्तीर्ण / शाळा सोडली"
+    graduated: "उत्तीर्ण / शाळा सोडली",
+    birthdayToday: "आजचे वाढदिवस",
+    happyBirthday: "वाढदिवसाच्या हार्दिक शुभेच्छा!",
+    noBirthdays: "आज कोणाचाही वाढदिवस नाही."
   }
 };
 
@@ -188,6 +196,7 @@ export default function WaghambaApp() {
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [isTabChanging, setIsTabChanging] = useState(false);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [todayDate, setTodayDate] = useState<Date | null>(null);
   
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
@@ -203,6 +212,10 @@ export default function WaghambaApp() {
     }
   }, [isEntered, user, isUserLoading, auth]);
 
+  useEffect(() => {
+    setTodayDate(new Date());
+  }, []);
+
   const handleStartHub = () => setIsEntered(true);
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
@@ -217,6 +230,18 @@ export default function WaghambaApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setIsTabChanging(false), 150);
   };
+
+  const todayBirthdays = useMemo(() => {
+    if (!todayDate || !schoolData.data.players) return [];
+    const currentMonth = todayDate.getMonth() + 1;
+    const currentDay = todayDate.getDate();
+
+    return schoolData.data.players.filter(p => {
+      if (!p.dob) return false;
+      const dobDate = new Date(p.dob);
+      return (dobDate.getMonth() + 1 === currentMonth) && (dobDate.getDate() === currentDay);
+    });
+  }, [schoolData.data.players, todayDate]);
 
   const topPerformers = useMemo(() => {
     if (!schoolData.data.players) return [];
@@ -622,6 +647,31 @@ export default function WaghambaApp() {
                 </div>
               ) : (
                 <div className="space-y-8 animate-in fade-in duration-500">
+                  {/* BIRTHDAY SECTION */}
+                  {todayBirthdays.length > 0 && (
+                    <Card className="bg-gradient-to-r from-pink-500 to-rose-500 border-0 rounded-[2.5rem] shadow-xl overflow-hidden relative group">
+                      <div className="absolute top-0 right-0 p-12 opacity-10 -rotate-12 transition-transform group-hover:rotate-0 duration-700">
+                        <PartyPopper className="w-48 h-48 text-white" />
+                      </div>
+                      <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
+                        <div className="bg-white/20 p-6 rounded-[2rem] backdrop-blur-md shadow-inner">
+                          <Cake className="w-16 h-16 text-white" />
+                        </div>
+                        <div className="text-center md:text-left space-y-2">
+                          <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">{t.happyBirthday}</h2>
+                          <p className="text-white/80 font-black uppercase text-xs tracking-[0.3em]">{t.birthdayToday}</p>
+                          <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
+                            {todayBirthdays.map(p => (
+                              <Badge key={p.id} className="bg-white text-rose-600 font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg border-0 hover:scale-105 transition-transform">
+                                {p.name} (Std {p.std})
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   <div className="bg-white p-12 rounded-[2.5rem] shadow-xl relative overflow-hidden border border-border">
                     <div className="relative z-10 space-y-10">
                       <div className="flex items-center gap-6">
