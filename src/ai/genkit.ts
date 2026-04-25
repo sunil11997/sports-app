@@ -1,19 +1,15 @@
-
 import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
-import { openai } from 'genkitx-openai';
 
 /**
  * Genkit instance configured for the Waghamba Sports Hub.
- * Supports both Google AI (Gemini) and OpenAI plugins.
+ * Uses Google AI (Gemini) as the primary provider.
  */
 export const ai = genkit({
   plugins: [
     googleAI(),
-    openai(),
   ],
-  // Defaulting to Gemini 2.5 Flash for speed and cost-efficiency.
-  // To use OpenAI by default, you can change this to e.g. openai.model('gpt-4o')
+  // Gemini 2.5 Flash is highly optimized for performance and lower latencies
   model: googleAI.model('gemini-2.5-flash'),
 });
 
