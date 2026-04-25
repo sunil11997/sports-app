@@ -137,9 +137,9 @@ export function useSchoolData() {
     healthIncidents: healthIncidents || [],
     activities: activities || [],
     schoolProfile: schoolProfile || {
-      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+      schoolName: "शासकीय माध्यमिक आश्रमशाळा वाघंबा",
       teacherName: "सुनिल देशमुख",
-      taluka: "सटाणा",
+      taluka: "बागलाण",
       district: "नाशिक",
       id: "default",
       qualification: "B.P.Ed / M.P.Ed",

@@ -68,7 +68,7 @@ import { PromotionHub } from '@/components/features/PromotionHub';
 
 const translations = {
   English: {
-    schoolName: "SPORTS APP",
+    schoolName: "ASHRAM SHALA WAGHAMBA",
     sportsHub: "Sports Hub",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
@@ -104,8 +104,8 @@ const translations = {
     sportsHubDesc: "Manage athletes, performance scores, and tournaments.",
     studentRegistryDesc: "Manage academic registries and growth logs.",
     enter: "GET STARTED",
-    institutionalStack: "V3.0 PERFORMANCE ENGINE",
-    tribalLogoHint: "OFFICIAL SPORTS SYSTEM",
+    institutionalStack: "ESTD. 1966 • V3.0 ENGINE",
+    tribalLogoHint: "GOVT. SECONDARY ASHRAM SHALA",
     registrySummary: "Institutional Registry",
     registryDesc: "Consolidated enrollment counts across all standards.",
     totalStudents: "Total Enrollment",
@@ -128,7 +128,7 @@ const translations = {
     noBirthdays: "No birthdays today."
   },
   Marathi: {
-    schoolName: "स्पोर्ट्स ॲप",
+    schoolName: "शासकीय आश्रम शाळा वाघंबा",
     sportsHub: "क्रीडा केंद्र",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
@@ -164,8 +164,8 @@ const translations = {
     sportsHubDesc: "खेळाडू, कामगिरीचे गुण आणि स्पर्धा व्यवस्थापित करा.",
     studentRegistryDesc: "सामान्य विद्यार्थी वाढीचे लॉग आणि नोंदणी व्यवस्थापित करा.",
     enter: "प्रवेश करा",
-    institutionalStack: "संस्थात्मक स्टॅक V3.0",
-    tribalLogoHint: "शासकीय क्रीडा व्यवस्थापन प्रणाली",
+    institutionalStack: "स्थापना १९६६ • स्टॅक V3.0",
+    tribalLogoHint: "शासकीय माध्यमिक आश्रमशाळा",
     registrySummary: "विद्यार्थी नोंदणी सारांश",
     registryDesc: "सर्व इयत्तांमधील एकत्रित नोंदणी संख्या.",
     totalStudents: "एकूण नावनोंदणी",
@@ -299,7 +299,7 @@ export default function WaghambaApp() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-5xl font-black text-primary tracking-tight leading-none px-4 uppercase">
+              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight leading-tight px-4 uppercase">
                 {t.schoolName}
               </h1>
               <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">
@@ -723,7 +723,7 @@ export default function WaghambaApp() {
                               <Badge className="bg-accent text-black font-black text-lg px-3 py-0.5 rounded-lg shadow-sm">Std {std}</Badge>
                             </div>
                             <div className="flex justify-between items-end border-b border-muted pb-2">
-                              <span className="text-[8px] font-black text-muted-foreground uppercase">Total</span>
+                              <span className="text-8px font-black text-muted-foreground uppercase">Total</span>
                               <span className="text-2xl font-black text-primary">{stats.total}</span>
                             </div>
                           </div>
