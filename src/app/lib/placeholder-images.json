@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "adivasi-vikas-logo",
-      "description": "Official institutional logo for Ashram Shala Waghamba.",
+      "description": "Official institutional logo for Ashram Shala Waghamba featuring the Government of Maharashtra branding.",
       "imageUrl": "/logo.png",
-      "imageHint": "School Logo"
+      "imageHint": "Government Logo"
     },
     {
       "id": "school-sports-hero",
