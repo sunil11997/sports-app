@@ -3,14 +3,14 @@
   "placeholderImages": [
     {
       "id": "adivasi-vikas-logo",
-      "description": "Adivasi Vikas Vibhag Official Logo",
-      "imageUrl": "https://picsum.photos/seed/maharashtra-tribal/200/200",
-      "imageHint": "Tribal Logo"
+      "description": "Official Logo of the Tribal Development Department, Government of Maharashtra",
+      "imageUrl": "https://picsum.photos/seed/maharashtra-emblem/200/200",
+      "imageHint": "Government Emblem"
     },
     {
       "id": "school-sports-hero",
-      "description": "Students playing sports on school ground",
-      "imageUrl": "https://picsum.photos/seed/school-sports/800/400",
+      "description": "Students playing sports on the Waghamba school grounds",
+      "imageUrl": "https://picsum.photos/seed/waghamba-sports/800/400",
       "imageHint": "School Sports"
     }
   ]
