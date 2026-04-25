@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   description: 'Professional Sports & Health Management System',
   manifest: '/manifest.json',
   icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
   },
   appleWebApp: {
     capable: true,
