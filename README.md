@@ -9,7 +9,7 @@ Once you have downloaded/exported this code from Firebase Studio, follow these s
 
 ### 1. Prerequisites
 - Install [Node.js](https://nodejs.org/) (v18 or higher recommended).
-- Have a Firebase project set up (though the config is already in `src/firebase/config.ts`).
+- Have a Firebase project set up.
 
 ### 2. Installation
 Open your terminal in the project root and run:
@@ -17,10 +17,14 @@ Open your terminal in the project root and run:
 npm install
 ```
 
-### 3. Environment Variables
-Create a `.env.local` file in the root directory and add your keys (especially if using AI features):
+### 3. Environment Variables (CRITICAL for AI)
+To enable the **AI Hub (Chat & Performance Analysis)**, you MUST provide a Gemini API Key.
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Create a free API Key.
+3. Edit the `.env` file in the root directory and paste your key:
 ```env
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+GEMINI_API_KEY=your_actual_key_here
+GOOGLE_GENAI_API_KEY=your_actual_key_here
 ```
 
 ### 4. Running the App

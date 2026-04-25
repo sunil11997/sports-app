@@ -108,6 +108,13 @@ const playerRecommendationFlow = ai.defineFlow(
     outputSchema: PlayerRecommendationOutputSchema,
   },
   async (input) => {
+    // Safety check for API Key
+    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
+      throw new Error(input.language === 'Marathi' 
+        ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key .env फाईलमध्ये जोडा." 
+        : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
+    }
+
     let attempts = 0;
     const maxAttempts = 3; 
     let lastError: any = null;
@@ -125,10 +132,8 @@ const playerRecommendationFlow = ai.defineFlow(
         console.error(`AI Recommendation Attempt ${attempts} failed:`, errorMsg);
 
         if (attempts >= maxAttempts) {
-          throw new Error(`AI Service Busy (Attempt ${attempts}). Please try again in 1 minute.`);
+          throw new Error(`AI Service Busy (Attempt ${attempts}). Please check your API key or try again later.`);
         }
-        
-        // Exponential backoff for free-tier recovery
         await new Promise(resolve => setTimeout(resolve, 3000 * attempts));
       }
     }

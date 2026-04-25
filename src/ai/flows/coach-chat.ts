@@ -30,6 +30,13 @@ const coachChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (input) => {
+    // Safety check for API Key
+    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
+      return input.language === 'Marathi' 
+        ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key जोडा." 
+        : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
+    }
+
     let attempts = 0;
     const maxAttempts = 3;
     
@@ -56,7 +63,6 @@ const coachChatFlow = ai.defineFlow(
         attempts++;
         console.error(`Coach Chat Attempt ${attempts} failed:`, error.message || error);
         if (attempts >= maxAttempts) throw error;
-        // Wait longer on each retry to overcome rate limits
         await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
       }
     }
