@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -11,10 +10,23 @@ import {
   Printer, 
   Stethoscope,
   TrendingUp,
-  Trophy
+  Trophy,
+  ChartLine
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -36,15 +48,18 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
 
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory[selectedPlayerId] || [])
-      .sort((a: any, b: any) => new Date(b.updatedAt || b.date).getTime() - new Date(a.updatedAt || a.date).getTime()),
+      .sort((a: any, b: any) => new Date(a.updatedAt || a.date).getTime() - new Date(b.updatedAt || b.date).getTime()), // Chronological for chart
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
-  const playerSkills = useMemo(() => 
-    (store.data.skillsHistory[selectedPlayerId] || [])
-      .sort((a: any, b: any) => new Date(b.lastUpdated || 0).getTime() - new Date(a.lastUpdated || 0).getTime()),
-    [selectedPlayerId, store.data.skillsHistory]
-  );
+  const chartData = useMemo(() => {
+    return playerFitness.map(f => ({
+      date: format(new Date(f.updatedAt || f.date || new Date()), 'MMM yy'),
+      score: parseFloat(f.score) || 0,
+      strength: parseFloat(f.strengthScore) || 0,
+      endurance: parseFloat(f.enduranceScore) || 0
+    }));
+  }, [playerFitness]);
 
   const handlePrint = () => {
     if (!player) return;
@@ -79,7 +94,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               </tr>
             </thead>
             <tbody>
-              ${playerFitness.map(f => `
+              ${[...playerFitness].reverse().map(f => `
                 <tr>
                   <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
                   ${isGeneral ? 
@@ -92,31 +107,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               `).join('')}
             </tbody>
           </table>
-
-          <div class="section-title">TECHNICAL SKILL EVOLUTION</div>
-          <table>
-            <thead>
-              <tr><th>Sport</th><th>Technical Moves & Scores</th><th>Aggregate</th><th>Last Updated</th></tr>
-            </thead>
-            <tbody>
-              ${playerSkills.map(s => `
-                <tr>
-                  <td><strong>${s.sportName}</strong></td>
-                  <td>${Object.entries(s.detailedSkills || {}).map(([name, sc]) => `${name}: ${sc}/10`).join(', ')}</td>
-                  <td><strong>${s.score}</strong></td>
-                  <td>${format(new Date(s.lastUpdated || 0), 'PP')}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
-          <div class="section-title">MEDICAL & INCIDENT LOG</div>
-          <table>
-            <thead><tr><th>Date</th><th>Incident Description & Suggested Treatment</th></tr></thead>
-            <tbody>
-              ${playerIncidents.map(inc => `<tr><td>${format(new Date(inc.date), 'dd MMM yyyy')}</td><td>${inc.description}</td></tr>`).join('')}
-            </tbody>
-          </table>
         </body>
       </html>
     `;
@@ -127,153 +117,190 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/30 p-4 rounded-lg border">
-        <div className="flex items-center gap-3">
-          <HistoryIcon className="w-6 h-6 text-primary" />
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Excel: Progress Archives</h2>
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/10 shadow-lg">
+        <div className="flex items-center gap-6">
+          <div className="bg-white p-4 rounded-2xl border-2 border-primary/10 shadow-inner">
+            <HistoryIcon className="w-10 h-10 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Archives</h2>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Multi-Year Evolution Tracker</p>
+          </div>
         </div>
-        <div className="flex flex-col w-full md:w-80 gap-2">
+        <div className="flex flex-col w-full md:w-80 gap-3">
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
-            <SelectTrigger className="h-9 text-sm font-bold bg-white">
+            <SelectTrigger className="h-12 text-md font-bold bg-white rounded-xl border-2 shadow-sm">
               <SelectValue placeholder="Pick student..." />
             </SelectTrigger>
             <SelectContent>
-              {availablePlayers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              {availablePlayers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button disabled={!selectedPlayerId} onClick={handlePrint} size="sm" className="font-bold h-9">
-            <Printer className="w-4 h-4 mr-2" /> Export Dossier
+          <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black uppercase text-xs tracking-widest shadow-md">
+            <Printer className="w-4 h-4 mr-2" /> Export Case Dossier
           </Button>
         </div>
       </div>
 
       {!selectedPlayerId ? (
-        <div className="p-12 text-center text-muted-foreground border-2 border-dashed rounded-lg opacity-40">
-          <TrendingUp className="w-12 h-12 mx-auto mb-2" />
-          <p className="font-bold uppercase text-[11px] tracking-widest">Select a student to view monthly evolution</p>
+        <div className="p-24 text-center text-muted-foreground border-4 border-dashed rounded-[3rem] opacity-30">
+          <TrendingUp className="w-16 h-16 mx-auto mb-4" />
+          <p className="font-black uppercase text-sm tracking-widest">Select a profile to analyze progress trends</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
-            <div className="bg-primary/5 p-2 border-b font-black text-[11px] uppercase text-primary flex items-center justify-between">
-              <span>Monthly Progress Spread: {player?.name}</span>
-              <Badge variant="outline" className="text-[9px] font-black uppercase">Archive Data</Badge>
-            </div>
-            <Table className="border-collapse min-w-max">
-              <TableHeader className="bg-muted/30 sticky top-0">
-                <TableRow className="border-b">
-                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black sticky left-0 bg-muted/30 z-10 w-[120px]">Date</TableHead>
-                  {isGeneral ? (
-                    <>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[60px]">Ht</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[60px]">Wt</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[60px]">Exam</TableHead>
-                    </>
-                  ) : (
-                    <>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">10x6</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">50M</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">600M</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Reach</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Jump</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Situps</TableHead>
-                      <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[50px]">Str %</TableHead>
-                    </>
-                  )}
-                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[80px]">Score</TableHead>
-                  <TableHead className="h-8 px-2 text-[9px] uppercase font-black text-right w-[150px]">Status / Level</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {playerFitness.length === 0 ? (
-                  <TableRow><TableCell colSpan={15} className="text-center py-4 text-[11px] text-muted-foreground italic">No archive data found for this player.</TableCell></TableRow>
-                ) : (
-                  playerFitness.map((fit: any, idx: number) => (
-                    <TableRow key={idx} className="border-b even:bg-muted/30 h-9 hover:bg-primary/5 transition-colors">
-                      <TableCell className="border-r p-2 text-[10px] font-bold sticky left-0 bg-white z-10">
-                        {format(new Date(fit.updatedAt || fit.date || new Date()), 'MMM yyyy')}
-                      </TableCell>
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 space-y-6">
+              <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
+                <CardHeader className="bg-muted/30 border-b p-6 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                    <ChartLine className="w-4 h-4 text-accent" /> Score Trend Analysis
+                  </CardTitle>
+                  <Badge className="bg-primary text-white font-black text-[9px] uppercase px-4 py-1">Standardized Index</Badge>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#235C36" stopOpacity={0.1}/>
+                            <stop offset="95%" stopColor="#235C36" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '15px' }}
+                        />
+                        <Area type="monotone" dataKey="score" stroke="#235C36" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
+                        {!isGeneral && (
+                          <>
+                            <Line type="monotone" dataKey="strength" stroke="#8AF075" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                            <Line type="monotone" dataKey="endurance" stroke="#F59E0B" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                          </>
+                        )}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm overflow-x-auto">
+                <Table className="border-collapse min-w-max">
+                  <TableHeader className="bg-muted/30 sticky top-0">
+                    <TableRow className="border-b">
+                      <TableHead className="border-r h-10 px-4 text-[9px] uppercase font-black sticky left-0 bg-muted/90 backdrop-blur-md z-10 w-[120px]">Month</TableHead>
                       {isGeneral ? (
                         <>
-                          <TableCell className="border-r p-1 text-center text-[11px]">{fit.height || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[11px]">{fit.weight || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[11px] font-black text-primary">{fit.examMarks || '0'}</TableCell>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[60px]">Ht (cm)</TableHead>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[60px]">Wt (kg)</TableHead>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[60px]">Exam SC</TableHead>
                         </>
                       ) : (
                         <>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.shuttleRun || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.run50m || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.run600m || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.sitAndReach || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.boardJump || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.sitUps || '-'}</TableCell>
-                          <TableCell className="border-r p-1 text-center text-[10px]">{fit.strengthScore || '-'}</TableCell>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[50px]">10x6</TableHead>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[50px]">50M</TableHead>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[50px]">600M</TableHead>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[50px]">Str %</TableHead>
+                          <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[50px]">End %</TableHead>
                         </>
                       )}
-                      <TableCell className="border-r p-1 text-center text-[11px] font-black text-primary bg-primary/5">
-                        {fit.score}{isGeneral ? '' : '%'}
-                      </TableCell>
-                      <TableCell className="p-1 text-right text-[9px] font-black uppercase text-muted-foreground/60 pr-4">
-                        {fit.status}
-                      </TableCell>
+                      <TableHead className="border-r h-10 px-2 text-[9px] uppercase font-black text-center w-[80px] bg-primary/5">Score</TableHead>
+                      <TableHead className="h-10 px-2 text-[9px] uppercase font-black text-right w-[150px]">Rating</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
-            <div className="bg-amber-50 p-2 border-b font-black text-[11px] uppercase text-amber-800 flex items-center gap-2">
-              <Trophy className="w-4 h-4" /> Technical Skill Archive
+                  </TableHeader>
+                  <TableBody>
+                    {[...playerFitness].reverse().map((fit: any, idx: number) => (
+                      <TableRow key={idx} className="border-b even:bg-muted/20 h-10 hover:bg-primary/5 transition-colors">
+                        <TableCell className="border-r p-2 text-[10px] font-bold sticky left-0 bg-white z-10">
+                          {format(new Date(fit.updatedAt || fit.date || new Date()), 'MMMM yyyy')}
+                        </TableCell>
+                        {isGeneral ? (
+                          <>
+                            <TableCell className="border-r p-1 text-center text-[10px] font-bold">{fit.height || '-'}</TableCell>
+                            <TableCell className="border-r p-1 text-center text-[10px] font-bold">{fit.weight || '-'}</TableCell>
+                            <TableCell className="border-r p-1 text-center text-[10px] font-black text-primary">{fit.examMarks || '0'}</TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell className="border-r p-1 text-center text-[10px]">{fit.shuttleRun || '-'}</TableCell>
+                            <TableCell className="border-r p-1 text-center text-[10px]">{fit.run50m || '-'}</TableCell>
+                            <TableCell className="border-r p-1 text-center text-[10px]">{fit.run600m || '-'}</TableCell>
+                            <TableCell className="border-r p-1 text-center text-[10px] font-bold text-accent-foreground">{fit.strengthScore || '-'}%</TableCell>
+                            <TableCell className="border-r p-1 text-center text-[10px] font-bold text-primary">{fit.enduranceScore || '-'}%</TableCell>
+                          </>
+                        )}
+                        <TableCell className="border-r p-1 text-center text-[11px] font-black text-primary bg-primary/5">
+                          {fit.score}{isGeneral ? '' : '%'}
+                        </TableCell>
+                        <TableCell className="p-1 text-right text-[9px] font-black uppercase text-muted-foreground/60 pr-4">
+                          {fit.status}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
-            <Table className="border-collapse min-w-max">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-b">
-                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black w-[150px]">Sport Name</TableHead>
-                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black">Detailed Skill Evaluation</TableHead>
-                  <TableHead className="border-r h-8 px-2 text-[9px] uppercase font-black text-center w-[100px]">Aggregate</TableHead>
-                  <TableHead className="h-8 px-2 text-[9px] uppercase font-black text-right w-[150px]">Sync Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {playerSkills.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-4 text-[11px] text-muted-foreground italic">No technical skill data logged.</TableCell></TableRow>
-                ) : (
-                  playerSkills.map((skill: any, idx: number) => (
-                    <TableRow key={idx} className="border-b even:bg-muted/30 h-auto hover:bg-amber-50/30 transition-colors">
-                      <TableCell className="border-r p-2 text-[10px] font-black uppercase text-amber-700">{skill.sportName}</TableCell>
-                      <TableCell className="border-r p-2 text-[10px]">
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(skill.detailedSkills || {}).map(([name, sc]) => (
-                            <span key={name} className="bg-white border px-1.5 py-0.5 rounded-sm shadow-xs font-medium">
-                              {name}: <span className="font-black text-primary">{sc}</span>
-                            </span>
-                          ))}
+
+            <div className="lg:col-span-4 space-y-6">
+              <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl">
+                <CardHeader className="bg-destructive/5 border-b p-6">
+                  <CardTitle className="text-sm font-black uppercase text-destructive tracking-widest flex items-center gap-2">
+                    <Stethoscope className="w-4 h-4" /> Medical History Log
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {playerIncidents.length === 0 ? (
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground italic text-center py-10 opacity-30">No recorded incidents</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {playerIncidents.map((inc: any) => (
+                        <div key={inc.id} className="border-l-4 border-destructive/30 pl-4 py-1 group">
+                          <div className="text-[9px] font-black text-muted-foreground uppercase">{format(new Date(inc.date), 'dd MMM yyyy')}</div>
+                          <p className="text-xs font-bold text-foreground/80 leading-snug mt-1 group-hover:text-destructive transition-colors">{inc.description}</p>
                         </div>
-                      </TableCell>
-                      <TableCell className="border-r p-2 text-center text-sm font-black text-primary">{skill.score}</TableCell>
-                      <TableCell className="p-2 text-right text-[10px] font-medium text-muted-foreground">{format(new Date(skill.lastUpdated || 0), 'PP')}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-          <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm">
-            <div className="bg-destructive/5 p-2 border-b font-black text-[11px] uppercase text-destructive flex items-center gap-2">
-              <Stethoscope className="w-4 h-4" /> Health & Medical Archives
-            </div>
-            <div className="p-4 space-y-3">
-              {playerIncidents.map((inc: any) => (
-                <div key={inc.id} className="border-l-4 border-destructive/30 pl-3 py-1">
-                  <div className="text-[10px] font-black text-muted-foreground uppercase">{format(new Date(inc.date), 'dd MMM yyyy')}</div>
-                  <p className="text-xs font-medium leading-relaxed mt-1">{inc.description}</p>
-                </div>
-              ))}
-              {playerIncidents.length === 0 && <p className="text-[11px] text-muted-foreground italic text-center py-4">No medical history logged for this student.</p>}
+              <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl">
+                <CardHeader className="bg-amber-50 border-b p-6">
+                  <CardTitle className="text-sm font-black uppercase text-amber-800 tracking-widest flex items-center gap-2">
+                    <Trophy className="w-4 h-4" /> Technical Proficiency
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {(store.data.skillsHistory[selectedPlayerId] || []).length === 0 ? (
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground italic text-center py-10 opacity-30">No technical data</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {Object.values(store.data.sportSkills)
+                        .filter((s: any) => s.playerId === selectedPlayerId)
+                        .map((skill: any, idx: number) => (
+                          <div key={idx} className="bg-muted/30 p-4 rounded-2xl border border-muted">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs font-black uppercase text-primary">{skill.sportName}</span>
+                              <Badge className="bg-primary text-white text-[10px] font-black">{skill.score}</Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(skill.detailedSkills || {}).map(([name, sc]) => (
+                                <span key={name} className="text-[8px] font-black uppercase bg-white px-1.5 py-0.5 rounded border border-muted">
+                                  {name}: {sc}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

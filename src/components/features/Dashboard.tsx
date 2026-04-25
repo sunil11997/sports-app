@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,8 @@ import {
   ArrowUpCircle,
   Users,
   ChevronRight,
-  Scale
+  Scale,
+  TrendingUp
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -51,6 +51,18 @@ import { differenceInYears, isValid } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Cell,
+  LineChart,
+  Line
+} from 'recharts';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
@@ -86,6 +98,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string, name: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -120,14 +133,36 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     return isNaN(result) ? 0 : result;
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => {
+  const filteredPlayers = useMemo(() => store.data.players.filter((p: any) => {
     const matchesCategory = p.category === targetCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       (p.sports && p.sports.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))) ||
       (p.aadharNumber && p.aadharNumber.includes(searchTerm));
     const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
     return matchesCategory && matchesSearch && matchesTab;
-  });
+  }), [store.data.players, targetCategory, searchTerm, activeCategory]);
+
+  // Performance Data for Charts
+  const chartData = useMemo(() => {
+    if (!filteredPlayers.length) return [];
+    
+    // Group by Std or Category for meaningful visualization
+    const groups: Record<string, { name: string, count: number, avgFitness: number, totalFit: number }> = {};
+    
+    filteredPlayers.forEach((p: any) => {
+      const std = `Std ${p.std}`;
+      if (!groups[std]) groups[std] = { name: std, count: 0, avgFitness: 0, totalFit: 0 };
+      
+      const fit = store.data.fitness[p.id] || { score: '0' };
+      groups[std].count++;
+      groups[std].totalFit += parseFloat(fit.score) || 0;
+    });
+
+    return Object.values(groups).map(g => ({
+      ...g,
+      avgFitness: Math.round(g.totalFit / g.count)
+    })).sort((a, b) => parseInt(a.name.split(' ')[1]) - parseInt(b.name.split(' ')[1]));
+  }, [filteredPlayers, store.data.fitness]);
 
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds);
@@ -326,7 +361,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
         {CATEGORIES.map(cat => (
           <Button
@@ -351,62 +386,96 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             <p className="text-[9px] font-bold text-muted-foreground uppercase">{isMarathi ? 'फिल्टर:' : 'Filtered by:'} {CATEGORIES.find(c => c.id === activeCategory)?.label}</p>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-          {selectedIds.size > 0 ? (
+        <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowCharts(!showCharts)}
+            className={cn("font-black h-9 text-[10px] uppercase", showCharts && "bg-primary text-white border-primary")}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" /> {isMarathi ? 'आलेख पहा' : 'View Analytics'}
+          </Button>
+          {selectedIds.size > 0 && (
             <Button 
               onClick={() => setIsPromotionDialogOpen(true)}
               className="bg-accent text-accent-foreground font-black h-9 text-xs uppercase animate-in zoom-in-95"
             >
               <ArrowUpCircle className="w-4 h-4 mr-2" /> {t.promoteNext} ({selectedIds.size})
             </Button>
-          ) : (
-            <div className="hidden md:flex items-center px-4 bg-muted/30 rounded-lg border border-dashed text-[9px] font-black text-muted-foreground uppercase">
-              Select students to enable Promotion Hub
-            </div>
           )}
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               placeholder={isMarathi ? "शोध: नाव, आधार, खेळ..." : "Search by name, aadhar, sport..."} 
-              className="pl-9 h-9 text-sm"
+              className="pl-9 h-9 text-sm rounded-lg"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Button onClick={handlePrint} size="sm" className="font-bold h-9">
-            <Printer className="w-4 h-4 mr-2" /> {isMarathi ? 'शीट प्रिंट करा' : 'Print Sheet'}
+            <Printer className="w-4 h-4 mr-2" /> {isMarathi ? 'प्रिंट' : 'Print'}
           </Button>
         </div>
       </div>
 
-      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+      {showCharts && (
+        <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-lg animate-in slide-in-from-top-4 duration-500">
+          <CardHeader className="bg-primary/5 border-b p-6">
+            <CardTitle className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> {isMarathi ? 'इयत्तावार सरासरी तंदुरुस्ती' : 'Standard-wise Average Fitness'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
+                  <Tooltip 
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar dataKey="avgFitness" radius={[4, 4, 0, 0]} barSize={40}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.avgFitness >= 70 ? '#235C36' : '#8AF075'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm overflow-x-auto ios-card-shadow">
         <Table className="border-collapse min-w-max">
           <TableHeader className="bg-muted/50 sticky top-0 z-20">
             <TableRow className="border-b">
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[40px] text-center">
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase w-[40px] text-center">
                 <Checkbox checked={selectedIds.size === filteredPlayers.length && filteredPlayers.length > 0} onCheckedChange={toggleSelectAll} />
               </TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[50px] text-center">SR</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[60px] text-center">{isMarathi ? 'फोटो' : 'Photo'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[180px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'वय' : 'Age'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'इयत्ता' : 'Std'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[150px]">{isMarathi ? 'BMI स्टेटस' : 'BMI Status'}</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'संपर्क' : 'Contact'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase w-[50px] text-center">SR</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase w-[60px] text-center">{isMarathi ? 'फोटो' : 'Photo'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase min-w-[180px]">{isMarathi ? 'नाव' : 'Name'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'वय' : 'Age'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase text-center w-[50px]">{isMarathi ? 'इयत्ता' : 'Std'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase text-center w-[150px]">{isMarathi ? 'BMI स्टेटस' : 'BMI Status'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'संपर्क' : 'Contact'}</TableHead>
               {isGeneral ? (
-                <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase w-[100px] text-center">{isMarathi ? 'गुण' : 'Exam'}</TableHead>
+                <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase w-[100px] text-center">{isMarathi ? 'गुण' : 'Exam'}</TableHead>
               ) : (
-                <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase min-w-[150px]">{isMarathi ? 'खेळ' : 'Sports'}</TableHead>
+                <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase min-w-[150px]">{isMarathi ? 'खेळ' : 'Sports'}</TableHead>
               )}
-              <TableHead className="border-r h-9 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'उपस्थिती' : 'Att %'}</TableHead>
-              <TableHead className="h-9 px-2 font-black text-[11px] uppercase text-center w-[90px]">{isMarathi ? 'क्रिया' : 'Actions'}</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[11px] uppercase text-center w-[100px]">{isMarathi ? 'उपस्थिती' : 'Att %'}</TableHead>
+              <TableHead className="h-10 px-2 font-black text-[11px] uppercase text-center w-[90px]">{isMarathi ? 'क्रिया' : 'Actions'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                  {isMarathi ? 'या श्रेणीत कोणतेही रेकॉर्ड सापडले नाहीत.' : 'No records found in this category.'}
+                <TableCell colSpan={11} className="text-center py-12 text-muted-foreground font-bold uppercase tracking-widest opacity-30">
+                  {isMarathi ? 'कोणतेही रेकॉर्ड सापडले नाहीत.' : 'No records found.'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -414,32 +483,32 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                 const attPercent = calculateAttendance(player.id);
                 const bmiInfo = getBMIInfo(player.height, player.weight, isMarathi);
                 return (
-                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
+                  <TableRow key={player.id} className="border-b even:bg-muted/20 hover:bg-primary/5 transition-colors h-12">
                     <TableCell className="border-r p-1 text-center">
                       <Checkbox checked={selectedIds.has(player.id)} onCheckedChange={() => toggleSelect(player.id)} />
                     </TableCell>
                     <TableCell className="border-r p-2 text-center text-xs font-bold text-primary">{index + 1}</TableCell>
                     <TableCell className="border-r p-1">
                       <div 
-                        className="flex justify-center items-center cursor-pointer hover:opacity-80 transition-opacity relative group"
+                        className="flex justify-center items-center cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => player.photoUrl && setViewingPhoto({ url: player.photoUrl, name: player.name })}
                       >
-                        <Avatar className="w-8 h-8 border">
+                        <Avatar className="w-9 h-9 border shadow-sm">
                           <AvatarImage src={player.photoUrl} alt={player.name} className="object-cover" />
                           <AvatarFallback className="text-[10px]"><User className="w-3 h-3" /></AvatarFallback>
                         </Avatar>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r p-2 text-xs font-bold">
+                    <TableCell className="border-r p-2 text-xs font-black">
                       <div className="flex flex-col">
-                        <span>{player.name}</span>
+                        <span className="uppercase text-primary">{player.name}</span>
                         <span className="text-[8px] uppercase text-muted-foreground font-black">
                           {isMarathi ? (player.gender === 'Female' ? 'महिला' : 'पुरुष') : player.gender} • {player.aadharNumber || 'NO AADHAR'}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r p-2 text-center text-xs">{player.age || 0}</TableCell>
-                    <TableCell className="border-r p-2 text-center text-xs">{player.std}</TableCell>
+                    <TableCell className="border-r p-2 text-center text-xs font-bold">{player.age || 0}</TableCell>
+                    <TableCell className="border-r p-2 text-center text-xs font-bold">{player.std}</TableCell>
                     <TableCell className="border-r p-2 text-center">
                       <div className="flex flex-col items-center gap-0.5">
                         <span className="text-[10px] font-black text-primary">{bmiInfo.bmi}</span>
@@ -448,7 +517,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r p-2 text-center text-[10px] font-mono">
+                    <TableCell className="border-r p-2 text-center text-[10px] font-mono font-bold">
                       {player.mobileNumber || '-'}
                     </TableCell>
                     {isGeneral ? (
@@ -474,13 +543,13 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                     </TableCell>
                     <TableCell className="p-1 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => handleEditClick(player)}>
-                          <Edit className="w-3 h-3" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleEditClick(player)}>
+                          <Edit className="w-3.5 h-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-destructive" onClick={() => {
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={() => {
                           if(confirm(isMarathi ? `${player.name} काढून टाकायचे?` : `Delete ${player.name}?`)) store.deletePlayer(player.id);
                         }}>
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </TableCell>

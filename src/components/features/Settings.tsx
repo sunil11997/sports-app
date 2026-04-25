@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -21,7 +20,9 @@ import {
   Languages,
   SmartphoneNfc,
   Database,
-  Chrome
+  Chrome,
+  ShieldAlert,
+  FileJson
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         console.error("Backup Error:", err);
         let errorMsg = language === 'Marathi' ? "कृपया तुमचे इंटरनेट तपासा किंवा पुन्हा प्रयत्न करा." : "Please check your connection or try again.";
         
-        // Handle specific Firebase Auth errors for better user guidance
         if (err.code === 'auth/popup-blocked') {
           errorMsg = language === 'Marathi' ? "ब्राउझरने पॉपअप ब्लॉक केले आहे. कृपया ते सुरू करा." : "Browser blocked the popup. Please enable popups for this site.";
         } else if (err.code === 'auth/cancelled-popup-request') {
@@ -75,8 +75,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const handleManualExport = () => {
     schoolData.exportBackupData();
     toast({
-      title: "JSON Backup Generated",
-      description: "Institutional data has been exported. Upload this to your official Google Drive."
+      title: "Consolidated Registry Exported",
+      description: "A complete institutional JSON backup has been generated. Store this in your secure records."
     });
   };
 
@@ -110,39 +110,41 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-4 ios-card-shadow">
-          <School className="w-10 h-10 text-primary" />
+        <div className="w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-4 ios-card-shadow border-4 border-white">
+          <School className="w-12 h-12 text-primary" />
         </div>
-        <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Configuration</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-60">शासकीय माध्यमिक आश्रम शाळा वाघंबा</p>
+        <h2 className="text-4xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
+        <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Ashram Shala Waghamba • v3.0 Production</p>
       </div>
 
       <div className="space-y-6">
-        {/* Google Cloud & Backups */}
+        {/* Institutional Data Safety */}
         <div className="space-y-2">
-          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Google Drive & Cloud Safety</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <ShieldAlert className="w-3 h-3 text-primary" /> Institutional Data Portability
+          </label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
             <SettingsItem 
-              icon={Chrome} 
-              color="bg-sky-500" 
-              label="My Google Drive" 
-              value={isGoogleLinked ? "Active Sync" : "Not Linked"}
-              sublabel="Official institutional storage"
-              onClick={handleBackup}
+              icon={FileJson} 
+              color="bg-indigo-500" 
+              label="Consolidated Backup" 
+              sublabel="Full Database JSON Export"
+              onClick={handleManualExport}
             />
             <SettingsItem 
               icon={Database} 
               color="bg-emerald-500" 
-              label="Backup to Google Cloud" 
-              sublabel="Real-time registry protection"
-              onClick={handleBackup}
+              label="Real-time Cloud Sync" 
+              value={isOnline ? "Active" : "Offline"}
+              sublabel="Encrypted registry protection"
             />
             <SettingsItem 
-              icon={Download} 
-              color="bg-indigo-500" 
-              label="Export to Offline File" 
-              sublabel="Manual JSON Database Export"
-              onClick={handleManualExport}
+              icon={Chrome} 
+              color="bg-sky-500" 
+              label="Google Drive Link" 
+              value={isGoogleLinked ? "Connected" : "Link Now"}
+              sublabel="Secure institutional storage"
+              onClick={handleBackup}
             />
           </div>
         </div>
@@ -150,20 +152,20 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         {/* Application Management */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Application Management</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
             <SettingsItem 
               icon={SmartphoneNfc} 
               color="bg-primary" 
               label={language === 'Marathi' ? "फोनवर इंस्टॉल करा" : "Install on Phone"} 
-              sublabel={isInstallable ? "Available for offline use" : "Already installed"}
+              sublabel={isInstallable ? "Available for offline use" : "Ready for use"}
               disabled={!isInstallable}
               onClick={isInstallable ? installApp : undefined}
             />
             <SettingsItem 
               icon={Languages} 
               color="bg-purple-500" 
-              label="App Language" 
-              sublabel="Select UI primary language"
+              label="System Language" 
+              sublabel="Select primary interface language"
               accessory={
                 <div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10">
                   <Button 
@@ -188,41 +190,39 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <SettingsItem 
               icon={isOnline ? Wifi : WifiOff} 
               color={isOnline ? "bg-green-500" : "bg-destructive"} 
-              label="System Status" 
-              value={isOnline ? "Online" : "Local"}
+              label="Registry Engine" 
+              value={isOnline ? "Cloud Active" : "Local Engine Only"}
             />
           </div>
         </div>
 
-        {/* User Identity */}
+        {/* Identity & Session */}
         <div className="space-y-2">
-          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Institutional Identity</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white">
-            <SettingsItem icon={User} color="bg-blue-600" label="Teacher" value="सुनिल देशमुख" />
-            <SettingsItem icon={Award} color="bg-amber-500" label="Role" value="PE Director" />
-            <SettingsItem icon={Mail} color="bg-rose-500" label="Session" value={user?.email || "Local Cache"} />
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Identity & Session</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
+            <SettingsItem icon={User} color="bg-blue-600" label="Lead Teacher" value="सुनिल देशमुख" sublabel="Registry Administrator" />
+            <SettingsItem icon={Award} color="bg-amber-500" label="Institutional Role" value="PE Director" />
+            <SettingsItem icon={Mail} color="bg-rose-500" label="Session UID" value={user?.uid.substring(0, 10) + "..."} />
           </div>
         </div>
 
-        {/* Danger Zone */}
         <div className="pt-6 px-4">
           <Button 
             variant="ghost" 
             onClick={() => initiateSignOut(auth)}
-            className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-16 font-black uppercase text-xs tracking-[0.2em] ios-card-shadow active-scale border border-destructive/5"
+            className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-16 font-black uppercase text-xs tracking-[0.2em] ios-card-shadow active-scale border border-destructive/10"
           >
             <LogOut className="w-5 h-5 mr-3" />
-            Terminate Session
+            End Institutional Session
           </Button>
         </div>
 
         <div className="text-center pt-8 pb-12 opacity-30">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">
-            Institutional Performance Hub V3.0
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.5em]">
+            WGB-SPORTS-HUB-PRO-V3.0
           </p>
         </div>
       </div>
     </div>
   );
 }
-
