@@ -40,16 +40,21 @@ export function initiateSignOut(authInstance: Auth): Promise<void> {
  */
 export async function initiateGoogleBackup(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
+  // Ensure we have a fresh provider instance and set custom parameters if needed
+  provider.setCustomParameters({ prompt: 'select_account' });
+  
   const currentUser = authInstance.currentUser;
   
   if (currentUser) {
     // Check if already linked to Google to avoid redundant calls or errors
     const isAlreadyLinked = currentUser.providerData.some(p => p.providerId === 'google.com');
     if (isAlreadyLinked) {
+      console.log("Account is already linked to Google.");
       return; 
     }
     
     // If signed in anonymously, link the account
+    // This will throw auth/credential-already-in-use if the Google account is already a user
     await linkWithPopup(currentUser, provider);
   } else {
     // If not signed in at all, perform a standard sign-in

@@ -77,6 +77,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         errorMsg = language === 'Marathi' 
           ? "हे गुगल खाते आधीच दुसऱ्या सेशनशी लिंक केलेले आहे. कृपया लॉगआउट करून थेट साइन-इन करा." 
           : "This Google account is already linked to another institutional session. Please sign out and sign in directly with Google.";
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        errorMsg = language === 'Marathi' ? "पॉपअप खिडकी बंद केली गेली." : "The login popup was closed before completion.";
       }
 
       toast({ 
