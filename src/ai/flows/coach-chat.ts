@@ -7,6 +7,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const MessageSchema = z.object({
@@ -30,11 +31,12 @@ const coachChatFlow = ai.defineFlow(
   },
   async (input) => {
     let attempts = 0;
-    const maxAttempts = 2;
+    const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       try {
         const {text} = await ai.generate({
+          model: googleAI.model('gemini-2.5-flash'),
           system: `You are an expert school sports coach and health advisor at Waghamba Ashram Shala. 
           You are helpful, encouraging, and provide scientifically-backed sports training and health advice.
           
@@ -52,8 +54,10 @@ const coachChatFlow = ai.defineFlow(
         return text;
       } catch (error: any) {
         attempts++;
+        console.error(`Coach Chat Attempt ${attempts} failed:`, error.message || error);
         if (attempts >= maxAttempts) throw error;
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait longer on each retry to overcome rate limits
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
       }
     }
     return "The AI coach is currently busy with other students. Please try asking again in a few moments.";

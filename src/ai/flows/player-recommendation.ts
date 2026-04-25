@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const PlayerRecommendationInputSchema = z.object({
@@ -61,6 +62,7 @@ export type PlayerRecommendationOutput = z.infer<typeof PlayerRecommendationOutp
 
 const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
+  model: googleAI.model('gemini-2.5-flash'),
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
   prompt: `You are an expert school sports coach and health advisor. Your task is to analyze a player's aggregated data and provide personalized recommendations for their athletic development and well-being.
@@ -120,22 +122,13 @@ const playerRecommendationFlow = ai.defineFlow(
         attempts++;
         
         const errorMsg = error?.message || String(error);
-        console.error(`AI Attempt ${attempts} failed:`, errorMsg);
+        console.error(`AI Recommendation Attempt ${attempts} failed:`, errorMsg);
 
-        // Check for specific retryable error codes/messages
-        const isRetryable = 
-          errorMsg.includes('503') || 
-          errorMsg.includes('504') ||
-          errorMsg.includes('429') ||
-          errorMsg.includes('UNAVAILABLE') || 
-          errorMsg.includes('overloaded') ||
-          errorMsg.includes('Deadline Exceeded');
-
-        if (!isRetryable || attempts >= maxAttempts) {
-          throw new Error(`AI Service Busy (Attempt ${attempts}): ${errorMsg}`);
+        if (attempts >= maxAttempts) {
+          throw new Error(`AI Service Busy (Attempt ${attempts}). Please try again in 1 minute.`);
         }
         
-        // Wait longer between each retry
+        // Exponential backoff for free-tier recovery
         await new Promise(resolve => setTimeout(resolve, 3000 * attempts));
       }
     }
