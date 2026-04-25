@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +16,6 @@ import {
   Sparkles,
   Home,
   FileText,
-  Loader2,
   History as HistoryIcon,
   ArrowRight,
   GraduationCap,
@@ -49,25 +50,25 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
+import { DashboardHomeSkeleton, StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
-// Feature Components
-import { Registration } from '@/components/features/Registration';
-import { Dashboard } from '@/components/features/Dashboard';
-import { Attendance } from '@/components/features/Attendance';
-import { Fitness } from '@/components/features/Fitness';
-import { SportsSkills } from '@/components/features/SportsSkills';
-import { SportsDrills } from '@/components/features/SportsDrills';
-import { HealthIncidents } from '@/components/features/HealthIncidents';
-import { AIAdvice } from '@/components/features/AIAdvice';
-import { DailyReport } from '@/components/features/DailyReport';
-import { TournamentRosters } from '@/components/features/TournamentRosters';
-import { History } from '@/components/features/History';
-import { SchoolActivities } from '@/components/features/SchoolActivities';
-import { ClassesHub } from '@/components/features/ClassesHub';
-import { ClassesSection } from '@/components/features/ClassesSection';
-import { Settings } from '@/components/features/Settings';
-import { PromotionHub } from '@/components/features/PromotionHub';
-import { DashboardHomeSkeleton, StatsSkeleton } from '@/components/ui/loading-skeletons';
+// Dynamic Feature Loading to reduce initial bundle size
+const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
+const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
+const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
+const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { ssr: false, loading: () => <TableSkeleton /> });
+const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { ssr: false, loading: () => <TableSkeleton /> });
+const SportsDrills = dynamic(() => import('@/components/features/SportsDrills').then(mod => mod.SportsDrills), { ssr: false, loading: () => <TableSkeleton /> });
+const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
+const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(mod => mod.AIAdvice), { ssr: false, loading: () => <StatsSkeleton /> });
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
+const TournamentRosters = dynamic(() => import('@/components/features/TournamentRosters').then(mod => mod.TournamentRosters), { ssr: false, loading: () => <TableSkeleton /> });
+const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
+const SchoolActivities = dynamic(() => import('@/components/features/SchoolActivities').then(mod => mod.SchoolActivities), { ssr: false, loading: () => <TableSkeleton /> });
+const ClassesHub = dynamic(() => import('@/components/features/ClassesHub').then(mod => mod.ClassesHub), { ssr: false, loading: () => <StatsSkeleton /> });
+const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(mod => mod.ClassesSection), { ssr: false, loading: () => <StatsSkeleton /> });
+const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
+const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(mod => mod.PromotionHub), { ssr: false, loading: () => <StatsSkeleton /> });
 
 const translations = {
   English: {
@@ -201,9 +202,8 @@ export default function WaghambaApp() {
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
-  const [isTabChanging, setIsTabChanging] = useState(false);
-  const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [todayDate, setTodayDate] = useState<Date | null>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
   
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
@@ -213,6 +213,7 @@ export default function WaghambaApp() {
   const t = translations[language];
   const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
 
+  // Background initialization
   useEffect(() => {
     if (!user && !isUserLoading) {
       initiateAnonymousSignIn(auth);
@@ -223,7 +224,10 @@ export default function WaghambaApp() {
     setTodayDate(new Date());
   }, []);
 
-  const handleStartHub = () => setIsEntered(true);
+  const handleStartHub = () => {
+    setIsEntered(true);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
@@ -232,10 +236,8 @@ export default function WaghambaApp() {
   };
 
   const handleTabChange = (value: string) => {
-    setIsTabChanging(true);
     setActiveTab(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setIsTabChanging(false), 150);
   };
 
   const todayBirthdays = useMemo(() => {
@@ -251,7 +253,7 @@ export default function WaghambaApp() {
   }, [schoolData.data.players, todayDate]);
 
   const topPerformers = useMemo(() => {
-    if (!schoolData.data.players) return [];
+    if (!schoolData.data.players || !schoolData.isLoaded) return [];
     const filtered = schoolData.data.players.filter(p => p.category === 'athlete');
     
     return [...filtered].map(p => {
@@ -261,7 +263,7 @@ export default function WaghambaApp() {
       const performance = (parseFloat(fitness.score) || 0) + maxSkill;
       return { ...p, performance, fitnessScore: fitness.score, latestStatus: fitness.status };
     }).sort((a, b) => b.performance - a.performance);
-  }, [schoolData.data.players, schoolData.data.fitness, schoolData.data.sportSkills]);
+  }, [schoolData.data.players, schoolData.data.fitness, schoolData.data.sportSkills, schoolData.isLoaded]);
 
   const classSummaries = useMemo(() => {
     const summary: Record<string, { total: number, boys: number, girls: number }> = {};
@@ -279,7 +281,10 @@ export default function WaghambaApp() {
     return summary;
   }, [schoolData.data.players]);
 
-  const totalStudentCount = Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0);
+  const totalStudentCount = useMemo(() => 
+    Object.values(classSummaries).reduce((acc, curr) => acc + curr.total, 0),
+  [classSummaries]);
+
   const bestPlayer = topPerformers[0];
   const profile = schoolData.data.schoolProfile;
 
@@ -298,6 +303,7 @@ export default function WaghambaApp() {
                     src={LOGO.imageUrl} 
                     alt="Sports App Logo" 
                     fill
+                    priority
                     className="object-contain group-hover:scale-110 transition-transform duration-700"
                   />
                 </div>
@@ -756,68 +762,69 @@ export default function WaghambaApp() {
               )}
             </TabsContent>
 
-            <TabsContent value="dashboard">
-              <Dashboard store={schoolData} section={selectedSection} language={language} t={t} />
+            {/* Performance Optimized Content Rendering */}
+            <TabsContent value="dashboard" className="mt-0">
+              {activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection} language={language} t={t} />}
             </TabsContent>
 
-            <TabsContent value="promotion">
-              <PromotionHub store={schoolData} section={selectedSection} />
+            <TabsContent value="promotion" className="mt-0">
+              {activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection} />}
             </TabsContent>
 
-            <TabsContent value="daily-report">
-              <DailyReport store={schoolData} />
+            <TabsContent value="daily-report" className="mt-0">
+              {activeTab === "daily-report" && <DailyReport store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="tournament">
-              <TournamentRosters store={schoolData} />
+            <TabsContent value="tournament" className="mt-0">
+              {activeTab === "tournament" && <TournamentRosters store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="archive">
-              <History store={schoolData} section={selectedSection} />
+            <TabsContent value="archive" className="mt-0">
+              {activeTab === "archive" && <History store={schoolData} section={selectedSection} />}
             </TabsContent>
 
-            <TabsContent value="registration">
-              <Registration store={schoolData} section={selectedSection} language={language} />
+            <TabsContent value="registration" className="mt-0">
+              {activeTab === "registration" && <Registration store={schoolData} section={selectedSection} language={language} />}
             </TabsContent>
 
-            <TabsContent value="attendance">
-              <Attendance store={schoolData} section={selectedSection} />
+            <TabsContent value="attendance" className="mt-0">
+              {activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
             </TabsContent>
 
-            <TabsContent value="fitness">
-              <Fitness store={schoolData} section={selectedSection} />
+            <TabsContent value="fitness" className="mt-0">
+              {activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}
             </TabsContent>
 
-            <TabsContent value="sports-skills">
-              <SportsSkills store={schoolData} />
+            <TabsContent value="sports-skills" className="mt-0">
+              {activeTab === "sports-skills" && <SportsSkills store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="drills">
-              <SportsDrills store={schoolData} />
+            <TabsContent value="drills" className="mt-0">
+              {activeTab === "drills" && <SportsDrills store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="ai">
-              <AIAdvice store={schoolData} />
+            <TabsContent value="ai" className="mt-0">
+              {activeTab === "ai" && <AIAdvice store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="health">
-              <HealthIncidents store={schoolData} />
+            <TabsContent value="health" className="mt-0">
+              {activeTab === "health" && <HealthIncidents store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="activities">
-              <SchoolActivities store={schoolData} />
+            <TabsContent value="activities" className="mt-0">
+              {activeTab === "activities" && <SchoolActivities store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="classes">
-              <ClassesSection store={schoolData} />
+            <TabsContent value="classes" className="mt-0">
+              {activeTab === "classes" && <ClassesSection store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="exam">
-              <ClassesHub store={schoolData} />
+            <TabsContent value="exam" className="mt-0">
+              {activeTab === "exam" && <ClassesHub store={schoolData} />}
             </TabsContent>
 
-            <TabsContent value="settings">
-              <Settings language={language} setLanguage={setLanguage} />
+            <TabsContent value="settings" className="mt-0">
+              {activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}
             </TabsContent>
           </div>
         </Tabs>
