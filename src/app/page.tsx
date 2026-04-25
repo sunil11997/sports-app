@@ -190,7 +190,7 @@ const translations = {
     selectAll: "सर्व निवडा",
     graduated: "उत्तीर्ण / शाळा सोडली",
     birthdayToday: "आजचे वाढदिवस",
-    happyBirthday: "वाढदिवसाच्या हार्दिक शुभेच्छा!",
+    happyBirthday: "वादिवसाच्या हार्दिक शुभेच्छा!",
     noBirthdays: "आज कोणाचाही वाढदिवस नाही.",
     academicYear: "शैक्षणिक वर्ष",
     archiveMode: "आर्काइव्ह माहिती पहात आहात"
@@ -304,6 +304,7 @@ export default function WaghambaApp() {
                     alt="Sports App Logo" 
                     fill
                     priority
+                    unoptimized
                     className="object-contain group-hover:scale-110 transition-transform duration-700"
                   />
                 </div>
@@ -476,7 +477,7 @@ export default function WaghambaApp() {
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
             <div className="bg-white p-1 rounded-full w-14 h-14 flex items-center justify-center shadow-lg border border-accent overflow-hidden relative">
               {LOGO ? (
-                <Image src={LOGO.imageUrl} alt="Logo" fill className="object-contain p-1" />
+                <Image src={LOGO.imageUrl} alt="Logo" fill unoptimized className="object-contain p-1" />
               ) : (
                 <Trophy className="w-8 h-8 text-black" />
               )}
