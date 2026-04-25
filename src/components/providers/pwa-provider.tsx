@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -23,21 +22,24 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker for Offline Mode
+    // Immediate registration of Service Worker for Offline Mode
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log("WGB Sports SW Registered with scope:", registration.scope);
-          })
-          .catch(err => {
-            console.error("WGB Sports SW Registration failed:", err);
-          });
+      // Check if registration is already handled or if we need to register fresh
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        if (!registration) {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then((reg) => {
+              console.log("WGB Sports SW Registered:", reg.scope);
+            })
+            .catch(err => {
+              console.error("WGB Sports SW Registration failed:", err);
+            });
+        }
       });
     }
 
     // Online/Offline status monitoring
-    setIsOnline(navigator.onLine);
+    setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -59,7 +61,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       setDeferredPrompt(null);
     });
 
-    // Device checks
+    // Device checks for iOS
     const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone);
     

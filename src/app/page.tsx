@@ -51,7 +51,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { DashboardHomeSkeleton, StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
-// Dynamic Feature Loading
+// Dynamic Feature Loading with Retry-Ready Fallbacks
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -210,7 +210,20 @@ export default function WaghambaApp() {
   const auth = useAuth();
 
   const t = translations[language];
-  const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
+  const LOGO_INAPP = "/icon-512.png"; // High-res for in-app identity
+
+  // 1. CHUNK LOAD ERROR RESILIENCE
+  useEffect(() => {
+    const handleChunkError = (e: ErrorEvent) => {
+      // Specifically target chunk load failures which common in unstable networks or after deployment
+      if (e.message?.includes('Loading chunk') || e.message?.includes('ChunkLoadError')) {
+        console.warn('Network interruption detected. Auto-refreshing for stability.');
+        window.location.reload();
+      }
+    };
+    window.addEventListener('error', handleChunkError);
+    return () => window.removeEventListener('error', handleChunkError);
+  }, []);
 
   // Background initialization
   useEffect(() => {
@@ -296,21 +309,17 @@ export default function WaghambaApp() {
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="w-52 h-52 bg-white rounded-full flex items-center justify-center mx-auto border-4 border-accent shadow-2xl overflow-hidden active-scale group p-4">
-              {LOGO ? (
-                <div className="relative">
-                  <Image 
-                    src={LOGO.imageUrl} 
-                    alt="Sports App Logo" 
-                    width={180}
-                    height={180}
-                    priority
-                    unoptimized
-                    className="object-contain group-hover:scale-110 transition-transform duration-700"
-                  />
-                </div>
-              ) : (
-                <Trophy className="w-16 h-16 text-primary" />
-              )}
+              <div className="relative w-full h-full">
+                <Image 
+                  src={LOGO_INAPP} 
+                  alt="Sports App Logo" 
+                  width={200}
+                  height={200}
+                  priority
+                  unoptimized
+                  className="object-contain group-hover:scale-110 transition-transform duration-700 w-full h-full"
+                />
+              </div>
             </div>
             
             <div className="space-y-4">
@@ -476,11 +485,7 @@ export default function WaghambaApp() {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
             <div className="bg-white p-1 rounded-full w-14 h-14 flex items-center justify-center shadow-lg border border-accent overflow-hidden relative">
-              {LOGO ? (
-                <Image src={LOGO.imageUrl} alt="Logo" width={48} height={48} unoptimized className="object-contain" />
-              ) : (
-                <Trophy className="w-8 h-8 text-black" />
-              )}
+              <Image src={LOGO_INAPP} alt="Logo" width={48} height={48} unoptimized className="object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">

@@ -1,15 +1,12 @@
-
-const CACHE_NAME = 'waghamba-sports-v3';
+const CACHE_NAME = 'waghamba-sports-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/globals.css',
+  '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png',
-  '/manifest.json'
+  '/icon-512.png'
 ];
 
-// Install Event - Caching basic assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -19,26 +16,28 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate Event - Cleaning old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
     })
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
-// Fetch Event - Serve from cache, then network
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin and AI/Firebase requests to let their own SDKs handle offline logic
+  // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) return;
+
+  // Navigation fallback to root for SPA routing
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/'))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
@@ -46,18 +45,26 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
 
-      return fetch(event.request).then((response) => {
-        // Cache new successful requests for local assets
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+      return fetch(event.request).then((networkResponse) => {
+        // Cache static assets, next.js chunks and images dynamically
+        if (
+          networkResponse.status === 200 &&
+          (event.request.url.includes('_next/static') || 
+           event.request.url.includes('.png') ||
+           event.request.url.includes('.jpg') ||
+           event.request.url.includes('.json'))
+        ) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
+        return networkResponse;
+      }).catch(() => {
+        // Fallback for failed asset fetches while offline
+        if (event.request.url.includes('.png') || event.request.url.includes('.jpg')) {
+          return caches.match('/icon-192.png');
+        }
       });
     })
   );
