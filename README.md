@@ -20,7 +20,7 @@ npm install
 ### 3. Environment Variables
 Create a `.env.local` file in the root directory and add your keys (especially if using AI features):
 ```env
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY=your_actual_gemini_api_key_here
 ```
 
 ### 4. Running the App
