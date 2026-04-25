@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -39,9 +38,11 @@ import {
   Settings as SettingsIcon,
   Cake,
   PartyPopper,
-  RefreshCcw
+  RefreshCcw,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
@@ -127,7 +128,9 @@ const translations = {
     graduated: "Graduated",
     birthdayToday: "Today's Birthdays",
     happyBirthday: "Happy Birthday!",
-    noBirthdays: "No birthdays today."
+    noBirthdays: "No birthdays today.",
+    academicYear: "Academic Year",
+    archiveMode: "Viewing Archived Data"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -187,7 +190,9 @@ const translations = {
     graduated: "उत्तीर्ण / शाळा सोडली",
     birthdayToday: "आजचे वाढदिवस",
     happyBirthday: "वाढदिवसाच्या हार्दिक शुभेच्छा!",
-    noBirthdays: "आज कोणाचाही वाढदिवस नाही."
+    noBirthdays: "आज कोणाचाही वाढदिवस नाही.",
+    academicYear: "शैक्षणिक वर्ष",
+    archiveMode: "आर्काइव्ह माहिती पहात आहात"
   }
 };
 
@@ -482,22 +487,46 @@ export default function WaghambaApp() {
               <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest truncate max-w-[200px]">{profile.schoolName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col items-end text-right">
-              <span className="text-[10px] font-black text-primary uppercase">{profile.teacherName}</span>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase">{profile.taluka}</span>
+          
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-2 bg-muted/40 p-1.5 rounded-2xl border">
+              <CalendarDays className="w-4 h-4 text-primary ml-2" />
+              <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
+                <SelectTrigger className="h-9 border-0 bg-transparent font-black uppercase text-[10px] tracking-widest focus:ring-0 w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2024-25" className="text-[10px] font-bold">Session 2024-25</SelectItem>
+                  <SelectItem value="2023-24" className="text-[10px] font-bold">Archive 2023-24</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setSelectedSection(null)}
-              className="text-[9px] font-black uppercase bg-white rounded-full h-8 px-4 border-border hover:bg-muted"
-            >
-              {t.switchHub}
-            </Button>
+
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex flex-col items-end text-right">
+                <span className="text-[10px] font-black text-primary uppercase">{profile.teacherName}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase">{profile.taluka}</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSelectedSection(null)}
+                className="text-[9px] font-black uppercase bg-white rounded-full h-8 px-4 border-border hover:bg-muted"
+              >
+                {t.switchHub}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
+
+      {schoolData.selectedYear !== "2024-25" && (
+        <div className="bg-amber-100 border-b border-amber-200 py-2 text-center">
+          <p className="text-[10px] font-black text-amber-800 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <HistoryIcon className="w-3 h-3" /> {t.archiveMode}: {schoolData.selectedYear}
+          </p>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto p-4 md:p-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">

@@ -18,6 +18,7 @@ export interface Player {
   photoUrl?: string;
   category: 'athlete' | 'student';
   examMarks?: string;
+  academicYear?: string;
 }
 
 export interface SchoolProfile {
@@ -51,6 +52,7 @@ export interface FitnessAssessment {
   updatedAt?: string;
   playerId?: string;
   term?: 'First' | 'Second';
+  academicYear?: string;
   // Registry specific monthly data
   height?: string;
   weight?: string;
@@ -75,6 +77,7 @@ export interface SportSkill {
   lastUpdated?: string;
   sportName?: string;
   playerId?: string;
+  academicYear?: string;
 }
 
 export interface AppState {
@@ -91,4 +94,5 @@ export interface HealthIncident {
   playerName: string;
   date: string;
   description: string;
+  academicYear?: string;
 }

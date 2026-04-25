@@ -13,6 +13,7 @@ import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlo
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
+  const [selectedYear, setSelectedYear] = useState("2024-25");
 
   // 1. School Profile
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
@@ -23,7 +24,7 @@ export function useSchoolData() {
     if (!user) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
   }, [db, user]);
-  const { data: players, isLoading: playersLoading } = useCollection<Player>(playersQuery);
+  const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
   // 3. Performance Registries (High-Volume Sub-States)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
@@ -33,12 +34,16 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
-  // 4. Global Performance Listeners (Root-Level Collections for optimized indexing)
+  // 4. Global Performance Listeners (Filtered by Academic Year)
   useEffect(() => {
     if (!user) return;
 
     // Attendance Observer
-    const attQuery = query(collection(db, 'attendance_registry'), where('schoolId', '==', user.uid));
+    const attQuery = query(
+      collection(db, 'attendance_registry'), 
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
     const unsubAtt = onSnapshot(attQuery, (snapshot) => {
       const newAtt: AttendanceRecord = {};
       snapshot.docs.forEach(doc => {
@@ -49,7 +54,11 @@ export function useSchoolData() {
     });
 
     // Fitness & History Observer
-    const fitQuery = query(collection(db, 'fitness_registry'), where('schoolId', '==', user.uid));
+    const fitQuery = query(
+      collection(db, 'fitness_registry'), 
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
     const unsubFit = onSnapshot(fitQuery, (snapshot) => {
       const latestMap: Record<string, FitnessAssessment> = {};
       const historyMap: Record<string, FitnessAssessment[]> = {};
@@ -72,7 +81,11 @@ export function useSchoolData() {
     });
 
     // Technical Skills Observer
-    const skillsQuery = query(collection(db, 'skills_registry'), where('schoolId', '==', user.uid));
+    const skillsQuery = query(
+      collection(db, 'skills_registry'), 
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
     const unsubSkills = onSnapshot(skillsQuery, (snapshot) => {
       const skillsMap: Record<string, SportSkill> = {};
       const historyMap: Record<string, (SportSkill & { sportName: string })[]> = {};
@@ -96,13 +109,17 @@ export function useSchoolData() {
       unsubFit();
       unsubSkills();
     };
-  }, [db, user]);
+  }, [db, user, selectedYear]);
 
   // 5. Health & Incident Management
   const incidentsQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid));
-  }, [db, user]);
+    return query(
+      collection(db, 'all_health_incidents'), 
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
+  }, [db, user, selectedYear]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
   // 6. Drill completion Observer
@@ -120,13 +137,17 @@ export function useSchoolData() {
   // 7. Academic Activities Observer
   const activitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(db, 'school_activities'), where('schoolId', '==', user.uid));
-  }, [db, user]);
+    return query(
+      collection(db, 'school_activities'), 
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
+  }, [db, user, selectedYear]);
   const { data: activities } = useCollection(activitiesQuery);
 
-  // 8. Aggregated Selector (Final Production Data Object)
+  // 8. Aggregated Selector
   const aggregatedData = useMemo(() => ({
-    players: players || [],
+    players: allPlayers || [],
     attendance,
     fitness,
     fitnessHistory,
@@ -145,9 +166,9 @@ export function useSchoolData() {
       role: "Physical Education Director",
       updatedAt: new Date().toISOString()
     }
-  }), [players, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
+  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
-  // Actions (Non-blocking writes for professional snappy feel)
+  // Actions
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user) return;
     const profileRef = doc(db, 'schools', user.uid);
@@ -157,8 +178,8 @@ export function useSchoolData() {
   const addPlayer = useCallback((playerData: any) => {
     if (!user) return;
     const playerRef = doc(db, 'players', playerData.id);
-    setDocumentNonBlocking(playerRef, { ...playerData, ownerId: user.uid, schoolId: user.uid }, { merge: true });
-  }, [db, user]);
+    setDocumentNonBlocking(playerRef, { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+  }, [db, user, selectedYear]);
 
   const updatePlayer = useCallback((player: any) => {
     const docRef = doc(db, 'players', player.id);
@@ -177,9 +198,9 @@ export function useSchoolData() {
       if (!playerId || !date) return;
       const attRef = doc(db, 'attendance_registry', `${playerId}_${date}`);
       if (!status) deleteDocumentNonBlocking(attRef);
-      else setDocumentNonBlocking(attRef, { status, playerId, date, schoolId: user.uid }, { merge: true });
+      else setDocumentNonBlocking(attRef, { status, playerId, date, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
     });
-  }, [db, user]);
+  }, [db, user, selectedYear]);
 
   const setFitness = useCallback((playerId: string, assessment: FitnessAssessment) => {
     if (!user) return;
@@ -187,15 +208,15 @@ export function useSchoolData() {
     const dateId = timestamp.split('T')[0];
     const refId = `${playerId}_${dateId}`;
     const fitnessRef = doc(db, 'fitness_registry', refId);
-    setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: timestamp }, { merge: true });
-  }, [db, user]);
+    setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: timestamp, academicYear: selectedYear }, { merge: true });
+  }, [db, user, selectedYear]);
 
   const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
     const refId = `${playerId}_${sport}`;
     const skillRef = doc(db, 'skills_registry', refId);
-    setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString() }, { merge: true });
-  }, [db, user]);
+    setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
+  }, [db, user, selectedYear]);
 
   const setDrillCompletion = useCallback((drillId: string, completed: boolean) => {
     if (!user) return;
@@ -207,14 +228,14 @@ export function useSchoolData() {
   const addHealthIncident = useCallback((incident: HealthIncident) => {
     if (!user) return;
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
-    setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid }, { merge: true });
-  }, [db, user]);
+    setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+  }, [db, user, selectedYear]);
 
   const addActivity = useCallback((activityData: any) => {
     if (!user) return;
     const activityRef = doc(db, 'school_activities', activityData.id);
-    setDocumentNonBlocking(activityRef, { ...activityData, schoolId: user.uid, timestamp: new Date().toISOString() }, { merge: true });
-  }, [db, user]);
+    setDocumentNonBlocking(activityRef, { ...activityData, schoolId: user.uid, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
+  }, [db, user, selectedYear]);
 
   const deleteActivity = useCallback((id: string) => {
     const docRef = doc(db, 'school_activities', id);
@@ -225,6 +246,7 @@ export function useSchoolData() {
     const backup = { 
       timestamp: new Date().toISOString(), 
       schoolName: schoolProfile?.schoolName || "Backup", 
+      academicYear: selectedYear,
       registryCount: aggregatedData.players.length,
       data: aggregatedData 
     };
@@ -232,16 +254,18 @@ export function useSchoolData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `wgb_sports_registry_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `wgb_sports_registry_${selectedYear}_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [aggregatedData, schoolProfile]);
+  }, [aggregatedData, schoolProfile, selectedYear]);
 
   return {
     data: aggregatedData,
     isLoaded: !playersLoading && !schoolsLoading,
+    selectedYear,
+    setSelectedYear,
     saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
   };
 }

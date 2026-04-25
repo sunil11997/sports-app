@@ -22,10 +22,13 @@ import {
   Database,
   Chrome,
   ShieldAlert,
-  FileJson
+  FileJson,
+  AlertTriangle,
+  ArrowRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -36,6 +39,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const { toast } = useToast();
   const schoolData = useSchoolData();
   const { isOnline, isInstallable, installApp } = usePWA();
+
+  const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com');
 
   const handleBackup = () => {
     if (!isOnline) {
@@ -80,8 +85,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     });
   };
 
-  const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com');
-
   const SettingsItem = ({ icon: Icon, color, label, value, onClick, sublabel, disabled, accessory }: any) => (
     <div 
       className={cn(
@@ -116,6 +119,28 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         <h2 className="text-4xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
         <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Ashram Shala Waghamba • v3.0 Production</p>
       </div>
+
+      {!isGoogleLinked && (
+        <Card className="border-2 border-amber-200 bg-amber-50 rounded-3xl overflow-hidden shadow-sm">
+          <CardContent className="p-6 flex gap-4">
+            <div className="bg-amber-100 p-3 rounded-2xl h-fit">
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
+            </div>
+            <div className="space-y-3">
+              <h3 className="font-black text-amber-900 uppercase text-xs tracking-widest">Guest Account Active</h3>
+              <p className="text-xs font-bold text-amber-800 leading-relaxed">
+                You are using a Guest Session. If you sign out without linking to Google, your local school data will be lost forever.
+              </p>
+              <Button 
+                onClick={handleBackup}
+                className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-10 px-6 font-black uppercase text-[10px] tracking-widest"
+              >
+                Link Google Now <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-6">
         {/* Institutional Data Safety */}
@@ -196,20 +221,18 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </div>
         </div>
 
-        {/* Identity & Session */}
-        <div className="space-y-2">
-          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Identity & Session</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
-            <SettingsItem icon={User} color="bg-blue-600" label="Lead Teacher" value="सुनिल देशमुख" sublabel="Registry Administrator" />
-            <SettingsItem icon={Award} color="bg-amber-500" label="Institutional Role" value="PE Director" />
-            <SettingsItem icon={Mail} color="bg-rose-500" label="Session UID" value={user?.uid.substring(0, 10) + "..."} />
-          </div>
-        </div>
-
         <div className="pt-6 px-4">
           <Button 
             variant="ghost" 
-            onClick={() => initiateSignOut(auth)}
+            onClick={() => {
+              if (!isGoogleLinked) {
+                if (confirm(language === 'Marathi' ? "तुमचे गुगल खाते लिंक केलेले नाही. लॉगआउट केल्यास तुमचा सर्व डेटा नष्ट होईल. पुढे जायचे?" : "WARNING: Your Google account is not linked. Logging out will delete all local data. Continue?")) {
+                  initiateSignOut(auth);
+                }
+              } else {
+                initiateSignOut(auth);
+              }
+            }}
             className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-16 font-black uppercase text-xs tracking-[0.2em] ios-card-shadow active-scale border border-destructive/10"
           >
             <LogOut className="w-5 h-5 mr-3" />
