@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "adivasi-vikas-logo",
-      "description": "Official institutional logo featuring the Physical Education identity icon.",
+      "description": "Official high-resolution institutional logo for internal application use.",
       "imageUrl": "/icon-512.png",
-      "imageHint": "Sports Logo"
+      "imageHint": "High-Res Logo"
     },
     {
       "id": "school-sports-hero",
