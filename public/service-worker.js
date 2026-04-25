@@ -1,10 +1,15 @@
-const CACHE_NAME = 'waghamba-sports-v1';
+
+const CACHE_NAME = 'waghamba-sports-v3';
 const ASSETS_TO_CACHE = [
   '/',
-  '/manifest.json',
+  '/index.html',
+  '/globals.css',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/manifest.json'
 ];
 
-// Install Event
+// Install Event - Caching basic assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -14,7 +19,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate Event
+// Activate Event - Cleaning old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -27,15 +32,33 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim();
+  return self.clients.claim();
 });
 
-// Fetch Event (Required for PWA installation)
+// Fetch Event - Serve from cache, then network
 self.addEventListener('fetch', (event) => {
-  // Simple network-first or cache-fallback strategy
+  // Skip cross-origin and AI/Firebase requests to let their own SDKs handle offline logic
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request).then((response) => {
+        // Cache new successful requests for local assets
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return response;
+      });
     })
   );
 });

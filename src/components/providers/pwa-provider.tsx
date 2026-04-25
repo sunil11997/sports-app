@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -22,14 +23,20 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
+    // Register Service Worker for Offline Mode
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(() => console.log("SW Registered"))
-        .catch(err => console.error("SW Registration failed", err));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log("WGB Sports SW Registered with scope:", registration.scope);
+          })
+          .catch(err => {
+            console.error("WGB Sports SW Registration failed:", err);
+          });
+      });
     }
 
-    // Online/Offline status
+    // Online/Offline status monitoring
     setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -39,24 +46,20 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // Capture the installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Update UI notify the user they can install the PWA
       setIsInstallable(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Detection for already installed apps
-    window.addEventListener('appinstalled', (evt) => {
-      console.log('App was installed');
+    window.addEventListener('appinstalled', () => {
       setIsInstallable(false);
       setDeferredPrompt(null);
     });
 
-    // iOS/Safari detection for installation
+    // Device checks
     const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone);
     
@@ -75,24 +78,17 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     if (!deferredPrompt) {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
       if (isIOS) {
-        alert("To install on iOS: Tap the Share button in Safari (square with arrow) and select 'Add to Home Screen'.");
+        alert("To install on iOS: Tap the Share button in Safari and select 'Add to Home Screen'.");
       }
       return;
     }
     
-    // Show the install prompt
     deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
     deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
+        setIsInstallable(false);
+        setDeferredPrompt(null);
       }
-      // Reset the deferred prompt variable, since it can only be used once.
-      setDeferredPrompt(null);
-      setIsInstallable(false);
     });
   };
 
