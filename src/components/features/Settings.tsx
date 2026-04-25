@@ -64,7 +64,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         description: language === 'Marathi' ? "तुमचा डेटा आता सुरक्षितपणे बॅकअप घेतला जात आहे." : "Your school data is now securely backed up to your Google account." 
       });
     } catch (err: any) {
-      console.error("Backup Error:", err);
       let errorMsg = language === 'Marathi' ? "कृपया तुमचे इंटरनेट तपासा किंवा पुन्हा प्रयत्न करा." : "Please check your connection or try again.";
       let errorTitle = language === 'Marathi' ? "बॅकअप अयशस्वी" : "Backup Failed";
       
@@ -77,8 +76,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         errorMsg = language === 'Marathi' 
           ? "हे गुगल खाते आधीच दुसऱ्या सेशनशी लिंक केलेले आहे. कृपया लॉगआउट करून थेट साइन-इन करा." 
           : "This Google account is already linked to another institutional session. Please sign out and sign in directly with Google.";
+        // Log as warning for known conflict
+        console.warn("Auth Link Conflict:", err.code);
       } else if (err.code === 'auth/popup-closed-by-user') {
         errorMsg = language === 'Marathi' ? "पॉपअप खिडकी बंद केली गेली." : "The login popup was closed before completion.";
+      } else {
+        console.error("Backup Error:", err);
       }
 
       toast({ 
