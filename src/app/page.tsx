@@ -52,7 +52,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { DashboardHomeSkeleton, StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
-// Dynamic Feature Loading to reduce initial bundle size
+// Dynamic Feature Loading
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -762,7 +762,7 @@ export default function WaghambaApp() {
               )}
             </TabsContent>
 
-            {/* Performance Optimized Content Rendering */}
+            {/* Content Tabs */}
             <TabsContent value="dashboard" className="mt-0">
               {activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection} language={language} t={t} />}
             </TabsContent>
