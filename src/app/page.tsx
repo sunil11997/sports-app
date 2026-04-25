@@ -284,14 +284,14 @@ export default function WaghambaApp() {
         
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto border-4 border-accent shadow-xl overflow-hidden active-scale">
+            <div className="w-36 h-36 bg-white rounded-full flex items-center justify-center mx-auto border-4 border-accent shadow-2xl overflow-hidden active-scale group">
               {LOGO ? (
                 <Image 
                   src={LOGO.imageUrl} 
                   alt="Sports App Logo" 
-                  width={80} 
-                  height={80} 
-                  className="object-contain"
+                  width={144} 
+                  height={144} 
+                  className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
                 />
               ) : (
                 <Trophy className="w-12 h-12 text-primary" />
@@ -471,9 +471,9 @@ export default function WaghambaApp() {
       )}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-accent p-2 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm">
+            <div className="bg-white p-0.5 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border border-accent overflow-hidden">
               {LOGO ? (
-                <Image src={LOGO.imageUrl} alt="Logo" width={28} height={28} />
+                <Image src={LOGO.imageUrl} alt="Logo" width={48} height={48} className="object-cover w-full h-full" />
               ) : (
                 <Trophy className="w-6 h-6 text-black" />
               )}
