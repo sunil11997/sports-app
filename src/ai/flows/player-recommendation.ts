@@ -111,34 +111,31 @@ const playerRecommendationFlow = ai.defineFlow(
     const maxAttempts = 3; 
     let lastError: any = null;
 
-    console.log(`Starting AI Recommendation for ${input.name} (Attempt 1)`);
+    console.log(`Starting AI Recommendation for ${input.name}`);
 
     while (attempts < maxAttempts) {
       try {
         const {output} = await playerRecommendationPrompt(input);
-        console.log(`AI Success for ${input.name} on attempt ${attempts + 1}`);
         return output!;
       } catch (error: any) {
         lastError = error;
         attempts++;
         
         const errorMsg = error?.message || String(error);
-        console.warn(`AI Attempt ${attempts} failed for ${input.name}: ${errorMsg}`);
+        console.error(`AI Attempt ${attempts} failed:`, errorMsg);
 
+        // Retry on transient errors
         const isTransient = 
           errorMsg.includes('503') || 
           errorMsg.includes('UNAVAILABLE') || 
-          errorMsg.includes('demand') ||
           errorMsg.includes('overloaded') ||
           errorMsg.includes('Deadline Exceeded');
 
         if (!isTransient || attempts >= maxAttempts) {
-          throw error;
+          throw new Error(`AI Service Error: ${errorMsg}`);
         }
         
-        // Jittered exponential backoff
-        const delay = Math.pow(2, attempts) * 1000 + (Math.random() * 1000);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
       }
     }
     throw lastError || new Error('Failed to generate AI recommendations after retries.');

@@ -9,8 +9,8 @@ export const ai = genkit({
   plugins: [
     googleAI(),
   ],
-  // Gemini 2.5 Flash is highly optimized for performance and lower latencies
-  model: googleAI.model('gemini-2.5-flash'),
+  // Use the standard string identifier for the model
+  model: 'googleai/gemini-2.5-flash',
 });
 
 export { z };
