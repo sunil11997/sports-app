@@ -490,34 +490,32 @@ export default function WaghambaApp() {
                   <RefreshCcw className="w-3 h-3 text-accent animate-spin" />
                 )}
               </div>
-              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest truncate max-w-[200px]">{profile.schoolName}</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest truncate max-w-[150px] md:max-w-[200px]">{profile.schoolName}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-2 bg-muted/40 p-1.5 rounded-2xl border">
-              <CalendarDays className="w-4 h-4 text-primary ml-2" />
+            <div className="flex items-center gap-2 bg-muted/40 p-1 rounded-2xl border shadow-inner">
+              <div className="hidden md:flex items-center gap-1 text-[9px] font-black text-primary uppercase pl-3 pr-1">
+                <CalendarDays className="w-3 h-3" /> {t.session}
+              </div>
               <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
-                <SelectTrigger className="h-9 border-0 bg-transparent font-black uppercase text-[10px] tracking-widest focus:ring-0 w-[140px]">
+                <SelectTrigger className="h-10 md:h-9 border-0 bg-transparent font-black uppercase text-[10px] tracking-widest focus:ring-0 w-[110px] md:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2024-25" className="text-[10px] font-bold">Session 2024-25</SelectItem>
-                  <SelectItem value="2023-24" className="text-[10px] font-bold">Archive 2023-24</SelectItem>
+                  <SelectItem value="2024-25" className="text-[10px] font-bold">2024-25</SelectItem>
+                  <SelectItem value="2023-24" className="text-[10px] font-bold">Archive 23-24</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex flex-col items-end text-right">
-                <span className="text-[10px] font-black text-primary uppercase">{profile.teacherName}</span>
-                <span className="text-[8px] font-bold text-muted-foreground uppercase">{profile.taluka}</span>
-              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSelectedSection(null)}
-                className="text-[9px] font-black uppercase bg-white rounded-full h-8 px-4 border-border hover:bg-muted"
+                className="text-[9px] font-black uppercase bg-white rounded-full h-10 md:h-8 px-4 border-border hover:bg-muted"
               >
                 {t.switchHub}
               </Button>
@@ -527,7 +525,7 @@ export default function WaghambaApp() {
       </header>
 
       {schoolData.selectedYear !== "2024-25" && (
-        <div className="bg-amber-100 border-b border-amber-200 py-2 text-center">
+        <div className="bg-amber-100 border-b border-amber-200 py-2 text-center sticky z-40" style={{ top: (isInstallable && showInstallBanner ? 122 : 72) }}>
           <p className="text-[10px] font-black text-amber-800 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
             <HistoryIcon className="w-3 h-3" /> {t.archiveMode}: {schoolData.selectedYear}
           </p>

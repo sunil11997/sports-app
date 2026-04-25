@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -196,27 +197,53 @@ export function useSchoolData() {
     Object.entries(records).forEach(([key, status]) => {
       const [playerId, date] = key.split('_');
       if (!playerId || !date) return;
+      const player = aggregatedData.players.find(p => p.id === playerId);
       const attRef = doc(db, 'attendance_registry', `${playerId}_${date}`);
       if (!status) deleteDocumentNonBlocking(attRef);
-      else setDocumentNonBlocking(attRef, { status, playerId, date, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+      else setDocumentNonBlocking(attRef, { 
+        status, 
+        playerId, 
+        date, 
+        schoolId: user.uid, 
+        academicYear: selectedYear,
+        std: player?.std || "N/A" // Denormalize std at time of record
+      }, { merge: true });
     });
-  }, [db, user, selectedYear]);
+  }, [db, user, selectedYear, aggregatedData.players]);
 
   const setFitness = useCallback((playerId: string, assessment: FitnessAssessment) => {
     if (!user) return;
     const timestamp = new Date().toISOString();
     const dateId = timestamp.split('T')[0];
     const refId = `${playerId}_${dateId}`;
+    const player = aggregatedData.players.find(p => p.id === playerId);
     const fitnessRef = doc(db, 'fitness_registry', refId);
-    setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: timestamp, academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
+    setDocumentNonBlocking(fitnessRef, { 
+      ...assessment, 
+      playerId, 
+      schoolId: user.uid, 
+      date: dateId, 
+      updatedAt: timestamp, 
+      academicYear: selectedYear,
+      std: assessment.std || player?.std || "N/A" // Preserve std at time of assessment
+    }, { merge: true });
+  }, [db, user, selectedYear, aggregatedData.players]);
 
   const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
     const refId = `${playerId}_${sport}`;
+    const player = aggregatedData.players.find(p => p.id === playerId);
     const skillRef = doc(db, 'skills_registry', refId);
-    setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
+    setDocumentNonBlocking(skillRef, { 
+      ...skill, 
+      playerId, 
+      sportName: sport, 
+      schoolId: user.uid, 
+      lastUpdated: new Date().toISOString(), 
+      academicYear: selectedYear,
+      std: player?.std || "N/A"
+    }, { merge: true });
+  }, [db, user, selectedYear, aggregatedData.players]);
 
   const setDrillCompletion = useCallback((drillId: string, completed: boolean) => {
     if (!user) return;
@@ -227,9 +254,15 @@ export function useSchoolData() {
 
   const addHealthIncident = useCallback((incident: HealthIncident) => {
     if (!user) return;
+    const player = aggregatedData.players.find(p => p.id === incident.playerId);
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
-    setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
+    setDocumentNonBlocking(globalIncRef, { 
+      ...incident, 
+      schoolId: user.uid, 
+      academicYear: selectedYear,
+      std: player?.std || "N/A"
+    }, { merge: true });
+  }, [db, user, selectedYear, aggregatedData.players]);
 
   const addActivity = useCallback((activityData: any) => {
     if (!user) return;
