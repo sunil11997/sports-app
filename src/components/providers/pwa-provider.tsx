@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -22,31 +23,25 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    // Immediate registration of Service Worker for Offline Mode
-    if ('serviceWorker' in navigator) {
-      // Check if registration is already handled or if we need to register fresh
-      navigator.serviceWorker.getRegistration().then((registration) => {
-        if (!registration) {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then((reg) => {
-              console.log("WGB Sports SW Registered:", reg.scope);
-            })
-            .catch(err => {
-              console.error("WGB Sports SW Registration failed:", err);
-            });
-        }
-      });
-    }
-
-    // Online/Offline status monitoring
+    // 1. Connection Monitoring
     setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
+    
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Capture the installation prompt
+    // 2. Service Worker Registration
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((reg) => console.log('WGB Service Worker Registered'))
+          .catch((err) => console.error('SW Registration Failed', err));
+      });
+    }
+
+    // 3. PWA Installation Logic
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -54,20 +49,6 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Detection for already installed apps
-    window.addEventListener('appinstalled', () => {
-      setIsInstallable(false);
-      setDeferredPrompt(null);
-    });
-
-    // Device checks for iOS
-    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone);
-    
-    if (isIOS && !isStandalone) {
-      setIsInstallable(true);
-    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -77,14 +58,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const installApp = () => {
-    if (!deferredPrompt) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS) {
-        alert("To install on iOS: Tap the Share button in Safari and select 'Add to Home Screen'.");
-      }
-      return;
-    }
-    
+    if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {

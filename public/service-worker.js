@@ -1,12 +1,14 @@
-const CACHE_NAME = 'waghamba-sports-v4';
+
+const CACHE_NAME = 'wgb-sports-v3';
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/globals.css'
 ];
 
+// Install Event - Caching App Shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -16,56 +18,48 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate Event - Cleaning old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
       );
     })
   );
   self.clients.claim();
 });
 
+// Fetch Event - Network First with Cache Fallback for dynamic parts, Cache First for static
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) return;
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
 
-  // Navigation fallback to root for SPA routing
-  if (event.request.mode === 'navigate') {
+  const url = new URL(event.request.url);
+
+  // Strategy: Cache-First for static assets (Images, Manifest)
+  if (ASSETS_TO_CACHE.includes(url.pathname) || url.pathname.endsWith('.png') || url.pathname.includes('/_next/static/')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/'))
+      caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || fetch(event.request).then((networkResponse) => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        });
+      })
     );
     return;
   }
 
+  // Strategy: Network-First for the rest
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((networkResponse) => {
-        // Cache static assets, next.js chunks and images dynamically
-        if (
-          networkResponse.status === 200 &&
-          (event.request.url.includes('_next/static') || 
-           event.request.url.includes('.png') ||
-           event.request.url.includes('.jpg') ||
-           event.request.url.includes('.json'))
-        ) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Fallback for failed asset fetches while offline
-        if (event.request.url.includes('.png') || event.request.url.includes('.jpg')) {
-          return caches.match('/icon-192.png');
-        }
-      });
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });
