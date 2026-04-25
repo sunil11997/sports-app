@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "adivasi-vikas-logo",
-      "description": "Official circular branding showing the colorful 'Majhi Sundar Shala' entrance and institutional board of Ashram Shala Waghamba.",
-      "imageUrl": "https://picsum.photos/seed/waghamba-entrance-logo/400/400",
-      "imageHint": "School Mural"
+      "description": "Official institutional logo featuring a blue running figure with a torch for Physical Education.",
+      "imageUrl": "/logo.png",
+      "imageHint": "Sports Logo"
     }
   ]
 }
