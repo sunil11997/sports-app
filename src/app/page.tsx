@@ -38,7 +38,8 @@ import {
   ArrowUpCircle,
   Settings as SettingsIcon,
   Cake,
-  PartyPopper
+  PartyPopper,
+  RefreshCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -206,11 +207,12 @@ export default function WaghambaApp() {
   const t = translations[language];
   const LOGO = PlaceHolderImages.find(img => img.id === 'adivasi-vikas-logo');
 
+  // Optimization: Initiate auth immediately on mount to use splash screen time productively
   useEffect(() => {
-    if (isEntered && !user && !isUserLoading) {
+    if (!user && !isUserLoading) {
       initiateAnonymousSignIn(auth);
     }
-  }, [isEntered, user, isUserLoading, auth]);
+  }, [user, isUserLoading, auth]);
 
   useEffect(() => {
     setTodayDate(new Date());
@@ -338,17 +340,9 @@ export default function WaghambaApp() {
     );
   }
 
-  if (isUserLoading || !schoolData.isLoaded) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-accent mx-auto" />
-          <p className="font-black text-muted-foreground tracking-widest uppercase text-xs animate-pulse">{t.loadingRegistry}</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Optimization: Remove blocking full-screen loader after entry.
+  // Data sync will happen in background with header indicator.
+  
   if (!selectedSection) {
     return (
       <div className="min-h-screen bg-muted/20 flex flex-col items-center justify-center p-6 relative">
@@ -480,9 +474,14 @@ export default function WaghambaApp() {
               )}
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
-                {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
+                  {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
+                </h1>
+                {!schoolData.isLoaded && (
+                  <RefreshCcw className="w-3 h-3 text-accent animate-spin" />
+                )}
+              </div>
               <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest truncate max-w-[200px]">{profile.schoolName}</p>
             </div>
           </div>
@@ -595,12 +594,14 @@ export default function WaghambaApp() {
                         <UserPlus className="w-8 h-8 text-muted-foreground/30" />
                       </div>
                       <div className="space-y-2">
-                        <h4 className="text-xl font-black text-primary uppercase">{t.noAthletes}</h4>
-                        <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{t.registerFirst}</p>
+                        <h4 className="text-xl font-black text-primary uppercase">{schoolData.isLoaded ? t.noAthletes : t.loadingRegistry}</h4>
+                        <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{schoolData.isLoaded ? t.registerFirst : ""}</p>
                       </div>
-                      <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary text-white font-black">
-                        Go to Registration
-                      </Button>
+                      {schoolData.isLoaded && (
+                        <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary text-white font-black">
+                          Go to Registration
+                        </Button>
+                      )}
                     </Card>
                   )}
 
