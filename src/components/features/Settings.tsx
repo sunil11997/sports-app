@@ -8,8 +8,6 @@ import { initiateSignOut } from '@/firebase/non-blocking-login';
 import { 
   ChevronRight, 
   LogOut, 
-  ShieldCheck, 
-  School,
   Wifi,
   WifiOff,
   SmartphoneNfc,
@@ -67,8 +65,16 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 ios-card-shadow border-4 border-accent overflow-hidden">
-          <Image src={LOGO_INAPP} alt="App Logo" width={96} height={96} unoptimized priority className="object-cover w-full h-full" />
+        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 ios-card-shadow border-4 border-accent overflow-hidden relative">
+          <Image 
+            src={LOGO_INAPP} 
+            alt="App Logo" 
+            width={96} 
+            height={96} 
+            unoptimized 
+            priority 
+            className="object-cover w-full h-full rounded-full" 
+          />
         </div>
         <h2 className="text-4xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
         <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Ashram Shala Waghamba • v3.0 Production</p>
@@ -140,7 +146,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               icon={isOnline ? Wifi : WifiOff} 
               color={isOnline ? "bg-green-500" : "bg-destructive"} 
               label="Registry Engine" 
-              value={isOnline ? "Cloud Active" : "Local Engine Only"}
+              value={isOnline ? "Cloud Active" : "Local Sync Mode"}
             />
           </div>
         </div>

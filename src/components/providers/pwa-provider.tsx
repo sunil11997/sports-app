@@ -32,27 +32,18 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // 2. Service Worker Registration (Enhanced for Instant Activation)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then((reg) => {
-          console.log('WGB Service Worker Registered');
-          // Update found, notify or auto-refresh
-          reg.onupdatefound = () => {
-            const installingWorker = reg.installing;
-            if (installingWorker) {
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New content available, ideally notify user
-                }
-              };
-            }
-          };
-        })
-        .catch((err) => console.error('SW Registration Failed', err));
+    // 2. Service Worker Registration (Enhanced for Offline Reliability)
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((reg) => {
+            console.log('WGB Institutional Service Worker Active');
+          })
+          .catch((err) => console.error('SW Activation Error', err));
+      });
     }
 
-    // 3. PWA Installation Logic
+    // 3. PWA Installation Prompt Logic
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);

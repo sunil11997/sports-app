@@ -39,8 +39,6 @@ import {
   Settings as SettingsIcon,
   Cake,
   PartyPopper,
-  RefreshCcw,
-  CalendarDays,
   Wifi,
   WifiOff
 } from 'lucide-react';
@@ -297,7 +295,15 @@ export default function WaghambaApp() {
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="w-52 h-52 bg-white rounded-full flex items-center justify-center mx-auto border-4 border-accent shadow-2xl overflow-hidden active-scale group">
-              <Image src={LOGO_INAPP} alt="App Logo" width={208} height={208} priority unoptimized className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700" />
+              <Image 
+                src={LOGO_INAPP} 
+                alt="App Logo" 
+                width={208} 
+                height={208} 
+                priority 
+                unoptimized 
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 rounded-full" 
+              />
             </div>
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight uppercase leading-tight px-4">{t.schoolName}</h1>
@@ -409,7 +415,14 @@ export default function WaghambaApp() {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
             <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg border border-accent overflow-hidden relative">
-              <Image src={LOGO_INAPP} alt="Logo" width={56} height={56} unoptimized className="object-cover w-full h-full" />
+              <Image 
+                src={LOGO_INAPP} 
+                alt="Logo" 
+                width={56} 
+                height={56} 
+                unoptimized 
+                className="object-cover w-full h-full rounded-full" 
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -509,7 +522,7 @@ export default function WaghambaApp() {
                         <h4 className="text-xl font-black text-primary uppercase">{t.noAthletes}</h4>
                         <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{t.registerFirst}</p>
                       </div>
-                      <Button onClick={() => handleTabChange('registration')} className="rounded-full px-8 bg-primary text-white font-black">Go to Registration</Button>
+                      <button onClick={() => handleTabChange('registration')} className="bg-primary text-white font-black rounded-full px-8 py-3 active-scale shadow-lg">Go to Registration</button>
                     </Card>
                   )}
                   {topPerformers.length > 1 && (
