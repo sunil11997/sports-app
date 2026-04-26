@@ -32,14 +32,12 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // 2. Service Worker Registration (Enhanced for Offline Reliability)
+    // 2. Service Worker Registration
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
-          .then((reg) => {
-            console.log('WGB Institutional Service Worker Active');
-          })
-          .catch((err) => console.error('SW Activation Error', err));
+          .then((reg) => console.log('WGB Service Worker Registered'))
+          .catch((err) => console.error('SW Registration Failed', err));
       });
     }
 

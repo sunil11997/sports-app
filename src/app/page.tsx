@@ -208,7 +208,7 @@ export default function WaghambaApp() {
   const t = translations[language];
   const LOGO_INAPP = "/icon-512.png";
 
-  // Chunk Load Resilience
+  // Chunk Failure Resilience
   useEffect(() => {
     const handleChunkError = (e: ErrorEvent) => {
       if (e.message?.includes('Loading chunk') || e.message?.includes('ChunkLoadError')) {
@@ -414,7 +414,7 @@ export default function WaghambaApp() {
       )}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg border border-accent overflow-hidden relative">
+            <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-accent overflow-hidden relative">
               <Image 
                 src={LOGO_INAPP} 
                 alt="Logo" 
@@ -429,7 +429,7 @@ export default function WaghambaApp() {
                 <h1 className="text-xl font-black uppercase text-primary leading-none tracking-tight">
                   {selectedSection === 'sports' ? t.sportsHub : t.studentRegistry}
                 </h1>
-                <Badge variant={isOnline ? "default" : "destructive"} className="h-4 px-1.5 text-[7px] font-black uppercase tracking-tighter">
+                <Badge variant={isOnline ? "default" : "outline"} className={cn("h-4 px-1.5 text-[7px] font-black uppercase tracking-tighter", !isOnline && "border-destructive text-destructive bg-destructive/5")}>
                   {isOnline ? <><Wifi className="w-2 h-2 mr-1" /> {t.onlineStatus}</> : <><WifiOff className="w-2 h-2 mr-1" /> {t.offlineStatus}</>}
                 </Badge>
               </div>

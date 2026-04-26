@@ -65,7 +65,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 ios-card-shadow border-4 border-accent overflow-hidden relative">
+        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border-2 border-accent overflow-hidden relative">
           <Image 
             src={LOGO_INAPP} 
             alt="App Logo" 
