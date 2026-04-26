@@ -208,8 +208,7 @@ export default function WaghambaApp() {
   const auth = useAuth();
 
   const t = translations[language];
-  const LOGO_INSTALL = "/icon-192.png"; // Optimized for splash/install
-  const LOGO_INAPP = "/icon-512.png";   // High-res for identity
+  const LOGO_INAPP = "/icon-512.png";
 
   // Chunk Load Resilience
   useEffect(() => {

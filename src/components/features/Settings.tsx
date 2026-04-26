@@ -1,6 +1,8 @@
+
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { useAuth, useUser } from '@/firebase';
 import { initiateSignOut } from '@/firebase/non-blocking-login';
 import { 
@@ -27,6 +29,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const { toast } = useToast();
   const schoolData = useSchoolData();
   const { isOnline, isInstallable, installApp } = usePWA();
+  const LOGO_INAPP = "/icon-512.png";
 
   const handleManualExport = () => {
     schoolData.exportBackupData();
@@ -46,7 +49,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     >
       <div className="flex items-center gap-3">
         <div className={cn("p-1.5 rounded-lg text-white transition-transform group-active:scale-90", color)}>
-          <Icon className="w-5 h-5" />
+          {Icon ? <Icon className="w-5 h-5" /> : <div className="w-5 h-5" />}
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold text-foreground">{label}</span>
@@ -64,8 +67,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        <div className="w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-4 ios-card-shadow border-4 border-white">
-          <School className="w-12 h-12 text-primary" />
+        <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-4 ios-card-shadow border-4 border-accent overflow-hidden p-2">
+          <Image src={LOGO_INAPP} alt="App Logo" width={80} height={80} unoptimized priority className="object-contain" />
         </div>
         <h2 className="text-4xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
         <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Ashram Shala Waghamba • v3.0 Production</p>

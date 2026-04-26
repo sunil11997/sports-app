@@ -1,12 +1,11 @@
 
-const CACHE_NAME = 'waghamba-sports-cache-v3';
-
-// Core assets to cache immediately
+const CACHE_NAME = 'wgb-sports-hub-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/icon-192.png',
   '/icon-512.png',
   '/manifest.json',
+  '/globals.css'
 ];
 
 self.addEventListener('install', (event) => {
@@ -19,38 +18,45 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
-  // Clear old caches
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
       );
     })
   );
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  // Navigation fallback to index for SPA behavior
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/');
+      })
+    );
+    return;
+  }
 
-  // Stale-While-Revalidate Strategy
   event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(event.request).then((cachedResponse) => {
-        const fetchedResponse = fetch(event.request).then((networkResponse) => {
-          // Cache successful responses for next time
-          if (networkResponse.status === 200) {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => {
-          // If network fails, the cached response (if any) will be returned
-          return cachedResponse;
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request).then((fetchResponse) => {
+        if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== 'basic') {
+          return fetchResponse;
+        }
+        const responseToCache = fetchResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
         });
-
-        return cachedResponse || fetchedResponse;
+        return fetchResponse;
       });
     })
   );

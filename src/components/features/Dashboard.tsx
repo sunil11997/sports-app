@@ -624,8 +624,9 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
               <Image 
                 src={viewingPhoto.url} 
                 alt={viewingPhoto.name} 
-                fill 
-                className="object-cover"
+                width={450}
+                height={600}
+                className="object-cover w-full h-full"
                 unoptimized
               />
             )}
