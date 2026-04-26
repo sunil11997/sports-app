@@ -721,7 +721,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Fingerprint className="w-3 h-3" /> {isMarathi ? 'आधार कार्ड' : 'Aadhar'}</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Fingerprint className="w-3 h-3" /> {isMarathi ? 'आधार कार्ड' : 'आधार'}</Label>
                     <Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({ ...editingPlayer, aadharNumber: e.target.value })} className="h-11 font-bold rounded-xl border-2" />
                   </div>
                   <div className="space-y-1.5">

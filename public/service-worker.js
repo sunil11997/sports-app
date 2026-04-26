@@ -1,20 +1,26 @@
 
-const CACHE_NAME = 'wgb-sports-hub-v3';
+/* eslint-disable no-restricted-globals */
+
+// Service Worker for Waghamba Sports Hub - Enabling full offline institutional access
+const CACHE_NAME = 'waghamba-sports-v3';
+const OFFLINE_URL = '/';
+
 const ASSETS_TO_CACHE = [
   '/',
+  '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  '/manifest.json',
-  '/globals.css'
+  '/globals.css',
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('WGB Cache Initialized');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -29,34 +35,39 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Navigation fallback to index for SPA behavior
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/');
-      })
-    );
+  if (event.request.method !== 'GET') return;
+
+  // Let Firestore handle its own offline persistence
+  if (event.request.url.includes('firestore.googleapis.com') || 
+      event.request.url.includes('identitytoolkit.googleapis.com')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
       }
-      return fetch(event.request).then((fetchResponse) => {
-        if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== 'basic') {
-          return fetchResponse;
+
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
         }
-        const responseToCache = fetchResponse.clone();
+
+        const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
         });
-        return fetchResponse;
+
+        return networkResponse;
+      }).catch(() => {
+        if (event.request.mode === 'navigate') {
+          return caches.match(OFFLINE_URL);
+        }
       });
     })
   );

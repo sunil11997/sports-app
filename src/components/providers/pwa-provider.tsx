@@ -32,14 +32,24 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // 2. Service Worker Registration
-    // Enabled in both production and development for previewing offline logic
+    // 2. Service Worker Registration (Enhanced for Instant Activation)
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((reg) => console.log('WGB Service Worker Registered'))
-          .catch((err) => console.error('SW Registration Failed', err));
-      });
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((reg) => {
+          console.log('WGB Service Worker Registered');
+          // Update found, notify or auto-refresh
+          reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            if (installingWorker) {
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content available, ideally notify user
+                }
+              };
+            }
+          };
+        })
+        .catch((err) => console.error('SW Registration Failed', err));
     }
 
     // 3. PWA Installation Logic
