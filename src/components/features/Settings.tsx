@@ -65,7 +65,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl border-2 border-accent overflow-hidden relative">
+        {/* Full Circular Settings Logo */}
+        <div className="w-24 h-24 rounded-full shadow-xl overflow-hidden relative mx-auto mb-4 border-0">
           <Image 
             src={LOGO_INAPP} 
             alt="App Logo" 
@@ -73,7 +74,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             height={96} 
             unoptimized 
             priority 
-            className="object-cover w-full h-full rounded-full" 
+            className="object-cover w-full h-full" 
           />
         </div>
         <h2 className="text-4xl font-black text-primary tracking-tight uppercase">Hub Control</h2>

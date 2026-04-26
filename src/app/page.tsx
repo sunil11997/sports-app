@@ -294,7 +294,8 @@ export default function WaghambaApp() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="w-52 h-52 bg-white rounded-full flex items-center justify-center mx-auto border-4 border-accent shadow-2xl overflow-hidden active-scale group">
+            {/* Full Circular Filled Logo Container */}
+            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale group border-0">
               <Image 
                 src={LOGO_INAPP} 
                 alt="App Logo" 
@@ -302,7 +303,7 @@ export default function WaghambaApp() {
                 height={208} 
                 priority 
                 unoptimized 
-                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 rounded-full" 
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700" 
               />
             </div>
             <div className="space-y-4">
@@ -414,14 +415,15 @@ export default function WaghambaApp() {
       )}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-accent overflow-hidden relative">
+            {/* Full Circular Header Logo */}
+            <div className="rounded-full w-14 h-14 shadow-lg overflow-hidden relative border-0">
               <Image 
                 src={LOGO_INAPP} 
                 alt="Logo" 
                 width={56} 
                 height={56} 
                 unoptimized 
-                className="object-cover w-full h-full rounded-full" 
+                className="object-cover w-full h-full" 
               />
             </div>
             <div>

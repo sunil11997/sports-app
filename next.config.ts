@@ -2,8 +2,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export',
-
+  // Removing output: 'export' to support Server Actions (AI Hub) while maintaining PWA capabilities.
   typescript: {
     ignoreBuildErrors: true,
   },

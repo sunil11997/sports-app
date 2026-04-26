@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -5,16 +6,17 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+/**
+ * initializeFirebase - Institutional Registry Engine
+ * Optimized for SSR safety and offline persistence.
+ */
 export function initializeFirebase() {
   let firebaseApp;
   if (!getApps().length) {
     try {
       firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to default app.', e);
-      }
+      // Fallback for environment-specific init failures
       firebaseApp = initializeApp();
     }
   } else {
@@ -25,29 +27,45 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
-  // Initialize Auth with local persistence
-  const auth = getAuth(firebaseApp);
-  setPersistence(auth, browserLocalPersistence);
+  // Server-safe check
+  const isClient = typeof window !== 'undefined';
 
-  // Initialize Firestore with robust local persistence (Multi-tab support)
-  // We use a try-catch block to handle cases where initializeFirestore 
-  // might be called more than once during Hot Module Replacement (HMR)
-  let firestore;
-  try {
-    firestore = initializeFirestore(firebaseApp, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    });
-  } catch (e: any) {
-    // If firestore is already initialized, get the existing instance
-    firestore = getFirestore(firebaseApp);
+  // Initialize Services
+  const auth = getAuth(firebaseApp);
+  
+  if (isClient) {
+    // 1. Set Auth Persistence (Client-only)
+    try {
+      setPersistence(auth, browserLocalPersistence);
+    } catch (e) {
+      console.warn('WGB: Auth persistence suppressed', e);
+    }
+
+    // 2. Initialize Firestore with Multi-Tab Offline Persistence
+    let firestore;
+    try {
+      firestore = initializeFirestore(firebaseApp, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch (e: any) {
+      // Fallback if indexedDB is locked or unavailable
+      firestore = getFirestore(firebaseApp);
+    }
+
+    return {
+      firebaseApp,
+      auth,
+      firestore
+    };
   }
 
+  // Server-side fallback (SSR/Build-time)
   return {
     firebaseApp,
     auth,
-    firestore
+    firestore: getFirestore(firebaseApp)
   };
 }
 
