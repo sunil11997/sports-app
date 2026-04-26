@@ -34,7 +34,8 @@ import {
   Users,
   ChevronRight,
   Scale,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -433,8 +434,8 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeights: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeights: 700 }} domain={[0, 100]} />
                       <Tooltip 
                         cursor={{ fill: 'transparent' }}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
@@ -615,6 +616,9 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
 
       <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
         <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[2rem] border-0 shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{viewingPhoto?.name || "Student Identification Photo"}</DialogTitle>
+          </DialogHeader>
           <div className="relative w-full aspect-[3/4] bg-muted">
             {viewingPhoto && (
               <Image 

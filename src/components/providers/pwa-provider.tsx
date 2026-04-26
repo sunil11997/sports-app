@@ -33,7 +33,8 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('offline', handleOffline);
 
     // 2. Service Worker Registration
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    // Enabled in both production and development for previewing offline logic
+    if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
           .then((reg) => console.log('WGB Service Worker Registered'))
