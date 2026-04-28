@@ -11,6 +11,8 @@ export interface Player {
   bloodGroup?: string;
   aadharNumber?: string;
   mobileNumber?: string;
+  address?: string;
+  aadharPhotoUrl?: string;
   sports: string[];
   history: 'Yes' | 'No';
   histDetail?: string;
@@ -53,18 +55,16 @@ export interface FitnessAssessment {
   playerId?: string;
   term?: 'First' | 'Second';
   academicYear?: string;
-  // Registry specific monthly data
   height?: string;
   weight?: string;
   examMarks?: string;
-  // Marathi Academic Markers
-  nirikshan?: string;    // दैनंदिन निरीक्षण
-  tondikam?: string;     // तोंडीकाम
-  pratyashike?: string;  // प्रात्यक्षिके/प्रयोग
-  upkram?: string;       // उपक्रम/कृती
-  prakalp?: string;      // प्रकल्प
-  chachani?: string;     // चाचणी (लेखी)
-  swadhyay?: string;     // स्वाध्याय/वर्गकार्य
+  nirikshan?: string;    
+  tondikam?: string;     
+  pratyashike?: string;  
+  upkram?: string;       
+  prakalp?: string;      
+  chachani?: string;     
+  swadhyay?: string;     
 }
 
 export interface SportSkill {
@@ -84,7 +84,7 @@ export interface AppState {
   players: Player[];
   attendance: AttendanceRecord;
   fitness: Record<string, FitnessAssessment>;
-  sportSkills: Record<string, SportSkill>; // key: playerId_sportName
+  sportSkills: Record<string, SportSkill>; 
   healthIncidents: HealthIncident[];
 }
 

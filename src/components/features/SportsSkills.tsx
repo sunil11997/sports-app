@@ -5,83 +5,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Trophy, Save, Printer, ListChecks, CheckCircle2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Trophy, Save, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
-const KABADDI_SKILLS = [
-  "Dubki", "Toe Touch", "Running Hand Touch", "Back Kick", "Lion Jump", 
-  "Sidekick", "Scorpion Kick", "Frog Jump", "Ankle Hold", "Thigh Hold", 
-  "Chain Tackle", "Dash", "Block", "Waist Hold", "Knee Hold"
-];
-
-const VOLLEYBALL_SKILLS = [
-  "Serving", "Passing (Bump)", "Setting", "Spiking (Attack)", 
-  "Blocking", "Digging (Defense)", "Footwork / Movement", "Communication"
-];
-
-const HANDBALL_SKILLS = [
-  "Passing", "Catching", "Dribbling", "Shooting", "Jump shot", "Running shot", "Dive shot", "Spin shot",
-  "Feints (body fake)", "Break-through (1 vs 1 attack)", "Fast break", "Blocking", "Marking", "Tackling",
-  "Interception", "Goalkeeping", "Defensive stance", "Footwork", "Pivot play", "Positioning",
-  "Support play", "Timing", "Coordination", "Communication", "Decision making", "Game awareness",
-  "Reaction time", "Balance & body control"
-];
-
-const KHO_KHO_SKILLS = [
-  "Sitting posture", "Pole turning", "Giving kho", "Receiving kho", "Chasing",
-  "Dodging", "Zig-zag running", "Sudden direction change", "Fake (feint) movement",
-  "Touching (tagging)", "Diving", "Rolling", "Skidding", "Running speed",
-  "Reaction time", "Footwork", "Coordination", "Balance & body control",
-  "Awareness of court", "Team coordination"
-];
-
-const RUNNING_SKILLS = [
-  "Starting technique", "Acceleration", "Stride length", "Stride frequency", "Running posture",
-  "Arm action", "Foot placement", "Breathing control", "Pacing", "Endurance",
-  "Speed", "Sprinting technique", "Turning technique", "Finish (leaning)", "Reaction time",
-  "Balance", "Coordination", "Agility", "Flexibility", "Recovery technique"
-];
-
-const SHOT_PUT_SKILLS = [
-  "Grip", "Stance", "Shot placement (neck position)", "Glide technique", "Rotation technique",
-  "Power position", "Leg drive", "Hip rotation", "Trunk rotation", "Arm extension",
-  "Release angle", "Release height", "Follow-through", "Balance", "Coordination",
-  "Timing", "Footwork", "Strength", "Explosive power", "Control"
-];
-
-const JAVLINE_SKILLS = [
-  "Grip", "Carrying position", "Run-up", "Approach rhythm", "Withdrawal (drawing back)", 
-  "Cross steps", "Impulse stride", "Block (front leg action)", "Hip rotation", 
-  "Trunk rotation", "Arm action", "Release", "Release angle", "Follow-through", 
-  "Balance", "Coordination", "Timing", "Footwork", "Speed", "Strength", "Flexibility", "Control"
-];
-
-const LONG_JUMP_SKILLS = [
-  "Approach run", "Acceleration", "Rhythm control", "Take-off", "Take-off foot placement",
-  "Penultimate step", "Last step control", "Knee drive", "Arm swing",
-  "Flight technique (hang)", "Flight technique (hitch-kick)", "Body posture in air",
-  "Landing", "Leg extension", "Sand contact technique", "Balance", "Coordination",
-  "Timing", "Speed", "Strength", "Explosive power", "Flexibility", "Control"
-];
-
-const HIGH_JUMP_SKILLS = [
-  "Approach run", "Curve running", "J-approach", "Rhythm control", "Take-off",
-  "Take-off foot placement", "Penultimate step", "Last step", "Knee drive",
-  "Arm swing", "Body lean (inward)", "Bar clearance (Fosbury flop)", "Back arch",
-  "Hip lift", "Head position", "Landing (mat)", "Balance", "Coordination",
-  "Timing", "Speed", "Strength", "Explosive power", "Flexibility", "Control"
-];
+const KABADDI_SKILLS = ["Dubki", "Toe Touch", "Running Hand Touch", "Back Kick", "Lion Jump", "Sidekick", "Scorpion Kick", "Frog Jump", "Ankle Hold", "Thigh Hold", "Chain Tackle", "Dash", "Block", "Waist Hold", "Knee Hold"];
+const VOLLEYBALL_SKILLS = ["Serving", "Passing (Bump)", "Setting", "Spiking (Attack)", "Blocking", "Digging (Defense)", "Footwork", "Communication"];
+const HANDBALL_SKILLS = ["Passing", "Catching", "Dribbling", "Shooting", "Jump shot", "Running shot", "Dive shot", "Spin shot", "Feints", "Break-through", "Blocking", "Marking", "Tackling", "Interception", "Goalkeeping", "Defensive stance", "Footwork", "Pivot play", "Positioning", "Support play", "Timing", "Coordination", "Communication", "Decision making", "Awareness", "Reaction time", "Balance"];
 
 export function SportsSkills({ store }: { store: any }) {
   const { toast } = useToast();
@@ -90,216 +23,134 @@ export function SportsSkills({ store }: { store: any }) {
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
   const getDetailedSkillsList = (sport: string) => {
-    switch (sport) {
-      case 'Kabaddi': return KABADDI_SKILLS;
-      case 'Volleyball': return VOLLEYBALL_SKILLS;
-      case 'Handball': return HANDBALL_SKILLS;
-      case 'Kho Kho': return KHO_KHO_SKILLS;
-      case 'Running': return RUNNING_SKILLS;
-      case 'Shot Put': return SHOT_PUT_SKILLS;
-      case 'Javline': return JAVLINE_SKILLS;
-      case 'Long Jump': return LONG_JUMP_SKILLS;
-      case 'High Jump': return HIGH_JUMP_SKILLS;
-      default: return [];
-    }
+    if (sport === 'Kabaddi') return KABADDI_SKILLS;
+    if (sport === 'Volleyball') return VOLLEYBALL_SKILLS;
+    if (sport === 'Handball') return HANDBALL_SKILLS;
+    return ["Fundamental Technique", "Game Awareness", "Pace Control", "Precision"];
   };
 
-  const getMaxScore = (sport: string) => {
-    switch (sport) {
-      case 'Kabaddi': return 150;
-      case 'Volleyball': return 80;
-      case 'Handball': return 280;
-      case 'Kho Kho': return 200;
-      case 'Running': return 200;
-      case 'Shot Put': return 200;
-      case 'Javline': return 220;
-      case 'Long Jump': return 230;
-      case 'High Jump': return 240;
-      default: return 20;
-    }
-  };
+  const getMaxScore = (sport: string) => getDetailedSkillsList(sport).length * 10;
 
   const handleDetailedSkillChange = (skill: string, value: string) => {
     if (!editingDetailedPlayer) return;
-    
     const { player, sport } = editingDetailedPlayer;
     const key = `${player.id}_${sport}`;
     const current = skills[key] || { score: '0', detailedSkills: {} };
-    const currentDetailedSkills = current.detailedSkills || {};
-    
-    const updatedDetailedSkills = {
-      ...currentDetailedSkills,
-      [skill]: value
-    };
-
+    const updatedDetailedSkills = { ...(current.detailedSkills || {}), [skill]: value };
     const total = Object.values(updatedDetailedSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
-
-    const updated = {
-      ...current,
-      detailedSkills: updatedDetailedSkills,
-      score: total.toString()
-    };
-
-    setSkills(prev => ({
-      ...prev,
-      [key]: updated
-    }));
+    setSkills(prev => ({ ...prev, [key]: { ...current, detailedSkills: updatedDetailedSkills, score: total.toString() } }));
   };
 
   const handleSave = (id: string) => {
     const key = `${id}_${activeSport}`;
-    const skill = skills[key];
-    if (!skill) return;
-
-    store.setSportSkill(id, activeSport, skill);
-    toast({ title: "Scores Synced", description: "Technical spreadsheet updated." });
+    if (skills[key]) store.setSportSkill(id, activeSport, skills[key]);
+    toast({ title: "Scores Synced", description: "Technical technical registry updated." });
     setEditingDetailedPlayer(null);
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => p.category === 'athlete' && p.sports.includes(activeSport));
-
   const handlePrint = () => {
-    const maxScore = getMaxScore(activeSport);
+    const players = store.data.players.filter((p: any) => p.category === 'athlete' && p.sports?.includes(activeSport));
     const printContent = `
       <html>
         <head>
-          <title>${activeSport} Skill Sheet</title>
+          <title>Skill Score Sheet - ${activeSport}</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 30px; }
-            h1 { color: #235C36; border-bottom: 2px solid #8AF075; text-transform: uppercase; }
+            @media print { @page { size: A4; margin: 1.5cm; } .no-print { display: none; } }
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 14px; }
+            .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 20px; font-weight: 900; color: #235C36; text-transform: uppercase; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f8f8f8; font-weight: bold; }
+            th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+            th { background: #f4f4f4; text-transform: uppercase; font-weight: 800; font-size: 12px; }
+            .score { font-weight: 900; color: #235C36; text-align: center; }
+            .btn { display: inline-block; padding: 10px 20px; background: #235C36; color: white; text-decoration: none; border-radius: 5px; font-weight: 900; margin-bottom: 20px; }
           </style>
         </head>
         <body>
-          <h1>Skill Registry: ${activeSport}</h1>
+          <div class="no-print" style="text-align: right;"><a href="javascript:window.close()" class="btn">RETURN TO APP</a></div>
+          <div class="header">
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
+            <div style="font-weight: 800; text-transform: uppercase;">Technical Skill Registry: ${activeSport}</div>
+          </div>
           <table>
             <thead>
-              <tr><th>PLAYER</th><th>SKILLS</th><th>SCORE</th></tr>
+              <tr><th>Sr.</th><th>Student Name</th><th>Std</th><th>Gender</th><th>Category</th><th style="text-align: center;">Total Score</th></tr>
             </thead>
             <tbody>
-              ${filteredPlayers.map((p: any) => {
-                const s = store.data.sportSkills[`${p.id}_${activeSport}`] || {};
-                const b = Object.entries(s.detailedSkills || {}).map(([n, sc]) => `${n}: ${sc}`).join(', ');
-                return `<tr><td>${p.name} (Std ${p.std})</td><td>${b}</td><td>${s.score || '0'} / ${maxScore}</td></tr>`;
+              ${players.map((p: any, i: number) => {
+                const s = store.data.sportSkills[`${p.id}_${activeSport}`] || { score: '0' };
+                const cat = p.age < 14 ? 'U14' : p.age < 17 ? 'U17' : 'Senior';
+                return `<tr><td>${i+1}</td><td><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${p.gender}</td><td>${cat}</td><td class="score">${s.score} / ${getMaxScore(activeSport)}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
+          <script>window.print();</script>
         </body>
       </html>
     `;
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
-    win?.print();
   };
+
+  const filteredPlayers = store.data.players.filter((p: any) => p.category === 'athlete' && p.sports?.includes(activeSport));
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <Trophy className="w-6 h-6 text-accent" />
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Excel: Technical Skills Registry</h2>
-        </div>
-        <Button onClick={handlePrint} size="sm" className="font-bold h-9">
-          <Printer className="w-4 h-4 mr-2" /> Print Sheet
-        </Button>
+      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border-2 shadow-lg">
+        <div className="flex items-center gap-3"><Trophy className="w-8 h-8 text-accent" /><h2 className="text-2xl font-black text-primary uppercase">Technical Skills Registry</h2></div>
+        <Button onClick={handlePrint} className="bg-primary font-black uppercase text-xs tracking-widest h-12 rounded-xl px-8"><Printer className="w-4 h-4 mr-2" /> Print score sheet</Button>
       </div>
       
-      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
-        {sportsList.map(sport => (
-          <Button
-            key={sport}
-            variant={activeSport === sport ? "default" : "ghost"}
-            size="sm"
-            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeSport === sport ? '' : 'text-muted-foreground'}`}
-            onClick={() => setActiveSport(sport)}
-          >
-            {sport}
-          </Button>
-        ))}
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-xl border overflow-x-auto">
+        {sportsList.map(sport => (<Button key={sport} variant={activeSport === sport ? "default" : "ghost"} size="sm" className="h-9 px-4 text-[10px] font-black uppercase" onClick={() => setActiveSport(sport)}>{sport}</Button>))}
       </div>
 
-      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
-        <Table className="border-collapse min-w-max">
-          <TableHeader className="bg-muted/50 sticky top-0 z-20">
-            <TableRow className="border-b">
-              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase w-[200px]">Player Name</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[150px]">Status</TableHead>
-              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase text-center w-[120px]">Current Total</TableHead>
-              <TableHead className="h-9 px-2 font-black text-[10px] uppercase text-right w-[120px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+      <div className="border rounded-2xl overflow-hidden bg-white shadow-xl overflow-x-auto">
+        <Table className="min-w-max">
+          <TableHeader className="bg-muted/50"><TableRow>
+            <TableHead className="font-black text-[10px] uppercase w-[250px]">Athlete Name</TableHead>
+            <TableHead className="font-black text-[10px] uppercase text-center w-[150px]">Status</TableHead>
+            <TableHead className="font-black text-[10px] uppercase text-center w-[150px]">Total Score</TableHead>
+            <TableHead className="font-black text-[10px] uppercase text-right w-[150px]">Actions</TableHead>
+          </TableRow></TableHeader>
           <TableBody>
-            {filteredPlayers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                  No athletes found for {activeSport}.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPlayers.map((player: any) => {
-                const key = `${player.id}_${activeSport}`;
-                const current = skills[key] || { score: '0', detailedSkills: {} };
-                return (
-                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
-                    <TableCell className="border-r p-2 text-xs font-bold">
-                      {player.name} <span className="text-[9px] text-muted-foreground uppercase">(Std {player.std})</span>
-                    </TableCell>
-                    <TableCell className="border-r p-2 text-center">
-                      <span className="text-[9px] font-bold uppercase text-muted-foreground">
-                        {Object.keys(current.detailedSkills || {}).length} Moves Scored
-                      </span>
-                    </TableCell>
-                    <TableCell className="border-r p-2 text-center">
-                      <div className="font-black text-primary text-sm">{current.score || '0'} <span className="text-[9px] text-muted-foreground">/ {getMaxScore(activeSport)}</span></div>
-                    </TableCell>
-                    <TableCell className="p-1 text-right">
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold uppercase" onClick={() => setEditingDetailedPlayer({ player, sport: activeSport })}>
-                        Score Moves
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center py-20 opacity-20 font-black uppercase">No athletes found for {activeSport}</TableCell></TableRow> : 
+            filteredPlayers.map((p: any) => {
+              const s = skills[`${p.id}_${activeSport}`] || { score: '0', detailedSkills: {} };
+              return (
+                <TableRow key={p.id} className="h-14 hover:bg-primary/5">
+                  <TableCell className="font-black text-xs uppercase">{p.name} <span className="text-[8px] opacity-40 ml-2">Std {p.std}</span></TableCell>
+                  <TableCell className="text-center font-bold text-[10px] uppercase text-muted-foreground">{Object.keys(s.detailedSkills || {}).length} Moves Scored</TableCell>
+                  <TableCell className="text-center font-black text-primary">{s.score} <span className="text-[8px] opacity-40">/ {getMaxScore(activeSport)}</span></TableCell>
+                  <TableCell className="text-right"><Button variant="ghost" onClick={() => setEditingDetailedPlayer({ player: p, sport: activeSport })} className="font-black text-[9px] uppercase border-2 h-9 rounded-lg">Score Moves</Button></TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
-      <Dialog open={!!editingDetailedPlayer} onOpenChange={(open) => !open && setEditingDetailedPlayer(null)}>
-        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black uppercase text-primary">Technical Evaluation: {editingDetailedPlayer?.sport}</DialogTitle>
-          </DialogHeader>
+      <Dialog open={!!editingDetailedPlayer} onOpenChange={() => setEditingDetailedPlayer(null)}>
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-3xl">
+          <DialogHeader><DialogTitle className="text-xl font-black uppercase text-primary">Technical evaluation: {editingDetailedPlayer?.sport}</DialogTitle></DialogHeader>
           {editingDetailedPlayer && (
-            <div className="py-2 space-y-4">
-              <div className="flex justify-between items-center border-b pb-2">
-                <span className="font-black text-sm uppercase">{editingDetailedPlayer.player.name}</span>
-                <span className="text-lg font-black text-primary">Total: {skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}/{getMaxScore(editingDetailedPlayer.sport)}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b pb-4"><span className="font-black uppercase text-lg">{editingDetailedPlayer.player.name}</span><span className="text-2xl font-black text-primary">{skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || '0'}/{getMaxScore(editingDetailedPlayer.sport)}</span></div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                 {getDetailedSkillsList(editingDetailedPlayer.sport).map((skill) => {
-                  const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
-                  const score = skills[key]?.detailedSkills?.[skill] || '';
+                  const val = skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.detailedSkills?.[skill] || '';
                   return (
-                    <div key={skill} className="flex items-center justify-between border-b border-dashed py-1">
+                    <div key={skill} className="flex items-center justify-between border-b border-dashed py-2">
                       <Label className="text-[11px] font-bold uppercase text-muted-foreground">{skill}</Label>
-                      <div className="flex items-center gap-1">
-                        <Input type="number" max="10" min="0" className="w-14 h-7 text-center text-xs font-bold" value={score} onChange={(e) => handleDetailedSkillChange(skill, e.target.value)} />
-                        <span className="text-[9px] font-bold text-muted-foreground">/10</span>
-                      </div>
+                      <div className="flex items-center gap-2"><Input type="number" max="10" min="0" className="w-16 h-10 text-center font-black" value={val} onChange={(e) => handleDetailedSkillChange(skill, e.target.value)} /><span className="text-[9px] font-black opacity-30">/10</span></div>
                     </div>
                   );
                 })}
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditingDetailedPlayer(null)}>Cancel</Button>
-            <Button size="sm" onClick={() => handleSave(editingDetailedPlayer!.player.id)}>Complete Evaluation</Button>
-          </DialogFooter>
+          <DialogFooter className="pt-8"><Button variant="ghost" onClick={() => setEditingDetailedPlayer(null)} className="font-black uppercase text-xs">Cancel</Button><Button onClick={() => handleSave(editingDetailedPlayer!.player.id)} className="bg-primary font-black uppercase text-xs h-12 rounded-xl px-12 shadow-lg">Save Registry</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

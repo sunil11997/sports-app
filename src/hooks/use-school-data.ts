@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -7,27 +6,20 @@ import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-/**
- * useSchoolData - Optimized Production Hook
- * Implements high-performance memoized selectors and resilient data structures.
- */
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
   const [selectedYear, setSelectedYear] = useState("2024-25");
 
-  // 1. School Profile
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
-  // 2. Players (Registry Core)
   const playersQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
   }, [db, user]);
   const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
-  // 3. Performance Registries (High-Volume Sub-States)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
@@ -35,11 +27,9 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
-  // 4. Global Performance Listeners (Filtered by Academic Year)
   useEffect(() => {
     if (!user) return;
 
-    // Attendance Observer
     const attQuery = query(
       collection(db, 'attendance_registry'), 
       where('schoolId', '==', user.uid),
@@ -54,7 +44,6 @@ export function useSchoolData() {
       setAttendanceData(newAtt);
     });
 
-    // Fitness & History Observer
     const fitQuery = query(
       collection(db, 'fitness_registry'), 
       where('schoolId', '==', user.uid),
@@ -81,7 +70,6 @@ export function useSchoolData() {
       setFitnessHistory(historyMap);
     });
 
-    // Technical Skills Observer
     const skillsQuery = query(
       collection(db, 'skills_registry'), 
       where('schoolId', '==', user.uid),
@@ -112,7 +100,6 @@ export function useSchoolData() {
     };
   }, [db, user, selectedYear]);
 
-  // 5. Health & Incident Management
   const incidentsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -123,7 +110,6 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
-  // 6. Drill completion Observer
   const drillsSyncRef = useMemoFirebase(() => user ? query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid)) : null, [db, user]);
   const { data: drillComps } = useCollection(drillsSyncRef);
 
@@ -135,7 +121,6 @@ export function useSchoolData() {
     }
   }, [drillComps]);
 
-  // 7. Academic Activities Observer
   const activitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -146,7 +131,6 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: activities } = useCollection(activitiesQuery);
 
-  // 8. Aggregated Selector
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -169,7 +153,6 @@ export function useSchoolData() {
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
-  // Actions
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user) return;
     const profileRef = doc(db, 'schools', user.uid);
@@ -206,7 +189,7 @@ export function useSchoolData() {
         date, 
         schoolId: user.uid, 
         academicYear: selectedYear,
-        std: player?.std || "N/A" // Denormalize std at time of record
+        std: player?.std || "N/A"
       }, { merge: true });
     });
   }, [db, user, selectedYear, aggregatedData.players]);
@@ -225,7 +208,7 @@ export function useSchoolData() {
       date: dateId, 
       updatedAt: timestamp, 
       academicYear: selectedYear,
-      std: assessment.std || player?.std || "N/A" // Preserve std at time of assessment
+      std: assessment.std || player?.std || "N/A" 
     }, { merge: true });
   }, [db, user, selectedYear, aggregatedData.players]);
 
@@ -245,10 +228,11 @@ export function useSchoolData() {
     }, { merge: true });
   }, [db, user, selectedYear, aggregatedData.players]);
 
-  const setDrillCompletion = useCallback((drillId: string, completed: boolean) => {
+  const setDrillCompletion = useCallback((drillId: string, playerId: string, completed: boolean) => {
     if (!user) return;
-    const drillRef = doc(db, 'drill_completions', drillId);
-    if (completed) setDocumentNonBlocking(drillRef, { schoolId: user.uid, timestamp: new Date().toISOString() }, { merge: true });
+    const refId = `${playerId}_${drillId}`;
+    const drillRef = doc(db, 'drill_completions', refId);
+    if (completed) setDocumentNonBlocking(drillRef, { schoolId: user.uid, playerId, drillId, timestamp: new Date().toISOString() }, { merge: true });
     else deleteDocumentNonBlocking(drillRef);
   }, [db, user]);
 
