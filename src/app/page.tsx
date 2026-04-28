@@ -291,7 +291,7 @@ export default function WaghambaApp() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale group border-0 bg-primary">
+            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale group border-0">
               <Image 
                 src={LOGO_INAPP} 
                 alt="App Logo" 
@@ -408,7 +408,7 @@ export default function WaghambaApp() {
       <header className="flex-none bg-white/90 backdrop-blur-xl border-b border-border py-4 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            <div className="rounded-full w-14 h-14 shadow-lg overflow-hidden relative border-0 bg-primary">
+            <div className="rounded-full w-14 h-14 shadow-lg overflow-hidden relative border-0">
               <Image 
                 src={LOGO_INAPP} 
                 alt="Logo" 

@@ -112,7 +112,7 @@ const playerRecommendationFlow = ai.defineFlow(
     if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
       throw new Error(input.language === 'Marathi' 
         ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key .env फाईलमध्ये जोडा." 
-        : "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key .env फाईलमध्ये जोडा.");
+        : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
     let attempts = 0;

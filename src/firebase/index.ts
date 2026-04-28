@@ -7,7 +7,7 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 
 /**
  * initializeFirebase - Institutional Registry Engine
- * Optimized for SSR safety and offline persistence.
+ * Optimized for server-safety and robust offline persistence.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
