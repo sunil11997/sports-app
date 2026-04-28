@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,9 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, RefreshCw, XCircle, AlertCircle, RotateCw, GraduationCap, Medal, Upload, Image as ImageIcon, Fingerprint, Phone, MapPin, ScanLine } from 'lucide-react';
+import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
@@ -159,7 +159,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     {activeCam === 'profile' ? (
                       <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                     ) : form.watch('photoUrl') ? (
-                      <img src={form.watch('photoUrl')} className="w-full h-full object-cover" />
+                      <img src={form.watch('photoUrl')} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground opacity-20">
                         <Camera className="w-12 h-12 mb-2" />
@@ -184,7 +184,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     {activeCam === 'aadhar' ? (
                       <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                     ) : form.watch('aadharPhotoUrl') ? (
-                      <img src={form.watch('aadharPhotoUrl')} className="w-full h-full object-cover" />
+                      <img src={form.watch('aadharPhotoUrl')} alt="Aadhar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-30">
                         <Fingerprint className="w-8 h-8 mb-1" />

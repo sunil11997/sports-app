@@ -1,21 +1,25 @@
+
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, Star, Award, Crown, Dumbbell, UsersRound, ChevronRight, LayoutGrid, Zap, MapPin, Smartphone, UserPlus, User, Download, X, ClipboardList, ArrowUpCircle, Settings as SettingsIcon, Cake, PartyPopper, Wifi, WifiOff } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, UserPlus, LayoutGrid, Zap, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePWA } from '@/components/providers/pwa-provider';
-import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
-import { DashboardHomeSkeleton, StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
+import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
+
+// Animation Import
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
+import splashAnimation from '@/app/lib/splash-animation.json';
 
 // Dynamic Feature Loading
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
@@ -81,7 +85,7 @@ export default function WaghambaApp() {
     { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
     { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
     { id: "sports-skills", label: t.skills, icon: Medal, color: "text-yellow-600 bg-yellow-50" },
-    { id: "drills", label: t.drills, icon: Dumbbell, color: "text-cyan-600 bg-cyan-50" },
+    { id: "drills", label: t.drills, icon: Trophy, color: "text-cyan-600 bg-cyan-50" },
     { id: "health", label: t.health, icon: Stethoscope, color: "text-red-600 bg-red-50" },
     { id: "daily-report", label: t.report, icon: FileText, color: "text-rose-600 bg-rose-50" },
     { id: "archive", label: t.history, icon: HistoryIcon, color: "text-indigo-600 bg-indigo-50" },
@@ -93,7 +97,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.enroll, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "promotion", label: "Promote", icon: ArrowUpCircle, color: "text-blue-600 bg-blue-50" },
+    { id: "promotion", label: "Promote", icon: Medal, color: "text-blue-600 bg-blue-50" },
     { id: "classes", label: "Profiles", icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
     { id: "activities", label: "Daily Log", icon: Zap, color: "text-purple-600 bg-purple-50" },
     { id: "daily-report", label: "Report", icon: FileText, color: "text-rose-600 bg-rose-50" },
@@ -103,17 +107,22 @@ export default function WaghambaApp() {
   if (!isEntered) {
     return (
       <div className="h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="max-w-xl w-full text-center space-y-10 relative z-10">
-          <div className="space-y-6">
-            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale">
-              <Image src={LOGO_INAPP} alt="App Logo" width={208} height={208} priority unoptimized className="object-cover w-full h-full" />
+        <div className="max-w-xl w-full text-center space-y-8 relative z-10">
+          <div className="relative mx-auto w-64 h-64">
+            <div className="absolute inset-0 z-0">
+              <Lottie animationData={splashAnimation} loop={true} className="w-full h-full" />
             </div>
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight uppercase leading-tight">{t.schoolName}</h1>
-              <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">Physical Education & Sports Hub</p>
+            <div className="absolute inset-4 z-10 rounded-full overflow-hidden shadow-2xl active-scale bg-white">
+              <Image src={LOGO_INAPP} alt="App Logo" width={256} height={256} priority unoptimized className="object-cover w-full h-full" />
             </div>
           </div>
-          <Button onClick={() => setIsEntered(true)} className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xl h-20 rounded-[1.5rem] shadow-xl active-scale">{t.enter} <ArrowRight className="ml-3 w-6 h-6" /></Button>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight uppercase leading-tight">{t.schoolName}</h1>
+              <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">{t.sportsHub}</p>
+            </div>
+            <Button onClick={() => setIsEntered(true)} className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xl h-20 rounded-[1.5rem] shadow-xl active-scale mt-8">{t.enter} <ArrowRight className="ml-3 w-6 h-6" /></Button>
+          </div>
         </div>
       </div>
     );
@@ -143,7 +152,7 @@ export default function WaghambaApp() {
       <header className="flex-none bg-white/90 backdrop-blur-xl border-b py-3 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden border-2 border-primary/10">
+            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden">
               <Image src={LOGO_INAPP} alt="Logo" width={48} height={48} unoptimized className="object-cover w-full h-full" />
             </div>
             <div>
@@ -159,7 +168,7 @@ export default function WaghambaApp() {
                 ) : (
                   <div className="flex items-center gap-1 bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-md border border-destructive/20">
                     <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
-                    <span className="text-[7px] font-black uppercase">Offline</span>
+                    <span className="text-[7px] font-black uppercase">Local Sync</span>
                   </div>
                 )}
               </div>
