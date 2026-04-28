@@ -295,7 +295,7 @@ export default function WaghambaApp() {
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Full Circular Filled Logo Container */}
-            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale group border-0">
+            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale group border-0 bg-primary">
               <Image 
                 src={LOGO_INAPP} 
                 alt="App Logo" 
@@ -416,7 +416,7 @@ export default function WaghambaApp() {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
             {/* Full Circular Header Logo */}
-            <div className="rounded-full w-14 h-14 shadow-lg overflow-hidden relative border-0">
+            <div className="rounded-full w-14 h-14 shadow-lg overflow-hidden relative border-0 bg-primary">
               <Image 
                 src={LOGO_INAPP} 
                 alt="Logo" 

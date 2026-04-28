@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -21,16 +22,18 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
-  // Robust Connectivity Check
+  // Robust Connectivity Check with Heartbeat
   const checkConnectivity = async () => {
-    if (typeof window === 'undefined' || !navigator.onLine) {
+    if (typeof window === 'undefined') return;
+    
+    if (!navigator.onLine) {
       setIsOnline(false);
       return;
     }
 
     try {
-      // Tiny fetch to verify actual internet access, bypassing cache
-      const response = await fetch('/manifest.json', { 
+      // Tiny fetch to verify actual internet access, bypassing cache with timestamp
+      const response = await fetch(`/manifest.json?h=${Date.now()}`, { 
         method: 'HEAD', 
         cache: 'no-store',
         mode: 'no-cors' 
@@ -57,15 +60,12 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     // Service Worker Registration
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((reg) => {
-            console.log('WGB Service Worker Registered');
-            // Check connectivity on registration
-            checkConnectivity();
-          })
-          .catch((err) => console.error('SW Registration Failed', err));
-      });
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((reg) => {
+          console.log('WGB: Institutional Service Worker Registered');
+          checkConnectivity();
+        })
+        .catch((err) => console.error('WGB: SW Registration Failed', err));
     }
 
     // PWA Installation Prompt Logic
