@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   LayoutDashboard, 
   CalendarCheck, 
@@ -182,7 +183,7 @@ const translations = {
     promoteNext: "पुढील इयत्तेत वर्ग करा",
     promoteDesc: "निवडलेल्या विद्यार्थ्यांना त्यांच्या पुढील शैक्षणिक इयत्तेत हलवा.",
     graduated: "उत्तीर्ण / शाळा सोडली",
-    birthdayToday: "आजचे वाढदिवस",
+    birthdayToday: "आजचे वाढदिवव",
     happyBirthday: "वादिवसाच्या हार्दिक शुभेच्छा!",
     noBirthdays: "आज कोणाचाही वाढदिवस नाही.",
     academicYear: "शैक्षणिक वर्ष",
@@ -231,18 +232,15 @@ export default function WaghambaApp() {
 
   const handleStartHub = () => {
     setIsEntered(true);
-    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleSectionSelect = (section: 'sports' | 'general') => {
     setSelectedSection(section);
     setActiveTab("home"); 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const todayBirthdays = useMemo(() => {
@@ -290,11 +288,10 @@ export default function WaghambaApp() {
 
   if (!isEntered) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            {/* Full Circular Filled Logo Container */}
             <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale group border-0 bg-primary">
               <Image 
                 src={LOGO_INAPP} 
@@ -329,7 +326,7 @@ export default function WaghambaApp() {
 
   if (!selectedSection) {
     return (
-      <div className="min-h-screen bg-muted/20 flex flex-col items-center justify-center p-6">
+      <div className="h-screen bg-muted/20 flex flex-col items-center justify-center p-6">
         <div className="max-w-4xl w-full space-y-12 text-center animate-in fade-in zoom-in-95 duration-500">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-border text-primary font-black uppercase text-[10px] tracking-widest mb-2 shadow-sm">
@@ -395,9 +392,9 @@ export default function WaghambaApp() {
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="min-h-screen bg-muted/10 pb-12">
+    <div className="h-screen flex flex-col bg-muted/10 overflow-hidden">
       {isInstallable && showInstallBanner && (
-        <div className="bg-primary text-white p-3 flex justify-between items-center animate-in slide-in-from-top duration-500 sticky top-0 z-[60] shadow-lg">
+        <div className="bg-primary text-white p-3 flex justify-between items-center animate-in slide-in-from-top duration-500 flex-none z-[60] shadow-lg">
           <div className="flex items-center gap-3 ml-2">
             <Download className="w-4 h-4" />
             <span className="text-[11px] font-black uppercase tracking-wider">{t.installBanner}</span>
@@ -409,13 +406,9 @@ export default function WaghambaApp() {
         </div>
       )}
 
-      <header className={cn(
-        "sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-border py-4 px-6 shadow-sm transition-all",
-        isInstallable && showInstallBanner ? "top-[52px]" : "top-0"
-      )}>
+      <header className="flex-none bg-white/90 backdrop-blur-xl border-b border-border py-4 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTabChange('home')}>
-            {/* Full Circular Header Logo */}
             <div className="rounded-full w-14 h-14 shadow-lg overflow-hidden relative border-0 bg-primary">
               <Image 
                 src={LOGO_INAPP} 
@@ -440,9 +433,9 @@ export default function WaghambaApp() {
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-muted/40 p-1 rounded-2xl border shadow-inner">
+            <div className="hidden sm:flex items-center gap-2 bg-muted/40 p-1 rounded-2xl border shadow-inner">
               <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
-                <SelectTrigger className="h-10 md:h-9 border-0 bg-transparent font-black uppercase text-[10px] tracking-widest focus:ring-0 w-[110px] md:w-[140px]">
+                <SelectTrigger className="h-9 border-0 bg-transparent font-black uppercase text-[10px] tracking-widest focus:ring-0 w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -459,16 +452,16 @@ export default function WaghambaApp() {
       </header>
 
       {schoolData.selectedYear !== "2024-25" && (
-        <div className="bg-amber-100 border-b border-amber-200 py-2 text-center sticky z-40" style={{ top: (isInstallable && showInstallBanner ? 122 : 72) }}>
+        <div className="flex-none bg-amber-100 border-b border-amber-200 py-2 text-center">
           <p className="text-[10px] font-black text-amber-800 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
             <HistoryIcon className="w-3 h-3" /> {t.archiveMode}: {schoolData.selectedYear}
           </p>
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto p-4 md:p-6">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
-          <div className="overflow-x-auto pb-2 scrollbar-hide">
+      <main className="flex-1 overflow-hidden flex flex-col w-full max-w-7xl mx-auto p-4 md:p-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-none overflow-x-auto pb-4 scrollbar-hide">
             <TabsList className="bg-white p-1 flex gap-2 rounded-2xl min-w-max border border-border h-auto shadow-sm">
               {currentTabs.map((tab) => (
                 <TabsTrigger key={tab.id} value={tab.id} className={cn("rounded-xl px-4 py-3 font-black text-[11px] uppercase tracking-wider transition-all flex flex-col items-center gap-1.5 min-w-[90px]", "data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg active-scale", !activeTab.includes(tab.id) && tab.color)}>
@@ -478,138 +471,140 @@ export default function WaghambaApp() {
             </TabsList>
           </div>
 
-          <div className="relative min-h-[60vh]">
-            <TabsContent value="home" className="mt-0">
-              {!schoolData.isLoaded ? (selectedSection === 'sports' ? <DashboardHomeSkeleton /> : <StatsSkeleton />) : selectedSection === 'sports' ? (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                  {bestPlayer ? (
-                    <Card className="border-0 rounded-[2.5rem] shadow-xl bg-white overflow-hidden ios-spring">
-                      <div className="grid grid-cols-1 lg:grid-cols-2">
-                        <div className="relative aspect-[4/3] lg:aspect-auto min-h-[350px]">
-                          {bestPlayer.photoUrl ? (
-                            <Image src={bestPlayer.photoUrl} alt={bestPlayer.name} fill className="object-cover" unoptimized />
-                          ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center"><User className="w-24 h-24 text-muted-foreground/20" /></div>
-                          )}
-                          <div className="absolute top-6 left-6">
-                            <Badge className="bg-accent text-black font-black text-[10px] px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-white/50">
-                              <Crown className="w-4 h-4" /> {t.performanceLeader}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="p-10 lg:p-16 flex flex-col justify-center space-y-8 bg-white border-l border-border">
-                          <div className="space-y-4">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">{t.studentExcellence}</h3>
-                            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none text-primary">{bestPlayer.name}</h2>
-                            <div className="flex flex-wrap gap-3 pt-2">
-                              <Badge variant="outline" className="text-primary border-primary/20 font-black uppercase text-[10px] px-4 py-1 rounded-full">Std {bestPlayer.std}</Badge>
-                              <Badge className="bg-primary text-white font-black uppercase text-[10px] px-4 py-1 rounded-full shadow-sm">Score: {bestPlayer.performance.toFixed(0)}</Badge>
-                              <Badge className="bg-muted text-muted-foreground font-black uppercase text-[10px] px-4 py-1 rounded-full border-0">Level: {bestPlayer.latestStatus || 'A'}</Badge>
+          <ScrollArea className="flex-1 mt-4">
+            <div className="pb-20">
+              <TabsContent value="home" className="mt-0">
+                {!schoolData.isLoaded ? (selectedSection === 'sports' ? <DashboardHomeSkeleton /> : <StatsSkeleton />) : selectedSection === 'sports' ? (
+                  <div className="space-y-8 animate-in fade-in duration-500">
+                    {bestPlayer ? (
+                      <Card className="border-0 rounded-[2.5rem] shadow-xl bg-white overflow-hidden ios-spring">
+                        <div className="grid grid-cols-1 lg:grid-cols-2">
+                          <div className="relative aspect-[4/3] lg:aspect-auto min-h-[350px]">
+                            {bestPlayer.photoUrl ? (
+                              <Image src={bestPlayer.photoUrl} alt={bestPlayer.name} fill className="object-cover" unoptimized />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center"><User className="w-24 h-24 text-muted-foreground/20" /></div>
+                            )}
+                            <div className="absolute top-6 left-6">
+                              <Badge className="bg-accent text-black font-black text-[10px] px-6 py-2 rounded-full shadow-lg flex items-center gap-2 border-2 border-white/50">
+                                <Crown className="w-4 h-4" /> {t.performanceLeader}
+                              </Badge>
                             </div>
                           </div>
-                          <div className="bg-muted/50 p-8 rounded-[2rem] border border-border space-y-4 shadow-inner">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center shadow-md"><Award className="w-7 h-7 text-black" /></div>
-                              <h4 className="text-2xl font-black uppercase tracking-tight text-primary">{t.congratulations}</h4>
-                            </div>
-                            <p className="text-muted-foreground font-semibold text-lg leading-relaxed italic">"{t.excellenceDesc}"</p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ) : (
-                    <Card className="border-2 border-dashed rounded-[2.5rem] shadow-sm bg-white p-20 text-center space-y-6">
-                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto"><UserPlus className="w-8 h-8 text-muted-foreground/30" /></div>
-                      <div className="space-y-2">
-                        <h4 className="text-xl font-black text-primary uppercase">{t.noAthletes}</h4>
-                        <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{t.registerFirst}</p>
-                      </div>
-                      <button onClick={() => handleTabChange('registration')} className="bg-primary text-white font-black rounded-full px-8 py-3 active-scale shadow-lg">Go to Registration</button>
-                    </Card>
-                  )}
-                  {topPerformers.length > 1 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between px-4">
-                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3"><Star className="w-6 h-6 text-accent fill-accent" /> {t.topSquadRanking}</h3>
-                        <p className="hidden md:block text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">{t.calculatedPerformanceHub}</p>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                        {topPerformers.slice(1, 11).map((player, idx) => (
-                          <Card key={player.id} className="border-2 border-transparent rounded-[2rem] overflow-hidden hover:border-accent shadow-lg bg-white group active-scale">
-                            <div className="relative aspect-square">
-                              {player.photoUrl ? <Image src={player.photoUrl} alt={player.name} fill className="object-cover" unoptimized /> : <div className="w-full h-full bg-muted flex items-center justify-center"><User className="w-10 h-10 text-muted-foreground/20" /></div>}
-                              <div className="absolute top-4 left-4"><Badge className="bg-black/80 text-accent font-black shadow-lg border-0 h-8 w-8 flex items-center justify-center p-0 rounded-lg">#{idx + 2}</Badge></div>
-                            </div>
-                            <CardContent className="p-5 space-y-3">
-                              <div className="space-y-0.5">
-                                <h4 className="font-black text-primary uppercase text-sm truncate">{player.name}</h4>
-                                <p className="text-[9px] font-black text-muted-foreground uppercase">Std {player.std} • {player.latestStatus || 'B'}</p>
+                          <div className="p-10 lg:p-16 flex flex-col justify-center space-y-8 bg-white border-l border-border">
+                            <div className="space-y-4">
+                              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">{t.studentExcellence}</h3>
+                              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none text-primary">{bestPlayer.name}</h2>
+                              <div className="flex flex-wrap gap-3 pt-2">
+                                <Badge variant="outline" className="text-primary border-primary/20 font-black uppercase text-[10px] px-4 py-1 rounded-full">Std {bestPlayer.std}</Badge>
+                                <Badge className="bg-primary text-white font-black uppercase text-[10px] px-4 py-1 rounded-full shadow-sm">Score: {bestPlayer.performance.toFixed(0)}</Badge>
+                                <Badge className="bg-muted text-muted-foreground font-black uppercase text-[10px] px-4 py-1 rounded-full border-0">Level: {bestPlayer.latestStatus || 'A'}</Badge>
                               </div>
-                              <div className="flex justify-between items-center pt-3 border-t border-muted">
-                                <span className="text-[8px] font-black text-muted-foreground uppercase">Fitness</span>
-                                <span className="text-sm font-black text-primary">{player.fitnessScore || '0'}%</span>
+                            </div>
+                            <div className="bg-muted/50 p-8 rounded-[2rem] border border-border space-y-4 shadow-inner">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center shadow-md"><Award className="w-7 h-7 text-black" /></div>
+                                <h4 className="text-2xl font-black uppercase tracking-tight text-primary">{t.congratulations}</h4>
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                  {todayBirthdays.length > 0 && (
-                    <Card className="bg-gradient-to-r from-pink-500 to-rose-500 border-0 rounded-[2.5rem] shadow-xl overflow-hidden relative group">
-                      <div className="absolute top-0 right-0 p-12 opacity-10 -rotate-12 transition-transform group-hover:rotate-0 duration-700"><PartyPopper className="w-48 h-48 text-white" /></div>
-                      <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
-                        <div className="bg-white/20 p-6 rounded-[2rem] backdrop-blur-md shadow-inner"><Cake className="w-16 h-16 text-white" /></div>
-                        <div className="text-center md:text-left space-y-2">
-                          <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">{t.happyBirthday}</h2>
-                          <p className="text-white/80 font-black uppercase text-xs tracking-[0.3em]">{t.birthdayToday}</p>
-                          <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
-                            {todayBirthdays.map(p => <Badge key={p.id} className="bg-white text-rose-600 font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg border-0 hover:scale-105 transition-transform">{p.name} (Std {p.std})</Badge>)}
+                              <p className="text-muted-foreground font-semibold text-lg leading-relaxed italic">"{t.excellenceDesc}"</p>
+                            </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  <div className="bg-white p-12 rounded-[2.5rem] shadow-xl relative overflow-hidden border border-border">
-                    <div className="relative z-10 space-y-10">
-                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10"><UsersRound className="w-8 h-8 text-primary" /></div>
-                        <div className="space-y-1">
-                          <h2 className="text-4xl font-black text-primary uppercase tracking-tight">{t.registrySummary}</h2>
-                          <p className="text-sm font-medium text-muted-foreground max-w-xl">{t.registryDesc}</p>
+                      </Card>
+                    ) : (
+                      <Card className="border-2 border-dashed rounded-[2.5rem] shadow-sm bg-white p-20 text-center space-y-6">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto"><UserPlus className="w-8 h-8 text-muted-foreground/30" /></div>
+                        <div className="space-y-2">
+                          <h4 className="text-xl font-black text-primary uppercase">{t.noAthletes}</h4>
+                          <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">{t.registerFirst}</p>
+                        </div>
+                        <button onClick={() => handleTabChange('registration')} className="bg-primary text-white font-black rounded-full px-8 py-3 active-scale shadow-lg">Go to Registration</button>
+                      </Card>
+                    )}
+                    {topPerformers.length > 1 && (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between px-4">
+                          <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3"><Star className="w-6 h-6 text-accent fill-accent" /> {t.topSquadRanking}</h3>
+                          <p className="hidden md:block text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">{t.calculatedPerformanceHub}</p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                          {topPerformers.slice(1, 11).map((player, idx) => (
+                            <Card key={player.id} className="border-2 border-transparent rounded-[2rem] overflow-hidden hover:border-accent shadow-lg bg-white group active-scale">
+                              <div className="relative aspect-square">
+                                {player.photoUrl ? <Image src={player.photoUrl} alt={player.name} fill className="object-cover" unoptimized /> : <div className="w-full h-full bg-muted flex items-center justify-center"><User className="w-10 h-10 text-muted-foreground/20" /></div>}
+                                <div className="absolute top-4 left-4"><Badge className="bg-black/80 text-accent font-black shadow-lg border-0 h-8 w-8 flex items-center justify-center p-0 rounded-lg">#{idx + 2}</Badge></div>
+                              </div>
+                              <CardContent className="p-5 space-y-3">
+                                <div className="space-y-0.5">
+                                  <h4 className="font-black text-primary uppercase text-sm truncate">{player.name}</h4>
+                                  <p className="text-[9px] font-black text-muted-foreground uppercase">Std {player.std} • {player.latestStatus || 'B'}</p>
+                                </div>
+                                <div className="flex justify-between items-center pt-3 border-t border-muted">
+                                  <span className="text-[8px] font-black text-muted-foreground uppercase">Fitness</span>
+                                  <span className="text-sm font-black text-primary">{player.fitnessScore || '0'}%</span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-muted/30 p-8 rounded-3xl border border-border shadow-inner space-y-2"><span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">{t.totalStudents}</span><p className="text-5xl font-black text-primary leading-none">{totalStudentCount}</p></div>
-                        <div className="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 shadow-sm space-y-2"><span className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.3em]">{t.boysLabel}</span><p className="text-5xl font-black text-emerald-700 leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p></div>
-                        <div className="bg-accent/10 p-8 rounded-3xl border border-accent/20 shadow-sm space-y-2"><span className="text-[9px] font-black text-accent uppercase tracking-[0.3em]">{t.girlsLabel}</span><p className="text-5xl font-black text-primary leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p></div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-8 animate-in fade-in duration-500">
+                    {todayBirthdays.length > 0 && (
+                      <Card className="bg-gradient-to-r from-pink-500 to-rose-500 border-0 rounded-[2.5rem] shadow-xl overflow-hidden relative group">
+                        <div className="absolute top-0 right-0 p-12 opacity-10 -rotate-12 transition-transform group-hover:rotate-0 duration-700"><PartyPopper className="w-48 h-48 text-white" /></div>
+                        <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
+                          <div className="bg-white/20 p-6 rounded-[2rem] backdrop-blur-md shadow-inner"><Cake className="w-16 h-16 text-white" /></div>
+                          <div className="text-center md:text-left space-y-2">
+                            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">{t.happyBirthday}</h2>
+                            <p className="text-white/80 font-black uppercase text-xs tracking-[0.3em]">{t.birthdayToday}</p>
+                            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
+                              {todayBirthdays.map(p => <Badge key={p.id} className="bg-white text-rose-600 font-black uppercase text-sm px-6 py-2 rounded-full shadow-lg border-0 hover:scale-105 transition-transform">{p.name} (Std {p.std})</Badge>)}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    <div className="bg-white p-12 rounded-[2.5rem] shadow-xl relative overflow-hidden border border-border">
+                      <div className="relative z-10 space-y-10">
+                        <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10"><UsersRound className="w-8 h-8 text-primary" /></div>
+                          <div className="space-y-1">
+                            <h2 className="text-4xl font-black text-primary uppercase tracking-tight">{t.registrySummary}</h2>
+                            <p className="text-sm font-medium text-muted-foreground max-w-xl">{t.registryDesc}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="bg-muted/30 p-8 rounded-3xl border border-border shadow-inner space-y-2"><span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">{t.totalStudents}</span><p className="text-5xl font-black text-primary leading-none">{totalStudentCount}</p></div>
+                          <div className="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 shadow-sm space-y-2"><span className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.3em]">{t.boysLabel}</span><p className="text-5xl font-black text-emerald-700 leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.boys, 0)}</p></div>
+                          <div className="bg-accent/10 p-8 rounded-3xl border border-accent/20 shadow-sm space-y-2"><span className="text-[9px] font-black text-accent uppercase tracking-[0.3em]">{t.girlsLabel}</span><p className="text-5xl font-black text-primary leading-none">{Object.values(classSummaries).reduce((acc, curr) => acc + curr.girls, 0)}</p></div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </TabsContent>
-            {/* Component Content Tabs */}
-            <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} />}</TabsContent>
-            <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="daily-report" className="mt-0">{activeTab === "daily-report" && <DailyReport store={schoolData} />}</TabsContent>
-            <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
-            <TabsContent value="archive" className="mt-0">{activeTab === "archive" && <History store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
-            <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="sports-skills" className="mt-0">{activeTab === "sports-skills" && <SportsSkills store={schoolData} />}</TabsContent>
-            <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
-            <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
-            <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} />}</TabsContent>
-            <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} />}</TabsContent>
-            <TabsContent value="classes" className="mt-0">{activeTab === "classes" && <ClassesSection store={schoolData} />}</TabsContent>
-            <TabsContent value="exam" className="mt-0">{activeTab === "exam" && <ClassesHub store={schoolData} />}</TabsContent>
-            <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
-          </div>
+                )}
+              </TabsContent>
+              {/* Component Content Tabs */}
+              <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} />}</TabsContent>
+              <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>
+              <TabsContent value="daily-report" className="mt-0">{activeTab === "daily-report" && <DailyReport store={schoolData} />}</TabsContent>
+              <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
+              <TabsContent value="archive" className="mt-0">{activeTab === "archive" && <History store={schoolData} section={selectedSection!} />}</TabsContent>
+              <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
+              <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
+              <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
+              <TabsContent value="sports-skills" className="mt-0">{activeTab === "sports-skills" && <SportsSkills store={schoolData} />}</TabsContent>
+              <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
+              <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
+              <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} />}</TabsContent>
+              <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} />}</TabsContent>
+              <TabsContent value="classes" className="mt-0">{activeTab === "classes" && <ClassesSection store={schoolData} />}</TabsContent>
+              <TabsContent value="exam" className="mt-0">{activeTab === "exam" && <ClassesHub store={schoolData} />}</TabsContent>
+              <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
+            </div>
+          </ScrollArea>
         </Tabs>
       </main>
     </div>
