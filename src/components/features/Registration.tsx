@@ -75,7 +75,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
   });
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    if (stream) stream.getTracks().forEach(t => t.stop());
+    if (stream) stream.getTracks().forEach(track => track.stop());
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: mode, width: { ideal: type === 'aadhar' ? 1280 : 640 }, height: { ideal: type === 'aadhar' ? 720 : 480 } } 
@@ -83,13 +83,16 @@ export function Registration({ store, section, language = 'English' }: { store: 
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+      }
     } catch (error) {
       toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not access camera.' });
     }
   };
 
   const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(t => t.stop());
+    if (stream) stream.getTracks().forEach(track => track.stop());
     setStream(null);
     setActiveCam(null);
   };

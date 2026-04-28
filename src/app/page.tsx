@@ -45,7 +45,7 @@ const translations = {
     studentRegistry: "Institutional Registry",
     switchHub: "Change Hub",
     home: "Home", register: "Enroll", roster: "List", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Setup", enroll: "Enroll", registry: "Registry", session: "Session",
-    enter: "ACCESS HUB", onlineStatus: "Cloud Connected", offlineStatus: "Local Sync Mode"
+    enter: "ACCESS HUB", onlineStatus: "Online", offlineStatus: "Local Sync"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -53,7 +53,7 @@ const translations = {
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
     home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र",
-    enter: "प्रवेश करा", onlineStatus: "क्लाउड कनेक्टेड", offlineStatus: "ऑफलाईन मोड"
+    enter: "प्रवेश करा", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
 };
 
@@ -62,7 +62,6 @@ export default function WaghambaApp() {
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
-  const [todayDate, setTodayDate] = useState<Date | null>(null);
   
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
@@ -74,7 +73,6 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     if (!user && !isUserLoading) initiateAnonymousSignIn(auth);
-    setTodayDate(new Date());
   }, [user, isUserLoading, auth]);
 
   const sportsTabs = [
@@ -112,7 +110,7 @@ export default function WaghambaApp() {
             <div className="absolute inset-0 z-0">
               <Lottie animationData={splashAnimation} loop={true} className="w-full h-full" />
             </div>
-            <div className="absolute inset-4 z-10 rounded-full overflow-hidden shadow-2xl active-scale bg-white">
+            <div className="absolute inset-4 z-10 rounded-full overflow-hidden shadow-2xl active-scale bg-primary">
               <Image src={LOGO_INAPP} alt="App Logo" width={256} height={256} priority unoptimized className="object-cover w-full h-full" />
             </div>
           </div>
@@ -152,7 +150,7 @@ export default function WaghambaApp() {
       <header className="flex-none bg-white/90 backdrop-blur-xl border-b py-3 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden">
+            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden bg-primary">
               <Image src={LOGO_INAPP} alt="Logo" width={48} height={48} unoptimized className="object-cover w-full h-full" />
             </div>
             <div>
@@ -160,23 +158,19 @@ export default function WaghambaApp() {
                 <h1 className="text-lg font-black uppercase text-primary leading-none tracking-tight">
                   {selectedSection === 'sports' ? "Sports Hub" : "Student Hub"}
                 </h1>
-                {isOnline ? (
-                  <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[7px] font-black uppercase">Online</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-md border border-destructive/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
-                    <span className="text-[7px] font-black uppercase">Local Sync</span>
-                  </div>
-                )}
+                <div className={cn(
+                  "flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[7px] font-black uppercase transition-all",
+                  isOnline ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-destructive/10 text-destructive border-destructive/20"
+                )}>
+                  <div className={cn("w-1 h-1 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
+                  {isOnline ? t.onlineStatus : t.offlineStatus}
+                </div>
               </div>
               <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[120px]">{schoolData.data.schoolProfile.schoolName}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-             <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}><SelectTrigger className="h-9 border-0 bg-muted/50 font-black uppercase text-[10px] w-[120px] rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24 Archive</SelectItem></SelectContent></Select>
+             <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}><SelectTrigger className="h-9 border-0 bg-muted/50 font-black uppercase text-[10px] w-[100px] rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent></Select>
              <Button variant="outline" size="sm" onClick={() => setSelectedSection(null)} className="text-[9px] font-black uppercase rounded-full h-9 px-4">{t.switchHub}</Button>
           </div>
         </div>
