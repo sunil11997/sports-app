@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -53,10 +52,10 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           <h1>Standard ${std} - Institutional Profile (${activeReportMode === 'First' ? 'Term 1' : 'Year-wise'})</h1>
           <p>Location: Satana, Nashik | Total Students: ${students.length}</p>
           
-          <h2>Student Health & Fitness Registry</h2>
+          <h2>Student Health Registry</h2>
           <table>
             <thead>
-              <tr><th>Name</th><th>Age</th><th>Ht (cm)</th><th>Wt (kg)</th><th>BMI</th><th>Fitness Score</th></tr>
+              <tr><th>Name</th><th>Age</th><th>Ht (cm)</th><th>Wt (kg)</th><th>BMI</th></tr>
             </thead>
             <tbody>
               ${students.map((s: any) => {
@@ -70,7 +69,6 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                     <td>${fit.height || s.height || '-'}</td>
                     <td>${fit.weight || s.weight || '-'}</td>
                     <td>${currentBMI}</td>
-                    <td>${fit.score || '0'}%</td>
                   </tr>
                 `;
               }).join('')}
@@ -142,10 +140,10 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
             <CardHeader className="bg-muted/30 border-b flex flex-row items-center justify-between p-6">
               <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
-                <Scale className="w-5 h-5" /> Student Health Registry
+                <Scale className="w-5 h-5" /> Student Registry
               </CardTitle>
               <Badge className="bg-accent text-black font-black uppercase text-[10px]">
-                {activeReportMode === 'First' ? 'Term 1 Analysis' : 'Annual Consolidated'}
+                Institutional Profile
               </Badge>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
@@ -156,8 +154,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                     <TableHead className="text-center font-black text-[10px] uppercase">Age</TableHead>
                     <TableHead className="text-center font-black text-[10px] uppercase">Height</TableHead>
                     <TableHead className="text-center font-black text-[10px] uppercase">Weight</TableHead>
-                    <TableHead className="text-center font-black text-[10px] uppercase">BMI</TableHead>
-                    <TableHead className="text-right font-black text-[10px] uppercase">Fitness Score</TableHead>
+                    <TableHead className="text-right font-black text-[10px] uppercase">BMI</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -180,7 +177,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                         <TableCell className="text-center text-xs font-bold">{student.age}</TableCell>
                         <TableCell className="text-center text-xs font-bold">{h} cm</TableCell>
                         <TableCell className="text-center text-xs font-bold">{w} kg</TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-right">
                           <Badge 
                             variant="outline" 
                             className={cn(
@@ -190,9 +187,6 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                           >
                             {bmi}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className="text-sm font-black text-primary">{fitnessData.score || '0'}%</span>
                         </TableCell>
                       </TableRow>
                     );

@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
@@ -125,7 +125,12 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             filteredPlayers.map((p: any, i: number) => (
               <TableRow key={p.id} className="h-14 hover:bg-primary/5">
                 <TableCell className="border-r text-center font-bold text-primary">{i+1}</TableCell>
-                <TableCell className="border-r text-center"><Avatar className="w-10 h-10 mx-auto border shadow-sm"><AvatarImage src={p.photoUrl} className="object-cover" /><AvatarFallback><User className="w-4 h-4" /></AvatarFallback></Avatar></TableCell>
+                <TableCell className="border-r text-center">
+                  <Avatar className="w-10 h-10 mx-auto border shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
+                    <AvatarImage src={p.photoUrl} className="object-cover" />
+                    <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                  </Avatar>
+                </TableCell>
                 <TableCell className="border-r font-black text-xs uppercase">{p.name}<div className="text-[8px] opacity-40 leading-none mt-1">{p.address}</div></TableCell>
                 <TableCell className="border-r text-center font-bold">{p.std}</TableCell>
                 <TableCell className="border-r font-mono text-[11px] font-black">{p.aadharNumber}</TableCell>
@@ -140,7 +145,9 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
 
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-3xl p-0 overflow-hidden">
-          <DialogHeader className="bg-primary/5 p-8 border-b"><DialogTitle className="text-xl font-black uppercase text-primary">Edit Registry Record</DialogTitle></DialogHeader>
+          <DialogHeader className="bg-primary/5 p-8 border-b">
+            <DialogTitle className="text-xl font-black uppercase text-primary">Edit Registry Record</DialogTitle>
+          </DialogHeader>
           {editingPlayer && (
             <div className="p-8 grid grid-cols-2 gap-6">
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
@@ -151,6 +158,15 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             </div>
           )}
           <DialogFooter className="bg-muted/10 p-8 border-t"><Button variant="ghost" onClick={() => setEditingPlayer(null)} className="font-black uppercase text-xs">Cancel</Button><Button onClick={handleUpdatePlayer} className="bg-primary px-12 font-black uppercase text-xs h-12 rounded-xl shadow-lg text-white">Save Changes</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewingPhoto} onOpenChange={() => setViewingPhoto(null)}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Student Identity Photo</DialogTitle>
+          </DialogHeader>
+          {viewingPhoto && <img src={viewingPhoto} alt="Student" className="w-full aspect-[3/4] object-cover" />}
         </DialogContent>
       </Dialog>
     </div>

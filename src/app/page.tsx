@@ -30,7 +30,6 @@ const DailyReport = dynamic(() => import('@/components/features/DailyReport').th
 const TournamentRosters = dynamic(() => import('@/components/features/TournamentRosters').then(mod => mod.TournamentRosters), { ssr: false, loading: () => <TableSkeleton /> });
 const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
 const SchoolActivities = dynamic(() => import('@/components/features/SchoolActivities').then(mod => mod.SchoolActivities), { ssr: false, loading: () => <TableSkeleton /> });
-const ClassesHub = dynamic(() => import('@/components/features/ClassesHub').then(mod => mod.ClassesHub), { ssr: false, loading: () => <StatsSkeleton /> });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(mod => mod.ClassesSection), { ssr: false, loading: () => <StatsSkeleton /> });
 const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
 const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(mod => mod.PromotionHub), { ssr: false, loading: () => <StatsSkeleton /> });
@@ -63,7 +62,7 @@ export default function WaghambaApp() {
   
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
-  const { isOnline, isInstallable, installApp } = usePWA();
+  const { isOnline } = usePWA();
   const auth = useAuth();
 
   const t = translations[language];
@@ -106,7 +105,9 @@ export default function WaghambaApp() {
       <div className="h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
         <div className="max-w-xl w-full text-center space-y-10 relative z-10">
           <div className="space-y-6">
-            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale"><Image src={LOGO_INAPP} alt="App Logo" width={208} height={208} priority unoptimized className="object-cover w-full h-full" /></div>
+            <div className="w-52 h-52 rounded-full overflow-hidden mx-auto shadow-2xl active-scale">
+              <Image src={LOGO_INAPP} alt="App Logo" width={208} height={208} priority unoptimized className="object-cover w-full h-full" />
+            </div>
             <div className="space-y-2">
               <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight uppercase leading-tight">{t.schoolName}</h1>
               <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">Physical Education & Sports Hub</p>
@@ -142,11 +143,25 @@ export default function WaghambaApp() {
       <header className="flex-none bg-white/90 backdrop-blur-xl border-b py-3 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden"><Image src={LOGO_INAPP} alt="Logo" width={48} height={48} unoptimized className="object-cover w-full h-full" /></div>
+            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden border-2 border-primary/10">
+              <Image src={LOGO_INAPP} alt="Logo" width={48} height={48} unoptimized className="object-cover w-full h-full" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black uppercase text-primary leading-none tracking-tight">{selectedSection === 'sports' ? "Sports" : "Registry"}</h1>
-                <div className={cn("w-2 h-2 rounded-full", isOnline ? "bg-green-500 animate-pulse" : "bg-red-500")} title={isOnline ? t.onlineStatus : t.offlineStatus} />
+                <h1 className="text-lg font-black uppercase text-primary leading-none tracking-tight">
+                  {selectedSection === 'sports' ? "Sports Hub" : "Student Hub"}
+                </h1>
+                {isOnline ? (
+                  <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[7px] font-black uppercase">Online</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-md border border-destructive/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                    <span className="text-[7px] font-black uppercase">Offline</span>
+                  </div>
+                )}
               </div>
               <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[120px]">{schoolData.data.schoolProfile.schoolName}</p>
             </div>

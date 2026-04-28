@@ -17,7 +17,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
-const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -46,11 +45,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  const isGeneral = section === 'general';
   const isMarathi = language === 'Marathi';
 
   const t = {
-    title: isMarathi ? (section === 'general' ? 'सामान्य विद्यार्थी नावनोंदणी' : 'खेळाडू नोंदणी') : (section === 'general' ? 'General Student Enrollment' : 'Athlete Registration'),
-    subtitle: isMarathi ? (section === 'general' ? 'संस्थात्मक शारीरिक शिक्षण नोंदणी' : 'क्रीडा उत्कृष्टता कार्यक्रम') : (section === 'general' ? 'Institutional Physical Ed Registry' : 'Sports Excellence Program'),
+    title: isMarathi ? (isGeneral ? 'सामान्य विद्यार्थी नावनोंदणी' : 'खेळाडू नोंदणी') : (isGeneral ? 'General Student Enrollment' : 'Athlete Registration'),
+    subtitle: isMarathi ? (isGeneral ? 'संस्थात्मक शारीरिक शिक्षण नोंदणी' : 'क्रीडा उत्कृष्टता कार्यक्रम') : (isGeneral ? 'Institutional Physical Ed Registry' : 'Sports Excellence Program'),
     studentName: isMarathi ? 'विद्यार्थ्याचे नाव *' : 'Student Name *',
     gender: isMarathi ? 'लिंग' : 'Gender',
     std: isMarathi ? 'इयत्ता' : 'Standard',
