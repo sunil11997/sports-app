@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -65,8 +64,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        {/* Full Circular Settings Logo */}
-        <div className="w-24 h-24 rounded-full shadow-xl overflow-hidden relative mx-auto mb-4 border-0">
+        <div className="w-24 h-24 rounded-full shadow-xl overflow-hidden relative mx-auto mb-4 border-0 bg-primary">
           <Image 
             src={LOGO_INAPP} 
             alt="App Logo" 

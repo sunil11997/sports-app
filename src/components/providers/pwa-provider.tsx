@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -32,7 +31,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Tiny fetch to verify actual internet access, bypassing cache with timestamp
+      // Tiny fetch to verify actual internet access, bypassing cache
       const response = await fetch(`/manifest.json?h=${Date.now()}`, { 
         method: 'HEAD', 
         cache: 'no-store',
@@ -45,30 +44,24 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Initial check
     checkConnectivity();
 
-    // Browser event listeners
     const handleOnline = () => checkConnectivity();
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Heartbeat: Check every 30 seconds for state changes
     const interval = setInterval(checkConnectivity, 30000);
 
-    // Service Worker Registration
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js')
-        .then((reg) => {
+        .then(() => {
           console.log('WGB: Institutional Service Worker Registered');
           checkConnectivity();
-        })
-        .catch((err) => console.error('WGB: SW Registration Failed', err));
+        });
     }
 
-    // PWA Installation Prompt Logic
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);

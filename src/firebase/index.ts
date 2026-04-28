@@ -1,22 +1,20 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getAuth, setPersistence, browserLocalPersistence, Auth } from 'firebase/auth';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from 'firebase/firestore';
 
 /**
  * initializeFirebase - Institutional Registry Engine
  * Optimized for SSR safety and offline persistence.
  */
 export function initializeFirebase() {
-  let firebaseApp;
+  let firebaseApp: FirebaseApp;
   if (!getApps().length) {
     try {
       firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
-      // Fallback for environment-specific init failures
       firebaseApp = initializeApp();
     }
   } else {
@@ -27,10 +25,7 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
-  // Server-safe check
   const isClient = typeof window !== 'undefined';
-
-  // Initialize Services
   const auth = getAuth(firebaseApp);
   
   if (isClient) {
@@ -42,7 +37,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
     }
 
     // 2. Initialize Firestore with Multi-Tab Offline Persistence
-    let firestore;
+    let firestore: Firestore;
     try {
       firestore = initializeFirestore(firebaseApp, {
         localCache: persistentLocalCache({
@@ -50,7 +45,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
         })
       });
     } catch (e: any) {
-      // Fallback if indexedDB is locked or unavailable
       firestore = getFirestore(firebaseApp);
     }
 
