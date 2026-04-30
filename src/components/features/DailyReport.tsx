@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,14 +10,21 @@ import { Printer, FileText, Activity, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function DailyReport({ store }: { store: any }) {
-  const [reportDate, setReportDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [isMounted, setIsMounted] = useState(false);
+  const [reportDate, setReportDate] = useState("");
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
   const [sessionTime, setSessionTime] = useState("Morning");
 
-  const activitiesToday = useMemo(() => 
-    store.data.activities.filter((a: any) => a.date === reportDate),
-  [store.data.activities, reportDate]);
+  useEffect(() => {
+    setIsMounted(true);
+    setReportDate(format(new Date(), 'yyyy-MM-dd'));
+  }, []);
+
+  const activitiesToday = useMemo(() => {
+    if (!isMounted || !reportDate) return [];
+    return store.data.activities.filter((a: any) => a.date === reportDate);
+  }, [store.data.activities, reportDate, isMounted]);
 
   const autoSummary = useMemo(() => {
     if (activitiesToday.length === 0) return "No physical education activities logged for this date.";
@@ -71,6 +78,8 @@ export function DailyReport({ store }: { store: any }) {
     win?.document.write(printContent);
     win?.document.close();
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

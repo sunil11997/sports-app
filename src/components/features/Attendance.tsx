@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -20,11 +19,17 @@ const CATEGORIES = [
 ];
 
 export function Attendance({ store, section }: { store: any, section: 'sports' | 'general' }) {
+  const [isMounted, setIsMounted] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeCategory, setActiveCategory] = useState("all");
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const days = isMounted ? eachDayOfInterval({ start: monthStart, end: monthEnd }) : [];
 
   const targetCategory = section === 'general' ? 'student' : 'athlete';
 
@@ -97,7 +102,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     win?.print();
   };
 
-  if (!store.isLoaded) {
+  if (!isMounted || !store.isLoaded) {
     return <TableSkeleton rows={15} cols={10} />;
   }
 

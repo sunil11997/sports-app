@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -27,7 +26,7 @@ import {
   Area,
   Line
 } from 'recharts';
-import { ChartSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
+import { ChartSkeleton, TableSkeleton, DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");

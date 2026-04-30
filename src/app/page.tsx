@@ -57,6 +57,7 @@ const translations = {
 };
 
 export default function WaghambaApp() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
@@ -67,12 +68,13 @@ export default function WaghambaApp() {
   const { isOnline } = usePWA();
   const auth = useAuth();
 
-  const t = translations[language];
-  const LOGO_INAPP = "/icon-512.png";
-
   useEffect(() => {
+    setIsMounted(true);
     if (!user && !isUserLoading) initiateAnonymousSignIn(auth);
   }, [user, isUserLoading, auth]);
+
+  const t = translations[language];
+  const LOGO_INAPP = "/icon-512.png";
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
@@ -102,6 +104,7 @@ export default function WaghambaApp() {
   ];
 
   const birthdaysToday = useMemo(() => {
+    if (!isMounted) return [];
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
@@ -111,7 +114,9 @@ export default function WaghambaApp() {
       const d = new Date(p.dob);
       return (d.getMonth() + 1) === currentMonth && d.getDate() === currentDay;
     });
-  }, [schoolData.data.players]);
+  }, [schoolData.data.players, isMounted]);
+
+  if (!isMounted) return null;
 
   if (!isEntered) {
     return (
