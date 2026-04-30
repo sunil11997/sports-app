@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, UserPlus, LayoutGrid, Zap, Settings as SettingsIcon, ArrowUpCircle } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, UserPlus, LayoutGrid, Zap, Settings as SettingsIcon, ArrowUpCircle, Cake, PartyPopper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -101,6 +101,18 @@ export default function WaghambaApp() {
     { id: "settings", label: t.settings, icon: SettingsIcon, color: "text-slate-600 bg-slate-50" },
   ];
 
+  const birthdaysToday = useMemo(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentDay = today.getDate();
+
+    return schoolData.data.players.filter(p => {
+      if (!p.dob) return false;
+      const d = new Date(p.dob);
+      return (d.getMonth() + 1) === currentMonth && d.getDate() === currentDay;
+    });
+  }, [schoolData.data.players]);
+
   if (!isEntered) {
     return (
       <div className="h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
@@ -189,7 +201,61 @@ export default function WaghambaApp() {
 
           <ScrollArea className="flex-1 mt-2">
             <div className="pb-20">
-              <TabsContent value="home" className="mt-0">{!schoolData.isLoaded ? <StatsSkeleton /> : <div className="space-y-6"><h2 className="text-3xl font-black text-primary uppercase">{selectedSection === 'sports' ? "Athlete Dashboard" : "Institutional Hub"}</h2><Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-2xl relative overflow-hidden"><div className="relative z-10 space-y-2"><p className="text-xs font-bold opacity-70 uppercase tracking-widest">Active Academic Year</p><h3 className="text-5xl font-black">{schoolData.selectedYear}</h3><div className="flex gap-4 pt-4"><div className="bg-white/10 p-4 rounded-2xl"><p className="text-[9px] font-black uppercase opacity-60">Total Registry</p><p className="text-2xl font-black">{schoolData.data.players.length}</p></div><div className="bg-white/10 p-4 rounded-2xl"><p className="text-[9px] font-black uppercase opacity-60">Activities Logged</p><p className="text-2xl font-black">{schoolData.data.activities.length}</p></div></div></div></Card></div>}</TabsContent>
+              <TabsContent value="home" className="mt-0">
+                {!schoolData.isLoaded ? <StatsSkeleton /> : (
+                  <div className="space-y-6">
+                    <h2 className="text-3xl font-black text-primary uppercase">{selectedSection === 'sports' ? "Athlete Dashboard" : "Institutional Hub"}</h2>
+                    
+                    <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-2xl relative overflow-hidden">
+                      <div className="relative z-10 space-y-2">
+                        <p className="text-xs font-bold opacity-70 uppercase tracking-widest">Active Academic Year</p>
+                        <h3 className="text-5xl font-black">{schoolData.selectedYear}</h3>
+                        <div className="flex gap-4 pt-4">
+                          <div className="bg-white/10 p-4 rounded-2xl">
+                            <p className="text-[9px] font-black uppercase opacity-60">Total Registry</p>
+                            <p className="text-2xl font-black">{schoolData.data.players.length}</p>
+                          </div>
+                          <div className="bg-white/10 p-4 rounded-2xl">
+                            <p className="text-[9px] font-black uppercase opacity-60">Activities Logged</p>
+                            <p className="text-2xl font-black">{schoolData.data.activities.length}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full translate-x-1/2 -translate-y-1/2" />
+                    </Card>
+
+                    {selectedSection === 'general' && birthdaysToday.length > 0 && (
+                      <Card className="rounded-[2.5rem] border-4 border-accent bg-accent/5 p-8 shadow-xl animate-in zoom-in-95 duration-500">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-md">
+                              <Cake className="w-7 h-7 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Celebrations</h3>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Birthday Boy & Girls</p>
+                            </div>
+                          </div>
+                          <PartyPopper className="w-10 h-10 text-accent" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {birthdaysToday.map((student: any) => (
+                            <div key={student.id} className="bg-white p-4 rounded-2xl border-2 border-accent/20 flex items-center gap-4 group hover:scale-105 transition-transform cursor-default">
+                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xl uppercase">
+                                {student.name[0]}
+                              </div>
+                              <div>
+                                <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Std {student.std} • Happy Birthday!</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
               <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} onTabChange={setActiveTab} />}</TabsContent>
               <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
               <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>

@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -10,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Professional Sports & Health Management System',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon-192.png',
+    icon: '/icon-512.png',
     apple: '/icon-512.png',
   },
   appleWebApp: {
