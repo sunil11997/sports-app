@@ -27,7 +27,10 @@ const formSchema = z.object({
   weight: z.string(),
   bloodGroup: z.string(),
   generalRegisterNumber: z.string().min(1, "GR Number is required"),
-  aadharNumber: z.string().length(12, "Aadhar must be exactly 12 digits").regex(/^\d+$/, "Only numbers allowed"),
+  // Aadhar is now optional. If provided, it must be 12 digits.
+  aadharNumber: z.string().optional().refine((val) => !val || val === "" || (val.length === 12 && /^\d+$/.test(val)), {
+    message: "Aadhar must be exactly 12 digits if provided"
+  }),
   mobileNumber: z.string().length(10, "Mobile must be exactly 10 digits").regex(/^\d+$/, "Only numbers allowed"),
   address: z.string().min(5, "Address is too short"),
   sports: z.array(z.string()).optional(),
@@ -62,7 +65,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     height: isMarathi ? 'उंची (cm)' : 'Height (cm)',
     weight: isMarathi ? 'वजन (kg)' : 'Weight (kg)',
     grNumber: isMarathi ? 'जनरल रजिस्टर नंबर (GR No.)' : 'General Register Number (GR No.)',
-    aadhar: isMarathi ? 'आधार कार्ड (१२ अंक)' : 'Aadhar Number (12 Digits)',
+    aadhar: isMarathi ? 'आधार कार्ड (ऐच्छिक)' : 'Aadhar Number (Optional)',
     mobile: isMarathi ? 'मोबाईल (१० अंक)' : 'Mobile Number (10 Digits)',
     address: isMarathi ? 'घरचा पत्ता' : 'Residential Address',
     medical: isMarathi ? 'वैद्यकीय नोंदी' : 'Medical Notes',
