@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList } from 'lucide-react';
+import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +41,8 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
+  
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -62,7 +64,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     mobile: isMarathi ? 'मोबाईल (१० अंक)' : 'Mobile Number (10 Digits)',
     address: isMarathi ? 'घरचा पत्ता' : 'Residential Address',
     medical: isMarathi ? 'वैद्यकीय नोंदी' : 'Medical Notes',
-    aadharScan: isMarathi ? 'आधार कार्ड स्कॅन' : 'Aadhar Card Photo',
+    aadharScan: isMarathi ? 'आधार कार्ड स्कॅन' : 'Aadhar Card Scan/Upload',
     enrollBtn: isMarathi ? 'विद्यार्थ्याची नोंदणी करा' : 'Enroll Student',
   };
 
@@ -79,7 +81,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     if (stream) stream.getTracks().forEach(track => track.stop());
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: type === 'aadhar' ? 1280 : 640 }, height: { ideal: type === 'aadhar' ? 720 : 480 } } 
+        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
       });
       setStream(newStream);
       setActiveCam(type);
@@ -115,6 +117,18 @@ export function Registration({ store, section, language = 'English' }: { store: 
         else form.setValue('aadharPhotoUrl', dataUrl);
         stopCamera();
       }
+    }
+  };
+
+  const handleAadharUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue('aadharPhotoUrl', reader.result as string);
+        toast({ title: "Aadhar Uploaded", description: "Identity document captured successfully." });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -201,7 +215,15 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       </div>
                     )}
                   </div>
-                  {!activeCam && <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="w-full bg-accent/5 text-accent-foreground border-2 border-accent/10 rounded-xl h-10 font-black uppercase text-[9px]">Start Card Scanner</Button>}
+                  {!activeCam && (
+                    <div className="flex gap-2">
+                      <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/10 rounded-xl h-12 font-black uppercase text-[10px]">Start Scanner</Button>
+                      <Button type="button" onClick={() => aadharUploadRef.current?.click()} className="w-12 h-12 bg-primary/5 text-primary border-2 border-primary/10 rounded-xl p-0 flex items-center justify-center shadow-sm">
+                        <Upload className="w-5 h-5" />
+                      </Button>
+                      <input type="file" ref={aadharUploadRef} className="hidden" accept="image/*" onChange={handleAadharUpload} />
+                    </div>
+                  )}
                 </div>
               </div>
 

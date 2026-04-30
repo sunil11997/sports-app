@@ -56,7 +56,7 @@ export function SportsSkills({ store }: { store: any }) {
           <title>Skill Score Sheet - ${activeSport}</title>
           <style>
             @media print { @page { size: A4; margin: 1.5cm; } .no-print { display: none; } }
-            body { font-family: Inter, sans-serif; padding: 20px; font-size: 14px; }
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 14px; color: #111; }
             .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 20px; font-weight: 900; color: #235C36; text-transform: uppercase; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
