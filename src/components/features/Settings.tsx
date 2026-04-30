@@ -3,10 +3,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { useAuth, useUser } from '@/firebase';
-import { initiateSignOut } from '@/firebase/non-blocking-login';
 import { 
   ChevronRight, 
-  LogOut, 
   Wifi,
   WifiOff,
   SmartphoneNfc,
@@ -162,21 +160,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               value={isOnline ? "Cloud Active" : "Local Sync Mode"}
             />
           </div>
-        </div>
-
-        <div className="pt-6 px-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => {
-              if (confirm(language === 'Marathi' ? "तुमचे सत्र संपवायचे आहे का? कृपया खात्री करा की तुम्ही तुमचा डेटा बॅकअप घेतला आहे." : "Do you want to end the current session? Please ensure you have exported your data if needed.")) {
-                initiateSignOut(auth);
-              }
-            }}
-            className="w-full bg-white text-destructive hover:bg-destructive/5 rounded-2xl h-16 font-black uppercase text-xs tracking-[0.2em] ios-card-shadow active-scale border border-destructive/10"
-          >
-            <LogOut className="w-5 h-5 mr-3" />
-            {language === 'Marathi' ? "संस्थात्मक सत्र संपवा" : "End Institutional Session"}
-          </Button>
         </div>
 
         <div className="text-center pt-8 pb-12 opacity-30">

@@ -27,7 +27,6 @@ const formSchema = z.object({
   weight: z.string(),
   bloodGroup: z.string(),
   generalRegisterNumber: z.string().min(1, "GR Number is required"),
-  // Aadhar is now optional. If provided, it must be 12 digits.
   aadharNumber: z.string().optional().refine((val) => !val || val === "" || (val.length === 12 && /^\d+$/.test(val)), {
     message: "Aadhar must be exactly 12 digits if provided"
   }),
@@ -320,7 +319,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ClipboardList className="w-3 h-3" /> {t.grNumber}</FormLabel>
-                    <FormControl><Input placeholder="e.g. GR-1234" className="h-12 font-black rounded-xl border-2 bg-emerald-50/30" {...field} /></FormControl>
+                    <FormControl><Input maxLength={15} placeholder="e.g. GR-1234" className="h-12 font-black rounded-xl border-2 bg-emerald-50/30" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -358,11 +357,11 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   )} />
                   <FormField control={form.control} name="height" render={({ field }) => (
                     <FormItem><FormLabel className="font-black text-primary uppercase text-[10px]">{t.height}</FormLabel>
-                    <FormControl><Input type="number" placeholder="cm" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl></FormItem>
+                    <FormControl><Input maxLength={3} placeholder="cm" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
                     <FormItem><FormLabel className="font-black text-primary uppercase text-[10px]">{t.weight}</FormLabel>
-                    <FormControl><Input type="number" placeholder="kg" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl></FormItem>
+                    <FormControl><Input maxLength={3} placeholder="kg" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl></FormItem>
                   )} />
                 </div>
 

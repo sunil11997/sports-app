@@ -49,21 +49,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     return { label: 'Overweight', color: 'bg-red-100 text-red-700 border-red-200' };
   };
 
-  const handlePromote = (p: Player) => {
-    const currentStdNum = parseInt(p.std) || 0;
-    let nextStd = "";
-    if (currentStdNum < 12) {
-      nextStd = (currentStdNum + 1).toString();
-    } else {
-      nextStd = "Graduated";
-    }
-
-    if (confirm(`Promote ${p.name} from Std ${p.std} to ${nextStd === 'Graduated' ? 'Graduated Status' : 'Std ' + nextStd}?`)) {
-      store.updatePlayer({ ...p, std: nextStd });
-      toast({ title: "Promotion Successful", description: `${p.name} moved to ${nextStd === 'Graduated' ? 'Graduated' : 'Standard ' + nextStd}.` });
-    }
-  };
-
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
       const h = parseFloat(editingPlayer.height) / 100;
@@ -219,10 +204,10 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
             <div className="p-8 grid grid-cols-2 gap-6">
               <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl border-2" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 font-bold rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}<SelectItem value="Graduated">Graduated</SelectItem></SelectContent></Select></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><ClipboardList className="w-3 h-3" /> GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-xl" /></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><ClipboardList className="w-3 h-3" /> GR Number</Label><Input maxLength={15} value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-xl" /></div>
               
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-xl" /></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-xl" /></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" maxLength={3} value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-xl" /></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" maxLength={3} value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-xl" /></div>
 
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Fingerprint className="w-3 h-3" /> Aadhar</Label><Input maxLength={12} value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile</Label><Input maxLength={10} value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
