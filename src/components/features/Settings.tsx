@@ -13,7 +13,8 @@ import {
   Database,
   ShieldAlert,
   FileJson,
-  Languages
+  Languages,
+  UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -80,6 +81,19 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
+        {/* Administrator Info */}
+        <div className="space-y-2">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Institutional Lead</label>
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
+            <SettingsItem 
+              icon={UserCheck} 
+              color="bg-orange-500" 
+              label="Sunil Deshmukh" 
+              sublabel="Teacher in Charge (Physical Education)"
+            />
+          </div>
+        </div>
+
         {/* Institutional Data Safety */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">

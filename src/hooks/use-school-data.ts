@@ -143,7 +143,7 @@ export function useSchoolData() {
     activities: activities || [],
     schoolProfile: schoolProfile || {
       schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-      teacherName: "सुनिल देशमुख",
+      teacherName: "सुनिल देशमुख (Sunil Deshmukh)",
       taluka: "बागलाण",
       district: "नाशिक",
       id: "default",

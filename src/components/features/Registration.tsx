@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert } from 'lucide-react';
+import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert, RefreshCw } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -79,7 +79,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
-  // Camera Synchronization Logic
   useEffect(() => {
     if (videoRef.current && stream && activeCam) {
       videoRef.current.srcObject = stream;
@@ -87,7 +86,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
   }, [stream, activeCam]);
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    // Stop any existing stream
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
@@ -113,6 +111,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
         description: 'Please enable camera permissions in your browser settings to use this feature.' 
       });
     }
+  };
+
+  const flipCamera = () => {
+    if (!activeCam) return;
+    const newMode = facingMode === 'user' ? 'environment' : 'user';
+    startCamera(activeCam, newMode);
   };
 
   const stopCamera = () => {
@@ -236,12 +240,13 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     {activeCam === 'profile' && (
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-20">
                         <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-12 rounded-xl shadow-lg active-scale">CAPTURE</Button>
+                        <Button type="button" variant="outline" onClick={flipCamera} className="w-12 h-12 p-0 rounded-xl bg-white border-2 border-primary/20"><RefreshCw className="w-5 h-5 text-primary" /></Button>
                         <Button type="button" variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl shadow-lg"><XCircle className="w-6 h-6" /></Button>
                       </div>
                     )}
                   </div>
                   {!activeCam && (
-                    <Button type="button" onClick={() => startCamera('profile')} className="w-full bg-primary text-white rounded-xl h-12 font-black uppercase text-[10px] shadow-sm">
+                    <Button type="button" onClick={() => startCamera('profile', 'user')} className="w-full bg-primary text-white rounded-xl h-12 font-black uppercase text-[10px] shadow-sm">
                       <Camera className="w-4 h-4 mr-2" /> Open Profile Camera
                     </Button>
                   )}
@@ -269,15 +274,17 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       </div>
                     )}
                     {activeCam === 'aadhar' && (
-                      <div className="absolute bottom-2 left-0 right-0 flex justify-center px-4 z-20">
-                        <Button type="button" onClick={takePhoto} className="bg-accent text-accent-foreground font-black text-[9px] h-10 px-8 rounded-xl shadow-lg">SCAN CARD</Button>
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 px-4 z-20">
+                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[9px] h-10 px-8 rounded-xl shadow-lg">SCAN CARD</Button>
+                        <Button type="button" variant="outline" onClick={flipCamera} className="w-10 h-10 p-0 rounded-xl bg-white border-2 border-primary/20"><RefreshCw className="w-4 h-4 text-primary" /></Button>
+                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl shadow-lg"><XCircle className="w-5 h-5" /></Button>
                       </div>
                     )}
                   </div>
                   {!activeCam && (
                     <div className="flex gap-2">
                       <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/10 text-accent-foreground border-2 border-accent/20 rounded-xl h-12 font-black uppercase text-[10px]">
-                        <ScanLine className="w-4 h-4 mr-2" /> Scan Card
+                        <ScanLine className="w-4 h-4 mr-2" /> Scan Card (Back Cam)
                       </Button>
                       <Button type="button" onClick={() => aadharUploadRef.current?.click()} className="w-12 h-12 bg-primary/5 text-primary border-2 border-primary/10 rounded-xl p-0 flex items-center justify-center shadow-sm">
                         <Upload className="w-5 h-5" />

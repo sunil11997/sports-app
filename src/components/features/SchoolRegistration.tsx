@@ -26,10 +26,10 @@ export function SchoolRegistration({ store }: { store: any }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      teacherName: "",
+      teacherName: "Sunil Deshmukh",
       qualification: "B.P.Ed / M.P.Ed",
       role: "Physical Education Director",
-      schoolName: "",
+      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
       taluka: "Satana",
       district: "Nashik",
       importantInfo: "",
