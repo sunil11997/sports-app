@@ -28,7 +28,7 @@ export function useSchoolData() {
   const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     const attQuery = query(
       collection(db, 'attendance_registry'), 
@@ -42,7 +42,7 @@ export function useSchoolData() {
         newAtt[`${data.playerId}_${data.date}`] = data.status;
       });
       setAttendanceData(newAtt);
-    });
+    }, (err) => console.error("WGB-Att-Sync-Error:", err));
 
     const fitQuery = query(
       collection(db, 'fitness_registry'), 
@@ -58,7 +58,12 @@ export function useSchoolData() {
         const pId = data.playerId;
         if (!pId) return;
 
-        if (!latestMap[pId] || (data.updatedAt && latestMap[pId].updatedAt && data.updatedAt > latestMap[pId].updatedAt)) {
+        // Safer timestamp comparison for latest record
+        const currentLatest = latestMap[pId];
+        const hasNewerUpdate = !currentLatest || 
+          (data.updatedAt && currentLatest.updatedAt && new Date(data.updatedAt) > new Date(currentLatest.updatedAt));
+
+        if (hasNewerUpdate) {
           latestMap[pId] = data;
         }
         
@@ -68,7 +73,7 @@ export function useSchoolData() {
 
       setFitnessData(latestMap);
       setFitnessHistory(historyMap);
-    });
+    }, (err) => console.error("WGB-Fit-Sync-Error:", err));
 
     const skillsQuery = query(
       collection(db, 'skills_registry'), 
@@ -91,7 +96,7 @@ export function useSchoolData() {
 
       setSportSkillsData(skillsMap);
       setSkillsHistory(historyMap);
-    });
+    }, (err) => console.error("WGB-Skill-Sync-Error:", err));
 
     return () => {
       unsubAtt();
