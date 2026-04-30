@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -6,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, Eye, ClipboardList } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, Eye, ClipboardList, Activity } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -36,9 +37,25 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     return matchesCategory && matchesSearch;
   }), [store.data.players, targetCategory, searchTerm]);
 
+  const getHealthStatus = (bmi: string) => {
+    const val = parseFloat(bmi);
+    if (!val || isNaN(val)) return { label: 'Pending', color: 'bg-muted text-muted-foreground' };
+    if (val < 18.5) return { label: 'Underweight', color: 'bg-orange-100 text-orange-700 border-orange-200' };
+    if (val <= 24.9) return { label: 'Fit', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+    return { label: 'Overweight', color: 'bg-red-100 text-red-700 border-red-200' };
+  };
+
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      store.updatePlayer(editingPlayer);
+      // Re-calculate BMI if height/weight changed
+      const h = parseFloat(editingPlayer.height) / 100;
+      const w = parseFloat(editingPlayer.weight);
+      const bmi = (w / (h * h)).toFixed(1);
+      
+      store.updatePlayer({
+        ...editingPlayer,
+        bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi
+      });
       setEditingPlayer(null);
       toast({ title: "Record Updated", description: `${editingPlayer.name}'s profile saved.` });
     }
@@ -57,32 +74,44 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background: #f4f4f4; font-weight: bold; text-transform: uppercase; }
+            .status-cell { font-weight: bold; text-transform: uppercase; font-size: 9px; }
             .btn { display: inline-block; padding: 10px 20px; background: #235C36; color: white; text-decoration: none; border-radius: 5px; font-weight: 900; margin-bottom: 20px; }
           </style>
         </head>
         <body>
-          <div class="no-print" style="text-align: right;"><a href="javascript:window.close()" class="btn">RETURN TO APP</a></div>
+          <div class="no-print" style="text-align: right;"><a href="javascript:window.close()" class="btn">RETURN TO HUB</a></div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
             <div style="font-weight: 800;">${isGeneral ? 'GENERAL STUDENT REGISTRY' : 'ACTIVE ATHLETE ROSTER'} - ${store.selectedYear}</div>
           </div>
           <table>
             <thead>
-              <tr><th>SR</th><th>GR NO.</th><th>NAME</th><th>GENDER</th><th>STD</th><th>AADHAR</th><th>MOBILE</th><th>ADDRESS</th></tr>
+              <tr>
+                <th>SR</th>
+                <th>GR NO.</th>
+                <th>NAME</th>
+                <th>STD</th>
+                <th>HT/WT</th>
+                <th>BMI</th>
+                <th>HEALTH</th>
+                ${!isGeneral ? '<th>GAMES</th>' : '<th>AADHAR</th>'}
+              </tr>
             </thead>
             <tbody>
-              ${filteredPlayers.map((p: any, i: number) => `
+              ${filteredPlayers.map((p: any, i: number) => {
+                const health = getHealthStatus(p.bmi);
+                return `
                 <tr>
                   <td>${i + 1}</td>
                   <td><strong>${p.generalRegisterNumber || '-'}</strong></td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
-                  <td>${p.gender}</td>
                   <td>${p.std}</td>
-                  <td>${p.aadharNumber || '-'}</td>
-                  <td>${p.mobileNumber || '-'}</td>
-                  <td style="font-size: 9px;">${p.address || '-'}</td>
+                  <td>${p.height}/${p.weight}</td>
+                  <td>${p.bmi}</td>
+                  <td class="status-cell">${health.label}</td>
+                  <td>${!isGeneral ? (p.sports || []).join(', ') : (p.aadharNumber || '-')}</td>
                 </tr>
-              `).join('')}
+              `}).join('')}
             </tbody>
           </table>
           <script>window.print();</script>
@@ -119,31 +148,38 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             <TableHead className="border-r h-12 px-2 text-center w-[60px]">Photo</TableHead>
             <TableHead className="border-r h-12 px-4 min-w-[200px]">Name</TableHead>
             <TableHead className="border-r h-12 px-2 text-center w-[80px]">Std</TableHead>
-            <TableHead className="border-r h-12 px-4 w-[150px]">Aadhar</TableHead>
-            <TableHead className="border-r h-12 px-4 w-[120px]">Mobile</TableHead>
+            <TableHead className="border-r h-12 px-2 text-center w-[60px]">BMI</TableHead>
+            <TableHead className="border-r h-12 px-4 text-center w-[120px]">Health Status</TableHead>
             {!isGeneral && <TableHead className="border-r h-12 px-4 min-w-[150px]">Games</TableHead>}
             <TableHead className="h-12 px-4 text-right w-[80px]">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={11} className="text-center py-20 opacity-30 font-black uppercase">No records found</TableCell></TableRow> : 
-            filteredPlayers.map((p: any, i: number) => (
-              <TableRow key={p.id} className="h-14 hover:bg-primary/5">
-                <TableCell className="border-r text-center font-bold text-primary">{i+1}</TableCell>
-                <TableCell className="border-r text-center font-black text-xs text-emerald-700">{p.generalRegisterNumber || '-'}</TableCell>
-                <TableCell className="border-r text-center">
-                  <Avatar className="w-10 h-10 mx-auto border shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
-                    <AvatarImage src={p.photoUrl} className="object-cover" />
-                    <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                  </Avatar>
-                </TableCell>
-                <TableCell className="border-r font-black text-xs uppercase">{p.name}<div className="text-[8px] opacity-40 leading-none mt-1">{p.address}</div></TableCell>
-                <TableCell className="border-r text-center font-bold">{p.std}</TableCell>
-                <TableCell className="border-r font-mono text-[11px] font-black">{p.aadharNumber}</TableCell>
-                <TableCell className="border-r font-mono text-[11px] font-black">{p.mobileNumber}</TableCell>
-                {!isGeneral && <TableCell className="border-r"><div className="flex flex-wrap gap-1">{(p.sports || []).map((s: any) => <Badge key={s} variant="outline" className="text-[8px] font-black border-accent text-primary px-1.5 py-0">{s}</Badge>)}</div></TableCell>}
-                <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button></TableCell>
-              </TableRow>
-            ))}
+            filteredPlayers.map((p: any, i: number) => {
+              const health = getHealthStatus(p.bmi);
+              return (
+                <TableRow key={p.id} className="h-14 hover:bg-primary/5">
+                  <TableCell className="border-r text-center font-bold text-primary">{i+1}</TableCell>
+                  <TableCell className="border-r text-center font-black text-xs text-emerald-700">{p.generalRegisterNumber || '-'}</TableCell>
+                  <TableCell className="border-r text-center">
+                    <Avatar className="w-10 h-10 mx-auto border shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
+                      <AvatarImage src={p.photoUrl} className="object-cover" />
+                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                    </Avatar>
+                  </TableCell>
+                  <TableCell className="border-r font-black text-xs uppercase">{p.name}<div className="text-[8px] opacity-40 leading-none mt-1">{p.address}</div></TableCell>
+                  <TableCell className="border-r text-center font-bold">{p.std}</TableCell>
+                  <TableCell className="border-r text-center font-mono font-black text-xs">{p.bmi}</TableCell>
+                  <TableCell className="border-r text-center">
+                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase px-3 py-0.5 border-2", health.color)}>
+                      {health.label}
+                    </Badge>
+                  </TableCell>
+                  {!isGeneral && <TableCell className="border-r"><div className="flex flex-wrap gap-1">{(p.sports || []).map((s: any) => <Badge key={s} variant="outline" className="text-[8px] font-black border-accent text-primary px-1.5 py-0">{s}</Badge>)}</div></TableCell>}
+                  <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button></TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
@@ -155,9 +191,13 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           </DialogHeader>
           {editingPlayer && (
             <div className="p-8 grid grid-cols-2 gap-6">
-              <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
+              <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl border-2" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 font-bold rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><ClipboardList className="w-3 h-3" /> GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-xl" /></div>
+              
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-xl" /></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-xl" /></div>
+
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Fingerprint className="w-3 h-3" /> Aadhar</Label><Input maxLength={12} value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile</Label><Input maxLength={10} value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
               <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><MapPin className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
