@@ -8,7 +8,7 @@ import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, UserPlus, LayoutGrid, Zap, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, UserPlus, LayoutGrid, Zap, Settings as SettingsIcon, ArrowUpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -44,15 +44,15 @@ const translations = {
     sportsHub: "Physical Ed & Sports Hub",
     studentRegistry: "Institutional Registry",
     switchHub: "Change Hub",
-    home: "Home", register: "Enroll", roster: "List", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Setup", enroll: "Enroll", registry: "Registry", session: "Session",
-    enter: "ACCESS HUB", onlineStatus: "Online", offlineStatus: "Local Sync"
+    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Setup", enroll: "Enroll", registry: "Registry", session: "Session",
+    enter: "ACCESS HUB", onlineStatus: "Cloud", offlineStatus: "Local"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
     sportsHub: "शारीरिक शिक्षण व क्रीडा",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
-    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र",
+    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र",
     enter: "प्रवेश करा", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
 };
@@ -79,6 +79,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.register, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
+    { id: "promotion", label: t.promote, icon: ArrowUpCircle, color: "text-blue-600 bg-blue-50" },
     { id: "tournament", label: t.tourney, icon: Trophy, color: "text-amber-600 bg-amber-50" },
     { id: "attendance", label: t.presence, icon: CalendarCheck, color: "text-teal-600 bg-teal-50" },
     { id: "fitness", label: t.fitness, icon: Activity, color: "text-orange-600 bg-orange-50" },
@@ -95,7 +96,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home, color: "text-primary bg-primary/5" },
     { id: "registration", label: t.enroll, icon: UserPlus, color: "text-emerald-600 bg-emerald-50" },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard, color: "text-purple-600 bg-purple-50" },
-    { id: "promotion", label: "Promote", icon: Medal, color: "text-blue-600 bg-blue-50" },
+    { id: "promotion", label: t.promote, icon: ArrowUpCircle, color: "text-blue-600 bg-blue-50" },
     { id: "classes", label: "Profiles", icon: LayoutGrid, color: "text-indigo-600 bg-indigo-50" },
     { id: "activities", label: "Daily Log", icon: Zap, color: "text-purple-600 bg-purple-50" },
     { id: "daily-report", label: "Report", icon: FileText, color: "text-rose-600 bg-rose-50" },
@@ -147,31 +148,31 @@ export default function WaghambaApp() {
 
   return (
     <div className="h-screen flex flex-col bg-muted/10 overflow-hidden">
-      <header className="flex-none bg-white/90 backdrop-blur-xl border-b py-3 px-6 shadow-sm z-50">
+      <header className="flex-none bg-white/90 backdrop-blur-xl border-b py-2 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="rounded-full w-12 h-12 shadow-lg overflow-hidden bg-primary">
-              <Image src={LOGO_INAPP} alt="Logo" width={48} height={48} unoptimized className="object-cover w-full h-full" />
+            <div className="rounded-full w-10 h-10 shadow-lg overflow-hidden bg-primary">
+              <Image src={LOGO_INAPP} alt="Logo" width={40} height={40} unoptimized className="object-cover w-full h-full" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black uppercase text-primary leading-none tracking-tight">
+                <h1 className="text-sm font-black uppercase text-primary leading-none tracking-tight">
                   {selectedSection === 'sports' ? "Sports Hub" : "Student Hub"}
                 </h1>
                 <div className={cn(
-                  "flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[7px] font-black uppercase transition-all",
+                  "flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[8px] font-black uppercase transition-all",
                   isOnline ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-destructive/10 text-destructive border-destructive/20"
                 )}>
-                  <div className={cn("w-1 h-1 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
+                  <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
                   {isOnline ? t.onlineStatus : t.offlineStatus}
                 </div>
               </div>
-              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[120px]">{schoolData.data.schoolProfile.schoolName}</p>
+              <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[120px]">{schoolData.data.schoolProfile.schoolName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-             <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}><SelectTrigger className="h-9 border-0 bg-muted/50 font-black uppercase text-[10px] w-[100px] rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent></Select>
-             <Button variant="outline" size="sm" onClick={() => setSelectedSection(null)} className="text-[9px] font-black uppercase rounded-full h-9 px-4">{t.switchHub}</Button>
+          <div className="flex items-center gap-2">
+             <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}><SelectTrigger className="h-8 border-0 bg-muted/50 font-black uppercase text-[9px] w-[90px] rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent></Select>
+             <Button variant="outline" size="sm" onClick={() => setSelectedSection(null)} className="text-[8px] font-black uppercase rounded-full h-8 px-3">{t.switchHub}</Button>
           </div>
         </div>
       </header>

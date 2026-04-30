@@ -1,13 +1,12 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, Eye, ClipboardList, Activity } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, ClipboardList, ArrowUpCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -17,8 +16,6 @@ import { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
 export function Dashboard({ store, section, language = 'English', t }: { store: any, section: 'sports' | 'general', language?: string, t: any }) {
   const { toast } = useToast();
@@ -45,9 +42,23 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     return { label: 'Overweight', color: 'bg-red-100 text-red-700 border-red-200' };
   };
 
+  const handlePromote = (p: Player) => {
+    const currentStdNum = parseInt(p.std) || 0;
+    let nextStd = "";
+    if (currentStdNum < 12) {
+      nextStd = (currentStdNum + 1).toString();
+    } else {
+      nextStd = "Graduated";
+    }
+
+    if (confirm(`Promote ${p.name} from Std ${p.std} to ${nextStd === 'Graduated' ? 'Graduated Status' : 'Std ' + nextStd}?`)) {
+      store.updatePlayer({ ...p, std: nextStd });
+      toast({ title: "Promotion Successful", description: `${p.name} moved to ${nextStd === 'Graduated' ? 'Graduated' : 'Standard ' + nextStd}.` });
+    }
+  };
+
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      // Re-calculate BMI if height/weight changed
       const h = parseFloat(editingPlayer.height) / 100;
       const w = parseFloat(editingPlayer.weight);
       const bmi = (w / (h * h)).toFixed(1);
@@ -151,7 +162,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             <TableHead className="border-r h-12 px-2 text-center w-[60px]">BMI</TableHead>
             <TableHead className="border-r h-12 px-4 text-center w-[120px]">Health Status</TableHead>
             {!isGeneral && <TableHead className="border-r h-12 px-4 min-w-[150px]">Games</TableHead>}
-            <TableHead className="h-12 px-4 text-right w-[80px]">Actions</TableHead>
+            <TableHead className="h-12 px-4 text-right w-[150px]">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={11} className="text-center py-20 opacity-30 font-black uppercase">No records found</TableCell></TableRow> : 
@@ -176,7 +187,12 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
                     </Badge>
                   </TableCell>
                   {!isGeneral && <TableCell className="border-r"><div className="flex flex-wrap gap-1">{(p.sports || []).map((s: any) => <Badge key={s} variant="outline" className="text-[8px] font-black border-accent text-primary px-1.5 py-0">{s}</Badge>)}</div></TableCell>}
-                  <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button></TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handlePromote(p)} title="Promote to Next Year" className="text-blue-600 hover:bg-blue-50"><ArrowUpCircle className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -192,7 +208,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           {editingPlayer && (
             <div className="p-8 grid grid-cols-2 gap-6">
               <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl border-2" /></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 font-bold rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 font-bold rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}<SelectItem value="Graduated">Graduated</SelectItem></SelectContent></Select></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><ClipboardList className="w-3 h-3" /> GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-xl" /></div>
               
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-xl" /></div>
@@ -203,7 +219,13 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
               <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><MapPin className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
             </div>
           )}
-          <DialogFooter className="bg-muted/10 p-8 border-t"><Button variant="ghost" onClick={() => setEditingPlayer(null)} className="font-black uppercase text-xs">Cancel</Button><Button onClick={handleUpdatePlayer} className="bg-primary px-12 font-black uppercase text-xs h-12 rounded-xl shadow-lg text-white">Save Changes</Button></DialogFooter>
+          <DialogFooter className="bg-muted/10 p-8 border-t">
+            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="font-black uppercase text-xs">Cancel</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => editingPlayer && handlePromote(editingPlayer)} className="border-blue-200 text-blue-700 font-black uppercase text-xs h-12 rounded-xl">Promote Std</Button>
+              <Button onClick={handleUpdatePlayer} className="bg-primary px-12 font-black uppercase text-xs h-12 rounded-xl shadow-lg text-white">Save Changes</Button>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
