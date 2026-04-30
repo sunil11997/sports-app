@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { LayoutDashboard, CalendarCheck, Activity, Trophy, Stethoscope, Sparkles, Home, FileText, History as HistoryIcon, ArrowRight, GraduationCap, Medal, UserPlus, LayoutGrid, Zap, Settings as SettingsIcon, ArrowUpCircle, Cake, PartyPopper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -111,7 +110,6 @@ export default function WaghambaApp() {
 
     return schoolData.data.players.filter(p => {
       if (!p.dob) return false;
-      // Format is usually YYYY-MM-DD
       const d = new Date(p.dob);
       return (d.getMonth() + 1) === currentMonth && d.getDate() === currentDay;
     });
@@ -121,7 +119,7 @@ export default function WaghambaApp() {
 
   if (!isEntered) {
     return (
-      <div className="h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
         <div className="max-w-xl w-full text-center space-y-8 relative z-10">
           <div className="relative mx-auto w-64 h-64">
             <div className="absolute inset-0 z-0">
@@ -145,7 +143,7 @@ export default function WaghambaApp() {
 
   if (!selectedSection) {
     return (
-      <div className="h-screen bg-muted/10 flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-muted/10 flex flex-col items-center justify-center p-6 app-content-scroll">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
           <button onClick={() => setSelectedSection('sports')} className="bg-white rounded-[2.5rem] p-12 text-center shadow-xl active-scale group border-4 border-transparent hover:border-accent">
             <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-md"><Medal className="w-8 h-8 text-black" /></div>
@@ -163,8 +161,8 @@ export default function WaghambaApp() {
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="h-screen flex flex-col bg-muted/10 overflow-hidden">
-      <header className="flex-none bg-white/90 backdrop-blur-xl border-b py-2 px-6 shadow-sm z-50">
+    <div className="min-h-screen flex flex-col bg-muted/10">
+      <header className="flex-none sticky top-0 bg-white/90 backdrop-blur-xl border-b py-2 px-6 shadow-sm z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveTab('home')}>
             <div className="rounded-full w-10 h-10 shadow-lg overflow-hidden bg-primary">
@@ -193,8 +191,8 @@ export default function WaghambaApp() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden flex flex-col w-full max-w-7xl mx-auto p-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col w-full max-w-7xl mx-auto p-4 app-content-scroll">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="flex-none overflow-x-auto pb-4 scrollbar-hide">
             <TabsList className="bg-white p-1 flex gap-1 rounded-2xl border min-w-max h-auto shadow-sm">
               {currentTabs.map((tab) => (
@@ -205,7 +203,7 @@ export default function WaghambaApp() {
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 mt-2">
+          <div className="flex-1 mt-2">
             <div className="pb-20">
               <TabsContent value="home" className="mt-0">
                 {!schoolData.isLoaded ? <StatsSkeleton /> : (
@@ -278,7 +276,7 @@ export default function WaghambaApp() {
               <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
               <TabsContent value="archive" className="mt-0">{activeTab === "archive" && <History store={schoolData} section={selectedSection!} />}</TabsContent>
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
       </main>
     </div>
