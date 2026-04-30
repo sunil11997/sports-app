@@ -111,6 +111,7 @@ export default function WaghambaApp() {
 
     return schoolData.data.players.filter(p => {
       if (!p.dob) return false;
+      // Format is usually YYYY-MM-DD
       const d = new Date(p.dob);
       return (d.getMonth() + 1) === currentMonth && d.getDate() === currentDay;
     });
