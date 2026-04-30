@@ -87,7 +87,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               icon={UserCheck} 
               color="bg-orange-500" 
               label="Sunil Deshmukh" 
-              sublabel="Teacher in Charge (Physical Education)"
+              sublabel="Teacher Coach & PE Director"
             />
           </div>
         </div>

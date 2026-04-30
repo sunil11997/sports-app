@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Dumbbell, Target, BookOpen, Clock, ClipboardCheck, Users, History, Loader2, User, PlayCircle } from 'lucide-react';
+import { CheckCircle, Dumbbell, Target, BookOpen, Clock, ClipboardCheck, Users, History, Loader2, User, PlayCircle, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -63,7 +63,9 @@ export function SportsDrills({ store }: { store: any }) {
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
               <PlayCircle className="w-10 h-10 text-cyan-600" /> Coaching Hub
             </h2>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Player-Specific Technical Mastery</p>
+            <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest">
+              <ShieldCheck className="w-4 h-4" /> Head Coach: Sunil Deshmukh
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full lg:w-auto">
             <div className="space-y-1">
@@ -93,7 +95,7 @@ export function SportsDrills({ store }: { store: any }) {
       {!selectedPlayerId ? (
         <Card className="border-dashed border-4 p-20 flex flex-col items-center opacity-30 rounded-[3rem]">
           <User className="w-16 h-16 mb-4" />
-          <p className="text-xl font-black uppercase tracking-widest">Select an athlete to start training</p>
+          <p className="text-xl font-black uppercase tracking-widest">Select an athlete to start Coach Sunil's training</p>
         </Card>
       ) : currentDrills.length === 0 ? (
         <Card className="border-dashed border-4 p-20 flex flex-col items-center opacity-30 rounded-[3rem]">

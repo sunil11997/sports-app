@@ -245,7 +245,7 @@ export function AIAdvice({ store }: { store: any }) {
               <BrainCircuit className="w-10 h-10 text-accent" /> AI Hub
             </h2>
             <p className="text-lg font-medium text-foreground/70">
-              Get personalized AI analysis and chat with your institutional sports assistant.
+              Get personalized AI analysis and chat with Coach Sunil Deshmukh's AI assistant.
             </p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
@@ -381,7 +381,7 @@ export function AIAdvice({ store }: { store: any }) {
               
               <div className="md:col-span-2 flex justify-center pt-8">
                 <Button variant="ghost" onClick={() => setActiveTab("chat")} className="font-black text-primary uppercase tracking-widest text-xs h-12 rounded-full border-2 border-primary/10 px-8">
-                  Ask AI specific questions about this student <MessageSquare className="w-4 h-4 ml-2" />
+                  Ask Coach Sunil specific questions about this student <MessageSquare className="w-4 h-4 ml-2" />
                 </Button>
               </div>
             </div>
@@ -396,7 +396,7 @@ export function AIAdvice({ store }: { store: any }) {
                   <Bot className="w-7 h-7 text-accent-foreground" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-black text-primary uppercase tracking-tight">Coach Assistant Chat</CardTitle>
+                  <CardTitle className="text-xl font-black text-primary uppercase tracking-tight">Coach Sunil Deshmukh's AI Assistant</CardTitle>
                   <div className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live Institutional AI Support
                   </div>
@@ -415,7 +415,7 @@ export function AIAdvice({ store }: { store: any }) {
                   {chatHistory.length === 0 && (
                     <div className="py-20 text-center space-y-4 opacity-30">
                       <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground" />
-                      <p className="font-black uppercase text-sm tracking-widest">Ask me anything about training or health</p>
+                      <p className="font-black uppercase text-sm tracking-widest">Ask Coach Sunil anything about training or health</p>
                     </div>
                   )}
                   {chatHistory.map((msg, idx) => (
@@ -463,7 +463,7 @@ export function AIAdvice({ store }: { store: any }) {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
-                    placeholder={language === 'Marathi' ? "कोचला प्रश्न विचारा..." : "Ask the coach a question..."}
+                    placeholder={language === 'Marathi' ? "कोचला प्रश्न विचारा..." : "Ask Coach Sunil a question..."}
                     className="flex-1 h-14 rounded-2xl border-2 px-6 font-bold shadow-inner focus-visible:ring-accent"
                   />
                   <Button 

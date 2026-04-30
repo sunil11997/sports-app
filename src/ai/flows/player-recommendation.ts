@@ -65,7 +65,7 @@ const playerRecommendationPrompt = ai.definePrompt({
   model: googleAI.model('gemini-2.5-flash'),
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
-  prompt: `You are an expert school sports coach and health advisor. Your task is to analyze a player's aggregated data and provide personalized recommendations for their athletic development and well-being.
+  prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. Your task is to analyze a player's aggregated data and provide your professional recommendations for their athletic development and well-being.
 
 IMPORTANT: You MUST provide all sections of your response in {{{language}}}.
 
@@ -92,12 +92,12 @@ Institutional Fitness Assessment:
 
 Health Context: {{{pastHealthIncidents}}}
 
-Based on this granular data, provide highly specific recommendations. 
+Based on this granular data, provide highly specific coaching recommendations. 
 Analyze which specific tests (e.g., endurance vs agility) or technical moves (for the selected sports) need more work. 
 
 IMPORTANT: Provide a detailed DIET PLAN section that addresses their BMI category and energy requirements for their specific sports. If they are underweight, focus on healthy mass building. If they have low endurance (based on 600m run), focus on stamina-boosting foods.
 
-Focus on actionable advice for training, health, nutrition, and performance improvement. Use a professional, encouraging tone suitable for a school environment.
+Focus on actionable advice for training, health, nutrition, and performance improvement. Use a professional, encouraging tone as Coach Sunil Deshmukh.
 `,
 });
 
