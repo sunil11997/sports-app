@@ -11,6 +11,7 @@ export interface Player {
   bloodGroup?: string;
   aadharNumber?: string;
   mobileNumber?: string;
+  generalRegisterNumber?: string;
   address?: string;
   aadharPhotoUrl?: string;
   sports: string[];

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -83,6 +82,7 @@ export function TournamentRosters({ store }: { store: any }) {
             .sr-col { width: 30px; text-align: center; }
             .std-col { width: 40px; text-align: center; }
             .age-col { width: 40px; text-align: center; }
+            .gr-col { width: 70px; text-align: center; }
           </style>
         </head>
         <body>
@@ -103,6 +103,7 @@ export function TournamentRosters({ store }: { store: any }) {
             <thead>
               <tr>
                 <th class="sr-col">SR</th>
+                <th class="gr-col">GR NO.</th>
                 <th>PLAYER NAME</th>
                 <th class="std-col">STD</th>
                 <th>DATE OF BIRTH</th>
@@ -114,6 +115,7 @@ export function TournamentRosters({ store }: { store: any }) {
               ${topTwelve.map((p, i) => `
                 <tr>
                   <td class="sr-col">${i + 1}</td>
+                  <td class="gr-col">${p.generalRegisterNumber || '-'}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td class="std-col">${p.std}</td>
                   <td>${p.dob ? format(new Date(p.dob), 'dd/MM/yyyy') : '-'}</td>
@@ -122,7 +124,7 @@ export function TournamentRosters({ store }: { store: any }) {
                 </tr>
               `).join('')}
               ${Array(Math.max(0, 12 - topTwelve.length)).fill(0).map((_, i) => `
-                <tr><td class="sr-col">${topTwelve.length + i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="sr-col">${topTwelve.length + i + 1}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               `).join('')}
             </tbody>
           </table>
@@ -226,7 +228,7 @@ export function TournamentRosters({ store }: { store: any }) {
                               <div className="flex flex-col">
                                 <span className="uppercase text-sm">{p.name}</span>
                                 <span className="text-[9px] text-muted-foreground uppercase font-black tracking-wider mt-1">
-                                  Std {p.std} • {p.aadharNumber ? `Aadhar: ${p.aadharNumber}` : 'No Aadhar'}
+                                  Std {p.std} • GR: {p.generalRegisterNumber || 'N/A'}
                                 </span>
                               </div>
                             </TableCell>

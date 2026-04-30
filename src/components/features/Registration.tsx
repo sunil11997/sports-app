@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState } from 'react';
@@ -12,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine } from 'lucide-react';
+import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +25,7 @@ const formSchema = z.object({
   height: z.string(),
   weight: z.string(),
   bloodGroup: z.string(),
+  generalRegisterNumber: z.string().min(1, "GR Number is required"),
   aadharNumber: z.string().length(12, "Aadhar must be exactly 12 digits").regex(/^\d+$/, "Only numbers allowed"),
   mobileNumber: z.string().length(10, "Mobile must be exactly 10 digits").regex(/^\d+$/, "Only numbers allowed"),
   address: z.string().min(5, "Address is too short"),
@@ -57,6 +57,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     dob: isMarathi ? 'जन्मतारीख' : 'Date of Birth',
     height: isMarathi ? 'उंची (cm)' : 'Height (cm)',
     weight: isMarathi ? 'वजन (kg)' : 'Weight (kg)',
+    grNumber: isMarathi ? 'जनरल रजिस्टर नंबर (GR No.)' : 'General Register Number (GR No.)',
     aadhar: isMarathi ? 'आधार कार्ड (१२ अंक)' : 'Aadhar Number (12 Digits)',
     mobile: isMarathi ? 'मोबाईल (१० अंक)' : 'Mobile Number (10 Digits)',
     address: isMarathi ? 'घरचा पत्ता' : 'Residential Address',
@@ -69,7 +70,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "", gender: "Male", std: "1", dob: "", height: "", weight: "",
-      bloodGroup: "None", aadharNumber: "", mobileNumber: "", address: "",
+      bloodGroup: "None", aadharNumber: "", mobileNumber: "", generalRegisterNumber: "", address: "",
       sports: [], history: "No", histDetail: "", medical: "", photoUrl: "", aadharPhotoUrl: ""
     },
   });
@@ -214,6 +215,11 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   <FormItem><FormLabel className="font-black text-primary uppercase text-[10px]">{t.std}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></FormItem>
+                )} />
+
+                <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
+                  <FormItem><FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ClipboardList className="w-3 h-3" /> {t.grNumber}</FormLabel>
+                  <FormControl><Input placeholder="e.g. GR-1234" className="h-12 font-black rounded-xl border-2" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
 
                 <FormField control={form.control} name="aadharNumber" render={({ field }) => (

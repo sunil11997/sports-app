@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, Eye } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, Eye, ClipboardList } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,8 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
   const filteredPlayers = useMemo(() => store.data.players.filter((p: any) => {
     const matchesCategory = p.category === targetCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (p.aadharNumber && p.aadharNumber.includes(searchTerm));
+      (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
+      (p.generalRegisterNumber && p.generalRegisterNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   }), [store.data.players, targetCategory, searchTerm]);
 
@@ -67,12 +68,13 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           </div>
           <table>
             <thead>
-              <tr><th>SR</th><th>NAME</th><th>GENDER</th><th>STD</th><th>AADHAR</th><th>MOBILE</th><th>ADDRESS</th></tr>
+              <tr><th>SR</th><th>GR NO.</th><th>NAME</th><th>GENDER</th><th>STD</th><th>AADHAR</th><th>MOBILE</th><th>ADDRESS</th></tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any, i: number) => `
                 <tr>
                   <td>${i + 1}</td>
+                  <td><strong>${p.generalRegisterNumber || '-'}</strong></td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td>${p.gender}</td>
                   <td>${p.std}</td>
@@ -90,6 +92,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
+    win?.print();
   };
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
@@ -103,7 +106,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search name or aadhar..." className="pl-9 h-10 rounded-xl" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+          <Input placeholder="Search name, GR or aadhar..." className="pl-9 h-10 rounded-xl" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
           <Button onClick={handlePrint} className="font-bold h-10 px-6 rounded-xl"><Printer className="w-4 h-4 mr-2" /> Print Sheet</Button>
         </div>
       </div>
@@ -112,6 +115,7 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/50 sticky top-0 z-20"><TableRow>
             <TableHead className="border-r h-12 px-2 text-center w-[50px]">SR</TableHead>
+            <TableHead className="border-r h-12 px-2 text-center w-[80px]">GR No.</TableHead>
             <TableHead className="border-r h-12 px-2 text-center w-[60px]">Photo</TableHead>
             <TableHead className="border-r h-12 px-4 min-w-[200px]">Name</TableHead>
             <TableHead className="border-r h-12 px-2 text-center w-[80px]">Std</TableHead>
@@ -121,10 +125,11 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
             <TableHead className="h-12 px-4 text-right w-[80px]">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-20 opacity-30 font-black uppercase">No records found</TableCell></TableRow> : 
+            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={11} className="text-center py-20 opacity-30 font-black uppercase">No records found</TableCell></TableRow> : 
             filteredPlayers.map((p: any, i: number) => (
               <TableRow key={p.id} className="h-14 hover:bg-primary/5">
                 <TableCell className="border-r text-center font-bold text-primary">{i+1}</TableCell>
+                <TableCell className="border-r text-center font-black text-xs text-emerald-700">{p.generalRegisterNumber || '-'}</TableCell>
                 <TableCell className="border-r text-center">
                   <Avatar className="w-10 h-10 mx-auto border shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
                     <AvatarImage src={p.photoUrl} className="object-cover" />
@@ -150,8 +155,9 @@ export function Dashboard({ store, section, language = 'English', t }: { store: 
           </DialogHeader>
           {editingPlayer && (
             <div className="p-8 grid grid-cols-2 gap-6">
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
+              <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 font-bold rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><ClipboardList className="w-3 h-3" /> GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-xl" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Fingerprint className="w-3 h-3" /> Aadhar</Label><Input maxLength={12} value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile</Label><Input maxLength={10} value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
               <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><MapPin className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
