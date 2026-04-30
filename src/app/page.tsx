@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -192,7 +191,7 @@ export default function WaghambaApp() {
           <ScrollArea className="flex-1 mt-2">
             <div className="pb-20">
               <TabsContent value="home" className="mt-0">{!schoolData.isLoaded ? <StatsSkeleton /> : <div className="space-y-6"><h2 className="text-3xl font-black text-primary uppercase">{selectedSection === 'sports' ? "Athlete Dashboard" : "Institutional Hub"}</h2><Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-2xl relative overflow-hidden"><div className="relative z-10 space-y-2"><p className="text-xs font-bold opacity-70 uppercase tracking-widest">Active Academic Year</p><h3 className="text-5xl font-black">{schoolData.selectedYear}</h3><div className="flex gap-4 pt-4"><div className="bg-white/10 p-4 rounded-2xl"><p className="text-[9px] font-black uppercase opacity-60">Total Registry</p><p className="text-2xl font-black">{schoolData.data.players.length}</p></div><div className="bg-white/10 p-4 rounded-2xl"><p className="text-[9px] font-black uppercase opacity-60">Activities Logged</p><p className="text-2xl font-black">{schoolData.data.activities.length}</p></div></div></div></Card></div>}</TabsContent>
-              <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} />}</TabsContent>
+              <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} onTabChange={setActiveTab} />}</TabsContent>
               <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
               <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
               <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
