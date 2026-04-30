@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload } from 'lucide-react';
+import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
@@ -46,6 +47,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
 
   const isGeneral = section === 'general';
   const isMarathi = language === 'Marathi';
@@ -77,25 +79,46 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
+  // Camera Synchronization Logic
+  useEffect(() => {
+    if (videoRef.current && stream && activeCam) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, activeCam]);
+
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+    // Stop any existing stream
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
+        video: { 
+          facingMode: mode, 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 } 
+        } 
       });
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-      }
+      setHasCameraPermission(true);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not access camera.' });
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Camera Access Denied', 
+        description: 'Please enable camera permissions in your browser settings to use this feature.' 
+      });
     }
   };
 
   const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
     setStream(null);
     setActiveCam(null);
   };
@@ -103,18 +126,24 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const takePhoto = () => {
     if (videoRef.current && canvasRef.current && activeCam) {
       const canvas = canvasRef.current;
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
+      
       if (ctx) {
         if (facingMode === 'user') {
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(videoRef.current, 0, 0);
+        ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') form.setValue('photoUrl', dataUrl);
-        else form.setValue('aadharPhotoUrl', dataUrl);
+        
+        if (activeCam === 'profile') {
+          form.setValue('photoUrl', dataUrl);
+        } else {
+          form.setValue('aadharPhotoUrl', dataUrl);
+        }
         stopCamera();
       }
     }
@@ -147,7 +176,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
       category: section === 'sports' ? 'athlete' : 'student',
     });
 
-    toast({ title: "Registration Successful", description: `${values.name} is now on the registry.` });
+    toast({ 
+      title: "Registration Successful", 
+      description: `${values.name} has been added to the institutional registry.` 
+    });
     form.reset();
   };
 
@@ -165,33 +197,54 @@ export function Registration({ store, section, language = 'English' }: { store: 
         </div>
       </CardHeader>
       <CardContent className="p-8">
+        {hasCameraPermission === false && (
+          <Alert variant="destructive" className="mb-6 rounded-2xl">
+            <ShieldAlert className="h-4 w-4" />
+            <AlertTitle>Camera Access Required</AlertTitle>
+            <AlertDescription>
+              We cannot access your camera. Please check your browser's site permissions for the Ashram Shala Hub.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-4 space-y-6">
                 <div className="space-y-2">
                   <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4" /> Identity Preview
+                    <ImageIcon className="w-4 h-4" /> Institutional ID Photo
                   </FormLabel>
-                  <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-inner">
+                  <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-inner group">
                     {activeCam === 'profile' ? (
-                      <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted 
+                        className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} 
+                      />
                     ) : form.watch('photoUrl') ? (
                       <img src={form.watch('photoUrl')} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground opacity-20">
                         <Camera className="w-12 h-12 mb-2" />
-                        <span className="text-[10px] font-black uppercase">No Photo</span>
+                        <span className="text-[10px] font-black uppercase">No Photo Captured</span>
                       </div>
                     )}
+                    
                     {activeCam === 'profile' && (
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
-                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-10 rounded-xl">SNAP</Button>
-                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-20">
+                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-12 rounded-xl shadow-lg active-scale">CAPTURE</Button>
+                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl shadow-lg"><XCircle className="w-6 h-6" /></Button>
                       </div>
                     )}
                   </div>
-                  {!activeCam && <Button type="button" onClick={() => startCamera('profile')} className="w-full bg-primary/5 text-primary border-2 border-primary/10 rounded-xl h-12 font-black uppercase text-[10px]">Open Camera</Button>}
+                  {!activeCam && (
+                    <Button type="button" onClick={() => startCamera('profile')} className="w-full bg-primary text-white rounded-xl h-12 font-black uppercase text-[10px] shadow-sm">
+                      <Camera className="w-4 h-4 mr-2" /> Open Profile Camera
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -200,24 +253,32 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   </FormLabel>
                   <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
                     {activeCam === 'aadhar' ? (
-                      <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted 
+                        className="w-full h-full object-cover" 
+                      />
                     ) : form.watch('aadharPhotoUrl') ? (
                       <img src={form.watch('aadharPhotoUrl')} alt="Aadhar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-30">
                         <Fingerprint className="w-8 h-8 mb-1" />
-                        <span className="text-[8px] font-black uppercase">Scan Aadhar</span>
+                        <span className="text-[8px] font-black uppercase">Click or Upload Card</span>
                       </div>
                     )}
                     {activeCam === 'aadhar' && (
-                      <div className="absolute bottom-2 left-0 right-0 flex justify-center px-4">
-                        <Button type="button" onClick={takePhoto} className="bg-accent text-accent-foreground font-black text-[9px] h-8 px-6 rounded-lg">CAPTURE CARD</Button>
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center px-4 z-20">
+                        <Button type="button" onClick={takePhoto} className="bg-accent text-accent-foreground font-black text-[9px] h-10 px-8 rounded-xl shadow-lg">SCAN CARD</Button>
                       </div>
                     )}
                   </div>
                   {!activeCam && (
                     <div className="flex gap-2">
-                      <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/10 rounded-xl h-12 font-black uppercase text-[10px]">Start Scanner</Button>
+                      <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/10 text-accent-foreground border-2 border-accent/20 rounded-xl h-12 font-black uppercase text-[10px]">
+                        <ScanLine className="w-4 h-4 mr-2" /> Scan Card
+                      </Button>
                       <Button type="button" onClick={() => aadharUploadRef.current?.click()} className="w-12 h-12 bg-primary/5 text-primary border-2 border-primary/10 rounded-xl p-0 flex items-center justify-center shadow-sm">
                         <Upload className="w-5 h-5" />
                       </Button>
@@ -229,35 +290,54 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
               <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem><FormLabel className="font-black text-primary uppercase text-[10px]">{t.studentName}</FormLabel>
-                  <FormControl><Input placeholder="Full Name" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className="font-black text-primary uppercase text-[10px]">{t.studentName}</FormLabel>
+                    <FormControl><Input placeholder="Official Name" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
 
                 <FormField control={form.control} name="std" render={({ field }) => (
-                  <FormItem><FormLabel className="font-black text-primary uppercase text-[10px]">{t.std}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></FormItem>
+                  <FormItem>
+                    <FormLabel className="font-black text-primary uppercase text-[10px]">{t.std}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                    </Select>
+                  </FormItem>
                 )} />
 
                 <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
-                  <FormItem><FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ClipboardList className="w-3 h-3" /> {t.grNumber}</FormLabel>
-                  <FormControl><Input placeholder="e.g. GR-1234" className="h-12 font-black rounded-xl border-2" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ClipboardList className="w-3 h-3" /> {t.grNumber}</FormLabel>
+                    <FormControl><Input placeholder="e.g. GR-1234" className="h-12 font-black rounded-xl border-2 bg-emerald-50/30" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
 
                 <FormField control={form.control} name="aadharNumber" render={({ field }) => (
-                  <FormItem><FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Fingerprint className="w-3 h-3" /> {t.aadhar}</FormLabel>
-                  <FormControl><Input maxLength={12} placeholder="1234 5678 9012" className="h-12 font-mono font-black text-lg text-center rounded-xl border-2" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Fingerprint className="w-3 h-3" /> {t.aadhar}</FormLabel>
+                    <FormControl><Input maxLength={12} placeholder="1234 5678 9012" className="h-12 font-mono font-black text-lg text-center rounded-xl border-2" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
 
                 <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                  <FormItem><FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Phone className="w-3 h-3" /> {t.mobile}</FormLabel>
-                  <FormControl><Input maxLength={10} placeholder="98XXXXXXXX" className="h-12 font-mono font-black text-lg text-center rounded-xl border-2" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Phone className="w-3 h-3" /> {t.mobile}</FormLabel>
+                    <FormControl><Input maxLength={10} placeholder="98XXXXXXXX" className="h-12 font-mono font-black text-lg text-center rounded-xl border-2" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
 
                 <div className="col-span-1 md:col-span-2">
                   <FormField control={form.control} name="address" render={({ field }) => (
-                    <FormItem><FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><MapPin className="w-3 h-3" /> {t.address}</FormLabel>
-                    <FormControl><Input placeholder="At. Post. Taluka, District, Pin" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem>
+                      <FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><MapPin className="w-3 h-3" /> {t.address}</FormLabel>
+                      <FormControl><Input placeholder="Permanent Village, Taluka, Pin Code" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )} />
                 </div>
 
@@ -278,16 +358,23 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
                 {!isGeneral && (
                   <div className="col-span-1 md:col-span-2 space-y-4">
-                    <FormLabel className="font-black text-primary uppercase text-[10px]">Select Games</FormLabel>
-                    <div className="grid grid-cols-3 gap-2 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10">
+                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Select Participating Games</FormLabel>
+                    <div className="grid grid-cols-3 gap-2 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10 shadow-inner">
                       {SPORTS_LIST.map(sport => (
                         <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
                           <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                            <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
-                              const curr = field.value || [];
-                              return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
-                            }}/></FormControl>
-                            <FormLabel className="text-[10px] font-bold uppercase">{sport}</FormLabel>
+                            <FormControl>
+                              <Checkbox 
+                                checked={field.value?.includes(sport)} 
+                                onCheckedChange={(checked) => {
+                                  const curr = field.value || [];
+                                  return checked 
+                                    ? field.onChange([...curr, sport]) 
+                                    : field.onChange(curr.filter(v => v !== sport))
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-[10px] font-bold uppercase cursor-pointer">{sport}</FormLabel>
                           </FormItem>
                         )} />
                       ))}
@@ -296,7 +383,11 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 )}
               </div>
             </div>
-            <div className="flex justify-end pt-8 border-t"><Button type="submit" className="bg-primary hover:bg-primary/90 text-white font-black px-16 h-16 rounded-2xl shadow-xl uppercase tracking-widest">{t.enrollBtn}</Button></div>
+            <div className="flex justify-end pt-8 border-t">
+              <Button type="submit" className="bg-primary hover:bg-primary/90 text-white font-black px-16 h-16 rounded-2xl shadow-xl uppercase tracking-widest active-scale">
+                {t.enrollBtn}
+              </Button>
+            </div>
           </form>
         </Form>
         <canvas ref={canvasRef} className="hidden" />
