@@ -137,9 +137,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry' : 'Athlete Roster'}</h2>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <Button variant="outline" onClick={() => onTabChange?.('promotion')} className="font-bold h-10 px-4 rounded-xl border-blue-200 text-blue-700 bg-blue-50/50">
-            <ArrowUpCircle className="w-4 h-4 mr-2" /> Promotion Hub
-          </Button>
+          {isGeneral && (
+            <Button variant="outline" onClick={() => onTabChange?.('promotion')} className="font-bold h-10 px-4 rounded-xl border-blue-200 text-blue-700 bg-blue-50/50">
+              <ArrowUpCircle className="w-4 h-4 mr-2" /> Promotion Hub
+            </Button>
+          )}
           <div className="relative flex-1 md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search name, GR or aadhar..." className="pl-9 h-10 rounded-xl" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
           <Button onClick={handlePrint} className="font-bold h-10 px-6 rounded-xl"><Printer className="w-4 h-4 mr-2" /> Print Sheet</Button>
@@ -184,7 +186,9 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   {!isGeneral && <TableCell className="border-r"><div className="flex flex-wrap gap-1">{(p.sports || []).map((s: any) => <Badge key={s} variant="outline" className="text-[8px] font-black border-accent text-primary px-1.5 py-0">{s}</Badge>)}</div></TableCell>}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => onTabChange?.('promotion')} title="Go to Promotion Hub" className="text-blue-600 hover:bg-blue-50"><ArrowUpCircle className="w-4 h-4" /></Button>
+                      {isGeneral && (
+                        <Button variant="ghost" size="icon" onClick={() => onTabChange?.('promotion')} title="Go to Promotion Hub" className="text-blue-600 hover:bg-blue-50"><ArrowUpCircle className="w-4 h-4" /></Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
@@ -217,7 +221,9 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <DialogFooter className="bg-muted/10 p-8 border-t">
             <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="font-black uppercase text-xs">Cancel</Button>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onTabChange?.('promotion')} className="border-blue-200 text-blue-700 font-black uppercase text-xs h-12 rounded-xl">Promotion Hub</Button>
+              {isGeneral && (
+                <Button variant="outline" onClick={() => onTabChange?.('promotion')} className="border-blue-200 text-blue-700 font-black uppercase text-xs h-12 rounded-xl">Promotion Hub</Button>
+              )}
               <Button onClick={handleUpdatePlayer} className="bg-primary px-12 font-black uppercase text-xs h-12 rounded-xl shadow-lg text-white">Save Changes</Button>
             </div>
           </DialogFooter>
