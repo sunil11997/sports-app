@@ -28,7 +28,10 @@ import {
   ChevronLeft,
   ShieldCheck,
   Lock,
-  Loader2
+  Loader2,
+  FileText,
+  History as HistoryIcon,
+  HeartPulse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,6 +51,11 @@ const TournamentRosters = dynamic(() => import('@/components/features/Tournament
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(mod => mod.ClassesSection), { ssr: false, loading: () => <StatsSkeleton /> });
 const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
 const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(mod => mod.PromotionHub), { ssr: false, loading: () => <StatsSkeleton /> });
+const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { ssr: false, loading: () => <TableSkeleton /> });
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
+const SportsDrills = dynamic(() => import('@/components/features/SportsDrills').then(mod => mod.SportsDrills), { ssr: false, loading: () => <TableSkeleton /> });
+const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
+const HistoryView = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
 
 const translations = {
   English: {
@@ -106,6 +114,11 @@ export default function WaghambaApp() {
     { id: "tournament", label: t.tourney, icon: Trophy },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "fitness", label: t.fitness, icon: Activity },
+    { id: "skills", label: t.skills, icon: Medal },
+    { id: "drills", label: t.drills, icon: Zap },
+    { id: "health", label: t.health, icon: HeartPulse },
+    { id: "history", label: t.history, icon: HistoryIcon },
+    { id: "report", label: t.report, icon: FileText },
     { id: "ai", label: t.aiHub, icon: Sparkles },
     { id: "settings", label: t.settings, icon: SettingsIcon },
   ];
@@ -257,14 +270,14 @@ export default function WaghambaApp() {
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-1 mx-8 flex-1 justify-center">
+          <div className="hidden md:flex items-center gap-1 mx-8 flex-1 justify-center overflow-x-auto scrollbar-hide">
             {currentTabs.map((tab) => (
               <Button
                 key={tab.id}
                 variant="ghost"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "rounded-full h-10 px-6 font-black uppercase text-[10px] tracking-widest transition-all",
+                  "rounded-full h-10 px-6 font-black uppercase text-[10px] tracking-widest transition-all whitespace-nowrap",
                   activeTab === tab.id ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted"
                 )}
               >
@@ -375,6 +388,11 @@ export default function WaghambaApp() {
             <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
             <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
+            <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} />}</TabsContent>
+            <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
+            <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} />}</TabsContent>
+            <TabsContent value="history" className="mt-0">{activeTab === "history" && <HistoryView store={schoolData} section={selectedSection!} />}</TabsContent>
+            <TabsContent value="report" className="mt-0">{activeTab === "report" && <DailyReport store={schoolData} />}</TabsContent>
             <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
             <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
             <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>
