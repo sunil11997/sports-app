@@ -8,6 +8,7 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 /**
  * initializeFirebase - Institutional Registry Engine
  * Optimized for server-safety and robust offline persistence.
+ * Uses persistentMultipleTabManager to ensure data is synced across instances.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;

@@ -58,7 +58,6 @@ export function useSchoolData() {
         const pId = data.playerId;
         if (!pId) return;
 
-        // Safer timestamp comparison for latest record
         const currentLatest = latestMap[pId];
         const hasNewerUpdate = !currentLatest || 
           (data.updatedAt && currentLatest.updatedAt && new Date(data.updatedAt) > new Date(currentLatest.updatedAt));

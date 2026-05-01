@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -25,10 +24,24 @@ const CATEGORIES = [
 
 export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
-  const [assessments, setAssessments] = useState<Record<string, any>>(store.data.fitness);
+  const [assessments, setAssessments] = useState<Record<string, any>>({});
   const [activeCategory, setActiveCategory] = useState("all");
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
+
+  // Auto-sync local state when store data arrives from Firestore
+  useEffect(() => {
+    if (store.isLoaded && store.data.fitness) {
+      setAssessments(prev => {
+        // Only update if current local state is mostly empty or data has changed
+        const newMap = { ...prev };
+        Object.entries(store.data.fitness).forEach(([id, data]) => {
+          if (!newMap[id]) newMap[id] = data;
+        });
+        return newMap;
+      });
+    }
+  }, [store.isLoaded, store.data.fitness]);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
@@ -140,15 +153,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
     const finalAssessment = { ...current, status };
     store.setFitness(id, finalAssessment);
-    setAssessments(prev => ({ ...prev, [id]: finalAssessment }));
     
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
 
     toast({ 
-      title: "Performance Data Synced", 
-      description: `Endurance (${endurance}%) and Strength (${strength}%) archived for ${player.name}.`,
+      title: "Data Synced to Cloud", 
+      description: `${player.name}'s performance metrics have been archived.`,
     });
   };
 
@@ -240,7 +252,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         <div className="flex items-center gap-2">
           {!isGeneral && (
             <Badge variant="outline" className="bg-white border-2 border-accent text-accent-foreground font-black uppercase text-[9px] px-3 h-9 hidden md:flex items-center gap-2">
-              <ShieldAlert className="w-3 h-3" /> Auto-Scoring Engine Active
+              <ShieldAlert className="w-3 h-3" /> Auto-Scoring Active
             </Badge>
           )}
           <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary hover:bg-primary/90">
@@ -268,7 +280,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Endurance</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Endur.</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Strength</TableHead>
                 </>
               )}
@@ -285,7 +297,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               </TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
-                const current = assessments[player.id] || {};
+                const current = assessments[player.id] || store.data.fitness[player.id] || {};
                 const { strength, endurance } = !isGeneral ? calculateAutoScores(player.id) : { strength: 0, endurance: 0 };
                 const isPulse = lastSavedId === player.id;
                 
