@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 0 0% 10%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
@@ -12,7 +12,7 @@
     --popover-foreground: 0 0% 10%;
     --primary: 142 69% 25%; /* Institutional Dark Green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
+    --secondary: 0 0% 92%;
     --secondary-foreground: 0 0% 0%;
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
@@ -23,7 +23,7 @@
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 142 69% 25%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
   }
 
   .dark {
@@ -56,51 +56,44 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none; /* Prevents unwanted pull-to-refresh on some mobile browsers */
+    overscroll-behavior-y: none;
   }
 }
 
 @layer utilities {
-  .ios-spring {
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  .google-nav-item {
+    @apply flex flex-col items-center justify-center gap-1 transition-all duration-200 py-1;
   }
   
-  .ios-blur {
-    @apply backdrop-blur-2xl bg-white/90;
+  .google-nav-icon {
+    @apply w-14 h-8 flex items-center justify-center rounded-full transition-colors duration-200;
   }
 
-  .ios-card-shadow {
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 5px 15px -5px rgba(0, 0, 0, 0.02);
+  .google-nav-item[data-active=true] .google-nav-icon {
+    @apply bg-primary/10 text-primary;
+  }
+
+  .google-nav-item[data-active=true] .google-nav-label {
+    @apply font-black text-primary;
+  }
+
+  .google-card {
+    @apply bg-white rounded-[2rem] border-none shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.06)] hover:shadow-lg transition-shadow duration-300;
+  }
+
+  .ios-blur {
+    @apply backdrop-blur-2xl bg-white/80;
   }
 
   .active-scale {
     @apply active:scale-[0.97] transition-transform duration-150;
   }
 
-  .ios-list-item {
-    @apply flex items-center justify-between py-4 px-5 bg-white active:bg-muted/50 transition-colors border-b last:border-b-0 border-muted;
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
-
-  .animate-success-pulse {
-    animation: success-pulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-
-  @keyframes success-pulse {
-    0%, 100% { background-color: transparent; }
-    50% { background-color: hsl(var(--accent) / 0.2); }
-  }
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Allow native-like scrolling for the app content */
-.app-content-scroll {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
 }

@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, Camera, MapPin, ClipboardList, ArrowUpCircle } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, MapPin, ClipboardList } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -77,44 +77,29 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background: #f4f4f4; font-weight: bold; text-transform: uppercase; }
-            .status-cell { font-weight: bold; text-transform: uppercase; font-size: 9px; }
-            .btn { display: inline-block; padding: 10px 20px; background: #235C36; color: white; text-decoration: none; border-radius: 5px; font-weight: 900; margin-bottom: 20px; }
           </style>
         </head>
         <body>
-          <div class="no-print" style="text-align: right;"><a href="javascript:window.close()" class="btn">RETURN TO HUB</a></div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div style="font-weight: 800;">${isGeneral ? 'GENERAL STUDENT REGISTRY' : 'ACTIVE ATHLETE ROSTER'} - ${store.selectedYear}</div>
+            <div style="font-weight: 800;">${isGeneral ? 'GENERAL REGISTRY' : 'ATHLETE ROSTER'} - ${store.selectedYear}</div>
           </div>
           <table>
             <thead>
-              <tr>
-                <th>SR</th>
-                <th>GR NO.</th>
-                <th>NAME</th>
-                <th>STD</th>
-                <th>HT/WT</th>
-                <th>BMI</th>
-                <th>HEALTH</th>
-                ${!isGeneral ? '<th>GAMES</th>' : '<th>AADHAR</th>'}
-              </tr>
+              <tr><th>SR</th><th>GR NO.</th><th>NAME</th><th>STD</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
             </thead>
             <tbody>
-              ${filteredPlayers.map((p: any, i: number) => {
-                const health = getHealthStatus(p.bmi);
-                return `
+              ${filteredPlayers.map((p: any, i: number) => `
                 <tr>
                   <td>${i + 1}</td>
-                  <td><strong>${p.generalRegisterNumber || '-'}</strong></td>
+                  <td>${p.generalRegisterNumber || '-'}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td>${p.std}</td>
                   <td>${p.height}/${p.weight}</td>
                   <td>${p.bmi}</td>
-                  <td class="status-cell">${health.label}</td>
-                  <td>${!isGeneral ? (p.sports || []).join(', ') : (p.aadharNumber || '-')}</td>
+                  <td>${getHealthStatus(p.bmi).label}</td>
                 </tr>
-              `}).join('')}
+              `).join('')}
             </tbody>
           </table>
           <script>window.print();</script>
@@ -131,66 +116,62 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm">
         <div className="flex items-center gap-3">
-          {isGeneral ? <GraduationCap className="w-6 h-6 text-primary" /> : <Medal className="w-6 h-6 text-accent" />}
+          <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center shadow-inner">
+            {isGeneral ? <GraduationCap className="w-5 h-5 text-primary" /> : <Medal className="w-5 h-5 text-primary" />}
+          </div>
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry' : 'Athlete Roster'}</h2>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          {isGeneral && (
-            <Button variant="outline" onClick={() => onTabChange?.('promotion')} className="font-bold h-10 px-4 rounded-xl border-blue-200 text-blue-700 bg-blue-50/50">
-              <ArrowUpCircle className="w-4 h-4 mr-2" /> Promotion Hub
-            </Button>
-          )}
-          <div className="relative flex-1 md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search name, GR or aadhar..." className="pl-9 h-10 rounded-xl" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-          <Button onClick={handlePrint} className="font-bold h-10 px-6 rounded-xl"><Printer className="w-4 h-4 mr-2" /> Print Sheet</Button>
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search name or GR number..." className="pl-9 h-11 rounded-full bg-muted/30 border-none focus-visible:ring-primary shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+          <Button onClick={handlePrint} size="icon" variant="outline" className="rounded-full h-11 w-11 hover:bg-primary/5 border-muted"><Printer className="w-4 h-4" /></Button>
         </div>
       </div>
 
-      <div className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm overflow-x-auto">
+      <div className="google-card overflow-hidden overflow-x-auto">
         <Table className="min-w-max border-collapse">
-          <TableHeader className="bg-muted/50 sticky top-0 z-20"><TableRow>
-            <TableHead className="border-r h-12 px-2 text-center w-[50px]">SR</TableHead>
-            <TableHead className="border-r h-12 px-2 text-center w-[80px]">GR No.</TableHead>
-            <TableHead className="border-r h-12 px-2 text-center w-[60px]">Photo</TableHead>
-            <TableHead className="border-r h-12 px-4 min-w-[200px]">Name</TableHead>
-            <TableHead className="border-r h-12 px-2 text-center w-[80px]">Std</TableHead>
-            <TableHead className="border-r h-12 px-2 text-center w-[60px]">BMI</TableHead>
-            <TableHead className="border-r h-12 px-4 text-center w-[120px]">Health Status</TableHead>
-            {!isGeneral && <TableHead className="border-r h-12 px-4 min-w-[150px]">Games</TableHead>}
-            <TableHead className="h-12 px-4 text-right w-[150px]">Actions</TableHead>
+          <TableHeader className="bg-muted/30"><TableRow>
+            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[60px]">SR</TableHead>
+            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
+            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Standard</TableHead>
+            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">BMI Index</TableHead>
+            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Status</TableHead>
+            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Edit</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={11} className="text-center py-20 opacity-30 font-black uppercase">No records found</TableCell></TableRow> : 
+            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow> : 
             filteredPlayers.map((p: any, i: number) => {
               const health = getHealthStatus(p.bmi);
               return (
-                <TableRow key={p.id} className="h-14 hover:bg-primary/5">
-                  <TableCell className="border-r text-center font-bold text-primary">{i+1}</TableCell>
-                  <TableCell className="border-r text-center font-black text-xs text-emerald-700">{p.generalRegisterNumber || '-'}</TableCell>
-                  <TableCell className="border-r text-center">
-                    <Avatar className="w-10 h-10 mx-auto border shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
-                      <AvatarImage src={p.photoUrl} className="object-cover" />
-                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                    </Avatar>
+                <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
+                  <TableCell className="px-6 text-[11px] font-black text-muted-foreground/50">{i+1}</TableCell>
+                  <TableCell className="px-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-11 h-11 border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
+                        <AvatarImage src={p.photoUrl} className="object-cover" />
+                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">GR: {p.generalRegisterNumber || 'N/A'}</p>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="border-r font-black text-xs uppercase">{p.name}<div className="text-[8px] opacity-40 leading-none mt-1">{p.address}</div></TableCell>
-                  <TableCell className="border-r text-center font-bold">{p.std}</TableCell>
-                  <TableCell className="border-r text-center font-mono font-black text-xs">{p.bmi}</TableCell>
-                  <TableCell className="border-r text-center">
-                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase px-3 py-0.5 border-2", health.color)}>
+                  <TableCell className="px-4 text-center">
+                    <Badge variant="outline" className="rounded-full px-3 py-0.5 border-muted text-[10px] font-black text-muted-foreground">Std {p.std}</Badge>
+                  </TableCell>
+                  <TableCell className="px-4 text-center font-mono font-black text-xs text-primary/70">{p.bmi}</TableCell>
+                  <TableCell className="px-4 text-center">
+                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase px-3 py-1 rounded-full border-2", health.color)}>
                       {health.label}
                     </Badge>
                   </TableCell>
-                  {!isGeneral && <TableCell className="border-r"><div className="flex flex-wrap gap-1">{(p.sports || []).map((s: any) => <Badge key={s} variant="outline" className="text-[8px] font-black border-accent text-primary px-1.5 py-0">{s}</Badge>)}</div></TableCell>}
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      {isGeneral && (
-                        <Button variant="ghost" size="icon" onClick={() => onTabChange?.('promotion')} title="Go to Promotion Hub" className="text-blue-600 hover:bg-blue-50"><ArrowUpCircle className="w-4 h-4" /></Button>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
-                    </div>
+                  <TableCell className="px-6 text-right">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
                   </TableCell>
                 </TableRow>
               );
@@ -199,42 +180,52 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         </Table>
       </div>
 
+      {/* Edit Dialog - Google Style */}
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
-        <DialogContent className="sm:max-w-[600px] rounded-3xl p-0 overflow-hidden">
-          <DialogHeader className="bg-primary/5 p-8 border-b">
-            <DialogTitle className="text-xl font-black uppercase text-primary">Edit Registry Record</DialogTitle>
+        <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="bg-primary/5 p-10 border-b">
+            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mx-auto mb-4 border">
+              <Edit className="w-6 h-6 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Edit Student Record</DialogTitle>
           </DialogHeader>
           {editingPlayer && (
-            <div className="p-8 grid grid-cols-2 gap-6">
-              <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl border-2" /></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 font-bold rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}<SelectItem value="Graduated">Graduated</SelectItem></SelectContent></Select></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><ClipboardList className="w-3 h-3" /> GR Number</Label><Input maxLength={15} value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-xl" /></div>
-              
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" maxLength={3} value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-xl" /></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" maxLength={3} value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-xl" /></div>
-
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Fingerprint className="w-3 h-3" /> Aadhar</Label><Input maxLength={12} value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile</Label><Input maxLength={10} value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 font-mono font-black" /></div>
-              <div className="col-span-2 space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><MapPin className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 font-bold rounded-xl" /></div>
+            <div className="p-10 grid grid-cols-2 gap-8">
+              <div className="col-span-2 space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
+                <Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-2xl bg-muted/30 border-none shadow-inner" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Standard</Label>
+                <Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}>
+                  <SelectTrigger className="h-12 font-bold rounded-2xl bg-muted/30 border-none"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-2xl">{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">GR Number</Label>
+                <Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Height (cm)</Label>
+                <Input type="number" maxLength={3} value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Weight (kg)</Label>
+                <Input type="number" maxLength={3} value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
+              </div>
             </div>
           )}
-          <DialogFooter className="bg-muted/10 p-8 border-t">
-            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="font-black uppercase text-xs">Cancel</Button>
-            <div className="flex gap-2">
-              {isGeneral && (
-                <Button variant="outline" onClick={() => onTabChange?.('promotion')} className="border-blue-200 text-blue-700 font-black uppercase text-xs h-12 rounded-xl">Promotion Hub</Button>
-              )}
-              <Button onClick={handleUpdatePlayer} className="bg-primary px-12 font-black uppercase text-xs h-12 rounded-xl shadow-lg text-white">Save Changes</Button>
-            </div>
+          <DialogFooter className="bg-muted/10 p-10 flex gap-3">
+            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-8 font-black uppercase text-[10px]">Cancel</Button>
+            <Button onClick={handleUpdatePlayer} className="bg-primary px-12 rounded-full font-black uppercase text-[10px] shadow-lg text-white">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!viewingPhoto} onOpenChange={() => setViewingPhoto(null)}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem]">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Student Identity Photo</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[3rem] border-none shadow-2xl">
+          <DialogHeader className="sr-only"><DialogTitle>Identity Photo</DialogTitle></DialogHeader>
           {viewingPhoto && <img src={viewingPhoto} alt="Student" className="w-full aspect-[3/4] object-cover" />}
         </DialogContent>
       </Dialog>
