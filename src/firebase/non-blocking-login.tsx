@@ -8,12 +8,36 @@ import {
   GoogleAuthProvider,
   linkWithPopup,
   signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance);
+}
+
+/** Initiate Google Sign-In (Pop-up). */
+export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  
+  try {
+    const currentUser = authInstance.currentUser;
+    if (currentUser && currentUser.isAnonymous) {
+      // If user is currently anonymous, link the Google account to preserve data
+      await linkWithPopup(currentUser, provider);
+    } else {
+      // Otherwise, standard sign in
+      await signInWithPopup(authInstance, provider);
+    }
+  } catch (error: any) {
+    // If linking fails because account exists, just sign in normally
+    if (error.code === 'auth/credential-already-in-use') {
+      await signInWithPopup(authInstance, provider);
+    } else {
+      throw error;
+    }
+  }
 }
 
 /** Initiate email/password sign-up (non-blocking). */
@@ -28,40 +52,7 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
 
 /** 
  * Initiate Sign Out. 
- * Returns a promise for UI handling.
  */
 export function initiateSignOut(authInstance: Auth): Promise<void> {
   return signOut(authInstance);
-}
-
-/** 
- * Initiate Google Backup (linking/signing with Google).
- * This allows an anonymous user to upgrade their account and backup data to Google.
- */
-export async function initiateGoogleBackup(authInstance: Auth): Promise<void> {
-  const provider = new GoogleAuthProvider();
-  // Ensure we have a fresh provider instance and set custom parameters if needed
-  provider.setCustomParameters({ prompt: 'select_account' });
-  
-  const currentUser = authInstance.currentUser;
-  
-  if (currentUser) {
-    // Check if already linked to Google to avoid redundant calls or errors
-    const isAlreadyLinked = currentUser.providerData.some(p => p.providerId === 'google.com');
-    if (isAlreadyLinked) {
-      return; 
-    }
-    
-    // If signed in anonymously, link the account
-    // This will throw auth/credential-already-in-use if the Google account is already a user
-    try {
-      await linkWithPopup(currentUser, provider);
-    } catch (error: any) {
-      // Re-throw to be handled by the UI
-      throw error;
-    }
-  } else {
-    // If not signed in at all, perform a standard sign-in
-    await signInWithPopup(authInstance, provider);
-  }
 }

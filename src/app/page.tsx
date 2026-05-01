@@ -23,15 +23,17 @@ import {
   ArrowUpCircle, 
   Cake, 
   PartyPopper,
-  Search,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  ShieldCheck,
+  Lock,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { useAuth, useUser } from '@/firebase';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { initiateAnonymousSignIn, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
@@ -53,7 +55,7 @@ const translations = {
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session",
-    enter: "ACCESS HUB", onlineStatus: "Online", offlineStatus: "Local"
+    enter: "ACCESS HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Syncs registry to your Google Account", onlineStatus: "Online", offlineStatus: "Local"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -61,14 +63,14 @@ const translations = {
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
     home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र",
-    enter: "प्रवेश करा", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
+    enter: "प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "तुमचा डेटा गूगल खात्यावर सेव्ह होईल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
 };
 
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
-  const [isEntered, setIsEntered] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
@@ -80,15 +82,25 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    if (!user && !isUserLoading) initiateAnonymousSignIn(auth);
-    
     // Auto-dismiss splash after 2.5 seconds
     const timer = setTimeout(() => setShowSplash(false), 2500);
     return () => clearTimeout(timer);
-  }, [user, isUserLoading, auth]);
+  }, []);
 
   const t = translations[language];
   const LOGO_PATH = "/icon-512.png";
+
+  const handleGoogleLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    try {
+      await initiateGoogleSignIn(auth);
+    } catch (error) {
+      console.error("Login Error:", error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
@@ -144,25 +156,66 @@ export default function WaghambaApp() {
     );
   }
 
-  if (!isEntered) {
+  const isFullyAuthenticated = user && !user.isAnonymous;
+
+  if (!isFullyAuthenticated) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="max-w-xl w-full text-center space-y-8 relative z-10">
-          <div className="relative mx-auto w-56 h-56 group cursor-pointer" onClick={() => setIsEntered(true)}>
-            <div className="absolute inset-0 bg-primary/10 rounded-[3rem] rotate-6 group-hover:rotate-12 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-accent/10 rounded-[3rem] -rotate-3 group-hover:-rotate-6 transition-transform duration-500" />
-            <div className="relative z-10 bg-white p-6 rounded-[3rem] shadow-2xl border-2 border-primary/5 active-scale">
+        <div className="max-w-xl w-full text-center space-y-12 relative z-10">
+          <div className="relative mx-auto w-48 h-48">
+            <div className="absolute inset-0 bg-primary/10 rounded-[3rem] rotate-6" />
+            <div className="relative z-10 bg-white p-6 rounded-[3rem] shadow-2xl border-2 border-primary/5">
               <Image src={LOGO_PATH} alt="App Logo" width={200} height={200} priority unoptimized className="object-contain w-full h-full" />
             </div>
           </div>
-          <div className="space-y-4 animate-in fade-in duration-1000">
-            <div className="space-y-1">
-              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tighter uppercase leading-tight">{t.schoolName}</h1>
+          <div className="space-y-6 animate-in fade-in duration-1000">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-black text-primary tracking-tighter uppercase leading-tight">{t.schoolName}</h1>
               <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">Institutional Management Hub</p>
             </div>
-            <Button onClick={() => setIsEntered(true)} className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xl h-20 rounded-[1.5rem] shadow-xl active-scale mt-8">
-              {t.enter} <ArrowRight className="ml-3 w-6 h-6" />
-            </Button>
+            
+            <div className="space-y-4 pt-4">
+              <Button 
+                onClick={handleGoogleLogin} 
+                disabled={isLoggingIn}
+                className="w-full bg-white text-foreground hover:bg-muted border-2 border-primary/10 h-20 rounded-[1.5rem] shadow-lg active-scale group"
+              >
+                {isLoggingIn ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                ) : (
+                  <>
+                    <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
+                      <path fill="#EA4335" d="M12 5.04c1.94 0 3.51.67 4.7 1.8l3.5-3.5C17.84 1.25 15.19 0 12 0 7.33 0 3.32 2.67 1.28 6.59l4.13 3.21C6.4 7.09 9.02 5.04 12 5.04z" />
+                      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.71 2.88c2.17-1.99 3.42-4.93 3.42-8.7z" />
+                      <path fill="#FBBC05" d="M5.41 14.62c-.24-.69-.37-1.42-.37-2.18s.13-1.49.37-2.18L1.28 6.59C.46 8.23 0 10.06 0 12s.46 3.77 1.28 5.41l4.13-3.21z" />
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.71-2.88c-1.03.69-2.35 1.1-4.22 1.1-3.15 0-5.81-2.13-6.76-4.99l-4.13 3.21C3.32 21.33 7.33 24 12 24z" />
+                    </svg>
+                    <div className="text-left">
+                      <span className="block font-black text-lg uppercase leading-none">{t.googleLogin}</span>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{t.syncNote}</span>
+                    </div>
+                  </>
+                )}
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-muted-foreground font-black tracking-widest">OR</span></div>
+              </div>
+
+              <Button 
+                variant="ghost" 
+                onClick={() => { initiateAnonymousSignIn(auth); setSelectedSection(null); }} 
+                className="w-full h-12 rounded-xl text-muted-foreground font-black text-[10px] uppercase tracking-widest"
+              >
+                Enter Without Sync (Local Only)
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 opacity-40">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            <span className="text-[8px] font-black uppercase tracking-[0.3em]">Encrypted Institutional Standard</span>
           </div>
         </div>
       </div>
@@ -213,7 +266,7 @@ export default function WaghambaApp() {
               <div className="flex items-center gap-1.5 mt-0.5 ml-5">
                 <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">
-                  {isOnline ? "Syncing" : "Local Mode"}
+                  {isOnline ? "Syncing to Google" : "Local Mode"}
                 </span>
               </div>
             </div>

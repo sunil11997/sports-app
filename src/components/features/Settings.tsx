@@ -12,16 +12,22 @@ import {
   ShieldAlert,
   FileJson,
   Languages,
-  UserCheck
+  UserCheck,
+  LogOut,
+  Mail,
+  CloudCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { usePWA } from '@/components/providers/pwa-provider';
+import { initiateSignOut } from '@/firebase/non-blocking-login';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
   const auth = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const schoolData = useSchoolData();
   const { isOnline, isInstallable, installApp } = usePWA();
@@ -33,6 +39,15 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       title: language === 'Marathi' ? "डेटा एक्सपोर्ट झाला" : "Consolidated Registry Exported",
       description: language === 'Marathi' ? "तुमच्या शाळेचा संपूर्ण डेटा JSON फाईलमध्ये जतन केला आहे." : "A complete institutional JSON backup has been generated. Store this in your secure records."
     });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await initiateSignOut(auth);
+      window.location.reload();
+    } catch (error) {
+      toast({ title: "Logout Error", variant: "destructive" });
+    }
   };
 
   const SettingsItem = ({ icon: Icon, color, label, value, onClick, sublabel, disabled, accessory }: any) => (
@@ -63,7 +78,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-3 py-6">
-        <div className="w-24 h-24 rounded-full shadow-xl overflow-hidden relative mx-auto mb-4 border-0 bg-primary">
+        <div className="w-24 h-24 rounded-full shadow-xl overflow-hidden relative mx-auto mb-4 border-4 border-white bg-primary">
           <Image 
             src={LOGO_INAPP} 
             alt="App Logo" 
@@ -79,16 +94,26 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
-        {/* Administrator Info */}
+        {/* Administrator Info - Google Identity */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Institutional Lead</label>
-          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
-            <SettingsItem 
-              icon={UserCheck} 
-              color="bg-orange-500" 
-              label="Sunil Deshmukh" 
-              sublabel="Teacher Coach & PE Director"
-            />
+          <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border p-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-14 w-14 border-2 border-primary/10 shadow-sm">
+                <AvatarImage src={user?.photoURL || undefined} />
+                <AvatarFallback className="bg-primary text-white font-black">{user?.displayName?.[0] || 'T'}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-black text-primary uppercase text-lg leading-none">{user?.displayName || 'Sunil Deshmukh'}</p>
+                <div className="flex items-center gap-1 mt-1.5 opacity-60">
+                   <Mail className="w-3 h-3" />
+                   <span className="text-[10px] font-bold uppercase">{user?.email || 'ashramshala.waghamba@gmail.com'}</span>
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full text-muted-foreground hover:text-destructive">
+               <LogOut className="w-5 h-5" />
+            </Button>
           </div>
         </div>
 
@@ -99,6 +124,13 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </label>
           <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
             <SettingsItem 
+              icon={CloudCheck} 
+              color="bg-primary" 
+              label={language === 'Marathi' ? "गूगल क्लाउड सिंक" : "Google Cloud Sync"} 
+              sublabel={user?.isAnonymous ? "Currently running in local mode" : "Auto-update enabled for Google Account"}
+              value={user?.isAnonymous ? "Local" : "Active"}
+            />
+            <SettingsItem 
               icon={FileJson} 
               color="bg-indigo-500" 
               label={language === 'Marathi' ? "संपूर्ण बॅकअप घ्या" : "Consolidated Backup"} 
@@ -108,9 +140,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <SettingsItem 
               icon={Database} 
               color="bg-emerald-500" 
-              label={language === 'Marathi' ? "क्लाउड सिंक" : "Real-time Cloud Sync"} 
-              value={isOnline ? (language === 'Marathi' ? "सुरू आहे" : "Active") : (language === 'Marathi' ? "बंद आहे" : "Offline")}
-              sublabel={language === 'Marathi' ? "सुरक्षित नोंदणी संरक्षण" : "Encrypted registry protection"}
+              label={language === 'Marathi' ? "डेटाबेस स्थिती" : "Registry Health"} 
+              value={isOnline ? (language === 'Marathi' ? "सुरू आहे" : "Live") : (language === 'Marathi' ? "बंद आहे" : "Cached")}
+              sublabel={language === 'Marathi' ? "सुरक्षित नोंदणी संरक्षण" : "Real-time sync to registry"}
             />
           </div>
         </div>
@@ -121,7 +153,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <div className="ios-card-shadow rounded-3xl overflow-hidden bg-white border">
             <SettingsItem 
               icon={SmartphoneNfc} 
-              color="bg-primary" 
+              color="bg-orange-500" 
               label={language === 'Marathi' ? "फोनवर इंस्टॉल करा" : "Install on Phone"} 
               sublabel={isInstallable ? (language === 'Marathi' ? "ऑफलाईन वापरासाठी उपलब्ध" : "Available for offline use") : (language === 'Marathi' ? "वापरासाठी तयार" : "Ready for use")}
               disabled={!isInstallable}
