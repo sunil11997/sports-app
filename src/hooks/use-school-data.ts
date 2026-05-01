@@ -29,18 +29,17 @@ export function useSchoolData() {
   }, [db, user]);
   const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
-  // 3. Granular Registries (Attendance, Fitness, Skills, Drills)
+  // 3. Reactive Registries (Attendance, Fitness, Skills)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
-  const [drillCompletions, setDrillCompletions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!user || !db) return;
 
-    // A. Sync Attendance
+    // A. Reactive Attendance (Instant update across devices)
     const attQuery = query(
       collection(db, 'attendance_registry'), 
       where('schoolId', '==', user.uid),
@@ -53,9 +52,9 @@ export function useSchoolData() {
         newAtt[`${data.playerId}_${data.date}`] = data.status;
       });
       setAttendanceData(newAtt);
-    }, (err) => console.error("WGB-Att-Sync-Error:", err));
+    });
 
-    // B. Sync Fitness Assessments (latest & history)
+    // B. Reactive Fitness Assessments
     const fitQuery = query(
       collection(db, 'fitness_registry'), 
       where('schoolId', '==', user.uid),
@@ -74,9 +73,7 @@ export function useSchoolData() {
         const hasNewerUpdate = !currentLatest || 
           (data.updatedAt && currentLatest.updatedAt && new Date(data.updatedAt) > new Date(currentLatest.updatedAt));
 
-        if (hasNewerUpdate) {
-          latestMap[pId] = data;
-        }
+        if (hasNewerUpdate) latestMap[pId] = data;
         
         if (!historyMap[pId]) historyMap[pId] = [];
         historyMap[pId].push({ ...data, date: data.date || data.updatedAt?.split('T')[0] });
@@ -84,9 +81,9 @@ export function useSchoolData() {
 
       setFitnessData(latestMap);
       setFitnessHistory(historyMap);
-    }, (err) => console.error("WGB-Fit-Sync-Error:", err));
+    });
 
-    // C. Sync Sport Technical Skills
+    // C. Reactive Technical Skills
     const skillsQuery = query(
       collection(db, 'skills_registry'), 
       where('schoolId', '==', user.uid),
@@ -108,7 +105,7 @@ export function useSchoolData() {
 
       setSportSkillsData(skillsMap);
       setSkillsHistory(historyMap);
-    }, (err) => console.error("WGB-Skill-Sync-Error:", err));
+    });
 
     return () => {
       unsubAtt();
@@ -128,19 +125,7 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
-  // 5. Sync Coaching Drill Completions
-  const drillsSyncRef = useMemoFirebase(() => user ? query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid)) : null, [db, user]);
-  const { data: drillComps } = useCollection(drillsSyncRef);
-
-  useEffect(() => {
-    if (drillComps) {
-      const logs: Record<string, boolean> = {};
-      drillComps.forEach(d => { logs[d.id] = true; });
-      setDrillCompletions(logs);
-    }
-  }, [drillComps]);
-
-  // 6. Sync Class Activities
+  // 5. Sync Class Activities
   const activitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -150,6 +135,19 @@ export function useSchoolData() {
     );
   }, [db, user, selectedYear]);
   const { data: activities } = useCollection(activitiesQuery);
+
+  // 6. Drill Completions (Instant cross-device checkmarks)
+  const drillsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid));
+  }, [db, user]);
+  const { data: drillComps } = useCollection(drillsQuery);
+
+  const drillCompletions = useMemo(() => {
+    const logs: Record<string, boolean> = {};
+    if (drillComps) drillComps.forEach(d => { logs[d.id] = true; });
+    return logs;
+  }, [drillComps]);
 
   // Consolidated Data Object
   const aggregatedData = useMemo(() => ({
@@ -164,9 +162,9 @@ export function useSchoolData() {
     activities: activities || [],
     schoolProfile: schoolProfile || {
       schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-      teacherName: "सुनिल देशमुख (Sunil Deshmukh)",
-      taluka: "बागलाण",
-      district: "नाशिक",
+      teacherName: "Sunil Deshmukh",
+      taluka: "Satana",
+      district: "Nashik",
       id: "default",
       qualification: "B.P.Ed / M.P.Ed",
       role: "Physical Education Director",
@@ -174,7 +172,7 @@ export function useSchoolData() {
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
-  // Action Handlers (All keyed to user.uid)
+  // ACTION HANDLERS (Synchronized with user.uid)
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user) return;
     const profileRef = doc(db, 'schools', user.uid);
@@ -192,17 +190,11 @@ export function useSchoolData() {
     updateDocumentNonBlocking(docRef, player);
   }, [db]);
 
-  const deletePlayer = useCallback((id: string) => {
-    const docRef = doc(db, 'players', id);
-    deleteDocumentNonBlocking(docRef);
-  }, [db]);
-
   const setAttendance = useCallback((records: AttendanceRecord) => {
     if (!user) return;
     Object.entries(records).forEach(([key, status]) => {
       const [playerId, date] = key.split('_');
       if (!playerId || !date) return;
-      const player = aggregatedData.players.find(p => p.id === playerId);
       const attRef = doc(db, 'attendance_registry', `${playerId}_${date}`);
       if (!status) deleteDocumentNonBlocking(attRef);
       else setDocumentNonBlocking(attRef, { 
@@ -210,65 +202,51 @@ export function useSchoolData() {
         playerId, 
         date, 
         schoolId: user.uid, 
-        academicYear: selectedYear,
-        std: player?.std || "N/A"
+        academicYear: selectedYear 
       }, { merge: true });
     });
-  }, [db, user, selectedYear, aggregatedData.players]);
+  }, [db, user, selectedYear]);
 
   const setFitness = useCallback((playerId: string, assessment: FitnessAssessment) => {
     if (!user) return;
-    const timestamp = new Date().toISOString();
-    const dateId = timestamp.split('T')[0];
-    const refId = `${playerId}_${dateId}`;
-    const player = aggregatedData.players.find(p => p.id === playerId);
-    const fitnessRef = doc(db, 'fitness_registry', refId);
+    const dateId = new Date().toISOString().split('T')[0];
+    const fitnessRef = doc(db, 'fitness_registry', `${playerId}_${dateId}`);
     setDocumentNonBlocking(fitnessRef, { 
       ...assessment, 
       playerId, 
       schoolId: user.uid, 
       date: dateId, 
-      updatedAt: timestamp, 
-      academicYear: selectedYear,
-      std: assessment.std || player?.std || "N/A" 
+      updatedAt: new Date().toISOString(), 
+      academicYear: selectedYear 
     }, { merge: true });
-  }, [db, user, selectedYear, aggregatedData.players]);
+  }, [db, user, selectedYear]);
 
   const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
-    const refId = `${playerId}_${sport}`;
-    const player = aggregatedData.players.find(p => p.id === playerId);
-    const skillRef = doc(db, 'skills_registry', refId);
+    const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}`);
     setDocumentNonBlocking(skillRef, { 
       ...skill, 
       playerId, 
       sportName: sport, 
       schoolId: user.uid, 
       lastUpdated: new Date().toISOString(), 
-      academicYear: selectedYear,
-      std: player?.std || "N/A"
+      academicYear: selectedYear 
     }, { merge: true });
-  }, [db, user, selectedYear, aggregatedData.players]);
+  }, [db, user, selectedYear]);
 
   const setDrillCompletion = useCallback((drillId: string, playerId: string, completed: boolean) => {
     if (!user) return;
     const refId = `${playerId}_${drillId}`;
     const drillRef = doc(db, 'drill_completions', refId);
-    if (completed) setDocumentNonBlocking(drillRef, { schoolId: user.uid, playerId, drillId, timestamp: new Date().toISOString() }, { merge: true });
+    if (completed) setDocumentNonBlocking(drillRef, { id: refId, schoolId: user.uid, playerId, drillId, timestamp: new Date().toISOString() }, { merge: true });
     else deleteDocumentNonBlocking(drillRef);
   }, [db, user]);
 
   const addHealthIncident = useCallback((incident: HealthIncident) => {
     if (!user) return;
-    const player = aggregatedData.players.find(p => p.id === incident.playerId);
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
-    setDocumentNonBlocking(globalIncRef, { 
-      ...incident, 
-      schoolId: user.uid, 
-      academicYear: selectedYear,
-      std: player?.std || "N/A"
-    }, { merge: true });
-  }, [db, user, selectedYear, aggregatedData.players]);
+    setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+  }, [db, user, selectedYear]);
 
   const addActivity = useCallback((activityData: any) => {
     if (!user) return;
@@ -277,34 +255,25 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
 
   const deleteActivity = useCallback((id: string) => {
-    const docRef = doc(db, 'school_activities', id);
-    deleteDocumentNonBlocking(docRef);
+    deleteDocumentNonBlocking(doc(db, 'school_activities', id));
   }, [db]);
 
   const exportBackupData = useCallback(() => {
-    const backup = { 
-      timestamp: new Date().toISOString(), 
-      schoolName: schoolProfile?.schoolName || "Backup", 
-      academicYear: selectedYear,
-      registryCount: aggregatedData.players.length,
-      data: aggregatedData 
-    };
+    const backup = { data: aggregatedData, timestamp: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `wgb_sports_registry_${selectedYear}_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
+    a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [aggregatedData, schoolProfile, selectedYear]);
+  }, [aggregatedData]);
 
   return {
     data: aggregatedData,
     isLoaded: !playersLoading && !schoolsLoading,
     selectedYear,
     setSelectedYear,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
+    saveSchoolProfile, addPlayer, updatePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
   };
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -29,20 +30,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
-  // Auto-sync local state when store data arrives from Firestore
-  useEffect(() => {
-    if (store.isLoaded && store.data.fitness) {
-      setAssessments(prev => {
-        // Only update if current local state is mostly empty or data has changed
-        const newMap = { ...prev };
-        Object.entries(store.data.fitness).forEach(([id, data]) => {
-          if (!newMap[id]) newMap[id] = data;
-        });
-        return newMap;
-      });
-    }
-  }, [store.isLoaded, store.data.fitness]);
-
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
 
@@ -65,20 +52,9 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setAssessments(prev => ({
       ...prev,
       [id]: {
-        ...(prev[id] || { 
-          shuttleRun: '', 
-          run50m: '', 
-          run600m: '', 
-          sitAndReach: '', 
-          boardJump: '', 
-          sitUps: '', 
-          strengthScore: '',
-          enduranceScore: '',
-          score: '', 
-          status: '',
-          height: '',
-          weight: '',
-          examMarks: ''
+        ...(prev[id] || store.data.fitness[id] || { 
+          shuttleRun: '', run50m: '', run600m: '', sitAndReach: '', boardJump: '', sitUps: '', 
+          strengthScore: '', enduranceScore: '', score: '', status: '', height: '', weight: '', examMarks: ''
         }),
         [field]: value
       }
@@ -86,7 +62,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   };
 
   const calculateAutoScores = (id: string) => {
-    const current = assessments[id] || {};
+    const current = assessments[id] || store.data.fitness[id] || {};
     const situps = parseInt(current.sitUps) || 0;
     const boardJump = parseInt(current.boardJump) || 0;
     const situpsRating = Math.min(60, (situps / 35) * 60);
@@ -112,56 +88,36 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const handleSave = async (player: any) => {
     const id = player.id;
     const { strength, endurance } = calculateAutoScores(id);
-    const current = { ...(assessments[id] || {}) };
+    const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
     setIsSaving(id);
     
     let status = 'Logged';
-
     if (!isGeneral) {
       current.strengthScore = strength.toString();
       current.enduranceScore = endurance.toString();
-
-      const fields = ['shuttleRun', 'run50m', 'run600m', 'sitAndReach', 'boardJump', 'sitUps', 'strengthScore', 'enduranceScore'];
-      let sum = 0;
-      let count = 0;
-
+      const fields = ['shuttleRun', 'run50m', 'sitAndReach', 'boardJump', 'sitUps'];
+      let sum = (strength + endurance);
+      let count = 2;
       fields.forEach(f => {
-        if (f === 'run600m' || f === 'run50m' || f === 'shuttleRun') return;
         const val = parseFloat(current[f]);
-        if (!isNaN(val)) {
-          sum += (val > 100 ? 100 : val);
-          count++;
-        }
+        if (!isNaN(val)) { sum += (val > 100 ? 100 : val); count++; }
       });
-      
-      sum += (strength + endurance);
-      count += 2;
-
-      const calculatedScore = count > 0 ? Math.round(sum / count).toString() : "0";
-      const scoreNum = parseInt(calculatedScore);
-      
+      const scoreNum = count > 0 ? Math.round(sum / count) : 0;
+      current.score = scoreNum.toString();
       if (scoreNum >= 85) status = 'Level A (Elite)';
       else if (scoreNum >= 70) status = 'Level B (Advanced)';
       else if (scoreNum >= 50) status = 'Level C (Developing)';
-      else if (scoreNum > 0) status = 'Level D (Needs Support)';
-      
-      current.score = calculatedScore;
+      else status = 'Level D (Needs Support)';
     } else {
       status = 'Updated';
       current.score = current.examMarks || "0";
     }
 
-    const finalAssessment = { ...current, status };
-    store.setFitness(id, finalAssessment);
-    
+    store.setFitness(id, { ...current, status });
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
-
-    toast({ 
-      title: "Data Synced to Cloud", 
-      description: `${player.name}'s performance metrics have been archived.`,
-    });
+    toast({ title: "Instant Sync Complete", description: "Record archived across all devices." });
   };
 
   const handlePrint = () => {
@@ -217,9 +173,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     win?.print();
   };
 
-  if (!store.isLoaded) {
-    return <TableSkeleton rows={12} cols={10} />;
-  }
+  if (!store.isLoaded) return <TableSkeleton rows={12} cols={10} />;
 
   return (
     <div className="space-y-4">
@@ -255,14 +209,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               <ShieldAlert className="w-3 h-3" /> Auto-Scoring Active
             </Badge>
           )}
-          <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary hover:bg-primary/90">
+          <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary hover:bg-primary/90 text-white">
             <Printer className="w-4 h-4 mr-2" /> Print Sheet
           </Button>
         </div>
       </div>
 
-      <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm overflow-x-auto ios-card-shadow">
-        <Table className="border-collapse min-w-max">
+      <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm overflow-x-auto">
+        <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow className="border-b">
               <TableHead className="border-r h-10 px-4 font-black text-[11px] uppercase w-[180px] sticky left-0 bg-muted/95 z-30">Athlete</TableHead>
@@ -280,8 +234,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Endur.</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Auto Strength</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Endurance %</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Strength %</TableHead>
                 </>
               )}
               <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[120px]">Final Level</TableHead>
@@ -290,11 +244,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={15} className="text-center py-12 text-muted-foreground font-bold uppercase tracking-widest opacity-30">
-                  No records found in this category.
-                </TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={15} className="text-center py-12 text-muted-foreground font-bold uppercase tracking-widest opacity-30">No records found.</TableCell></TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness[player.id] || {};
@@ -302,14 +252,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 const isPulse = lastSavedId === player.id;
                 
                 return (
-                  <TableRow 
-                    key={player.id} 
-                    className={cn(
-                      "border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-12",
-                      isPulse && "animate-success-pulse"
-                    )}
-                  >
-                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
+                  <TableRow key={player.id} className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-12", isPulse && "animate-success-pulse")}>
+                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10">
                       <div className="flex flex-col">
                         <span className="text-primary uppercase truncate w-[140px]">{player.name}</span>
                         <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Std {player.std}</span>
@@ -318,36 +262,20 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                     
                     {isGeneral ? (
                       <>
-                        <TableCell className="border-r p-0">
-                          <Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} />
-                        </TableCell>
-                        <TableCell className="border-r p-0">
-                          <Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white rounded-none" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} />
-                        </TableCell>
-                        <TableCell className="border-r p-0">
-                          <Input className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white rounded-none" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} />
-                        </TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} /></TableCell>
                       </>
                     ) : (
                       <>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="S" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="S" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="M:S" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="CM" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="CM" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" placeholder="#" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0 text-center bg-accent/[0.03]">
-                          <span className={cn(
-                            "text-[10px] font-black",
-                            endurance >= 80 ? "text-green-600" : endurance >= 50 ? "text-orange-600" : "text-destructive"
-                          )}>{endurance}%</span>
-                        </TableCell>
-                        <TableCell className="border-r p-0 text-center bg-accent/[0.03]">
-                          <span className={cn(
-                            "text-[10px] font-black",
-                            strength >= 80 ? "text-green-600" : strength >= 50 ? "text-orange-600" : "text-destructive"
-                          )}>{strength}%</span>
-                        </TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0 text-center bg-accent/[0.03] text-[10px] font-black">{endurance}%</TableCell>
+                        <TableCell className="border-r p-0 text-center bg-accent/[0.03] text-[10px] font-black">{strength}%</TableCell>
                       </>
                     )}
 
@@ -357,8 +285,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                         <span className="text-[7px] font-black uppercase text-muted-foreground truncate w-full px-1">{current.status || 'Pending'}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10 ios-blur">
-                      <Button variant="ghost" size="icon" className="h-12 w-full rounded-none text-primary" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
+                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
+                      <Button variant="ghost" size="icon" className="h-12 w-full text-primary" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
                         {isSaving === player.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       </Button>
                     </TableCell>
