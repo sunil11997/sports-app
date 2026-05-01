@@ -69,7 +69,6 @@ const translations = {
 
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
@@ -82,9 +81,6 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    // Auto-dismiss splash after 2.5 seconds
-    const timer = setTimeout(() => setShowSplash(false), 2500);
-    return () => clearTimeout(timer);
   }, []);
 
   const t = translations[language];
@@ -137,48 +133,37 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
-  // Premium Splash Sequence
-  if (showSplash) {
+  const isFullyAuthenticated = user && !user.isAnonymous;
+
+  if (isUserLoading) {
     return (
-      <div className="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-1000">
-        <div className="relative w-64 h-64 splash-logo-pulse">
-          <div className="absolute inset-0 bg-primary/5 rounded-full blur-3xl" />
-          <Image src={LOGO_PATH} alt="Physical Education Logo" width={256} height={256} priority unoptimized className="relative z-10 drop-shadow-2xl" />
-        </div>
-        <div className="mt-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase leading-none">Waghamba Ashram Shala</h2>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-3 opacity-60">Physical Education Hub • V3.0</p>
-          <div className="w-16 h-1 bg-accent mx-auto mt-6 rounded-full overflow-hidden">
-             <div className="h-full bg-primary w-full animate-progress-fast" />
-          </div>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
       </div>
     );
   }
 
-  const isFullyAuthenticated = user && !user.isAnonymous;
-
   if (!isFullyAuthenticated) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="max-w-xl w-full text-center space-y-12 relative z-10">
-          <div className="relative mx-auto w-48 h-48">
-            <div className="absolute inset-0 bg-primary/10 rounded-[3rem] rotate-6" />
-            <div className="relative z-10 bg-white p-6 rounded-[3rem] shadow-2xl border-2 border-primary/5">
-              <Image src={LOGO_PATH} alt="App Logo" width={200} height={200} priority unoptimized className="object-contain w-full h-full" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="max-w-xl w-full text-center space-y-12 relative z-10 animate-in fade-in duration-1000">
+          <div className="relative mx-auto w-40 h-40">
+            <div className="absolute inset-0 bg-primary/5 rounded-[3rem] rotate-6" />
+            <div className="relative z-10 bg-white p-6 rounded-[3rem] shadow-xl border border-primary/5">
+              <Image src={LOGO_PATH} alt="App Logo" width={160} height={160} priority unoptimized className="object-contain w-full h-full" />
             </div>
           </div>
-          <div className="space-y-6 animate-in fade-in duration-1000">
+          <div className="space-y-6">
             <div className="space-y-2">
               <h1 className="text-4xl font-black text-primary tracking-tighter uppercase leading-tight">{t.schoolName}</h1>
-              <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">Institutional Management Hub</p>
+              <p className="text-muted-foreground font-black tracking-[0.4em] text-[9px] uppercase opacity-60">Institutional Management Hub</p>
             </div>
             
             <div className="space-y-4 pt-4">
               <Button 
                 onClick={handleGoogleLogin} 
                 disabled={isLoggingIn}
-                className="w-full bg-white text-foreground hover:bg-muted border-2 border-primary/10 h-20 rounded-[1.5rem] shadow-lg active-scale group"
+                className="w-full bg-white text-foreground hover:bg-muted border border-primary/10 h-20 rounded-[1.5rem] shadow-sm active-scale group"
               >
                 {isLoggingIn ? (
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -200,7 +185,7 @@ export default function WaghambaApp() {
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-muted-foreground font-black tracking-widest">OR</span></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground font-black tracking-widest">OR</span></div>
               </div>
 
               <Button 
@@ -215,7 +200,7 @@ export default function WaghambaApp() {
           
           <div className="flex items-center justify-center gap-2 opacity-40">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em]">Encrypted Institutional Standard</span>
+            <span className="text-[8px] font-black uppercase tracking-[0.3em]">Secure Institutional Standard</span>
           </div>
         </div>
       </div>
@@ -224,21 +209,21 @@ export default function WaghambaApp() {
 
   if (!selectedSection) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
-          <button onClick={() => setSelectedSection('sports')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary">
+          <button onClick={() => setSelectedSection('sports')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-xl transition-all active-scale group border border-transparent hover:border-primary/20">
             <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
               <Medal className="w-10 h-10 text-primary group-hover:text-white" />
             </div>
             <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Training & Excellence</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Training & Excellence</p>
           </button>
-          <button onClick={() => setSelectedSection('general')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary">
+          <button onClick={() => setSelectedSection('general')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-xl transition-all active-scale group border border-transparent hover:border-primary/20">
             <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
               <GraduationCap className="w-10 h-10 text-primary group-hover:text-white" />
             </div>
             <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Academic & Records</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Records</p>
           </button>
         </div>
       </div>
@@ -248,8 +233,7 @@ export default function WaghambaApp() {
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FA] pb-24 md:pb-0">
-      {/* Google Style Header */}
+    <div className="min-h-screen flex flex-col bg-background pb-24 md:pb-0 animate-in fade-in duration-1000">
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedSection(null)}>
@@ -265,8 +249,8 @@ export default function WaghambaApp() {
               </div>
               <div className="flex items-center gap-1.5 mt-0.5 ml-5">
                 <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">
-                  {isOnline ? "Syncing to Google" : "Local Mode"}
+                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest opacity-60">
+                  {isOnline ? "Syncing to Cloud" : "Local Mode"}
                 </span>
               </div>
             </div>
@@ -316,18 +300,18 @@ export default function WaghambaApp() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-2xl relative overflow-hidden group">
+                  <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden group">
                     <div className="relative z-10 space-y-6">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase opacity-70 tracking-[0.2em]">Institutional Hub</p>
+                        <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em]">Institutional Hub</p>
                         <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.length}</h3>
                         <p className="text-sm font-bold opacity-60">Total Enrolled Students</p>
                       </div>
-                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-xl">
+                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
                         <UserPlus className="w-4 h-4 mr-2" /> Add New Record
                       </Button>
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 group-hover:scale-105 transition-transform duration-1000" />
                   </Card>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -337,7 +321,7 @@ export default function WaghambaApp() {
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">{schoolData.data.activities.length}</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Activities Logged</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Activities Logged</p>
                       </div>
                     </Card>
                     <Card className="google-card p-8 flex flex-col justify-between">
@@ -346,35 +330,35 @@ export default function WaghambaApp() {
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">{schoolData.data.players.filter(p => p.category === 'athlete').length}</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Active Athletes</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Active Athletes</p>
                       </div>
                     </Card>
                   </div>
                 </div>
 
                 {selectedSection === 'general' && birthdaysToday.length > 0 && (
-                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border-2 border-accent/20">
+                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-md">
                           <Cake className="w-7 h-7 text-white" />
                         </div>
                         <div>
                           <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Institutional Celebration</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Institutional Celebration</p>
                         </div>
                       </div>
-                      <PartyPopper className="w-10 h-10 text-accent animate-bounce" />
+                      <PartyPopper className="w-10 h-10 text-accent opacity-50" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {birthdaysToday.map((student: any) => (
-                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 group hover:shadow-xl transition-all cursor-default border border-accent/20">
+                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 group hover:shadow-md transition-all cursor-default border border-accent/10">
                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">
                             {student.name[0]}
                           </div>
                           <div>
                             <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1.5">Std {student.std} • Happy Birthday!</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1.5 opacity-60">Std {student.std} • Happy Birthday!</p>
                           </div>
                         </div>
                       ))}
