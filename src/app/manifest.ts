@@ -2,13 +2,13 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub',
+    name: 'Waghamba Institutional Sports & Health Hub',
     short_name: 'WGB Sports',
-    description: 'Professional Sports & Health Management System',
+    description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#235C36',
+    theme_color: '#0048A0',
     icons: [
       {
         src: '/icon-41.png',

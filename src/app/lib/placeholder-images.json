@@ -1,10 +1,10 @@
 {
   "placeholderImages": [
     {
-      "id": "adivasi-vikas-logo",
-      "description": "Official high-resolution institutional logo for internal application use.",
+      "id": "institutional-logo",
+      "description": "Professional Physical Education torch logo with vibrant blue identity.",
       "imageUrl": "/icon-512.png",
-      "imageHint": "High-Res Logo"
+      "imageHint": "Torch Logo"
     },
     {
       "id": "school-sports-hero",

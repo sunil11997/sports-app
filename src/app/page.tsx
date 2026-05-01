@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -12,11 +11,8 @@ import {
   CalendarCheck, 
   Activity, 
   Trophy, 
-  Stethoscope, 
   Sparkles, 
   Home, 
-  FileText, 
-  History as HistoryIcon, 
   ArrowRight, 
   GraduationCap, 
   Medal, 
@@ -39,23 +35,13 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
-// Animation Import
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
-import splashAnimation from '@/app/lib/splash-animation.json';
-
 // Dynamic Feature Loading
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { ssr: false, loading: () => <TableSkeleton /> });
-const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { ssr: false, loading: () => <TableSkeleton /> });
-const SportsDrills = dynamic(() => import('@/components/features/SportsDrills').then(mod => mod.SportsDrills), { ssr: false, loading: () => <TableSkeleton /> });
-const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(mod => mod.AIAdvice), { ssr: false, loading: () => <StatsSkeleton /> });
-const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
 const TournamentRosters = dynamic(() => import('@/components/features/TournamentRosters').then(mod => mod.TournamentRosters), { ssr: false, loading: () => <TableSkeleton /> });
-const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
-const SchoolActivities = dynamic(() => import('@/components/features/SchoolActivities').then(mod => mod.SchoolActivities), { ssr: false, loading: () => <TableSkeleton /> });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(mod => mod.ClassesSection), { ssr: false, loading: () => <StatsSkeleton /> });
 const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
 const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(mod => mod.PromotionHub), { ssr: false, loading: () => <StatsSkeleton /> });
@@ -63,7 +49,7 @@ const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').
 const translations = {
   English: {
     schoolName: "ASHRAM SHALA WAGHAMBA",
-    sportsHub: "Sports Hub",
+    sportsHub: "Sports Excellence",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session",
@@ -82,6 +68,7 @@ const translations = {
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
@@ -94,10 +81,14 @@ export default function WaghambaApp() {
   useEffect(() => {
     setIsMounted(true);
     if (!user && !isUserLoading) initiateAnonymousSignIn(auth);
+    
+    // Auto-dismiss splash after 2.5 seconds
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    return () => clearTimeout(timer);
   }, [user, isUserLoading, auth]);
 
   const t = translations[language];
-  const LOGO_INAPP = "/icon-512.png";
+  const LOGO_PATH = "/icon-512.png";
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
@@ -134,24 +125,44 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
+  // Premium Splash Sequence
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-1000">
+        <div className="relative w-64 h-64 splash-logo-pulse">
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-3xl" />
+          <Image src={LOGO_PATH} alt="Physical Education Logo" width={256} height={256} priority unoptimized className="relative z-10 drop-shadow-2xl" />
+        </div>
+        <div className="mt-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase leading-none">Waghamba Ashram Shala</h2>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-3 opacity-60">Physical Education Hub • V3.0</p>
+          <div className="w-16 h-1 bg-accent mx-auto mt-6 rounded-full overflow-hidden">
+             <div className="h-full bg-primary w-full animate-progress-fast" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isEntered) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
         <div className="max-w-xl w-full text-center space-y-8 relative z-10">
-          <div className="relative mx-auto w-64 h-64">
-            <div className="absolute inset-0 z-0">
-              <Lottie animationData={splashAnimation} loop={true} className="w-full h-full" />
-            </div>
-            <div className="absolute inset-4 z-10 rounded-full overflow-hidden shadow-2xl active-scale bg-primary">
-              <Image src={LOGO_INAPP} alt="App Logo" width={256} height={256} priority unoptimized className="object-cover w-full h-full" />
+          <div className="relative mx-auto w-56 h-56 group cursor-pointer" onClick={() => setIsEntered(true)}>
+            <div className="absolute inset-0 bg-primary/10 rounded-[3rem] rotate-6 group-hover:rotate-12 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-accent/10 rounded-[3rem] -rotate-3 group-hover:-rotate-6 transition-transform duration-500" />
+            <div className="relative z-10 bg-white p-6 rounded-[3rem] shadow-2xl border-2 border-primary/5 active-scale">
+              <Image src={LOGO_PATH} alt="App Logo" width={200} height={200} priority unoptimized className="object-contain w-full h-full" />
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 animate-in fade-in duration-1000">
             <div className="space-y-1">
-              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight uppercase leading-tight">{t.schoolName}</h1>
+              <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tighter uppercase leading-tight">{t.schoolName}</h1>
               <p className="text-muted-foreground font-black tracking-[0.4em] text-[10px] uppercase">Institutional Management Hub</p>
             </div>
-            <Button onClick={() => setIsEntered(true)} className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xl h-20 rounded-[1.5rem] shadow-xl active-scale mt-8">{t.enter} <ArrowRight className="ml-3 w-6 h-6" /></Button>
+            <Button onClick={() => setIsEntered(true)} className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xl h-20 rounded-[1.5rem] shadow-xl active-scale mt-8">
+              {t.enter} <ArrowRight className="ml-3 w-6 h-6" />
+            </Button>
           </div>
         </div>
       </div>
@@ -189,8 +200,8 @@ export default function WaghambaApp() {
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedSection(null)}>
-            <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-primary p-0.5 border">
-              <Image src={LOGO_INAPP} alt="Logo" width={36} height={36} unoptimized className="object-cover w-full h-full rounded-full" />
+            <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white p-1 border">
+              <Image src={LOGO_PATH} alt="Logo" width={36} height={36} unoptimized className="object-contain w-full h-full" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -208,7 +219,6 @@ export default function WaghambaApp() {
             </div>
           </div>
           
-          {/* Desktop Navigation Tabs (Hidden on mobile) */}
           <div className="hidden md:flex items-center gap-1 mx-8 flex-1 justify-center">
             {currentTabs.map((tab) => (
               <Button
@@ -227,10 +237,6 @@ export default function WaghambaApp() {
           </div>
 
           <div className="flex items-center gap-3">
-             <div className="hidden lg:flex items-center bg-muted/50 rounded-full px-4 py-1.5 gap-2 border">
-               <Search className="w-3.5 h-3.5 text-muted-foreground" />
-               <span className="text-[10px] font-bold text-muted-foreground uppercase">Search Registry</span>
-             </div>
              <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
                <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
@@ -242,7 +248,6 @@ export default function WaghambaApp() {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
           <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
@@ -275,7 +280,7 @@ export default function WaghambaApp() {
                   <div className="grid grid-cols-2 gap-4">
                     <Card className="google-card p-8 flex flex-col justify-between">
                       <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-inner">
-                        <Zap className="w-5 h-5 text-primary" />
+                        <Zap className="w-5 h-5 text-white" />
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">{schoolData.data.activities.length}</p>
@@ -295,15 +300,15 @@ export default function WaghambaApp() {
                 </div>
 
                 {selectedSection === 'general' && birthdaysToday.length > 0 && (
-                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500">
+                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border-2 border-accent/20">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
-                          <Cake className="w-7 h-7 text-primary" />
+                          <Cake className="w-7 h-7 text-white" />
                         </div>
                         <div>
                           <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Celebrate with the students</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Institutional Celebration</p>
                         </div>
                       </div>
                       <PartyPopper className="w-10 h-10 text-accent animate-bounce" />
@@ -341,7 +346,6 @@ export default function WaghambaApp() {
         </Tabs>
       </main>
 
-      {/* Google Style Scrollable Bottom Navigation (Mobile Only) */}
       <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-20 px-2 md:hidden z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
         <div className="h-full flex items-center justify-start gap-4 px-4 min-w-max">
           {currentTabs.map((tab) => (
