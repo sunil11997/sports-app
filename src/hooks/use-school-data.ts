@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -6,20 +7,29 @@ import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
+/**
+ * useSchoolData - The Institutional Registry Engine
+ * 
+ * Provides real-time synchronization and automatic data restoration across devices.
+ * All data is keyed to the authenticated user's Google UID.
+ */
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
   const [selectedYear, setSelectedYear] = useState("2024-25");
 
+  // 1. Institutional Profile Sync
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
+  // 2. Player Registry Sync (Top-level with Owner ID filtering)
   const playersQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
   }, [db, user]);
   const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
+  // 3. Granular Registries (Attendance, Fitness, Skills, Drills)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
@@ -30,6 +40,7 @@ export function useSchoolData() {
   useEffect(() => {
     if (!user || !db) return;
 
+    // A. Sync Attendance
     const attQuery = query(
       collection(db, 'attendance_registry'), 
       where('schoolId', '==', user.uid),
@@ -44,6 +55,7 @@ export function useSchoolData() {
       setAttendanceData(newAtt);
     }, (err) => console.error("WGB-Att-Sync-Error:", err));
 
+    // B. Sync Fitness Assessments (latest & history)
     const fitQuery = query(
       collection(db, 'fitness_registry'), 
       where('schoolId', '==', user.uid),
@@ -74,6 +86,7 @@ export function useSchoolData() {
       setFitnessHistory(historyMap);
     }, (err) => console.error("WGB-Fit-Sync-Error:", err));
 
+    // C. Sync Sport Technical Skills
     const skillsQuery = query(
       collection(db, 'skills_registry'), 
       where('schoolId', '==', user.uid),
@@ -104,6 +117,7 @@ export function useSchoolData() {
     };
   }, [db, user, selectedYear]);
 
+  // 4. Sync Health Incidents
   const incidentsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -114,6 +128,7 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
+  // 5. Sync Coaching Drill Completions
   const drillsSyncRef = useMemoFirebase(() => user ? query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid)) : null, [db, user]);
   const { data: drillComps } = useCollection(drillsSyncRef);
 
@@ -125,6 +140,7 @@ export function useSchoolData() {
     }
   }, [drillComps]);
 
+  // 6. Sync Class Activities
   const activitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -135,6 +151,7 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: activities } = useCollection(activitiesQuery);
 
+  // Consolidated Data Object
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -157,6 +174,7 @@ export function useSchoolData() {
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
+  // Action Handlers (All keyed to user.uid)
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user) return;
     const profileRef = doc(db, 'schools', user.uid);
