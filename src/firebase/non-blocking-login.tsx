@@ -25,18 +25,33 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
     const currentUser = authInstance.currentUser;
     if (currentUser && currentUser.isAnonymous) {
       // If user is currently anonymous, link the Google account to preserve data
-      await linkWithPopup(currentUser, provider);
+      try {
+        await linkWithPopup(currentUser, provider);
+      } catch (linkError: any) {
+        // If linking fails because account exists, just sign in normally
+        if (linkError.code === 'auth/credential-already-in-use') {
+          await signInWithPopup(authInstance, provider);
+        } else {
+          throw linkError;
+        }
+      }
     } else {
       // Otherwise, standard sign in
       await signInWithPopup(authInstance, provider);
     }
   } catch (error: any) {
-    // If linking fails because account exists, just sign in normally
-    if (error.code === 'auth/credential-already-in-use') {
-      await signInWithPopup(authInstance, provider);
-    } else {
-      throw error;
+    // Suppress common "user-cancelled" errors
+    const userCancelled = 
+      error.code === 'auth/popup-closed-by-user' || 
+      error.code === 'auth/cancelled-popup-request' ||
+      error.code === 'auth/popup-blocked';
+
+    if (userCancelled) {
+      console.log("WGB: Google Sign-In cancelled by user.");
+      return;
     }
+    
+    throw error;
   }
 }
 
