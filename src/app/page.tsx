@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -27,7 +28,8 @@ import {
   Cake, 
   PartyPopper,
   Search,
-  Menu
+  Menu,
+  ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -63,7 +65,7 @@ const translations = {
     schoolName: "ASHRAM SHALA WAGHAMBA",
     sportsHub: "Sports Hub",
     studentRegistry: "Student Registry",
-    switchHub: "Switch",
+    switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session",
     enter: "ACCESS HUB", onlineStatus: "Online", offlineStatus: "Local"
   },
@@ -186,15 +188,18 @@ export default function WaghambaApp() {
       {/* Google Style Header */}
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('home')}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedSection(null)}>
             <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-primary p-0.5 border">
               <Image src={LOGO_INAPP} alt="Logo" width={36} height={36} unoptimized className="object-cover w-full h-full rounded-full" />
             </div>
             <div>
-              <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
-                {selectedSection === 'sports' ? "Sports" : "Students"}
-              </h1>
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="flex items-center gap-2">
+                <ChevronLeft className="w-3 h-3 text-primary" />
+                <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
+                  {selectedSection === 'sports' ? "Sports" : "Students"}
+                </h1>
+              </div>
+              <div className="flex items-center gap-1.5 mt-0.5 ml-5">
                 <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">
                   {isOnline ? "Syncing" : "Local Mode"}
@@ -203,16 +208,34 @@ export default function WaghambaApp() {
             </div>
           </div>
           
+          {/* Desktop Navigation Tabs (Hidden on mobile) */}
+          <div className="hidden md:flex items-center gap-1 mx-8 flex-1 justify-center">
+            {currentTabs.map((tab) => (
+              <Button
+                key={tab.id}
+                variant="ghost"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "rounded-full h-10 px-6 font-black uppercase text-[10px] tracking-widest transition-all",
+                  activeTab === tab.id ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex items-center gap-3">
-             <div className="hidden md:flex items-center bg-muted/50 rounded-full px-4 py-1.5 gap-2 border">
+             <div className="hidden lg:flex items-center bg-muted/50 rounded-full px-4 py-1.5 gap-2 border">
                <Search className="w-3.5 h-3.5 text-muted-foreground" />
-               <span className="text-[10px] font-bold text-muted-foreground uppercase">Global Registry Search</span>
+               <span className="text-[10px] font-bold text-muted-foreground uppercase">Search Registry</span>
              </div>
              <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
                <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
              </Select>
-             <Button variant="ghost" size="icon" onClick={() => setSelectedSection(null)} className="rounded-full h-8 w-8 hover:bg-primary/5 text-primary">
+             <Button variant="ghost" size="icon" onClick={() => setSelectedSection(null)} className="rounded-full h-8 w-8 hover:bg-primary/5 text-primary" title={t.switchHub}>
                <Menu className="w-5 h-5" />
              </Button>
           </div>
@@ -318,15 +341,15 @@ export default function WaghambaApp() {
         </Tabs>
       </main>
 
-      {/* Google Style Bottom Navigation (Mobile Only) */}
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-20 px-4 md:hidden z-50 safe-area-bottom">
-        <div className="h-full max-w-lg mx-auto flex items-center justify-around">
-          {currentTabs.slice(0, 5).map((tab) => (
+      {/* Google Style Scrollable Bottom Navigation (Mobile Only) */}
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-20 px-2 md:hidden z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
+        <div className="h-full flex items-center justify-start gap-4 px-4 min-w-max">
+          {currentTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               data-active={activeTab === tab.id}
-              className="google-nav-item"
+              className="google-nav-item min-w-[70px]"
             >
               <div className="google-nav-icon">
                 <tab.icon className={cn("w-6 h-6", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
