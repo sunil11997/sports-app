@@ -7,7 +7,7 @@ import {
   ChevronRight, 
   Wifi,
   WifiOff,
-  SmartphoneNfc,
+  Smartphone,
   Database,
   ShieldAlert,
   FileJson,
@@ -15,9 +15,8 @@ import {
   UserCheck,
   LogOut,
   Mail,
-  CloudCheck,
+  Cloud,
   Globe,
-  Smartphone,
   Info,
   Key,
   Loader2
@@ -137,7 +136,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         {/* Cloud Identity Section */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-            <CloudCheck className="w-3 h-3 text-primary" /> Cloud Identity & Sync
+            <Cloud className="w-3 h-3 text-primary" /> Cloud Identity & Sync
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             {user?.isAnonymous ? (
@@ -182,7 +181,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                   <div>
                     <p className="font-black text-emerald-800 uppercase text-lg leading-none">{user?.displayName || 'Cloud User'}</p>
                     <div className="flex items-center gap-1 mt-1.5 opacity-60">
-                       <CloudCheck className="w-3 h-3 text-emerald-600" />
+                       <Cloud className="w-3 h-3 text-emerald-600" />
                        <span className="text-[10px] font-bold uppercase text-emerald-700 tracking-wider">Sync Active: {user?.email}</span>
                     </div>
                   </div>
@@ -223,7 +222,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Device & Interface</label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             <SettingsItem 
-              icon={SmartphoneNfc} 
+              icon={Smartphone} 
               color="bg-orange-500" 
               label="Install App" 
               sublabel={isInstallable ? "Available for offline use" : "Running in Web Mode"}

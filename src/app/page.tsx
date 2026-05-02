@@ -32,7 +32,7 @@ import {
   ArrowRight,
   TrendingUp,
   Award,
-  CloudCheck,
+  Cloud,
   CloudOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
