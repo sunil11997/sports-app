@@ -13,7 +13,6 @@ import {
   Trophy, 
   Sparkles, 
   Home, 
-  ArrowRight, 
   GraduationCap, 
   Medal, 
   UserPlus, 
@@ -26,7 +25,6 @@ import {
   Menu,
   ChevronLeft,
   ShieldCheck,
-  Lock,
   Loader2,
   FileText,
   History as HistoryIcon,
@@ -133,6 +131,7 @@ export default function WaghambaApp() {
     { id: "activities", label: t.activities, icon: ClipboardList },
     { id: "promotion", label: t.promote, icon: ArrowUpCircle },
     { id: "classes", label: "Profiles", icon: LayoutGrid },
+    { id: "health", label: t.health, icon: HeartPulse },
     { id: "history", label: t.history, icon: HistoryIcon },
     { id: "report", label: t.report, icon: FileText },
     { id: "settings", label: t.settings, icon: SettingsIcon },
@@ -153,7 +152,6 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
-  // Fully authenticated means we have a user and they aren't anonymous
   const isFullyAuthenticated = user && !user.isAnonymous;
 
   if (isUserLoading) {
@@ -357,7 +355,7 @@ export default function WaghambaApp() {
                   </div>
                 </div>
 
-                {selectedSection === 'general' && birthdaysToday.length > 0 && (
+                {birthdaysToday.length > 0 && (
                   <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">

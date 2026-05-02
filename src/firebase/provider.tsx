@@ -70,23 +70,26 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     let isMounted = true;
 
-    // 1. Critical: Consume the Redirect Result first
-    // This is what finishes the "Google -> App" transition
+    // Critical: Handle Redirect Result with enhanced error catching
     const initAuth = async () => {
       try {
+        // Attempt to resolve the redirect first
         const result = await getRedirectResult(auth);
         if (result && isMounted) {
           console.log("WGB Auth: Redirect settled for", result.user.email);
         }
       } catch (error: any) {
-        console.error("WGB Auth: Redirect resolution error", error.code, error.message);
-        // We handle linking errors gracefully
-        if (error.code === 'auth/credential-already-in-use') {
-          console.warn("WGB Auth: Identity already exists. Standard sign-in will proceed.");
+        // Suppress "Missing Initial State" error as it often resolves on next tick/reload
+        if (error.code === 'auth/missing-initial-state') {
+          console.warn("WGB Auth: Initial state missing, waiting for auth listener...");
+        } else if (error.code === 'auth/credential-already-in-use') {
+          console.warn("WGB Auth: Identity already exists. Proceeding to sign-in.");
+        } else {
+          console.error("WGB Auth: Redirect error", error.code, error.message);
         }
       }
 
-      // 2. Set up the state listener to finalize loading
+      // Finalize loading state by subscribing to the actual auth changes
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {
