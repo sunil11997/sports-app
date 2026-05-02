@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -51,13 +50,20 @@ const INCIDENT_TYPES = [
   }
 ];
 
-export function HealthIncidents({ store }: { store: any }) {
+export function HealthIncidents({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [description, setDescription] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [severity, setSeverity] = useState("Minor");
+
+  const targetCategory = section === 'general' ? 'student' : 'athlete';
+  
+  const filteredPlayers = useMemo(() => 
+    store.data.players.filter((p: any) => p.category === targetCategory),
+    [store.data.players, targetCategory]
+  );
 
   const currentTypeData = useMemo(() => 
     INCIDENT_TYPES.find(t => t.value === selectedType), 
@@ -68,7 +74,6 @@ export function HealthIncidents({ store }: { store: any }) {
     setSelectedType(val);
     const typeData = INCIDENT_TYPES.find(t => t.value === val);
     if (typeData) {
-      // Auto-populate description with treatment suggestion
       setDescription(`TYPE: ${typeData.label}\n\nSUGGESTED TREATMENT:\n${typeData.treatment}\n\nNOTES: `);
       if (val === 'head' || val === 'fracture') {
         setSeverity("Critical");
@@ -91,7 +96,8 @@ export function HealthIncidents({ store }: { store: any }) {
       playerName: player?.name || "Unknown",
       date,
       description: `[${severity.toUpperCase()}] ${description}`,
-      severity // Keeping it for UI filtering if needed
+      severity,
+      category: targetCategory
     };
 
     store.addHealthIncident(incident);
@@ -106,6 +112,10 @@ export function HealthIncidents({ store }: { store: any }) {
   };
 
   const handlePrint = () => {
+    const incidentsToPrint = store.data.healthIncidents.filter((inc: any) => 
+      filteredPlayers.some((p: any) => p.id === inc.playerId)
+    );
+
     const printContent = `
       <html>
         <head>
@@ -123,10 +133,10 @@ export function HealthIncidents({ store }: { store: any }) {
           </style>
         </head>
         <body>
-          <h1>Complete Medical & Injury Log - Ashram Shala Waghamba</h1>
+          <h1>Complete Medical & Injury Log - ${section === 'sports' ? 'Sports Hub' : 'Student Registry'}</h1>
           <p>Institutional Record - Teacher Sunil Deshmukh</p>
           <hr/>
-          ${store.data.healthIncidents.map((inc: any) => {
+          ${incidentsToPrint.map((inc: any) => {
             const isCritical = inc.description.includes('[CRITICAL]');
             return `
               <div class="incident ${isCritical ? 'critical' : ''}">
@@ -148,6 +158,10 @@ export function HealthIncidents({ store }: { store: any }) {
     win?.print();
   };
 
+  const incidentsList = store.data.healthIncidents.filter((inc: any) => 
+    filteredPlayers.some((p: any) => p.id === inc.playerId)
+  );
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
       <div className="lg:col-span-1 space-y-6">
@@ -165,7 +179,7 @@ export function HealthIncidents({ store }: { store: any }) {
                   <SelectValue placeholder="Choose student..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {store.data.players.map((p: any) => (
+                  {filteredPlayers.map((p: any) => (
                     <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
                   ))}
                 </SelectContent>
@@ -246,7 +260,7 @@ export function HealthIncidents({ store }: { store: any }) {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
           <div className="flex items-center gap-3">
             <History className="w-8 h-8 text-primary" />
-            <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Health Registry</h3>
+            <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Health Registry ({section === 'sports' ? 'Sports' : 'General'})</h3>
           </div>
           <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-2 h-12 px-6 shadow-sm ios-spring">
             <Printer className="w-5 h-5 mr-2 text-primary" /> Print Full History
@@ -254,13 +268,13 @@ export function HealthIncidents({ store }: { store: any }) {
         </div>
         
         <div className="space-y-4">
-          {store.data.healthIncidents.length === 0 ? (
+          {incidentsList.length === 0 ? (
             <Card className="border-dashed border-4 p-20 flex flex-col items-center text-muted-foreground rounded-[2.5rem] bg-white/50 backdrop-blur-sm">
               <Stethoscope className="w-16 h-16 mb-6 opacity-10" />
-              <p className="text-xl font-bold uppercase tracking-widest opacity-30">No health logs found</p>
+              <p className="text-xl font-bold uppercase tracking-widest opacity-30">No health logs found for this section</p>
             </Card>
           ) : (
-            store.data.healthIncidents.slice().reverse().map((inc: any) => {
+            incidentsList.slice().reverse().map((inc: any) => {
               const isCritical = inc.description.includes('[CRITICAL]');
               return (
                 <Card 

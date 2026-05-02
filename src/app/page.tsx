@@ -290,8 +290,8 @@ export default function WaghambaApp() {
                     <div className="relative z-10 space-y-6">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em]">Institutional Hub</p>
-                        <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.length}</h3>
-                        <p className="text-sm font-bold opacity-60">Total Enrolled Students</p>
+                        <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.filter(p => p.category === (selectedSection === 'sports' ? 'athlete' : 'student')).length}</h3>
+                        <p className="text-sm font-bold opacity-60">Total {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
                       </div>
                       <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
                         <UserPlus className="w-4 h-4 mr-2" /> Add New Record
@@ -306,7 +306,9 @@ export default function WaghambaApp() {
                         <Zap className="w-5 h-5 text-white" />
                       </div>
                       <div className="mt-4">
-                        <p className="text-4xl font-black text-primary">{schoolData.data.activities.length}</p>
+                        <p className="text-4xl font-black text-primary">
+                          {schoolData.data.activities.filter(a => a.category === (selectedSection === 'sports' ? 'athlete' : 'student')).length}
+                        </p>
                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Activities Logged</p>
                       </div>
                     </Card>
@@ -315,14 +317,18 @@ export default function WaghambaApp() {
                         <Medal className="w-5 h-5 text-primary" />
                       </div>
                       <div className="mt-4">
-                        <p className="text-4xl font-black text-primary">{schoolData.data.players.filter(p => p.category === 'athlete').length}</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Active Athletes</p>
+                        <p className="text-4xl font-black text-primary">
+                          {selectedSection === 'sports' 
+                            ? schoolData.data.players.filter(p => p.category === 'athlete').length 
+                            : schoolData.data.players.filter(p => p.category === 'student').length}
+                        </p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Active Profiles</p>
                       </div>
                     </Card>
                   </div>
                 </div>
 
-                {birthdaysToday.length > 0 && (
+                {birthdaysToday.filter(p => p.category === (selectedSection === 'sports' ? 'athlete' : 'student')).length > 0 && (
                   <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
@@ -337,7 +343,9 @@ export default function WaghambaApp() {
                       <PartyPopper className="w-10 h-10 text-accent opacity-50" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {birthdaysToday.map((student: any) => (
+                      {birthdaysToday
+                        .filter(p => p.category === (selectedSection === 'sports' ? 'athlete' : 'student'))
+                        .map((student: any) => (
                         <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 group hover:shadow-md transition-all cursor-default border border-accent/10">
                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">
                             {student.name[0]}
@@ -362,10 +370,10 @@ export default function WaghambaApp() {
             <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
-            <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} />}</TabsContent>
-            <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} />}</TabsContent>
+            <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} section={selectedSection!} />}</TabsContent>
+            <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="history" className="mt-0">{activeTab === "history" && <HistoryView store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="report" className="mt-0">{activeTab === "report" && <DailyReport store={schoolData} />}</TabsContent>
+            <TabsContent value="report" className="mt-0">{activeTab === "report" && <DailyReport store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
             <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
             <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>

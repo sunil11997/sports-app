@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Printer, FileText, Activity, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
-export function DailyReport({ store }: { store: any }) {
+export function DailyReport({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [isMounted, setIsMounted] = useState(false);
   const [reportDate, setReportDate] = useState("");
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
   const [sessionTime, setSessionTime] = useState("Morning");
+
+  const targetCategory = section === 'general' ? 'student' : 'athlete';
 
   useEffect(() => {
     setIsMounted(true);
@@ -23,13 +25,15 @@ export function DailyReport({ store }: { store: any }) {
 
   const activitiesToday = useMemo(() => {
     if (!isMounted || !reportDate) return [];
-    return store.data.activities.filter((a: any) => a.date === reportDate);
-  }, [store.data.activities, reportDate, isMounted]);
+    return store.data.activities.filter((a: any) => 
+      a.date === reportDate && a.category === targetCategory
+    );
+  }, [store.data.activities, reportDate, isMounted, targetCategory]);
 
   const autoSummary = useMemo(() => {
-    if (activitiesToday.length === 0) return "No physical education activities logged for this date.";
+    if (activitiesToday.length === 0) return `No ${section === 'sports' ? 'athletic training' : 'physical education'} activities logged for this date.`;
     return activitiesToday.map((a: any) => `• [Std ${a.std}] ${a.type} (${a.duration}): ${a.summary}`).join('\n\n');
-  }, [activitiesToday]);
+  }, [activitiesToday, section]);
 
   const handlePrint = () => {
     const printContent = `
@@ -56,7 +60,7 @@ export function DailyReport({ store }: { store: any }) {
           </div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div class="report-title">Physical Education & Sports Activity Report</div>
+            <div class="report-title">${section === 'sports' ? 'Competitive Sports' : 'Physical Education'} Activity Report</div>
           </div>
           <div class="meta">
             <span>Date: ${format(new Date(reportDate), 'PPPP')}</span>
@@ -89,7 +93,7 @@ export function DailyReport({ store }: { store: any }) {
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
               <FileText className="w-10 h-10 text-accent" /> Institutional Report Hub
             </h2>
-            <p className="text-lg font-medium text-foreground/70">Automatic summary generation from logged class activities.</p>
+            <p className="text-lg font-medium text-foreground/70">Automatic summary generation for the {section === 'sports' ? 'Sports Hub' : 'Student Registry'}.</p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
             <div className="space-y-2">
@@ -103,7 +107,7 @@ export function DailyReport({ store }: { store: any }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-          <CardHeader className="bg-accent/10 border-b p-6"><CardTitle className="text-sm font-black uppercase tracking-widest">Automatic Daily Summary</CardTitle></CardHeader>
+          <CardHeader className="bg-accent/10 border-b p-6"><CardTitle className="text-sm font-black uppercase tracking-widest">Automatic Daily Summary ({targetCategory === 'athlete' ? 'Athletes' : 'Students'})</CardTitle></CardHeader>
           <CardContent className="p-8">
             <div className="bg-muted/30 p-6 rounded-2xl border-2 border-dashed border-muted font-medium text-sm text-foreground/60 whitespace-pre-wrap leading-relaxed min-h-[250px]">{autoSummary}</div>
           </CardContent>

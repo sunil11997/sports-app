@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -159,7 +158,7 @@ export function useSchoolData() {
     skillsHistory,
     drillCompletions,
     healthIncidents: healthIncidents || [],
-    activities: activities || [],
+    activities: (activities || []).map((a: any) => ({ ...a, category: a.category || (a.std ? 'student' : 'athlete') })),
     schoolProfile: schoolProfile || {
       schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
       teacherName: "Sunil Deshmukh",

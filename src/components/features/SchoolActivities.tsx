@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -171,7 +170,7 @@ const ACTIVITY_GUIDELINES: Record<string, { rules: string[], instructions: strin
 
 const ACTIVITY_TYPES = Object.keys(ACTIVITY_GUIDELINES);
 
-export function SchoolActivities({ store }: { store: any }) {
+export function SchoolActivities({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [std, setStd] = useState("1");
@@ -180,6 +179,7 @@ export function SchoolActivities({ store }: { store: any }) {
   const [summary, setSummary] = useState("");
 
   const currentGuidelines = useMemo(() => ACTIVITY_GUIDELINES[type], [type]);
+  const targetCategory = section === 'general' ? 'student' : 'athlete';
 
   const handleSave = () => {
     if (!summary) {
@@ -194,6 +194,7 @@ export function SchoolActivities({ store }: { store: any }) {
       type,
       duration,
       summary,
+      category: targetCategory
     };
 
     store.addActivity(newActivity);
@@ -260,12 +261,15 @@ export function SchoolActivities({ store }: { store: any }) {
     win?.print();
   };
 
-  const activitiesList = store.data.activities.slice().sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const activitiesList = store.data.activities
+    .filter((a: any) => a.category === targetCategory)
+    .slice()
+    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
       <div className="lg:col-span-1 space-y-6">
-        <Card className="border-2 border-primary/10 shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] overflow-hidden bg-white">
           <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
               <Plus className="w-5 h-5" /> Log Class Activity
@@ -359,7 +363,7 @@ export function SchoolActivities({ store }: { store: any }) {
       <div className="lg:col-span-2 space-y-6">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-3xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-            <History className="w-8 h-8 text-primary" /> Institutional History
+            <History className="w-8 h-8 text-primary" /> Institutional History ({section === 'sports' ? 'Sports' : 'General'})
           </h3>
         </div>
 
