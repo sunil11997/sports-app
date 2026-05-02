@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -104,7 +103,6 @@ export default function WaghambaApp() {
       await initiateGoogleSignIn(auth);
     } catch (error) {
       console.error("Login Error:", error);
-    } finally {
       setIsLoggingIn(false);
     }
   };
@@ -155,6 +153,7 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
+  // Fully authenticated means we have a user and they aren't anonymous
   const isFullyAuthenticated = user && !user.isAnonymous;
 
   if (isUserLoading) {

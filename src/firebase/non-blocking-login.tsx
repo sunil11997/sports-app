@@ -19,30 +19,27 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 
 /** 
  * Initiate Google Sign-In (Redirect).
- * This opens the login in the default browser and returns to the app.
- * Optimized for Account Linking.
+ * Optimized for PWA and Mobile environments.
  */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
+  // Ensure account selection for institutional clarity
   provider.setCustomParameters({ 
-    prompt: 'select_account',
-    // Helps with PWA/Mobile redirects
-    display: 'page' 
+    prompt: 'select_account'
   });
   
   try {
     const currentUser = authInstance.currentUser;
+    // Account Linking: Merge anonymous data into the Google identity
     if (currentUser && currentUser.isAnonymous) {
-      // LINKING: Preserve data from anonymous session to Google Account
-      console.log("WGB Auth: Initiating Account Link via Redirect...");
+      console.log("WGB Auth: Initiating Account Link...");
       await linkWithRedirect(currentUser, provider);
     } else {
-      // STANDARD: Just sign in
-      console.log("WGB Auth: Initiating Google Sign-In via Redirect...");
+      console.log("WGB Auth: Initiating Google Redirect...");
       await signInWithRedirect(authInstance, provider);
     }
   } catch (error: any) {
-    console.error("WGB Auth: Google Redirect Initialization Error:", error.code, error.message);
+    console.error("WGB Auth: Redirect initialization failed", error.code, error.message);
     throw error;
   }
 }

@@ -13,26 +13,22 @@ interface FirebaseProviderProps {
   auth: Auth;
 }
 
-// Internal state for user authentication
 interface UserAuthState {
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// Combined state for the Firebase context
 export interface FirebaseContextState {
-  areServicesAvailable: boolean; // True if core services (app, firestore, auth instance) are provided
+  areServicesAvailable: boolean;
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
-  auth: Auth | null; // The Auth service instance
-  // User authentication state
+  auth: Auth | null;
   user: User | null;
-  isUserLoading: boolean; // True during initial auth check
-  userError: Error | null; // Error from auth listener
+  isUserLoading: boolean;
+  userError: Error | null;
 }
 
-// Return type for useFirebase()
 export interface FirebaseServicesAndUser {
   firebaseApp: FirebaseApp;
   firestore: Firestore;
@@ -42,19 +38,17 @@ export interface FirebaseServicesAndUser {
   userError: Error | null;
 }
 
-// Return type for useUser() - specific to user auth state
 export interface UserHookResult { 
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// React Context
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
- * FirebaseProvider manages and provides Firebase services and user authentication state.
- * Optimized to handle Redirect results for Google Sign-In.
+ * FirebaseProvider - The Institutional Auth Engine
+ * Consumes Google Redirect results and maintains registry synchronization.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -64,33 +58,35 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
-    isUserLoading: true, // Start loading until redirect and auth state are settled
+    isUserLoading: true, 
     userError: null,
   });
 
-  // Effect to handle redirect resolution and subscribe to auth changes
   useEffect(() => {
     if (!auth) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
+      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service unavailable.") });
       return;
     }
 
     let isMounted = true;
 
-    const resolveAuth = async () => {
+    // 1. Critical: Consume the Redirect Result first
+    // This is what finishes the "Google -> App" transition
+    const initAuth = async () => {
       try {
-        // 1. Check if we are returning from a Google Redirect
-        // This is crucial for finalizing the login state
-        const redirectResult = await getRedirectResult(auth);
-        if (redirectResult && isMounted) {
-          console.log("WGB Auth: Redirect settled for", redirectResult.user.email);
+        const result = await getRedirectResult(auth);
+        if (result && isMounted) {
+          console.log("WGB Auth: Redirect settled for", result.user.email);
         }
       } catch (error: any) {
-        console.error("WGB Auth: Redirect error", error.code, error.message);
-        // We don't throw here to allow the onAuthStateChanged to recover if possible
+        console.error("WGB Auth: Redirect resolution error", error.code, error.message);
+        // We handle linking errors gracefully
+        if (error.code === 'auth/credential-already-in-use') {
+          console.warn("WGB Auth: Identity already exists. Standard sign-in will proceed.");
+        }
       }
 
-      // 2. Set up the long-running auth listener
+      // 2. Set up the state listener to finalize loading
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {
@@ -100,7 +96,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         },
         (error) => {
           if (isMounted) {
-            console.error("FirebaseProvider: Auth listener error:", error);
+            console.error("WGB Auth: State listener error", error);
             setUserAuthState({ user: null, isUserLoading: false, userError: error });
           }
         }
@@ -109,7 +105,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       return unsubscribe;
     };
 
-    const unsubPromise = resolveAuth();
+    const unsubPromise = initAuth();
 
     return () => {
       isMounted = false;
@@ -117,7 +113,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     };
   }, [auth]);
 
-  // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
     return {
@@ -144,7 +139,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
   if (context === undefined) throw new Error('useFirebase must be used within a FirebaseProvider.');
   if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
-    throw new Error('Firebase core services not available.');
+    throw new Error('Firebase services not ready.');
   }
   return {
     firebaseApp: context.firebaseApp,
