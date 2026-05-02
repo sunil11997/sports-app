@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -32,7 +31,9 @@ import {
   ClipboardList,
   ArrowRight,
   TrendingUp,
-  Award
+  Award,
+  CloudCheck,
+  CloudOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -91,7 +92,6 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    // Automatic high-resilience login to "remove splash screen"
     if (!isUserLoading && !user) {
       initiateAnonymousSignIn(auth);
     }
@@ -148,7 +148,6 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
-  // Faster transition: Only show loader during actual user resolution
   if (isUserLoading && !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -160,7 +159,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // Hub Selection screen acts as the new Home entry point
   if (!selectedSection) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
@@ -206,8 +204,10 @@ export default function WaghambaApp() {
           </div>
 
           <div className="flex items-center justify-center gap-2 opacity-30 pt-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[9px] font-black uppercase tracking-widest">Real-time Cloud Synchronization Active</p>
+            <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isOnline ? "bg-emerald-500" : "bg-destructive")} />
+            <p className="text-[9px] font-black uppercase tracking-widest">
+              {isOnline ? "Real-time Cloud Synchronization Active" : "Local Sync Mode - Internet Off"}
+            </p>
           </div>
         </div>
       </div>
@@ -233,9 +233,9 @@ export default function WaghambaApp() {
                 </h1>
               </div>
               <div className="flex items-center gap-1.5 mt-0.5 ml-5">
-                <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
+                <div className={cn("w-1.5 h-1.5 rounded-full", (isOnline && !user?.isAnonymous) ? "bg-emerald-500 animate-pulse" : "bg-amber-500")} />
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest opacity-60">
-                  {isOnline ? "Cloud Sync Active" : "Offline Mode"}
+                  {user?.isAnonymous ? "Device Only" : "Cloud Sync Active"}
                 </span>
               </div>
             </div>
@@ -286,6 +286,19 @@ export default function WaghambaApp() {
                      <span className="text-[10px] font-black text-primary uppercase px-3 py-1 bg-primary/5 rounded-full">{schoolData.selectedYear} Term</span>
                    </div>
                 </div>
+
+                {user?.isAnonymous && (
+                  <Card className="rounded-3xl border-none bg-amber-50 p-6 flex items-center justify-between shadow-inner">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-amber-200 rounded-xl flex items-center justify-center"><CloudOff className="text-amber-800" /></div>
+                      <div>
+                        <p className="text-sm font-black text-amber-900 uppercase">Local Mode Active</p>
+                        <p className="text-xs text-amber-800/60 font-medium">To see data on other devices, please login in Settings.</p>
+                      </div>
+                    </div>
+                    <Button onClick={() => setActiveTab('settings')} className="bg-amber-500 hover:bg-amber-600 text-white font-black uppercase text-[9px] rounded-xl h-9">Login to Sync</Button>
+                  </Card>
+                )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden group col-span-1 md:col-span-2 lg:col-span-1">
