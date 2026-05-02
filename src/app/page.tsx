@@ -394,7 +394,7 @@ export default function WaghambaApp() {
             <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
             <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} />}</TabsContent>
+            <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
             <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} />}</TabsContent>
             <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} />}</TabsContent>

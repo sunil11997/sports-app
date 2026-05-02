@@ -4,7 +4,7 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { toast } from '@/hooks/use-toast';
 
 interface FirebaseProviderProps {
@@ -50,7 +50,7 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 /**
  * FirebaseProvider - The Institutional Auth Engine
  * Consumes Google Redirect results and maintains registry synchronization.
- * High-resilience version optimized for mobile browsers and PWAs.
+ * High-resilience version optimized for mobile browsers and storage-partitioned PWAs.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -72,35 +72,23 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     let isMounted = true;
 
-    // Critical: Handle Redirect Result with high resilience
     const initAuth = async () => {
+      // 1. Critical: Attempt to resolve redirect with error recovery
       try {
         const result = await getRedirectResult(auth);
         if (result && isMounted) {
           console.log("WGB Auth: Redirect settled for", result.user.email);
         }
       } catch (error: any) {
-        console.error("WGB Auth Error Details:", error.code, error.message);
-        
-        // Specific guidance for 403/Forbidden errors
-        if (error.code === 'auth/operation-not-allowed') {
-          toast({
-            variant: "destructive",
-            title: "Auth Disabled",
-            description: "Please enable Google Sign-In in the Firebase Console.",
-          });
-        } else if (error.code === 'auth/unauthorized-domain') {
-          toast({
-            variant: "destructive",
-            title: "Domain Restricted",
-            description: "Add this URL to 'Authorized Domains' in Firebase Console.",
-          });
-        } else if (error.code === 'auth/missing-initial-state') {
-          console.warn("WGB Auth: State partitioned, let listener settle session.");
+        // Recovery path for storage-partitioning issues (Missing Initial State)
+        if (error.code === 'auth/missing-initial-state') {
+          console.warn("WGB Auth: Browser storage partitioned. Waiting for state listener...");
+        } else {
+          console.error("WGB Auth Redirect Error:", error.code, error.message);
         }
       }
 
-      // 2. Permanent state listener
+      // 2. Permanent state listener - This is the final source of truth
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {
@@ -151,7 +139,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
-/** Hooks */
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
   if (context === undefined) throw new Error('useFirebase must be used within a FirebaseProvider.');
