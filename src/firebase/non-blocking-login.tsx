@@ -49,51 +49,43 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
 
 /** 
  * syncViaEmail - High-Resilience Cloud Link
- * Links an anonymous session to a permanent email identity to enable multi-device sync.
+ * Links an anonymous session to a permanent email identity or signs in.
  */
-export async function syncViaEmail(authInstance: Auth, email: string): Promise<void> {
-  const syncPass = "wgb-institutional-vault-2025"; 
-  const credential = EmailAuthProvider.credential(email, syncPass);
+export async function syncViaEmail(authInstance: Auth, email: string, pass: string): Promise<void> {
+  const credential = EmailAuthProvider.credential(email, pass);
   const currentUser = authInstance.currentUser;
   
-  // 1. If we have an anonymous user, try to link their data to this email first
+  // 1. If anonymous, try linking
   if (currentUser && currentUser.isAnonymous) {
     try {
       await linkWithCredential(currentUser, credential);
       console.log("WGB Auth: Local data linked to cloud identity.");
       return;
     } catch (linkError: any) {
-      // If email is already in use, we fall through to sign-in or check for password mismatch
+      // If email already exists, we must sign in normally
       if (linkError.code !== 'auth/email-already-in-use' && linkError.code !== 'auth/credential-already-in-use') {
         throw linkError;
       }
-      console.warn("WGB Auth: Email already in use during link, falling back to sign-in.");
+      console.warn("WGB Auth: Email in use, falling back to sign-in.");
     }
   }
 
-  // 2. Attempt to sign in with the system's sync password
-  try {
-    await signInWithEmailAndPassword(authInstance, email, syncPass);
-    console.log("WGB Auth: Signed into existing cloud vault.");
-  } catch (signInError: any) {
-    // 3. If user doesn't exist, create the account
-    if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-      try {
-        await createUserWithEmailAndPassword(authInstance, email, syncPass);
-        console.log("WGB Auth: Created new cloud vault for email.");
-      } catch (createError: any) {
-        // Final fallback: if creation fails because email exists (race condition),
-        // and sign-in already failed, the password definitely doesn't match.
-        if (createError.code === 'auth/email-already-in-use') {
-          throw new Error("AUTH_PASSWORD_MISMATCH");
-        }
-        throw createError;
-      }
-    } else {
-      // If it's a different error (like account disabled or network), propagate it
-      throw signInError;
-    }
+  // 2. Standard sign in
+  await signInWithEmailAndPassword(authInstance, email, pass);
+}
+
+/**
+ * createEmailAccount - For fresh registration
+ */
+export async function createEmailAccount(authInstance: Auth, email: string, pass: string): Promise<void> {
+  const currentUser = authInstance.currentUser;
+  
+  if (currentUser && currentUser.isAnonymous) {
+    // If user is already anonymous, we should use syncViaEmail to "upgrade" them
+    return syncViaEmail(authInstance, email, pass);
   }
+
+  await createUserWithEmailAndPassword(authInstance, email, pass);
 }
 
 /** Initiate Sign Out. */

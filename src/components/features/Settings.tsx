@@ -18,7 +18,11 @@ import {
   Key,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff,
+  UserPlus,
+  LogIn
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -36,8 +40,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const { toast } = useToast();
   const schoolData = useSchoolData();
   const { isOnline, isInstallable, installApp } = usePWA();
+  
   const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   
   const LOGO_INAPP = "/icon-512.png";
 
@@ -65,7 +73,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     }
   };
 
-  const handleEmailSync = async () => {
+  const handleAuthAction = async () => {
     if (!emailInput.includes('@')) {
       toast({ 
         title: language === 'Marathi' ? "अवैध ईमेल" : "Invalid Email", 
@@ -74,29 +82,38 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       });
       return;
     }
+
+    if (passwordInput.length < 6) {
+      toast({ 
+        title: language === 'Marathi' ? "लहान पासवर्ड" : "Short Password", 
+        description: language === 'Marathi' ? "पासवर्ड किमान ६ अक्षरांचा असावा." : "Password must be at least 6 characters.",
+        variant: "destructive" 
+      });
+      return;
+    }
     
     try {
       setIsSyncing(true);
-      await syncViaEmail(auth, emailInput.trim().toLowerCase());
+      await syncViaEmail(auth, emailInput.trim().toLowerCase(), passwordInput);
       toast({ 
         title: language === 'Marathi' ? "सिंक यशस्वी" : "Identity Synced", 
         description: language === 'Marathi' ? "तुमचा सर्व डेटा आता सुरक्षितपणे क्लाउडमध्ये जतन केला आहे." : "All records are now secured in your cloud vault.",
         className: "bg-primary text-white" 
       });
     } catch (error: any) {
-      console.error("Email Sync Error:", error);
+      console.error("Auth Action Error:", error);
       let errorMessage = language === 'Marathi' 
-        ? "सिंक करताना त्रुटी आली. कृपया इंटरनेट कनेक्शन तपासा." 
-        : "Failed to sync. Please check your internet connection and try again.";
+        ? "त्रुटी आली. कृपया ईमेल आणि पासवर्ड तपासा." 
+        : "An error occurred. Please check your email and password.";
       
-      if (error.message === "AUTH_PASSWORD_MISMATCH") {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMessage = language === 'Marathi'
-          ? "हा ईमेल आधीच वेगळ्या पासवर्डने नोंदणीकृत आहे. कृपया दुसरा ईमेल वापरा."
-          : "This email is registered with a different password in our system. Please try a different email or contact support.";
+          ? "चुकीचा पासवर्ड. कृपया पुन्हा प्रयत्न करा."
+          : "Incorrect password or email. Please try again.";
       }
 
       toast({ 
-        title: language === 'Marathi' ? "सिंक त्रुटी" : "Sync Error", 
+        title: language === 'Marathi' ? "लॉगिन त्रुटी" : "Auth Error", 
         description: errorMessage, 
         variant: "destructive" 
       });
@@ -186,28 +203,80 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             {user?.isAnonymous && (
               <div className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-primary uppercase ml-1">Option 1: Recommended Email Sync</p>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
+                {/* Auth Mode Toggle */}
+                <div className="flex bg-muted/50 p-1 rounded-xl">
+                  <button 
+                    onClick={() => setAuthMode('sync')}
+                    className={cn(
+                      "flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all",
+                      authMode === 'sync' ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
+                    )}
+                  >
+                    {language === 'Marathi' ? "नवीन खाते / सिंक" : "Sync & Register"}
+                  </button>
+                  <button 
+                    onClick={() => setAuthMode('login')}
+                    className={cn(
+                      "flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all",
+                      authMode === 'login' ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
+                    )}
+                  >
+                    {language === 'Marathi' ? "लॉगिन करा" : "Log In"}
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-primary uppercase ml-1">
+                      {language === 'Marathi' ? "ईमेल पत्ता" : "Email Address"}
+                    </label>
+                    <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
                       <Input 
-                        placeholder="Enter your email..." 
+                        placeholder="your-name@school.com" 
                         className="h-14 rounded-2xl border-2 font-bold pl-12 bg-muted/20" 
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleEmailSync()}
                       />
                     </div>
-                    <Button 
-                      onClick={handleEmailSync} 
-                      disabled={isSyncing}
-                      className="h-14 w-14 rounded-2xl bg-primary text-white shadow-lg p-0 active-scale"
-                    >
-                      {isSyncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Key className="w-5 h-5" />}
-                    </Button>
                   </div>
-                  <p className="text-[9px] text-muted-foreground font-medium italic ml-1">* High-resilience method for all mobile devices and browsers.</p>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-primary uppercase ml-1">
+                      {language === 'Marathi' ? "पासवर्ड" : "Password"}
+                    </label>
+                    <div className="relative">
+                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
+                      <Input 
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••" 
+                        className="h-14 rounded-2xl border-2 font-bold pl-12 pr-12 bg-muted/20" 
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAuthAction()}
+                      />
+                      <button 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={handleAuthAction} 
+                    disabled={isSyncing}
+                    className="w-full h-14 rounded-2xl bg-primary text-white shadow-lg font-black uppercase text-xs tracking-widest active-scale"
+                  >
+                    {isSyncing ? (
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : authMode === 'sync' ? (
+                      <><UserPlus className="w-5 h-5 mr-2" /> {language === 'Marathi' ? "डेटा क्लाउडवर जतन करा" : "Secure Data to Cloud"}</>
+                    ) : (
+                      <><LogIn className="w-5 h-5 mr-2" /> {language === 'Marathi' ? "लॉगिन करा" : "Log In to Hub"}</>
+                    )}
+                  </Button>
                 </div>
                 
                 <div className="relative py-2">
@@ -223,6 +292,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                   {isSyncing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Globe className="w-5 h-5 mr-2" />}
                   Sync with Google ID
                 </Button>
+                <p className="text-[9px] text-center text-muted-foreground font-medium italic">
+                  * Recommended for high-reliability data sync across all devices.
+                </p>
               </div>
             )}
 
