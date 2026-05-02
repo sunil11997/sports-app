@@ -55,23 +55,38 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
   const credential = EmailAuthProvider.credential(email, pass);
   const currentUser = authInstance.currentUser;
   
-  // 1. If anonymous, try linking
+  // 1. If anonymous, try linking (this "upgrades" the local data to cloud)
   if (currentUser && currentUser.isAnonymous) {
     try {
       await linkWithCredential(currentUser, credential);
       console.log("WGB Auth: Local data linked to cloud identity.");
       return;
     } catch (linkError: any) {
-      // If email already exists, we must sign in normally
-      if (linkError.code !== 'auth/email-already-in-use' && linkError.code !== 'auth/credential-already-in-use') {
+      // If email already exists, we should probably sign in normally
+      // But if it doesn't exist, and linking failed for another reason, we try creating
+      if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
+        console.warn("WGB Auth: Email in use, falling back to sign-in.");
+      } else if (linkError.code === 'auth/user-not-found' || linkError.code === 'auth/invalid-credential') {
+        // Fall through to create or sign in
+      } else {
         throw linkError;
       }
-      console.warn("WGB Auth: Email in use, falling back to sign-in.");
     }
   }
 
-  // 2. Standard sign in
-  await signInWithEmailAndPassword(authInstance, email, pass);
+  // 2. Standard sign in or create logic
+  try {
+    await signInWithEmailAndPassword(authInstance, email, pass);
+  } catch (signInError: any) {
+    if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+      // If we are currently anonymous and the account doesn't exist, create it via createUser to keep linking logic if possible
+      // Actually createUserWithEmailAndPassword on an anonymous user doesn't link them directly in some versions, 
+      // but Firebase usually handles it or we use the linked credential above.
+      await createUserWithEmailAndPassword(authInstance, email, pass);
+    } else {
+      throw signInError;
+    }
+  }
 }
 
 /**
