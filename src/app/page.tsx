@@ -29,13 +29,14 @@ import {
   FileText,
   History as HistoryIcon,
   HeartPulse,
-  ClipboardList
+  ClipboardList,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { useAuth, useUser } from '@/firebase';
-import { initiateAnonymousSignIn, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
@@ -63,7 +64,7 @@ const translations = {
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session", activities: "Activities",
-    enter: "ACCESS HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Syncs registry to your Google Account", onlineStatus: "Online", offlineStatus: "Local"
+    enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -71,13 +72,12 @@ const translations = {
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
     home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र", activities: "उपक्रम",
-    enter: "प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "तुमचा डेटा गूगल खात्यावर सेव्ह होईल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
+    enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
 };
 
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
@@ -93,17 +93,6 @@ export default function WaghambaApp() {
 
   const t = translations[language];
   const LOGO_PATH = "/icon-512.png";
-
-  const handleGoogleLogin = async () => {
-    if (isLoggingIn) return;
-    setIsLoggingIn(true);
-    try {
-      await initiateGoogleSignIn(auth);
-    } catch (error) {
-      console.error("Login Error:", error);
-      setIsLoggingIn(false);
-    }
-  };
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
@@ -153,8 +142,6 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
-  const isFullyAuthenticated = user && !user.isAnonymous;
-
   if (isUserLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -163,7 +150,7 @@ export default function WaghambaApp() {
     );
   }
 
-  if (!isFullyAuthenticated) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
         <div className="max-w-xl w-full text-center space-y-12 relative z-10 animate-in fade-in duration-1000">
@@ -181,46 +168,25 @@ export default function WaghambaApp() {
             
             <div className="space-y-4 pt-4">
               <Button 
-                onClick={handleGoogleLogin} 
-                disabled={isLoggingIn}
-                className="w-full bg-white text-foreground hover:bg-muted border border-primary/10 h-20 rounded-[1.5rem] shadow-sm active-scale group"
-              >
-                {isLoggingIn ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                ) : (
-                  <>
-                    <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
-                      <path fill="#EA4335" d="M12 5.04c1.94 0 3.51.67 4.7 1.8l3.5-3.5C17.84 1.25 15.19 0 12 0 7.33 0 3.32 2.67 1.28 6.59l4.13 3.21C6.4 7.09 9.02 5.04 12 5.04z" />
-                      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.71 2.88c2.17-1.99 3.42-4.93 3.42-8.7z" />
-                      <path fill="#FBBC05" d="M5.41 14.62c-.24-.69-.37-1.42-.37-2.18s.13-1.49.37-2.18L1.28 6.59C.46 8.23 0 10.06 0 12s.46 3.77 1.28 5.41l4.13-3.21z" />
-                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.71-2.88c-1.03.69-2.35 1.1-4.22 1.1-3.15 0-5.81-2.13-6.76-4.99l-4.13 3.21C3.32 21.33 7.33 24 12 24z" />
-                    </svg>
-                    <div className="text-left">
-                      <span className="block font-black text-lg uppercase leading-none">{t.googleLogin}</span>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{t.syncNote}</span>
-                    </div>
-                  </>
-                )}
-              </Button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground font-black tracking-widest">OR</span></div>
-              </div>
-
-              <Button 
-                variant="ghost" 
                 onClick={() => { initiateAnonymousSignIn(auth); setSelectedSection(null); }} 
-                className="w-full h-12 rounded-xl text-muted-foreground font-black text-[10px] uppercase tracking-widest"
+                className="w-full bg-primary text-white hover:bg-primary/90 h-20 rounded-[1.5rem] shadow-xl active-scale group flex items-center justify-center gap-4"
               >
-                Enter Without Sync (Local Only)
+                <div className="text-center">
+                  <span className="block font-black text-lg uppercase leading-none">{t.enter}</span>
+                  <span className="text-[9px] font-bold opacity-60 uppercase tracking-widest">{t.syncNote}</span>
+                </div>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Button>
+
+              <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pt-4">
+                Secure Registry Access • Production v3.0
+              </p>
             </div>
           </div>
           
           <div className="flex items-center justify-center gap-2 opacity-40">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em]">Secure Institutional Standard</span>
+            <span className="text-[8px] font-black uppercase tracking-[0.3em]">Institutional Data Integrity Standard</span>
           </div>
         </div>
       </div>
@@ -270,7 +236,7 @@ export default function WaghambaApp() {
               <div className="flex items-center gap-1.5 mt-0.5 ml-5">
                 <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-emerald-500 animate-pulse" : "bg-destructive")} />
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest opacity-60">
-                  {isOnline ? "Syncing to Cloud" : "Local Mode"}
+                  {isOnline ? "Cloud Sync Active" : "Offline Mode"}
                 </span>
               </div>
             </div>
