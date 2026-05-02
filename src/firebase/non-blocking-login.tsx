@@ -22,14 +22,20 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 
 /** 
  * Initiate Google Sign-In (Redirect method for best mobile PWA compatibility).
+ * Configured for offline access and forced consent to ensure refresh token availability
+ * for the Gmail scope.
  */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/userinfo.email');
   provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
   provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+  
+  // Set custom parameters to request offline access and force the consent screen
+  // This ensures a refresh token is provided by Google.
   provider.setCustomParameters({ 
-    prompt: 'select_account',
+    access_type: 'offline',
+    prompt: 'consent',
     client_id: googleClientId
   });
   
