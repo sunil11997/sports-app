@@ -56,8 +56,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     } catch (error: any) {
       console.error("Google Sync Error:", error);
       toast({ 
-        title: "Google Sync Error", 
-        description: "If Google says 'Account not found', please use the Email Sync option below as a reliable alternative.", 
+        title: "Google Sync Failed", 
+        description: "If Google says 'Access Denied', please add your email to the Test Users in Google Cloud Console, or use Email Sync below.", 
         variant: "destructive" 
       });
     } finally {
@@ -80,9 +80,15 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       });
     } catch (error: any) {
       console.error("Email Sync Error:", error);
+      let errorMessage = "Please check your internet connection and try again.";
+      
+      if (error.message === "AUTH_PASSWORD_MISMATCH") {
+        errorMessage = "This email is registered with a different password. Please try another email for the Ashram Shala sync.";
+      }
+
       toast({ 
-        title: "Sync System Busy", 
-        description: "Please check your internet connection and try again.", 
+        title: "Sync Error", 
+        description: errorMessage, 
         variant: "destructive" 
       });
     } finally {
@@ -168,12 +174,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             {user?.isAnonymous && (
               <div className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black text-primary uppercase ml-1">Option 1: Recommended Institutional Sync</p>
+                  <p className="text-[10px] font-black text-primary uppercase ml-1">Option 1: Recommended Email Sync</p>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
                       <Input 
-                        placeholder="Enter your school email..." 
+                        placeholder="Enter your email..." 
                         className="h-14 rounded-2xl border-2 font-bold pl-12 bg-muted/20" 
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
@@ -187,7 +193,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                       {isSyncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Key className="w-5 h-5" />}
                     </Button>
                   </div>
-                  <p className="text-[9px] text-muted-foreground font-medium italic ml-1">* This method bypasses Google configuration issues and works on all browsers.</p>
+                  <p className="text-[9px] text-muted-foreground font-medium italic ml-1">* This method bypasses Google login restrictions and works on all devices.</p>
                 </div>
                 
                 <div className="relative py-2">
@@ -212,7 +218,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                    <Cloud className="w-6 h-6 text-primary" />
                    <div className="flex-1">
                       <p className="text-xs font-black text-primary uppercase">Registry Synchronized</p>
-                      <p className="text-[10px] font-medium text-muted-foreground">Your data is being backed up in real-time to the institutional cloud.</p>
+                      <p className="text-[10px] font-medium text-muted-foreground">Your records are backed up in real-time to the cloud.</p>
                    </div>
                 </div>
               </div>

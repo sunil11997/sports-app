@@ -8,8 +8,6 @@ import {
   GoogleAuthProvider,
   linkWithRedirect,
   signInWithRedirect,
-  linkWithPopup,
-  signInWithPopup,
   EmailAuthProvider,
   linkWithCredential
 } from 'firebase/auth';
@@ -54,36 +52,53 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
  * Links an anonymous session to a permanent email identity to enable multi-device sync.
  */
 export async function syncViaEmail(authInstance: Auth, email: string): Promise<void> {
-  // Use a standardized institutional sync password
   const syncPass = "wgb-institutional-vault-2025"; 
   const credential = EmailAuthProvider.credential(email, syncPass);
   const currentUser = authInstance.currentUser;
   
   try {
     if (currentUser && currentUser.isAnonymous) {
-      // 1. Link current "Local" data to the new email identity
-      await linkWithCredential(currentUser, credential);
-      console.log("WGB Auth: Local data linked to cloud identity.");
+      // 1. Try to link current session to this email
+      try {
+        await linkWithCredential(currentUser, credential);
+        console.log("WGB Auth: Local data linked to cloud identity.");
+      } catch (linkError: any) {
+        // If email is already taken, we can't link, we must sign in
+        if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
+          console.warn("WGB Auth: Email taken. Signing in instead.");
+          await signInWithEmailAndPassword(authInstance, email, syncPass);
+        } else {
+          throw linkError;
+        }
+      }
     } else {
-      // 2. Already signed in or fresh start - attempt standard login
+      // 2. Standard sign-in if not anonymous
       await signInWithEmailAndPassword(authInstance, email, syncPass);
     }
   } catch (error: any) {
-    // Handle account creation if it doesn't exist
+    // 3. If account doesn't exist, create it automatically
     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-disabled') {
       try {
         await createUserWithEmailAndPassword(authInstance, email, syncPass);
       } catch (createErr: any) {
-        // If account already exists but link failed, just sign in
+        // If creation fails because it exists (race condition), final try at sign in
         if (createErr.code === 'auth/email-already-in-use') {
-          await signInWithEmailAndPassword(authInstance, email, syncPass);
+          try {
+            await signInWithEmailAndPassword(authInstance, email, syncPass);
+          } catch (finalErr) {
+            throw new Error("AUTH_PASSWORD_MISMATCH");
+          }
         } else {
           throw createErr;
         }
       }
     } else if (error.code === 'auth/email-already-in-use') {
-      // If the email is already registered, we switch to that account
-      await signInWithEmailAndPassword(authInstance, email, syncPass);
+      // Last check for already registered emails
+      try {
+        await signInWithEmailAndPassword(authInstance, email, syncPass);
+      } catch (signInErr) {
+        throw new Error("AUTH_PASSWORD_MISMATCH");
+      }
     } else {
       throw error;
     }
