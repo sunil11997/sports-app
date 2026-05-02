@@ -29,6 +29,8 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   provider.addScope('https://www.googleapis.com/auth/userinfo.email');
   provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
   
+  // Note: Manual client_id is provided but the primary authorization 
+  // must be configured in the Firebase Console > Auth > Sign-in method.
   provider.setCustomParameters({ 
     prompt: 'select_account',
     client_id: googleClientId
