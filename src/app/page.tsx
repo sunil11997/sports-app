@@ -128,6 +128,7 @@ export default function WaghambaApp() {
     { id: "dashboard", label: t.roster, icon: LayoutDashboard },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "fitness", label: t.fitness, icon: Activity },
+    { id: "skills", label: t.skills, icon: Medal },
     { id: "activities", label: t.activities, icon: ClipboardList },
     { id: "promotion", label: t.promote, icon: ArrowUpCircle },
     { id: "classes", label: "Profiles", icon: LayoutGrid },

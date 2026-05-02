@@ -49,6 +49,7 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 /**
  * FirebaseProvider - The Institutional Auth Engine
  * Consumes Google Redirect results and maintains registry synchronization.
+ * High-resilience version optimized for mobile browsers and PWAs.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -70,31 +71,36 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     let isMounted = true;
 
-    // Critical: Handle Redirect Result with enhanced error catching
+    // Critical: Handle Redirect Result with high resilience for storage-partitioned browsers
     const initAuth = async () => {
       try {
-        // Attempt to resolve the redirect first
+        // 1. Check for redirect results immediately
         const result = await getRedirectResult(auth);
         if (result && isMounted) {
           console.log("WGB Auth: Redirect settled for", result.user.email);
         }
       } catch (error: any) {
-        // Suppress "Missing Initial State" error as it often resolves on next tick/reload
+        // Handle "Missing Initial State" which happens if sessionStorage is cleared/partitioned
         if (error.code === 'auth/missing-initial-state') {
-          console.warn("WGB Auth: Initial state missing, waiting for auth listener...");
+          console.warn("WGB Auth: State partitioned, falling back to session listener...");
         } else if (error.code === 'auth/credential-already-in-use') {
-          console.warn("WGB Auth: Identity already exists. Proceeding to sign-in.");
+          console.warn("WGB Auth: Identity exists, letting listener handle session.");
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          // Ignore cancellation
         } else {
-          console.error("WGB Auth: Redirect error", error.code, error.message);
+          console.error("WGB Auth: Handshake error", error.code, error.message);
         }
       }
 
-      // Finalize loading state by subscribing to the actual auth changes
+      // 2. Establish permanent state listener
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {
           if (isMounted) {
             setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+            if (firebaseUser) {
+              console.log("WGB Auth: Session active for", firebaseUser.email || "Anonymous");
+            }
           }
         },
         (error) => {
