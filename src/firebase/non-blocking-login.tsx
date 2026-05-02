@@ -6,8 +6,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  linkWithPopup,
-  signInWithPopup,
+  linkWithRedirect,
   signInWithRedirect,
 } from 'firebase/auth';
 
@@ -16,7 +15,10 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
   signInAnonymously(authInstance);
 }
 
-/** Initiate Google Sign-In (Pop-up). */
+/** 
+ * Initiate Google Sign-In (Redirect).
+ * This opens the login in the default browser and returns to the app.
+ */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
@@ -24,33 +26,15 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   try {
     const currentUser = authInstance.currentUser;
     if (currentUser && currentUser.isAnonymous) {
-      // If user is currently anonymous, link the Google account to preserve data
-      try {
-        await linkWithPopup(currentUser, provider);
-      } catch (linkError: any) {
-        // If linking fails because account exists, just sign in normally
-        if (linkError.code === 'auth/credential-already-in-use') {
-          await signInWithPopup(authInstance, provider);
-        } else {
-          throw linkError;
-        }
-      }
+      // If user is currently anonymous, link the Google account via redirect to preserve data
+      await linkWithRedirect(currentUser, provider);
     } else {
-      // Otherwise, standard sign in
-      await signInWithPopup(authInstance, provider);
+      // Otherwise, standard sign in via redirect
+      await signInWithRedirect(authInstance, provider);
     }
   } catch (error: any) {
-    // Suppress common "user-cancelled" errors
-    const userCancelled = 
-      error.code === 'auth/popup-closed-by-user' || 
-      error.code === 'auth/cancelled-popup-request' ||
-      error.code === 'auth/popup-blocked';
-
-    if (userCancelled) {
-      console.log("WGB: Google Sign-In cancelled by user.");
-      return;
-    }
-    
+    // Suppress common redirect/browser blocked errors
+    console.error("WGB: Google Redirect Sign-In Error:", error.code || error.message);
     throw error;
   }
 }
