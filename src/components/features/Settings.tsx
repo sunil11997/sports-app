@@ -96,24 +96,33 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       setIsSyncing(true);
       await syncViaEmail(auth, emailInput.trim().toLowerCase(), passwordInput);
       toast({ 
-        title: language === 'Marathi' ? "सिंक यशस्वी" : "Identity Synced", 
-        description: language === 'Marathi' ? "तुमचा सर्व डेटा आता सुरक्षितपणे क्लाउडमध्ये जतन केला आहे." : "All records are now secured in your cloud vault.",
+        title: language === 'Marathi' ? "यशस्वी" : "Identity Verified", 
+        description: language === 'Marathi' ? "तुमचा डेटा आता क्लाउडमध्ये सुरक्षित आहे." : "Your school records are now synchronized to the cloud.",
         className: "bg-primary text-white" 
       });
     } catch (error: any) {
-      console.error("Auth Action Error:", error);
+      console.error("Auth Action Error:", error.code, error.message);
+      
       let errorMessage = language === 'Marathi' 
-        ? "त्रुटी आली. कृपया ईमेल आणि पासवर्ड तपासा." 
-        : "An error occurred. Please check your email and password.";
+        ? "त्रुटी आली. कृपया पुन्हा प्रयत्न करा." 
+        : "An error occurred. Please try again.";
       
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMessage = language === 'Marathi'
-          ? "चुकीचा पासवर्ड. कृपया पुन्हा प्रयत्न करा."
-          : "Incorrect password or email. Please try again.";
+          ? "चुकीचा पासवर्ड किंवा ईमेल. कृपया तपासा."
+          : "Incorrect password or email. Please check your credentials.";
+      } else if (error.code === 'auth/user-token-expired') {
+        errorMessage = language === 'Marathi'
+          ? "सत्र संपले आहे. कृपया पुन्हा प्रयत्न करा."
+          : "Session expired. Please try your request again.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = language === 'Marathi'
+          ? "पासवर्ड किमान ६ अक्षरांचा असावा."
+          : "Password must be at least 6 characters.";
       }
 
       toast({ 
-        title: language === 'Marathi' ? "लॉगिन त्रुटी" : "Auth Error", 
+        title: language === 'Marathi' ? "लॉगिन त्रुटी" : "Sync Error", 
         description: errorMessage, 
         variant: "destructive" 
       });

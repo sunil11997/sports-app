@@ -50,6 +50,7 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
 /** 
  * syncViaEmail - High-Resilience Cloud Link
  * Links an anonymous session to a permanent email identity or signs in.
+ * Handles token expiration and credential conflicts.
  */
 export async function syncViaEmail(authInstance: Auth, email: string, pass: string): Promise<void> {
   const credential = EmailAuthProvider.credential(email, pass);
@@ -62,27 +63,38 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
       console.log("WGB Auth: Local data linked to cloud identity.");
       return;
     } catch (linkError: any) {
-      // If email already exists, we should probably sign in normally
-      // But if it doesn't exist, and linking failed for another reason, we try creating
-      if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
+      console.warn("WGB Auth: Link failed, checking code...", linkError.code);
+      
+      // If token expired or other session issues, we fall back to direct sign-in/up
+      if (
+        linkError.code === 'auth/user-token-expired' || 
+        linkError.code === 'auth/network-request-failed'
+      ) {
+        console.warn("WGB Auth: Session stale, attempting direct auth fallback.");
+      } else if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
         console.warn("WGB Auth: Email in use, falling back to sign-in.");
-      } else if (linkError.code === 'auth/user-not-found' || linkError.code === 'auth/invalid-credential') {
-        // Fall through to create or sign in
       } else {
+        // For critical errors (invalid email format etc), re-throw to UI
         throw linkError;
       }
     }
   }
 
-  // 2. Standard sign in or create logic
+  // 2. Standard sign in or create logic (The Fallback)
+  // We try sign-in first, if that fails with 'user-not-found', we create.
   try {
     await signInWithEmailAndPassword(authInstance, email, pass);
+    console.log("WGB Auth: Standard sign-in successful.");
   } catch (signInError: any) {
     if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-      // If we are currently anonymous and the account doesn't exist, create it via createUser to keep linking logic if possible
-      // Actually createUserWithEmailAndPassword on an anonymous user doesn't link them directly in some versions, 
-      // but Firebase usually handles it or we use the linked credential above.
-      await createUserWithEmailAndPassword(authInstance, email, pass);
+      // Create user if they don't exist
+      try {
+        await createUserWithEmailAndPassword(authInstance, email, pass);
+        console.log("WGB Auth: New cloud account created.");
+      } catch (createError: any) {
+        // If creation fails (e.g. invalid password), throw back to UI
+        throw createError;
+      }
     } else {
       throw signInError;
     }
