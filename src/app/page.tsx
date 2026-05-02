@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -24,13 +25,14 @@ import {
   PartyPopper,
   Menu,
   ChevronLeft,
-  ShieldCheck,
   Loader2,
   FileText,
   History as HistoryIcon,
   HeartPulse,
   ClipboardList,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -89,7 +91,11 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    // Automatic high-resilience login to "remove splash screen"
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
 
   const t = translations[language];
   const LOGO_PATH = "/icon-512.png";
@@ -142,81 +148,74 @@ export default function WaghambaApp() {
 
   if (!isMounted) return null;
 
-  if (isUserLoading) {
+  // Faster transition: Only show loader during actual user resolution
+  if (isUserLoading && !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="max-w-xl w-full text-center space-y-12 relative z-10 animate-in fade-in duration-1000">
-          <div className="relative mx-auto w-40 h-40">
-            <div className="absolute inset-0 bg-primary/5 rounded-[3rem] rotate-6" />
-            <div className="relative z-10 bg-white p-6 rounded-[3rem] shadow-xl border border-primary/5">
-              <Image src={LOGO_PATH} alt="App Logo" width={160} height={160} priority unoptimized className="object-contain w-full h-full" />
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-black text-primary tracking-tighter uppercase leading-tight">{t.schoolName}</h1>
-              <p className="text-muted-foreground font-black tracking-[0.4em] text-[9px] uppercase opacity-60">Institutional Management Hub</p>
-            </div>
-            
-            <div className="space-y-4 pt-4">
-              <Button 
-                onClick={() => { initiateAnonymousSignIn(auth); setSelectedSection(null); }} 
-                className="w-full bg-primary text-white hover:bg-primary/90 h-20 rounded-[1.5rem] shadow-xl active-scale group flex items-center justify-center gap-4"
-              >
-                <div className="text-center">
-                  <span className="block font-black text-lg uppercase leading-none">{t.enter}</span>
-                  <span className="text-[9px] font-bold opacity-60 uppercase tracking-widest">{t.syncNote}</span>
-                </div>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
-              <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] pt-4">
-                Secure Registry Access • Production v3.0
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-center gap-2 opacity-40">
-            <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em]">Institutional Data Integrity Standard</span>
-          </div>
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto opacity-20" />
+          <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Initializing Registry</p>
         </div>
       </div>
     );
   }
 
+  // Hub Selection screen acts as the new Home entry point
   if (!selectedSection) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
-          <button onClick={() => setSelectedSection('sports')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-xl transition-all active-scale group border border-transparent hover:border-primary/20">
-            <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
-              <Medal className="w-10 h-10 text-primary group-hover:text-white" />
+        <div className="max-w-4xl w-full space-y-12">
+          <div className="text-center space-y-4">
+            <div className="w-24 h-24 bg-white p-4 rounded-[2rem] shadow-xl mx-auto border border-primary/5">
+              <Image src={LOGO_PATH} alt="App Logo" width={96} height={96} priority unoptimized className="object-contain w-full h-full" />
             </div>
-            <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Training & Excellence</p>
-          </button>
-          <button onClick={() => setSelectedSection('general')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-xl transition-all active-scale group border border-transparent hover:border-primary/20">
-            <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
-              <GraduationCap className="w-10 h-10 text-primary group-hover:text-white" />
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h1>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-60">Digital Management Suite</p>
             </div>
-            <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Records</p>
-          </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <button 
+              onClick={() => setSelectedSection('sports')} 
+              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
+            >
+              <div className="relative z-10">
+                <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
+                  <Medal className="w-10 h-10 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Competitive Training</p>
+              </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+            </button>
+
+            <button 
+              onClick={() => setSelectedSection('general')} 
+              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
+            >
+              <div className="relative z-10">
+                <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
+                  <GraduationCap className="w-10 h-10 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Physical Ed</p>
+              </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 opacity-30 pt-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <p className="text-[9px] font-black uppercase tracking-widest">Real-time Cloud Synchronization Active</p>
+          </div>
         </div>
       </div>
     );
   }
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
+  const currentCategory = selectedSection === 'sports' ? 'athlete' : 'student';
 
   return (
     <div className="min-h-screen flex flex-col bg-background pb-24 md:pb-0 animate-in fade-in duration-1000">
@@ -277,21 +276,24 @@ export default function WaghambaApp() {
             {!schoolData.isLoaded ? <StatsSkeleton /> : (
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
-                   <h2 className="text-3xl font-black text-primary uppercase tracking-tight">
-                    Welcome back, Coach
-                   </h2>
+                   <div>
+                     <h2 className="text-3xl font-black text-primary uppercase tracking-tight">
+                      Welcome, Coach
+                     </h2>
+                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Managing {selectedSection === 'sports' ? 'Athletic Excellence' : 'Academic Growth'}</p>
+                   </div>
                    <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-2">
-                     <span className="text-[10px] font-black text-primary uppercase px-3 py-1 bg-primary/5 rounded-full">{schoolData.selectedYear}</span>
+                     <span className="text-[10px] font-black text-primary uppercase px-3 py-1 bg-primary/5 rounded-full">{schoolData.selectedYear} Term</span>
                    </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden group">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden group col-span-1 md:col-span-2 lg:col-span-1">
                     <div className="relative z-10 space-y-6">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em]">Institutional Hub</p>
-                        <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.filter(p => p.category === (selectedSection === 'sports' ? 'athlete' : 'student')).length}</h3>
-                        <p className="text-sm font-bold opacity-60">Total {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
+                        <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.filter(p => p.category === currentCategory).length}</h3>
+                        <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
                       </div>
                       <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
                         <UserPlus className="w-4 h-4 mr-2" /> Add New Record
@@ -300,35 +302,65 @@ export default function WaghambaApp() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 group-hover:scale-105 transition-transform duration-1000" />
                   </Card>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card className="google-card p-8 flex flex-col justify-between">
-                      <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-inner">
-                        <Zap className="w-5 h-5 text-white" />
+                  <div className="grid grid-cols-2 gap-6 lg:col-span-2">
+                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all">
+                      <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Zap className="w-6 h-6 text-white" />
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">
-                          {schoolData.data.activities.filter(a => a.category === (selectedSection === 'sports' ? 'athlete' : 'student')).length}
+                          {schoolData.data.activities.filter(a => a.category === currentCategory).length}
                         </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Activities Logged</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Sessions Logged</p>
                       </div>
                     </Card>
-                    <Card className="google-card p-8 flex flex-col justify-between">
-                      <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center shadow-inner">
-                        <Medal className="w-5 h-5 text-primary" />
+                    
+                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all">
+                      <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                        <TrendingUp className="w-6 h-6 text-primary" />
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">
-                          {selectedSection === 'sports' 
-                            ? schoolData.data.players.filter(p => p.category === 'athlete').length 
-                            : schoolData.data.players.filter(p => p.category === 'student').length}
+                          {Object.keys(schoolData.data.fitness).filter(id => {
+                            const p = schoolData.data.players.find(p => p.id === id);
+                            return p?.category === currentCategory;
+                          }).length}
                         </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Active Profiles</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Tests Conducted</p>
+                      </div>
+                    </Card>
+
+                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all">
+                      <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                        <Award className="w-6 h-6 text-emerald-600" />
+                      </div>
+                      <div className="mt-4">
+                        <p className="text-4xl font-black text-primary">
+                          {Object.keys(schoolData.data.sportSkills).filter(key => {
+                            const pId = key.split('_')[0];
+                            const p = schoolData.data.players.find(p => p.id === pId);
+                            return p?.category === currentCategory;
+                          }).length}
+                        </p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Evaluations</p>
+                      </div>
+                    </Card>
+
+                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-destructive/20 border-2 border-transparent transition-all">
+                      <div className="w-12 h-12 bg-destructive/5 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                        <HeartPulse className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div className="mt-4">
+                        <p className="text-4xl font-black text-primary">
+                          {schoolData.data.healthIncidents.filter(i => i.category === currentCategory).length}
+                        </p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Health Alerts</p>
                       </div>
                     </Card>
                   </div>
                 </div>
 
-                {birthdaysToday.filter(p => p.category === (selectedSection === 'sports' ? 'athlete' : 'student')).length > 0 && (
+                {birthdaysToday.filter(p => p.category === currentCategory).length > 0 && (
                   <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
@@ -344,7 +376,7 @@ export default function WaghambaApp() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {birthdaysToday
-                        .filter(p => p.category === (selectedSection === 'sports' ? 'athlete' : 'student'))
+                        .filter(p => p.category === currentCategory)
                         .map((student: any) => (
                         <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 group hover:shadow-md transition-all cursor-default border border-accent/10">
                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">
