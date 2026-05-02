@@ -9,6 +9,7 @@ import {
   linkWithRedirect,
   signInWithRedirect,
 } from 'firebase/auth';
+import { googleClientId } from './config';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -19,7 +20,7 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 
 /** 
  * Initiate Google Sign-In (Redirect).
- * Optimized for PWA and Mobile environments.
+ * Optimized for PWA and Mobile environments using specific Client ID.
  */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
@@ -29,7 +30,8 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
   
   provider.setCustomParameters({ 
-    prompt: 'select_account'
+    prompt: 'select_account',
+    client_id: googleClientId
   });
   
   try {

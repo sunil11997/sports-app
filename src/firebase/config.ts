@@ -6,3 +6,5 @@ export const firebaseConfig = {
   "measurementId": "",
   "messagingSenderId": "865560649263"
 };
+
+export const googleClientId = "949303626062-5sro1cu4f8ika0smc8nu2ka3nhrt9rlm.apps.googleusercontent.com";
