@@ -48,7 +48,7 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 /**
  * FirebaseProvider - High-Resilience Institutional Auth
- * Ensures redirect results are fully processed before finishing the loading state.
+ * Configured to support both Popup and Redirect sign-in results.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -66,10 +66,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     if (!auth) return;
 
     let isMounted = true;
-    let initialAuthSettled = false;
 
     const initAuth = async () => {
-      // 1. Wait for Redirect Result first to prevent double-sign-in loops
+      // 1. Check for Redirect Result (in case popup was blocked or redirect was used)
       try {
         await getRedirectResult(auth);
       } catch (error: any) {
@@ -82,7 +81,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         (firebaseUser) => {
           if (isMounted) {
             setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-            initialAuthSettled = true;
           }
         },
         (error) => {

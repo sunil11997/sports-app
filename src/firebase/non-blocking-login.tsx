@@ -6,8 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  linkWithRedirect,
-  signInWithRedirect,
+  linkWithPopup,
+  signInWithPopup,
   EmailAuthProvider,
   linkWithCredential
 } from 'firebase/auth';
@@ -21,9 +21,8 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 }
 
 /** 
- * Initiate Google Sign-In (Redirect method for best mobile PWA compatibility).
- * Configured for offline access and forced consent to ensure refresh token availability
- * for the Gmail scope.
+ * Initiate Google Sign-In (Popup method for best contextual stability).
+ * Configured for offline access and forced consent to ensure refresh token availability.
  */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
@@ -32,7 +31,6 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
   
   // Set custom parameters to request offline access and force the consent screen
-  // This ensures a refresh token is provided by Google.
   provider.setCustomParameters({ 
     access_type: 'offline',
     prompt: 'consent',
@@ -42,14 +40,18 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   try {
     const currentUser = authInstance.currentUser;
     if (currentUser && currentUser.isAnonymous) {
-      console.log("WGB Auth: Initiating Google Link via Redirect...");
-      await linkWithRedirect(currentUser, provider);
+      console.log("WGB Auth: Initiating Google Link via Popup...");
+      await linkWithPopup(currentUser, provider);
+      console.log("WGB Auth: Local data linked to Google identity.");
     } else {
-      console.log("WGB Auth: Initiating Google Sign-In via Redirect...");
-      await signInWithRedirect(authInstance, provider);
+      console.log("WGB Auth: Initiating Google Sign-In via Popup...");
+      await signInWithPopup(authInstance, provider);
+      console.log("WGB Auth: Google Sign-In successful.");
     }
   } catch (error: any) {
-    console.error("WGB Auth: Google Redirect failed", error);
+    console.error("WGB Auth: Google Popup failed", error);
+    // Note: Some browsers block popups by default. 
+    // If blocked, Coach Sunil may need to allow popups for the Ashram Shala domain.
     throw error;
   }
 }
@@ -57,13 +59,11 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
 /** 
  * syncViaEmail - High-Resilience Cloud Link
  * Links an anonymous session to a permanent email identity or signs in.
- * Handles token expiration and credential conflicts.
  */
 export async function syncViaEmail(authInstance: Auth, email: string, pass: string): Promise<void> {
   const credential = EmailAuthProvider.credential(email, pass);
   const currentUser = authInstance.currentUser;
   
-  // 1. If anonymous, try linking (this "upgrades" the local data to cloud)
   if (currentUser && currentUser.isAnonymous) {
     try {
       await linkWithCredential(currentUser, credential);
@@ -72,7 +72,6 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
     } catch (linkError: any) {
       console.warn("WGB Auth: Link failed, checking code...", linkError.code);
       
-      // If token expired or other session issues, we fall back to direct sign-in/up
       if (
         linkError.code === 'auth/user-token-expired' || 
         linkError.code === 'auth/network-request-failed'
@@ -81,25 +80,20 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
       } else if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
         console.warn("WGB Auth: Email in use, falling back to sign-in.");
       } else {
-        // For critical errors (invalid email format etc), re-throw to UI
         throw linkError;
       }
     }
   }
 
-  // 2. Standard sign in or create logic (The Fallback)
-  // We try sign-in first, if that fails with 'user-not-found', we create.
   try {
     await signInWithEmailAndPassword(authInstance, email, pass);
     console.log("WGB Auth: Standard sign-in successful.");
   } catch (signInError: any) {
     if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-      // Create user if they don't exist
       try {
         await createUserWithEmailAndPassword(authInstance, email, pass);
         console.log("WGB Auth: New cloud account created.");
       } catch (createError: any) {
-        // If creation fails (e.g. invalid password), throw back to UI
         throw createError;
       }
     } else {
@@ -115,7 +109,6 @@ export async function createEmailAccount(authInstance: Auth, email: string, pass
   const currentUser = authInstance.currentUser;
   
   if (currentUser && currentUser.isAnonymous) {
-    // If user is already anonymous, we should use syncViaEmail to "upgrade" them
     return syncViaEmail(authInstance, email, pass);
   }
 
