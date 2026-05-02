@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -218,7 +219,7 @@ export default function WaghambaApp() {
   const currentCategory = selectedSection === 'sports' ? 'athlete' : 'student';
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-24 md:pb-0 animate-in fade-in duration-1000">
+    <div className="min-h-screen flex flex-col bg-background pb-24 animate-in fade-in duration-1000">
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedSection(null)}>
@@ -241,23 +242,6 @@ export default function WaghambaApp() {
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-1 mx-8 flex-1 justify-center overflow-x-auto scrollbar-hide">
-            {currentTabs.map((tab) => (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "rounded-full h-10 px-6 font-black uppercase text-[10px] tracking-widest transition-all whitespace-nowrap",
-                  activeTab === tab.id ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                <tab.icon className="w-3.5 h-3.5 mr-2" />
-                {tab.label}
-              </Button>
-            ))}
-          </div>
-
           <div className="flex items-center gap-3">
              <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
@@ -428,14 +412,14 @@ export default function WaghambaApp() {
         </Tabs>
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-20 px-2 md:hidden z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
-        <div className="h-full flex items-center justify-start gap-4 px-4 min-w-max">
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-20 px-2 z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
+        <div className="h-full flex items-center justify-start md:justify-center gap-4 px-4 min-w-max md:min-w-full">
           {currentTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               data-active={activeTab === tab.id}
-              className="google-nav-item min-w-[70px]"
+              className="google-nav-item min-w-[70px] md:min-w-[100px]"
             >
               <div className="google-nav-icon">
                 <tab.icon className={cn("w-6 h-6", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
