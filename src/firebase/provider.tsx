@@ -5,6 +5,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { toast } from '@/hooks/use-toast';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -71,28 +72,35 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     let isMounted = true;
 
-    // Critical: Handle Redirect Result with high resilience for storage-partitioned browsers
+    // Critical: Handle Redirect Result with high resilience
     const initAuth = async () => {
       try {
-        // 1. Check for redirect results immediately
         const result = await getRedirectResult(auth);
         if (result && isMounted) {
           console.log("WGB Auth: Redirect settled for", result.user.email);
         }
       } catch (error: any) {
-        // Handle "Missing Initial State" which happens if sessionStorage is cleared/partitioned
-        if (error.code === 'auth/missing-initial-state') {
-          console.warn("WGB Auth: State partitioned, falling back to session listener...");
-        } else if (error.code === 'auth/credential-already-in-use') {
-          console.warn("WGB Auth: Identity exists, letting listener handle session.");
-        } else if (error.code === 'auth/popup-closed-by-user') {
-          // Ignore cancellation
-        } else {
-          console.error("WGB Auth: Handshake error", error.code, error.message);
+        console.error("WGB Auth Error Details:", error.code, error.message);
+        
+        // Specific guidance for 403/Forbidden errors
+        if (error.code === 'auth/operation-not-allowed') {
+          toast({
+            variant: "destructive",
+            title: "Auth Disabled",
+            description: "Please enable Google Sign-In in the Firebase Console.",
+          });
+        } else if (error.code === 'auth/unauthorized-domain') {
+          toast({
+            variant: "destructive",
+            title: "Domain Restricted",
+            description: "Add this URL to 'Authorized Domains' in Firebase Console.",
+          });
+        } else if (error.code === 'auth/missing-initial-state') {
+          console.warn("WGB Auth: State partitioned, let listener settle session.");
         }
       }
 
-      // 2. Establish permanent state listener
+      // 2. Permanent state listener
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {

@@ -23,7 +23,11 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
  */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
-  // Ensure account selection for institutional clarity
+  
+  // Scopes and custom parameters for maximum compatibility
+  provider.addScope('https://www.googleapis.com/auth/userinfo.email');
+  provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+  
   provider.setCustomParameters({ 
     prompt: 'select_account'
   });
@@ -32,7 +36,7 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
     const currentUser = authInstance.currentUser;
     // Account Linking: Merge anonymous data into the Google identity
     if (currentUser && currentUser.isAnonymous) {
-      console.log("WGB Auth: Initiating Account Link...");
+      console.log("WGB Auth: Initiating Account Link via Redirect...");
       await linkWithRedirect(currentUser, provider);
     } else {
       console.log("WGB Auth: Initiating Google Redirect...");
