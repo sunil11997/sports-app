@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -31,7 +32,9 @@ import {
   ClipboardList,
   TrendingUp,
   Award,
-  CloudOff
+  CloudOff,
+  Video,
+  Dumbbell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,6 +60,7 @@ const SportsDrills = dynamic(() => import('@/components/features/SportsDrills').
 const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
 const HistoryView = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
 const SchoolActivities = dynamic(() => import('@/components/features/SchoolActivities').then(mod => mod.SchoolActivities), { ssr: false, loading: () => <TableSkeleton /> });
+const CoreHub = dynamic(() => import('@/components/features/CoreHub').then(mod => mod.CoreHub), { ssr: false, loading: () => <TableSkeleton /> });
 
 const translations = {
   English: {
@@ -65,6 +69,7 @@ const translations = {
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session", activities: "Activities",
+    coreHub: "Core Hub",
     enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local"
   },
   Marathi: {
@@ -73,6 +78,7 @@ const translations = {
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
     home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र", activities: "उपक्रम",
+    coreHub: "प्रशिक्षण",
     enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
 };
@@ -104,18 +110,14 @@ export default function WaghambaApp() {
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
-    { id: "registration", label: t.register, icon: UserPlus },
-    { id: "dashboard", label: t.roster, icon: LayoutDashboard },
+    { id: "core", label: t.coreHub, icon: Video },
     { id: "tournament", label: t.tourney, icon: Trophy },
-    { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "fitness", label: t.fitness, icon: Activity },
     { id: "skills", label: t.skills, icon: Medal },
-    { id: "drills", label: t.drills, icon: Zap },
-    { id: "activities", label: t.activities, icon: ClipboardList },
-    { id: "health", label: t.health, icon: HeartPulse },
-    { id: "history", label: t.history, icon: HistoryIcon },
-    { id: "report", label: t.report, icon: FileText },
+    { id: "drills", label: t.drills, icon: Dumbbell },
+    { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "ai", label: t.aiHub, icon: Sparkles },
+    { id: "report", label: t.report, icon: FileText },
     { id: "settings", label: t.settings, icon: SettingsIcon },
   ];
 
@@ -125,10 +127,7 @@ export default function WaghambaApp() {
     { id: "dashboard", label: t.roster, icon: LayoutDashboard },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "fitness", label: t.fitness, icon: Activity },
-    { id: "skills", label: t.skills, icon: Medal },
     { id: "activities", label: t.activities, icon: ClipboardList },
-    { id: "promotion", label: t.promote, icon: ArrowUpCircle },
-    { id: "classes", label: "Profiles", icon: LayoutGrid },
     { id: "health", label: t.health, icon: HeartPulse },
     { id: "history", label: t.history, icon: HistoryIcon },
     { id: "report", label: t.report, icon: FileText },
@@ -293,8 +292,8 @@ export default function WaghambaApp() {
                         <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.filter(p => p.category === currentCategory).length}</h3>
                         <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
                       </div>
-                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
-                        <UserPlus className="w-4 h-4 mr-2" /> Add New Record
+                      <Button onClick={() => setActiveTab(selectedSection === 'sports' ? 'core' : 'registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
+                        <UserPlus className="w-4 h-4 mr-2" /> {selectedSection === 'sports' ? 'Launch Core Hub' : 'Add New Record'}
                       </Button>
                     </div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 group-hover:scale-105 transition-transform duration-1000" />
@@ -394,6 +393,7 @@ export default function WaghambaApp() {
           </TabsContent>
 
           <div className="pb-8">
+            <TabsContent value="core" className="mt-0">{activeTab === "core" && <CoreHub store={schoolData} />}</TabsContent>
             <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} onTabChange={setActiveTab} />}</TabsContent>
             <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
             <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
@@ -435,3 +435,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+
