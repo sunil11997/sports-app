@@ -57,7 +57,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       console.error("Google Sync Error:", error);
       toast({ 
         title: "Google Sync Failed", 
-        description: "If Google says 'Access Denied', please add your email to the Test Users in Google Cloud Console, or use Email Sync below.", 
+        description: "If Google login fails, please use the Email Sync option below for higher reliability.", 
         variant: "destructive" 
       });
     } finally {
@@ -67,27 +67,36 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
 
   const handleEmailSync = async () => {
     if (!emailInput.includes('@')) {
-      toast({ title: "Invalid Email", variant: "destructive" });
+      toast({ 
+        title: language === 'Marathi' ? "अवैध ईमेल" : "Invalid Email", 
+        description: language === 'Marathi' ? "कृपया एक वैध ईमेल पत्ता प्रविष्ट करा." : "Please enter a valid email address.",
+        variant: "destructive" 
+      });
       return;
     }
+    
     try {
       setIsSyncing(true);
-      await syncViaEmail(auth, emailInput);
+      await syncViaEmail(auth, emailInput.trim().toLowerCase());
       toast({ 
-        title: "Identity Synced", 
-        description: "All records are now secured in your cloud vault.",
+        title: language === 'Marathi' ? "सिंक यशस्वी" : "Identity Synced", 
+        description: language === 'Marathi' ? "तुमचा सर्व डेटा आता सुरक्षितपणे क्लाउडमध्ये जतन केला आहे." : "All records are now secured in your cloud vault.",
         className: "bg-primary text-white" 
       });
     } catch (error: any) {
       console.error("Email Sync Error:", error);
-      let errorMessage = "Please check your internet connection and try again.";
+      let errorMessage = language === 'Marathi' 
+        ? "सिंक करताना त्रुटी आली. कृपया इंटरनेट कनेक्शन तपासा." 
+        : "Failed to sync. Please check your internet connection and try again.";
       
       if (error.message === "AUTH_PASSWORD_MISMATCH") {
-        errorMessage = "This email is registered with a different password. Please try another email for the Ashram Shala sync.";
+        errorMessage = language === 'Marathi'
+          ? "हा ईमेल आधीच वेगळ्या पासवर्डने नोंदणीकृत आहे. कृपया दुसरा ईमेल वापरा."
+          : "This email is registered with a different password in our system. Please try a different email or contact support.";
       }
 
       toast({ 
-        title: "Sync Error", 
+        title: language === 'Marathi' ? "सिंक त्रुटी" : "Sync Error", 
         description: errorMessage, 
         variant: "destructive" 
       });
@@ -145,9 +154,13 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         {user?.isAnonymous ? (
           <Alert className="bg-amber-50 border-amber-200 rounded-[2rem] p-6 shadow-sm">
             <Info className="h-5 w-5 text-amber-600" />
-            <AlertTitle className="text-amber-800 font-black uppercase text-xs tracking-widest">Local Mode Active</AlertTitle>
+            <AlertTitle className="text-amber-800 font-black uppercase text-xs tracking-widest">
+              {language === 'Marathi' ? "लोकल मोड सक्रिय" : "Local Mode Active"}
+            </AlertTitle>
             <AlertDescription className="text-amber-700/80 text-xs font-medium mt-1 leading-relaxed">
-              Records are currently stored only on this device. To enable sync across all your phones, please link your Cloud Identity below.
+              {language === 'Marathi' 
+                ? "तुमचा डेटा सध्या फक्त या डिव्हाइसवर जतन केला आहे. सर्व डिव्हाइसेसवर डेटा पाहण्यासाठी कृपया खाली सिंक करा." 
+                : "Records are currently stored only on this device. To enable sync across all your phones, please link your Cloud Identity below."}
             </AlertDescription>
           </Alert>
         ) : (
@@ -158,7 +171,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                </div>
                <div>
                   <p className="font-black text-emerald-900 uppercase text-sm">Cloud Sync Active</p>
-                  <p className="text-[10px] font-bold text-emerald-700/60 uppercase">{user?.email}</p>
+                  <p className="text-[10px] font-bold text-emerald-700/60 uppercase truncate max-w-[150px]">{user?.email}</p>
                </div>
             </div>
             <Button variant="ghost" onClick={handleLogout} className="text-emerald-700 hover:text-destructive font-black text-[10px] uppercase">Sign Out</Button>
@@ -183,6 +196,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                         className="h-14 rounded-2xl border-2 font-bold pl-12 bg-muted/20" 
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleEmailSync()}
                       />
                     </div>
                     <Button 
@@ -193,7 +207,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                       {isSyncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Key className="w-5 h-5" />}
                     </Button>
                   </div>
-                  <p className="text-[9px] text-muted-foreground font-medium italic ml-1">* This method bypasses Google login restrictions and works on all devices.</p>
+                  <p className="text-[9px] text-muted-foreground font-medium italic ml-1">* High-resilience method for all mobile devices and browsers.</p>
                 </div>
                 
                 <div className="relative py-2">
@@ -218,7 +232,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                    <Cloud className="w-6 h-6 text-primary" />
                    <div className="flex-1">
                       <p className="text-xs font-black text-primary uppercase">Registry Synchronized</p>
-                      <p className="text-[10px] font-medium text-muted-foreground">Your records are backed up in real-time to the cloud.</p>
+                      <p className="text-[10px] font-medium text-muted-foreground">Your records are backed up in real-time to your cloud identity.</p>
                    </div>
                 </div>
               </div>

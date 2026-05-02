@@ -56,51 +56,42 @@ export async function syncViaEmail(authInstance: Auth, email: string): Promise<v
   const credential = EmailAuthProvider.credential(email, syncPass);
   const currentUser = authInstance.currentUser;
   
-  try {
-    if (currentUser && currentUser.isAnonymous) {
-      // 1. Try to link current session to this email
-      try {
-        await linkWithCredential(currentUser, credential);
-        console.log("WGB Auth: Local data linked to cloud identity.");
-      } catch (linkError: any) {
-        // If email is already taken, we can't link, we must sign in
-        if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
-          console.warn("WGB Auth: Email taken. Signing in instead.");
-          await signInWithEmailAndPassword(authInstance, email, syncPass);
-        } else {
-          throw linkError;
-        }
+  // 1. If we have an anonymous user, try to link their data to this email first
+  if (currentUser && currentUser.isAnonymous) {
+    try {
+      await linkWithCredential(currentUser, credential);
+      console.log("WGB Auth: Local data linked to cloud identity.");
+      return;
+    } catch (linkError: any) {
+      // If email is already in use, we fall through to sign-in or check for password mismatch
+      if (linkError.code !== 'auth/email-already-in-use' && linkError.code !== 'auth/credential-already-in-use') {
+        throw linkError;
       }
-    } else {
-      // 2. Standard sign-in if not anonymous
-      await signInWithEmailAndPassword(authInstance, email, syncPass);
+      console.warn("WGB Auth: Email already in use during link, falling back to sign-in.");
     }
-  } catch (error: any) {
-    // 3. If account doesn't exist, create it automatically
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-disabled') {
+  }
+
+  // 2. Attempt to sign in with the system's sync password
+  try {
+    await signInWithEmailAndPassword(authInstance, email, syncPass);
+    console.log("WGB Auth: Signed into existing cloud vault.");
+  } catch (signInError: any) {
+    // 3. If user doesn't exist, create the account
+    if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
       try {
         await createUserWithEmailAndPassword(authInstance, email, syncPass);
-      } catch (createErr: any) {
-        // If creation fails because it exists (race condition), final try at sign in
-        if (createErr.code === 'auth/email-already-in-use') {
-          try {
-            await signInWithEmailAndPassword(authInstance, email, syncPass);
-          } catch (finalErr) {
-            throw new Error("AUTH_PASSWORD_MISMATCH");
-          }
-        } else {
-          throw createErr;
+        console.log("WGB Auth: Created new cloud vault for email.");
+      } catch (createError: any) {
+        // Final fallback: if creation fails because email exists (race condition),
+        // and sign-in already failed, the password definitely doesn't match.
+        if (createError.code === 'auth/email-already-in-use') {
+          throw new Error("AUTH_PASSWORD_MISMATCH");
         }
-      }
-    } else if (error.code === 'auth/email-already-in-use') {
-      // Last check for already registered emails
-      try {
-        await signInWithEmailAndPassword(authInstance, email, syncPass);
-      } catch (signInErr) {
-        throw new Error("AUTH_PASSWORD_MISMATCH");
+        throw createError;
       }
     } else {
-      throw error;
+      // If it's a different error (like account disabled or network), propagate it
+      throw signInError;
     }
   }
 }
