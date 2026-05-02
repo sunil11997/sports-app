@@ -9,7 +9,9 @@ import {
   linkWithRedirect,
   signInWithRedirect,
   linkWithPopup,
-  signInWithPopup
+  signInWithPopup,
+  EmailAuthProvider,
+  linkWithCredential
 } from 'firebase/auth';
 import { googleClientId } from './config';
 
@@ -21,7 +23,7 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 }
 
 /** 
- * Initiate Google Sign-In (Popup fallback for better reliability).
+ * Initiate Google Sign-In (Redirect method for best mobile PWA compatibility).
  */
 export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
@@ -35,39 +37,53 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   try {
     const currentUser = authInstance.currentUser;
     if (currentUser && currentUser.isAnonymous) {
-      console.log("WGB Auth: Linking Anonymous data to Google...");
-      await linkWithPopup(currentUser, provider);
+      console.log("WGB Auth: Initiating Google Link via Redirect...");
+      await linkWithRedirect(currentUser, provider);
     } else {
-      console.log("WGB Auth: Initiating Google Popup...");
-      await signInWithPopup(authInstance, provider);
-    }
-  } catch (error: any) {
-    console.warn("WGB Auth: Popup blocked or failed, falling back to Redirect...", error.code);
-    if (authInstance.currentUser && authInstance.currentUser.isAnonymous) {
-      await linkWithRedirect(authInstance.currentUser, provider);
-    } else {
+      console.log("WGB Auth: Initiating Google Sign-In via Redirect...");
       await signInWithRedirect(authInstance, provider);
     }
+  } catch (error: any) {
+    console.error("WGB Auth: Google Redirect failed", error);
+    throw error;
   }
 }
 
-/** Initiate email/password sign-up or sign-in (Sync Fallback). */
+/** 
+ * syncViaEmail - High-Resilience Cloud Link
+ * Links an anonymous session to a permanent email identity to enable multi-device sync.
+ */
 export async function syncViaEmail(authInstance: Auth, email: string): Promise<void> {
-  // For simplicity in this institutional hub, we use a fixed password or 
-  // you can prompt for one. Here we use a standard login/create flow.
-  const dummyPassword = "wgb-institutional-sync"; 
+  // Use a standardized institutional sync password
+  const syncPass = "wgb-institutional-vault-2025"; 
+  const credential = EmailAuthProvider.credential(email, syncPass);
+  const currentUser = authInstance.currentUser;
   
   try {
-    const currentUser = authInstance.currentUser;
     if (currentUser && currentUser.isAnonymous) {
-      // Logic for linking would go here, but for simplicity we'll suggest 
-      // the user uses a permanent account from the start for multi-device sync.
-      console.log("WGB Auth: Attempting Email Link...");
+      // 1. Link current "Local" data to the new email identity
+      await linkWithCredential(currentUser, credential);
+      console.log("WGB Auth: Local data linked to cloud identity.");
+    } else {
+      // 2. Already signed in or fresh start - attempt standard login
+      await signInWithEmailAndPassword(authInstance, email, syncPass);
     }
-    await signInWithEmailAndPassword(authInstance, email, dummyPassword);
   } catch (error: any) {
-    if (error.code === 'auth/user-not-found') {
-      await createUserWithEmailAndPassword(authInstance, email, dummyPassword);
+    // Handle account creation if it doesn't exist
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-disabled') {
+      try {
+        await createUserWithEmailAndPassword(authInstance, email, syncPass);
+      } catch (createErr: any) {
+        // If account already exists but link failed, just sign in
+        if (createErr.code === 'auth/email-already-in-use') {
+          await signInWithEmailAndPassword(authInstance, email, syncPass);
+        } else {
+          throw createErr;
+        }
+      }
+    } else if (error.code === 'auth/email-already-in-use') {
+      // If the email is already registered, we switch to that account
+      await signInWithEmailAndPassword(authInstance, email, syncPass);
     } else {
       throw error;
     }
