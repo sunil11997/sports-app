@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -30,10 +29,8 @@ import {
   History as HistoryIcon,
   HeartPulse,
   ClipboardList,
-  ArrowRight,
   TrendingUp,
   Award,
-  Cloud,
   CloudOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -93,8 +90,12 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Silent recovery: Ensure we have at least an anonymous identity if not loading
     if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
+      const timer = setTimeout(() => {
+        initiateAnonymousSignIn(auth);
+      }, 500); // Small grace period for late auth events
+      return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, auth]);
 

@@ -5,7 +5,6 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { toast } from '@/hooks/use-toast';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -48,9 +47,8 @@ export interface UserHookResult {
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
- * FirebaseProvider - The Institutional Auth Engine
- * Consumes Google Redirect results and maintains registry synchronization.
- * High-resilience version optimized for mobile browsers and storage-partitioned PWAs.
+ * FirebaseProvider - High-Resilience Institutional Auth
+ * Ensures redirect results are fully processed before finishing the loading state.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -65,38 +63,26 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
 
   useEffect(() => {
-    if (!auth) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service unavailable.") });
-      return;
-    }
+    if (!auth) return;
 
     let isMounted = true;
+    let initialAuthSettled = false;
 
     const initAuth = async () => {
-      // 1. Critical: Attempt to resolve redirect with error recovery
+      // 1. Wait for Redirect Result first to prevent double-sign-in loops
       try {
-        const result = await getRedirectResult(auth);
-        if (result && isMounted) {
-          console.log("WGB Auth: Redirect settled for", result.user.email);
-        }
+        await getRedirectResult(auth);
       } catch (error: any) {
-        // Recovery path for storage-partitioning issues (Missing Initial State)
-        if (error.code === 'auth/missing-initial-state') {
-          console.warn("WGB Auth: Browser storage partitioned. Waiting for state listener...");
-        } else {
-          console.error("WGB Auth Redirect Error:", error.code, error.message);
-        }
+        console.warn("WGB Auth Redirect Handshake Error:", error.code);
       }
 
-      // 2. Permanent state listener - This is the final source of truth
+      // 2. Setup permanent state listener
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {
           if (isMounted) {
             setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-            if (firebaseUser) {
-              console.log("WGB Auth: Session active for", firebaseUser.email || "Anonymous");
-            }
+            initialAuthSettled = true;
           }
         },
         (error) => {

@@ -2,13 +2,12 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence, Auth } from 'firebase/auth';
+import { getAuth, setPersistence, indexedDBLocalPersistence, Auth } from 'firebase/auth';
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from 'firebase/firestore';
 
 /**
  * initializeFirebase - Institutional Registry Engine
- * Optimized for server-safety and robust offline persistence.
- * Uses persistentMultipleTabManager to ensure data is synced across instances.
+ * Optimized for high-resilience persistence using IndexedDB.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
@@ -30,11 +29,11 @@ export function getSdks(firebaseApp: FirebaseApp) {
   const auth = getAuth(firebaseApp);
   
   if (isClient) {
-    // 1. Set Auth Persistence (Client-only)
+    // 1. Set Robust Auth Persistence (IndexedDB is best for PWAs)
     try {
-      setPersistence(auth, browserLocalPersistence);
+      setPersistence(auth, indexedDBLocalPersistence);
     } catch (e) {
-      console.warn('WGB: Auth persistence suppressed', e);
+      console.warn('WGB: Auth persistence restricted', e);
     }
 
     // 2. Initialize Firestore with Multi-Tab Offline Persistence
@@ -56,7 +55,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
     };
   }
 
-  // Server-side fallback (SSR/Build-time)
   return {
     firebaseApp,
     auth,
