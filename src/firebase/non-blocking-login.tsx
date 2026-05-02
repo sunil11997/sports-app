@@ -27,6 +27,7 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/userinfo.email');
   provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+  provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
   provider.setCustomParameters({ 
     prompt: 'select_account',
     client_id: googleClientId
