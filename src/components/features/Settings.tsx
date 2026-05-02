@@ -65,7 +65,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       console.error("Google Sync Error:", error);
       toast({ 
         title: "Google Sync Failed", 
-        description: "If Google login fails, please use the Email Sync option below for higher reliability.", 
+        description: "If Google login fails, please use the Email Sync option for higher reliability.", 
         variant: "destructive" 
       });
     } finally {
@@ -105,20 +105,20 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       
       let errorMessage = language === 'Marathi' 
         ? "त्रुटी आली. कृपया पुन्हा प्रयत्न करा." 
-        : "An error occurred. Please try again.";
+        : "An error occurred during sync. Please try again.";
       
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/wrong-password' || error.message.includes('WRONG_PASSWORD')) {
         errorMessage = language === 'Marathi'
-          ? "चुकीचा पासवर्ड किंवा ईमेल. कृपया तपासा."
-          : "Incorrect password or email. Please check your credentials.";
+          ? "चुकीचा पासवर्ड. या ईमेलसाठी आधीच खाते आहे."
+          : "Incorrect password. This email already has an account.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage = language === 'Marathi'
+          ? "हा ईमेल आधीच नोंदणीकृत आहे. कृपया 'लॉगिन' टॅब वापरा."
+          : "Email already in use. Please use the 'Log In' tab instead.";
       } else if (error.code === 'auth/user-token-expired') {
         errorMessage = language === 'Marathi'
           ? "सत्र संपले आहे. कृपया पुन्हा प्रयत्न करा."
-          : "Session expired. Please try your request again.";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = language === 'Marathi'
-          ? "पासवर्ड किमान ६ अक्षरांचा असावा."
-          : "Password must be at least 6 characters.";
+          : "Session expired. Please try again.";
       }
 
       toast({ 
@@ -134,7 +134,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const handleLogout = async () => {
     try {
       await initiateSignOut(auth);
-      window.location.reload();
+      window.location.href = "/";
     } catch (error) {
       toast({ title: "Logout Error", variant: "destructive" });
     }
@@ -176,7 +176,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
-        {/* Cloud Synchronization Warning */}
         {user?.isAnonymous ? (
           <Alert className="bg-amber-50 border-amber-200 rounded-[2rem] p-6 shadow-sm">
             <Info className="h-5 w-5 text-amber-600" />
@@ -186,7 +185,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <AlertDescription className="text-amber-700/80 text-xs font-medium mt-1 leading-relaxed">
               {language === 'Marathi' 
                 ? "तुमचा डेटा सध्या फक्त या डिव्हाइसवर जतन केला आहे. सर्व डिव्हाइसेसवर डेटा पाहण्यासाठी कृपया खाली सिंक करा." 
-                : "Records are currently stored only on this device. To enable sync across all your phones, please link your Cloud Identity below."}
+                : "Records are currently stored only on this device. Use the forms below to link your data to a Cloud Identity for multi-device sync."}
             </AlertDescription>
           </Alert>
         ) : (
@@ -204,7 +203,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </div>
         )}
 
-        {/* Cloud Identity Section */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <Cloud className="w-3 h-3 text-primary" /> Multi-Device Cloud Sync
@@ -212,7 +210,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             {user?.isAnonymous && (
               <div className="p-6 space-y-6">
-                {/* Auth Mode Toggle */}
                 <div className="flex bg-muted/50 p-1 rounded-xl">
                   <button 
                     onClick={() => setAuthMode('sync')}
@@ -236,13 +233,11 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-primary uppercase ml-1">
-                      {language === 'Marathi' ? "ईमेल पत्ता" : "Email Address"}
-                    </label>
+                    <label className="text-[10px] font-black text-primary uppercase ml-1">Email</label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
                       <Input 
-                        placeholder="your-name@school.com" 
+                        placeholder="teacher@school.com" 
                         className="h-14 rounded-2xl border-2 font-bold pl-12 bg-muted/20" 
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
@@ -251,9 +246,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-primary uppercase ml-1">
-                      {language === 'Marathi' ? "पासवर्ड" : "Password"}
-                    </label>
+                    <label className="text-[10px] font-black text-primary uppercase ml-1">Password</label>
                     <div className="relative">
                       <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
                       <Input 
@@ -281,7 +274,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                     {isSyncing ? (
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
                     ) : authMode === 'sync' ? (
-                      <><UserPlus className="w-5 h-5 mr-2" /> {language === 'Marathi' ? "डेटा क्लाउडवर जतन करा" : "Secure Data to Cloud"}</>
+                      <><UserPlus className="w-5 h-5 mr-2" /> {language === 'Marathi' ? "डेटा क्लाउडवर जतन करा" : "Register & Sync Data"}</>
                     ) : (
                       <><LogIn className="w-5 h-5 mr-2" /> {language === 'Marathi' ? "लॉगिन करा" : "Log In to Hub"}</>
                     )}
@@ -301,9 +294,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                   {isSyncing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Globe className="w-5 h-5 mr-2" />}
                   Sync with Google ID
                 </Button>
-                <p className="text-[9px] text-center text-muted-foreground font-medium italic">
-                  * Recommended for high-reliability data sync across all devices.
-                </p>
               </div>
             )}
 
@@ -313,7 +303,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                    <Cloud className="w-6 h-6 text-primary" />
                    <div className="flex-1">
                       <p className="text-xs font-black text-primary uppercase">Registry Synchronized</p>
-                      <p className="text-[10px] font-medium text-muted-foreground">Your records are backed up in real-time to your cloud identity.</p>
+                      <p className="text-[10px] font-medium text-muted-foreground">All your records are now secure in the cloud vault.</p>
                    </div>
                 </div>
               </div>
@@ -321,7 +311,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </div>
         </div>
 
-        {/* Institutional Data */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <ShieldAlert className="w-3 h-3 text-primary" /> Data & Safety
@@ -344,7 +333,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </div>
         </div>
 
-        {/* Device Settings */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Interface Settings</label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
@@ -369,10 +357,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               }
             />
           </div>
-        </div>
-
-        <div className="text-center pt-8 opacity-20">
-          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.6em]">WGB-VAULT-V3.0</p>
         </div>
       </div>
     </div>

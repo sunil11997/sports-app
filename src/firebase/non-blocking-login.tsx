@@ -50,8 +50,6 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
     }
   } catch (error: any) {
     console.error("WGB Auth: Google Popup failed", error);
-    // Note: Some browsers block popups by default. 
-    // If blocked, Coach Sunil may need to allow popups for the Ashram Shala domain.
     throw error;
   }
 }
@@ -64,55 +62,50 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
   const credential = EmailAuthProvider.credential(email, pass);
   const currentUser = authInstance.currentUser;
   
+  // Phase 1: Try Linking (only if currently anonymous)
   if (currentUser && currentUser.isAnonymous) {
     try {
       await linkWithCredential(currentUser, credential);
       console.log("WGB Auth: Local data linked to cloud identity.");
       return;
     } catch (linkError: any) {
-      console.warn("WGB Auth: Link failed, checking code...", linkError.code);
-      
+      console.warn("WGB Auth: Link check...", linkError.code);
+      // If email is already taken, we must fall through to standard sign-in
       if (
-        linkError.code === 'auth/user-token-expired' || 
-        linkError.code === 'auth/network-request-failed'
+        linkError.code === 'auth/email-already-in-use' || 
+        linkError.code === 'auth/credential-already-in-use' ||
+        linkError.code === 'auth/user-token-expired'
       ) {
-        console.warn("WGB Auth: Session stale, attempting direct auth fallback.");
-      } else if (linkError.code === 'auth/email-already-in-use' || linkError.code === 'auth/credential-already-in-use') {
-        console.warn("WGB Auth: Email in use, falling back to sign-in.");
+        console.warn("WGB Auth: Email in use or token expired, attempting direct sign-in fallback.");
       } else {
         throw linkError;
       }
     }
   }
 
+  // Phase 2: Standard Sign In
   try {
     await signInWithEmailAndPassword(authInstance, email, pass);
-    console.log("WGB Auth: Standard sign-in successful.");
+    console.log("WGB Auth: Sign-in successful.");
   } catch (signInError: any) {
+    // If user not found, try to Create a new account
     if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
       try {
         await createUserWithEmailAndPassword(authInstance, email, pass);
-        console.log("WGB Auth: New cloud account created.");
+        console.log("WGB Auth: New account created successfully.");
       } catch (createError: any) {
+        // If it fails with 'already-in-use' here, it means Phase 2 failed because of a WRONG PASSWORD
+        if (createError.code === 'auth/email-already-in-use') {
+          const customError = new Error('WRONG_PASSWORD_FOR_EXISTING_ACCOUNT');
+          (customError as any).code = 'auth/wrong-password';
+          throw customError;
+        }
         throw createError;
       }
     } else {
       throw signInError;
     }
   }
-}
-
-/**
- * createEmailAccount - For fresh registration
- */
-export async function createEmailAccount(authInstance: Auth, email: string, pass: string): Promise<void> {
-  const currentUser = authInstance.currentUser;
-  
-  if (currentUser && currentUser.isAnonymous) {
-    return syncViaEmail(authInstance, email, pass);
-  }
-
-  await createUserWithEmailAndPassword(authInstance, email, pass);
 }
 
 /** Initiate Sign Out. */
