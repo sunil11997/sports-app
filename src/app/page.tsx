@@ -159,13 +159,13 @@ export default function WaghambaApp() {
     });
   }, [schoolData.data.players]);
 
-  // ELIMINATE WHITE SCREEN: Show an instant institutional splash while mounting
+  // INSTANT INSTITUTIONAL SPLASH: Replaced placeholder icon with full logo
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6 text-white overflow-hidden">
         <div className="relative z-10 space-y-8 animate-pulse text-center">
-          <div className="w-24 h-24 bg-white/20 p-4 rounded-[2rem] mx-auto backdrop-blur-xl border border-white/30 flex items-center justify-center">
-             <div className="w-12 h-12 bg-white rounded-xl shadow-lg" />
+          <div className="w-32 h-32 bg-white p-6 rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20">
+             <Image src={LOGO_PATH} alt="Institutional Logo" width={100} height={100} priority unoptimized className="object-contain" />
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
