@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -21,8 +22,16 @@ import { cn } from '@/lib/utils';
 
 export function StandardClassView({ store, std }: { store: any, std: string }) {
   const [activeReportMode, setActiveReportMode] = useState<'First' | 'Yearly'>('First');
-  const students = store.data.players.filter((p: any) => p.std === std && p.category === 'student');
-  const classActivities = store.data.activities.filter((a: any) => a.std === std);
+  
+  const students = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => p.std === std)
+      .sort((a: any, b: any) => (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0));
+  }, [store.data.players, std]);
+
+  const classActivities = useMemo(() => {
+    return store.data.activities.filter((a: any) => a.std === std);
+  }, [store.data.activities, std]);
 
   const calculateBMI = (h: string, w: string) => {
     const height = parseFloat(h) / 100;
@@ -171,7 +180,10 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                         <TableCell className="font-bold text-xs">
                           <div className="flex flex-col">
                             <span className="uppercase text-primary">{student.name}</span>
-                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ID: {student.id}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">SR: #{student.serialNumber || '0'}</span>
+                              {student.category === 'athlete' && <Badge className="bg-accent/10 text-accent text-[6px] font-black h-3 px-1 border-accent/20">ATHLETE</Badge>}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-center text-xs font-bold">{student.age}</TableCell>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -58,11 +59,18 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
   const [selectedType, setSelectedType] = useState("");
   const [severity, setSeverity] = useState("Minor");
 
-  const targetCategory = section === 'general' ? 'student' : 'athlete';
+  const isGeneral = section === 'general';
   
   const filteredPlayers = useMemo(() => 
-    store.data.players.filter((p: any) => p.category === targetCategory),
-    [store.data.players, targetCategory]
+    store.data.players
+      .filter((p: any) => isGeneral ? true : p.category === 'athlete')
+      .sort((a: any, b: any) => {
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      }),
+    [store.data.players, isGeneral]
   );
 
   const currentTypeData = useMemo(() => 
@@ -97,7 +105,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
       date,
       description: `[${severity.toUpperCase()}] ${description}`,
       severity,
-      category: targetCategory
+      category: player?.category || 'student'
     };
 
     store.addHealthIncident(incident);

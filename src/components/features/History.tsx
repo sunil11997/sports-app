@@ -41,9 +41,17 @@ import { ChartSkeleton, DashboardHomeSkeleton } from '@/components/ui/loading-sk
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
-  const targetCategory = isGeneral ? 'student' : 'athlete';
 
-  const availablePlayers = store.data.players.filter((p: any) => p.category === targetCategory);
+  const availablePlayers = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => isGeneral ? true : p.category === 'athlete')
+      .sort((a: any, b: any) => {
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
+  }, [store.data.players, isGeneral]);
 
   const player = useMemo(() => 
     store.data.players.find((p: any) => p.id === selectedPlayerId),

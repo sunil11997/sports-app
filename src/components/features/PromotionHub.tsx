@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -21,8 +22,8 @@ export function PromotionHub({ store, section }: { store: any, section: 'sports'
   const [isPromoting, setIsPromoting] = useState<string | null>(null);
 
   const students = useMemo(() => {
-    const targetCategory = section === 'general' ? 'student' : 'athlete';
-    return store.data.players.filter((p: any) => p.category === targetCategory);
+    const isGeneral = section === 'general';
+    return store.data.players.filter((p: any) => isGeneral ? true : p.category === 'athlete');
   }, [store.data.players, section]);
 
   const statsByStd = useMemo(() => {
