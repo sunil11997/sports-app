@@ -1,12 +1,13 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Video, 
   Dumbbell, 
@@ -19,50 +20,71 @@ import {
   Plus,
   Trash2,
   Printer,
-  Download,
   Search,
   PenTool,
-  Scan,
   Maximize2,
   Clock,
   CheckCircle2,
-  Library,
   Zap,
-  Target
+  Target,
+  User,
+  Medal,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+
 const DRILL_LIBRARY = [
-  { id: 'k1', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '15m', level: 'Advanced', description: 'Focus on explosive leg extension and rapid retreat.' },
-  { id: 'k2', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Strengthening hand grip and pulling force.' },
-  { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with the ball toss peak.' },
-  { id: 'v2', category: 'Volleyball', name: 'Side-Out Rotation', duration: '15m', level: 'Intermediate', description: 'Coordination and communication during rotation phases.' },
-  { id: 'a1', category: 'Agility', name: 'Shuttle 10x6 Sprint', duration: '10m', level: 'Basic', description: 'Developing core acceleration and deceleration.' },
-  { id: 'a2', category: 'Agility', name: 'Ladder Drill (High Knee)', duration: '12m', level: 'Basic', description: 'Improving foot speed and coordination.' }
+  // Kabaddi
+  { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.' },
+  { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.' },
+  { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.' },
+  { id: 'k4', category: 'Kabaddi', name: 'Hand Touch Reach', duration: '12m', level: 'Basic', description: 'Improving upper body reach during raiding.' },
+  // Volleyball
+  { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.' },
+  { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.' },
+  { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.' },
+  { id: 'v4', category: 'Volleyball', name: 'Block Timing', duration: '15m', level: 'Advanced', description: 'Reacting to attacker hand movements.' },
+  // Handball
+  { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.' },
+  { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.' },
+  // Athletics
+  { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.' },
+  { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.' },
+  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.' }
 ];
 
 export function CoreHub({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeHubTab, setActiveHubTab] = useState("analysis");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSport, setSelectedSport] = useState("Kabaddi");
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   
   // Analysis States
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
 
   // Planning States
   const [currentPlan, setCurrentPlan] = useState<any[]>([]);
-  const [planName, setPlanName] = useState("Monday Elite Training");
+  const [planName, setPlanName] = useState("Standard Technical Practice");
 
   const filteredDrills = DRILL_LIBRARY.filter(d => 
-    d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    d.category.toLowerCase().includes(searchTerm.toLowerCase())
+    (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     d.category.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (d.category === selectedSport || !selectedSport)
   );
+
+  const playersInSport = useMemo(() => {
+    return store.data.players.filter((p: any) => 
+      p.category === 'athlete' && (!selectedSport || p.sports?.includes(selectedSport))
+    );
+  }, [store.data.players, selectedSport]);
 
   const totalPlanTime = currentPlan.reduce((acc, item) => acc + parseInt(item.duration), 0);
 
@@ -85,6 +107,18 @@ export function CoreHub({ store }: { store: any }) {
     toast({ title: "Drill Added", description: `${drill.name} added to practice plan.` });
   };
 
+  const handleAutoPlan = () => {
+    const sportDrills = DRILL_LIBRARY.filter(d => d.category === selectedSport).slice(0, 4);
+    if (sportDrills.length === 0) {
+      toast({ title: "No Drills Found", description: "No standard drills available for this sport category yet.", variant: "destructive" });
+      return;
+    }
+    const mapped = sportDrills.map(d => ({ ...d, planId: Math.random() }));
+    setCurrentPlan(mapped);
+    setPlanName(`${selectedSport} Technical Session`);
+    toast({ title: "Plan Generated", description: `Standard 4-drill session created for ${selectedSport}.` });
+  };
+
   const handlePrintPlan = () => {
     const win = window.open('', '_blank');
     const content = `
@@ -93,35 +127,33 @@ export function CoreHub({ store }: { store: any }) {
           <title>Practice Plan: ${planName}</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 40px; color: #111; }
-            h1 { color: #221 50% 38%; border-bottom: 4px solid #F59E0B; padding-bottom: 10px; text-transform: uppercase; }
+            h1 { color: #235C36; border-bottom: 4px solid #F59E0B; padding-bottom: 10px; text-transform: uppercase; }
             .meta { margin-bottom: 30px; font-weight: 800; font-size: 14px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
             th { background: #f8f8f8; text-transform: uppercase; font-size: 11px; }
-            .footer { margin-top: 50px; text-align: center; font-size: 10px; color: #888; }
           </style>
         </head>
         <body>
           <h1>Practice Plan: ${planName}</h1>
           <div class="meta">
-            Date: ${format(new Date(), 'PP')} | Total Estimated Duration: ${totalPlanTime} Mins
+            Date: ${format(new Date(), 'PP')} | Discipline: ${selectedSport} | Duration: ${totalPlanTime} Mins
           </div>
           <table>
             <thead>
-              <tr><th>Sequence</th><th>Drill/Activity</th><th>Duration</th><th>Focus Points</th></tr>
+              <tr><th>Seq</th><th>Drill</th><th>Duration</th><th>Description</th></tr>
             </thead>
             <tbody>
               ${currentPlan.map((p, i) => `
                 <tr>
                   <td>${i + 1}</td>
-                  <td><strong>${p.name.toUpperCase()}</strong> (${p.category})</td>
+                  <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td>${p.duration}</td>
                   <td>${p.description}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
-          <div class="footer">Waghamba Ashram Shala - Sports Hub V3.0</div>
         </body>
       </html>
     `;
@@ -132,224 +164,293 @@ export function CoreHub({ store }: { store: any }) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="bg-primary/5 p-10 rounded-[3.5rem] border-2 border-primary/10 shadow-lg relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-3 text-center md:text-left">
-            <h2 className="text-4xl font-black text-primary uppercase tracking-tighter flex items-center gap-4">
+      {/* Institutional Selector Header */}
+      <div className="bg-primary p-10 rounded-[3.5rem] shadow-2xl relative overflow-hidden text-white">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-4 space-y-2">
+            <h2 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
               <Zap className="w-10 h-10 text-accent" /> Core Hub
             </h2>
-            <p className="text-lg font-medium text-muted-foreground max-w-xl">
-              Elite institutional analysis, drill management, and tactical planning suite.
-            </p>
+            <p className="text-sm font-bold opacity-70 uppercase tracking-widest">Advanced Technical Registry</p>
           </div>
-          <Tabs value={activeHubTab} onValueChange={setActiveHubTab} className="w-full md:w-auto">
-            <TabsList className="bg-white/50 border rounded-2xl h-14 p-1.5 shadow-inner">
-              <TabsTrigger value="analysis" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Analysis</TabsTrigger>
-              <TabsTrigger value="library" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Library</TabsTrigger>
-              <TabsTrigger value="planning" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Planning</TabsTrigger>
-            </TabsList>
-          </Tabs>
+
+          <div className="lg:col-span-4 space-y-2">
+            <label className="text-[10px] font-black uppercase opacity-60 ml-2">Select Institutional Game</label>
+            <Select value={selectedSport} onValueChange={setSelectedSport}>
+              <SelectTrigger className="h-14 rounded-2xl bg-white/10 border-white/20 text-white font-black uppercase">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SPORTS_LIST.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="lg:col-span-4 space-y-2">
+            <label className="text-[10px] font-black uppercase opacity-60 ml-2">Select Student Registry</label>
+            <Select value={selectedPlayerId} onValueChange={setSelectedPlayerId}>
+              <SelectTrigger className="h-14 rounded-2xl bg-white/10 border-white/20 text-white font-black uppercase">
+                <SelectValue placeholder="All Athletes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Athletes</SelectItem>
+                {playersInSport.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
       </div>
 
-      <div className="pb-12">
-        <Tabs value={activeHubTab} onValueChange={setActiveHubTab} className="space-y-8">
-          
-          <TabsContent value="analysis" className="mt-0">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <Card className="lg:col-span-8 border-2 rounded-[3rem] overflow-hidden bg-black shadow-2xl relative">
-                <div className="aspect-video bg-muted/10 flex items-center justify-center relative">
-                  <video 
-                    ref={videoRef}
-                    className="w-full h-full object-contain"
-                    src="https://www.w3schools.com/html/mov_bbb.mp4" // Placeholder
-                    onPause={() => setIsPlaying(false)}
-                    onPlay={() => setIsPlaying(true)}
-                  />
-                  <canvas ref={canvasRef} className="absolute inset-0 z-10 pointer-events-none" />
+      <Tabs value={activeHubTab} onValueChange={setActiveHubTab} className="space-y-8">
+        <div className="flex items-center justify-center">
+          <TabsList className="bg-muted/50 border rounded-full h-16 p-2 shadow-inner">
+            <TabsTrigger value="analysis" className="rounded-full px-10 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Analysis</TabsTrigger>
+            <TabsTrigger value="library" className="rounded-full px-10 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Library</TabsTrigger>
+            <TabsTrigger value="planning" className="rounded-full px-10 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Planning</TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="analysis" className="mt-0 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <Card className="lg:col-span-8 border-2 rounded-[3.5rem] overflow-hidden bg-black shadow-2xl relative">
+              <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
+                <video 
+                  ref={videoRef}
+                  className="w-full h-full object-contain"
+                  src="https://www.w3schools.com/html/mov_bbb.mp4"
+                  onPause={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                />
+              </div>
+              
+              <div className="bg-zinc-950 p-8 flex flex-wrap items-center justify-between gap-6 border-t border-white/5">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="icon" onClick={() => handleStep(-0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronLeft className="w-8 h-8" /></Button>
+                  <Button onClick={handleTogglePlayback} className="bg-white text-black hover:bg-white/90 rounded-full h-16 w-16 shadow-2xl scale-110">
+                    {isPlaying ? <Pause className="fill-current w-8 h-8" /> : <Play className="fill-current w-8 h-8 ml-1" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleStep(0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronRight className="w-8 h-8" /></Button>
                 </div>
-                
-                <div className="bg-zinc-900 p-6 flex flex-wrap items-center justify-between gap-6 border-t border-white/10">
-                  <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => handleStep(-0.033)} className="text-white hover:bg-white/10 rounded-full h-12 w-12"><ChevronLeft className="w-6 h-6" /></Button>
-                    <Button onClick={handleTogglePlayback} className="bg-white text-black hover:bg-white/90 rounded-full h-14 w-14 shadow-xl">
-                      {isPlaying ? <Pause className="fill-current w-6 h-6" /> : <Play className="fill-current w-6 h-6 ml-1" />}
+
+                <div className="flex items-center gap-2 bg-white/5 p-2 rounded-2xl border border-white/10">
+                  {[0.25, 0.5, 1].map(rate => (
+                    <Button 
+                      key={rate} 
+                      size="sm" 
+                      variant={playbackRate === rate ? "default" : "ghost"}
+                      onClick={() => { setPlaybackRate(rate); if(videoRef.current) videoRef.current.playbackRate = rate; }}
+                      className={cn("rounded-xl font-black text-xs px-6 h-10", playbackRate === rate ? "bg-accent text-white" : "text-white/60")}
+                    >
+                      {rate}x Speed
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleStep(0.033)} className="text-white hover:bg-white/10 rounded-full h-12 w-12"><ChevronRight className="w-6 h-6" /></Button>
+                  ))}
+                </div>
+
+                <Button className="bg-accent text-white rounded-2xl px-8 h-14 font-black uppercase text-xs tracking-widest shadow-xl"><Maximize2 className="w-5 h-5 mr-3" /> Analyze Form</Button>
+              </div>
+            </Card>
+
+            <div className="lg:col-span-4 space-y-6">
+              <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white flex flex-col h-full">
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3 mb-8">
+                  <Target className="w-7 h-7 text-accent" /> Technique Hub
+                </h3>
+                <div className="flex-1 space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Active Recording</label>
+                    <div className="bg-primary/5 p-6 rounded-3xl border-2 border-primary/5 flex flex-col gap-4">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg"><Video className="w-6 h-6" /></div>
+                          <div>
+                            <p className="font-black text-sm uppercase text-primary leading-none">{selectedSport}_Drill_01.mp4</p>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Uploaded: Today, 10:45 AM</span>
+                          </div>
+                       </div>
+                       <Badge variant="outline" className="w-fit text-[9px] font-black uppercase border-primary/20 bg-white">60 FPS High Precision</Badge>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-2xl border border-white/10">
-                    {[0.25, 0.5, 1].map(rate => (
-                      <Button 
-                        key={rate} 
-                        size="sm" 
-                        variant={playbackRate === rate ? "default" : "ghost"}
-                        onClick={() => { setPlaybackRate(rate); if(videoRef.current) videoRef.current.playbackRate = rate; }}
-                        className={cn("rounded-xl font-black text-[10px] px-4", playbackRate === rate ? "bg-accent text-white" : "text-white/60")}
-                      >
-                        {rate}x
-                      </Button>
-                    ))}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-2">Analysis Checkpoints</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                       {['Posture Alignment', 'Explosive Takeoff', 'Reaction Delay'].map((check, i) => (
+                         <div key={i} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-primary/10 transition-colors">
+                           <span className="text-xs font-bold text-foreground/80 uppercase">{check}</span>
+                           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                         </div>
+                       ))}
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" size="icon" className="border-white/20 text-white rounded-xl hover:bg-white/10"><RotateCcw className="w-5 h-5" /></Button>
-                    <Button variant="outline" size="icon" className="border-white/20 text-white rounded-xl hover:bg-white/10"><PenTool className="w-5 h-5" /></Button>
-                    <Button className="bg-accent text-white rounded-xl px-6 font-black uppercase text-[10px]"><Maximize2 className="w-4 h-4 mr-2" /> Fullscreen</Button>
-                  </div>
+                </div>
+                <div className="pt-8 border-t space-y-3">
+                  <Button variant="outline" className="w-full h-14 rounded-2xl border-2 font-black uppercase text-xs tracking-widest">Compare Side-by-Side</Button>
+                  <Button className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg">Save Analysis Log</Button>
                 </div>
               </Card>
+            </div>
+          </div>
+        </TabsContent>
 
-              <div className="lg:col-span-4 space-y-6">
-                <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white">
-                  <h3 className="text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2 mb-6">
-                    <Target className="w-6 h-6 text-accent" /> Technique Analysis
+        <TabsContent value="library" className="mt-0">
+           <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+             <div className="relative flex-1 w-full max-w-2xl">
+               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+               <Input 
+                 placeholder={`Search technical drills for ${selectedSport}...`} 
+                 className="pl-16 h-16 rounded-[2rem] border-2 font-bold shadow-inner text-lg" 
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+               />
+             </div>
+             <div className="flex gap-3">
+               <Button onClick={handleAutoPlan} className="bg-accent text-white h-16 rounded-[1.5rem] font-black uppercase text-xs px-10 tracking-widest shadow-xl active-scale">
+                 <Sparkles className="w-5 h-5 mr-3" /> Auto-Plan {selectedSport}
+               </Button>
+             </div>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+             {filteredDrills.length === 0 ? (
+               <div className="col-span-full py-32 text-center space-y-4 opacity-20">
+                 <Dumbbell className="w-20 h-20 mx-auto" />
+                 <p className="text-2xl font-black uppercase tracking-widest">No drills match your search</p>
+               </div>
+             ) : filteredDrills.map(drill => (
+               <Card key={drill.id} className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary/30 transition-all shadow-xl bg-white relative">
+                 <div className="aspect-video bg-zinc-100 relative flex items-center justify-center overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                   <Play className="w-16 h-16 text-white/50 group-hover:scale-110 group-hover:text-primary transition-all z-10" />
+                   <Badge className="absolute top-6 left-6 bg-primary text-white border-0 font-black text-[10px] uppercase px-4 py-1.5 rounded-full shadow-lg">{drill.category}</Badge>
+                 </div>
+                 <div className="p-8 space-y-6">
+                   <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <h4 className="text-2xl font-black text-primary uppercase tracking-tight">{drill.name}</h4>
+                        <div className="flex items-center gap-4">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="w-4 h-4" /> {drill.duration}</span>
+                          <span className="text-[10px] font-black text-accent uppercase tracking-widest">{drill.level}</span>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => handleAddToPlan(drill)} className="text-primary hover:bg-primary/5 rounded-full h-12 w-12 border border-primary/10"><Plus className="w-6 h-6" /></Button>
+                   </div>
+                   <p className="text-sm font-medium text-foreground/60 leading-relaxed italic border-l-4 border-accent/20 pl-4">"{drill.description}"</p>
+                   <div className="grid grid-cols-2 gap-3 pt-2">
+                     <Button variant="outline" className="rounded-xl font-black uppercase text-[10px] border-2 h-11">View Demo</Button>
+                     <Button variant="ghost" className="rounded-xl font-black uppercase text-[10px] h-11">Progression</Button>
+                   </div>
+                 </div>
+               </Card>
+             ))}
+           </div>
+        </TabsContent>
+
+        <TabsContent value="planning" className="mt-0">
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+             <div className="lg:col-span-4 space-y-8">
+                <Card className="border-2 rounded-[3rem] p-10 shadow-2xl bg-white">
+                  <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3 mb-8">
+                    <CalendarRange className="w-8 h-8 text-accent" /> Session Builder
                   </h3>
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Loaded Footage</label>
-                      <div className="bg-primary/5 p-4 rounded-2xl border-2 border-primary/5 flex items-center justify-between">
-                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg"><Video className="w-5 h-5" /></div>
-                            <span className="font-bold text-sm uppercase">Kabaddi_Raid_01.mp4</span>
-                         </div>
-                         <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20">60 FPS</Badge>
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">Practice Title</label>
+                      <Input value={planName} onChange={(e) => setPlanName(e.target.value)} className="h-14 rounded-2xl border-2 font-bold bg-muted/20 shadow-inner px-6" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">Selected Sport</label>
+                      <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border-2 border-primary/5">
+                        <Medal className="w-5 h-5 text-primary" />
+                        <span className="font-black text-primary uppercase">{selectedSport}</span>
                       </div>
                     </div>
 
-                    <div className="p-5 bg-muted/30 rounded-3xl border-2 border-dashed border-muted text-center space-y-4">
-                      <p className="text-xs font-medium text-muted-foreground italic">"Frame-by-frame breakdown active. Use arrows to detect drag in leg extension."</p>
-                      <Button variant="outline" className="w-full rounded-xl border-2 font-black uppercase text-[10px] tracking-widest h-11">
-                        Compare Side-by-Side
-                      </Button>
+                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-primary/5 text-center relative overflow-hidden">
+                       <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Target Run Time</p>
+                       <h4 className="text-6xl font-black text-primary tracking-tighter">{totalPlanTime}<span className="text-xl ml-2 opacity-40">MINS</span></h4>
+                       <div className="mt-6 flex items-center justify-center gap-2 text-emerald-600 font-bold uppercase text-[10px]">
+                          <CheckCircle2 className="w-4 h-4" /> Balanced Intensity
+                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 pt-4 border-t">
-                       <Button variant="ghost" className="h-12 rounded-xl text-primary font-black uppercase text-[10px] border-2 border-transparent hover:border-primary/10">Add Telestration</Button>
-                       <Button variant="ghost" className="h-12 rounded-xl text-primary font-black uppercase text-[10px] border-2 border-transparent hover:border-primary/10">Save Clips</Button>
+                    <div className="grid grid-cols-1 gap-4">
+                      <Button onClick={handleAutoPlan} variant="outline" className="w-full h-14 rounded-2xl border-2 font-black uppercase text-xs tracking-widest">
+                        <RefreshCw className="w-5 h-5 mr-3" /> Reset to Standard
+                      </Button>
+                      <Button onClick={handlePrintPlan} disabled={currentPlan.length === 0} className="w-full bg-primary text-white h-16 rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale">
+                        <Printer className="w-6 h-6 mr-3" /> Export Session PDF
+                      </Button>
                     </div>
                   </div>
                 </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="library" className="mt-0">
-             <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8">
-               <div className="relative flex-1 w-full max-w-xl">
-                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                 <Input 
-                   placeholder="Search Ballogy drills, techniques, categories..." 
-                   className="pl-12 h-14 rounded-2xl border-2 font-bold shadow-inner" 
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                 />
-               </div>
-               <div className="flex gap-2">
-                 <Button variant="outline" className="h-14 rounded-2xl font-black uppercase text-[10px] px-8 border-2 shadow-sm"><Library className="w-5 h-5 mr-2" /> All Categories</Button>
-                 <Button className="bg-primary text-white h-14 rounded-2xl font-black uppercase text-[10px] px-10 shadow-lg"><Plus className="w-5 h-5 mr-2" /> Custom Drill</Button>
-               </div>
              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-               {filteredDrills.map(drill => (
-                 <Card key={drill.id} className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary/30 transition-all shadow-xl bg-white">
-                   <div className="aspect-video bg-muted/30 relative flex items-center justify-center">
-                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                     <Play className="w-12 h-12 text-white/50 group-hover:scale-110 group-hover:text-primary transition-all z-10" />
-                     <Badge className="absolute top-4 right-4 bg-white/90 text-primary border-0 font-black text-[9px] uppercase px-3 shadow-sm">{drill.category}</Badge>
-                   </div>
-                   <div className="p-8 space-y-6">
-                     <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <h4 className="text-xl font-black text-primary uppercase tracking-tight">{drill.name}</h4>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="w-3 h-3" /> {drill.duration}</span>
-                            <span className="text-[10px] font-black text-accent uppercase tracking-widest">{drill.level}</span>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/5 rounded-full"><Plus className="w-5 h-5" onClick={() => handleAddToPlan(drill)} /></Button>
+             <div className="lg:col-span-8 space-y-6">
+                <Card className="border-2 rounded-[3.5rem] overflow-hidden shadow-2xl bg-white min-h-[700px] flex flex-col">
+                  <div className="bg-muted/40 p-8 border-b flex justify-between items-center">
+                     <div className="flex items-center gap-3">
+                       <ListOrdered className="w-5 h-5 text-primary" />
+                       <span className="text-xs font-black text-primary uppercase tracking-widest">Planned Activity Sequence</span>
                      </div>
-                     <p className="text-xs font-medium text-foreground/60 leading-relaxed italic border-l-4 border-primary/10 pl-4">"{drill.description}"</p>
-                     <Button variant="outline" className="w-full h-12 rounded-xl font-black uppercase text-[10px] border-2 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">View Demo Footage</Button>
-                   </div>
-                 </Card>
-               ))}
-             </div>
-          </TabsContent>
-
-          <TabsContent value="planning" className="mt-0">
-             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-               <div className="lg:col-span-4 space-y-6">
-                  <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white">
-                    <h3 className="text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2 mb-6">
-                      <CalendarRange className="w-6 h-6 text-accent" /> Session Builder
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Practice Title</label>
-                        <Input value={planName} onChange={(e) => setPlanName(e.target.value)} className="h-12 rounded-xl border-2 font-bold bg-muted/20 shadow-inner" />
-                      </div>
-                      <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-primary/5 text-center">
-                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Run Time</p>
-                         <h4 className="text-5xl font-black text-primary tracking-tighter">{totalPlanTime}<span className="text-sm ml-1 opacity-40">MINS</span></h4>
-                         <div className="mt-4 flex items-center justify-center gap-2 text-primary/40">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span className="text-[10px] font-bold uppercase">Balanced Intensity</span>
+                     <Badge className="font-black text-xs uppercase px-6 py-2 rounded-full bg-primary text-white">{currentPlan.length} Segments</Badge>
+                  </div>
+                  <div className="flex-1 p-10 space-y-6 overflow-y-auto">
+                    {currentPlan.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-6">
+                         <Dumbbell className="w-24 h-24" />
+                         <div className="text-center space-y-2">
+                           <p className="font-black uppercase text-xl tracking-widest">Planning Deck Empty</p>
+                           <p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use "Auto-Plan" to start building your technical session.</p>
                          </div>
                       </div>
-                      <Button onClick={handlePrintPlan} disabled={currentPlan.length === 0} className="w-full bg-primary text-white h-16 rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale">
-                        <Printer className="w-5 h-5 mr-3" /> Export to PDF
-                      </Button>
-                    </div>
-                  </Card>
-               </div>
-
-               <div className="lg:col-span-8 space-y-6">
-                  <Card className="border-2 rounded-[3rem] overflow-hidden shadow-2xl bg-white min-h-[600px] flex flex-col">
-                    <div className="bg-muted/30 p-6 border-b flex justify-between items-center">
-                       <span className="text-xs font-black text-primary uppercase tracking-widest">Planned Sequence</span>
-                       <Badge variant="outline" className="font-black text-[9px] uppercase px-4 py-1 rounded-full">{currentPlan.length} ACTIVITIES</Badge>
-                    </div>
-                    <div className="flex-1 p-8 space-y-4 overflow-y-auto">
-                      {currentPlan.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center opacity-30 space-y-4">
-                           <Dumbbell className="w-16 h-16" />
-                           <p className="font-black uppercase text-sm tracking-widest text-center">Drag and drop drills here<br />to build your session</p>
+                    ) : (
+                      currentPlan.map((p, idx) => (
+                        <div key={p.planId} className="bg-white p-8 rounded-[2rem] border-2 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all animate-in slide-in-from-right-4 duration-300">
+                           <div className="flex items-center gap-8">
+                              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-2xl text-primary shadow-inner border border-primary/5">{idx + 1}</div>
+                              <div>
+                                 <p className="font-black text-2xl text-primary uppercase tracking-tight leading-none">{p.name}</p>
+                                 <div className="flex items-center gap-4 mt-2">
+                                   <Badge variant="secondary" className="text-[9px] font-black uppercase">{p.category}</Badge>
+                                   <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Target className="w-3 h-3" /> {p.level} Focus</span>
+                                 </div>
+                              </div>
+                           </div>
+                           <div className="flex items-center gap-8">
+                              <div className="text-right">
+                                 <p className="font-black text-2xl text-primary leading-none">{p.duration}</p>
+                                 <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">Est. Time</p>
+                              </div>
+                              <Button variant="ghost" size="icon" onClick={() => setCurrentPlan(currentPlan.filter(i => i.planId !== p.planId))} className="text-destructive hover:bg-destructive/5 rounded-full h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-6 h-6" /></Button>
+                           </div>
                         </div>
-                      ) : (
-                        currentPlan.map((p, idx) => (
-                          <div key={p.planId} className="bg-white p-6 rounded-3xl border-2 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all">
-                             <div className="flex items-center gap-6">
-                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center font-black text-primary shadow-inner">{idx + 1}</div>
-                                <div>
-                                   <p className="font-black text-primary uppercase tracking-tight leading-none">{p.name}</p>
-                                   <span className="text-[9px] font-bold text-muted-foreground uppercase">{p.category} • {p.level}</span>
-                                </div>
-                             </div>
-                             <div className="flex items-center gap-6">
-                                <div className="text-right">
-                                   <p className="font-black text-sm text-primary">{p.duration}</p>
-                                   <p className="text-[8px] font-bold text-muted-foreground uppercase">Estimated</p>
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => setCurrentPlan(currentPlan.filter(i => i.planId !== p.planId))} className="text-destructive hover:bg-destructive/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-5 h-5" /></Button>
-                             </div>
-                          </div>
-                        ))
-                      )}
+                      ))
+                    )}
+                  </div>
+                  <div className="p-10 bg-muted/10 border-t flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                       <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                       <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Institutional logic verified by Hub v3.0</p>
                     </div>
-                    <div className="p-8 bg-muted/10 border-t flex items-center justify-center gap-3">
-                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                       <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Session Logic Verified by Institutional Hub</span>
-                    </div>
-                  </Card>
-               </div>
+                    {selectedPlayerId && (
+                      <div className="flex items-center gap-3 px-6 py-2 bg-white rounded-full border shadow-sm">
+                        <User className="w-4 h-4 text-primary" />
+                        <span className="text-[10px] font-black uppercase text-primary">Assigning to: {store.data.players.find((p: any) => p.id === selectedPlayerId)?.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
              </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+           </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
 
+const ListOrdered = ({ className }: { className?: string }) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
+  </svg>
+);
