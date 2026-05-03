@@ -1,19 +1,19 @@
 
-const CACHE_NAME = 'waghamba-sports-v4';
+const CACHE_NAME = 'wgb-sports-hub-v1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-41.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -32,26 +32,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') return;
-
+  // Simple network-first strategy for dynamic registry data
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Cache successful responses for next time
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Fallback if network fails and no cache exists
-        return cachedResponse;
-      });
-
-      return cachedResponse || fetchPromise;
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });

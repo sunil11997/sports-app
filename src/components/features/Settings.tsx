@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -22,7 +23,8 @@ import {
   Eye,
   EyeOff,
   UserPlus,
-  LogIn
+  LogIn,
+  Download
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -176,6 +178,28 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
+        {isInstallable && (
+          <div className="bg-primary/5 border-2 border-primary/20 p-6 rounded-[2.5rem] shadow-lg animate-in zoom-in-95 duration-500">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-xl">
+                <Download className="text-white w-8 h-8 animate-bounce" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-black text-primary uppercase tracking-tight">Institutional Web App Ready</h3>
+                <p className="text-xs font-medium text-muted-foreground max-w-[250px] mx-auto leading-relaxed">
+                  Install this system directly to your device for a fast, native-like experience.
+                </p>
+              </div>
+              <Button 
+                onClick={installApp} 
+                className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale"
+              >
+                Install Now
+              </Button>
+            </div>
+          </div>
+        )}
+
         {user?.isAnonymous ? (
           <Alert className="bg-amber-50 border-amber-200 rounded-[2rem] p-6 shadow-sm">
             <Info className="h-5 w-5 text-amber-600" />
@@ -339,9 +363,9 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <SettingsItem 
               icon={Smartphone} 
               color="bg-orange-500" 
-              label="Install Native Hub" 
-              sublabel={isInstallable ? "Available for local installation" : "Running on web engine"}
-              disabled={!isInstallable}
+              label="Native Hub Status" 
+              sublabel={isInstallable ? "Ready to Install" : "Running on Web"}
+              value={isInstallable ? "Available" : "Active"}
               onClick={isInstallable ? installApp : undefined}
             />
             <SettingsItem 

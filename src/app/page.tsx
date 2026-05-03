@@ -40,7 +40,8 @@ import {
   ShieldCheck,
   Flame,
   Globe,
-  BarChart3
+  BarChart3,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -78,7 +79,8 @@ const translations = {
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Dashboard", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities",
     coreHub: "Core Hub",
-    enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local"
+    enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local",
+    installApp: "INSTALL NATIVE HUB"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -87,7 +89,8 @@ const translations = {
     switchHub: "हब बदला",
     home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "डॅशबोर्ड", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम",
     coreHub: "प्रशिक्षण",
-    enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
+    enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन",
+    installApp: "ॲप इन्स्टॉल करा"
   }
 };
 
@@ -100,7 +103,7 @@ export default function WaghambaApp() {
   
   const schoolData = useSchoolData();
   const { user, isUserLoading } = useUser();
-  const { isOnline } = usePWA();
+  const { isOnline, isInstallable, installApp } = usePWA();
   const auth = useAuth();
 
   useEffect(() => {
@@ -209,6 +212,16 @@ export default function WaghambaApp() {
               {t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </Button>
             
+            {isInstallable && (
+              <Button 
+                onClick={installApp}
+                variant="outline"
+                className="h-14 rounded-2xl border-2 border-primary text-primary font-black uppercase tracking-widest active-scale group"
+              >
+                <Download className="mr-2 w-5 h-5 animate-bounce" /> {t.installApp}
+              </Button>
+            )}
+
             <div className="flex items-center justify-center gap-4">
                <button 
                  onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
