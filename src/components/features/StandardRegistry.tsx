@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -17,11 +17,15 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const [activeTerm, setActiveTerm] = useState<'First' | 'Second'>('First');
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
-  const playersInStd = store.data.players.filter((p: any) => p.std === std && p.category === 'student');
+  // Memoize filtered players to avoid triggering useEffect loops
+  const playersInStd = useMemo(() => 
+    store.data.players.filter((p: any) => p.std === std && p.category === 'student'),
+    [store.data.players, std]
+  );
 
   const [termRecords, setTermRecords] = useState<Record<string, any>>({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!store.isLoaded) return;
     const newRecords: Record<string, any> = {};
     playersInStd.forEach((p: any) => {
