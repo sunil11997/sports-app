@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
@@ -31,7 +30,8 @@ import {
   Medal,
   RefreshCw,
   Sparkles,
-  Eye
+  Eye,
+  Youtube
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -84,6 +84,17 @@ export function CoreHub({ store }: { store: any }) {
   const [analysisVideo, setAnalysisVideo] = useState(SPORT_VIDEOS['Kabaddi']);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Helper to check for YouTube
+  const isYouTube = useMemo(() => {
+    return analysisVideo.includes('youtube.com') || analysisVideo.includes('youtu.be');
+  }, [analysisVideo]);
+
+  const getYouTubeEmbed = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1&mute=0` : null;
+  };
+
   // Planning States
   const [currentPlan, setCurrentPlan] = useState<any[]>([]);
   const [planName, setPlanName] = useState("Standard Technical Practice");
@@ -92,6 +103,7 @@ export function CoreHub({ store }: { store: any }) {
   useEffect(() => {
     if (SPORT_VIDEOS[selectedSport]) {
       setAnalysisVideo(SPORT_VIDEOS[selectedSport]);
+      setIsPlaying(false);
     }
   }, [selectedSport]);
 
@@ -110,6 +122,7 @@ export function CoreHub({ store }: { store: any }) {
   const totalPlanTime = currentPlan.reduce((acc, item) => acc + parseInt(item.duration), 0);
 
   const handleTogglePlayback = () => {
+    if (isYouTube) return; // YouTube handled by its own controls
     if (videoRef.current) {
       if (isPlaying) videoRef.current.pause();
       else videoRef.current.play();
@@ -118,6 +131,7 @@ export function CoreHub({ store }: { store: any }) {
   };
 
   const handleStep = (amount: number) => {
+    if (isYouTube) return;
     if (videoRef.current) {
       videoRef.current.currentTime += amount;
     }
@@ -132,6 +146,7 @@ export function CoreHub({ store }: { store: any }) {
     if (drill.video) {
       setAnalysisVideo(drill.video);
       setActiveHubTab("analysis");
+      setIsPlaying(false);
       toast({ title: "Loading Technique", description: `Reviewing technical moves for ${drill.name}` });
     }
   };
@@ -244,42 +259,63 @@ export function CoreHub({ store }: { store: any }) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <Card className="lg:col-span-8 border-2 rounded-[3.5rem] overflow-hidden bg-black shadow-2xl relative">
               <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
-                <video 
-                  key={analysisVideo}
-                  ref={videoRef}
-                  className="w-full h-full object-contain"
-                  src={analysisVideo}
-                  onPause={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
-                  controls={false}
-                />
+                {isYouTube ? (
+                  <iframe 
+                    key={analysisVideo}
+                    src={getYouTubeEmbed(analysisVideo) || ""}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video 
+                    key={analysisVideo}
+                    ref={videoRef}
+                    className="w-full h-full object-contain"
+                    src={analysisVideo}
+                    onPause={() => setIsPlaying(false)}
+                    onPlay={() => setIsPlaying(true)}
+                    controls={false}
+                  />
+                )}
               </div>
               
-              <div className="bg-zinc-950 p-8 flex flex-wrap items-center justify-between gap-6 border-t border-white/5">
-                <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="icon" onClick={() => handleStep(-0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronLeft className="w-8 h-8" /></Button>
-                  <Button onClick={handleTogglePlayback} className="bg-white text-black hover:bg-white/90 rounded-full h-16 w-16 shadow-2xl scale-110">
-                    {isPlaying ? <Pause className="fill-current w-8 h-8" /> : <Play className="fill-current w-8 h-8 ml-1" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleStep(0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronRight className="w-8 h-8" /></Button>
-                </div>
-
-                <div className="flex items-center gap-2 bg-white/5 p-2 rounded-2xl border border-white/10">
-                  {[0.25, 0.5, 1].map(rate => (
-                    <Button 
-                      key={rate} 
-                      size="sm" 
-                      variant={playbackRate === rate ? "default" : "ghost"}
-                      onClick={() => { setPlaybackRate(rate); if(videoRef.current) videoRef.current.playbackRate = rate; }}
-                      className={cn("rounded-xl font-black text-xs px-6 h-10", playbackRate === rate ? "bg-accent text-white" : "text-white/60")}
-                    >
-                      {rate}x Speed
+              {!isYouTube && (
+                <div className="bg-zinc-950 p-8 flex flex-wrap items-center justify-between gap-6 border-t border-white/5">
+                  <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => handleStep(-0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronLeft className="w-8 h-8" /></Button>
+                    <Button onClick={handleTogglePlayback} className="bg-white text-black hover:bg-white/90 rounded-full h-16 w-16 shadow-2xl scale-110">
+                      {isPlaying ? <Pause className="fill-current w-8 h-8" /> : <Play className="fill-current w-8 h-8 ml-1" />}
                     </Button>
-                  ))}
-                </div>
+                    <Button variant="ghost" size="icon" onClick={() => handleStep(0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronRight className="w-8 h-8" /></Button>
+                  </div>
 
-                <Button className="bg-accent text-white rounded-2xl px-8 h-14 font-black uppercase text-xs tracking-widest shadow-xl"><Maximize2 className="w-5 h-5 mr-3" /> Analyze Form</Button>
-              </div>
+                  <div className="flex items-center gap-2 bg-white/5 p-2 rounded-2xl border border-white/10">
+                    {[0.25, 0.5, 1].map(rate => (
+                      <Button 
+                        key={rate} 
+                        size="sm" 
+                        variant={playbackRate === rate ? "default" : "ghost"}
+                        onClick={() => { setPlaybackRate(rate); if(videoRef.current) videoRef.current.playbackRate = rate; }}
+                        className={cn("rounded-xl font-black text-xs px-6 h-10", playbackRate === rate ? "bg-accent text-white" : "text-white/60")}
+                      >
+                        {rate}x Speed
+                      </Button>
+                    ))}
+                  </div>
+
+                  <Button className="bg-accent text-white rounded-2xl px-8 h-14 font-black uppercase text-xs tracking-widest shadow-xl"><Maximize2 className="w-5 h-5 mr-3" /> Analyze Form</Button>
+                </div>
+              )}
+
+              {isYouTube && (
+                <div className="bg-zinc-950 p-6 flex items-center justify-center border-t border-white/5">
+                  <div className="flex items-center gap-2 text-white/40">
+                    <Youtube className="w-5 h-5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">YouTube technical player active</span>
+                  </div>
+                </div>
+              )}
             </Card>
 
             <div className="lg:col-span-4 space-y-6">
@@ -292,9 +328,16 @@ export function CoreHub({ store }: { store: any }) {
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Active Recording</label>
                     <div className="bg-primary/5 p-6 rounded-3xl border-2 border-primary/5 flex flex-col gap-4">
                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg"><Video className="w-6 h-6" /></div>
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg",
+                            isYouTube ? "bg-red-600" : "bg-primary"
+                          )}>
+                            {isYouTube ? <Youtube className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+                          </div>
                           <div>
-                            <p className="font-black text-sm uppercase text-primary leading-none">{selectedSport}_Tutorial_Mastery.mp4</p>
+                            <p className="font-black text-sm uppercase text-primary leading-none truncate max-w-[150px]">
+                              {selectedSport}_Tutorial_Mastery
+                            </p>
                             <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Reference Material</span>
                           </div>
                        </div>
