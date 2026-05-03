@@ -283,10 +283,9 @@ export default function WaghambaApp() {
   }
 
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
-  const currentCategory = selectedSection === 'sports' ? 'athlete' : 'student';
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-24 animate-in fade-in duration-1000">
+    <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))] animate-in fade-in duration-1000">
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
@@ -416,7 +415,7 @@ export default function WaghambaApp() {
             )}
           </TabsContent>
 
-          <div className="pb-8">
+          <div className="pb-12">
             <TabsContent value="core" className="mt-0">{activeTab === "core" && <CoreHub store={schoolData} />}</TabsContent>
             <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} language={language} t={t} onTabChange={setActiveTab} />}</TabsContent>
             <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
@@ -439,23 +438,31 @@ export default function WaghambaApp() {
         </Tabs>
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-20 px-2 z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
-        <div className="h-full flex items-center justify-start md:justify-center gap-4 px-4 min-w-max md:min-w-full">
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
+        <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
           {currentTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               data-active={activeTab === tab.id}
-              className="google-nav-item min-w-[70px] md:min-w-[100px]"
+              className="google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 group transition-all"
             >
-              <div className="google-nav-icon">
-                <tab.icon className={cn("w-6 h-6", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+              <div className={cn(
+                "google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all group-active:scale-90",
+                activeTab === tab.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+              )}>
+                <tab.icon className="w-6 h-6" />
               </div>
-              <span className="google-nav-label text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span className={cn(
+                "google-nav-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap",
+                activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+              )}>
                 {tab.label}
               </span>
             </button>
           ))}
+          {/* Spacer for horizontal scroll comfort */}
+          <div className="w-6 shrink-0 md:hidden" />
         </div>
       </nav>
     </div>
