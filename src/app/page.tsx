@@ -34,7 +34,8 @@ import {
   Award,
   CloudOff,
   Video,
-  Dumbbell
+  Dumbbell,
+  UsersRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -61,6 +62,7 @@ const HealthIncidents = dynamic(() => import('@/components/features/HealthIncide
 const HistoryView = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
 const SchoolActivities = dynamic(() => import('@/components/features/SchoolActivities').then(mod => mod.SchoolActivities), { ssr: false, loading: () => <TableSkeleton /> });
 const CoreHub = dynamic(() => import('@/components/features/CoreHub').then(mod => mod.CoreHub), { ssr: false, loading: () => <TableSkeleton /> });
+const Teams = dynamic(() => import('@/components/features/Teams').then(mod => mod.Teams), { ssr: false, loading: () => <TableSkeleton /> });
 
 const translations = {
   English: {
@@ -68,7 +70,7 @@ const translations = {
     sportsHub: "Sports Excellence",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
-    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session", activities: "Activities",
+    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session", activities: "Activities",
     coreHub: "Core Hub",
     enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local"
   },
@@ -77,7 +79,7 @@ const translations = {
     sportsHub: "क्रीडा विभाग",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
-    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र", activities: "उपक्रम",
+    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र", activities: "उपक्रम",
     coreHub: "प्रशिक्षण",
     enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
@@ -112,6 +114,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home },
     { id: "core", label: t.coreHub, icon: Video },
     { id: "tournament", label: t.tourney, icon: Trophy },
+    { id: "teams", label: t.teams, icon: UsersRound },
     { id: "fitness", label: t.fitness, icon: Activity },
     { id: "skills", label: t.skills, icon: Medal },
     { id: "drills", label: t.drills, icon: Dumbbell },
@@ -125,10 +128,12 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home },
     { id: "registration", label: t.enroll, icon: UserPlus },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard },
+    { id: "classes", label: t.registry, icon: LayoutGrid },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "fitness", label: t.fitness, icon: Activity },
     { id: "activities", label: t.activities, icon: ClipboardList },
     { id: "health", label: t.health, icon: HeartPulse },
+    { id: "promotion", label: t.promote, icon: ArrowUpCircle },
     { id: "history", label: t.history, icon: HistoryIcon },
     { id: "report", label: t.report, icon: FileText },
     { id: "settings", label: t.settings, icon: SettingsIcon },
@@ -409,6 +414,7 @@ export default function WaghambaApp() {
             <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="classes" className="mt-0">{activeTab === "classes" && <ClassesSection store={schoolData} />}</TabsContent>
             <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
+            <TabsContent value="teams" className="mt-0">{activeTab === "teams" && <Teams store={schoolData} />}</TabsContent>
           </div>
         </Tabs>
       </main>
@@ -435,4 +441,3 @@ export default function WaghambaApp() {
     </div>
   );
 }
-
