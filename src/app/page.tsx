@@ -38,7 +38,9 @@ import {
   UsersRound,
   ArrowRight,
   ShieldCheck,
-  Flame
+  Flame,
+  Globe,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,10 +64,11 @@ const SportsSkills = dynamic(() => import('@/components/features/SportsSkills').
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
 const SportsDrills = dynamic(() => import('@/components/features/SportsDrills').then(mod => mod.SportsDrills), { ssr: false, loading: () => <TableSkeleton /> });
 const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
-const HistoryView = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
+const PersonalDashboard = dynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
 const SchoolActivities = dynamic(() => import('@/components/features/SchoolActivities').then(mod => mod.SchoolActivities), { ssr: false, loading: () => <TableSkeleton /> });
 const CoreHub = dynamic(() => import('@/components/features/CoreHub').then(mod => mod.CoreHub), { ssr: false, loading: () => <TableSkeleton /> });
 const Teams = dynamic(() => import('@/components/features/Teams').then(mod => mod.Teams), { ssr: false, loading: () => <TableSkeleton /> });
+const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(mod => mod.ExamsHub), { ssr: false, loading: () => <TableSkeleton /> });
 
 const translations = {
   English: {
@@ -73,7 +76,7 @@ const translations = {
     sportsHub: "Sports Excellence",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
-    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "History", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", session: "Session", activities: "Activities",
+    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Dashboard", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities",
     coreHub: "Core Hub",
     enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local"
   },
@@ -82,7 +85,7 @@ const translations = {
     sportsHub: "क्रीडा विभाग",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
-    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "इतिहास", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", session: "सत्र", activities: "उपक्रम",
+    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "डॅशबोर्ड", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम",
     coreHub: "प्रशिक्षण",
     enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन"
   }
@@ -117,6 +120,7 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home },
     { id: "registration", label: t.register, icon: UserPlus },
     { id: "core", label: t.coreHub, icon: Video },
+    { id: "history", label: t.history, icon: BarChart3 },
     { id: "tournament", label: t.tourney, icon: Trophy },
     { id: "teams", label: t.teams, icon: UsersRound },
     { id: "fitness", label: t.fitness, icon: Activity },
@@ -132,13 +136,14 @@ export default function WaghambaApp() {
     { id: "home", label: t.home, icon: Home },
     { id: "registration", label: t.enroll, icon: UserPlus },
     { id: "dashboard", label: t.roster, icon: LayoutDashboard },
+    { id: "history", label: t.history, icon: BarChart3 },
     { id: "classes", label: t.registry, icon: LayoutGrid },
+    { id: "exams", label: t.exams, icon: FileText },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "fitness", label: t.fitness, icon: Activity },
     { id: "activities", label: t.activities, icon: ClipboardList },
     { id: "health", label: t.health, icon: HeartPulse },
     { id: "promotion", label: t.promote, icon: ArrowUpCircle },
-    { id: "history", label: t.history, icon: HistoryIcon },
     { id: "report", label: t.report, icon: FileText },
     { id: "settings", label: t.settings, icon: SettingsIcon },
   ];
@@ -169,11 +174,9 @@ export default function WaghambaApp() {
     );
   }
 
-  // STAGE 1: Beautiful Landing Page
   if (stage === 'landing') {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        {/* Background Visual Elements */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
 
@@ -219,7 +222,7 @@ export default function WaghambaApp() {
           <div className="pt-12 flex items-center justify-center gap-2 opacity-30">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <p className="text-[9px] font-black uppercase tracking-[0.2em]">
-              Authorized Institutional Registry • v3.0 Powered by Genkit
+              Authorized Institutional Registry • v3.1 Powered by Genkit
             </p>
           </div>
         </div>
@@ -227,7 +230,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // STAGE 2: Section Selector
   if (stage === 'selector') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -244,7 +246,7 @@ export default function WaghambaApp() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <button 
-              onClick={() => { setSelectedSection('sports'); setStage('hub'); }} 
+              onClick={() => { setSelectedSection('sports'); setStage('hub'); setActiveTab('home'); }} 
               className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
             >
               <div className="relative z-10">
@@ -254,11 +256,10 @@ export default function WaghambaApp() {
                 <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Competitive Training & Coaching</p>
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
             </button>
 
             <button 
-              onClick={() => { setSelectedSection('general'); setStage('hub'); }} 
+              onClick={() => { setSelectedSection('general'); setStage('hub'); setActiveTab('home'); }} 
               className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
             >
               <div className="relative z-10">
@@ -268,7 +269,6 @@ export default function WaghambaApp() {
                 <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Physical Ed Profile</p>
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
             </button>
           </div>
 
@@ -282,7 +282,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // STAGE 3: The Hub
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
   const currentCategory = selectedSection === 'sports' ? 'athlete' : 'student';
 
@@ -339,19 +338,6 @@ export default function WaghambaApp() {
                    </div>
                 </div>
 
-                {user?.isAnonymous && (
-                  <Card className="rounded-3xl border-none bg-amber-50 p-6 flex items-center justify-between shadow-inner">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-amber-200 rounded-xl flex items-center justify-center"><CloudOff className="text-amber-800" /></div>
-                      <div>
-                        <p className="text-sm font-black text-amber-900 uppercase">Local Mode Active</p>
-                        <p className="text-xs text-amber-800/60 font-medium">To see data on other devices, please login in Settings.</p>
-                      </div>
-                    </div>
-                    <Button onClick={() => setActiveTab('settings')} className="bg-amber-500 hover:bg-amber-600 text-white font-black uppercase text-[9px] rounded-xl h-9">Login to Sync</Button>
-                  </Card>
-                )}
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden group col-span-1 md:col-span-2 lg:col-span-1">
                     <div className="relative z-10 space-y-6">
@@ -364,25 +350,22 @@ export default function WaghambaApp() {
                         <UserPlus className="w-4 h-4 mr-2" /> Add New {selectedSection === 'sports' ? 'Athlete' : 'Student'}
                       </Button>
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 group-hover:scale-105 transition-transform duration-1000" />
                   </Card>
 
                   <div className="grid grid-cols-2 gap-6 lg:col-span-2">
-                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all">
+                    <Card onClick={() => setActiveTab('history')} className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all cursor-pointer">
                       <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Zap className="w-6 h-6 text-white" />
+                        <TrendingUp className="w-6 h-6 text-white" />
                       </div>
                       <div className="mt-4">
-                        <p className="text-4xl font-black text-primary">
-                          {schoolData.data.activities.filter(a => a.category === currentCategory).length}
-                        </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Sessions Logged</p>
+                        <p className="text-4xl font-black text-primary">Open</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Analytics Hub</p>
                       </div>
                     </Card>
                     
-                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all">
+                    <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all cursor-pointer">
                       <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                        <TrendingUp className="w-6 h-6 text-primary" />
+                        <Activity className="w-6 h-6 text-primary" />
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">
@@ -391,35 +374,7 @@ export default function WaghambaApp() {
                             return p?.category === currentCategory;
                           }).length}
                         </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Tests Conducted</p>
-                      </div>
-                    </Card>
-
-                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all">
-                      <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                        <Award className="w-6 h-6 text-emerald-600" />
-                      </div>
-                      <div className="mt-4">
-                        <p className="text-4xl font-black text-primary">
-                          {Object.keys(schoolData.data.sportSkills).filter(key => {
-                            const pId = key.split('_')[0];
-                            const p = schoolData.data.players.find(p => p.id === pId);
-                            return p?.category === currentCategory;
-                          }).length}
-                        </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Evaluations</p>
-                      </div>
-                    </Card>
-
-                    <Card className="google-card p-8 flex flex-col justify-between group hover:border-destructive/20 border-2 border-transparent transition-all">
-                      <div className="w-12 h-12 bg-destructive/5 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                        <HeartPulse className="w-6 h-6 text-destructive" />
-                      </div>
-                      <div className="mt-4">
-                        <p className="text-4xl font-black text-primary">
-                          {schoolData.data.healthIncidents.filter(i => i.category === currentCategory).length}
-                        </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Health Alerts</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Tests Logged</p>
                       </div>
                     </Card>
                   </div>
@@ -437,13 +392,12 @@ export default function WaghambaApp() {
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Institutional Celebration</p>
                         </div>
                       </div>
-                      <PartyPopper className="w-10 h-10 text-accent opacity-50" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {birthdaysToday
                         .filter(p => p.category === currentCategory)
                         .map((student: any) => (
-                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 group hover:shadow-md transition-all cursor-default border border-accent/10">
+                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 border border-accent/10">
                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">
                             {student.name[0]}
                           </div>
@@ -470,12 +424,13 @@ export default function WaghambaApp() {
             <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
             <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="history" className="mt-0">{activeTab === "history" && <HistoryView store={schoolData} section={selectedSection!} />}</TabsContent>
+            <TabsContent value="history" className="mt-0">{activeTab === "history" && <PersonalDashboard store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="report" className="mt-0">{activeTab === "report" && <DailyReport store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
             <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
             <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="classes" className="mt-0">{activeTab === "classes" && <ClassesSection store={schoolData} />}</TabsContent>
+            <TabsContent value="exams" className="mt-0">{activeTab === "exams" && <ExamsHub store={schoolData} />}</TabsContent>
             <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
             <TabsContent value="teams" className="mt-0">{activeTab === "teams" && <Teams store={schoolData} />}</TabsContent>
           </div>
@@ -504,9 +459,3 @@ export default function WaghambaApp() {
     </div>
   );
 }
-
-const Globe = ({ className }: { className?: string }) => (
-  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-  </svg>
-);
