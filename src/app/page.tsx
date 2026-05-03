@@ -22,17 +22,13 @@ import {
   Settings as SettingsIcon, 
   ArrowUpCircle, 
   Cake, 
-  PartyPopper,
   Menu,
   ChevronLeft,
   Loader2,
   FileText,
-  History as HistoryIcon,
   HeartPulse,
   ClipboardList,
   TrendingUp,
-  Award,
-  CloudOff,
   Video,
   Dumbbell,
   UsersRound,
@@ -152,7 +148,6 @@ export default function WaghambaApp() {
   ];
 
   const birthdaysToday = useMemo(() => {
-    if (!isMounted) return [];
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
@@ -162,9 +157,24 @@ export default function WaghambaApp() {
       const d = new Date(p.dob);
       return (d.getMonth() + 1) === currentMonth && d.getDate() === currentDay;
     });
-  }, [schoolData.data.players, isMounted]);
+  }, [schoolData.data.players]);
 
-  if (!isMounted) return null;
+  // ELIMINATE WHITE SCREEN: Show an instant institutional splash while mounting
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6 text-white overflow-hidden">
+        <div className="relative z-10 space-y-8 animate-pulse text-center">
+          <div className="w-24 h-24 bg-white/20 p-4 rounded-[2rem] mx-auto backdrop-blur-xl border border-white/30 flex items-center justify-center">
+             <div className="w-12 h-12 bg-white rounded-xl shadow-lg" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
+            <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.3em]">Institutional Registry Booting</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isUserLoading && !user) {
     return (
@@ -474,7 +484,6 @@ export default function WaghambaApp() {
               </span>
             </button>
           ))}
-          {/* Spacer for horizontal scroll comfort */}
           <div className="w-6 shrink-0 md:hidden" />
         </div>
       </nav>
