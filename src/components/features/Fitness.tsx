@@ -49,6 +49,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   });
 
   const handleChange = (id: string, field: string, value: string) => {
+    // Basic range enforcement for numeric fields
+    const numFields = ['shuttleRun', 'run50m', 'sitAndReach', 'boardJump', 'sitUps', 'height', 'weight'];
+    let finalVal = value;
+    if (numFields.includes(field)) {
+      const num = parseFloat(value);
+      if (!isNaN(num) && num < 0) finalVal = "0";
+    }
+
     setAssessments(prev => ({
       ...prev,
       [id]: {
@@ -56,7 +64,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           shuttleRun: '', run50m: '', run600m: '', sitAndReach: '', boardJump: '', sitUps: '', 
           strengthScore: '', enduranceScore: '', score: '', status: '', height: '', weight: '', examMarks: ''
         }),
-        [field]: value
+        [field]: finalVal
       }
     }));
   };
@@ -145,7 +153,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             <thead>
               <tr>
                 <th>STUDENT NAME</th>
-                ${isGeneral ? '<th>HT</th><th>WT</th><th>EXAM SC</th>' : '<th>10x6</th><th>50M</th><th>600M</th><th>REACH</th><th>JUMP</th><th>SITUPS</th><th>ENDURANCE %</th><th>STRENGTH %</th>'}
+                ${isGeneral ? '<th>HT (cm)</th><th>WT (kg)</th><th>EXAM SC</th>' : '<th>10x6 (sec)</th><th>50M (sec)</th><th>600M (min:sec)</th><th>REACH (cm)</th><th>JUMP (cm)</th><th>SITUPS (count)</th><th>ENDURANCE %</th><th>STRENGTH %</th>'}
                 <th>AGGREGATE</th>
                 <th>LEVEL</th>
               </tr>
@@ -224,15 +232,15 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 <>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">HT (cm)</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">WT (kg)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Exam</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Exam Sc</TableHead>
                 </>
               ) : (
                 <>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">10x6</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">50M</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[75px]">600M</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">10x6 (s)</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">50M (s)</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[75px]">600M (m:s)</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach (cm)</TableHead>
+                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump (cm)</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Endurance %</TableHead>
                   <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Strength %</TableHead>
@@ -262,18 +270,18 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                     
                     {isGeneral ? (
                       <>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="kg" className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="marks" className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} /></TableCell>
                       </>
                     ) : (
                       <>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="sec" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="sec" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input placeholder="MM:SS" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="count" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
                         <TableCell className="border-r p-0 text-center bg-accent/[0.03] text-[10px] font-black">{endurance}%</TableCell>
                         <TableCell className="border-r p-0 text-center bg-accent/[0.03] text-[10px] font-black">{strength}%</TableCell>
                       </>

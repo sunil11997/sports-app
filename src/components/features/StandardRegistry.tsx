@@ -46,11 +46,19 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   }, [activeTerm, playersInStd, store.data.fitnessHistory, store.isLoaded]);
 
   const handleChange = (id: string, field: string, value: string) => {
+    // Enforce 0-10 range for exam marks
+    const numVal = parseFloat(value);
+    let finalVal = value;
+    if (!isNaN(numVal)) {
+      if (numVal > 10) finalVal = "10";
+      if (numVal < 0) finalVal = "0";
+    }
+
     setTermRecords(prev => ({
       ...prev,
       [id]: {
         ...(prev[id] || {}),
-        [field]: value
+        [field]: finalVal
       }
     }));
   };
@@ -62,14 +70,14 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   };
 
   const getGrade = (total: number) => {
-    if (total >= 91) return "अ-1";
-    if (total >= 81) return "अ-2";
-    if (total >= 71) return "ब-1";
-    if (total >= 61) return "ब-2";
-    if (total >= 51) return "क-1";
-    if (total >= 41) return "क-2";
-    if (total >= 31) return "ड";
-    if (total >= 21) return "ई-1";
+    if (total >= 63) return "अ-1"; // Adjusted for 70 max (10*7 fields)
+    if (total >= 56) return "अ-2";
+    if (total >= 49) return "ब-1";
+    if (total >= 42) return "ब-2";
+    if (total >= 35) return "क-1";
+    if (total >= 28) return "क-2";
+    if (total >= 21) return "ड";
+    if (total >= 14) return "ई-1";
     return "ई-2";
   };
 
@@ -116,8 +124,8 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             <thead>
               <tr>
                 <th>क्र.</th><th>विद्यार्थ्याचे नाव</th><th>लिंग</th>
-                <th>दैनंदिन निरीक्षण</th><th>तोंडीकाम</th><th>प्रात्यक्षिके</th><th>उपक्रम</th><th>प्रकल्प</th><th>चाचणी</th><th>स्वाध्याय</th>
-                <th>एकूण</th><th>श्रेणी</th>
+                <th>दैनंदिन निरीक्षण (१०)</th><th>तोंडीकाम (10)</th><th>प्रात्यक्षिके (10)</th><th>उपक्रम (10)</th><th>प्रकल्प (10)</th><th>चाचणी (10)</th><th>स्वाध्याय (10)</th>
+                <th>एकूण (70)</th><th>श्रेणी</th>
               </tr>
             </thead>
             <tbody>
@@ -165,7 +173,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">इयत्ता {std} - परीक्षा नोंदणी</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Ashram Shala Waghamba</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Marks: Max 10 per field</p>
           </div>
         </div>
 
@@ -208,14 +216,14 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             <TableRow>
               <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[220px] sticky left-0 bg-muted/95 z-30">विद्यार्थ्याचे नाव</TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">लिंग</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">निरीक्षण</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">तोंडीकाम</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">प्रयोग</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">उपक्रम</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">प्रकल्प</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">चाचणी</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">स्वाध्याय</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[80px] bg-primary/10">एकूण</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">निरीक्षण (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">तोंडीकाम (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">प्रयोग (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">उपक्रम (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">प्रकल्प (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">चाचणी (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">स्वाध्याय (10)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[80px] bg-primary/10">एकूण (70)</TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">श्रेणी</TableHead>
               <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
             </TableRow>
@@ -236,13 +244,13 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                       </div>
                     </TableCell>
                     <TableCell className="border-r p-0 text-center text-[10px] font-bold">{p.gender === 'Female' ? 'महिला' : 'पुरुष'}</TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
                     <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary text-sm">{total}</TableCell>
                     <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary text-xs">{getGrade(total)}</TableCell>
                     <TableCell className="p-0 text-right sticky right-0 bg-white z-10 ios-blur">
