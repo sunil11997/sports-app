@@ -58,20 +58,13 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const handleChange = (id: string, field: string, value: string) => {
     let finalVal = value;
     
-    // Strict enforcement for numeric fields
+    // Strict enforcement removed for general exam marks as per user request.
+    // Bio-mechanical inputs still prevent negative values for data sanity.
     if (value !== '') {
       const numVal = parseFloat(value);
       if (!isNaN(numVal)) {
-        if (field === 'examMarks') {
-          // General section aggregate marks capped at 10 per logic
-          finalVal = Math.min(10, Math.max(0, numVal)).toString();
-        } else {
-          // Biomechanical inputs capped logically to prevent typos (e.g., 300cm jump is fine, 3000 is not)
-          const numFields = ['shuttleRun', 'run50m', 'sitAndReach', 'boardJump', 'sitUps', 'height', 'weight'];
-          if (numFields.includes(field)) {
-             if (numVal < 0) finalVal = "0";
-             // Optional: add upper bounds if needed, but 10 is the user's specific request for component marks
-          }
+        if (field !== 'examMarks') {
+          if (numVal < 0) finalVal = "0";
         }
       }
     }
@@ -296,7 +289,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                       <>
                         <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} /></TableCell>
                         <TableCell className="border-r p-0"><Input type="number" placeholder="kg" className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" min="0" max="10" placeholder="0-10" className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} /></TableCell>
                       </>
                     ) : (
                       <>
