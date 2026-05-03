@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const monthEnd = endOfMonth(currentDate);
   const days = isMounted ? eachDayOfInterval({ start: monthStart, end: monthEnd }) : [];
 
-  const targetCategory = section === 'general' ? 'student' : 'athlete';
+  const isGeneral = section === 'general';
 
   const getPlayerCategory = (p: any) => {
     const age = parseInt(p.age) || 0;
@@ -42,11 +42,20 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     return `${genderPart}-${agePart}`;
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => {
-    const matchesTarget = p.category === targetCategory;
-    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
-    return matchesTarget && matchesTab;
-  });
+  const filteredPlayers = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => {
+        const matchesSection = isGeneral ? true : p.category === 'athlete';
+        const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
+        return matchesSection && matchesTab;
+      })
+      .sort((a: any, b: any) => {
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
+  }, [store.data.players, isGeneral, activeCategory]);
 
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}`;
@@ -76,6 +85,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
           <table>
             <thead>
               <tr>
+                <th>SNR</th>
                 <th>PLAYER</th>
                 ${days.map(d => `<th>${format(d, 'd')}</th>`).join('')}
                 <th>TOT</th>
@@ -89,7 +99,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                return `<tr><td class="name-cell">${p.name}</td>${row}<td>${total}</td></tr>`;
+                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -172,8 +182,11 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                   <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
                     <TableCell className="border-r p-2 text-xs font-bold sticky left-0 bg-white z-10">
                       <div className="flex flex-col">
-                        <span>{player.name}</span>
-                        <span className="text-[8px] uppercase text-muted-foreground font-black">{player.gender}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
+                           <span className="uppercase truncate w-[140px]">{player.name}</span>
+                        </div>
+                        <span className="text-[8px] uppercase text-muted-foreground font-black ml-6">Std {player.std} • {player.gender}</span>
                       </div>
                     </TableCell>
                     {days.map(day => {

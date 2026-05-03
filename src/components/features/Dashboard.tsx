@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, MapPin, ClipboardList } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, MapPin, ClipboardList, Hash } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -31,15 +31,28 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
   const isGeneral = section === 'general';
-  const targetCategory = isGeneral ? 'student' : 'athlete';
 
-  const filteredPlayers = useMemo(() => store.data.players.filter((p: any) => {
-    const matchesCategory = p.category === targetCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
-      (p.generalRegisterNumber && p.generalRegisterNumber.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  }), [store.data.players, targetCategory, searchTerm]);
+  const filteredPlayers = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => {
+        // Athletes appear everywhere. Students only appear in General.
+        const matchesSection = isGeneral ? true : p.category === 'athlete';
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
+          (p.generalRegisterNumber && p.generalRegisterNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+        return matchesSection && matchesSearch;
+      })
+      .sort((a: any, b: any) => {
+        // Institutional Sorting: By Std first, then by Class Serial Number
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        
+        const srA = parseInt(a.serialNumber) || 0;
+        const srB = parseInt(b.serialNumber) || 0;
+        return srA - srB;
+      });
+  }, [store.data.players, isGeneral, searchTerm]);
 
   const getHealthStatus = (bmi: string) => {
     const val = parseFloat(bmi);
@@ -86,12 +99,12 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </div>
           <table>
             <thead>
-              <tr><th>SR</th><th>GR NO.</th><th>NAME</th><th>STD</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
+              <tr><th>SR. NO</th><th>GR NO.</th><th>NAME</th><th>STD</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
             </thead>
             <tbody>
-              ${filteredPlayers.map((p: any, i: number) => `
+              ${filteredPlayers.map((p: any) => `
                 <tr>
-                  <td>${i + 1}</td>
+                  <td>${p.serialNumber || '-'}</td>
                   <td>${p.generalRegisterNumber || '-'}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td>${p.std}</td>
@@ -135,7 +148,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       <div className="google-card overflow-hidden overflow-x-auto">
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/30"><TableRow>
-            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[60px]">SR</TableHead>
+            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Standard</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">BMI Index</TableHead>
@@ -144,11 +157,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </TableRow></TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow> : 
-            filteredPlayers.map((p: any, i: number) => {
+            filteredPlayers.map((p: any) => {
               const health = getHealthStatus(p.bmi);
               return (
                 <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
-                  <TableCell className="px-6 text-[11px] font-black text-muted-foreground/50">{i+1}</TableCell>
+                  <TableCell className="px-6 text-sm font-black text-primary/60">#{p.serialNumber || '0'}</TableCell>
                   <TableCell className="px-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="w-11 h-11 border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
@@ -156,7 +169,10 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
+                          {p.category === 'athlete' && <Badge className="h-4 px-1.5 bg-accent text-[7px] font-black uppercase">ATHLETE</Badge>}
+                        </div>
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">GR: {p.generalRegisterNumber || 'N/A'}</p>
                       </div>
                     </div>
@@ -171,7 +187,9 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                     </Badge>
                   </TableCell>
                   <TableCell className="px-6 text-right">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -180,7 +198,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         </Table>
       </div>
 
-      {/* Edit Dialog - Google Style */}
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="bg-primary/5 p-10 border-b">
@@ -203,16 +220,16 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-1"><Hash className="w-3 h-3" /> Class Sr. No</Label>
+                <Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 font-black rounded-2xl bg-accent/5 border-none shadow-inner" />
+              </div>
+              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">GR Number</Label>
                 <Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Height (cm)</Label>
                 <Input type="number" maxLength={3} value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Weight (kg)</Label>
-                <Input type="number" maxLength={3} value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
               </div>
             </div>
           )}

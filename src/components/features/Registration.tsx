@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert, RefreshCw } from 'lucide-react';
+import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert, RefreshCw, Hash } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -22,6 +22,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
   gender: z.enum(["Male", "Female"]),
   std: z.string(),
+  serialNumber: z.string().min(1, "Sr. No is required"),
   dob: z.string(),
   height: z.string(),
   weight: z.string(),
@@ -60,6 +61,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     studentName: isMarathi ? 'विद्यार्थ्याचे नाव *' : 'Student Name *',
     gender: isMarathi ? 'लिंग' : 'Gender',
     std: isMarathi ? 'इयत्ता' : 'Standard',
+    serialNumber: isMarathi ? 'हजेरी क्रमांक (Sr No)' : 'Class Sr. No *',
     dob: isMarathi ? 'जन्मतारीख' : 'Date of Birth',
     height: isMarathi ? 'उंची (cm)' : 'Height (cm)',
     weight: isMarathi ? 'वजन (kg)' : 'Weight (kg)',
@@ -75,7 +77,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "", gender: "Male", std: "1", dob: "", height: "", weight: "",
+      name: "", gender: "Male", std: "1", serialNumber: "", dob: "", height: "", weight: "",
       bloodGroup: "None", aadharNumber: "", mobileNumber: "", generalRegisterNumber: "", address: "",
       sports: [], history: "No", histDetail: "", medical: "", photoUrl: "", aadharPhotoUrl: ""
     },
@@ -299,20 +301,44 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
               <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-1 md:col-span-2">
                     <FormLabel className="font-black text-primary uppercase text-[10px]">{t.studentName}</FormLabel>
                     <FormControl><Input placeholder="Official Name" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="std" render={({ field }) => (
+                <div className="grid grid-cols-2 gap-6 col-span-1 md:col-span-2">
+                  <FormField control={form.control} name="gender" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-black text-primary uppercase text-[10px]">{t.gender}</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="Male">Male / पुरुष</SelectItem>
+                          <SelectItem value="Female">Female / महिला</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="std" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-black text-primary uppercase text-[10px]">{t.std}</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={form.control} name="serialNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-black text-primary uppercase text-[10px]">{t.std}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
-                    </Select>
+                    <FormLabel className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Hash className="w-3 h-3" /> {t.serialNumber}</FormLabel>
+                    <FormControl><Input type="number" placeholder="e.g. 1" className="h-12 font-black rounded-xl border-2 bg-accent/5" {...field} /></FormControl>
+                    <FormMessage />
                   </FormItem>
                 )} />
 

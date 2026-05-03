@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,12 +10,13 @@ import { StandardRegistry } from './StandardRegistry';
 export function ExamsHub({ store }: { store: any }) {
   const [selectedStd, setSelectedStd] = useState<string | null>(null);
 
-  const classSummaries = React.useMemo(() => {
+  const classSummaries = useMemo(() => {
     const summary: Record<string, number> = {};
     for (let i = 1; i <= 12; i++) {
       summary[i.toString()] = 0;
     }
-    store.data.players.filter((p: any) => p.category === 'student').forEach((p: any) => {
+    // Exam hub shows ALL students (including athletes)
+    store.data.players.forEach((p: any) => {
       if (summary[p.std] !== undefined) summary[p.std]++;
     });
     return summary;

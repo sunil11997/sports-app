@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -17,11 +16,12 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const [activeTerm, setActiveTerm] = useState<'First' | 'Second'>('First');
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
-  // Memoize filtered players to avoid triggering useEffect loops
-  const playersInStd = useMemo(() => 
-    store.data.players.filter((p: any) => p.std === std && p.category === 'student'),
-    [store.data.players, std]
-  );
+  // Exam hub shows ALL students (including athletes) in that Std
+  const playersInStd = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => p.std === std)
+      .sort((a: any, b: any) => (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0));
+  }, [store.data.players, std]);
 
   const [termRecords, setTermRecords] = useState<Record<string, any>>({});
 
@@ -46,7 +46,6 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   }, [activeTerm, playersInStd, store.data.fitnessHistory, store.isLoaded]);
 
   const handleChange = (id: string, field: string, value: string) => {
-    // Enforce 0-10 range for exam marks
     const numVal = parseFloat(value);
     let finalVal = value;
     if (!isNaN(numVal)) {
@@ -70,7 +69,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   };
 
   const getGrade = (total: number) => {
-    if (total >= 63) return "अ-1"; // Adjusted for 70 max (10*7 fields)
+    if (total >= 63) return "अ-1"; 
     if (total >= 56) return "अ-2";
     if (total >= 49) return "ब-1";
     if (total >= 42) return "ब-2";
@@ -123,7 +122,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           <table>
             <thead>
               <tr>
-                <th>क्र.</th><th>विद्यार्थ्याचे नाव</th><th>लिंग</th>
+                <th>क्र.</th><th>Sr No</th><th>विद्यार्थ्याचे नाव</th><th>लिंग</th>
                 <th>दैनंदिन निरीक्षण (१०)</th><th>तोंडीकाम (10)</th><th>प्रात्यक्षिके (10)</th><th>उपक्रम (10)</th><th>प्रकल्प (10)</th><th>चाचणी (10)</th><th>स्वाध्याय (10)</th>
                 <th>एकूण (70)</th><th>श्रेणी</th>
               </tr>
@@ -135,6 +134,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                 return `
                   <tr>
                     <td>${i + 1}</td>
+                    <td>${p.serialNumber || ''}</td>
                     <td>${p.name}</td>
                     <td>${p.gender === 'Female' ? 'महिला' : 'पुरुष'}</td>
                     <td>${r.nirikshan || '-'}</td>
@@ -239,8 +239,11 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                   <TableRow key={p.id} className="border-b hover:bg-primary/5 h-14 transition-colors">
                     <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
                       <div className="flex flex-col">
-                        <span className="uppercase text-primary">{p.name}</span>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Term: {activeTerm}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[9px] font-black text-primary/40">#{p.serialNumber || '0'}</span>
+                           <span className="uppercase text-primary">{p.name}</span>
+                        </div>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">Term: {activeTerm}</span>
                       </div>
                     </TableCell>
                     <TableCell className="border-r p-0 text-center text-[10px] font-bold">{p.gender === 'Female' ? 'महिला' : 'पुरुष'}</TableCell>

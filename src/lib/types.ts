@@ -3,6 +3,7 @@ export interface Player {
   name: string;
   gender: 'Male' | 'Female';
   std: string;
+  serialNumber?: string; // Class Serial Number
   dob: string;
   age: number;
   height: string;

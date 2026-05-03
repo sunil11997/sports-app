@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -31,7 +30,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
   const isGeneral = section === 'general';
-  const targetCategory = isGeneral ? 'student' : 'athlete';
 
   const getPlayerCategory = (p: any) => {
     const age = parseInt(p.age) || 0;
@@ -42,14 +40,22 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     return `${genderPart}-${agePart}`;
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => {
-    const matchesTarget = p.category === targetCategory;
-    const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
-    return matchesTarget && matchesTab;
-  });
+  const filteredPlayers = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => {
+        const matchesSection = isGeneral ? true : p.category === 'athlete';
+        const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
+        return matchesSection && matchesTab;
+      })
+      .sort((a: any, b: any) => {
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
+  }, [store.data.players, isGeneral, activeCategory]);
 
   const handleChange = (id: string, field: string, value: string) => {
-    // Basic range enforcement for numeric fields
     const numFields = ['shuttleRun', 'run50m', 'sitAndReach', 'boardJump', 'sitUps', 'height', 'weight'];
     let finalVal = value;
     if (numFields.includes(field)) {
@@ -152,6 +158,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           <table>
             <thead>
               <tr>
+                <th>SNR</th>
                 <th>STUDENT NAME</th>
                 ${isGeneral ? '<th>HT (cm)</th><th>WT (kg)</th><th>EXAM SC</th>' : '<th>10x6 (sec)</th><th>50M (sec)</th><th>600M (min:sec)</th><th>REACH (cm)</th><th>JUMP (cm)</th><th>SITUPS (count)</th><th>ENDURANCE %</th><th>STRENGTH %</th>'}
                 <th>AGGREGATE</th>
@@ -163,6 +170,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 const fit = store.data.fitness[p.id] || {};
                 return `
                   <tr>
+                    <td>${p.serialNumber || ''}</td>
                     <td><strong>${p.name}</strong> (Std ${p.std})</td>
                     ${isGeneral ? `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.enduranceScore || '-'}%</td><td>${fit.strengthScore || '-'}%</td>`}
                     <td>${fit.score || '0'}${isGeneral ? '' : '%'}</td>
@@ -263,8 +271,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   <TableRow key={player.id} className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-12", isPulse && "animate-success-pulse")}>
                     <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10">
                       <div className="flex flex-col">
-                        <span className="text-primary uppercase truncate w-[140px]">{player.name}</span>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Std {player.std}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
+                           <span className="text-primary uppercase truncate w-[120px]">{player.name}</span>
+                        </div>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">Std {player.std}</span>
                       </div>
                     </TableCell>
                     
