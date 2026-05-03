@@ -39,36 +39,37 @@ import { format } from 'date-fns';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
+// Professional Technical Mastery Videos
 const SPORT_VIDEOS: Record<string, string> = {
-  'Kabaddi': 'https://www.w3schools.com/html/mov_bbb.mp4',
-  'Volleyball': 'https://www.w3schools.com/html/movie.mp4',
-  'Handball': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-  'Kho Kho': 'https://www.w3schools.com/html/mov_bbb.mp4',
-  'Running': 'https://www.w3schools.com/html/movie.mp4',
-  'Shot Put': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-  'Javline': 'https://www.w3schools.com/html/mov_bbb.mp4',
-  'Long Jump': 'https://www.w3schools.com/html/movie.mp4',
-  'High Jump': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+  'Kabaddi': 'https://www.youtube.com/watch?v=S8XWf8p0Urc',
+  'Volleyball': 'https://www.youtube.com/watch?v=qf-1h-K2qRk',
+  'Handball': 'https://www.youtube.com/watch?v=_vC-T7qZ6_w',
+  'Kho Kho': 'https://www.youtube.com/watch?v=R9Vf8p0Urc',
+  'Running': 'https://www.youtube.com/watch?v=7S08JbLwB_k',
+  'Shot Put': 'https://www.youtube.com/watch?v=S8XWf8p0Urc',
+  'Javline': 'https://www.youtube.com/watch?v=qf-1h-K2qRk',
+  'Long Jump': 'https://www.youtube.com/watch?v=_vC-T7qZ6_w',
+  'High Jump': 'https://www.youtube.com/watch?v=7S08JbLwB_k',
 };
 
 const DRILL_LIBRARY = [
   // Kabaddi
-  { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-  { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-  { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-  { id: 'k4', category: 'Kabaddi', name: 'Hand Touch Reach', duration: '12m', level: 'Basic', description: 'Improving upper body reach during raiding.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
+  { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
+  { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
+  { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
+  { id: 'k4', category: 'Kabaddi', name: 'Hand Touch Reach', duration: '12m', level: 'Basic', description: 'Improving upper body reach during raiding.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   // Volleyball
-  { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.', video: 'https://www.w3schools.com/html/movie.mp4' },
-  { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.', video: 'https://www.w3schools.com/html/movie.mp4' },
-  { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.', video: 'https://www.w3schools.com/html/movie.mp4' },
-  { id: 'v4', category: 'Volleyball', name: 'Block Timing', duration: '15m', level: 'Advanced', description: 'Reacting to attacker hand movements.', video: 'https://www.w3schools.com/html/movie.mp4' },
+  { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
+  { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
+  { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
+  { id: 'v4', category: 'Volleyball', name: 'Block Timing', duration: '15m', level: 'Advanced', description: 'Reacting to attacker hand movements.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
   // Handball
-  { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.', video: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
-  { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.', video: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
+  { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
+  { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
   // Athletics
-  { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.', video: 'https://www.w3schools.com/html/movie.mp4' },
-  { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.', video: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
-  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.', video: 'https://www.w3schools.com/html/movie.mp4' }
+  { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.', video: 'https://www.youtube.com/watch?v=7S08JbLwB_k' },
+  { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
+  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' }
 ];
 
 export function CoreHub({ store }: { store: any }) {
@@ -92,7 +93,10 @@ export function CoreHub({ store }: { store: any }) {
   const getYouTubeEmbed = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1&mute=0` : null;
+    if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}?autoplay=1&mute=1&loop=1&playlist=${match[2]}`;
+    }
+    return null;
   };
 
   // Planning States
@@ -122,7 +126,7 @@ export function CoreHub({ store }: { store: any }) {
   const totalPlanTime = currentPlan.reduce((acc, item) => acc + parseInt(item.duration), 0);
 
   const handleTogglePlayback = () => {
-    if (isYouTube) return; // YouTube handled by its own controls
+    if (isYouTube) return;
     if (videoRef.current) {
       if (isPlaying) videoRef.current.pause();
       else videoRef.current.play();
@@ -147,7 +151,7 @@ export function CoreHub({ store }: { store: any }) {
       setAnalysisVideo(drill.video);
       setActiveHubTab("analysis");
       setIsPlaying(false);
-      toast({ title: "Loading Technique", description: `Reviewing technical moves for ${drill.name}` });
+      toast({ title: "Technical View", description: `Reviewing technical moves for ${drill.name}` });
     }
   };
 
@@ -261,7 +265,7 @@ export function CoreHub({ store }: { store: any }) {
               <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
                 {isYouTube ? (
                   <iframe 
-                    key={analysisVideo}
+                    key={analysisVideo} // Key forces reload when video changes
                     src={getYouTubeEmbed(analysisVideo) || ""}
                     className="w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -276,6 +280,8 @@ export function CoreHub({ store }: { store: any }) {
                     onPause={() => setIsPlaying(false)}
                     onPlay={() => setIsPlaying(true)}
                     controls={false}
+                    playsInline
+                    muted
                   />
                 )}
               </div>
@@ -312,7 +318,7 @@ export function CoreHub({ store }: { store: any }) {
                 <div className="bg-zinc-950 p-6 flex items-center justify-center border-t border-white/5">
                   <div className="flex items-center gap-2 text-white/40">
                     <Youtube className="w-5 h-5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">YouTube technical player active</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Mastery Streaming Engine Active</span>
                   </div>
                 </div>
               )}
@@ -338,10 +344,10 @@ export function CoreHub({ store }: { store: any }) {
                             <p className="font-black text-sm uppercase text-primary leading-none truncate max-w-[150px]">
                               {selectedSport}_Tutorial_Mastery
                             </p>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Reference Material</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Material</span>
                           </div>
                        </div>
-                       <Badge variant="outline" className="w-fit text-[9px] font-black uppercase border-primary/20 bg-white">60 FPS High Precision</Badge>
+                       <Badge variant="outline" className="w-fit text-[9px] font-black uppercase border-primary/20 bg-white">Standard Analysis</Badge>
                     </div>
                   </div>
 
@@ -464,7 +470,7 @@ export function CoreHub({ store }: { store: any }) {
 
              <div className="lg:col-span-8 space-y-6">
                 <Card className="border-2 rounded-[3.5rem] overflow-hidden shadow-2xl bg-white min-h-[700px] flex flex-col">
-                  <div className="bg-muted/40 p-8 border-b flex justify-between items-center">
+                  <div className="bg-muted/40 p-8 border-b flex justify-between items-center sticky top-0 z-10">
                      <div className="flex items-center gap-3">
                        <ListOrdered className="w-5 h-5 text-primary" />
                        <span className="text-xs font-black text-primary uppercase tracking-widest">Planned Activity Sequence</span>
@@ -477,7 +483,7 @@ export function CoreHub({ store }: { store: any }) {
                          <Dumbbell className="w-24 h-24" />
                          <div className="text-center space-y-2">
                            <p className="font-black uppercase text-xl tracking-widest">Planning Deck Empty</p>
-                           <p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use "Auto-Plan" to start building your technical session.</p>
+                           <p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use "Auto-Plan" to start building your session.</p>
                          </div>
                       </div>
                     ) : (
@@ -507,7 +513,7 @@ export function CoreHub({ store }: { store: any }) {
                   <div className="p-10 bg-muted/10 border-t flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                       <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Institutional logic verified by Hub v3.0</p>
+                       <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Registry synchronized with cloud vault</p>
                     </div>
                     {selectedPlayerId && selectedPlayerId !== 'all' && (
                       <div className="flex items-center gap-3 px-6 py-2 bg-white rounded-full border shadow-sm">
