@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,8 @@ import {
   User,
   Medal,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -38,24 +39,36 @@ import { format } from 'date-fns';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
+const SPORT_VIDEOS: Record<string, string> = {
+  'Kabaddi': 'https://www.w3schools.com/html/mov_bbb.mp4',
+  'Volleyball': 'https://www.w3schools.com/html/movie.mp4',
+  'Handball': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+  'Kho Kho': 'https://www.w3schools.com/html/mov_bbb.mp4',
+  'Running': 'https://www.w3schools.com/html/movie.mp4',
+  'Shot Put': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+  'Javline': 'https://www.w3schools.com/html/mov_bbb.mp4',
+  'Long Jump': 'https://www.w3schools.com/html/movie.mp4',
+  'High Jump': 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+};
+
 const DRILL_LIBRARY = [
   // Kabaddi
-  { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.' },
-  { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.' },
-  { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.' },
-  { id: 'k4', category: 'Kabaddi', name: 'Hand Touch Reach', duration: '12m', level: 'Basic', description: 'Improving upper body reach during raiding.' },
+  { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
+  { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
+  { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
+  { id: 'k4', category: 'Kabaddi', name: 'Hand Touch Reach', duration: '12m', level: 'Basic', description: 'Improving upper body reach during raiding.', video: 'https://www.w3schools.com/html/mov_bbb.mp4' },
   // Volleyball
-  { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.' },
-  { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.' },
-  { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.' },
-  { id: 'v4', category: 'Volleyball', name: 'Block Timing', duration: '15m', level: 'Advanced', description: 'Reacting to attacker hand movements.' },
+  { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.', video: 'https://www.w3schools.com/html/movie.mp4' },
+  { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.', video: 'https://www.w3schools.com/html/movie.mp4' },
+  { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.', video: 'https://www.w3schools.com/html/movie.mp4' },
+  { id: 'v4', category: 'Volleyball', name: 'Block Timing', duration: '15m', level: 'Advanced', description: 'Reacting to attacker hand movements.', video: 'https://www.w3schools.com/html/movie.mp4' },
   // Handball
-  { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.' },
-  { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.' },
+  { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.', video: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
+  { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.', video: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
   // Athletics
-  { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.' },
-  { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.' },
-  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.' }
+  { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.', video: 'https://www.w3schools.com/html/movie.mp4' },
+  { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.', video: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
+  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.', video: 'https://www.w3schools.com/html/movie.mp4' }
 ];
 
 export function CoreHub({ store }: { store: any }) {
@@ -68,11 +81,19 @@ export function CoreHub({ store }: { store: any }) {
   // Analysis States
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [analysisVideo, setAnalysisVideo] = useState(SPORT_VIDEOS['Kabaddi']);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Planning States
   const [currentPlan, setCurrentPlan] = useState<any[]>([]);
   const [planName, setPlanName] = useState("Standard Technical Practice");
+
+  // Sync video source with sport selection
+  useEffect(() => {
+    if (SPORT_VIDEOS[selectedSport]) {
+      setAnalysisVideo(SPORT_VIDEOS[selectedSport]);
+    }
+  }, [selectedSport]);
 
   const filteredDrills = DRILL_LIBRARY.filter(d => 
     (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -105,6 +126,14 @@ export function CoreHub({ store }: { store: any }) {
   const handleAddToPlan = (drill: any) => {
     setCurrentPlan([...currentPlan, { ...drill, planId: Math.random() }]);
     toast({ title: "Drill Added", description: `${drill.name} added to practice plan.` });
+  };
+
+  const handleViewTechnique = (drill: any) => {
+    if (drill.video) {
+      setAnalysisVideo(drill.video);
+      setActiveHubTab("analysis");
+      toast({ title: "Loading Technique", description: `Reviewing technical moves for ${drill.name}` });
+    }
   };
 
   const handleAutoPlan = () => {
@@ -216,11 +245,13 @@ export function CoreHub({ store }: { store: any }) {
             <Card className="lg:col-span-8 border-2 rounded-[3.5rem] overflow-hidden bg-black shadow-2xl relative">
               <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
                 <video 
+                  key={analysisVideo}
                   ref={videoRef}
                   className="w-full h-full object-contain"
-                  src="https://www.w3schools.com/html/mov_bbb.mp4"
+                  src={analysisVideo}
                   onPause={() => setIsPlaying(false)}
                   onPlay={() => setIsPlaying(true)}
+                  controls={false}
                 />
               </div>
               
@@ -263,8 +294,8 @@ export function CoreHub({ store }: { store: any }) {
                        <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg"><Video className="w-6 h-6" /></div>
                           <div>
-                            <p className="font-black text-sm uppercase text-primary leading-none">{selectedSport}_Drill_01.mp4</p>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Uploaded: Today, 10:45 AM</span>
+                            <p className="font-black text-sm uppercase text-primary leading-none">{selectedSport}_Tutorial_Mastery.mp4</p>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Reference Material</span>
                           </div>
                        </div>
                        <Badge variant="outline" className="w-fit text-[9px] font-black uppercase border-primary/20 bg-white">60 FPS High Precision</Badge>
@@ -318,7 +349,7 @@ export function CoreHub({ store }: { store: any }) {
                </div>
              ) : filteredDrills.map(drill => (
                <Card key={drill.id} className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary/30 transition-all shadow-xl bg-white relative">
-                 <div className="aspect-video bg-zinc-100 relative flex items-center justify-center overflow-hidden">
+                 <div className="aspect-video bg-zinc-100 relative flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => handleViewTechnique(drill)}>
                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                    <Play className="w-16 h-16 text-white/50 group-hover:scale-110 group-hover:text-primary transition-all z-10" />
                    <Badge className="absolute top-6 left-6 bg-primary text-white border-0 font-black text-[10px] uppercase px-4 py-1.5 rounded-full shadow-lg">{drill.category}</Badge>
@@ -336,7 +367,9 @@ export function CoreHub({ store }: { store: any }) {
                    </div>
                    <p className="text-sm font-medium text-foreground/60 leading-relaxed italic border-l-4 border-accent/20 pl-4">"{drill.description}"</p>
                    <div className="grid grid-cols-2 gap-3 pt-2">
-                     <Button variant="outline" className="rounded-xl font-black uppercase text-[10px] border-2 h-11">View Demo</Button>
+                     <Button variant="outline" onClick={() => handleViewTechnique(drill)} className="rounded-xl font-black uppercase text-[10px] border-2 h-11 flex items-center gap-2">
+                        <Eye className="w-3 h-3" /> View Technique
+                     </Button>
                      <Button variant="ghost" className="rounded-xl font-black uppercase text-[10px] h-11">Progression</Button>
                    </div>
                  </div>
