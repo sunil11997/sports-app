@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -48,7 +49,8 @@ export function useSchoolData() {
       const newAtt: AttendanceRecord = {};
       snapshot.docs.forEach(doc => {
         const data = doc.data();
-        newAtt[`${data.playerId}_${data.date}`] = data.status;
+        const sessionSuffix = data.session ? `_${data.session}` : '_Morning'; // Default to Morning if missing
+        newAtt[`${data.playerId}_${data.date}${sessionSuffix}`] = data.status;
       });
       setAttendanceData(newAtt);
     });
@@ -192,14 +194,20 @@ export function useSchoolData() {
   const setAttendance = useCallback((records: AttendanceRecord) => {
     if (!user) return;
     Object.entries(records).forEach(([key, status]) => {
-      const [playerId, date] = key.split('_');
-      if (!playerId || !date) return;
-      const attRef = doc(db, 'attendance_registry', `${playerId}_${date}`);
+      const parts = key.split('_');
+      if (parts.length < 3) return;
+      
+      const playerId = parts[0];
+      const date = parts[1];
+      const session = parts[2];
+      
+      const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
       if (!status) deleteDocumentNonBlocking(attRef);
       else setDocumentNonBlocking(attRef, { 
         status, 
         playerId, 
         date, 
+        session,
         schoolId: user.uid, 
         academicYear: selectedYear 
       }, { merge: true });

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -5,8 +6,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { CalendarCheck, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
+import { CalendarCheck, ChevronLeft, ChevronRight, Printer, Sun, Moon } from 'lucide-react';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -22,6 +24,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const [isMounted, setIsMounted] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeCategory, setActiveCategory] = useState("all");
+  const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
 
   useEffect(() => {
     setIsMounted(true);
@@ -58,7 +61,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   }, [store.data.players, isGeneral, activeCategory]);
 
   const handleToggle = (playerId: string, date: Date) => {
-    const key = `${playerId}_${format(date, 'yyyy-MM-dd')}`;
+    const key = `${playerId}_${format(date, 'yyyy-MM-dd')}_${activeSession}`;
     const currentStatus = store.data.attendance[key];
     const nextStatus = currentStatus === 'P' ? 'A' : currentStatus === 'A' ? null : 'P';
     store.setAttendance({ [key]: nextStatus });
@@ -66,6 +69,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   const handlePrint = () => {
     const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
+    const sessionLabel = activeSession === 'Morning' ? 'Morning (सकाळ)' : 'Evening (संध्याकाळ)';
     const printContent = `
       <html>
         <head>
@@ -81,7 +85,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </head>
         <body>
           <h1>Attendance (${section.toUpperCase()}): ${format(currentDate, 'MMMM yyyy')}</h1>
-          <div class="meta">Category: ${categoryLabel.toUpperCase()}</div>
+          <div class="meta">Category: ${categoryLabel.toUpperCase()} | Session: ${sessionLabel.toUpperCase()}</div>
           <table>
             <thead>
               <tr>
@@ -95,7 +99,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               ${filteredPlayers.map((p: any) => {
                 let total = 0;
                 const row = days.map(d => {
-                  const s = store.data.attendance[`${p.id}_${format(d, 'yyyy-MM-dd')}`];
+                  const s = store.data.attendance[`${p.id}_${format(d, 'yyyy-MM-dd')}_${activeSession}`];
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
@@ -118,24 +122,53 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
-        {CATEGORIES.map(cat => (
-          <Button
-            key={cat.id}
-            variant={activeCategory === cat.id ? "default" : "ghost"}
-            size="sm"
-            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
-            onClick={() => setActiveCategory(cat.id)}
-          >
-            {cat.label}
-          </Button>
-        ))}
+      <div className="flex flex-col md:flex-row justify-between gap-4">
+        <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto flex-1">
+          {CATEGORIES.map(cat => (
+            <Button
+              key={cat.id}
+              variant={activeCategory === cat.id ? "default" : "ghost"}
+              size="sm"
+              className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
+              onClick={() => setActiveCategory(cat.id)}
+            >
+              {cat.label}
+            </Button>
+          ))}
+        </div>
+        
+        <div className="bg-muted/50 p-1 rounded-lg border flex items-center gap-1 min-w-fit">
+           <Button 
+             variant={activeSession === 'Morning' ? "default" : "ghost"}
+             size="sm"
+             onClick={() => setActiveSession('Morning')}
+             className={cn(
+               "h-8 rounded px-4 text-[10px] font-black uppercase flex items-center gap-2",
+               activeSession === 'Morning' ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
+             )}
+           >
+             <Sun className="w-3.5 h-3.5" /> Morning
+           </Button>
+           <Button 
+             variant={activeSession === 'Evening' ? "default" : "ghost"}
+             size="sm"
+             onClick={() => setActiveSession('Evening')}
+             className={cn(
+               "h-8 rounded px-4 text-[10px] font-black uppercase flex items-center gap-2",
+               activeSession === 'Evening' ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
+             )}
+           >
+             <Moon className="w-3.5 h-3.5" /> Evening
+           </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Excel: Monthly Attendance</h2>
-          <p className="text-[9px] font-bold text-muted-foreground uppercase">Filtered by: {CATEGORIES.find(c => c.id === activeCategory)?.label}</p>
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Monthly Presence Log</h2>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-2">
+            Session: <span className="text-primary">{activeSession}</span> • Category: {CATEGORIES.find(c => c.id === activeCategory)?.label}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-white p-1 rounded-lg border shadow-sm">
@@ -150,7 +183,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             </Button>
           </div>
           <Button onClick={handlePrint} size="sm" className="font-bold h-9">
-            <Printer className="w-4 h-4 mr-2" /> Print Sheet
+            <Printer className="w-4 h-4 mr-2" /> Print {activeSession}
           </Button>
         </div>
       </div>
@@ -190,7 +223,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                       </div>
                     </TableCell>
                     {days.map(day => {
-                      const key = `${player.id}_${format(day, 'yyyy-MM-dd')}`;
+                      const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
                       const status = store.data.attendance[key];
                       if (status === 'P') monthlyTotal++;
                       
@@ -201,9 +234,9 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                           onClick={() => handleToggle(player.id, day)}
                         >
                           <div className={`w-full h-10 flex items-center justify-center text-[10px] font-black ${
-                            status === 'P' ? 'bg-primary/20 text-primary' : 
-                            status === 'A' ? 'bg-destructive/20 text-destructive' : 
-                            'text-muted-foreground/30'
+                            status === 'P' ? "bg-primary text-white" : 
+                            status === 'A' ? "bg-destructive text-white" : 
+                            'text-muted-foreground/20'
                           }`}>
                             {status || '-'}
                           </div>
