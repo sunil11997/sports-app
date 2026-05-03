@@ -35,7 +35,10 @@ import {
   CloudOff,
   Video,
   Dumbbell,
-  UsersRound
+  UsersRound,
+  ArrowRight,
+  ShieldCheck,
+  Flame
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -87,6 +90,7 @@ const translations = {
 
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
+  const [stage, setStage] = useState<'landing' | 'selector' | 'hub'>('landing');
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
@@ -98,11 +102,10 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    // Silent recovery: Ensure we have at least an anonymous identity if not loading
     if (!isUserLoading && !user) {
       const timer = setTimeout(() => {
         initiateAnonymousSignIn(auth);
-      }, 500); // Small grace period for late auth events
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, auth]);
@@ -112,6 +115,7 @@ export default function WaghambaApp() {
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
+    { id: "registration", label: t.register, icon: UserPlus },
     { id: "core", label: t.coreHub, icon: Video },
     { id: "tournament", label: t.tourney, icon: Trophy },
     { id: "teams", label: t.teams, icon: UsersRound },
@@ -165,54 +169,57 @@ export default function WaghambaApp() {
     );
   }
 
-  if (!selectedSection) {
+  // STAGE 1: Beautiful Landing Page
+  if (stage === 'landing') {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
-        <div className="max-w-4xl w-full space-y-12">
-          <div className="text-center space-y-4">
-            <div className="w-24 h-24 bg-white p-4 rounded-[2rem] shadow-xl mx-auto border border-primary/5">
-              <Image src={LOGO_PATH} alt="App Logo" width={96} height={96} priority unoptimized className="object-contain w-full h-full" />
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Background Visual Elements */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
+
+        <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in zoom-in-95 duration-1000">
+          <div className="space-y-6">
+            <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center group hover:scale-105 transition-transform duration-500">
+              <Image src={LOGO_PATH} alt="App Logo" width={100} height={100} priority unoptimized className="object-contain" />
             </div>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h1>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-60">Digital Management Suite</p>
+            
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
+                <Flame className="w-4 h-4 text-accent animate-pulse" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Excellence</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tighter leading-tight uppercase">
+                {language === 'Marathi' ? "शासकीय माध्यमिक" : "ASHRAM SHALA"}<br/>
+                <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "WAGHAMBA HUB"}</span>
+              </h1>
+              <p className="text-sm md:text-lg font-medium text-muted-foreground max-w-md mx-auto uppercase tracking-widest opacity-60">
+                {language === 'Marathi' ? "डिजिटल व्यवस्थापन आणि क्रीडा केंद्र" : "Digital Management & Sports Hub"}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <button 
-              onClick={() => setSelectedSection('sports')} 
-              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
+          <div className="flex flex-col gap-4 max-w-sm mx-auto">
+            <Button 
+              onClick={() => setStage('selector')}
+              className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-2xl hover:bg-primary/90 transition-all active-scale group"
             >
-              <div className="relative z-10">
-                <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
-                  <Medal className="w-10 h-10 text-primary group-hover:text-white" />
-                </div>
-                <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Competitive Training</p>
-              </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
-            </button>
-
-            <button 
-              onClick={() => setSelectedSection('general')} 
-              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
-            >
-              <div className="relative z-10">
-                <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors">
-                  <GraduationCap className="w-10 h-10 text-primary group-hover:text-white" />
-                </div>
-                <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Physical Ed</p>
-              </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
-            </button>
+              {t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            
+            <div className="flex items-center justify-center gap-4">
+               <button 
+                 onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
+                 className="text-[10px] font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center gap-2"
+               >
+                 <Globe className="w-4 h-4" /> {language === 'English' ? 'Switch to Marathi' : 'English मध्ये बदला'}
+               </button>
+            </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 opacity-30 pt-8">
-            <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isOnline ? "bg-emerald-500" : "bg-destructive")} />
-            <p className="text-[9px] font-black uppercase tracking-widest">
-              {isOnline ? "Real-time Cloud Synchronization Active" : "Local Sync Mode - Internet Off"}
+          <div className="pt-12 flex items-center justify-center gap-2 opacity-30">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <p className="text-[9px] font-black uppercase tracking-[0.2em]">
+              Authorized Institutional Registry • v3.0 Powered by Genkit
             </p>
           </div>
         </div>
@@ -220,6 +227,62 @@ export default function WaghambaApp() {
     );
   }
 
+  // STAGE 2: Section Selector
+  if (stage === 'selector') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-4xl w-full space-y-12">
+          <div className="text-center space-y-6">
+            <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white p-3 rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4">
+              <Image src={LOGO_PATH} alt="App Logo" width={48} height={48} priority unoptimized className="object-contain" />
+            </button>
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-60">Digital Management Suite</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <button 
+              onClick={() => { setSelectedSection('sports'); setStage('hub'); }} 
+              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
+            >
+              <div className="relative z-10">
+                <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors duration-500">
+                  <Medal className="w-12 h-12 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Competitive Training & Coaching</p>
+              </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+            </button>
+
+            <button 
+              onClick={() => { setSelectedSection('general'); setStage('hub'); }} 
+              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20 relative overflow-hidden"
+            >
+              <div className="relative z-10">
+                <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-primary transition-colors duration-500">
+                  <GraduationCap className="w-12 h-12 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Physical Ed Profile</p>
+              </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 pt-8">
+            <Button variant="ghost" onClick={() => setStage('landing')} className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">
+              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Entrance
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // STAGE 3: The Hub
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
   const currentCategory = selectedSection === 'sports' ? 'athlete' : 'student';
 
@@ -227,7 +290,7 @@ export default function WaghambaApp() {
     <div className="min-h-screen flex flex-col bg-background pb-24 animate-in fade-in duration-1000">
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedSection(null)}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
             <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white p-1 border">
               <Image src={LOGO_PATH} alt="Logo" width={36} height={36} unoptimized className="object-contain w-full h-full" />
             </div>
@@ -252,7 +315,7 @@ export default function WaghambaApp() {
                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
                <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
              </Select>
-             <Button variant="ghost" size="icon" onClick={() => setSelectedSection(null)} className="rounded-full h-8 w-8 hover:bg-primary/5 text-primary" title={t.switchHub}>
+             <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 hover:bg-primary/5 text-primary" title={t.switchHub}>
                <Menu className="w-5 h-5" />
              </Button>
           </div>
@@ -297,8 +360,8 @@ export default function WaghambaApp() {
                         <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.filter(p => p.category === currentCategory).length}</h3>
                         <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
                       </div>
-                      <Button onClick={() => setActiveTab(selectedSection === 'sports' ? 'core' : 'registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
-                        <UserPlus className="w-4 h-4 mr-2" /> {selectedSection === 'sports' ? 'Launch Core Hub' : 'Add New Record'}
+                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
+                        <UserPlus className="w-4 h-4 mr-2" /> Add New {selectedSection === 'sports' ? 'Athlete' : 'Student'}
                       </Button>
                     </div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 group-hover:scale-105 transition-transform duration-1000" />
@@ -441,3 +504,9 @@ export default function WaghambaApp() {
     </div>
   );
 }
+
+const Globe = ({ className }: { className?: string }) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </svg>
+);
