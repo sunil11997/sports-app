@@ -191,6 +191,11 @@ export function useSchoolData() {
     updateDocumentNonBlocking(docRef, player);
   }, [db]);
 
+  const deletePlayer = useCallback((playerId: string) => {
+    const docRef = doc(db, 'players', playerId);
+    deleteDocumentNonBlocking(docRef);
+  }, [db]);
+
   const setAttendance = useCallback((records: AttendanceRecord) => {
     if (!user) return;
     Object.entries(records).forEach(([key, status]) => {
@@ -281,6 +286,6 @@ export function useSchoolData() {
     isLoaded: !playersLoading && !schoolsLoading,
     selectedYear,
     setSelectedYear,
-    saveSchoolProfile, addPlayer, updatePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
   };
 }

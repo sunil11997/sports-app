@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -5,9 +6,19 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, MapPin, ClipboardList, Hash } from 'lucide-react';
+import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, MapPin, ClipboardList, Hash, Trash2, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +39,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
   const isGeneral = section === 'general';
@@ -74,6 +86,19 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       });
       setEditingPlayer(null);
       toast({ title: "Record Updated", description: `${editingPlayer.name}'s profile saved.` });
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deletingPlayerId) {
+      const playerToDelete = store.data.players.find((p: any) => p.id === deletingPlayerId);
+      store.deletePlayer(deletingPlayerId);
+      setDeletingPlayerId(null);
+      toast({ 
+        title: "Record Deleted", 
+        description: `${playerToDelete?.name || 'Student'} has been removed from the registry.`,
+        variant: "destructive"
+      });
     }
   };
 
@@ -153,7 +178,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Standard</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">BMI Index</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Status</TableHead>
-            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Edit</TableHead>
+            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow> : 
@@ -189,6 +214,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   <TableCell className="px-6 text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => setDeletingPlayerId(p.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -198,6 +224,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         </Table>
       </div>
 
+      {/* Edit Dialog */}
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="bg-primary/5 p-10 border-b">
@@ -231,6 +258,10 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Height (cm)</Label>
                 <Input type="number" maxLength={3} value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
               </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Weight (kg)</Label>
+                <Input type="number" maxLength={3} value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-2xl bg-muted/30 border-none shadow-inner" />
+              </div>
             </div>
           )}
           <DialogFooter className="bg-muted/10 p-10 flex gap-3">
@@ -239,6 +270,25 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingPlayerId} onOpenChange={() => setDeletingPlayerId(null)}>
+        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-8">
+          <AlertDialogHeader className="space-y-4">
+            <div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-black uppercase text-center text-primary">Remove from Registry?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center font-medium text-foreground/70">
+              Are you sure you want to delete this student? This action is permanent and will remove all their history, test results, and attendance records from the cloud.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex justify-center gap-4 pt-6 mt-0">
+            <AlertDialogCancel className="rounded-full px-8 font-black uppercase text-[10px] border-2">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="rounded-full px-8 font-black uppercase text-[10px] bg-destructive hover:bg-destructive/90 text-white">Delete Permanently</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={!!viewingPhoto} onOpenChange={() => setViewingPhoto(null)}>
         <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[3rem] border-none shadow-2xl">
