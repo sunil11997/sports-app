@@ -343,7 +343,9 @@ export default function WaghambaApp() {
                     <div className="relative z-10 space-y-6">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em]">Institutional Hub</p>
-                        <h3 className="text-5xl font-black tracking-tight">{schoolData.data.players.filter(p => p.category === currentCategory).length}</h3>
+                        <h3 className="text-5xl font-black tracking-tight">
+                          {schoolData.data.players.filter(p => selectedSection === 'general' ? true : p.category === 'athlete').length}
+                        </h3>
                         <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
                       </div>
                       <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
@@ -371,7 +373,7 @@ export default function WaghambaApp() {
                         <p className="text-4xl font-black text-primary">
                           {Object.keys(schoolData.data.fitness).filter(id => {
                             const p = schoolData.data.players.find(p => p.id === id);
-                            return p?.category === currentCategory;
+                            return selectedSection === 'general' ? !!p : p?.category === 'athlete';
                           }).length}
                         </p>
                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Tests Logged</p>
@@ -380,7 +382,7 @@ export default function WaghambaApp() {
                   </div>
                 </div>
 
-                {birthdaysToday.filter(p => p.category === currentCategory).length > 0 && (
+                {birthdaysToday.filter(p => selectedSection === 'general' ? true : p.category === 'athlete').length > 0 && (
                   <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
@@ -395,7 +397,7 @@ export default function WaghambaApp() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {birthdaysToday
-                        .filter(p => p.category === currentCategory)
+                        .filter(p => selectedSection === 'general' ? true : p.category === 'athlete')
                         .map((student: any) => (
                         <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 border border-accent/10">
                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">
