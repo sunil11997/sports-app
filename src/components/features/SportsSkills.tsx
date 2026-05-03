@@ -15,7 +15,13 @@ const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', '
 
 const KABADDI_SKILLS = ["Dubki", "Toe Touch", "Running Hand Touch", "Back Kick", "Lion Jump", "Sidekick", "Scorpion Kick", "Frog Jump", "Ankle Hold", "Thigh Hold", "Chain Tackle", "Dash", "Block", "Waist Hold", "Knee Hold"];
 const VOLLEYBALL_SKILLS = ["Serving", "Passing (Bump)", "Setting", "Spiking (Attack)", "Blocking", "Digging (Defense)", "Footwork", "Communication"];
-const HANDBALL_SKILLS = ["Passing", "Catching", "Dribbling", "Shooting", "Jump shot", "Running shot", "Dive shot", "Spin shot", "Feints", "Break-through", "Blocking", "Marking", "Tackling", "Interception", "Goalkeeping", "Defensive stance", "Footwork", "Pivot play", "Positioning", "Support play", "Timing", "Coordination", "Communication", "Decision making", "Awareness", "Reaction time", "Balance"];
+const HANDBALL_SKILLS = ["Passing", "Catching", "Dribbling", "Shooting", "Jump shot", "Running shot", "Dive shot", "Spin shot", "Feints", "Break-through", "Blocking", "Marking", "Tackling", "Interception", "Goalkeeping"];
+const KHOKHO_SKILLS = ["Pole turning", "Giving Kho", "Dodging", "Running", "Diving", "Tapping", "Fake Kho", "Chain Play", "Ring Game", "Defensive Footwork"];
+const RUNNING_SKILLS = ["Block Start", "Arm Action", "Knee Drive", "Finish Technique", "Pace Control", "Relay Baton Exchange"];
+const SHOTPUT_SKILLS = ["Grip", "Stance", "Glide Technique", "Spin Technique", "Release Angle", "Power Position"];
+const JAVELINE_SKILLS = ["Grip", "Approach Run", "Cross-over Steps", "Release Angle", "Recovery", "Flight Control"];
+const LONGJUMP_SKILLS = ["Approach Run", "Takeoff", "Flight (Hitch-kick)", "Flight (Hang)", "Landing Technique"];
+const HIGHJUMP_SKILLS = ["Approach", "Takeoff", "Bar Clearance (Flop)", "Bar Clearance (Straddle)", "Landing"];
 
 const GENERAL_SKILLS = ["Fundamental Technique", "Game Awareness", "Pace Control", "Precision", "Rules Understanding", "Sportsmanship"];
 
@@ -30,10 +36,18 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
 
   const getDetailedSkillsList = (sport: string) => {
     if (isGeneral) return GENERAL_SKILLS;
-    if (sport === 'Kabaddi') return KABADDI_SKILLS;
-    if (sport === 'Volleyball') return VOLLEYBALL_SKILLS;
-    if (sport === 'Handball') return HANDBALL_SKILLS;
-    return ["Fundamental Technique", "Game Awareness", "Pace Control", "Precision"];
+    switch(sport) {
+      case 'Kabaddi': return KABADDI_SKILLS;
+      case 'Volleyball': return VOLLEYBALL_SKILLS;
+      case 'Handball': return HANDBALL_SKILLS;
+      case 'Kho Kho': return KHOKHO_SKILLS;
+      case 'Running': return RUNNING_SKILLS;
+      case 'Shot Put': return SHOTPUT_SKILLS;
+      case 'Javline': return JAVELINE_SKILLS;
+      case 'Long Jump': return LONGJUMP_SKILLS;
+      case 'High Jump': return HIGHJUMP_SKILLS;
+      default: return GENERAL_SKILLS;
+    }
   };
 
   const getMaxScore = (sport: string) => getDetailedSkillsList(sport).length * 10;
@@ -80,13 +94,13 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
           </div>
           <table>
             <thead>
-              <tr><th>Sr.</th><th>Student Name</th><th>Std</th><th>Gender</th><th>Level</th><th style="text-align: center;">Total Score</th></tr>
+              <tr><th>Sr.</th><th>Student Name</th><th>Std</th><th>Gender</th><th style="text-align: center;">Total Score</th></tr>
             </thead>
             <tbody>
               ${players.map((p: any, i: number) => {
                 const sportName = isGeneral ? 'General P.E.' : activeSport;
                 const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
-                return `<tr><td>${i+1}</td><td><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${p.gender}</td><td>${p.std}</td><td class="score">${s.score} / ${getMaxScore(activeSport)}</td></tr>`;
+                return `<tr><td>${i+1}</td><td><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${p.gender}</td><td class="score">${s.score} / ${getMaxScore(activeSport)}</td></tr>`;
               }).join('')}
             </tbody>
           </table>

@@ -11,19 +11,35 @@ import { useToast } from '@/hooks/use-toast';
 
 const DRILLS_DATA: Record<string, any[]> = {
   'Kabaddi': [
-    { id: 'k1', name: 'Dubki Mastery', skill: 'Dubki', instructions: ['Start low.', 'Anticipate tackle.', 'Duck head.'], duration: '15m' },
-    { id: 'k2', name: 'Toe Touch Reach', skill: 'Toe Touch', instructions: ['Extend leg quickly.', 'Touch foot.', 'Retreat fast.'], duration: '10m' },
-    { id: 'k9', name: 'Ankle Hold Grip', skill: 'Ankle Hold', instructions: ['Watch feet.', 'Grip both hands.', 'Pull backward.'], duration: '15m' },
-    { id: 'k12', name: 'Dash Defense', skill: 'Dash', instructions: ['Shoulder push.', 'Drive raider out.'], duration: '15m' },
+    { id: 'k1', name: 'Dubki Mastery', skill: 'Dubki', instructions: ['Start low in raid.', 'Anticipate chain tackle.', 'Duck head and lunge forward.'], duration: '15m' },
+    { id: 'k2', name: 'Toe Touch Reach', skill: 'Toe Touch', instructions: ['Extend lead leg quickly.', 'Touch defender\'s foot.', 'Retreat to midline fast.'], duration: '10m' },
+    { id: 'k9', name: 'Ankle Hold Grip', skill: 'Ankle Hold', instructions: ['Watch raider\'s leading foot.', 'Grip with both hands firmly.', 'Pull backward to destabilize.'], duration: '15m' },
+    { id: 'k12', name: 'Dash Defense', skill: 'Dash', instructions: ['Wait for raider to deep lunge.', 'Shoulder push with momentum.', 'Drive raider out of bounds.'], duration: '15m' },
   ],
   'Volleyball': [
-    { id: 'v1', name: 'Service Ace', skill: 'Serving', instructions: ['Toss high.', 'Strike palm.'], duration: '20m' },
-    { id: 'v4', name: 'Spike Power', skill: 'Spiking', instructions: ['3-step run.', 'Peak jump.'], duration: '25m' },
-    { id: 'v5', name: 'Wall Block', skill: 'Blocking', instructions: ['Hands up.', 'Push over net.'], duration: '15m' },
+    { id: 'v1', name: 'Service Ace', skill: 'Serving', instructions: ['High toss consistency.', 'Flat palm strike.', 'Aim for court corners.'], duration: '20m' },
+    { id: 'v4', name: 'Spike Power', skill: 'Spiking', instructions: ['3-step rhythmic approach.', 'Vertical jump at peak.', 'Wrist snap on ball contact.'], duration: '25m' },
+    { id: 'v5', name: 'Wall Block', skill: 'Blocking', instructions: ['Hands up, fingers spread.', 'Timing against the hitter.', 'Push hands over the net.'], duration: '15m' },
+    { id: 'v6', name: 'Digging Drill', skill: 'Digging', instructions: ['Low athletic stance.', 'Platform preparation.', 'Redirect ball to setter.'], duration: '20m' },
   ],
   'Kho Kho': [
-    { id: 'kh2', name: 'Pole Pivot', skill: 'Pole turning', instructions: ['Inner hand grip.', 'Pole low.'], duration: '15m' },
-    { id: 'kh3', name: 'Clear Kho', skill: 'Giving kho', instructions: ['Shoulder tap.', 'Loud "KHO".'], duration: '10m' },
+    { id: 'kh2', name: 'Pole Pivot', skill: 'Pole turning', instructions: ['Inner hand grip on pole.', 'Body low and outside.', 'Fast pivot around pole.'], duration: '15m' },
+    { id: 'kh3', name: 'Clear Kho', skill: 'Giving kho', instructions: ['Strong shoulder tap.', 'Loud and clear "KHO" command.', 'Instant replacement.'], duration: '10m' },
+    { id: 'kh4', name: 'Diving Touch', skill: 'Diving', instructions: ['Sprint parallel to defender.', 'Explosive lunge forward.', 'Hand tap before landing.'], duration: '20m' },
+  ],
+  'Handball': [
+    { id: 'h1', name: 'Jump Shot Power', skill: 'Shooting', instructions: ['3-step run-up.', 'Vertical takeoff.', 'Highest point release.'], duration: '20m' },
+    { id: 'h2', name: 'Piston Movement', skill: 'Defense', instructions: ['Move forward on attacker.', 'Backpedal to line.', 'Lateral coordination.'], duration: '15m' },
+  ],
+  'Running': [
+    { id: 'r1', name: 'Block Start Drill', skill: 'Block Start', instructions: ['Correct block spacing.', 'Drive from front leg.', 'Low head stay for 10m.'], duration: '20m' },
+    { id: 'r2', name: 'Baton Handover', skill: 'Relay', instructions: ['Blind exchange practice.', 'V-hand shape.', 'Speed synchronization.'], duration: '15m' },
+  ],
+  'Shot Put': [
+    { id: 'sp1', name: 'Glide Phase', skill: 'Glide', instructions: ['Low crouch position.', 'Powerful kick-off.', 'Quick hip rotation.'], duration: '20m' },
+  ],
+  'Javline': [
+    { id: 'j1', name: 'Approach Speed', skill: 'Approach', instructions: ['Rhythmic build-up.', 'Baton/Javelin high.', 'Final 5-step transition.'], duration: '15m' },
   ]
 };
 
@@ -35,7 +51,7 @@ export function SportsDrills({ store }: { store: any }) {
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   const playersInSport = useMemo(() => 
-    store.data.players.filter((p: any) => p.category === 'athlete' && p.sports?.includes(activeSport)),
+    store.data.players.filter((p: any) => p.category === 'athlete' && (p.sports?.includes(activeSport) || activeSport === 'Kabaddi')),
   [store.data.players, activeSport]);
 
   const handleToggleComplete = async (drillId: string, drillName: string) => {
@@ -83,7 +99,7 @@ export function SportsDrills({ store }: { store: any }) {
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-primary uppercase ml-2">3. History</label>
+              <label className="text-[10px] font-black text-primary uppercase ml-2">3. Status</label>
               <Button variant={viewHistory ? "default" : "outline"} onClick={() => setViewHistory(!viewHistory)} className="w-full h-12 rounded-xl border-2 font-black uppercase text-[10px]">
                 {viewHistory ? <History className="w-4 h-4 mr-2" /> : <ClipboardCheck className="w-4 h-4 mr-2" />} {viewHistory ? "Done" : "Pending"}
               </Button>

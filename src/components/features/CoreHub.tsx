@@ -44,7 +44,6 @@ import { usePWA } from '@/components/providers/pwa-provider';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
-// Professional Technical Mastery Videos
 const SPORT_VIDEOS: Record<string, string> = {
   'Kabaddi': 'https://www.youtube.com/watch?v=S8XWf8p0Urc',
   'Volleyball': 'https://www.youtube.com/watch?v=qf-1h-K2qRk',
@@ -67,14 +66,18 @@ const DRILL_LIBRARY = [
   { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
   { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
   { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
-  { id: 'v4', category: 'Volleyball', name: 'Block Timing', duration: '15m', level: 'Advanced', description: 'Reacting to attacker hand movements.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
   // Handball
   { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
   { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
+  // Kho Kho
+  { id: 'kh1', category: 'Kho Kho', name: 'Pole Turning Speed', duration: '15m', level: 'Intermediate', description: 'Minimizing radius during pole transitions.', video: 'https://www.youtube.com/watch?v=R9Vf8p0Urc' },
+  { id: 'kh2', category: 'Kho Kho', name: 'Kho Timing', duration: '10m', level: 'Basic', description: 'Synchronized shoulder tap and verbal call.', video: 'https://www.youtube.com/watch?v=R9Vf8p0Urc' },
   // Athletics
   { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.', video: 'https://www.youtube.com/watch?v=7S08JbLwB_k' },
   { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
-  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' }
+  { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
+  { id: 'a4', category: 'High Jump', name: 'Fosbury Approach', duration: '20m', level: 'Pro', description: 'J-shaped approach run and centrifugal force.', video: 'https://www.youtube.com/watch?v=7S08JbLwB_k' },
+  { id: 'a5', category: 'Javline', name: 'Approach Rhythms', duration: '15m', level: 'Intermediate', description: 'Transitioning from sprint to cross-over steps.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' }
 ];
 
 export function CoreHub({ store }: { store: any }) {
@@ -94,7 +97,6 @@ export function CoreHub({ store }: { store: any }) {
   const [isAiSearching, setIsAiSearching] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Helper to check for YouTube
   const isYouTube = useMemo(() => {
     return analysisVideo.includes('youtube.com') || analysisVideo.includes('youtu.be');
   }, [analysisVideo]);
@@ -108,11 +110,9 @@ export function CoreHub({ store }: { store: any }) {
     return url.includes('youtube.com/results') ? url : null;
   };
 
-  // Planning States
   const [currentPlan, setCurrentPlan] = useState<any[]>([]);
   const [planName, setPlanName] = useState("Standard Technical Practice");
 
-  // Sync video source with sport selection
   useEffect(() => {
     if (SPORT_VIDEOS[selectedSport]) {
       setAnalysisVideo(SPORT_VIDEOS[selectedSport]);
@@ -250,7 +250,6 @@ export function CoreHub({ store }: { store: any }) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Institutional Selector Header */}
       <div className="bg-primary p-10 rounded-[3.5rem] shadow-2xl relative overflow-hidden text-white">
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-4 space-y-2">
@@ -303,7 +302,7 @@ export function CoreHub({ store }: { store: any }) {
               <div className="aspect-video bg-zinc-900 flex items-center justify-center relative">
                 {isYouTube ? (
                   <iframe 
-                    key={analysisVideo} // Key forces reload when video changes
+                    key={analysisVideo}
                     src={getYouTubeEmbed(analysisVideo) || ""}
                     className="w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -333,38 +332,20 @@ export function CoreHub({ store }: { store: any }) {
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleStep(0.033)} className="text-white hover:bg-white/10 rounded-full h-14 w-14"><ChevronRight className="w-8 h-8" /></Button>
                   </div>
-
                   <div className="flex items-center gap-2 bg-white/5 p-2 rounded-2xl border border-white/10">
                     {[0.25, 0.5, 1].map(rate => (
-                      <Button 
-                        key={rate} 
-                        size="sm" 
-                        variant={playbackRate === rate ? "default" : "ghost"}
-                        onClick={() => { setPlaybackRate(rate); if(videoRef.current) videoRef.current.playbackRate = rate; }}
-                        className={cn("rounded-xl font-black text-xs px-6 h-10", playbackRate === rate ? "bg-accent text-white" : "text-white/60")}
-                      >
-                        {rate}x Speed
-                      </Button>
+                      <Button key={rate} size="sm" variant={playbackRate === rate ? "default" : "ghost"} onClick={() => { setPlaybackRate(rate); if(videoRef.current) videoRef.current.playbackRate = rate; }} className={cn("rounded-xl font-black text-xs px-6 h-10", playbackRate === rate ? "bg-accent text-white" : "text-white/60")}>{rate}x Speed</Button>
                     ))}
                   </div>
-
                   <Button className="bg-accent text-white rounded-2xl px-8 h-14 font-black uppercase text-xs tracking-widest shadow-xl"><Maximize2 className="w-5 h-5 mr-3" /> Analyze Form</Button>
                 </div>
               )}
 
               {isYouTube && (
                 <div className="bg-zinc-950 p-6 flex items-center justify-between border-t border-white/5 px-8">
-                  <div className="flex items-center gap-4 text-white/40">
-                    <Youtube className="w-6 h-6" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Mastery Streaming Engine Active</span>
-                  </div>
-                  <Button 
-                    onClick={handleAiVideoSearch} 
-                    disabled={isAiSearching || !isOnline}
-                    className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 font-black uppercase text-[10px] px-6 border border-white/10"
-                  >
-                    {isAiSearching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BrainCircuit className="w-4 h-4 mr-2 text-accent" />}
-                    AI Video Search
+                  <div className="flex items-center gap-4 text-white/40"><Youtube className="w-6 h-6" /><span className="text-[10px] font-black uppercase tracking-widest">Mastery Streaming Engine Active</span></div>
+                  <Button onClick={handleAiVideoSearch} disabled={isAiSearching || !isOnline} className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 font-black uppercase text-[10px] px-6 border border-white/10">
+                    {isAiSearching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BrainCircuit className="w-4 h-4 mr-2 text-accent" />} AI Video Search
                   </Button>
                 </div>
               )}
@@ -372,52 +353,33 @@ export function CoreHub({ store }: { store: any }) {
 
             <div className="lg:col-span-4 space-y-6">
               <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white flex flex-col h-full">
-                <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3 mb-8">
-                  <Target className="w-7 h-7 text-accent" /> Technique Hub
-                </h3>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3 mb-8"><Target className="w-7 h-7 text-accent" /> Technique Hub</h3>
                 <div className="flex-1 space-y-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-2">Active Recording</label>
                     <div className="bg-primary/5 p-6 rounded-3xl border-2 border-primary/5 flex flex-col gap-4">
                        <div className="flex items-center gap-4">
-                          <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg",
-                            isYouTube ? "bg-red-600" : "bg-primary"
-                          )}>
+                          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg", isYouTube ? "bg-red-600" : "bg-primary")}>
                             {isYouTube ? <Youtube className="w-6 h-6" /> : <Video className="w-6 h-6" />}
                           </div>
-                          <div>
-                            <p className="font-black text-sm uppercase text-primary leading-none truncate max-w-[150px]">
-                              {activeDrillName}
-                            </p>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Material</span>
-                          </div>
+                          <div><p className="font-black text-sm uppercase text-primary leading-none truncate max-w-[150px]">{activeDrillName}</p><span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Material</span></div>
                        </div>
                        <Badge variant="outline" className="w-fit text-[9px] font-black uppercase border-primary/20 bg-white">Standard Analysis</Badge>
                     </div>
                   </div>
-
                   {aiFocusPoints && (
                     <div className="space-y-4 animate-in zoom-in-95 duration-500">
-                      <h4 className="text-[10px] font-black uppercase text-accent tracking-[0.2em] ml-2 flex items-center gap-2">
-                        <BrainCircuit className="w-3 h-3" /> AI Analysis Notes
-                      </h4>
-                      <div className="bg-accent/5 p-6 rounded-3xl border-2 border-accent/10">
-                        <p className="text-xs font-medium text-foreground/70 leading-relaxed whitespace-pre-wrap italic">
-                          {aiFocusPoints}
-                        </p>
-                      </div>
+                      <h4 className="text-[10px] font-black uppercase text-accent tracking-[0.2em] ml-2 flex items-center gap-2"><BrainCircuit className="w-3 h-3" /> AI Analysis Notes</h4>
+                      <div className="bg-accent/5 p-6 rounded-3xl border-2 border-accent/10"><p className="text-xs font-medium text-foreground/70 leading-relaxed whitespace-pre-wrap italic">{aiFocusPoints}</p></div>
                     </div>
                   )}
-
                   {!aiFocusPoints && (
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-2">Standard Checkpoints</h4>
                       <div className="grid grid-cols-1 gap-3">
                          {['Posture Alignment', 'Explosive Takeoff', 'Reaction Delay'].map((check, i) => (
                            <div key={i} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-primary/10 transition-colors">
-                             <span className="text-xs font-bold text-foreground/80 uppercase">{check}</span>
-                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                             <span className="text-xs font-bold text-foreground/80 uppercase">{check}</span><CheckCircle2 className="w-4 h-4 text-emerald-500" />
                            </div>
                          ))}
                       </div>
@@ -426,8 +388,7 @@ export function CoreHub({ store }: { store: any }) {
                 </div>
                 <div className="pt-8 border-t space-y-3">
                   <Button onClick={handleAiVideoSearch} disabled={isAiSearching || !isOnline} className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black uppercase text-xs tracking-widest shadow-lg active-scale">
-                    {isAiSearching ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <BrainCircuit className="w-5 h-5 mr-3" />}
-                    AI Search for Technique
+                    {isAiSearching ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <BrainCircuit className="w-5 h-5 mr-3" />} AI Search for Technique
                   </Button>
                   <Button className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg">Save Analysis Log</Button>
                 </div>
@@ -438,51 +399,21 @@ export function CoreHub({ store }: { store: any }) {
 
         <TabsContent value="library" className="mt-0">
            <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
-             <div className="relative flex-1 w-full max-w-2xl">
-               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
-               <Input 
-                 placeholder={`Search technical drills for ${selectedSport}...`} 
-                 className="pl-16 h-16 rounded-[2rem] border-2 font-bold shadow-inner text-lg" 
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-               />
-             </div>
-             <div className="flex gap-3">
-               <Button onClick={handleAutoPlan} className="bg-accent text-white h-16 rounded-[1.5rem] font-black uppercase text-xs px-10 tracking-widest shadow-xl active-scale">
-                 <Sparkles className="w-5 h-5 mr-3" /> Auto-Plan {selectedSport}
-               </Button>
-             </div>
+             <div className="relative flex-1 w-full max-w-2xl"><Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" /><Input placeholder={`Search technical drills for ${selectedSport}...`} className="pl-16 h-16 rounded-[2rem] border-2 font-bold shadow-inner text-lg" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+             <div className="flex gap-3"><Button onClick={handleAutoPlan} className="bg-accent text-white h-16 rounded-[1.5rem] font-black uppercase text-xs px-10 tracking-widest shadow-xl active-scale"><Sparkles className="w-5 h-5 mr-3" /> Auto-Plan {selectedSport}</Button></div>
            </div>
-
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {filteredDrills.length === 0 ? (
-               <div className="col-span-full py-32 text-center space-y-4 opacity-20">
-                 <Dumbbell className="w-20 h-20 mx-auto" />
-                 <p className="text-2xl font-black uppercase tracking-widest">No drills match your search</p>
-               </div>
-             ) : filteredDrills.map(drill => (
+             {filteredDrills.length === 0 ? (<div className="col-span-full py-32 text-center space-y-4 opacity-20"><Dumbbell className="w-20 h-20 mx-auto" /><p className="text-2xl font-black uppercase tracking-widest">No drills match your search</p></div>) : filteredDrills.map(drill => (
                <Card key={drill.id} className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary/30 transition-all shadow-xl bg-white relative">
-                 <div className="aspect-video bg-zinc-100 relative flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => handleViewTechnique(drill)}>
-                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                   <Play className="w-16 h-16 text-white/50 group-hover:scale-110 group-hover:text-primary transition-all z-10" />
-                   <Badge className="absolute top-6 left-6 bg-primary text-white border-0 font-black text-[10px] uppercase px-4 py-1.5 rounded-full shadow-lg">{drill.category}</Badge>
-                 </div>
+                 <div className="aspect-video bg-zinc-100 relative flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => handleViewTechnique(drill)}><div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" /><Play className="w-16 h-16 text-white/50 group-hover:scale-110 group-hover:text-primary transition-all z-10" /><Badge className="absolute top-6 left-6 bg-primary text-white border-0 font-black text-[10px] uppercase px-4 py-1.5 rounded-full shadow-lg">{drill.category}</Badge></div>
                  <div className="p-8 space-y-6">
                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <h4 className="text-2xl font-black text-primary uppercase tracking-tight">{drill.name}</h4>
-                        <div className="flex items-center gap-4">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="w-4 h-4" /> {drill.duration}</span>
-                          <span className="text-[10px] font-black text-accent uppercase tracking-widest">{drill.level}</span>
-                        </div>
-                      </div>
+                      <div className="space-y-1"><h4 className="text-2xl font-black text-primary uppercase tracking-tight">{drill.name}</h4><div className="flex items-center gap-4"><span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="w-4 h-4" /> {drill.duration}</span><span className="text-[10px] font-black text-accent uppercase tracking-widest">{drill.level}</span></div></div>
                       <Button variant="ghost" size="icon" onClick={() => handleAddToPlan(drill)} className="text-primary hover:bg-primary/5 rounded-full h-12 w-12 border border-primary/10"><Plus className="w-6 h-6" /></Button>
                    </div>
                    <p className="text-sm font-medium text-foreground/60 leading-relaxed italic border-l-4 border-accent/20 pl-4">"{drill.description}"</p>
                    <div className="grid grid-cols-2 gap-3 pt-2">
-                     <Button variant="outline" onClick={() => handleViewTechnique(drill)} className="rounded-xl font-black uppercase text-[10px] border-2 h-11 flex items-center gap-2">
-                        <Eye className="w-3 h-3" /> View Technique
-                     </Button>
+                     <Button variant="outline" onClick={() => handleViewTechnique(drill)} className="rounded-xl font-black uppercase text-[10px] border-2 h-11 flex items-center gap-2"><Eye className="w-3 h-3" /> View Technique</Button>
                      <Button variant="ghost" className="rounded-xl font-black uppercase text-[10px] h-11">Progression</Button>
                    </div>
                  </div>
@@ -495,97 +426,29 @@ export function CoreHub({ store }: { store: any }) {
            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
              <div className="lg:col-span-4 space-y-8">
                 <Card className="border-2 rounded-[3rem] p-10 shadow-2xl bg-white">
-                  <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3 mb-8">
-                    <CalendarRange className="w-8 h-8 text-accent" /> Session Builder
-                  </h3>
+                  <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3 mb-8"><CalendarRange className="w-8 h-8 text-accent" /> Session Builder</h3>
                   <div className="space-y-8">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">Practice Title</label>
-                      <Input value={planName} onChange={(e) => setPlanName(e.target.value)} className="h-14 rounded-2xl border-2 font-bold bg-muted/20 shadow-inner px-6" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">Selected Sport</label>
-                      <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border-2 border-primary/5">
-                        <Medal className="w-5 h-5 text-primary" />
-                        <span className="font-black text-primary uppercase">{selectedSport}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-primary/5 text-center relative overflow-hidden">
-                       <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Target Run Time</p>
-                       <h4 className="text-6xl font-black text-primary tracking-tighter">{totalPlanTime}<span className="text-xl ml-2 opacity-40">MINS</span></h4>
-                       <div className="mt-6 flex items-center justify-center gap-2 text-emerald-600 font-bold uppercase text-[10px]">
-                          <CheckCircle2 className="w-4 h-4" /> Balanced Intensity
-                       </div>
-                    </div>
-
+                    <div className="space-y-2"><label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">Practice Title</label><Input value={planName} onChange={(e) => setPlanName(e.target.value)} className="h-14 rounded-2xl border-2 font-bold bg-muted/20 shadow-inner px-6" /></div>
+                    <div className="space-y-2"><label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-2">Selected Sport</label><div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border-2 border-primary/5"><Medal className="w-5 h-5 text-primary" /><span className="font-black text-primary uppercase">{selectedSport}</span></div></div>
+                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-primary/5 text-center relative overflow-hidden"><p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Target Run Time</p><h4 className="text-6xl font-black text-primary tracking-tighter">{totalPlanTime}<span className="text-xl ml-2 opacity-40">MINS</span></h4><div className="mt-6 flex items-center justify-center gap-2 text-emerald-600 font-bold uppercase text-[10px]"><CheckCircle2 className="w-4 h-4" /> Balanced Intensity</div></div>
                     <div className="grid grid-cols-1 gap-4">
-                      <Button onClick={handleAutoPlan} variant="outline" className="w-full h-14 rounded-2xl border-2 font-black uppercase text-xs tracking-widest">
-                        <RefreshCw className="w-5 h-5 mr-3" /> Reset to Standard
-                      </Button>
-                      <Button onClick={handlePrintPlan} disabled={currentPlan.length === 0} className="w-full bg-primary text-white h-16 rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale">
-                        <Printer className="w-6 h-6 mr-3" /> Export Session PDF
-                      </Button>
+                      <Button onClick={handleAutoPlan} variant="outline" className="w-full h-14 rounded-2xl border-2 font-black uppercase text-xs tracking-widest"><RefreshCw className="w-5 h-5 mr-3" /> Reset to Standard</Button>
+                      <Button onClick={handlePrintPlan} disabled={currentPlan.length === 0} className="w-full bg-primary text-white h-16 rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale"><Printer className="w-6 h-6 mr-3" /> Export Session PDF</Button>
                     </div>
                   </div>
                 </Card>
              </div>
-
              <div className="lg:col-span-8 space-y-6">
                 <Card className="border-2 rounded-[3.5rem] overflow-hidden shadow-2xl bg-white min-h-[700px] flex flex-col">
-                  <div className="bg-muted/40 p-8 border-b flex justify-between items-center sticky top-0 z-10">
-                     <div className="flex items-center gap-3">
-                       <ListOrdered className="w-5 h-5 text-primary" />
-                       <span className="text-xs font-black text-primary uppercase tracking-widest">Planned Activity Sequence</span>
-                     </div>
-                     <Badge className="font-black text-xs uppercase px-6 py-2 rounded-full bg-primary text-white">{currentPlan.length} Segments</Badge>
-                  </div>
+                  <div className="bg-muted/40 p-8 border-b flex justify-between items-center sticky top-0 z-10"><div className="flex items-center gap-3"><ListOrdered className="w-5 h-5 text-primary" /><span className="text-xs font-black text-primary uppercase tracking-widest">Planned Activity Sequence</span></div><Badge className="font-black text-xs uppercase px-6 py-2 rounded-full bg-primary text-white">{currentPlan.length} Segments</Badge></div>
                   <div className="flex-1 p-10 space-y-6 overflow-y-auto">
-                    {currentPlan.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-6">
-                         <Dumbbell className="w-24 h-24" />
-                         <div className="text-center space-y-2">
-                           <p className="font-black uppercase text-xl tracking-widest">Planning Deck Empty</p>
-                           <p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use "Auto-Plan" to start building your session.</p>
-                         </div>
-                      </div>
-                    ) : (
+                    {currentPlan.length === 0 ? (<div className="h-full flex flex-col items-center justify-center opacity-20 space-y-6"><Dumbbell className="w-24 h-24" /><div className="text-center space-y-2"><p className="font-black uppercase text-xl tracking-widest">Planning Deck Empty</p><p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use "Auto-Plan" to start building your session.</p></div></div>) : (
                       currentPlan.map((p, idx) => (
-                        <div key={p.planId} className="bg-white p-8 rounded-[2rem] border-2 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all animate-in slide-in-from-right-4 duration-300">
-                           <div className="flex items-center gap-8">
-                              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-2xl text-primary shadow-inner border border-primary/5">{idx + 1}</div>
-                              <div>
-                                 <p className="font-black text-2xl text-primary uppercase tracking-tight leading-none">{p.name}</p>
-                                 <div className="flex items-center gap-4 mt-2">
-                                   <Badge variant="secondary" className="text-[9px] font-black uppercase">{p.category}</Badge>
-                                   <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Target className="w-3 h-3" /> {p.level} Focus</span>
-                                 </div>
-                              </div>
-                           </div>
-                           <div className="flex items-center gap-8">
-                              <div className="text-right">
-                                 <p className="font-black text-2xl text-primary leading-none">{p.duration}</p>
-                                 <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">Est. Time</p>
-                              </div>
-                              <Button variant="ghost" size="icon" onClick={() => setCurrentPlan(currentPlan.filter(i => i.planId !== p.planId))} className="text-destructive hover:bg-destructive/5 rounded-full h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-6 h-6" /></Button>
-                           </div>
-                        </div>
+                        <div key={p.planId} className="bg-white p-8 rounded-[2rem] border-2 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all animate-in slide-in-from-right-4 duration-300"><div className="flex items-center gap-8"><div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-2xl text-primary shadow-inner border border-primary/5">{idx + 1}</div><div><p className="font-black text-2xl text-primary uppercase tracking-tight leading-none">{p.name}</p><div className="flex items-center gap-4 mt-2"><Badge variant="secondary" className="text-[9px] font-black uppercase">{p.category}</Badge><span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Target className="w-3 h-3" /> {p.level} Focus</span></div></div></div><div className="flex items-center gap-8"><div className="text-right"><p className="font-black text-2xl text-primary leading-none">{p.duration}</p><p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">Est. Time</p></div><Button variant="ghost" size="icon" onClick={() => setCurrentPlan(currentPlan.filter(i => i.planId !== p.planId))} className="text-destructive hover:bg-destructive/5 rounded-full h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-6 h-6" /></Button></div></div>
                       ))
                     )}
                   </div>
-                  <div className="p-10 bg-muted/10 border-t flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                       <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                       <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Registry synchronized with cloud vault</p>
-                    </div>
-                    {selectedPlayerId && selectedPlayerId !== 'all' && (
-                      <div className="flex items-center gap-3 px-6 py-2 bg-white rounded-full border shadow-sm">
-                        <User className="w-4 h-4 text-primary" />
-                        <span className="text-[10px] font-black uppercase text-primary">Assigning to: {store.data.players.find((p: any) => p.id === selectedPlayerId)?.name}</span>
-                      </div>
-                    )}
-                  </div>
+                  <div className="p-10 bg-muted/10 border-t flex flex-col md:flex-row items-center justify-between gap-6"><div className="flex items-center gap-4"><div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" /><p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Registry synchronized with cloud vault</p></div>{selectedPlayerId && selectedPlayerId !== 'all' && (<div className="flex items-center gap-3 px-6 py-2 bg-white rounded-full border shadow-sm"><User className="w-4 h-4 text-primary" /><span className="text-[10px] font-black uppercase text-primary">Assigning to: {store.data.players.find((p: any) => p.id === selectedPlayerId)?.name}</span></div>)}</div>
                 </Card>
              </div>
            </div>
@@ -596,7 +459,5 @@ export function CoreHub({ store }: { store: any }) {
 }
 
 const ListOrdered = ({ className }: { className?: string }) => (
-  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="10" x1="6" x2="21" y2="6"/><line x1="10" x1="12" x2="21" y2="12"/><line x1="10" x1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
-  </svg>
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="10" x1="6" x2="21" y2="6"/><line x1="10" x1="12" x2="21" y2="12"/><line x1="10" x1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
 );
