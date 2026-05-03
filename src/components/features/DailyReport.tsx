@@ -6,15 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, FileText, Activity, ArrowLeft } from 'lucide-react';
+import { Printer, FileText, Activity, AlertTriangle, Users, ClipboardCheck, History } from 'lucide-react';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export function DailyReport({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [isMounted, setIsMounted] = useState(false);
   const [reportDate, setReportDate] = useState("");
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
-  const [sessionTime, setSessionTime] = useState("Morning");
 
   const targetCategory = section === 'general' ? 'student' : 'athlete';
 
@@ -23,6 +24,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     setReportDate(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
+  // 1. Fetch Activities logged today
   const activitiesToday = useMemo(() => {
     if (!isMounted || !reportDate) return [];
     return store.data.activities.filter((a: any) => 
@@ -30,8 +32,32 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     );
   }, [store.data.activities, reportDate, isMounted, targetCategory]);
 
+  // 2. Fetch Health Incidents logged today
+  const healthToday = useMemo(() => {
+    if (!isMounted || !reportDate) return [];
+    return store.data.healthIncidents.filter((h: any) => 
+      h.date === reportDate && (section === 'general' ? true : h.category === 'athlete')
+    );
+  }, [store.data.healthIncidents, reportDate, isMounted, section]);
+
+  // 3. Aggregate Attendance Summary
+  const attendanceSummary = useMemo(() => {
+    if (!isMounted || !reportDate) return { morning: 0, evening: 0 };
+    let morning = 0;
+    let evening = 0;
+    
+    Object.entries(store.data.attendance).forEach(([key, status]) => {
+      if (status === 'P' && key.includes(reportDate)) {
+        if (key.endsWith('_Morning')) morning++;
+        if (key.endsWith('_Evening')) evening++;
+      }
+    });
+    
+    return { morning, evening };
+  }, [store.data.attendance, reportDate, isMounted]);
+
   const autoSummary = useMemo(() => {
-    if (activitiesToday.length === 0) return `No ${section === 'sports' ? 'athletic training' : 'physical education'} activities logged for this date.`;
+    if (activitiesToday.length === 0) return `No ${section === 'sports' ? 'athletic training' : 'physical education'} activities were recorded in the registry for this date.`;
     return activitiesToday.map((a: any) => `• [Std ${a.std}] ${a.type} (${a.duration}): ${a.summary}`).join('\n\n');
   }, [activitiesToday, section]);
 
@@ -39,40 +65,56 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     const printContent = `
       <html>
         <head>
-          <title>Daily Report - ${reportDate}</title>
+          <title>Daily Briefing - ${reportDate}</title>
           <style>
-            @media print { @page { size: A4; margin: 2cm; } .no-print { display: none; } }
-            body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; font-size: 14px; }
-            .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 20px; }
+            @media print { @page { size: A4; margin: 1.5cm; } .no-print { display: none; } }
+            body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 13px; }
+            .header { text-align: center; border-bottom: 4px double #221d1d; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
-            .report-title { font-weight: 800; text-transform: uppercase; margin-top: 5px; }
-            .meta { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #eee; padding: 10px 0; }
-            h3 { color: #1b4b3a; border-left: 5px solid #8AF075; padding-left: 10px; margin-top: 30px; text-transform: uppercase; }
-            .box { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee; white-space: pre-wrap; min-height: 150px; }
-            .btn { display: inline-block; padding: 10px 20px; background: #235C36; color: white; text-decoration: none; border-radius: 5px; font-weight: 900; margin-bottom: 20px; }
-            .footer { margin-top: 60px; display: flex; justify-content: space-between; }
-            .sign { border-top: 1px solid #333; width: 200px; text-align: center; padding-top: 5px; font-weight: bold; }
+            .report-title { font-weight: 800; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
+            .meta { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid #eee; padding: 10px 0; margin-bottom: 20px; }
+            h3 { color: #111; border-left: 5px solid #235C36; padding-left: 10px; margin-top: 25px; text-transform: uppercase; font-size: 14px; }
+            .box { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; border-radius: 8px; white-space: pre-wrap; min-height: 100px; margin-top: 5px; }
+            .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+            .stat-item { border: 1px solid #eee; padding: 10px; border-radius: 5px; text-align: center; }
+            .footer { margin-top: 50px; display: flex; justify-content: space-between; font-weight: 900; }
+            .sign { border-top: 1px solid #333; width: 220px; text-align: center; padding-top: 5px; }
+            .critical { color: #991b1b; background: #fee2e2; border-color: #f87171; }
           </style>
         </head>
         <body>
-          <div class="no-print" style="text-align: right;">
-            <a href="javascript:window.close()" class="btn">RETURN TO APP</a>
-          </div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div class="report-title">${section === 'sports' ? 'Competitive Sports' : 'Physical Education'} Activity Report</div>
+            <div class="report-title">Daily Institutional Activity Briefing (${section.toUpperCase()})</div>
           </div>
           <div class="meta">
-            <span>Date: ${format(new Date(reportDate), 'PPPP')}</span>
-            <span>Session: ${sessionTime} (${weather})</span>
+            <span>DATE: ${format(new Date(reportDate), 'PPPP')}</span>
+            <span>WEATHER: ${weather.toUpperCase()}</span>
           </div>
-          <h3>Consolidated Activity Summary</h3>
+
+          <h3>1. Institutional Attendance Overview</h3>
+          <div class="stat-grid">
+            <div class="stat-item"><strong>Morning Session:</strong> ${attendanceSummary.morning} Present</div>
+            <div class="stat-item"><strong>Evening Session:</strong> ${attendanceSummary.evening} Present</div>
+          </div>
+
+          <h3>2. Consolidated Activity Summary</h3>
           <div class="box">${autoSummary}</div>
-          <h3>Additional Instructor Observations</h3>
-          <div class="box">${manualNotes || 'No additional notes provided.'}</div>
+
+          <h3>3. Health & Medical Log</h3>
+          <div class="box ${healthToday.length > 0 ? 'critical' : ''}">
+            ${healthToday.length === 0 
+              ? 'No medical incidents or injuries reported today.' 
+              : healthToday.map((h: any) => `ALERT: [${h.playerName}] ${h.description}`).join('\n')
+            }
+          </div>
+
+          <h3>4. Head Instructor Observations</h3>
+          <div class="box">${manualNotes || 'Standard operations conducted without additional specific observations.'}</div>
+
           <div class="footer">
-            <div class="sign">Physical Education Director</div>
-            <div class="sign">Principal Signature</div>
+            <div class="sign">Teacher Sunil Deshmukh<br/>(Physical Education Director)</div>
+            <div class="sign">Institutional Principal<br/>(Official Signature)</div>
           </div>
           <script>window.print();</script>
         </body>
@@ -89,39 +131,135 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex-1 space-y-4">
-            <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <FileText className="w-10 h-10 text-accent" /> Institutional Report Hub
+          <div className="flex-1 space-y-4 text-center md:text-left">
+            <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center justify-center md:justify-start gap-3">
+              <FileText className="w-10 h-10 text-accent" /> Official Briefing
             </h2>
-            <p className="text-lg font-medium text-foreground/70">Automatic summary generation for the {section === 'sports' ? 'Sports Hub' : 'Student Registry'}.</p>
+            <p className="text-lg font-medium text-foreground/70">Automatic daily aggregation from across the institutional registry.</p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase">Select Date</label>
-              <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="rounded-2xl border-2 h-14 font-black" />
+              <label className="text-[10px] font-black text-primary uppercase ml-2 tracking-widest">Target Date</label>
+              <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="rounded-2xl border-2 h-14 font-black shadow-sm" />
             </div>
-            <Button onClick={handlePrint} className="bg-primary text-white h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl"><Printer className="w-5 h-5 mr-2" /> Print Official Report</Button>
+            <Button onClick={handlePrint} className="bg-primary text-white h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active-scale">
+              <Printer className="w-5 h-5 mr-2" /> Generate Official Brief
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-          <CardHeader className="bg-accent/10 border-b p-6"><CardTitle className="text-sm font-black uppercase tracking-widest">Automatic Daily Summary ({targetCategory === 'athlete' ? 'Athletes' : 'Students'})</CardTitle></CardHeader>
-          <CardContent className="p-8">
-            <div className="bg-muted/30 p-6 rounded-2xl border-2 border-dashed border-muted font-medium text-sm text-foreground/60 whitespace-pre-wrap leading-relaxed min-h-[250px]">{autoSummary}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-          <CardHeader className="bg-primary/5 border-b p-6"><CardTitle className="text-sm font-black uppercase tracking-widest">Additional Notes</CardTitle></CardHeader>
-          <CardContent className="p-8 space-y-6">
-             <div className="grid grid-cols-2 gap-4">
-               <Select value={weather} onValueChange={setWeather}><SelectTrigger className="h-12 border-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Sunny">Sunny ☀️</SelectItem><SelectItem value="Rainy">Rainy 🌧️</SelectItem></SelectContent></Select>
-               <Select value={sessionTime} onValueChange={setSessionTime}><SelectTrigger className="h-12 border-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Morning">Morning</SelectItem><SelectItem value="Evening">Evening</SelectItem></SelectContent></Select>
-             </div>
-             <Textarea value={manualNotes} onChange={(e) => setManualSummary(e.target.value)} placeholder="Type extra observations here..." className="min-h-[200px] rounded-2xl border-2 p-6" />
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+            <CardHeader className="bg-accent/5 border-b p-6 flex flex-row justify-between items-center">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" /> Daily Activity Stream
+              </CardTitle>
+              <Badge variant="outline" className="font-black border-accent/20 text-accent">Auto-Aggregated</Badge>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="bg-muted/30 p-8 rounded-[2rem] border-2 border-dashed border-muted font-medium text-sm text-foreground/60 whitespace-pre-wrap leading-relaxed min-h-[300px]">
+                {autoSummary}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={cn(
+            "border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden transition-all",
+            healthToday.length > 0 ? "border-destructive/30" : "border-border"
+          )}>
+            <CardHeader className={cn(
+              "border-b p-6 flex flex-row justify-between items-center",
+              healthToday.length > 0 ? "bg-destructive/5" : "bg-muted/10"
+            )}>
+              <CardTitle className={cn(
+                "text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2",
+                healthToday.length > 0 ? "text-destructive" : "text-primary"
+              )}>
+                <AlertTriangle className="w-4 h-4" /> Medical Briefing
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              {healthToday.length === 0 ? (
+                <p className="text-sm font-bold text-muted-foreground italic text-center opacity-40">No health incidents logged in registry for this date.</p>
+              ) : (
+                <div className="space-y-4">
+                  {healthToday.map((h: any, i: number) => (
+                    <div key={i} className="flex gap-4 p-4 bg-destructive/[0.03] border border-destructive/10 rounded-2xl">
+                      <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black uppercase text-xs text-destructive">{h.playerName}</p>
+                        <p className="text-xs font-medium text-foreground/70">{h.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+            <CardHeader className="bg-primary/5 border-b p-6">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" /> Session Attendance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/5 text-center">
+                  <p className="text-[10px] font-black uppercase text-primary/40 mb-2">Morning Session</p>
+                  <h4 className="text-4xl font-black text-primary">{attendanceSummary.morning}</h4>
+                  <p className="text-[9px] font-bold uppercase text-primary/60 mt-1">Present Today</p>
+                </div>
+                <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/5 text-center">
+                  <p className="text-[10px] font-black uppercase text-primary/40 mb-2">Evening Session</p>
+                  <h4 className="text-4xl font-black text-primary">{attendanceSummary.evening}</h4>
+                  <p className="text-[9px] font-bold uppercase text-primary/60 mt-1">Present Today</p>
+                </div>
+              </div>
+              <div className="p-4 bg-muted/20 rounded-2xl flex items-center gap-3">
+                 <ClipboardCheck className="w-5 h-5 text-emerald-600" />
+                 <p className="text-[10px] font-black uppercase text-muted-foreground leading-tight">Data verified from institutional presence log</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+            <CardHeader className="bg-primary/5 border-b p-6">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em]">Extra Observations</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-4">
+               <div className="space-y-2">
+                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Weather Conditions</label>
+                 <Select value={weather} onValueChange={setWeather}>
+                   <SelectTrigger className="h-12 border-2 rounded-xl">
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="Sunny">Sunny ☀️</SelectItem>
+                     <SelectItem value="Rainy">Rainy 🌧️</SelectItem>
+                     <SelectItem value="Overcast">Overcast ☁️</SelectItem>
+                     <SelectItem value="Cold">Cold ❄️</SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Daily Remark</label>
+                 <Textarea 
+                  value={manualNotes} 
+                  onChange={(e) => setManualSummary(e.target.value)} 
+                  placeholder="e.g. Ground preparation for Zilla Parishad meet..." 
+                  className="min-h-[150px] rounded-2xl border-2 p-6 font-medium text-sm" 
+                 />
+               </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
