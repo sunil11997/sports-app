@@ -19,7 +19,8 @@ import {
   Target,
   AlertCircle,
   CheckCircle2,
-  Calendar
+  Calendar,
+  History as HistoryIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -209,7 +210,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
                           <defs>
-                            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorScore" x1="0" x1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#235C36" stopOpacity={0.15}/>
                               <stop offset="95%" stopColor="#235C36" stopOpacity={0}/>
                             </linearGradient>
