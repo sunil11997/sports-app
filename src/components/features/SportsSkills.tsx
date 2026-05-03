@@ -54,12 +54,28 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
 
   const handleDetailedSkillChange = (skill: string, value: string) => {
     if (!editingDetailedPlayer) return;
+    
+    let clampedValue = value;
+    if (value !== '') {
+      const numVal = parseFloat(value);
+      if (!isNaN(numVal)) {
+        // Enforce strict 0-10 range for each technical skill
+        clampedValue = Math.min(10, Math.max(0, numVal)).toString();
+      }
+    }
+
     const { player, sport } = editingDetailedPlayer;
     const key = `${player.id}_${sport}`;
     const current = skills[key] || { score: '0', detailedSkills: {} };
-    const updatedDetailedSkills = { ...(current.detailedSkills || {}), [skill]: value };
+    const updatedDetailedSkills = { ...(current.detailedSkills || {}), [skill]: clampedValue };
+    
+    // Recalculate total based on clamped values
     const total = Object.values(updatedDetailedSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
-    setSkills(prev => ({ ...prev, [key]: { ...current, detailedSkills: updatedDetailedSkills, score: total.toString() } }));
+    
+    setSkills(prev => ({ 
+      ...prev, 
+      [key]: { ...current, detailedSkills: updatedDetailedSkills, score: total.toString() } 
+    }));
   };
 
   const handleSave = (id: string) => {

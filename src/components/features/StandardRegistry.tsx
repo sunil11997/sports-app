@@ -16,7 +16,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const [activeTerm, setActiveTerm] = useState<'First' | 'Second'>('First');
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
-  // Exam hub shows ALL students (including athletes) in that Std
+  // Memoize the filtered list to prevent infinite re-render loops
   const playersInStd = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.std === std)
@@ -46,8 +46,18 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   }, [activeTerm, playersInStd, store.data.fitnessHistory, store.isLoaded]);
 
   const handleChange = (id: string, field: string, value: string) => {
+    if (value === '') {
+      setTermRecords(prev => ({
+        ...prev,
+        [id]: { ...(prev[id] || {}), [field]: '' }
+      }));
+      return;
+    }
+
     const numVal = parseFloat(value);
     let finalVal = value;
+    
+    // Strict enforcement for exam components (max 10)
     if (!isNaN(numVal)) {
       if (numVal > 10) finalVal = "10";
       if (numVal < 0) finalVal = "0";
