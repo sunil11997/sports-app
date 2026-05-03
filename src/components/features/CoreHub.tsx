@@ -63,7 +63,7 @@ export function CoreHub({ store }: { store: any }) {
   const [activeHubTab, setActiveHubTab] = useState("analysis");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState("Kabaddi");
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("all");
   
   // Analysis States
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -193,7 +193,7 @@ export function CoreHub({ store }: { store: any }) {
                 <SelectValue placeholder="All Athletes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Athletes</SelectItem>
+                <SelectItem value="all">All Athletes</SelectItem>
                 {playersInSport.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -433,7 +433,7 @@ export function CoreHub({ store }: { store: any }) {
                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
                        <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Institutional logic verified by Hub v3.0</p>
                     </div>
-                    {selectedPlayerId && (
+                    {selectedPlayerId && selectedPlayerId !== 'all' && (
                       <div className="flex items-center gap-3 px-6 py-2 bg-white rounded-full border shadow-sm">
                         <User className="w-4 h-4 text-primary" />
                         <span className="text-[10px] font-black uppercase text-primary">Assigning to: {store.data.players.find((p: any) => p.id === selectedPlayerId)?.name}</span>
@@ -451,6 +451,6 @@ export function CoreHub({ store }: { store: any }) {
 
 const ListOrdered = ({ className }: { className?: string }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
+    <line x1="10" x1="6" x2="21" y2="6"/><line x1="10" x1="12" x2="21" y2="12"/><line x1="10" x1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
   </svg>
 );
