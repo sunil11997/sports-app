@@ -31,11 +31,16 @@ import {
   RefreshCw,
   Sparkles,
   Eye,
-  Youtube
+  Youtube,
+  Loader2,
+  BrainCircuit,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { videoSearch, type VideoSearchOutput } from '@/ai/flows/video-search';
+import { usePWA } from '@/components/providers/pwa-provider';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
@@ -74,15 +79,19 @@ const DRILL_LIBRARY = [
 
 export function CoreHub({ store }: { store: any }) {
   const { toast } = useToast();
+  const { isOnline } = usePWA();
   const [activeHubTab, setActiveHubTab] = useState("analysis");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState("Kabaddi");
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("all");
+  const [activeDrillName, setActiveDrillName] = useState<string>("Technical Mastery");
   
   // Analysis States
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [analysisVideo, setAnalysisVideo] = useState(SPORT_VIDEOS['Kabaddi']);
+  const [aiFocusPoints, setAiFocusPoints] = useState<string>("");
+  const [isAiSearching, setIsAiSearching] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Helper to check for YouTube
@@ -96,7 +105,7 @@ export function CoreHub({ store }: { store: any }) {
     if (match && match[2].length === 11) {
       return `https://www.youtube.com/embed/${match[2]}?autoplay=1&mute=1&loop=1&playlist=${match[2]}`;
     }
-    return null;
+    return url.includes('youtube.com/results') ? url : null;
   };
 
   // Planning States
@@ -107,6 +116,8 @@ export function CoreHub({ store }: { store: any }) {
   useEffect(() => {
     if (SPORT_VIDEOS[selectedSport]) {
       setAnalysisVideo(SPORT_VIDEOS[selectedSport]);
+      setActiveDrillName(`${selectedSport} Technical Standards`);
+      setAiFocusPoints("");
       setIsPlaying(false);
     }
   }, [selectedSport]);
@@ -149,9 +160,36 @@ export function CoreHub({ store }: { store: any }) {
   const handleViewTechnique = (drill: any) => {
     if (drill.video) {
       setAnalysisVideo(drill.video);
+      setActiveDrillName(drill.name);
+      setAiFocusPoints("");
       setActiveHubTab("analysis");
       setIsPlaying(false);
       toast({ title: "Technical View", description: `Reviewing technical moves for ${drill.name}` });
+    }
+  };
+
+  const handleAiVideoSearch = async () => {
+    if (!isOnline) {
+      toast({ title: "Offline", description: "Internet required for AI Technical Search.", variant: "destructive" });
+      return;
+    }
+
+    setIsAiSearching(true);
+    try {
+      const result = await videoSearch({
+        drillName: activeDrillName,
+        sport: selectedSport,
+        language: "English"
+      });
+
+      setAnalysisVideo(result.youtubeUrl);
+      setAiFocusPoints(result.focusPoints);
+      toast({ title: "AI Found Technique", description: `Loading technical breakdown for ${activeDrillName}` });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "AI Error", description: "Could not find specific technique video.", variant: "destructive" });
+    } finally {
+      setIsAiSearching(false);
     }
   };
 
@@ -315,11 +353,19 @@ export function CoreHub({ store }: { store: any }) {
               )}
 
               {isYouTube && (
-                <div className="bg-zinc-950 p-6 flex items-center justify-center border-t border-white/5">
-                  <div className="flex items-center gap-2 text-white/40">
-                    <Youtube className="w-5 h-5" />
+                <div className="bg-zinc-950 p-6 flex items-center justify-between border-t border-white/5 px-8">
+                  <div className="flex items-center gap-4 text-white/40">
+                    <Youtube className="w-6 h-6" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Mastery Streaming Engine Active</span>
                   </div>
+                  <Button 
+                    onClick={handleAiVideoSearch} 
+                    disabled={isAiSearching || !isOnline}
+                    className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-10 font-black uppercase text-[10px] px-6 border border-white/10"
+                  >
+                    {isAiSearching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BrainCircuit className="w-4 h-4 mr-2 text-accent" />}
+                    AI Video Search
+                  </Button>
                 </div>
               )}
             </Card>
@@ -342,7 +388,7 @@ export function CoreHub({ store }: { store: any }) {
                           </div>
                           <div>
                             <p className="font-black text-sm uppercase text-primary leading-none truncate max-w-[150px]">
-                              {selectedSport}_Tutorial_Mastery
+                              {activeDrillName}
                             </p>
                             <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Institutional Material</span>
                           </div>
@@ -351,20 +397,38 @@ export function CoreHub({ store }: { store: any }) {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-2">Analysis Checkpoints</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                       {['Posture Alignment', 'Explosive Takeoff', 'Reaction Delay'].map((check, i) => (
-                         <div key={i} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-primary/10 transition-colors">
-                           <span className="text-xs font-bold text-foreground/80 uppercase">{check}</span>
-                           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                         </div>
-                       ))}
+                  {aiFocusPoints && (
+                    <div className="space-y-4 animate-in zoom-in-95 duration-500">
+                      <h4 className="text-[10px] font-black uppercase text-accent tracking-[0.2em] ml-2 flex items-center gap-2">
+                        <BrainCircuit className="w-3 h-3" /> AI Analysis Notes
+                      </h4>
+                      <div className="bg-accent/5 p-6 rounded-3xl border-2 border-accent/10">
+                        <p className="text-xs font-medium text-foreground/70 leading-relaxed whitespace-pre-wrap italic">
+                          {aiFocusPoints}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {!aiFocusPoints && (
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-2">Standard Checkpoints</h4>
+                      <div className="grid grid-cols-1 gap-3">
+                         {['Posture Alignment', 'Explosive Takeoff', 'Reaction Delay'].map((check, i) => (
+                           <div key={i} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-primary/10 transition-colors">
+                             <span className="text-xs font-bold text-foreground/80 uppercase">{check}</span>
+                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                           </div>
+                         ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="pt-8 border-t space-y-3">
-                  <Button variant="outline" className="w-full h-14 rounded-2xl border-2 font-black uppercase text-xs tracking-widest">Compare Side-by-Side</Button>
+                  <Button onClick={handleAiVideoSearch} disabled={isAiSearching || !isOnline} className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-black uppercase text-xs tracking-widest shadow-lg active-scale">
+                    {isAiSearching ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : <BrainCircuit className="w-5 h-5 mr-3" />}
+                    AI Search for Technique
+                  </Button>
                   <Button className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg">Save Analysis Log</Button>
                 </div>
               </Card>
