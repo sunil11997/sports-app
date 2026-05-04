@@ -1,32 +1,32 @@
+/**
+ * Waghamba Sports Hub - Institutional Service Worker
+ * Handles offline caching for core assets to ensure zero-latency booting.
+ */
 
-const CACHE_NAME = 'wgb-sports-hub-v1';
+const CACHE_NAME = 'wgb-sports-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/icon-512.png',
   '/icon-41.png'
 ];
 
-// Install Event - Caching App Shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('WGB: Caching App Shell');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
   self.skipWaiting();
 });
 
-// Activate Event - Cleaning old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('WGB: Clearing old cache');
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
         })
       );
@@ -35,34 +35,35 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event - Stale-While-Revalidate Strategy
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
+  // Only handle GET requests for navigation and core assets
   if (event.request.method !== 'GET') return;
-
-  // Skip Firebase/Google API calls to let their internal SDK handle persistence
-  if (event.request.url.includes('firestore.googleapis.com') || 
-      event.request.url.includes('google-analytics.com')) {
-    return;
-  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Cache the new response for next time
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Fallback if network fails and not in cache
+      if (cachedResponse) {
         return cachedResponse;
-      });
+      }
 
-      return cachedResponse || fetchPromise;
+      return fetch(event.request).then((response) => {
+        // Cache successful responses for future offline use
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return response;
+      }).catch(() => {
+        // If fetch fails (offline) and not in cache, return the root for navigation
+        if (event.request.mode === 'navigate') {
+          return caches.match('/');
+        }
+        return null;
+      });
     })
   );
 });

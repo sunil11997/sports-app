@@ -164,8 +164,8 @@ export default function WaghambaApp() {
     return (
       <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6 text-white overflow-hidden">
         <div className="relative z-10 space-y-8 animate-pulse text-center">
-          <div className="w-32 h-32 bg-white p-6 rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20">
-             <Image src={LOGO_PATH} alt="Institutional Logo" width={100} height={100} priority unoptimized className="object-contain" />
+          <div className="w-32 h-32 bg-white rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20 overflow-hidden relative">
+             <Image src={LOGO_PATH} alt="Institutional Logo" fill priority unoptimized className="object-cover" />
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
