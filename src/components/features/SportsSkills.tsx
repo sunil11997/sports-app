@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -59,7 +60,6 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
     if (value !== '') {
       const numVal = parseFloat(value);
       if (!isNaN(numVal)) {
-        // Enforce strict 0-10 range for each technical skill
         clampedValue = Math.min(10, Math.max(0, numVal)).toString();
       }
     }
@@ -69,7 +69,6 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
     const current = skills[key] || { score: '0', detailedSkills: {} };
     const updatedDetailedSkills = { ...(current.detailedSkills || {}), [skill]: clampedValue };
     
-    // Recalculate total based on clamped values
     const total = Object.values(updatedDetailedSkills).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
     
     setSkills(prev => ({ 
@@ -87,7 +86,6 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
   };
 
   const handlePrint = () => {
-    const players = store.data.players.filter((p: any) => p.category === targetCategory && (isGeneral || p.sports?.includes(activeSport)));
     const printContent = `
       <html>
         <head>
@@ -113,10 +111,10 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
               <tr><th>Sr.</th><th>Student Name</th><th>Std</th><th>Gender</th><th style="text-align: center;">Total Score</th></tr>
             </thead>
             <tbody>
-              ${players.map((p: any, i: number) => {
+              ${filteredPlayers.map((p: any, i: number) => {
                 const sportName = isGeneral ? 'General P.E.' : activeSport;
                 const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
-                return `<tr><td>${i+1}</td><td><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${p.gender}</td><td class="score">${s.score} / ${getMaxScore(activeSport)}</td></tr>`;
+                return `<tr><td>${p.serialNumber || i+1}</td><td><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${p.gender}</td><td class="score">${s.score} / ${getMaxScore(activeSport)}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -129,9 +127,24 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
     win?.document.close();
   };
 
-  const filteredPlayers = store.data.players.filter((p: any) => 
-    p.category === targetCategory && (isGeneral || p.sports?.includes(activeSport))
-  );
+  const filteredPlayers = useMemo(() => {
+    return store.data.players
+      .filter((p: any) => p.category === targetCategory && (isGeneral || p.sports?.includes(activeSport)))
+      .sort((a: any, b: any) => {
+        // 1. Sort by Standard
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+
+        // 2. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+
+        // 3. Sort by Serial Number
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
+  }, [store.data.players, targetCategory, isGeneral, activeSport]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
@@ -200,7 +213,7 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
                     <TableCell className="px-6">
                       <div className="flex flex-col">
                         <span className="font-black text-sm uppercase text-primary leading-tight">{p.name}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Standard {p.std}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">{p.gender} • Std {p.std} • #{p.serialNumber || '0'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">

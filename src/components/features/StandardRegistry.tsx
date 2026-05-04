@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -16,11 +17,17 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const [activeTerm, setActiveTerm] = useState<'First' | 'Second'>('First');
   const [isSaving, setIsSaving] = useState<string | null>(null);
 
-  // Memoize the filtered list to prevent infinite re-render loops
   const playersInStd = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.std === std)
-      .sort((a: any, b: any) => (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0));
+      .sort((a: any, b: any) => {
+        // 1. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+        // 2. Sort by Serial Number
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
   }, [store.data.players, std]);
 
   const [termRecords, setTermRecords] = useState<Record<string, any>>({});
@@ -54,7 +61,6 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
       return;
     }
 
-    // Removed the clamping logic (max 10) so the user can enter their own values freely.
     setTermRecords(prev => ({
       ...prev,
       [id]: {
@@ -175,7 +181,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">इयत्ता {std} - परीक्षा नोंदणी</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Enter any numeric marks</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Female group listed first</p>
           </div>
         </div>
 
@@ -245,7 +251,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                            <span className="text-[9px] font-black text-primary/40">#{p.serialNumber || '0'}</span>
                            <span className="uppercase text-primary">{p.name}</span>
                         </div>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">Term: {activeTerm}</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">{p.gender} • Term: {activeTerm}</span>
                       </div>
                     </TableCell>
                     <TableCell className="border-r p-0 text-center text-[10px] font-bold">{p.gender === 'Female' ? 'महिला' : 'पुरुष'}</TableCell>

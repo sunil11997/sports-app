@@ -65,9 +65,17 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
+        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
+
+        // 2. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+
+        // 3. Sort by Serial Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       }),
     [store.data.players, isGeneral]

@@ -53,9 +53,17 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
+        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
+
+        // 2. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+
+        // 3. Sort by Serial Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory]);
@@ -91,6 +99,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               <tr>
                 <th>SNR</th>
                 <th>PLAYER</th>
+                <th>GENDER</th>
                 ${days.map(d => `<th>${format(d, 'd')}</th>`).join('')}
                 <th>TOT</th>
               </tr>
@@ -103,7 +112,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name}</td>${row}<td>${total}</td></tr>`;
+                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name}</td><td>${p.gender}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -219,7 +228,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                            <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
                            <span className="uppercase truncate w-[140px]">{player.name}</span>
                         </div>
-                        <span className="text-[8px] uppercase text-muted-foreground font-black ml-6">Std {player.std} • {player.gender}</span>
+                        <span className="text-[8px] uppercase text-muted-foreground font-black ml-6">{player.gender} • Std {player.std}</span>
                       </div>
                     </TableCell>
                     {days.map(day => {

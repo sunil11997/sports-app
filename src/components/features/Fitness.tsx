@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -48,18 +49,23 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
+        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
+
+        // 2. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+
+        // 3. Sort by Serial Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory]);
 
   const handleChange = (id: string, field: string, value: string) => {
     let finalVal = value;
-    
-    // Strict enforcement removed for general exam marks as per user request.
-    // Bio-mechanical inputs still prevent negative values for data sanity.
     if (value !== '') {
       const numVal = parseFloat(value);
       if (!isNaN(numVal)) {
@@ -166,6 +172,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               <tr>
                 <th>SNR</th>
                 <th>STUDENT NAME</th>
+                <th>GENDER</th>
                 ${isGeneral ? '<th>HT (cm)</th><th>WT (kg)</th><th>EXAM SC</th>' : '<th>10x6 (sec)</th><th>50M (sec)</th><th>600M (min:sec)</th><th>REACH (cm)</th><th>JUMP (cm)</th><th>SITUPS (count)</th><th>ENDURANCE %</th><th>STRENGTH %</th>'}
                 <th>AGGREGATE</th>
                 <th>LEVEL</th>
@@ -178,6 +185,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   <tr>
                     <td>${p.serialNumber || ''}</td>
                     <td><strong>${p.name}</strong> (Std ${p.std})</td>
+                    <td>${p.gender}</td>
                     ${isGeneral ? `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.enduranceScore || '-'}%</td><td>${fit.strengthScore || '-'}%</td>`}
                     <td>${fit.score || '0'}${isGeneral ? '' : '%'}</td>
                     <td><strong>${fit.status || 'PENDING'}</strong></td>
@@ -281,7 +289,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                            <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
                            <span className="text-primary uppercase truncate w-[120px]">{player.name}</span>
                         </div>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">Std {player.std}</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">{player.gender} • Std {player.std}</span>
                       </div>
                     </TableCell>
                     

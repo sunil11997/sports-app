@@ -46,9 +46,17 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
+        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
+
+        // 2. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+
+        // 3. Sort by Serial Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral]);
@@ -88,19 +96,16 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     const latestFit = playerFitness[playerFitness.length - 1] || store.data.fitness[player.id] || {};
     const latestSkills = Object.values(store.data.sportSkills).filter((s: any) => s.playerId === player.id);
     
-    // BMI Logic
     const bmi = parseFloat(latestFit.bmi || player.bmi);
     if (bmi < 18.5) weak.push("Underweight status (Need nutritional focus)");
     else if (bmi >= 18.5 && bmi <= 24.9) plus.push("Healthy BMI Index (Fit for institutional training)");
     else if (bmi > 25) weak.push("Overweight status (Needs aerobic focus)");
 
-    // Performance Logic
     if (parseFloat(latestFit.score) > 80) plus.push("Excellent overall physical score");
     if (parseFloat(latestFit.enduranceScore) > 85) plus.push("Elite aerobic endurance (High 600m performance)");
     if (parseFloat(latestFit.enduranceScore) < 45) weak.push("Low stamina (Focus on 600m pacing)");
     if (parseFloat(latestFit.strengthScore) > 85) plus.push("High explosive power (Board jump/Situps master)");
     
-    // Technical Logic
     if (latestSkills.some(s => parseFloat(s.score) > 70)) plus.push("Advanced technical proficiency in games");
 
     return { plus, weak };
@@ -292,14 +297,14 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                     </div>
                     <div>
                       <h3 className="font-black uppercase text-xl text-primary leading-tight">{player.name}</h3>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">GR: {player.generalRegisterNumber || 'N/A'}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{player.gender} • GR: {player.generalRegisterNumber || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-y-4 text-sm font-bold">
                     <div><span className="text-[9px] font-black uppercase text-muted-foreground block">Standard</span> Std {player.std}</div>
                     <div><span className="text-[9px] font-black uppercase text-muted-foreground block">Age</span> {player.age} Years</div>
                     <div><span className="text-[9px] font-black uppercase text-muted-foreground block">Current BMI</span> {player.bmi}</div>
-                    <div><span className="text-[9px] font-black uppercase text-muted-foreground block">Gender</span> {player.gender}</div>
+                    <div><span className="text-[9px] font-black uppercase text-muted-foreground block">Serial No</span> #{player.serialNumber || '0'}</div>
                   </div>
                 </CardContent>
               </Card>

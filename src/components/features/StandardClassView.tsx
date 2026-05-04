@@ -26,7 +26,14 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
   const students = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.std === std)
-      .sort((a: any, b: any) => (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0));
+      .sort((a: any, b: any) => {
+        // 1. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+        // 2. Sort by Serial Number
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
   }, [store.data.players, std]);
 
   const classActivities = useMemo(() => {
@@ -64,7 +71,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           <h2>Student Health Registry</h2>
           <table>
             <thead>
-              <tr><th>Name</th><th>Age</th><th>Ht (cm)</th><th>Wt (kg)</th><th>BMI</th></tr>
+              <tr><th>SNR</th><th>Name</th><th>Gender</th><th>Age</th><th>Ht (cm)</th><th>Wt (kg)</th><th>BMI</th></tr>
             </thead>
             <tbody>
               ${students.map((s: any) => {
@@ -73,7 +80,9 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                 const currentBMI = calculateBMI(fit.height || s.height, fit.weight || s.weight);
                 return `
                   <tr>
+                    <td>${s.serialNumber || '-'}</td>
                     <td><strong>${s.name.toUpperCase()}</strong></td>
+                    <td>${s.gender}</td>
                     <td>${s.age}</td>
                     <td>${fit.height || s.height || '-'}</td>
                     <td>${fit.weight || s.weight || '-'}</td>
@@ -181,7 +190,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                           <div className="flex flex-col">
                             <span className="uppercase text-primary">{student.name}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">SR: #{student.serialNumber || '0'}</span>
+                              <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">SR: #{student.serialNumber || '0'} • {student.gender}</span>
                               {student.category === 'athlete' && <Badge className="bg-accent/10 text-accent text-[6px] font-black h-3 px-1 border-accent/20">ATHLETE</Badge>}
                             </div>
                           </div>

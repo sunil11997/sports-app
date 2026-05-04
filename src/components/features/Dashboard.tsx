@@ -60,10 +60,17 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         return matchesSection && matchesSearch;
       })
       .sort((a: any, b: any) => {
+        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
         
+        // 2. Sort by Gender (Female first)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Female' ? -1 : 1;
+        }
+
+        // 3. Sort by Serial Number
         const srA = parseInt(a.serialNumber) || 0;
         const srB = parseInt(b.serialNumber) || 0;
         return srA - srB;
@@ -80,7 +87,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      // Logic from Registration for derived fields
       const dobDate = new Date(editingPlayer.dob);
       const age = isValid(dobDate) ? differenceInYears(new Date(), dobDate) : editingPlayer.age;
       
@@ -133,7 +139,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </div>
           <table>
             <thead>
-              <tr><th>SR. NO</th><th>GR NO.</th><th>NAME</th><th>STD</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
+              <tr><th>SR. NO</th><th>GR NO.</th><th>NAME</th><th>GENDER</th><th>STD</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => `
@@ -141,6 +147,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   <td>${p.serialNumber || '-'}</td>
                   <td>${p.generalRegisterNumber || '-'}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
+                  <td>${p.gender}</td>
                   <td>${p.std}</td>
                   <td>${p.height}/${p.weight}</td>
                   <td>${p.bmi}</td>
@@ -207,7 +214,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                           <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
                           {p.category === 'athlete' && <Badge className="h-4 px-1.5 bg-accent text-[7px] font-black uppercase">ATHLETE</Badge>}
                         </div>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">GR: {p.generalRegisterNumber || 'N/A'}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} • GR: {p.generalRegisterNumber || 'N/A'}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -233,7 +240,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         </Table>
       </div>
 
-      {/* Expanded Edit Dialog */}
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
           <DialogHeader className="bg-primary/5 p-8 border-b shrink-0">
@@ -247,7 +253,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <ScrollArea className="flex-1">
             {editingPlayer && (
               <div className="p-8 space-y-10">
-                {/* Identity Section */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b pb-2">
                     <User className="w-5 h-5" />
@@ -289,7 +294,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   </div>
                 </div>
 
-                {/* Biometrics Section */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b pb-2">
                     <HeartPulse className="w-5 h-5" />
@@ -309,7 +313,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                       <Select value={editingPlayer.bloodGroup || 'None'} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}>
                         <SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          {['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={v} value={bg}>{bg}</SelectItem>)}
+                          {['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -322,7 +326,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   </div>
                 </div>
 
-                {/* Contacts & Documents */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b pb-2">
                     <Fingerprint className="w-5 h-5" />
@@ -344,7 +347,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   </div>
                 </div>
 
-                {/* Sports Section (Athletes Only) */}
                 {editingPlayer.category === 'athlete' && (
                   <div className="space-y-6">
                     <div className="flex items-center gap-3 text-primary border-b pb-2">
@@ -372,7 +374,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   </div>
                 )}
 
-                {/* Medical & History */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b pb-2">
                     <History className="w-5 h-5" />
@@ -402,7 +403,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletingPlayerId} onOpenChange={() => setDeletingPlayerId(null)}>
         <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-8">
           <AlertDialogHeader className="space-y-4">
@@ -430,4 +430,3 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     </div>
   );
 }
-
