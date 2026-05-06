@@ -164,12 +164,12 @@ export default function WaghambaApp() {
     return (
       <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6 text-white overflow-hidden">
         <div className="relative z-10 space-y-8 animate-pulse text-center">
-          <div className="w-32 h-32 bg-white rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20 overflow-hidden relative">
+          <div className="w-48 h-48 bg-white rounded-[3rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20 overflow-hidden relative">
              <Image src={LOGO_PATH} alt="Institutional Logo" fill priority unoptimized className="object-cover" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
-            <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.3em]">Institutional Registry Booting</p>
+            <h1 className="text-3xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
+            <p className="text-[12px] font-black uppercase opacity-60 tracking-[0.4em]">Institutional Registry Booting</p>
           </div>
         </div>
       </div>
@@ -245,7 +245,7 @@ export default function WaghambaApp() {
           <div className="pt-12 flex items-center justify-center gap-2 opacity-30">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <p className="text-[9px] font-black uppercase tracking-[0.2em]">
-              Authorized Institutional Registry • v3.1 Powered by Genkit
+              Authorized Institutional Registry • v4.0 Native Speed
             </p>
           </div>
         </div>

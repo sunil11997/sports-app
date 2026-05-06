@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -48,8 +49,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Waghamba Sports" />
         <link rel="apple-touch-icon" href="/icon-512.png" />
+        <meta name="theme-color" content="#0048A0" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased bg-[#0048A0]">
         <FirebaseClientProvider>
           <PWAProvider>
             {children}

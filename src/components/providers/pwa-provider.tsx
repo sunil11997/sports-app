@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -21,45 +22,32 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
-  // Robust Connectivity Check with Heartbeat
+  // Robust Connectivity Check
   const checkConnectivity = async () => {
     if (typeof window === 'undefined') return;
-    
-    if (!navigator.onLine) {
-      setIsOnline(false);
-      return;
-    }
-
-    try {
-      // Tiny fetch to verify actual internet access, bypassing cache
-      const response = await fetch(`/manifest.json?h=${Date.now()}`, { 
-        method: 'HEAD', 
-        cache: 'no-store',
-        mode: 'no-cors' 
-      });
-      setIsOnline(true);
-    } catch (e) {
-      setIsOnline(false);
-    }
+    setIsOnline(navigator.onLine);
   };
 
   useEffect(() => {
     checkConnectivity();
 
-    const handleOnline = () => checkConnectivity();
+    const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    const interval = setInterval(checkConnectivity, 30000);
-
+    // Force aggressive Service Worker registration
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(() => {
-          console.log('WGB: Institutional Service Worker Registered');
-          checkConnectivity();
-        });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('WGB: Native Service Worker Registered', registration.scope);
+          })
+          .catch((error) => {
+            console.error('WGB: SW Registration Failed:', error);
+          });
+      });
     }
 
     const handleBeforeInstallPrompt = (e: any) => {
@@ -74,7 +62,6 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      clearInterval(interval);
     };
   }, []);
 
