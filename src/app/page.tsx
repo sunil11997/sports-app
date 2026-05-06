@@ -159,7 +159,6 @@ export default function WaghambaApp() {
     });
   }, [schoolData.data.players]);
 
-  // INSTANT INSTITUTIONAL SPLASH: Replaced placeholder icon with full logo
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6 text-white overflow-hidden">
@@ -195,8 +194,8 @@ export default function WaghambaApp() {
 
         <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in zoom-in-95 duration-1000">
           <div className="space-y-6">
-            <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center group hover:scale-105 transition-transform duration-500">
-              <Image src={LOGO_PATH} alt="App Logo" width={100} height={100} priority unoptimized className="object-contain" />
+            <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center group hover:scale-105 transition-transform duration-500 overflow-hidden relative">
+              <Image src={LOGO_PATH} alt="App Logo" fill unoptimized className="object-cover" />
             </div>
             
             <div className="space-y-4">
@@ -258,8 +257,8 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white p-3 rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4">
-              <Image src={LOGO_PATH} alt="App Logo" width={48} height={48} priority unoptimized className="object-contain" />
+            <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden relative">
+              <Image src={LOGO_PATH} alt="App Logo" fill unoptimized className="object-cover" />
             </button>
             <div className="space-y-1">
               <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
@@ -312,8 +311,8 @@ export default function WaghambaApp() {
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-            <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white p-1 border">
-              <Image src={LOGO_PATH} alt="Logo" width={36} height={36} unoptimized className="object-contain w-full h-full" />
+            <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative">
+              <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -368,7 +367,7 @@ export default function WaghambaApp() {
                         <h3 className="text-5xl font-black tracking-tight">
                           {schoolData.data.players.filter(p => selectedSection === 'general' ? true : p.category === 'athlete').length}
                         </h3>
-                        <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Students'}</p>
+                        <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Total Students'}</p>
                       </div>
                       <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
                         <UserPlus className="w-4 h-4 mr-2" /> Add New {selectedSection === 'sports' ? 'Athlete' : 'Student'}
@@ -404,7 +403,7 @@ export default function WaghambaApp() {
                   </div>
                 </div>
 
-                {birthdaysToday.filter(p => selectedSection === 'general' ? true : p.category === 'athlete').length > 0 && (
+                {birthdaysToday.length > 0 && (
                   <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
@@ -419,7 +418,6 @@ export default function WaghambaApp() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {birthdaysToday
-                        .filter(p => selectedSection === 'general' ? true : p.category === 'athlete')
                         .map((student: any) => (
                         <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 border border-accent/10">
                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">

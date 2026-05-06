@@ -70,7 +70,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           return a.gender === 'Female' ? -1 : 1;
         }
 
-        // 3. Sort by Serial Number
+        // 3. Sort by Serial Number (Numeric)
         const srA = parseInt(a.serialNumber) || 0;
         const srB = parseInt(b.serialNumber) || 0;
         return srA - srB;
@@ -320,7 +320,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Calculated BMI</Label>
                       <div className="h-12 flex items-center justify-center font-black text-lg text-primary bg-muted/30 rounded-xl">
-                        {getHealthStatus(editingPlayer.bmi || "0").label === 'Pending' ? '0.0' : editingPlayer.bmi}
+                        {editingPlayer.bmi || '0.0'}
                       </div>
                     </div>
                   </div>

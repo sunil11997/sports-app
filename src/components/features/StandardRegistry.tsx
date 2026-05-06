@@ -25,7 +25,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
         if (a.gender !== b.gender) {
           return a.gender === 'Female' ? -1 : 1;
         }
-        // 2. Sort by Serial Number
+        // 2. Sort by Serial Number (Numeric)
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std]);
@@ -53,14 +53,6 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   }, [activeTerm, playersInStd, store.data.fitnessHistory, store.isLoaded]);
 
   const handleChange = (id: string, field: string, value: string) => {
-    if (value === '') {
-      setTermRecords(prev => ({
-        ...prev,
-        [id]: { ...(prev[id] || {}), [field]: '' }
-      }));
-      return;
-    }
-
     setTermRecords(prev => ({
       ...prev,
       [id]: {
