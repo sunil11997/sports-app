@@ -5,22 +5,14 @@ import React, { useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
-  ScrollText, 
-  Library, 
-  PlayCircle, 
-  Trophy, 
-  Target, 
   ShieldCheck, 
-  Clock, 
   BookOpen, 
   Upload, 
   FileText, 
-  Eye, 
+  ExternalLink, 
   Trash2, 
-  Loader2,
-  X
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -126,7 +118,6 @@ export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'dr
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedSportForUpload, setSelectedSportForUpload] = useState<string | null>(null);
-  const [viewingPdf, setViewingPdf] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,8 +129,8 @@ export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'dr
       return;
     }
 
-    if (file.size > 1024 * 1024) { // 1MB Limit for Firestore
-       toast({ title: "File Too Large", description: "Institutional PDFs must be under 1MB for registry storage.", variant: "destructive" });
+    if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+       toast({ title: "File Too Large", description: "Institutional PDFs must be under 2MB.", variant: "destructive" });
        return;
     }
 
@@ -155,6 +146,22 @@ export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'dr
     reader.readAsDataURL(file);
   };
 
+  const handleOpenPdfExternally = (pdfData: string, sport: string) => {
+    // To open "in Android" (native viewer) rather than "in app", 
+    // we trigger a system download/blob open that Android Chrome hands off to the OS.
+    const link = document.createElement('a');
+    link.href = pdfData;
+    link.download = `Waghamba_Sports_${sport}_Rules.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Opening Rules",
+      description: `Passing ${sport} PDF to Android System Viewer...`,
+    });
+  };
+
   if (type === 'rules') {
     return (
       <div className="space-y-8 animate-in fade-in duration-700 pb-20">
@@ -165,7 +172,7 @@ export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'dr
             </div>
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Rulebook</h2>
             <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto">
-              View official technical regulations or upload tournament-specific PDF rules for all competitive games.
+              Select a sport to view technical rules or upload your own PDF to open in the Android viewer.
             </p>
           </div>
         </div>
@@ -217,14 +224,14 @@ export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'dr
                          <FileText className="w-10 h-10" />
                       </div>
                       <div className="text-center space-y-1">
-                        <p className="font-black text-primary uppercase tracking-widest text-sm">Official PDF Active</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Archived in Registry</p>
+                        <p className="font-black text-primary uppercase tracking-widest text-sm">Official PDF Linked</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Tap to open in Android</p>
                       </div>
                       <Button 
-                        onClick={() => setViewingPdf(pdfData)} 
-                        className="bg-accent text-accent-foreground font-black px-8 rounded-xl h-12 uppercase text-xs tracking-widest shadow-lg active-scale"
+                        onClick={() => handleOpenPdfExternally(pdfData, item.sport)} 
+                        className="bg-accent text-accent-foreground font-black px-8 rounded-xl h-14 uppercase text-xs tracking-widest shadow-lg active-scale"
                       >
-                        <Eye className="w-4 h-4 mr-2" /> Open Official PDF
+                        <ExternalLink className="w-4 h-4 mr-2" /> Open in Android Viewer
                       </Button>
                     </div>
                   ) : (
@@ -254,40 +261,9 @@ export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'dr
             );
           })}
         </div>
-
-        <Dialog open={!!viewingPdf} onValueChange={() => setViewingPdf(null)}>
-          <DialogContent className="sm:max-w-[95vw] h-[90vh] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-slate-900">
-            <DialogHeader className="p-6 bg-primary border-b border-white/10 flex flex-row items-center justify-between shrink-0">
-               <div className="flex items-center gap-4 text-white">
-                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <DialogTitle className="text-xl font-black uppercase tracking-tight leading-none">Inbuilt PDF Viewer</DialogTitle>
-                    <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest mt-1">Institutional Technical Regulations</p>
-                  </div>
-               </div>
-               <Button variant="ghost" onClick={() => setViewingPdf(null)} className="rounded-full h-12 w-12 text-white hover:bg-white/10">
-                 <X className="w-6 h-6" />
-               </Button>
-            </DialogHeader>
-            <div className="flex-1 w-full bg-slate-800 relative">
-               {viewingPdf && (
-                 <iframe 
-                   src={viewingPdf} 
-                   className="w-full h-full border-0" 
-                   title="PDF Viewer"
-                 />
-               )}
-            </div>
-            <div className="p-4 bg-primary/10 border-t border-white/5 flex justify-center shrink-0">
-               <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em]">Waghamba Institutional Sports Hub • PDF Engine v1.0</p>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     );
   }
 
-  return null; // Fallback for other types
+  return null; 
 }
