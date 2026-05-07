@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -25,6 +26,7 @@ export function useSchoolData() {
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
+  const [gameRules, setGameRulesData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!user || !db) return;
@@ -95,10 +97,24 @@ export function useSchoolData() {
       setSkillsHistory(historyMap);
     }, (err) => console.warn("WGB Skills Sync Delayed:", err.message));
 
+    // Games Rules PDF Registry
+    const rulesQuery = query(
+      collection(db, 'game_rules_registry'),
+      where('schoolId', '==', user.uid)
+    );
+    const unsubRules = onSnapshot(rulesQuery, (snapshot) => {
+      const rulesMap: Record<string, any> = {};
+      snapshot.docs.forEach(doc => {
+        rulesMap[doc.id] = doc.data();
+      });
+      setGameRulesData(rulesMap);
+    });
+
     return () => {
       unsubAtt();
       unsubFit();
       unsubSkills();
+      unsubRules();
     };
   }, [db, user, selectedYear]);
 
@@ -142,6 +158,7 @@ export function useSchoolData() {
     sportSkills,
     skillsHistory,
     drillCompletions,
+    gameRules,
     healthIncidents: healthIncidents || [],
     activities: (activities || []).map((a: any) => ({ ...a, category: a.category || (a.std ? 'student' : 'athlete') })),
     schoolProfile: schoolProfile || {
@@ -154,7 +171,7 @@ export function useSchoolData() {
       role: "Physical Education Director",
       updatedAt: new Date().toISOString()
     }
-  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
+  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, schoolProfile]);
 
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user) return;
@@ -236,6 +253,21 @@ export function useSchoolData() {
     else deleteDocumentNonBlocking(drillRef);
   }, [db, user]);
 
+  const setGameRule = useCallback((sportName: string, pdfData: string | null) => {
+    if (!user) return;
+    const ruleRef = doc(db, 'game_rules_registry', sportName);
+    if (!pdfData) {
+      deleteDocumentNonBlocking(ruleRef);
+    } else {
+      setDocumentNonBlocking(ruleRef, { 
+        sportName, 
+        pdfData, 
+        schoolId: user.uid, 
+        updatedAt: new Date().toISOString() 
+      }, { merge: true });
+    }
+  }, [db, user]);
+
   const addHealthIncident = useCallback((incident: HealthIncident) => {
     if (!user) return;
     const globalIncRef = doc(db, 'all_health_incidents', incident.id);
@@ -268,6 +300,6 @@ export function useSchoolData() {
     isLoaded: !playersLoading && !schoolsLoading,
     selectedYear,
     setSelectedYear,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, addHealthIncident, addActivity, deleteActivity, exportBackupData
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData
   };
 }

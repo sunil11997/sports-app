@@ -1,10 +1,29 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollText, Library, PlayCircle, Trophy, Target, ShieldCheck, Clock, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { 
+  ScrollText, 
+  Library, 
+  PlayCircle, 
+  Trophy, 
+  Target, 
+  ShieldCheck, 
+  Clock, 
+  BookOpen, 
+  Upload, 
+  FileText, 
+  Eye, 
+  Trash2, 
+  Loader2,
+  X
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const RULES_DATA = [
   {
@@ -103,29 +122,42 @@ const RULES_DATA = [
   }
 ];
 
-const DRILLS_DATA = [
-  {
-    category: "Agility & Speed",
-    drills: [
-      "Ladder Drills: High knees, lateral shuffles, and in-and-outs.",
-      "Cone Slalom: Sprinting through zig-zag cone patterns.",
-      "Shuttle Runs: 10m sprints with hand-touches at each end."
-    ]
-  },
-  {
-    category: "Strength",
-    drills: [
-      "Explosive Squat Jumps: For vertical power in volleyball/basketball.",
-      "Medicine Ball Throws: For core and upper body power.",
-      "Plank variations: For fundamental core stability."
-    ]
-  }
-];
+export function SportsLibrary({ store, type }: { store: any, type: 'rules' | 'drills' | 'videos' }) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedSportForUpload, setSelectedSportForUpload] = useState<string | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-export function SportsLibrary({ type }: { type: 'rules' | 'drills' | 'videos' }) {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedSportForUpload) return;
+
+    if (file.type !== 'application/pdf') {
+      toast({ title: "Invalid File", description: "Please upload a valid PDF document.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 1024 * 1024) { // 1MB Limit for Firestore
+       toast({ title: "File Too Large", description: "Institutional PDFs must be under 1MB for registry storage.", variant: "destructive" });
+       return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      store.setGameRule(selectedSportForUpload, base64String);
+      toast({ title: "Rulebook Archived", description: `Official PDF for ${selectedSportForUpload} uploaded successfully.` });
+      setIsUploading(false);
+      setSelectedSportForUpload(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (type === 'rules') {
     return (
-      <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="space-y-8 animate-in fade-in duration-700 pb-20">
         <div className="bg-primary/5 p-10 rounded-[3rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
           <div className="relative z-10 space-y-4">
             <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
@@ -133,76 +165,129 @@ export function SportsLibrary({ type }: { type: 'rules' | 'drills' | 'videos' })
             </div>
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Rulebook</h2>
             <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto">
-              Official technical regulations for competitive games at Ashram Shala Waghamba.
+              View official technical regulations or upload tournament-specific PDF rules for all competitive games.
             </p>
           </div>
         </div>
 
+        <input 
+          type="file" 
+          accept="application/pdf" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          className="hidden" 
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {RULES_DATA.map((item) => (
-            <Card key={item.sport} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl hover:border-primary/30 transition-all group">
-              <CardHeader className="bg-primary/5 border-b p-6">
-                <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-3">
-                  <ShieldCheck className="w-6 h-6 text-accent" /> {item.sport}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <ul className="space-y-4">
-                  {item.rules.map((rule, idx) => (
-                    <li key={idx} className="flex gap-4 text-sm font-bold text-foreground/80 leading-relaxed">
-                      <span className="text-accent font-black text-lg">•</span>
-                      {rule}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+          {RULES_DATA.map((item) => {
+            const hasPdf = !!store.data.gameRules[item.sport];
+            const pdfData = store.data.gameRules[item.sport]?.pdfData;
 
-  if (type === 'drills') {
-    return (
-      <div className="space-y-6">
-        {DRILLS_DATA.map((item) => (
-          <Card key={item.category} className="border-2 rounded-[2.5rem] overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle className="text-2xl font-black text-primary uppercase flex items-center gap-3">
-                <Library className="w-6 h-6" /> {item.category}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {item.drills.map((drill, idx) => (
-                <div key={idx} className="bg-muted/30 p-4 rounded-xl flex items-center gap-4">
-                  <div className="bg-primary/10 w-10 h-10 rounded-lg flex items-center justify-center">
-                    <Target className="w-5 h-5 text-primary" />
+            return (
+              <Card key={item.sport} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl hover:border-primary/30 transition-all group flex flex-col h-full">
+                <CardHeader className="bg-primary/5 border-b p-6 flex flex-row justify-between items-center">
+                  <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-3">
+                    <ShieldCheck className="w-6 h-6 text-accent" /> {item.sport}
+                  </CardTitle>
+                  <div className="flex gap-2">
+                     <Button 
+                       variant="ghost" 
+                       size="icon" 
+                       onClick={() => { setSelectedSportForUpload(item.sport); fileInputRef.current?.click(); }}
+                       className="rounded-full h-8 w-8 hover:bg-primary/10 text-primary"
+                     >
+                       {isUploading && selectedSportForUpload === item.sport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                     </Button>
+                     {hasPdf && (
+                       <Button 
+                         variant="ghost" 
+                         size="icon" 
+                         onClick={() => store.setGameRule(item.sport, null)}
+                         className="rounded-full h-8 w-8 hover:bg-destructive/10 text-destructive"
+                       >
+                         <Trash2 className="w-4 h-4" />
+                       </Button>
+                     )}
                   </div>
-                  <p className="text-sm font-bold uppercase">{drill}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
+                </CardHeader>
+                <CardContent className="p-8 flex-1 flex flex-col">
+                  {hasPdf ? (
+                    <div className="flex-1 flex flex-col items-center justify-center space-y-6 py-10 bg-accent/5 rounded-[2rem] border-2 border-dashed border-accent/20">
+                      <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center text-accent">
+                         <FileText className="w-10 h-10" />
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="font-black text-primary uppercase tracking-widest text-sm">Official PDF Active</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Archived in Registry</p>
+                      </div>
+                      <Button 
+                        onClick={() => setViewingPdf(pdfData)} 
+                        className="bg-accent text-accent-foreground font-black px-8 rounded-xl h-12 uppercase text-xs tracking-widest shadow-lg active-scale"
+                      >
+                        <Eye className="w-4 h-4 mr-2" /> Open Official PDF
+                      </Button>
+                    </div>
+                  ) : (
+                    <ul className="space-y-4">
+                      {item.rules.map((rule, idx) => (
+                        <li key={idx} className="flex gap-4 text-sm font-bold text-foreground/80 leading-relaxed">
+                          <span className="text-accent font-black text-lg">•</span>
+                          {rule}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  
+                  {!hasPdf && (
+                    <div className="mt-8 pt-8 border-t border-dashed">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => { setSelectedSportForUpload(item.sport); fileInputRef.current?.click(); }}
+                        className="w-full h-12 border-2 rounded-xl font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary/5"
+                      >
+                        <Upload className="w-4 h-4 mr-2" /> Upload Official Rulebook
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <Dialog open={!!viewingPdf} onValueChange={() => setViewingPdf(null)}>
+          <DialogContent className="sm:max-w-[95vw] h-[90vh] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-slate-900">
+            <DialogHeader className="p-6 bg-primary border-b border-white/10 flex flex-row items-center justify-between shrink-0">
+               <div className="flex items-center gap-4 text-white">
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-black uppercase tracking-tight leading-none">Inbuilt PDF Viewer</DialogTitle>
+                    <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest mt-1">Institutional Technical Regulations</p>
+                  </div>
+               </div>
+               <Button variant="ghost" onClick={() => setViewingPdf(null)} className="rounded-full h-12 w-12 text-white hover:bg-white/10">
+                 <X className="w-6 h-6" />
+               </Button>
+            </DialogHeader>
+            <div className="flex-1 w-full bg-slate-800 relative">
+               {viewingPdf && (
+                 <iframe 
+                   src={viewingPdf} 
+                   className="w-full h-full border-0" 
+                   title="PDF Viewer"
+                 />
+               )}
+            </div>
+            <div className="p-4 bg-primary/10 border-t border-white/5 flex justify-center shrink-0">
+               <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em]">Waghamba Institutional Sports Hub • PDF Engine v1.0</p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <Card key={i} className="group border-2 rounded-[2rem] overflow-hidden cursor-pointer hover:border-primary transition-all">
-          <div className="aspect-video bg-muted flex items-center justify-center relative">
-            <PlayCircle className="w-12 h-12 text-primary opacity-20 group-hover:opacity-100 transition-opacity" />
-            <Badge className="absolute bottom-3 right-3 bg-black/60 text-white border-0 font-bold">12:40</Badge>
-          </div>
-          <CardContent className="p-4">
-            <h4 className="font-black text-primary uppercase text-sm mb-1">Kabaddi Defensive Moves - Lesson {i}</h4>
-            <p className="text-xs font-medium text-muted-foreground">Mastering the Ankle Hold technique with pro timing.</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+  return null; // Fallback for other types
 }
