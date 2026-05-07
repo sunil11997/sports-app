@@ -67,7 +67,6 @@ const SchoolActivities = dynamic(() => import('@/components/features/SchoolActiv
 const CoreHub = dynamic(() => import('@/components/features/CoreHub').then(mod => mod.CoreHub), { ssr: false, loading: () => <TableSkeleton /> });
 const Teams = dynamic(() => import('@/components/features/Teams').then(mod => mod.Teams), { ssr: false, loading: () => <TableSkeleton /> });
 const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(mod => mod.ExamsHub), { ssr: false, loading: () => <TableSkeleton /> });
-const SportsLibrary = dynamic(() => import('@/components/features/SportsLibrary').then(mod => mod.SportsLibrary), { ssr: false, loading: () => <TableSkeleton /> });
 
 const translations = {
   English: {
@@ -126,7 +125,6 @@ export default function WaghambaApp() {
     { id: "teams", label: t.teams, icon: UsersRound },
     { id: "fitness", label: t.fitness, icon: Activity },
     { id: "skills", label: t.skills, icon: Medal },
-    { id: "rules", label: t.rules, icon: BookOpen },
     { id: "drills", label: t.drills, icon: Dumbbell },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "ai", label: t.aiHub, icon: Sparkles },
@@ -448,7 +446,6 @@ export default function WaghambaApp() {
             <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="rules" className="mt-0">{activeTab === "rules" && <SportsLibrary store={schoolData} type="rules" />}</TabsContent>
             <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
             <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} section={selectedSection!} />}</TabsContent>
@@ -494,3 +491,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+
