@@ -1,11 +1,9 @@
-
-const CACHE_NAME = 'waghamba-hub-v4';
+const CACHE_NAME = 'wgb-sports-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
-  '/icon-512.png',
   '/icon-41.png',
-  '/globals.css'
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -33,7 +31,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Stale-while-revalidate strategy
+  // Strategy: Stale-While-Revalidate
+  if (event.request.mode === 'navigate' || 
+      (event.request.method === 'GET' && 
+       event.request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/');
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -44,9 +53,6 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Fallback if network fails and not in cache
-        return cachedResponse;
       });
       return cachedResponse || fetchPromise;
     })

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -7,29 +6,20 @@ import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-/**
- * useSchoolData - The Institutional Registry Engine
- * 
- * Provides real-time synchronization and automatic data restoration across devices.
- * All data is keyed to the authenticated user's Google UID.
- */
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
   const [selectedYear, setSelectedYear] = useState("2024-25");
 
-  // 1. Institutional Profile Sync
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
-  // 2. Player Registry Sync (Top-level with Owner ID filtering)
   const playersQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
   }, [db, user]);
   const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
-  // 3. Reactive Registries (Attendance, Fitness, Skills)
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
   const [fitnessHistory, setFitnessHistory] = useState<Record<string, FitnessAssessment[]>>({});
@@ -39,7 +29,6 @@ export function useSchoolData() {
   useEffect(() => {
     if (!user || !db) return;
 
-    // A. Reactive Attendance (Instant update across devices)
     const attQuery = query(
       collection(db, 'attendance_registry'), 
       where('schoolId', '==', user.uid),
@@ -49,13 +38,12 @@ export function useSchoolData() {
       const newAtt: AttendanceRecord = {};
       snapshot.docs.forEach(doc => {
         const data = doc.data();
-        const sessionSuffix = data.session ? `_${data.session}` : '_Morning'; // Default to Morning if missing
+        const sessionSuffix = data.session ? `_${data.session}` : '_Morning';
         newAtt[`${data.playerId}_${data.date}${sessionSuffix}`] = data.status;
       });
       setAttendanceData(newAtt);
-    });
+    }, (err) => console.warn("WGB Attendance Sync Delayed:", err.message));
 
-    // B. Reactive Fitness Assessments
     const fitQuery = query(
       collection(db, 'fitness_registry'), 
       where('schoolId', '==', user.uid),
@@ -82,9 +70,8 @@ export function useSchoolData() {
 
       setFitnessData(latestMap);
       setFitnessHistory(historyMap);
-    });
+    }, (err) => console.warn("WGB Fitness Sync Delayed:", err.message));
 
-    // C. Reactive Technical Skills
     const skillsQuery = query(
       collection(db, 'skills_registry'), 
       where('schoolId', '==', user.uid),
@@ -106,7 +93,7 @@ export function useSchoolData() {
 
       setSportSkillsData(skillsMap);
       setSkillsHistory(historyMap);
-    });
+    }, (err) => console.warn("WGB Skills Sync Delayed:", err.message));
 
     return () => {
       unsubAtt();
@@ -115,7 +102,6 @@ export function useSchoolData() {
     };
   }, [db, user, selectedYear]);
 
-  // 4. Sync Health Incidents
   const incidentsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -126,7 +112,6 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
-  // 5. Sync Class Activities
   const activitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -137,7 +122,6 @@ export function useSchoolData() {
   }, [db, user, selectedYear]);
   const { data: activities } = useCollection(activitiesQuery);
 
-  // 6. Drill Completions (Instant cross-device checkmarks)
   const drillsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid));
@@ -150,7 +134,6 @@ export function useSchoolData() {
     return logs;
   }, [drillComps]);
 
-  // Consolidated Data Object
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -173,7 +156,6 @@ export function useSchoolData() {
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, schoolProfile]);
 
-  // ACTION HANDLERS (Synchronized with user.uid)
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user) return;
     const profileRef = doc(db, 'schools', user.uid);
