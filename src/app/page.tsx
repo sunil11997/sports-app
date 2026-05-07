@@ -37,7 +37,8 @@ import {
   Flame,
   Globe,
   BarChart3,
-  Download
+  Download,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -66,6 +67,7 @@ const SchoolActivities = dynamic(() => import('@/components/features/SchoolActiv
 const CoreHub = dynamic(() => import('@/components/features/CoreHub').then(mod => mod.CoreHub), { ssr: false, loading: () => <TableSkeleton /> });
 const Teams = dynamic(() => import('@/components/features/Teams').then(mod => mod.Teams), { ssr: false, loading: () => <TableSkeleton /> });
 const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(mod => mod.ExamsHub), { ssr: false, loading: () => <TableSkeleton /> });
+const SportsLibrary = dynamic(() => import('@/components/features/SportsLibrary').then(mod => mod.SportsLibrary), { ssr: false, loading: () => <TableSkeleton /> });
 
 const translations = {
   English: {
@@ -73,7 +75,7 @@ const translations = {
     sportsHub: "Sports Excellence",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
-    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Dashboard", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities",
+    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Dashboard", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities", rules: "Rules",
     coreHub: "Core Hub",
     enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local",
     installApp: "INSTALL NATIVE HUB"
@@ -83,7 +85,7 @@ const translations = {
     sportsHub: "क्रीडा विभाग",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
-    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "डॅशबोर्ड", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम",
+    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "डॅशबोर्ड", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम", rules: "नियम",
     coreHub: "प्रशिक्षण",
     enter: "हब मध्ये प्रवेश करा", googleLogin: "गूगल द्वारे लॉगिन करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन",
     installApp: "ॲप इन्स्टॉल करा"
@@ -124,6 +126,7 @@ export default function WaghambaApp() {
     { id: "teams", label: t.teams, icon: UsersRound },
     { id: "fitness", label: t.fitness, icon: Activity },
     { id: "skills", label: t.skills, icon: Medal },
+    { id: "rules", label: t.rules, icon: BookOpen },
     { id: "drills", label: t.drills, icon: Dumbbell },
     { id: "attendance", label: t.presence, icon: CalendarCheck },
     { id: "ai", label: t.aiHub, icon: Sparkles },
@@ -161,14 +164,14 @@ export default function WaghambaApp() {
 
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6 text-white overflow-hidden">
-        <div className="relative z-10 space-y-8 animate-pulse text-center">
-          <div className="w-48 h-48 bg-white rounded-[3rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20 overflow-hidden relative">
+      <div className="min-h-screen bg-[#0048A0] flex flex-col items-center justify-center p-6 text-white overflow-hidden">
+        <div className="relative z-10 space-y-8 text-center animate-in fade-in duration-700">
+          <div className="w-32 h-32 bg-white rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20 overflow-hidden relative">
              <Image src={LOGO_PATH} alt="Institutional Logo" fill priority unoptimized className="object-cover" />
           </div>
           <div className="space-y-2">
             <h1 className="text-3xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
-            <p className="text-[12px] font-black uppercase opacity-60 tracking-[0.4em]">Institutional Registry Booting</p>
+            <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.4em]">Booting Native Engine</p>
           </div>
         </div>
       </div>
@@ -295,9 +298,9 @@ export default function WaghambaApp() {
           </div>
 
           <div className="flex items-center justify-center gap-4 pt-8">
-            <Button variant="ghost" onClick={() => setStage('landing')} className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Entrance
-            </Button>
+            <button onClick={() => setStage('landing')} className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-2 hover:text-primary transition-colors">
+              <ChevronLeft className="w-4 h-4" /> Back to Entrance
+            </button>
           </div>
         </div>
       </div>
@@ -365,7 +368,9 @@ export default function WaghambaApp() {
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em]">Institutional Hub</p>
                         <h3 className="text-5xl font-black tracking-tight">
-                          {schoolData.data.players.filter(p => selectedSection === 'general' ? true : p.category === 'athlete').length}
+                          {selectedSection === 'general' 
+                            ? schoolData.data.players.length 
+                            : schoolData.data.players.filter(p => p.category === 'athlete').length}
                         </h3>
                         <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Total Students'}</p>
                       </div>
@@ -443,6 +448,7 @@ export default function WaghambaApp() {
             <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} section={selectedSection!} />}</TabsContent>
+            <TabsContent value="rules" className="mt-0">{activeTab === "rules" && <SportsLibrary type="rules" />}</TabsContent>
             <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
             <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} section={selectedSection!} />}</TabsContent>
             <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} section={selectedSection!} />}</TabsContent>
