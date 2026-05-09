@@ -8,7 +8,9 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  }
+  },
+  // Next.js 14 specific config
+  swcMinify: true,
 };
 
 module.exports = nextConfig;
