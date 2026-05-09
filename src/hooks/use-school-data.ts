@@ -165,7 +165,12 @@ export function useSchoolData() {
         const pId = data.playerId;
         if (!pId) return;
 
-        skillsMap[`${pId}_${data.sportName}`] = data;
+        // Current skills map (latest per sport)
+        const currentLatest = skillsMap[`${pId}_${data.sportName}`];
+        if (!currentLatest || (data.lastUpdated && currentLatest.lastUpdated && new Date(data.lastUpdated) > new Date(currentLatest.lastUpdated))) {
+          skillsMap[`${pId}_${data.sportName}`] = data;
+        }
+
         if (!historyMap[pId]) historyMap[pId] = [];
         historyMap[pId].push({ ...data, sportName: data.sportName || 'Unknown' });
       });
@@ -333,7 +338,8 @@ export function useSchoolData() {
 
   const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
-    const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}`);
+    const dateId = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}_${dateId}`);
     setDocumentNonBlocking(skillRef, { 
       ...skill, 
       playerId, 

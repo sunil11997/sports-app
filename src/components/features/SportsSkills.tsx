@@ -7,10 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Trophy, Save, Printer, UserCircle } from 'lucide-react';
+import { Trophy, Save, Printer, UserCircle, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { LineChart, Line, ResponsiveContainer, YAxis, XAxis, Tooltip } from 'recharts';
+import { format } from 'date-fns';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
@@ -131,20 +133,48 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
     return store.data.players
       .filter((p: any) => p.category === targetCategory && (isGeneral || p.sports?.includes(activeSport)))
       .sort((a: any, b: any) => {
-        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-
-        // 2. Sort by Gender (Female first)
         if (a.gender !== b.gender) {
           return a.gender === 'Female' ? -1 : 1;
         }
-
-        // 3. Sort by Serial Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, targetCategory, isGeneral, activeSport]);
+
+  const ProgressTrendChart = ({ playerId, sportName }: { playerId: string, sportName: string }) => {
+    const history = useMemo(() => {
+      return (store.data.skillsHistory[playerId] || [])
+        .filter((s: any) => s.sportName === sportName)
+        .sort((a: any, b: any) => new Date(a.lastUpdated || 0).getTime() - new Date(b.lastUpdated || 0).getTime())
+        .map((s: any) => ({
+          score: parseFloat(s.score) || 0,
+          date: s.lastUpdated ? format(new Date(s.lastUpdated), 'MMM d') : ''
+        }));
+    }, [playerId, sportName, store.data.skillsHistory]);
+
+    if (history.length < 2) return <div className="text-[7px] text-muted-foreground uppercase font-black opacity-30">No trend data</div>;
+
+    return (
+      <div className="h-8 w-20">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={history}>
+            <Line 
+              type="monotone" 
+              dataKey="score" 
+              stroke="#0048A0" 
+              strokeWidth={1.5} 
+              dot={false} 
+              isAnimationActive={false}
+            />
+            <YAxis hide domain={[0, 'auto']} />
+            <XAxis hide dataKey="date" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
@@ -189,7 +219,7 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead className="font-black text-[10px] uppercase h-12 px-6">Student Registry</TableHead>
-              <TableHead className="font-black text-[10px] uppercase text-center w-[200px]">Evaluation Status</TableHead>
+              <TableHead className="font-black text-[10px] uppercase text-center w-[120px]">Progress Trend</TableHead>
               <TableHead className="font-black text-[10px] uppercase text-center w-[150px]">Technical Score</TableHead>
               <TableHead className="font-black text-[10px] uppercase text-right w-[150px] px-6">Actions</TableHead>
             </TableRow>
@@ -217,9 +247,9 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-bold text-[10px] uppercase text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                        {Object.keys(s.detailedSkills || {}).length} Moves Tracked
-                      </span>
+                      <div className="flex justify-center items-center h-full">
+                        <ProgressTrendChart playerId={p.id} sportName={sportName} />
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex flex-col items-center">
