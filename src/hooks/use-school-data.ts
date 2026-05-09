@@ -7,10 +7,14 @@ import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
+const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
+
 export function useSchoolData() {
   const db = useFirestore();
   const { user } = useUser();
   const [selectedYear, setSelectedYear] = useState("2024-25");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const schoolDocRef = useMemoFirebase(() => user ? doc(db, 'schools', user.uid) : null, [db, user]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
@@ -28,8 +32,72 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [gameRules, setGameRulesData] = useState<Record<string, any>>({});
 
+  // Sync offline queue to Firestore
+  const syncOfflineAttendance = useCallback(async () => {
+    if (!user || !navigator.onLine || isSyncing) return;
+
+    const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY);
+    if (!queueStr) {
+      setPendingCount(0);
+      return;
+    }
+
+    const queue: AttendanceRecord = JSON.parse(queueStr);
+    const keys = Object.keys(queue);
+    
+    if (keys.length === 0) {
+      setPendingCount(0);
+      return;
+    }
+
+    setIsSyncing(true);
+    console.log(`WGB: Syncing ${keys.length} offline attendance records...`);
+
+    try {
+      for (const key of keys) {
+        const status = queue[key];
+        const parts = key.split('_');
+        if (parts.length < 3) continue;
+        
+        const playerId = parts[0];
+        const date = parts[1];
+        const session = parts[2];
+        
+        const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
+        if (!status) {
+          deleteDocumentNonBlocking(attRef);
+        } else {
+          setDocumentNonBlocking(attRef, { 
+            status, 
+            playerId, 
+            date, 
+            session,
+            schoolId: user.uid, 
+            academicYear: selectedYear 
+          }, { merge: true });
+        }
+        
+        // Remove from local queue after initiating firebase write
+        delete queue[key];
+      }
+      
+      localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
+      setPendingCount(Object.keys(queue).length);
+    } catch (error) {
+      console.error("WGB: Offline sync failed", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [db, user, selectedYear, isSyncing]);
+
   useEffect(() => {
     if (!user || !db) return;
+
+    // Listen for online event to trigger sync
+    window.addEventListener('online', syncOfflineAttendance);
+    
+    // Initial sync check
+    syncOfflineAttendance();
 
     const attQuery = query(
       collection(db, 'attendance_registry'), 
@@ -43,7 +111,16 @@ export function useSchoolData() {
         const sessionSuffix = data.session ? `_${data.session}` : '_Morning';
         newAtt[`${data.playerId}_${data.date}${sessionSuffix}`] = data.status;
       });
-      setAttendanceData(newAtt);
+      
+      // Merge with any local pending changes so the UI stays up to date
+      const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY);
+      if (queueStr) {
+        const queue = JSON.parse(queueStr);
+        setAttendanceData({ ...newAtt, ...queue });
+        setPendingCount(Object.keys(queue).length);
+      } else {
+        setAttendanceData(newAtt);
+      }
     }, (err) => console.warn("WGB Attendance Sync Delayed:", err.message));
 
     const fitQuery = query(
@@ -97,7 +174,6 @@ export function useSchoolData() {
       setSkillsHistory(historyMap);
     }, (err) => console.warn("WGB Skills Sync Delayed:", err.message));
 
-    // Games Rules PDF Registry
     const rulesQuery = query(
       collection(db, 'game_rules_registry'),
       where('schoolId', '==', user.uid)
@@ -111,12 +187,13 @@ export function useSchoolData() {
     });
 
     return () => {
+      window.removeEventListener('online', syncOfflineAttendance);
       unsubAtt();
       unsubFit();
       unsubSkills();
       unsubRules();
     };
-  }, [db, user, selectedYear]);
+  }, [db, user, selectedYear, syncOfflineAttendance]);
 
   const incidentsQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -197,26 +274,48 @@ export function useSchoolData() {
 
   const setAttendance = useCallback((records: AttendanceRecord) => {
     if (!user) return;
-    Object.entries(records).forEach(([key, status]) => {
-      const parts = key.split('_');
-      if (parts.length < 3) return;
+
+    // 1. Update React State immediately for "Native Speed" feel
+    setAttendanceData(prev => ({ ...prev, ...records }));
+
+    // 2. Save to localStorage Queue
+    const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
+    const queue = JSON.parse(queueStr);
+    const updatedQueue = { ...queue, ...records };
+    localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(updatedQueue));
+    setPendingCount(Object.keys(updatedQueue).length);
+
+    // 3. Attempt Firebase Update if Online
+    if (navigator.onLine) {
+      Object.entries(records).forEach(([key, status]) => {
+        const parts = key.split('_');
+        if (parts.length < 3) return;
+        
+        const playerId = parts[0];
+        const date = parts[1];
+        const session = parts[2];
+        
+        const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
+        if (!status) {
+          deleteDocumentNonBlocking(attRef);
+        } else {
+          setDocumentNonBlocking(attRef, { 
+            status, 
+            playerId, 
+            date, 
+            session,
+            schoolId: user.uid, 
+            academicYear: selectedYear 
+          }, { merge: true });
+        }
+        
+        // If successful or at least initiated, we can clean up from local queue later via syncOfflineAttendance
+      });
       
-      const playerId = parts[0];
-      const date = parts[1];
-      const session = parts[2];
-      
-      const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
-      if (!status) deleteDocumentNonBlocking(attRef);
-      else setDocumentNonBlocking(attRef, { 
-        status, 
-        playerId, 
-        date, 
-        session,
-        schoolId: user.uid, 
-        academicYear: selectedYear 
-      }, { merge: true });
-    });
-  }, [db, user, selectedYear]);
+      // Auto-trigger a cleanup sync in 2 seconds
+      setTimeout(syncOfflineAttendance, 2000);
+    }
+  }, [db, user, selectedYear, syncOfflineAttendance]);
 
   const setFitness = useCallback((playerId: string, assessment: FitnessAssessment) => {
     if (!user) return;
@@ -300,6 +399,8 @@ export function useSchoolData() {
     isLoaded: !playersLoading && !schoolsLoading,
     selectedYear,
     setSelectedYear,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData
+    pendingSyncCount: pendingCount,
+    isSyncing,
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance
   };
 }

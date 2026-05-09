@@ -6,9 +6,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { CalendarCheck, ChevronLeft, ChevronRight, Printer, Sun, Moon } from 'lucide-react';
+import { CalendarCheck, ChevronLeft, ChevronRight, Printer, Sun, Moon, WifiOff, RefreshCw, CloudSync } from 'lucide-react';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { cn } from '@/lib/utils';
+import { usePWA } from '@/components/providers/pwa-provider';
+import { Badge } from '@/components/ui/badge';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -25,6 +27,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
+  const { isOnline } = usePWA();
 
   useEffect(() => {
     setIsMounted(true);
@@ -53,17 +56,9 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
-        // 1. Sort by Standard
-        const stdA = parseInt(a.std) || 0;
-        const stdB = parseInt(b.std) || 0;
-        if (stdA !== stdB) return stdA - stdB;
-
-        // 2. Sort by Gender (Female first)
         if (a.gender !== b.gender) {
           return a.gender === 'Female' ? -1 : 1;
         }
-
-        // 3. Sort by Serial Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory]);
@@ -131,6 +126,42 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   return (
     <div className="space-y-4">
+      {/* Offline Alert */}
+      {!isOnline && (
+        <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3">
+            <WifiOff className="w-5 h-5 text-amber-600" />
+            <div>
+              <p className="text-sm font-black text-amber-900 uppercase leading-none">Offline Mode Active</p>
+              <p className="text-[10px] font-bold text-amber-700 uppercase mt-1">Attendance will sync when internet returns</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 font-black">LOCAL SAVE</Badge>
+        </div>
+      )}
+
+      {/* Sync Status */}
+      {store.pendingSyncCount > 0 && isOnline && (
+        <div className="bg-primary/5 border-2 border-primary/10 p-4 rounded-2xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <RefreshCw className={cn("w-5 h-5 text-primary", store.isSyncing && "animate-spin")} />
+            <div>
+              <p className="text-sm font-black text-primary uppercase leading-none">Pending Synchronization</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{store.pendingSyncCount} items queued for cloud upload</p>
+            </div>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={store.syncOfflineAttendance} 
+            disabled={store.isSyncing}
+            className="rounded-full h-8 px-4 font-black uppercase text-[9px] border-primary/20 text-primary"
+          >
+            {store.isSyncing ? "Syncing..." : "Sync Now"}
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto flex-1">
           {CATEGORIES.map(cat => (
@@ -242,11 +273,12 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                           className="border-r p-0 text-center cursor-pointer hover:bg-primary/10 transition-colors"
                           onClick={() => handleToggle(player.id, day)}
                         >
-                          <div className={`w-full h-10 flex items-center justify-center text-[10px] font-black ${
+                          <div className={cn(
+                            "w-full h-10 flex items-center justify-center text-[10px] font-black",
                             status === 'P' ? "bg-primary text-white" : 
                             status === 'A' ? "bg-destructive text-white" : 
                             'text-muted-foreground/20'
-                          }`}>
+                          )}>
                             {status || '-'}
                           </div>
                         </TableCell>
