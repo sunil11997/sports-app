@@ -9,6 +9,11 @@ import { CheckCircle, Dumbbell, Target, BookOpen, Clock, ClipboardCheck, Users, 
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * Updated Sports Drills component v4.1
+ * Forces a clean re-bundle of the drill logic and registry interactions.
+ */
+
 // Comprehensive Drill Database mapped to Skills Hub categories
 const DRILLS_DATA: Record<string, any[]> = {
   'Kabaddi': [
@@ -198,3 +203,4 @@ export function SportsDrills({ store }: { store: any }) {
     </div>
   );
 }
+

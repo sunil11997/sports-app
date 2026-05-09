@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -18,7 +17,6 @@ import {
   Medal, 
   UserPlus, 
   LayoutGrid, 
-  Zap, 
   Settings as SettingsIcon, 
   ArrowUpCircle, 
   Cake, 
@@ -29,8 +27,6 @@ import {
   HeartPulse,
   ClipboardList,
   TrendingUp,
-  Video,
-  Dumbbell,
   UsersRound,
   ArrowRight,
   ShieldCheck,
@@ -38,7 +34,7 @@ import {
   Globe,
   BarChart3,
   Download,
-  BookOpen
+  Dumbbell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,7 +44,7 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
-// Dynamic Feature Loading
+// Dynamic Feature Loading with consistent paths
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -191,7 +187,7 @@ export default function WaghambaApp() {
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
 
-        <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in zoom-in-95 duration-1000">
+        <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
           <div className="space-y-6">
             <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center group hover:scale-105 transition-transform duration-500 overflow-hidden relative">
               <Image src={LOGO_PATH} alt="App Logo" fill unoptimized className="object-cover" />
@@ -306,7 +302,7 @@ export default function WaghambaApp() {
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))] animate-in fade-in duration-1000">
+    <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
@@ -488,3 +484,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+
