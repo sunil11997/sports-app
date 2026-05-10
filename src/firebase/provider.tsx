@@ -63,7 +63,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      setUserAuthState(prev => ({ ...prev, isUserLoading: false }));
+      return;
+    }
 
     let isMounted = true;
 
@@ -109,7 +112,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       firestore,
       auth,
       user: userAuthState.user,
-      isUserLoading: !areServicesAvailable || userAuthState.isUserLoading,
+      isUserLoading: userAuthState.isUserLoading && areServicesAvailable,
       userError: userAuthState.userError,
     };
   }, [firebaseApp, firestore, auth, userAuthState, areServicesAvailable]);

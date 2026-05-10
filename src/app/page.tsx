@@ -37,7 +37,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePWA } from '@/components/providers/pwa-provider';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
@@ -98,13 +97,16 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    if (!isUserLoading && !user && auth) {
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !isUserLoading && !user && auth) {
       const timer = setTimeout(() => {
         initiateAnonymousSignIn(auth);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [user, isUserLoading, auth]);
+  }, [user, isUserLoading, auth, isMounted]);
 
   const t = translations[language];
   const LOGO_PATH = "/icon-512.png";
@@ -153,8 +155,13 @@ export default function WaghambaApp() {
     });
   }, [schoolData.data.players]);
 
-  // SSR Landing State
-  if (stage === 'landing' || !isMounted) {
+  // Initial SSR / Hydration Fallback
+  if (!isMounted) {
+    return <div className="min-h-screen bg-white" />;
+  }
+
+  // 1. Landing State
+  if (stage === 'landing') {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
@@ -198,6 +205,7 @@ export default function WaghambaApp() {
     );
   }
 
+  // 2. Critical Loader (Only for Selector/Hub if auth is missing)
   if (isUserLoading && !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -209,6 +217,7 @@ export default function WaghambaApp() {
     );
   }
 
+  // 3. Section Selector
   if (stage === 'selector') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -244,6 +253,7 @@ export default function WaghambaApp() {
     );
   }
 
+  // 4. Main Hub UI
   const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
 
   return (
