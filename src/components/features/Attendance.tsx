@@ -1,15 +1,39 @@
-
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { CalendarCheck, ChevronLeft, ChevronRight, Printer, Sun, Moon, WifiOff, RefreshCw, CloudSync } from 'lucide-react';
-import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import { cn } from '@/lib/utils';
-import { usePWA } from '@/components/providers/pwa-provider';
+import React, { useEffect, useMemo, useState } from "react";
+
+import { Card } from "@/components/ui/card";
+import { TableSkeleton } from "@/components/ui/loading-skeletons";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+} from "date-fns";
+import { usePWA } from "@/components/providers/pwa-provider";
+
+import {
+  CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
+  Printer,
+  Sun,
+  Moon,
+  WifiOff,
+  RefreshCw,
+  CloudSun,
+} from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 
 const CATEGORIES = [

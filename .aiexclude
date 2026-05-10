@@ -1,0 +1,8 @@
+node_modules/
+.next/
+android/
+.vercel/
+public/
+docs/
+.idx/
+.firebase/

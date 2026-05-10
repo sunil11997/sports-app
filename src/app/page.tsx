@@ -44,7 +44,7 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 
-// Dynamic Feature Loading with consistent paths
+// Dynamic Feature Loading - using ssr: false for all client-only heavy modules
 const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -71,8 +71,8 @@ const translations = {
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Dashboard", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities", rules: "Rules",
     coreHub: "Core Hub",
-    enter: "ACCESS INSTITUTIONAL HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local",
-    installApp: "INSTALL NATIVE HUB"
+    enter: "ACCESS HUB", googleLogin: "LOGIN WITH GOOGLE", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local",
+    installApp: "INSTALL APP"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -156,14 +156,14 @@ export default function WaghambaApp() {
 
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-[#0048A0] flex flex-col items-center justify-center p-6 text-white overflow-hidden">
+      <div className="min-h-screen bg-[#0048A0] flex flex-col items-center justify-center p-6 text-white">
         <div className="relative z-10 space-y-8 text-center animate-in fade-in duration-700">
-          <div className="w-32 h-32 bg-white rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center group border-4 border-white/20 overflow-hidden relative">
-             <Image src={LOGO_PATH} alt="Institutional Logo" fill priority unoptimized className="object-cover" />
+          <div className="w-32 h-32 bg-white rounded-[2.5rem] mx-auto shadow-2xl flex items-center justify-center border-4 border-white/20 overflow-hidden relative">
+             <Image src={LOGO_PATH} alt="Logo" fill priority unoptimized className="object-cover" />
           </div>
           <div className="space-y-2">
             <h1 className="text-3xl font-black tracking-tighter uppercase">WGB Sports Hub</h1>
-            <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.4em]">Booting Native Engine</p>
+            <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.4em]">Booting Engine</p>
           </div>
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto opacity-20" />
-          <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Initializing Registry</p>
+          <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Initializing</p>
         </div>
       </div>
     );
@@ -190,7 +190,7 @@ export default function WaghambaApp() {
         <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
           <div className="space-y-6">
             <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center group hover:scale-105 transition-transform duration-500 overflow-hidden relative">
-              <Image src={LOGO_PATH} alt="App Logo" fill unoptimized className="object-cover" />
+              <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
             </div>
             
             <div className="space-y-4">
@@ -203,7 +203,7 @@ export default function WaghambaApp() {
                 <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "WAGHAMBA HUB"}</span>
               </h1>
               <p className="text-sm md:text-lg font-medium text-muted-foreground max-w-md mx-auto uppercase tracking-widest opacity-60">
-                {language === 'Marathi' ? "डिजिटल व्यवस्थापन आणि क्रीडा केंद्र" : "Digital Management & Sports Hub"}
+                {language === 'Marathi' ? "डिजिटल व्यवस्थापन" : "Digital Hub v4.0"}
               </p>
             </div>
           </div>
@@ -216,31 +216,14 @@ export default function WaghambaApp() {
               {t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </Button>
             
-            {isInstallable && (
-              <Button 
-                onClick={installApp}
-                variant="outline"
-                className="h-14 rounded-2xl border-2 border-primary text-primary font-black uppercase tracking-widest active-scale group"
-              >
-                <Download className="mr-2 w-5 h-5 animate-bounce" /> {t.installApp}
-              </Button>
-            )}
-
             <div className="flex items-center justify-center gap-4">
                <button 
                  onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
                  className="text-[10px] font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center gap-2"
                >
-                 <Globe className="w-4 h-4" /> {language === 'English' ? 'Switch to Marathi' : 'English मध्ये बदला'}
+                 <Globe className="w-4 h-4" /> {language === 'English' ? 'Marathi' : 'English'}
                </button>
             </div>
-          </div>
-
-          <div className="pt-12 flex items-center justify-center gap-2 opacity-30">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <p className="text-[9px] font-black uppercase tracking-[0.2em]">
-              Authorized Institutional Registry • v4.0 Native Speed
-            </p>
           </div>
         </div>
       </div>
@@ -253,11 +236,11 @@ export default function WaghambaApp() {
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
             <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden relative">
-              <Image src={LOGO_PATH} alt="App Logo" fill unoptimized className="object-cover" />
+              <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
             </button>
             <div className="space-y-1">
               <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-60">Digital Management Suite</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] opacity-60">Management Suite</p>
             </div>
           </div>
 
@@ -271,7 +254,7 @@ export default function WaghambaApp() {
                   <Medal className="w-12 h-12 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Competitive Training & Coaching</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Athletics & Coaching</p>
               </div>
             </button>
 
@@ -284,14 +267,8 @@ export default function WaghambaApp() {
                   <GraduationCap className="w-12 h-12 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Academic & Physical Ed Profile</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Student Profiles</p>
               </div>
-            </button>
-          </div>
-
-          <div className="flex items-center justify-center gap-4 pt-8">
-            <button onClick={() => setStage('landing')} className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-2 hover:text-primary transition-colors">
-              <ChevronLeft className="w-4 h-4" /> Back to Entrance
             </button>
           </div>
         </div>
@@ -316,12 +293,6 @@ export default function WaghambaApp() {
                   {selectedSection === 'sports' ? "Sports" : "Students"}
                 </h1>
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5 ml-5">
-                <div className={cn("w-1.5 h-1.5 rounded-full", (isOnline && !user?.isAnonymous) ? "bg-emerald-500 animate-pulse" : "bg-amber-500")} />
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest opacity-60">
-                  {user?.isAnonymous ? "Device Only" : "Cloud Sync Active"}
-                </span>
-              </div>
             </div>
           </div>
           
@@ -330,7 +301,7 @@ export default function WaghambaApp() {
                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
                <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
              </Select>
-             <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 hover:bg-primary/5 text-primary" title={t.switchHub}>
+             <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary">
                <Menu className="w-5 h-5" />
              </Button>
           </div>
@@ -344,13 +315,8 @@ export default function WaghambaApp() {
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
                    <div>
-                     <h2 className="text-3xl font-black text-primary uppercase tracking-tight">
-                      Welcome, Coach
-                     </h2>
-                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Managing {selectedSection === 'sports' ? 'Athletic Excellence' : 'Academic Growth'}</p>
-                   </div>
-                   <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-2">
-                     <span className="text-[10px] font-black text-primary uppercase px-3 py-1 bg-primary/5 rounded-full">{schoolData.selectedYear} Term</span>
+                     <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Welcome</h2>
+                     <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Managing {selectedSection}</p>
                    </div>
                 </div>
 
@@ -364,65 +330,58 @@ export default function WaghambaApp() {
                             ? schoolData.data.players.length 
                             : schoolData.data.players.filter(p => p.category === 'athlete').length}
                         </h3>
-                        <p className="text-sm font-bold opacity-60">Registered {selectedSection === 'sports' ? 'Athletes' : 'Total Students'}</p>
+                        <p className="text-sm font-bold opacity-60">Registered</p>
                       </div>
-                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary hover:bg-white/90 rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
-                        <UserPlus className="w-4 h-4 mr-2" /> Add New {selectedSection === 'sports' ? 'Athlete' : 'Student'}
+                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 shadow-lg">
+                        Add New
                       </Button>
                     </div>
                   </Card>
 
                   <div className="grid grid-cols-2 gap-6 lg:col-span-2">
-                    <Card onClick={() => setActiveTab('history')} className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all cursor-pointer">
-                      <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Card onClick={() => setActiveTab('history')} className="google-card p-8 flex flex-col justify-between group cursor-pointer">
+                      <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
                         <TrendingUp className="w-6 h-6 text-white" />
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">Open</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Analytics Hub</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Analytics</p>
                       </div>
                     </Card>
                     
-                    <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between group hover:border-primary/20 border-2 border-transparent transition-all cursor-pointer">
-                      <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                    <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between group cursor-pointer">
+                      <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center shadow-inner">
                         <Activity className="w-6 h-6 text-primary" />
                       </div>
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">
-                          {Object.keys(schoolData.data.fitness).filter(id => {
-                            const p = schoolData.data.players.find(p => p.id === id);
-                            return selectedSection === 'general' ? !!p : p?.category === 'athlete';
-                          }).length}
+                          {Object.keys(schoolData.data.fitness).length}
                         </p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Tests Logged</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1 opacity-60">Logs</p>
                       </div>
                     </Card>
                   </div>
                 </div>
 
                 {birthdaysToday.length > 0 && (
-                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner animate-in zoom-in-95 duration-500 border border-accent/10">
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-md">
-                          <Cake className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Institutional Celebration</p>
-                        </div>
+                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center">
+                        <Cake className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {birthdaysToday
-                        .map((student: any) => (
-                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4 border border-accent/10">
-                          <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary text-xl uppercase shadow-inner">
+                      {birthdaysToday.map((student: any) => (
+                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary">
                             {student.name[0]}
                           </div>
                           <div>
-                            <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1.5 opacity-60">Std {student.std} • Happy Birthday!</p>
+                            <p className="font-black text-primary uppercase text-sm">{student.name}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Std {student.std}</p>
                           </div>
                         </div>
                       ))}
@@ -455,17 +414,17 @@ export default function WaghambaApp() {
         </Tabs>
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 safe-area-bottom overflow-x-auto scrollbar-hide">
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
         <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
           {currentTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               data-active={activeTab === tab.id}
-              className="google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 group transition-all"
+              className="google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all"
             >
               <div className={cn(
-                "google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all group-active:scale-90",
+                "google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all",
                 activeTab === tab.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
               )}>
                 <tab.icon className="w-6 h-6" />
@@ -484,4 +443,3 @@ export default function WaghambaApp() {
     </div>
   );
 }
-
