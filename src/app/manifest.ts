@@ -1,5 +1,9 @@
 import { MetadataRoute } from 'next'
 
+/**
+ * Waghamba Sports Hub - PWA Manifest
+ * Configures how the app appears when installed on a device.
+ */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Waghamba Institutional Sports & Health Hub',
@@ -8,7 +12,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#0048A0',
+    theme_color: '#1e3a8a',
+    orientation: 'portrait',
     icons: [
       {
         src: '/icon-41.png',
