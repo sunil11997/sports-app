@@ -1,28 +1,47 @@
 /**
  * Waghamba Sports Hub - Service Worker
- * Implements mandatory fetch listener for PWA installability.
+ * Enabling offline-first experience and PWA installability.
  */
 
-const CACHE_NAME = 'wgb-sports-v3';
-const ASSETS = [
+const CACHE_NAME = 'wgb-hub-v3';
+const ASSETS_TO_CACHE = [
   '/',
+  '/favicon.ico',
   '/icon-512.png',
-  '/favicon.ico'
 ];
 
+// 1. Installation: Cache core shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
+// 2. Activation: Cleanup old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 3. Fetch: Essential for PWA "Offline Ready" check
 self.addEventListener('fetch', (event) => {
-  // Required listener for PWA "Add to Home Screen" eligibility
+  // We prefer network, fallback to cache
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });

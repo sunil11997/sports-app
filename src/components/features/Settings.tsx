@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -33,7 +32,6 @@ import { cn } from '@/lib/utils';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { initiateSignOut, initiateGoogleSignIn, syncViaEmail } from '@/firebase/non-blocking-login';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
@@ -60,6 +58,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   };
 
   const handleGoogleLogin = async () => {
+    if (!auth) return;
     try {
       setIsSyncing(true);
       await initiateGoogleSignIn(auth);
@@ -76,6 +75,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   };
 
   const handleAuthAction = async () => {
+    if (!auth) return;
     if (!emailInput.includes('@')) {
       toast({ 
         title: language === 'Marathi' ? "अवैध ईमेल" : "Invalid Email", 
@@ -134,6 +134,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   };
 
   const handleLogout = async () => {
+    if (!auth) return;
     try {
       await initiateSignOut(auth);
       window.location.href = "/";
