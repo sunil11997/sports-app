@@ -21,7 +21,6 @@ import {
   ArrowUpCircle, 
   Cake, 
   Menu,
-  ChevronLeft,
   Loader2,
   FileText,
   HeartPulse,
@@ -155,69 +154,148 @@ export default function WaghambaApp() {
     });
   }, [schoolData.data.players]);
 
-  // Initial SSR / Hydration Fallback
-  if (!isMounted) {
-    return <div className="min-h-screen bg-white" />;
-  }
+  // Handle stage transitions
+  const enterHub = (section: 'sports' | 'general') => {
+    setSelectedSection(section);
+    setStage('hub');
+    setActiveTab('home');
+  };
 
-  // 1. Landing State
-  if (stage === 'landing') {
+  // 1. Hub UI (Authenticated)
+  if (stage === 'hub' && selectedSection) {
+    const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
-
-        <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
-          <div className="space-y-6">
-            <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center relative">
-              <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover" />
-            </div>
-            
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
-                <Flame className="w-4 h-4 text-accent animate-pulse" />
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Excellence</span>
+      <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
+              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative">
+                <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tighter leading-tight uppercase">
-                {language === 'Marathi' ? "शासकीय माध्यमिक" : "ASHRAM SHALA"}<br/>
-                <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "WAGHAMBA HUB"}</span>
+              <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
+                {selectedSection === 'sports' ? "Sports" : "Students"}
               </h1>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-4 max-w-sm mx-auto">
-            <Button 
-              onClick={() => setStage('selector')}
-              className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-2xl hover:bg-primary/90 transition-all active-scale group"
-            >
-              {t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </Button>
             
-            <button 
-              onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
-              className="text-[10px] font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-            >
-              <Globe className="w-4 h-4" /> {language === 'English' ? 'Marathi' : 'English'}
-            </button>
+            <div className="flex items-center gap-3">
+              <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
+                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
+              </Select>
+              <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </header>
+
+        <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+            <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
+              {!schoolData.isLoaded ? <StatsSkeleton /> : (
+                <div className="space-y-8">
+                  <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Welcome</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden">
+                      <h3 className="text-5xl font-black tracking-tight">
+                        {selectedSection === 'general' 
+                          ? schoolData.data.players.length 
+                          : schoolData.data.players.filter(p => p.category === 'athlete').length}
+                      </h3>
+                      <p className="text-sm font-bold opacity-60 uppercase mt-2">Registered Registry</p>
+                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 mt-6 shadow-lg">
+                        Add New
+                      </Button>
+                    </Card>
+                    <Card onClick={() => setActiveTab('history')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
+                      <TrendingUp className="w-10 h-10 text-accent" />
+                      <div className="mt-4">
+                        <p className="text-4xl font-black text-primary">Open</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Analytics</p>
+                      </div>
+                    </Card>
+                    <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
+                      <Activity className="w-10 h-10 text-primary" />
+                      <div className="mt-4">
+                        <p className="text-4xl font-black text-primary">{Object.keys(schoolData.data.fitness).length}</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Logs</p>
+                      </div>
+                    </Card>
+                  </div>
+                  {birthdaysToday.length > 0 && (
+                    <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10">
+                      <div className="flex items-center gap-4 mb-6">
+                        <Cake className="w-8 h-8 text-accent" />
+                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {birthdaysToday.map((student: any) => (
+                          <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary">{student.name[0]}</div>
+                            <div>
+                              <p className="font-black text-primary uppercase text-sm">{student.name}</p>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase">Std {student.std}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <div className="pb-12">
+              <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection} t={t} onTabChange={setActiveTab} />}</TabsContent>
+              <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection} language={language} />}</TabsContent>
+              <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
+              <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="history" className="mt-0">{activeTab === "history" && <PersonalDashboard store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="report" className="mt-0">{activeTab === "report" && <DailyReport store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
+              <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
+              <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection} />}</TabsContent>
+              <TabsContent value="classes" className="mt-0">{activeTab === "classes" && <ClassesSection store={schoolData} />}</TabsContent>
+              <TabsContent value="exams" className="mt-0">{activeTab === "exams" && <ExamsHub store={schoolData} />}</TabsContent>
+              <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
+              <TabsContent value="teams" className="mt-0">{activeTab === "teams" && <Teams store={schoolData} />}</TabsContent>
+            </div>
+          </Tabs>
+        </main>
+
+        <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
+          <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
+            {currentTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all",
+                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <div className={cn(
+                  "google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all",
+                  activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                )}>
+                  <tab.icon className="w-6 h-6" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </nav>
       </div>
     );
   }
 
-  // 2. Critical Loader (Only for Selector/Hub if auth is missing)
-  if (isUserLoading && !user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto opacity-20" />
-          <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Initializing Registry</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. Section Selector
+  // 2. Section Selector
   if (stage === 'selector') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -228,21 +306,13 @@ export default function WaghambaApp() {
             </button>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <button 
-              onClick={() => { setSelectedSection('sports'); setStage('hub'); setActiveTab('home'); }} 
-              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20"
-            >
+            <button onClick={() => enterHub('sports')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
               <Medal className="w-12 h-12 text-primary mx-auto mb-8 transition-transform group-hover:scale-110" />
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Athletics & Coaching</p>
             </button>
-
-            <button 
-              onClick={() => { setSelectedSection('general'); setStage('hub'); setActiveTab('home'); }} 
-              className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20"
-            >
+            <button onClick={() => enterHub('general')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
               <GraduationCap className="w-12 h-12 text-primary mx-auto mb-8 transition-transform group-hover:scale-110" />
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Student Profiles</p>
@@ -253,140 +323,42 @@ export default function WaghambaApp() {
     );
   }
 
-  // 4. Main Hub UI
-  const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
-
+  // 3. Landing Page (Rendered on server and client)
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-            <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative">
-              <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
+      <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
+        <div className="space-y-6">
+          <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center relative">
+            <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover" />
+          </div>
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
+              <Flame className="w-4 h-4 text-accent animate-pulse" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Excellence</span>
             </div>
-            <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
-              {selectedSection === 'sports' ? "Sports" : "Students"}
+            <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tighter leading-tight uppercase">
+              {language === 'Marathi' ? "शासकीय माध्यमिक" : "ASHRAM SHALA"}<br/>
+              <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "WAGHAMBA HUB"}</span>
             </h1>
           </div>
-          
-          <div className="flex items-center gap-3">
-             <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
-               <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
-               <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
-             </Select>
-             <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary">
-               <Menu className="w-5 h-5" />
-             </Button>
-          </div>
         </div>
-      </header>
-
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
-            {!schoolData.isLoaded ? <StatsSkeleton /> : (
-              <div className="space-y-8">
-                <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Welcome</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden">
-                    <h3 className="text-5xl font-black tracking-tight">
-                      {selectedSection === 'general' 
-                        ? schoolData.data.players.length 
-                        : schoolData.data.players.filter(p => p.category === 'athlete').length}
-                    </h3>
-                    <p className="text-sm font-bold opacity-60 uppercase mt-2">Registered Registry</p>
-                    <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 mt-6 shadow-lg">
-                      Add New
-                    </Button>
-                  </Card>
-
-                  <Card onClick={() => setActiveTab('history')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
-                    <TrendingUp className="w-10 h-10 text-accent" />
-                    <div className="mt-4">
-                      <p className="text-4xl font-black text-primary">Open</p>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Analytics</p>
-                    </div>
-                  </Card>
-                  
-                  <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
-                    <Activity className="w-10 h-10 text-primary" />
-                    <div className="mt-4">
-                      <p className="text-4xl font-black text-primary">{Object.keys(schoolData.data.fitness).length}</p>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Logs</p>
-                    </div>
-                  </Card>
-                </div>
-
-                {birthdaysToday.length > 0 && (
-                  <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10">
-                    <div className="flex items-center gap-4 mb-6">
-                      <Cake className="w-8 h-8 text-accent" />
-                      <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {birthdaysToday.map((student: any) => (
-                        <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary">{student.name[0]}</div>
-                          <div>
-                            <p className="font-black text-primary uppercase text-sm">{student.name}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Std {student.std}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          <div className="pb-12">
-            <TabsContent value="dashboard" className="mt-0">{activeTab === "dashboard" && <Dashboard store={schoolData} section={selectedSection!} t={t} onTabChange={setActiveTab} />}</TabsContent>
-            <TabsContent value="registration" className="mt-0">{activeTab === "registration" && <Registration store={schoolData} section={selectedSection!} language={language} />}</TabsContent>
-            <TabsContent value="attendance" className="mt-0">{activeTab === "attendance" && <Attendance store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="fitness" className="mt-0">{activeTab === "fitness" && <Fitness store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="skills" className="mt-0">{activeTab === "skills" && <SportsSkills store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="drills" className="mt-0">{activeTab === "drills" && <SportsDrills store={schoolData} />}</TabsContent>
-            <TabsContent value="activities" className="mt-0">{activeTab === "activities" && <SchoolActivities store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="health" className="mt-0">{activeTab === "health" && <HealthIncidents store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="history" className="mt-0">{activeTab === "history" && <PersonalDashboard store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="report" className="mt-0">{activeTab === "report" && <DailyReport store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="ai" className="mt-0">{activeTab === "ai" && <AIAdvice store={schoolData} />}</TabsContent>
-            <TabsContent value="settings" className="mt-0">{activeTab === "settings" && <Settings language={language} setLanguage={setLanguage} />}</TabsContent>
-            <TabsContent value="promotion" className="mt-0">{activeTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection!} />}</TabsContent>
-            <TabsContent value="classes" className="mt-0">{activeTab === "classes" && <ClassesSection store={schoolData} />}</TabsContent>
-            <TabsContent value="exams" className="mt-0">{activeTab === "exams" && <ExamsHub store={schoolData} />}</TabsContent>
-            <TabsContent value="tournament" className="mt-0">{activeTab === "tournament" && <TournamentRosters store={schoolData} />}</TabsContent>
-            <TabsContent value="teams" className="mt-0">{activeTab === "teams" && <Teams store={schoolData} />}</TabsContent>
-          </div>
-        </Tabs>
-      </main>
-
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
-        <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
-          {currentTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all",
-                activeTab === tab.id ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              <div className={cn(
-                "google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all",
-                activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
-              )}>
-                <tab.icon className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                {tab.label}
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-col gap-4 max-w-sm mx-auto">
+          <Button 
+            onClick={() => setStage('selector')}
+            className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group"
+          >
+            {isUserLoading && isMounted ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+          </Button>
+          <button 
+            onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
+            className="text-[10px] font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+          >
+            <Globe className="w-4 h-4" /> {language === 'English' ? 'Marathi' : 'English'}
+          </button>
         </div>
-      </nav>
+      </div>
     </div>
   );
 }
