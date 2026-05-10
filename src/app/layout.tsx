@@ -5,11 +5,8 @@ import type { ReactNode } from "react";
 import ServiceWorkerRegister from "./sw-register";
 
 import {
-  FirebaseProvider,
-  initializeFirebase,
+  FirebaseClientProvider,
 } from "@/firebase";
-
-const firebase = initializeFirebase();
 
 export const metadata: Metadata = {
   title: "Sports Hub",
@@ -29,14 +26,10 @@ export default function RootLayout({
       </head>
 
       <body>
-        <FirebaseProvider
-          firebaseApp={firebase.firebaseApp}
-          firestore={firebase.firestore}
-          auth={firebase.auth}
-        >
+        <FirebaseClientProvider>
           <ServiceWorkerRegister />
           {children}
-        </FirebaseProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
