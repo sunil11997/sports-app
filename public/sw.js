@@ -1,16 +1,16 @@
 /**
  * Waghamba Sports Hub - Service Worker
- * Handles basic caching and fetch events to satisfy PWA installability requirements.
+ * Required for PWA Installability and Offline Capabilities.
  */
 
 const CACHE_NAME = 'wgb-sports-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/icon-512.png',
-  '/favicon.ico'
+  '/manifest.webmanifest'
 ];
 
-// Install Event
+// Install Event - Caching basic assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -22,32 +22,19 @@ self.addEventListener('install', (event) => {
 
 // Activate Event
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
+  event.waitUntil(self.clients.claim());
 });
 
-// Fetch Event (Mandatory for PWA installability)
+// Fetch Event - Mandatory for PWA "Add to Home Screen" support
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
-
+  // Simple network-first or cache-fallback strategy
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).catch(() => {
-        // Fallback or just let it fail if offline and not cached
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).catch(() => {
+        // Fallback for offline if resource not in cache
+        if (event.request.mode === 'navigate') {
+          return caches.match('/');
+        }
       });
     })
   );

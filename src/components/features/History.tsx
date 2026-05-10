@@ -3,9 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   BarChart3, 
   Printer, 
@@ -20,8 +18,7 @@ import {
   CheckCircle2,
   Calendar,
   History as HistoryIcon,
-  Cake,
-  UsersRound
+  Cake
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -40,10 +37,15 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+/**
+ * Institutional Athlete Growth & Performance Dossier.
+ * Aggregates all biometric, technical, and medical data for individual tracking.
+ */
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
 
+  // 1. Filter and Sort Available Players
   const availablePlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
@@ -56,23 +58,27 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       });
   }, [store.data.players, isGeneral]);
 
+  // 2. Select Player Context
   const player = useMemo(() => 
     store.data.players.find((p: any) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
   );
 
+  // 3. Health & Medical Context
   const playerIncidents = useMemo(() => 
     store.data.healthIncidents.filter((inc: any) => inc.playerId === selectedPlayerId)
       .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [selectedPlayerId, store.data.healthIncidents]
   );
 
+  // 4. Performance Trends (Fitness)
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory[selectedPlayerId] || [])
       .sort((a: any, b: any) => new Date(a.updatedAt || a.date || 0).getTime() - new Date(b.updatedAt || b.date || 0).getTime()),
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
+  // 5. Attendance Summary
   const playerAttendance = useMemo(() => {
     if (!selectedPlayerId) return { present: 0, total: 0 };
     let present = 0;
@@ -83,16 +89,17 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return { present, total: entries.length };
   }, [selectedPlayerId, store.data.attendance]);
 
+  // 6. Chart Data Preparation
   const chartData = useMemo(() => {
     return playerFitness.map((f: any) => ({
       date: format(new Date(f.updatedAt || f.date || new Date()), 'MMM yy'),
       score: parseFloat(f.score) || 0,
       strength: parseFloat(f.strengthScore) || 0,
-      endurance: parseFloat(f.enduranceScore) || 0,
-      bmi: parseFloat(f.bmi) || 0
+      endurance: parseFloat(f.enduranceScore) || 0
     }));
   }, [playerFitness]);
 
+  // 7. Team Category Deduction
   const teamCategory = useMemo(() => {
     if (!player) return "N/A";
     const age = Number(player.age) || 0;
@@ -102,6 +109,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return `${gender} Senior Squad`;
   }, [player]);
 
+  // 8. Automated Insights Generation
   const analyticalInsights = useMemo(() => {
     if (!player) return { plus: [], weak: [] };
     const plus: string[] = [];
@@ -109,21 +117,21 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     
     const latestFit = playerFitness[playerFitness.length - 1] || store.data.fitness[player.id] || {};
     
+    // BMI Logic
     const bmi = parseFloat(latestFit.bmi || player.bmi || "0");
     if (bmi < 18.5) weak.push("Underweight (Nutrition priority)");
     else if (bmi >= 18.5 && bmi <= 24.9) plus.push("Optimal Body Mass Index");
     else if (bmi > 25) weak.push("Overweight (Aerobic priority)");
 
+    // Fitness Logic
     const fitScore = parseFloat(latestFit.score || "0");
     if (fitScore > 80) plus.push("Elite Physical Preparedness");
     if (fitScore < 50 && fitScore > 0) weak.push("Foundational Strength Deficit");
     
-    if (parseFloat(latestFit.enduranceScore || "0") > 85) plus.push("Exceptional Aerobic Recovery");
-    if (parseFloat(latestFit.strengthScore || "0") > 85) plus.push("Superior Explosive Power");
-
     return { plus, weak };
   }, [player, playerFitness, store.data.fitness]);
 
+  // 9. Professional A4 Export Engine
   const handlePrint = () => {
     if (!player) return;
     
@@ -249,6 +257,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Column 1: Biometrics & Identity */}
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <div className="h-2 w-full bg-accent" />
@@ -307,6 +316,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </Card>
           </div>
 
+          {/* Column 2: Analytics & Trends */}
           <div className="lg:col-span-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="border-2 rounded-[2.5rem] bg-emerald-50/50 p-6 border-emerald-100">

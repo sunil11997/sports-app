@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -32,7 +31,6 @@ export function useSchoolData() {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [gameRules, setGameRulesData] = useState<Record<string, any>>({});
 
-  // Sync offline queue to Firestore
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !navigator.onLine || isSyncing) return;
 
@@ -51,7 +49,6 @@ export function useSchoolData() {
     }
 
     setIsSyncing(true);
-    console.log(`WGB: Syncing ${keys.length} offline attendance records...`);
 
     try {
       for (const key of keys) {
@@ -76,8 +73,6 @@ export function useSchoolData() {
             academicYear: selectedYear 
           }, { merge: true });
         }
-        
-        // Remove from local queue after initiating firebase write
         delete queue[key];
       }
       
@@ -93,10 +88,7 @@ export function useSchoolData() {
   useEffect(() => {
     if (!user || !db) return;
 
-    // Listen for online event to trigger sync
     window.addEventListener('online', syncOfflineAttendance);
-    
-    // Initial sync check
     syncOfflineAttendance();
 
     const attQuery = query(
@@ -112,7 +104,6 @@ export function useSchoolData() {
         newAtt[`${data.playerId}_${data.date}${sessionSuffix}`] = data.status;
       });
       
-      // Merge with any local pending changes so the UI stays up to date
       const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY);
       if (queueStr) {
         const queue = JSON.parse(queueStr);
@@ -121,7 +112,7 @@ export function useSchoolData() {
       } else {
         setAttendanceData(newAtt);
       }
-    }, (err) => console.warn("WGB Attendance Sync Delayed:", err.message));
+    });
 
     const fitQuery = query(
       collection(db, 'fitness_registry'), 
@@ -149,7 +140,7 @@ export function useSchoolData() {
 
       setFitnessData(latestMap);
       setFitnessHistory(historyMap);
-    }, (err) => console.warn("WGB Fitness Sync Delayed:", err.message));
+    });
 
     const skillsQuery = query(
       collection(db, 'skills_registry'), 
@@ -165,7 +156,6 @@ export function useSchoolData() {
         const pId = data.playerId;
         if (!pId) return;
 
-        // Current skills map (latest per sport)
         const currentLatest = skillsMap[`${pId}_${data.sportName}`];
         if (!currentLatest || (data.lastUpdated && currentLatest.lastUpdated && new Date(data.lastUpdated) > new Date(currentLatest.lastUpdated))) {
           skillsMap[`${pId}_${data.sportName}`] = data;
@@ -177,7 +167,7 @@ export function useSchoolData() {
 
       setSportSkillsData(skillsMap);
       setSkillsHistory(historyMap);
-    }, (err) => console.warn("WGB Skills Sync Delayed:", err.message));
+    });
 
     const rulesQuery = query(
       collection(db, 'game_rules_registry'),
@@ -279,45 +269,21 @@ export function useSchoolData() {
 
   const setAttendance = useCallback((records: AttendanceRecord) => {
     if (!user) return;
-
-    // 1. Update React State immediately for "Native Speed" feel
     setAttendanceData(prev => ({ ...prev, ...records }));
-
-    // 2. Save to localStorage Queue
     const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
     const queue = JSON.parse(queueStr);
     const updatedQueue = { ...queue, ...records };
     localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(updatedQueue));
     setPendingCount(Object.keys(updatedQueue).length);
 
-    // 3. Attempt Firebase Update if Online
     if (navigator.onLine) {
       Object.entries(records).forEach(([key, status]) => {
         const parts = key.split('_');
         if (parts.length < 3) return;
-        
-        const playerId = parts[0];
-        const date = parts[1];
-        const session = parts[2];
-        
-        const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
-        if (!status) {
-          deleteDocumentNonBlocking(attRef);
-        } else {
-          setDocumentNonBlocking(attRef, { 
-            status, 
-            playerId, 
-            date, 
-            session,
-            schoolId: user.uid, 
-            academicYear: selectedYear 
-          }, { merge: true });
-        }
-        
-        // If successful or at least initiated, we can clean up from local queue later via syncOfflineAttendance
+        const attRef = doc(db, 'attendance_registry', `${parts[0]}_${parts[1]}_${parts[2]}`);
+        if (!status) deleteDocumentNonBlocking(attRef);
+        else setDocumentNonBlocking(attRef, { status, playerId: parts[0], date: parts[1], session: parts[2], schoolId: user.uid, academicYear: selectedYear }, { merge: true });
       });
-      
-      // Auto-trigger a cleanup sync in 2 seconds
       setTimeout(syncOfflineAttendance, 2000);
     }
   }, [db, user, selectedYear, syncOfflineAttendance]);
@@ -326,28 +292,15 @@ export function useSchoolData() {
     if (!user) return;
     const dateId = new Date().toISOString().split('T')[0];
     const fitnessRef = doc(db, 'fitness_registry', `${playerId}_${dateId}`);
-    setDocumentNonBlocking(fitnessRef, { 
-      ...assessment, 
-      playerId, 
-      schoolId: user.uid, 
-      date: dateId, 
-      updatedAt: new Date().toISOString(), 
-      academicYear: selectedYear 
-    }, { merge: true });
+    setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
   }, [db, user, selectedYear]);
 
   const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
     if (!user) return;
-    const dateId = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}_${dateId}`);
-    setDocumentNonBlocking(skillRef, { 
-      ...skill, 
-      playerId, 
-      sportName: sport, 
-      schoolId: user.uid, 
-      lastUpdated: new Date().toISOString(), 
-      academicYear: selectedYear 
-    }, { merge: true });
+    // Use timestamp as ID to ensure EVERY entry is a new historical record for progress tracking
+    const timeId = new Date().getTime().toString();
+    const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}_${timeId}`);
+    setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
   }, [db, user, selectedYear]);
 
   const setDrillCompletion = useCallback((drillId: string, playerId: string, completed: boolean) => {
@@ -361,16 +314,8 @@ export function useSchoolData() {
   const setGameRule = useCallback((sportName: string, pdfData: string | null) => {
     if (!user) return;
     const ruleRef = doc(db, 'game_rules_registry', sportName);
-    if (!pdfData) {
-      deleteDocumentNonBlocking(ruleRef);
-    } else {
-      setDocumentNonBlocking(ruleRef, { 
-        sportName, 
-        pdfData, 
-        schoolId: user.uid, 
-        updatedAt: new Date().toISOString() 
-      }, { merge: true });
-    }
+    if (!pdfData) deleteDocumentNonBlocking(ruleRef);
+    else setDocumentNonBlocking(ruleRef, { sportName, pdfData, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
   }, [db, user]);
 
   const addHealthIncident = useCallback((incident: HealthIncident) => {
@@ -394,10 +339,8 @@ export function useSchoolData() {
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click(); URL.revokeObjectURL(url);
   }, [aggregatedData]);
 
   return {
