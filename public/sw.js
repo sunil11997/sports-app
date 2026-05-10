@@ -1,16 +1,15 @@
 /**
- * Waghamba Sports Hub - Service Worker
- * Enabling offline-first experience and PWA installability.
+ * Waghamba Sports Hub - Institutional Service Worker
+ * Critical for PWA installability and offline resilience.
  */
 
-const CACHE_NAME = 'wgb-hub-v3';
+const CACHE_NAME = 'wgb-sports-v3';
 const ASSETS_TO_CACHE = [
   '/',
-  '/favicon.ico',
   '/icon-512.png',
+  '/manifest.webmanifest'
 ];
 
-// 1. Installation: Cache core shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -20,28 +19,34 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 2. Activation: Cleanup old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  self.clients.claim();
 });
 
-// 3. Fetch: Essential for PWA "Offline Ready" check
+// MANDATORY FETCH LISTENER: Required for browser PWA validation
 self.addEventListener('fetch', (event) => {
-  // We prefer network, fallback to cache
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/');
+      })
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
     })
   );
 });

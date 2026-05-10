@@ -10,13 +10,13 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 50% 38%; /* Softer, more professional Institutional Blue */
+    --primary: 221 50% 38%; /* Institutional Deep Blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 34 70% 45%; /* Muted Torch Amber/Orange */
+    --accent: 34 70% 45%; /* Torch Amber/Orange */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -105,5 +105,9 @@
     0% { background-color: transparent; }
     50% { background-color: hsl(var(--primary) / 0.1); }
     100% { background-color: transparent; }
+  }
+
+  .dossier-print {
+    font-family: 'Inter', sans-serif;
   }
 }

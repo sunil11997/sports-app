@@ -38,10 +38,16 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+/**
+ * Institutional History & Analytics Hub
+ * Restores the signature "Institutional Performance Dossier" design.
+ * Features: High-density growth charts, medical incident logs, and A4 professional printing.
+ */
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
 
+  // 1. Memoized Players List
   const availablePlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
@@ -54,6 +60,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       });
   }, [store.data.players, isGeneral]);
 
+  // 2. Active Player Context
   const player = useMemo(() => 
     store.data.players.find((p: any) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
@@ -117,6 +124,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return { plus, weak };
   }, [player, playerFitness, store.data.fitness]);
 
+  // 3. Printing Engine (Dossier Layout)
   const handlePrint = () => {
     if (!player) return;
     
@@ -146,7 +154,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     const htmlContent = `
       <html>
         <head>
-          <title>Dossier - ${player.name}</title>
+          <title>Institutional Dossier - ${player.name}</title>
           <style>
             @media print { @page { size: A4; margin: 1cm; } }
             body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 12px; }
@@ -167,7 +175,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
         <body>
           <div class="header">
             <div class="school-name">ASHRAM SHALA WAGHAMBA</div>
-            <div style="font-weight: 800; font-size: 14px;">INSTITUTIONAL ATHLETE PERFORMANCE DOSSIER</div>
+            <div style="font-weight: 800; font-size: 14px;">OFFICIAL ATHLETE PERFORMANCE DOSSIER</div>
           </div>
           <div class="profile-grid">
             <div class="photo-box">${photoHtml}</div>
@@ -179,27 +187,26 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               <tr><td style="font-weight:900;">ATTENDANCE:</td><td>${playerAttendance.present} Sessions Present</td></tr>
             </table>
           </div>
-          <h3>1. Historical Growth Log</h3>
+          <h3>1. Historical Progress Registry</h3>
           <table class="data-table">
             <thead><tr><th>DATE</th><th>SCORE</th><th>STRENGTH %</th><th>ENDURANCE %</th><th>INSTITUTIONAL STATUS</th></tr></thead>
             <tbody>${fitnessRows}</tbody>
           </table>
-          <h3>2. Growth Analysis</h3>
+          <h3>2. Athletic Growth Analysis</h3>
           <div class="insight-box">
-            <div class="box"><strong>STRENGTHS (+):</strong><ul>${insightsPlus || 'None recorded'}</ul></div>
-            <div class="box"><strong>FOCUS AREAS (-):</strong><ul>${insightsWeak || 'None recorded'}</ul></div>
+            <div class="box"><strong>STRENGTHS (+):</strong><ul>${insightsPlus || 'No specific strengths recorded'}</ul></div>
+            <div class="box"><strong>DEVELOPMENT AREAS (-):</strong><ul>${insightsWeak || 'Performing at standard levels'}</ul></div>
           </div>
-          <h3>3. Health & Medical Summary</h3>
+          <h3>3. Health & Medical Log</h3>
           <div class="box">${medicalLogs}</div>
           <div class="footer"><div class="sign">Teacher Sunil Deshmukh</div><div class="sign">Institutional Principal</div></div>
+          <script>window.print();</script>
         </body>
       </html>
     `;
     
     win.document.write(htmlContent);
     win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); }, 500);
   };
 
   if (!store.isLoaded) return <DashboardHomeSkeleton />;
@@ -212,14 +219,14 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             <BarChart3 className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Athlete Dashboard</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">360° Institutional Dossier</p>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Athlete Analytics</h2>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">360° Institutional Dossier Hub</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
             <SelectTrigger className="h-12 text-md font-bold bg-white rounded-xl border-2 shadow-sm">
-              <SelectValue placeholder="Select Athlete..." />
+              <SelectValue placeholder="Select Athlete Profile..." />
             </SelectTrigger>
             <SelectContent>
               {availablePlayers.map((p: any) => (
@@ -228,7 +235,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </SelectContent>
           </Select>
           <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black uppercase text-xs tracking-widest shadow-md active-scale">
-            <Printer className="w-4 h-4 mr-2" /> Export A4 Dossier
+            <Printer className="w-4 h-4 mr-2" /> Export Performance Dossier
           </Button>
         </div>
       </div>
@@ -236,10 +243,11 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       {!selectedPlayerId ? (
         <div className="p-24 text-center text-muted-foreground border-4 border-dashed rounded-[3rem] opacity-30">
           <TrendingUp className="w-16 h-16 mx-auto mb-4" />
-          <p className="font-black uppercase text-sm tracking-widest">Select an athlete to view progress</p>
+          <p className="font-black uppercase text-sm tracking-widest">Identify an athlete to access progress metrics</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Sidebar Profiler */}
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <div className="h-2 w-full bg-accent" />
@@ -262,8 +270,8 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                     <p className="text-xs font-bold text-primary">{player?.dob ? format(new Date(player.dob), 'dd MMM yyyy') : 'N/A'}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1 justify-center"><Users className="w-3 h-3" /> Presence</p>
-                    <p className="text-xs font-bold text-primary">{playerAttendance.present} Sessions</p>
+                    <p className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1 justify-center"><Users className="w-3 h-3" /> Attendance</p>
+                    <p className="text-xs font-bold text-primary">{playerAttendance.present} Logged</p>
                   </div>
                 </div>
               </CardContent>
@@ -272,14 +280,14 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-destructive/5 border-b p-6">
                 <CardTitle className="text-sm font-black uppercase text-destructive flex items-center gap-2">
-                  <Stethoscope className="w-4 h-4" /> Health Log
+                  <Stethoscope className="w-4 h-4" /> Medical Context
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {playerIncidents.length === 0 ? (
                   <div className="py-8 text-center space-y-2 opacity-20">
                     <CheckCircle2 className="w-10 h-10 mx-auto" />
-                    <p className="text-[10px] font-black uppercase">Clear Medical Record</p>
+                    <p className="text-[10px] font-black uppercase">Cleared Medical Registry</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -298,6 +306,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </Card>
           </div>
 
+          {/* Metrics Visualization */}
           <div className="lg:col-span-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="border-2 rounded-[2.5rem] bg-emerald-50/50 p-6 border-emerald-100">
@@ -309,19 +318,19 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                     <div key={i} className="flex gap-2 text-xs font-bold text-emerald-900/70">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" /> {p}
                     </div>
-                  )) : <p className="text-[10px] font-bold text-muted-foreground uppercase">Recording baseline data...</p>}
+                  )) : <p className="text-[10px] font-bold text-muted-foreground uppercase">Gathering performance baseline...</p>}
                 </div>
               </Card>
               <Card className="border-2 rounded-[2.5rem] bg-orange-50/50 p-6 border-orange-100">
                 <h4 className="text-xs font-black text-orange-800 uppercase flex items-center gap-2 mb-4">
-                  <Zap className="w-5 h-5 text-orange-600 fill-orange-600" /> Focus Areas (-)
+                  <Zap className="w-5 h-5 text-orange-600 fill-orange-600" /> Target Areas (-)
                 </h4>
                 <div className="space-y-3">
                   {analyticalInsights.weak.length > 0 ? analyticalInsights.weak.map((w, i) => (
                     <div key={i} className="flex gap-2 text-xs font-bold text-orange-900/70">
                       <Target className="w-3 h-3 text-orange-600 mt-0.5 shrink-0" /> {w}
                     </div>
-                  )) : <p className="text-[10px] font-bold text-muted-foreground uppercase">Performing at standard levels.</p>}
+                  )) : <p className="text-[10px] font-bold text-muted-foreground uppercase">Stable performance across metrics.</p>}
                 </div>
               </Card>
             </div>
@@ -329,17 +338,15 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
               <CardHeader className="bg-muted/30 border-b p-6 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
-                  <ChartLine className="w-4 h-4 text-accent" /> Growth Trends
+                  <ChartLine className="w-4 h-4 text-accent" /> Institutional Growth Trends
                 </CardTitle>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="text-[8px] font-black uppercase bg-white">Standard: {player?.std}</Badge>
-                </div>
+                <Badge variant="outline" className="text-[8px] font-black uppercase bg-white">Standard: {player?.std}</Badge>
               </CardHeader>
               <CardContent className="p-8">
                 {chartData.length < 2 ? (
-                   <div className="h-[300px] flex flex-col items-center justify-center space-y-4 opacity-20">
+                   <div className="h-[300px] flex flex-col items-center justify-center space-y-4 opacity-20 text-center">
                       <TrendingUp className="w-12 h-12" />
-                      <p className="font-black uppercase text-xs">Waiting for more testing data...</p>
+                      <p className="font-black uppercase text-xs">Awaiting subsequent physical test results<br/>to generate trend analytics.</p>
                    </div>
                 ) : (
                   <div className="h-[350px] w-full">
@@ -349,7 +356,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                         <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
                         <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.05} name="Aggregate" />
+                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.05} name="Total Agg." />
                         <Line type="monotone" dataKey="strength" stroke="#F59E0B" strokeWidth={2} dot={{ r: 4 }} name="Strength %" />
                         <Line type="monotone" dataKey="endurance" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} name="Endurance %" />
                         <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }} />
