@@ -1,16 +1,16 @@
 /**
  * Waghamba Sports Hub - Service Worker
- * Ensures the app is recognized as "Offline Capable" for PWA Installation.
+ * Handles basic caching and fetch events to satisfy PWA installability requirements.
  */
 
-const CACHE_NAME = 'wgb-sports-v1';
+const CACHE_NAME = 'wgb-sports-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/icon-512.png',
   '/favicon.ico'
 ];
 
-// Install Event - Caching basic assets
+// Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -20,32 +20,35 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate Event - Clean up old caches
+// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
         })
       );
     })
   );
+  self.clients.claim();
 });
 
-/**
- * MANDATORY FETCH HANDLER
- * This is the critical requirement for PWA installability.
- * Browsers check if a fetch event is handled to confirm offline support.
- */
+// Fetch Event (Mandatory for PWA installability)
 self.addEventListener('fetch', (event) => {
-  // We handle network-first for most requests to ensure fresh data
-  // but fall back to cache for the shell if offline.
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).catch(() => {
+        // Fallback or just let it fail if offline and not cached
+      });
     })
   );
 });

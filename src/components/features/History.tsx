@@ -48,11 +48,11 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
-        const stdA = parseInt(a.std) || 0;
-        const stdB = parseInt(b.std) || 0;
+        const stdA = Number(a.std) || 0;
+        const stdB = Number(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
         if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
-        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+        return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral]);
 
@@ -231,7 +231,9 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               <SelectValue placeholder="Select Athlete..." />
             </SelectTrigger>
             <SelectContent>
-              {availablePlayers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>)}
+              {availablePlayers.map((p: any) => (
+                <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black uppercase text-xs tracking-widest shadow-md">
