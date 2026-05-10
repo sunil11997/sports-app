@@ -37,15 +37,10 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/**
- * Institutional Athlete Growth & Performance Dossier.
- * Aggregates all biometric, technical, and medical data for individual tracking.
- */
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
 
-  // 1. Filter and Sort Available Players
   const availablePlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
@@ -58,27 +53,23 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       });
   }, [store.data.players, isGeneral]);
 
-  // 2. Select Player Context
   const player = useMemo(() => 
     store.data.players.find((p: any) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
   );
 
-  // 3. Health & Medical Context
   const playerIncidents = useMemo(() => 
     store.data.healthIncidents.filter((inc: any) => inc.playerId === selectedPlayerId)
       .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [selectedPlayerId, store.data.healthIncidents]
   );
 
-  // 4. Performance Trends (Fitness)
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory[selectedPlayerId] || [])
       .sort((a: any, b: any) => new Date(a.updatedAt || a.date || 0).getTime() - new Date(b.updatedAt || b.date || 0).getTime()),
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
-  // 5. Attendance Summary
   const playerAttendance = useMemo(() => {
     if (!selectedPlayerId) return { present: 0, total: 0 };
     let present = 0;
@@ -89,7 +80,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return { present, total: entries.length };
   }, [selectedPlayerId, store.data.attendance]);
 
-  // 6. Chart Data Preparation
   const chartData = useMemo(() => {
     return playerFitness.map((f: any) => ({
       date: format(new Date(f.updatedAt || f.date || new Date()), 'MMM yy'),
@@ -99,7 +89,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     }));
   }, [playerFitness]);
 
-  // 7. Team Category Deduction
   const teamCategory = useMemo(() => {
     if (!player) return "N/A";
     const age = Number(player.age) || 0;
@@ -109,21 +98,17 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return `${gender} Senior Squad`;
   }, [player]);
 
-  // 8. Automated Insights Generation
   const analyticalInsights = useMemo(() => {
     if (!player) return { plus: [], weak: [] };
     const plus: string[] = [];
     const weak: string[] = [];
     
     const latestFit = playerFitness[playerFitness.length - 1] || store.data.fitness[player.id] || {};
-    
-    // BMI Logic
     const bmi = parseFloat(latestFit.bmi || player.bmi || "0");
     if (bmi < 18.5) weak.push("Underweight (Nutrition priority)");
     else if (bmi >= 18.5 && bmi <= 24.9) plus.push("Optimal Body Mass Index");
     else if (bmi > 25) weak.push("Overweight (Aerobic priority)");
 
-    // Fitness Logic
     const fitScore = parseFloat(latestFit.score || "0");
     if (fitScore > 80) plus.push("Elite Physical Preparedness");
     if (fitScore < 50 && fitScore > 0) weak.push("Foundational Strength Deficit");
@@ -131,7 +116,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return { plus, weak };
   }, [player, playerFitness, store.data.fitness]);
 
-  // 9. Professional A4 Export Engine
   const handlePrint = () => {
     if (!player) return;
     
@@ -158,32 +142,30 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     const win = window.open('', '_blank');
     if (!win) return;
 
-    const content = `
+    const htmlContent = `
       <html>
         <head>
-          <title>Dossier - ${player.name}</title>
+          <title>Institutional Dossier - ${player.name}</title>
           <style>
-            @media print { @page { size: A4; margin: 1.5cm; } }
-            body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #111; line-height: 1.4; }
+            body { font-family: sans-serif; padding: 20px; line-height: 1.5; color: #111; }
             .header { text-align: center; border-bottom: 4px double #221d1d; padding-bottom: 15px; margin-bottom: 30px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
-            .report-title { font-size: 16px; font-weight: 800; margin-top: 5px; text-decoration: underline; }
+            .school-name { font-size: 24px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
             .profile-grid { display: grid; grid-template-columns: 120px 1fr; gap: 30px; margin-bottom: 30px; }
-            .photo-box { width: 120px; height: 150px; border: 2px solid #ddd; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 10px; text-transform: uppercase; overflow: hidden; }
+            .photo-box { width: 120px; height: 150px; border: 2px solid #ddd; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; }
             .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            .data-table th, .data-table td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
-            .data-table th { background: #f2f2f2; font-weight: 900; }
-            h3 { text-transform: uppercase; font-size: 14px; border-left: 5px solid #f59e0b; padding-left: 10px; margin-top: 30px; }
-            .insight-box { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-            .box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; font-size: 12px; }
-            .footer { margin-top: 60px; display: flex; justify-content: space-between; font-weight: 900; }
-            .sign { border-top: 1px solid #000; width: 200px; text-align: center; padding-top: 5px; }
+            .data-table th, .data-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 13px; }
+            .data-table th { background: #f2f2f2; }
+            h3 { border-left: 5px solid #f59e0b; padding-left: 10px; text-transform: uppercase; font-size: 15px; margin-top: 30px; }
+            .insight-box { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+            .box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #fafafa; }
+            .footer { margin-top: 60px; display: flex; justify-content: space-between; font-weight: bold; }
+            .sign { border-top: 1px solid #000; width: 220px; text-align: center; padding-top: 5px; }
           </style>
         </head>
         <body>
           <div class="header">
             <div class="school-name">ASHRAM SHALA WAGHAMBA</div>
-            <div class="report-title">ATHLETE PERFORMANCE & GROWTH DOSSIER</div>
+            <div style="font-weight: 800; font-size: 16px; margin-top: 5px;">ATHLETE PERFORMANCE & GROWTH DOSSIER</div>
           </div>
           <div class="profile-grid">
             <div class="photo-box">${photoHtml}</div>
@@ -192,31 +174,34 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                 <tr><td style="font-weight:900; width: 150px;">NAME:</td><td>${player.name}</td></tr>
                 <tr><td style="font-weight:900;">GR NUMBER:</td><td>${player.generalRegisterNumber || 'N/A'}</td></tr>
                 <tr><td style="font-weight:900;">STD / SR:</td><td>Std ${player.std} / #${player.serialNumber || '0'}</td></tr>
-                <tr><td style="font-weight:900;">GEN / AGE:</td><td>${player.gender} / ${player.age} Years</td></tr>
-                <tr><td style="font-weight:900;">SQUAD:</td><td>${teamCategory}</td></tr>
+                <tr><td style="font-weight:900;">GENDER / AGE:</td><td>${player.gender} / ${player.age} Years</td></tr>
+                <tr><td style="font-weight:900;">ASSIGNED SQUAD:</td><td>${teamCategory}</td></tr>
               </table>
             </div>
           </div>
-          <h3>1. Growth Matrix</h3>
+          <h3>1. Performance History</h3>
           <table class="data-table">
-            <thead><tr><th>DATE</th><th>SCORE</th><th>STR %</th><th>END %</th><th>RATING</th></tr></thead>
+            <thead><tr><th>DATE</th><th>SCORE</th><th>STR %</th><th>END %</th><th>STATUS</th></tr></thead>
             <tbody>${fitnessRows}</tbody>
           </table>
-          <h3>2. Analytics</h3>
+          <h3>2. Growth Insights</h3>
           <div class="insight-box">
             <div class="box"><strong>STRENGTHS:</strong><ul>${insightsPlus}</ul></div>
-            <div class="box"><strong>DEVELOPMENT:</strong><ul>${insightsWeak}</ul></div>
+            <div class="box"><strong>DEVELOPMENT AREAS:</strong><ul>${insightsWeak}</ul></div>
           </div>
-          <h3>3. Health & Attendance</h3>
-          <p style="font-size: 12px;"><strong>Attendance:</strong> ${playerAttendance.present}/${playerAttendance.total} Sessions. <strong>Medical:</strong> ${medicalLogs}</p>
+          <h3>3. Health & Participation</h3>
+          <p style="font-size: 13px;"><strong>Attendance Record:</strong> ${playerAttendance.present} sessions present out of ${playerAttendance.total} logged. <strong>Medical Notes:</strong> ${medicalLogs}</p>
           <div class="footer"><div class="sign">Teacher Sunil Deshmukh</div><div class="sign">Institutional Principal</div></div>
         </body>
       </html>
     `;
-    win.document.write(content);
+    
+    win.document.write(htmlContent);
     win.document.close();
     win.focus();
-    setTimeout(() => win.print(), 500);
+    setTimeout(() => {
+      win.print();
+    }, 500);
   };
 
   if (!store.isLoaded) return <DashboardHomeSkeleton />;
@@ -257,7 +242,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Column 1: Biometrics & Identity */}
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <div className="h-2 w-full bg-accent" />
@@ -316,7 +300,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </Card>
           </div>
 
-          {/* Column 2: Analytics & Trends */}
           <div className="lg:col-span-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="border-2 rounded-[2.5rem] bg-emerald-50/50 p-6 border-emerald-100">

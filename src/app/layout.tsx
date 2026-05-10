@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: "Waghamba Sports Hub",
   description: "Institutional Physical Education & Sports Management System",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
