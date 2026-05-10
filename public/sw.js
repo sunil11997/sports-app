@@ -1,18 +1,16 @@
 /**
  * Waghamba Sports Hub - Service Worker
- * Provides offline capability and enables PWA installation.
+ * Ensures the app is recognized as "Offline Capable" for PWA Installation.
  */
 
-const CACHE_NAME = 'wgb-sports-cache-v1';
-const OFFLINE_URL = '/';
-
+const CACHE_NAME = 'wgb-sports-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/icon-512.png',
-  '/icon-41.png'
+  '/favicon.ico'
 ];
 
-// Install Event: Cache essential assets
+// Install Event - Caching basic assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -22,32 +20,32 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate Event: Cleanup old caches
+// Activate Event - Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
           }
         })
       );
     })
   );
-  self.clients.claim();
 });
 
-// Fetch Event: Simple network-first strategy for dynamic content, 
-// cache-fallback for static assets. This satisfies the "offline-capable" check.
+/**
+ * MANDATORY FETCH HANDLER
+ * This is the critical requirement for PWA installability.
+ * Browsers check if a fetch event is handled to confirm offline support.
+ */
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
-
+  // We handle network-first for most requests to ensure fresh data
+  // but fall back to cache for the shell if offline.
   event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request) || caches.match(OFFLINE_URL);
-      })
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
   );
 });

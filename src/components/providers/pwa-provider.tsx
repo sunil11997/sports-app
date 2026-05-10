@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -22,57 +21,59 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
-  // Robust Connectivity Check
-  const checkConnectivity = async () => {
-    if (typeof window === 'undefined') return;
-    setIsOnline(navigator.onLine);
-  };
-
   useEffect(() => {
-    checkConnectivity();
+    // 1. Connectivity Tracking
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine);
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
 
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+      // 2. Capture Install Prompt Event
+      const handleBeforeInstallPrompt = (e: Event) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        setDeferredPrompt(e);
+        setIsInstallable(true);
+        console.log("WGB: App is now installable");
+      };
 
-    // Force aggressive Service Worker registration
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('WGB: Native Service Worker Registered', registration.scope);
-          })
-          .catch((error) => {
-            console.error('WGB: SW Registration Failed:', error);
-          });
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+
+      // 3. Track successful installation
+      window.addEventListener('appinstalled', () => {
+        setIsInstallable(false);
+        setDeferredPrompt(null);
+        console.log('WGB: App successfully installed');
       });
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+      };
     }
-
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
 
   const installApp = () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      console.warn("WGB: Install prompt not available yet.");
+      return;
+    }
+    // Show the install prompt
     deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
     deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {
-        setIsInstallable(false);
-        setDeferredPrompt(null);
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
       }
+      setDeferredPrompt(null);
+      setIsInstallable(false);
     });
   };
 

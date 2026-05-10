@@ -3,6 +3,7 @@ import { MetadataRoute } from 'next'
 /**
  * Waghamba Sports Hub - PWA Manifest
  * Configures how the app appears when installed on a device.
+ * Meets all criteria for modern browser "Add to Home Screen" eligibility.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -16,11 +17,6 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait',
     icons: [
       {
-        src: '/icon-41.png',
-        sizes: '41x41',
-        type: 'image/png',
-      },
-      {
         src: '/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
@@ -31,7 +27,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any'
-      },
+      }
     ],
   }
 }
