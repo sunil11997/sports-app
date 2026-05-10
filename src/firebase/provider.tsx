@@ -8,9 +8,9 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
   children: ReactNode;
-  firebaseApp: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
+  firebaseApp?: FirebaseApp | null;
+  firestore?: Firestore | null;
+  auth?: Auth | null;
 }
 
 interface UserAuthState {
@@ -48,13 +48,13 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 /**
  * FirebaseProvider - High-Resilience Institutional Auth
- * Configured to support both Popup and Redirect sign-in results.
+ * Handles both SSR (null services) and Client (initialized services) states.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
-  firebaseApp,
-  firestore,
-  auth,
+  firebaseApp = null,
+  firestore = null,
+  auth = null,
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
@@ -68,14 +68,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     let isMounted = true;
 
     const initAuth = async () => {
-      // 1. Check for Redirect Result (in case popup was blocked or redirect was used)
       try {
         await getRedirectResult(auth);
       } catch (error: any) {
         console.warn("WGB Auth Redirect Handshake Error:", error.code);
       }
 
-      // 2. Setup permanent state listener
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => {
@@ -102,18 +100,19 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     };
   }, [auth]);
 
+  const areServicesAvailable = !!(firebaseApp && firestore && auth);
+
   const contextValue = useMemo((): FirebaseContextState => {
-    const servicesAvailable = !!(firebaseApp && firestore && auth);
     return {
-      areServicesAvailable: servicesAvailable,
-      firebaseApp: servicesAvailable ? firebaseApp : null,
-      firestore: servicesAvailable ? firestore : null,
-      auth: servicesAvailable ? auth : null,
+      areServicesAvailable,
+      firebaseApp,
+      firestore,
+      auth,
       user: userAuthState.user,
-      isUserLoading: userAuthState.isUserLoading,
+      isUserLoading: !areServicesAvailable || userAuthState.isUserLoading,
       userError: userAuthState.userError,
     };
-  }, [firebaseApp, firestore, auth, userAuthState]);
+  }, [firebaseApp, firestore, auth, userAuthState, areServicesAvailable]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -125,10 +124,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
-  if (context === undefined) throw new Error('useFirebase must be used within a FirebaseProvider.');
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
-    throw new Error('Firebase services not ready.');
+  if (context === undefined) {
+    throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
+  
+  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
+    throw new Error('Firebase services accessed before initialization.');
+  }
+  
   return {
     firebaseApp: context.firebaseApp,
     firestore: context.firestore,
@@ -139,12 +142,29 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-export const useAuth = (): Auth => useFirebase().auth;
-export const useFirestore = (): Firestore => useFirebase().firestore;
-export const useFirebaseApp = (): FirebaseApp => useFirebase().firebaseApp;
+export const useAuth = () => {
+  const context = useContext(FirebaseContext);
+  return context?.auth || null;
+};
+
+export const useFirestore = () => {
+  const context = useContext(FirebaseContext);
+  return context?.firestore || null;
+};
+
+export const useFirebaseApp = () => {
+  const context = useContext(FirebaseContext);
+  return context?.firebaseApp || null;
+};
+
 export const useUser = (): UserHookResult => {
-  const { user, isUserLoading, userError } = useFirebase();
-  return { user, isUserLoading, userError };
+  const context = useContext(FirebaseContext);
+  if (!context) return { user: null, isUserLoading: true, userError: null };
+  return { 
+    user: context.user, 
+    isUserLoading: context.isUserLoading, 
+    userError: context.userError 
+  };
 };
 
 type MemoFirebase <T> = T & {__memo?: boolean};

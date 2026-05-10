@@ -1,16 +1,17 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import ServiceWorkerRegister from "./sw-register";
-
-import {
-  FirebaseClientProvider,
-} from "@/firebase";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 export const metadata: Metadata = {
-  title: "Sports Hub",
-  description: "Sports coaching app",
+  title: "Waghamba Sports Hub",
+  description: "Institutional Physical Education & Sports Management System",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1e3a8a",
 };
 
 export default function RootLayout({
@@ -20,11 +21,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1e3a8a" />
-      </head>
-
       <body>
         <FirebaseClientProvider>
           <ServiceWorkerRegister />
