@@ -69,7 +69,7 @@ const translations = {
     sportsHub: "Sports Excellence",
     studentRegistry: "Student Registry",
     switchHub: "Switch Hub",
-    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Dashboard", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities", rules: "Rules",
+    home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Analytics", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities", rules: "Rules",
     coreHub: "Core Hub",
     enter: "ACCESS HUB", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local",
     installApp: "INSTALL APP"
@@ -79,7 +79,7 @@ const translations = {
     sportsHub: "क्रीडा विभाग",
     studentRegistry: "विद्यार्थी नोंदणी",
     switchHub: "हब बदला",
-    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "डॅशबोर्ड", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम", rules: "नियम",
+    home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "Analytics", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम", rules: "नियम",
     coreHub: "प्रशिक्षण",
     enter: "हब मध्ये प्रवेश करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन",
     installApp: "ॲप इन्स्टॉल करा"
@@ -117,6 +117,7 @@ export default function WaghambaApp() {
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
     { id: "registration", label: t.register, icon: UserPlus },
+    { id: "dashboard", label: t.roster, icon: ClipboardList },
     { id: "history", label: t.history, icon: BarChart3 },
     { id: "tournament", label: t.tourney, icon: Trophy },
     { id: "teams", label: t.teams, icon: UsersRound },
@@ -132,6 +133,7 @@ export default function WaghambaApp() {
   const generalTabs = [
     { id: "home", label: t.home, icon: Home },
     { id: "registration", label: t.enroll, icon: UserPlus },
+    { id: "dashboard", label: t.roster, icon: ClipboardList },
     { id: "history", label: t.history, icon: BarChart3 },
     { id: "classes", label: t.registry, icon: LayoutGrid },
     { id: "exams", label: t.exams, icon: FileText },
@@ -217,11 +219,11 @@ export default function WaghambaApp() {
                         Add New
                       </Button>
                     </Card>
-                    <Card onClick={() => setActiveTab('history')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
-                      <TrendingUp className="w-10 h-10 text-accent" />
+                    <Card onClick={() => setActiveTab('dashboard')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
+                      <ClipboardList className="w-10 h-10 text-accent" />
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">Open</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Analytics</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Full Registry</p>
                       </div>
                     </Card>
                     <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
