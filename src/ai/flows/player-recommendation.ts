@@ -26,7 +26,6 @@ const PlayerRecommendationInputSchema = z.object({
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
   language: z.string().describe('The language for the output (English or Marathi).'),
   engine: z.enum(['Genkit', 'Gemini']).optional().describe('The selected AI engine.'),
-  // Enhanced Fitness Test Results
   fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds.'),
   fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds.'),
   fitnessRun600m: z.string().optional().describe('600 Meter Run result.'),
@@ -35,7 +34,6 @@ const PlayerRecommendationInputSchema = z.object({
   fitnessSitUps: z.string().optional().describe('Core Strength / Sit Ups count.'),
   fitnessScore: z.string().optional().describe('Overall fitness score.'),
   fitnessStatus: z.string().optional().describe('School Fitness Level (A/B/C/D).'),
-  // Skill Data
   sportSkill1: z.string().optional().describe('First specific skill for their primary/selected sport.'),
   sportSkill2: z.string().optional().describe('Second specific skill for their primary/selected sport.'),
   sportSkillScore: z.string().optional().describe('Overall skill score for their primary/selected sport.'),
@@ -63,7 +61,6 @@ export type PlayerRecommendationOutput = z.infer<typeof PlayerRecommendationOutp
 
 const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
-  model: googleAI.model('gemini-2.5-flash'), // Default, can be overridden in generate call
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
   prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. Your task is to analyze a player's aggregated data and provide your professional recommendations for their athletic development and well-being.
@@ -98,7 +95,7 @@ Health Context: {{{pastHealthIncidents}}}
 Based on this granular data, provide highly specific coaching recommendations. 
 Analyze which specific tests (e.g., endurance vs agility) or technical moves (for the selected sports) need more work. 
 
-IMPORTANT: Provide a detailed DIET PLAN section that addresses their BMI category and energy requirements for their specific sports. If they are underweight, focus on healthy mass building. If they have low endurance (based on 600m run), focus on stamina-boosting foods.
+IMPORTANT: Provide a detailed DIET PLAN section that addresses their BMI category and energy requirements for their specific sports.
 
 Focus on actionable advice for training, health, nutrition, and performance improvement. Use a professional, encouraging tone as Coach Sunil Deshmukh.
 `,
@@ -118,7 +115,7 @@ const playerRecommendationFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
-    // gemini-1.5 series is decommissioned. Use 2.5 or 3.1.
+    // Use latest high-performance models.
     const selectedModel = input.engine === 'Gemini' ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
 
     let attempts = 0;
@@ -135,13 +132,8 @@ const playerRecommendationFlow = ai.defineFlow(
       } catch (error: any) {
         lastError = error;
         attempts++;
-        
-        const errorMsg = error?.message || String(error);
-        console.error(`AI Recommendation Attempt ${attempts} failed:`, errorMsg);
-
-        if (attempts >= maxAttempts) {
-          throw new Error(`AI Service Busy (Attempt ${attempts}). Please check your API key or try again later.`);
-        }
+        console.error(`AI Recommendation Attempt ${attempts} failed:`, error?.message || error);
+        if (attempts >= maxAttempts) throw error;
         await new Promise(resolve => setTimeout(resolve, 3000 * attempts));
       }
     }

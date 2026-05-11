@@ -38,7 +38,7 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    // gemini-1.5 series is decommissioned. Use 2.5 or 3.1.
+    // Use latest resilient models.
     const selectedModel = input.engine === 'Gemini' ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
 
     let attempts = 0;

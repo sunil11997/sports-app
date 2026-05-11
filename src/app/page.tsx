@@ -163,7 +163,14 @@ export default function WaghambaApp() {
     setActiveTab('home');
   };
 
-  if (!isMounted) return null;
+  if (!isMounted) return (
+    <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
+      <div className="space-y-4">
+        <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+        <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Loading Institutional Hub...</p>
+      </div>
+    </div>
+  );
 
   // Stage: Hub
   if (stage === 'hub' && selectedSection) {
@@ -356,7 +363,7 @@ export default function WaghambaApp() {
             }}
             className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group"
           >
-            {isUserLoading && isMounted ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+            {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
           </Button>
           <button 
             onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
