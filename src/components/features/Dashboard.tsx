@@ -1,12 +1,34 @@
-
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Search, Printer, User, Medal, GraduationCap, Phone, Fingerprint, MapPin, ClipboardList, Hash, Trash2, AlertTriangle, Calendar, HeartPulse, History } from 'lucide-react';
+import { 
+  Edit, 
+  Search, 
+  Printer, 
+  User, 
+  Medal, 
+  GraduationCap, 
+  Phone, 
+  Fingerprint, 
+  MapPin, 
+  ClipboardList, 
+  Hash, 
+  Trash2, 
+  AlertTriangle, 
+  Calendar, 
+  HeartPulse, 
+  History,
+  Camera,
+  Upload,
+  XCircle,
+  RefreshCw,
+  ImageIcon,
+  ScanLine
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -18,7 +40,7 @@ import {
   AlertDialogFooter, 
   AlertDialogHeader, 
   AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+} from "@/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,6 +70,86 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
+  // Camera States for Edit Dialog
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
+  const profileUploadRef = useRef<HTMLInputElement>(null);
+  
+  const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [stream, setStream] = useState<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (videoRef.current && stream && activeCam) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, activeCam]);
+
+  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
+      });
+      setStream(newStream);
+      setActiveCam(type);
+      setFacingMode(mode);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Camera Error', description: 'Enable camera permissions.' });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setStream(null);
+    setActiveCam(null);
+  };
+
+  const takePhoto = () => {
+    if (videoRef.current && canvasRef.current && activeCam && editingPlayer) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        if (facingMode === 'user') {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        if (activeCam === 'profile') {
+          setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        } else {
+          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
+        }
+        stopCamera();
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+    const file = e.target.files?.[0];
+    if (file && editingPlayer) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (type === 'profile') {
+          setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
+        } else {
+          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: reader.result as string });
+        }
+        toast({ title: "Photo Updated", description: "Identity document captured successfully." });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const isGeneral = section === 'general';
 
   const filteredPlayers = useMemo(() => {
@@ -60,20 +162,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         return matchesSection && matchesSearch;
       })
       .sort((a: any, b: any) => {
-        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-        
-        // 2. Sort by Gender (Female first)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Female' ? -1 : 1;
-        }
-
-        // 3. Sort by Serial Number (Numeric)
-        const srA = parseInt(a.serialNumber) || 0;
-        const srB = parseInt(b.serialNumber) || 0;
-        return srA - srB;
+        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, searchTerm]);
 
@@ -89,7 +182,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     if (editingPlayer) {
       const dobDate = new Date(editingPlayer.dob);
       const age = isValid(dobDate) ? differenceInYears(new Date(), dobDate) : editingPlayer.age;
-      
       const h = parseFloat(editingPlayer.height) / 100;
       const w = parseFloat(editingPlayer.weight);
       const bmi = (w / (h * h)).toFixed(1);
@@ -106,14 +198,9 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
   const handleDeleteConfirm = () => {
     if (deletingPlayerId) {
-      const playerToDelete = store.data.players.find((p: any) => p.id === deletingPlayerId);
       store.deletePlayer(deletingPlayerId);
       setDeletingPlayerId(null);
-      toast({ 
-        title: "Record Deleted", 
-        description: `${playerToDelete?.name || 'Student'} has been removed from the registry.`,
-        variant: "destructive"
-      });
+      toast({ title: "Record Deleted", variant: "destructive" });
     }
   };
 
@@ -163,7 +250,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
-    win?.print();
   };
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
@@ -180,7 +266,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search name or GR number..." className="pl-9 h-11 rounded-full bg-muted/30 border-none focus-visible:ring-primary shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <Input placeholder="Search name or GR number..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
           <Button onClick={handlePrint} size="icon" variant="outline" className="rounded-full h-11 w-11 hover:bg-primary/5 border-muted"><Printer className="w-4 h-4" /></Button>
         </div>
@@ -240,193 +326,131 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         </Table>
       </div>
 
-      <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
+      <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
         <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
           <DialogHeader className="bg-primary/5 p-8 border-b shrink-0">
-            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mx-auto mb-4 border">
-              <Edit className="w-6 h-6 text-primary" />
-            </div>
-            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Full Profile Editor</DialogTitle>
-            <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Update all institutional records</p>
+            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Comprehensive Profile Editor</DialogTitle>
+            <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Multi-Registry Sync</p>
           </DialogHeader>
           
           <ScrollArea className="flex-1">
             {editingPlayer && (
               <div className="p-8 space-y-10">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 text-primary border-b pb-2">
-                    <User className="w-5 h-5" />
-                    <h3 className="font-black uppercase text-sm tracking-widest">Institutional Identity</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-2 space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Student Name</Label>
-                      <Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 font-bold rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Gender</Label>
-                      <Select value={editingPlayer.gender} onValueChange={v => setEditingPlayer({...editingPlayer, gender: v as any})}>
-                        <SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl"><SelectItem value="Male">Male / पुरुष</SelectItem><SelectItem value="Female">Female / महिला</SelectItem></SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Standard</Label>
-                      <Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}>
-                        <SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl">{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-1"><Hash className="w-3 h-3" /> Class Sr. No</Label>
-                      <Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 font-black rounded-xl border-2 bg-accent/5" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">GR Number</Label>
-                      <Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 font-bold rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Date of Birth</Label>
-                      <Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 font-bold rounded-xl border-2" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 text-primary border-b pb-2">
-                    <HeartPulse className="w-5 h-5" />
-                    <h3 className="font-black uppercase text-sm tracking-widest">Health & Biometrics</h3>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Height (cm)</Label>
-                      <Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 font-black rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Weight (kg)</Label>
-                      <Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 font-black rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Blood Group</Label>
-                      <Select value={editingPlayer.bloodGroup || 'None'} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}>
-                        <SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          {['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Calculated BMI</Label>
-                      <div className="h-12 flex items-center justify-center font-black text-lg text-primary bg-muted/30 rounded-xl">
-                        {editingPlayer.bmi || '0.0'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 text-primary border-b pb-2">
-                    <Fingerprint className="w-5 h-5" />
-                    <h3 className="font-black uppercase text-sm tracking-widest">Identity & Contacts</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Aadhar Number</Label>
-                      <Input maxLength={12} value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 font-mono font-black text-center rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Mobile Number</Label>
-                      <Input maxLength={10} value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 font-mono font-black text-center rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Residential Address</Label>
-                      <Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 font-bold rounded-xl border-2" />
-                    </div>
-                  </div>
-                </div>
-
-                {editingPlayer.category === 'athlete' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-primary border-b pb-2">
-                      <Medal className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-widest">Competitive Sports</h3>
-                    </div>
-                    <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                      {SPORTS_LIST.map(sport => (
-                        <div key={sport} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`edit-${sport}`}
-                            checked={editingPlayer.sports?.includes(sport)}
-                            onCheckedChange={(checked) => {
-                              const curr = editingPlayer.sports || [];
-                              setEditingPlayer({
-                                ...editingPlayer,
-                                sports: checked ? [...curr, sport] : curr.filter(s => s !== sport)
-                              });
-                            }}
-                          />
-                          <label htmlFor={`edit-${sport}`} className="text-[10px] font-bold uppercase cursor-pointer">{sport}</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                   {/* Photo Section */}
+                   <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
+                        <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 group">
+                           {activeCam === 'profile' ? (
+                             <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                           ) : editingPlayer.photoUrl ? (
+                             <img src={editingPlayer.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                           ) : (
+                             <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase">No Photo</span></div>
+                           )}
+                           {activeCam === 'profile' && (
+                             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-20">
+                               <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
+                               <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><XCircle className="w-6 h-6" /></Button>
+                             </div>
+                           )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                        {!activeCam && (
+                          <div className="flex gap-2">
+                            <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary text-white rounded-xl h-10 font-black text-[10px] uppercase"><Camera className="w-3 h-3 mr-2" /> Recapture</Button>
+                            <Button variant="outline" onClick={() => profileUploadRef.current?.click()} className="w-10 h-10 p-0 border-2 rounded-xl"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                          </div>
+                        )}
+                      </div>
 
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 text-primary border-b pb-2">
-                    <History className="w-5 h-5" />
-                    <h3 className="font-black uppercase text-sm tracking-widest">Background & Medical</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Medical Conditions / Allergies</Label>
-                      <Textarea value={editingPlayer.medical} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[100px] rounded-xl border-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Previous Sport History</Label>
-                      <Textarea value={editingPlayer.histDetail} onChange={e => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="min-h-[100px] rounded-xl border-2" />
-                    </div>
-                  </div>
+                      <div className="space-y-2">
+                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ScanLine className="w-4 h-4" /> Aadhar Scan</Label>
+                        <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
+                           {activeCam === 'aadhar' ? (
+                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                           ) : editingPlayer.aadharPhotoUrl ? (
+                             <img src={editingPlayer.aadharPhotoUrl} alt="Aadhar" className="w-full h-full object-cover" />
+                           ) : (
+                             <div className="w-full h-full flex flex-col items-center justify-center opacity-30"><Fingerprint className="w-8 h-8" /></div>
+                           )}
+                           {activeCam === 'aadhar' && (
+                             <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 px-4">
+                               <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[9px] rounded-xl">SCAN</Button>
+                               <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-4 h-4" /></Button>
+                             </div>
+                           )}
+                        </div>
+                        {!activeCam && (
+                          <div className="flex gap-2">
+                            <Button onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/10 text-accent-foreground border-2 border-accent/20 rounded-xl h-10 font-black text-[10px] uppercase">New Scan</Button>
+                            <Button variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-10 h-10 p-0 border-2 rounded-xl"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                          </div>
+                        )}
+                      </div>
+                   </div>
+
+                   {/* Data Section */}
+                   <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-10 font-bold border-2" /></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={v => setEditingPlayer({...editingPlayer, gender: v as any})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Std</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Sr No</Label><Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-10 font-black border-2" /></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">GR No</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-10 font-black border-2" /></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Mobile</Label><Input value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-10 font-mono border-2" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup || 'None'} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                        </div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-mono font-black border-2 text-center" /></div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t pt-10">
+                   <div className="space-y-6">
+                      <div className="flex items-center gap-2 text-primary border-b pb-2"><HeartPulse className="w-4 h-4" /><h3 className="text-xs font-black uppercase">Medical & Recovery</h3></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-10 border-2" /></div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-10 border-2" /></div>
+                      </div>
+                      <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Clinical Notes</Label><Textarea value={editingPlayer.medical} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[80px] border-2" /></div>
+                   </div>
+                   <div className="space-y-6">
+                      <div className="flex items-center gap-2 text-primary border-b pb-2"><Medal className="w-4 h-4" /><h3 className="text-xs font-black uppercase">Sports Participation</h3></div>
+                      <div className="bg-muted/30 p-5 rounded-2xl border-2 border-dashed grid grid-cols-2 gap-x-6 gap-y-2">
+                         {SPORTS_LIST.map(sport => (
+                           <div key={sport} className="flex items-center space-x-2">
+                             <Checkbox id={`ed-${sport}`} checked={editingPlayer.sports?.includes(sport)} onCheckedChange={c => {
+                               const s = editingPlayer.sports || [];
+                               setEditingPlayer({...editingPlayer, sports: c ? [...s, sport] : s.filter(x => x !== sport)});
+                             }} />
+                             <label htmlFor={`ed-${sport}`} className="text-[9px] font-bold uppercase cursor-pointer">{sport}</label>
+                           </div>
+                         ))}
+                      </div>
+                      <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Performance History</Label><Textarea value={editingPlayer.histDetail} onChange={e => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="min-h-[80px] border-2" /></div>
+                   </div>
                 </div>
               </div>
             )}
           </ScrollArea>
 
           <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
-            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-8 font-black uppercase text-[10px] h-14">Discard Changes</Button>
-            <Button onClick={handleUpdatePlayer} className="bg-primary px-16 rounded-full font-black uppercase text-[10px] shadow-xl text-white h-14 active-scale">
-              <ClipboardList className="w-4 h-4 mr-2" /> Sync Record to Cloud
+            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-8 font-black uppercase text-[10px] h-14">Discard</Button>
+            <Button onClick={handleUpdatePlayer} className="bg-primary px-16 rounded-full font-black uppercase text-[10px] shadow-xl text-white h-14">
+              Sync Record to Cloud
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={!!deletingPlayerId} onOpenChange={() => setDeletingPlayerId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-8">
-          <AlertDialogHeader className="space-y-4">
-            <div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-8 h-8 text-destructive" />
-            </div>
-            <AlertDialogTitle className="text-2xl font-black uppercase text-center text-primary">Remove from Registry?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium text-foreground/70">
-              Are you sure you want to delete this student? This action is permanent and will remove all their history, test results, and attendance records from the cloud.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex justify-center gap-4 pt-6 mt-0">
-            <AlertDialogCancel className="rounded-full px-8 font-black uppercase text-[10px] border-2">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="rounded-full px-8 font-black uppercase text-[10px] bg-destructive hover:bg-destructive/90 text-white">Delete Permanently</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog open={!!viewingPhoto} onOpenChange={() => setViewingPhoto(null)}>
-        <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden rounded-[3rem] border-none shadow-2xl">
-          <DialogHeader className="sr-only"><DialogTitle>Identity Photo</DialogTitle></DialogHeader>
-          {viewingPhoto && <img src={viewingPhoto} alt="Student" className="w-full aspect-[3/4] object-cover" />}
-        </DialogContent>
-      </Dialog>
+      <canvas ref={canvasRef} hidden />
     </div>
   );
 }
