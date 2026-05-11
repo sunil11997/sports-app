@@ -1,28 +1,41 @@
 /**
- * Waghamba Sports Hub - Service Worker
- * Required for Android PWA Installability and offline resilience.
+ * Institutional Service Worker for Waghamba Sports Hub.
+ * Required for modern browsers to enable PWA installation on Android.
  */
 
-const CACHE_NAME = 'wgb-sports-hub-v3';
+const CACHE_NAME = 'wgb-hub-v3';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/manifest.webmanifest',
+  '/icon-512.png',
+];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Allow Firebase and AI Hub requests to pass through without interception
-  if (
-    event.request.url.includes('googleapis') || 
-    event.request.url.includes('firebase') ||
-    event.request.url.includes('cloudworkstations.dev')
-  ) {
-    return;
-  }
-  
+  // Pass-through strategy for Firestore/Auth which handle their own persistence
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request);

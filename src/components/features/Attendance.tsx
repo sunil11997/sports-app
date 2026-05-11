@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 
-const CATEGORIES = [
+const SPORTS_CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'boys-u14', label: 'Boys U14' },
   { id: 'boys-u17', label: 'Boys U17' },
@@ -44,6 +44,14 @@ const CATEGORIES = [
   { id: 'girls-u14', label: 'Girls U14' },
   { id: 'girls-u17', label: 'Girls U17' },
   { id: 'girls-senior', label: 'Girls Senior' },
+];
+
+const GENERAL_CATEGORIES = [
+  { id: 'all', label: 'All' },
+  ...Array.from({ length: 12 }, (_, i) => ({ 
+    id: (i + 1).toString(), 
+    label: `Std ${i + 1}` 
+  }))
 ];
 
 export function Attendance({ store, section }: { store: any, section: 'sports' | 'general' }) {
@@ -62,8 +70,10 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const days = isMounted ? eachDayOfInterval({ start: monthStart, end: monthEnd }) : [];
 
   const isGeneral = section === 'general';
+  const categories = isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES;
 
   const getPlayerCategory = (p: any) => {
+    if (isGeneral) return p.std;
     const age = parseInt(p.age) || 0;
     const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
     let agePart = 'senior';
@@ -80,6 +90,9 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
         if (a.gender !== b.gender) {
           return a.gender === 'Female' ? -1 : 1;
         }
@@ -95,7 +108,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   };
 
   const handlePrint = () => {
-    const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
+    const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
     const sessionLabel = activeSession === 'Morning' ? 'Morning (सकाळ)' : 'Evening (संध्याकाळ)';
     const printContent = `
       <html>
@@ -103,7 +116,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
           <title>Attendance Report - ${format(currentDate, 'MMMM yyyy')}</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; }
-            h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #8AF075; margin-bottom: 10px; }
+            h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 10px; }
             .meta { font-weight: bold; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
@@ -117,8 +130,9 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             <thead>
               <tr>
                 <th>SNR</th>
-                <th>PLAYER</th>
-                <th>GENDER</th>
+                <th>STUDENT</th>
+                <th>STD</th>
+                <th>GEN</th>
                 ${days.map(d => `<th>${format(d, 'd')}</th>`).join('')}
                 <th>TOT</th>
               </tr>
@@ -131,7 +145,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name}</td><td>${p.gender}</td>${row}<td>${total}</td></tr>`;
+                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name}</td><td>${p.std}</td><td>${p.gender[0]}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -188,7 +202,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto flex-1">
-          {CATEGORIES.map(cat => (
+          {categories.map(cat => (
             <Button
               key={cat.id}
               variant={activeCategory === cat.id ? "default" : "ghost"}
@@ -231,7 +245,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         <div>
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">Monthly Presence Log</h2>
           <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-2">
-            Session: <span className="text-primary">{activeSession}</span> • Category: {CATEGORIES.find(c => c.id === activeCategory)?.label}
+            Session: <span className="text-primary">{activeSession}</span> • Filter: {categories.find(c => c.id === activeCategory)?.label}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -246,8 +260,8 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-          <Button onClick={handlePrint} size="sm" className="font-bold h-9">
-            <Printer className="w-4 h-4 mr-2" /> Print {activeSession}
+          <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary text-white">
+            <Printer className="w-4 h-4 mr-2" /> Print Sheet
           </Button>
         </div>
       </div>
@@ -268,7 +282,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={days.length + 2} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={days.length + 2} className="text-center py-8 text-muted-foreground font-black uppercase text-xs opacity-40">
                   No records found in this category.
                 </TableCell>
               </TableRow>
