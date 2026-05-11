@@ -44,7 +44,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
@@ -327,13 +326,13 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
           <DialogHeader className="bg-primary/5 p-8 border-b shrink-0">
             <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Comprehensive Profile Editor</DialogTitle>
             <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Multi-Registry Sync</p>
           </DialogHeader>
           
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             {editingPlayer && (
               <div className="p-8 space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -409,6 +408,8 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup || 'None'} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                         </div>
                         <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-mono font-black border-2 text-center" /></div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-10 font-bold border-2" /></div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-10 font-bold border-2" /></div>
                       </div>
                    </div>
                 </div>
@@ -440,7 +441,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                 </div>
               </div>
             )}
-          </ScrollArea>
+          </div>
 
           <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
             <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-8 font-black uppercase text-[10px] h-14">Discard</Button>
