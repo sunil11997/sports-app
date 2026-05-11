@@ -8,20 +8,24 @@ import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlo
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
-export function useSchoolData() {
+/**
+ * useSchoolData - Optimized hook with conditional fetching
+ * @param isActive If true, listeners will be established. Used for performance optimization.
+ */
+export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
   const { user } = useUser();
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
-  const schoolDocRef = useMemoFirebase(() => (user && db) ? doc(db, 'schools', user.uid) : null, [db, user]);
+  const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
   const playersQuery = useMemoFirebase(() => {
-    if (!user || !db) return null;
+    if (!user || !db || !isActive) return null;
     return query(collection(db, 'players'), where('ownerId', '==', user.uid));
-  }, [db, user]);
+  }, [db, user, isActive]);
   const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
@@ -86,7 +90,7 @@ export function useSchoolData() {
   }, [db, user, selectedYear, isSyncing]);
 
   useEffect(() => {
-    if (!user || !db) return;
+    if (!user || !db || !isActive) return;
 
     if (typeof window !== 'undefined') {
       window.addEventListener('online', syncOfflineAttendance);
@@ -190,32 +194,32 @@ export function useSchoolData() {
       unsubSkills();
       unsubRules();
     };
-  }, [db, user, selectedYear, syncOfflineAttendance]);
+  }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
   const incidentsQuery = useMemoFirebase(() => {
-    if (!user || !db) return null;
+    if (!user || !db || !isActive) return null;
     return query(
       collection(db, 'all_health_incidents'), 
       where('schoolId', '==', user.uid),
       where('academicYear', '==', selectedYear)
     );
-  }, [db, user, selectedYear]);
+  }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
   const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !db) return null;
+    if (!user || !db || !isActive) return null;
     return query(
       collection(db, 'school_activities'), 
       where('schoolId', '==', user.uid),
       where('academicYear', '==', selectedYear)
     );
-  }, [db, user, selectedYear]);
+  }, [db, user, selectedYear, isActive]);
   const { data: activities } = useCollection(activitiesQuery);
 
   const drillsQuery = useMemoFirebase(() => {
-    if (!user || !db) return null;
+    if (!user || !db || !isActive) return null;
     return query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid));
-  }, [db, user]);
+  }, [db, user, isActive]);
   const { data: drillComps } = useCollection(drillsQuery);
 
   const drillCompletions = useMemo(() => {
@@ -349,7 +353,7 @@ export function useSchoolData() {
 
   return {
     data: aggregatedData,
-    isLoaded: !playersLoading && !schoolsLoading && !!db,
+    isLoaded: !playersLoading && !schoolsLoading && !!db && isActive,
     selectedYear,
     setSelectedYear,
     pendingSyncCount: pendingCount,
