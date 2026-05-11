@@ -1,22 +1,23 @@
 /**
- * Waghamba Sports Hub - High-Performance Service Worker
- * Implements Cache-First strategy for static assets to ensure near-instant loading.
+ * Waghamba Sports Hub - High Resilience Service Worker
+ * Optimizes chunk loading speed and enables Android PWA installation.
  */
 
-const CACHE_NAME = 'wgb-static-v4';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'wgb-hub-v3.0.0';
+const STATIC_ASSETS = [
   '/',
   '/icon-512.png',
   '/manifest.webmanifest'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log('WGB: Pre-caching institutional assets');
+      return cache.addAll(STATIC_ASSETS);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -30,36 +31,33 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+/**
+ * Cache-First Strategy for speed
+ * Network-First fallback for data sync
+ */
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Cache-first for static chunks and styles
-  if (url.origin === self.location.origin && (
-    url.pathname.includes('/_next/static/') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.css')
-  )) {
+  // We only cache static assets and chunks, not Firestore calls or dynamic API routes
+  if (
+    event.request.url.includes('/_next/static/') ||
+    event.request.url.includes('/images/') ||
+    event.request.url.endsWith('.png') ||
+    event.request.url.endsWith('.ico')
+  ) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
+      caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
-        return fetch(request).then((networkResponse) => {
-          const cacheCopy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cacheCopy));
-          return networkResponse;
+        return fetch(event.request).then((response) => {
+          if (!response || response.status !== 200) return response;
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
         });
       })
     );
-    return;
+  } else {
+    // Default network-only/network-first for everything else
+    event.respondWith(fetch(event.request));
   }
-
-  // Network-only for Firebase/Auth API calls
-  if (url.origin.includes('firebase') || url.pathname.includes('/api/')) {
-    return;
-  }
-
-  // Default: Network with fallback to cache
-  event.respondWith(
-    fetch(request).catch(() => caches.match(request))
-  );
 });

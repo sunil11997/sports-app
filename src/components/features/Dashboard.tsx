@@ -40,7 +40,7 @@ import {
   AlertDialogFooter, 
   AlertDialogHeader, 
   AlertDialogTitle 
-} from "@/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -69,7 +69,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
-  // Camera States for Edit Dialog
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const aadharUploadRef = useRef<HTMLInputElement>(null);
@@ -336,7 +335,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
             {editingPlayer && (
               <div className="p-8 space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                   {/* Photo Section */}
                    <div className="space-y-6">
                       <div className="space-y-2">
                         <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
@@ -391,7 +389,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                       </div>
                    </div>
 
-                   {/* Data Section */}
                    <div className="space-y-6">
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
@@ -451,6 +448,22 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={!!deletingPlayerId} onOpenChange={() => setDeletingPlayerId(null)}>
+        <AlertDialogContent className="rounded-[2.5rem] p-8 border-none">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-black uppercase text-destructive">Permanently Delete Record?</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-foreground/70">
+              This action cannot be undone. All historical data including attendance and fitness logs for this student will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-8 gap-4">
+            <AlertDialogCancel className="rounded-2xl h-14 font-black uppercase text-[10px] border-2">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="rounded-2xl h-14 font-black uppercase text-[10px] bg-destructive text-white hover:bg-destructive/90 shadow-lg">Confirm Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <canvas ref={canvasRef} hidden />
     </div>
   );
