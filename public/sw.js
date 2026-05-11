@@ -1,10 +1,10 @@
 /**
  * Waghamba Sports Hub - Service Worker
- * Required for PWA installability.
+ * Mandatory for PWA Installability on Android/Chrome.
  */
 
-const CACHE_NAME = 'wgb-sports-cache-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'wgb-sports-v3';
+const ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/icon-512.png'
@@ -13,23 +13,16 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(ASSETS);
     })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-/**
- * Functional fetch listener is mandatory for Chrome/Android PWA installability.
- */
 self.addEventListener('fetch', (event) => {
+  // Required fetch listener for PWA compliance
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });
