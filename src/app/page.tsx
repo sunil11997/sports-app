@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -7,6 +6,7 @@ import NextDynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { 
   LayoutDashboard, 
   CalendarCheck, 
@@ -311,26 +311,6 @@ export default function WaghambaApp() {
                             <div>
                               <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
                               <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {student.std} • Happy Wishes!</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
-                  )}
-                  
-                  {selectedSection === 'sports' && birthdaysToday.length > 0 && (
-                    <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10">
-                      <div className="flex items-center gap-4 mb-6">
-                        <Cake className="w-8 h-8 text-accent" />
-                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Birthdays</h3>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {birthdaysToday.map((student: any) => (
-                          <div key={student.id} className="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-black text-primary">{student.name[0]}</div>
-                            <div>
-                              <p className="font-black text-primary uppercase text-sm">{student.name}</p>
-                              <p className="text-[10px] font-bold text-muted-foreground uppercase">Std {student.std}</p>
                             </div>
                           </div>
                         ))}
