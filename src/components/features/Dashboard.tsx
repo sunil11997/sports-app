@@ -178,11 +178,15 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      const dobDate = new Date(editingPlayer.dob);
-      const age = isValid(dobDate) ? differenceInYears(new Date(), dobDate) : editingPlayer.age;
-      const h = parseFloat(editingPlayer.height) / 100;
-      const w = parseFloat(editingPlayer.weight);
-      const bmi = (w / (h * h)).toFixed(1);
+      const dobDate = editingPlayer.dob ? new Date(editingPlayer.dob) : null;
+      const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : editingPlayer.age;
+      
+      let bmi = editingPlayer.bmi;
+      if (editingPlayer.height && editingPlayer.weight) {
+        const h = parseFloat(editingPlayer.height) / 100;
+        const w = parseFloat(editingPlayer.weight);
+        bmi = (w / (h * h)).toFixed(1);
+      }
       
       store.updatePlayer({
         ...editingPlayer,

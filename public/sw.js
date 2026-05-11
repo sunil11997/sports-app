@@ -1,23 +1,23 @@
 /**
  * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First for JS chunks, Cache-First for static assets.
- * Satisfies all Android Chrome PWA installation requirements.
+ * Strategy: Network-First with Cache Fallback for dynamic chunks.
+ * Ensures the app stays up-to-date while supporting offline access.
  */
 
 const CACHE_NAME = 'wgb-hub-v3.1';
-const STATIC_ASSETS = [
+const ASSETS_TO_CACHE = [
   '/',
   '/icon-512.png',
   '/manifest.webmanifest'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -28,47 +28,38 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim();
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // 1. Network-First for Next.js Data and Static Chunks
-  // This prevents the 404 ChunkLoadError during updates.
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.includes('monospaceUid')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
+  // Ignore non-GET and browser extension requests
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
     return;
   }
 
-  // 2. Cache-First for Images and Icons
-  if (event.request.destination === 'image') {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        return cached || fetch(event.request).then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
-          return response;
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // If valid network response, clone and cache it
+        if (response && response.status === 200) {
+          const resClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, resClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Offline fallback: Try cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          
+          // Return offline landing if it's a page navigation
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          return null;
         });
       })
-    );
-    return;
-  }
-
-  // 3. Stale-While-Revalidate for everything else
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networked = fetch(event.request)
-        .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
-          return response;
-        })
-        .catch(() => cached);
-      return cached || networked;
-    })
   );
 });

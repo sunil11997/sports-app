@@ -44,8 +44,7 @@ import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons'
 // Force dynamic to prevent prerendering errors with Firebase
 export const dynamic = 'force-dynamic';
 
-// Dynamic Feature Loading with optimized loading skeletons
-// Renamed to NextDynamic to avoid conflict with the exported constant 'dynamic'
+// Fixed naming conflict by using NextDynamic
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
