@@ -10,16 +10,35 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert, RefreshCw, Hash, UserCircle2, Medal } from 'lucide-react';
+import { 
+  UserPlus, 
+  Camera, 
+  XCircle, 
+  ImageIcon, 
+  Fingerprint, 
+  Phone, 
+  MapPin, 
+  ScanLine, 
+  ClipboardList, 
+  Upload, 
+  ShieldAlert, 
+  Hash, 
+  UserCircle2, 
+  Medal,
+  HeartPulse,
+  History as HistoryIcon,
+  Ruler
+} from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
 /**
- * Unified Enrollment Schema
- * Optimized for speed: Only Name and Std are compulsory.
+ * Unified Enrollment Schema - COMPLETE VERSION
+ * Only Name and Std are compulsory as requested.
  */
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -32,7 +51,7 @@ const formSchema = z.object({
   weight: z.string().optional().default(""),
   bloodGroup: z.string().optional().default("None"),
   generalRegisterNumber: z.string().optional().default(""),
-  aadharNumber: z.string().optional(),
+  aadharNumber: z.string().optional().default(""),
   mobileNumber: z.string().optional().default(""),
   address: z.string().optional().default(""),
   sports: z.array(z.string()).optional().default([]),
@@ -55,9 +74,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const isMarathi = language === 'Marathi';
 
   const t = {
-    title: isMarathi ? 'नवीन नावनोंदणी' : 'Institutional Enrollment',
-    subtitle: isMarathi ? 'संस्थात्मक विद्यार्थी व खेळाडू नोंदणी' : 'Unified Student & Athlete Registry',
-    enrollBtn: isMarathi ? 'नोंदणी पूर्ण करा' : 'Complete Enrollment',
+    title: isMarathi ? 'संस्थात्मक नावनोंदणी' : 'Institutional Enrollment',
+    subtitle: isMarathi ? 'विद्यार्थी व खेळाडू संपूर्ण नोंदणी' : 'Full Student & Athlete Registry Hub',
+    enrollBtn: isMarathi ? 'नोंदणी जतन करा' : 'Register Profile',
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -150,163 +169,221 @@ export function Registration({ store, section, language = 'English' }: { store: 
       bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi,
     });
 
-    toast({ title: "Enrollment Success", description: `${values.name} added to ${values.category} list.` });
+    toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     form.reset({
       ...form.getValues(),
       name: "",
       serialNumber: "",
       generalRegisterNumber: "",
       aadharNumber: "",
-      mobileNumber: ""
+      mobileNumber: "",
+      photoUrl: "",
+      aadharPhotoUrl: ""
     });
   };
 
   return (
-    <Card className="border-2 shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-      <CardHeader className="bg-primary/5 border-b p-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary rounded-2xl text-white shadow-lg">
-            <UserPlus className="w-8 h-8" />
+    <Card className="border-2 shadow-2xl rounded-[3rem] bg-white overflow-hidden">
+      <CardHeader className="bg-primary/5 border-b p-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl">
+              <UserPlus className="w-10 h-10" />
+            </div>
+            <div>
+              <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">{t.title}</CardTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">{t.subtitle}</p>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-3xl font-black text-primary uppercase tracking-tight">{t.title}</CardTitle>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{t.subtitle}</p>
+          
+          <div className="bg-white p-2 rounded-2xl border-2 border-primary/10 shadow-inner inline-flex">
+            <Button 
+              type="button"
+              variant={form.watch('category') === 'student' ? 'default' : 'ghost'}
+              onClick={() => form.setValue('category', 'student')}
+              className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px] tracking-widest", form.watch('category') === 'student' ? 'bg-primary text-white' : 'text-muted-foreground')}
+            >
+              <UserCircle2 className="w-4 h-4 mr-2" /> General
+            </Button>
+            <Button 
+              type="button"
+              variant={form.watch('category') === 'athlete' ? 'default' : 'ghost'}
+              onClick={() => form.setValue('category', 'athlete')}
+              className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px] tracking-widest", form.watch('category') === 'athlete' ? 'bg-primary text-white' : 'text-muted-foreground')}
+            >
+              <Medal className="w-4 h-4 mr-2" /> Athlete
+            </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-8">
+
+      <CardContent className="p-10">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              {/* Photo & Aadhar Section */}
-              <div className="lg:col-span-4 space-y-6">
-                <div className="space-y-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              {/* Profile Images Column */}
+              <div className="lg:col-span-4 space-y-10">
+                <div className="space-y-4">
                   <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4" /> Identity Photo
+                    <ImageIcon className="w-4 h-4" /> Identity Photo (Profile)
                   </FormLabel>
-                  <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-inner group">
+                  <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-2xl group">
                     {activeCam === 'profile' ? (
                       <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                     ) : form.watch('photoUrl') ? (
                       <img src={form.watch('photoUrl')} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase">Click to capture</span></div>
+                      <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest">Awaiting Capture</span></div>
                     )}
                     {activeCam === 'profile' && (
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-20">
-                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-12 rounded-xl shadow-lg">CAPTURE</Button>
-                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><XCircle className="w-6 h-6" /></Button>
+                      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 px-6 z-20">
+                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-14 rounded-2xl shadow-xl active-scale">CAPTURE</Button>
+                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-14 h-14 p-0 rounded-2xl shadow-xl"><XCircle className="w-6 h-6" /></Button>
                       </div>
                     )}
                   </div>
                   {!activeCam && (
-                    <Button type="button" onClick={() => startCamera('profile')} className="w-full bg-primary/5 text-primary border-2 border-primary/10 rounded-xl h-12 font-black uppercase text-[10px]">
-                      <Camera className="w-4 h-4 mr-2" /> Start Camera
+                    <Button type="button" onClick={() => startCamera('profile')} className="w-full bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest hover:bg-primary/10 transition-all">
+                      <Camera className="w-4 h-4 mr-2" /> Start Profile Camera
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <ScanLine className="w-4 h-4" /> Aadhar Identity Scan
+                  </FormLabel>
+                  <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20 shadow-inner">
+                    {activeCam === 'aadhar' ? (
+                      <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                    ) : form.watch('aadharPhotoUrl') ? (
+                      <img src={form.watch('aadharPhotoUrl')} alt="Aadhar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /><span className="text-[8px] font-black uppercase tracking-widest mt-2">No Document Scanned</span></div>
+                    )}
+                    {activeCam === 'aadhar' && (
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-6">
+                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
+                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                      </div>
+                    )}
+                  </div>
+                  {!activeCam && (
+                    <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="w-full bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest hover:bg-accent/10 transition-all">
+                      <Fingerprint className="w-4 h-4 mr-2" /> Scan Aadhar Card
                     </Button>
                   )}
                 </div>
               </div>
 
-              {/* Data Fields */}
-              <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="col-span-full bg-accent/5 p-6 rounded-[2rem] border-2 border-dashed border-accent/20 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="category" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-black text-accent uppercase text-[10px] tracking-[0.2em]">Enrollment Section *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger className="h-14 font-black border-2 bg-white rounded-2xl"><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          <SelectItem value="student"><div className="flex items-center gap-2"><UserCircle2 className="w-4 h-4" /> General Student</div></SelectItem>
-                          <SelectItem value="athlete"><div className="flex items-center gap-2"><Medal className="w-4 h-4" /> Sports Athlete</div></SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
+              {/* Data Fields Column */}
+              <div className="lg:col-span-8 space-y-12">
+                {/* Core Identification Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                    <Hash className="w-5 h-5" />
+                    <h3 className="font-black uppercase text-sm tracking-[0.2em]">Institutional Identity</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField control={form.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name *</FormLabel>
+                        <FormControl><Input placeholder="Required Field" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="std" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard (Std) *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="h-14 font-black border-2 bg-white rounded-2xl text-lg shadow-sm"><SelectValue /></SelectTrigger></FormControl>
+                          <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <FormField control={form.control} name="gender" render={({ field }) => (
+                      <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></FormItem>
+                    )} />
+                    <FormField control={form.control} name="serialNumber" render={({ field }) => (
+                      <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Roll No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
+                      <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">GR Number</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="dob" render={({ field }) => (
+                      <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Birth Date</FormLabel><FormControl><Input type="date" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
+                    )} />
+                  </div>
+                </div>
 
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-black text-primary uppercase text-[10px] tracking-[0.2em]">Student Name *</FormLabel>
-                      <FormControl><Input placeholder="Full Name" className="h-14 font-bold border-2 rounded-2xl bg-white" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="std" render={({ field }) => (
-                    <FormItem className="col-span-full md:col-span-1">
-                      <FormLabel className="font-black text-primary uppercase text-[10px] tracking-[0.2em]">Standard (Std) *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger className="h-14 font-black border-2 bg-white rounded-2xl"><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                {/* Health & Physicals Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                    <Ruler className="w-5 h-5" />
+                    <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical Measurement</h3>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <FormField control={form.control} name="height" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Height (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="weight" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Weight (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="bloodGroup" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Blood Group</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></FormItem>
+                    )} />
+                    <FormField control={form.control} name="mobileNumber" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Contact No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-mono" {...field} /></FormControl></FormItem>
+                    )} />
+                  </div>
+                  <FormField control={form.control} name="medical" render={({ field }) => (
+                    <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions (if any)</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries, Allergies..." {...field} /></FormControl></FormItem>
                   )} />
                 </div>
 
-                {/* Secondary Fields (Optional) */}
-                <FormField control={form.control} name="gender" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger className="h-12 font-bold rounded-xl border-2"><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="serialNumber" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Serial No</FormLabel>
-                    <FormControl><Input placeholder="Hajeri No" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">GR Number</FormLabel>
-                    <FormControl><Input placeholder="GR-XXXX" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Mobile</FormLabel>
-                    <FormControl><Input placeholder="10 Digits" className="h-12 font-mono border-2 rounded-xl" {...field} /></FormControl>
-                  </FormItem>
-                )} />
-
+                {/* Sports Specific Section */}
                 {form.watch('category') === 'athlete' && (
-                  <div className="col-span-full space-y-4">
-                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Select Institutional Games</FormLabel>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10 shadow-inner">
-                      {SPORTS_LIST.map(sport => (
-                        <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <Checkbox 
-                                checked={field.value?.includes(sport)} 
-                                onCheckedChange={(checked) => {
-                                  const curr = field.value || [];
-                                  return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-[10px] font-bold uppercase cursor-pointer">{sport}</FormLabel>
-                          </FormItem>
-                        )} />
-                      ))}
+                  <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
+                      <Medal className="w-5 h-5" />
+                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Athletic Participation</h3>
                     </div>
+                    <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-dashed border-accent/20">
+                      <FormLabel className="font-black text-accent uppercase text-[10px] tracking-widest mb-6 block">Select Active Institutional Games</FormLabel>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
+                        {SPORTS_LIST.map(sport => (
+                          <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 group">
+                              <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
+                                const curr = field.value || [];
+                                return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
+                              }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent" /></FormControl>
+                              <FormLabel className="text-xs font-black uppercase text-foreground/70 cursor-pointer group-hover:text-accent transition-colors">{sport}</FormLabel>
+                            </FormItem>
+                          )} />
+                        ))}
+                      </div>
+                    </div>
+                    <FormField control={form.control} name="histDetail" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><HistoryIcon className="w-3 h-3" /> Competition History</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="Previous participation in Zilla Parishad or Inter-school meets..." {...field} /></FormControl></FormItem>
+                    )} />
                   </div>
                 )}
+                
+                <div className="pt-8 border-t border-dashed flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4 text-muted-foreground">
+                    <ShieldAlert className="w-6 h-6 opacity-30" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest max-w-xs leading-relaxed opacity-40">Records are cryptographically secured in the institutional cloud vault.</p>
+                  </div>
+                  <Button type="submit" className="w-full md:w-auto px-20 h-20 bg-primary hover:bg-primary/90 text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] active-scale transition-all text-lg">
+                    {t.enrollBtn}
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-end pt-8 border-t">
-              <Button type="submit" className="bg-primary hover:bg-primary/90 text-white font-black px-16 h-16 rounded-2xl shadow-xl uppercase tracking-widest active-scale">
-                {t.enrollBtn}
-              </Button>
             </div>
           </form>
         </Form>
