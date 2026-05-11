@@ -1,10 +1,9 @@
 /**
  * Waghamba Sports Hub - Service Worker
- * Required for PWA Installability on Android and iOS.
- * Implements a simple fetch handler to satisfy the browser's offline requirement.
+ * Required for Android PWA Installability and offline resilience.
  */
 
-const CACHE_NAME = 'wgb-sports-v3';
+const CACHE_NAME = 'wgb-sports-hub-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -15,11 +14,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Respond with the network request.
-  // This satisfies the Android "Add to Home Screen" requirement for a fetch handler.
+  // Allow Firebase and AI Hub requests to pass through without interception
+  if (
+    event.request.url.includes('googleapis') || 
+    event.request.url.includes('firebase') ||
+    event.request.url.includes('cloudworkstations.dev')
+  ) {
+    return;
+  }
+  
   event.respondWith(
     fetch(event.request).catch(() => {
-      // Offline fallback can be added here if needed.
+      return caches.match(event.request);
     })
   );
 });

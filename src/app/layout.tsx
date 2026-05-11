@@ -32,11 +32,11 @@ export default function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body>
+      <body className="antialiased font-body">
         <FirebaseClientProvider>
           <PWAProvider>
             <ServiceWorkerRegister />
