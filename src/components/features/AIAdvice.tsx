@@ -52,6 +52,15 @@ export function AIAdvice({ store }: { store: any }) {
   const [chatLoading, setChatLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * CRITICAL FIX: Clear previous summary and chat when student context changes.
+   * This ensures Coach Sunil provides a clean slate for the newly selected student.
+   */
+  useEffect(() => {
+    setAdvice(null);
+    setChatHistory([]);
+  }, [selectedPlayerId]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });

@@ -1,38 +1,11 @@
 /**
- * Institutional Service Worker - Waghamba Hub
- * Implements a high-reliability Network-First strategy to avoid 404 chunk errors
- * while enabling offline availability and Android PWA installation.
+ * Waghamba Sports Hub - Service Worker
+ * Strategy: Network First (with Cache Fallback)
+ * Ensures the latest code is always fetched when online to prevent 404 ChunkLoadErrors,
+ * while allowing the app to run offline and meet PWA installation requirements.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.1';
-
-// Mandatory fetch listener for PWA "Add to Home Screen"
-self.addEventListener('fetch', (event) => {
-  // Use Network-First strategy for application chunks and logic
-  // This prevents 404 ChunkLoadErrors during hot-reloads and updates.
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful responses for static assets
-        if (response.status === 200 && (
-          event.request.url.includes('.js') || 
-          event.request.url.includes('.css') || 
-          event.request.url.includes('.png') ||
-          event.request.url.includes('.json')
-        )) {
-          const resClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, resClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cache if network is unavailable
-        return caches.match(event.request);
-      })
-  );
-});
+const CACHE_NAME = 'wgb-cache-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -42,12 +15,33 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        cacheNames.filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
       );
     })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  // We skip non-GET requests (like Firestore sync)
+  if (event.request.method !== 'GET') return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful responses for static assets
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache if network is down
+        return caches.match(event.request);
+      })
   );
 });
