@@ -115,14 +115,14 @@ const playerRecommendationFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
-    // Default to high-resilience model first due to quota restrictions on Pro.
+    // Default to high-resilience model first.
     let selectedModel = 'gemini-2.5-flash';
     if (input.engine === 'Gemini') {
       selectedModel = 'gemini-3.1-pro-preview';
     }
 
     let attempts = 0;
-    const maxAttempts = 3; 
+    const maxAttempts = 5; 
     let lastError: any = null;
 
     while (attempts < maxAttempts) {
@@ -136,15 +136,20 @@ const playerRecommendationFlow = ai.defineFlow(
         lastError = error;
         attempts++;
         
-        // Automatic Fallback on Resource Exhaustion
-        if (error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429')) {
-          console.warn("WGB AI: Quota hit, falling back to Flash model...");
+        // Automatic Fallback on Resource Exhaustion OR Unavailable
+        const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
+        const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
+
+        if (isQuota || isUnavailable) {
+          console.warn(`WGB AI: Model ${selectedModel} is busy or limited. Falling back to high-resilience Flash...`);
           selectedModel = 'gemini-2.5-flash';
         }
 
         console.error(`AI Recommendation Attempt ${attempts} failed:`, error?.message || error);
         if (attempts >= maxAttempts) throw error;
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(1.5, attempts)));
       }
     }
     throw lastError || new Error('Failed to generate recommendations.');

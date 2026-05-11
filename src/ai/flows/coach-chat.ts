@@ -38,14 +38,13 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    // Default to Flash for reliability.
     let selectedModel = 'gemini-2.5-flash';
     if (input.engine === 'Gemini') {
       selectedModel = 'gemini-3.1-pro-preview';
     }
 
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     
     while (attempts < maxAttempts) {
       try {
@@ -72,18 +71,20 @@ const coachChatFlow = ai.defineFlow(
       } catch (error: any) {
         attempts++;
         
-        // Automatic Fallback on Resource Exhaustion
-        if (error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429')) {
-          console.warn("WGB AI Chat: Quota hit, falling back to Flash model...");
+        const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
+        const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
+
+        if (isQuota || isUnavailable) {
+          console.warn("WGB AI Chat: Demand spike or quota hit, falling back to Flash model...");
           selectedModel = 'gemini-2.5-flash';
         }
 
         console.error(`Coach Chat Attempt ${attempts} failed:`, error.message || error);
         if (attempts >= maxAttempts) throw error;
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(1.5, attempts)));
       }
     }
-    return "The AI coach is currently busy with other students. Please try asking again in a few moments.";
+    return "The AI coach is currently busy due to high demand. Please try asking again in a few moments.";
   }
 );
 

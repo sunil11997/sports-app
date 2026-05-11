@@ -45,6 +45,7 @@ import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons'
 export const dynamic = 'force-dynamic';
 
 // Dynamic Feature Loading with optimized loading skeletons
+// Renamed to NextDynamic to avoid conflict with the exported constant 'dynamic'
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -169,7 +170,7 @@ export default function WaghambaApp() {
     <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
       <div className="space-y-4">
         <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-        <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Waghamba Hub V3.0...</p>
+        <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Waghamba Hub V3.1...</p>
       </div>
     </div>
   );
