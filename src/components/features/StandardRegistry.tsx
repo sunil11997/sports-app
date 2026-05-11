@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Printer, Save, Loader2, ClipboardList, CalendarDays, FileText } from 'lucide-react';
+import { Printer, Save, Loader2, ClipboardList, CalendarDays, FileText, Scale } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -21,11 +21,9 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     return store.data.players
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
-        // 1. Sort by Gender (Female first)
         if (a.gender !== b.gender) {
           return a.gender === 'Female' ? -1 : 1;
         }
-        // 2. Sort by Serial Number (Numeric)
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std]);
@@ -45,7 +43,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
         newRecords[p.id] = {
           nirikshan: '', tondikam: '', pratyashike: '', 
           upkram: '', prakalp: '', chachani: '', swadhyay: '',
-          height: '', weight: ''
+          height: p.height || '', weight: p.weight || ''
         };
       }
     });
@@ -99,31 +97,33 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     setIsSaving(null);
     toast({ 
       title: "रेकॉर्ड जतन केला", 
-      description: `${player.name} ची ${activeTerm === 'First' ? 'पहिले' : 'दुसरे'} सत्राची माहिती अपडेट झाली.` 
+      description: `${player.name} ची माहिती अपडेट झाली.` 
     });
   };
 
   const handlePrintTerm = () => {
-    const termLabel = activeTerm === 'First' ? 'पहिले सत्र (First Term)' : 'दुसरे सत्र (Second Term)';
+    const termLabel = activeTerm === 'First' ? 'प्रथम सत्र' : 'द्वितीय सत्र';
     const printContent = `
       <html>
         <head>
-          <title>विद्यार्थी परीक्षा नोंदणी - इयत्ता ${std}</title>
+          <title>परीक्षा नोंदणी - इयत्ता ${std}</title>
           <style>
-            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; }
-            h1 { text-align: center; color: #235C36; border-bottom: 2px solid #8AF075; margin-bottom: 10px; }
+            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 9px; }
+            h1 { text-align: center; color: #221d1d; border-bottom: 2px solid #333; margin-bottom: 10px; text-transform: uppercase; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #000; padding: 4px; text-align: center; }
+            .name-cell { text-align: left; font-weight: bold; }
           </style>
         </head>
         <body>
-          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा - परीक्षा गुण नोंदणी</h1>
+          <h1>आश्रम शाळा वाघंबा - परीक्षा गुण व आरोग्य नोंदणी</h1>
           <h2>इयत्ता: ${std} | ${termLabel}</h2>
           <table>
             <thead>
               <tr>
-                <th>क्र.</th><th>Sr No</th><th>विद्यार्थ्याचे नाव</th><th>लिंग</th>
-                <th>दैनंदिन निरीक्षण</th><th>तोंडीकाम</th><th>प्रात्यक्षिके</th><th>उपक्रम</th><th>प्रकल्प</th><th>चाचणी</th><th>स्वाध्याय</th>
+                <th>Sr</th><th>विद्यार्थ्याचे नाव</th><th>लिंग</th><th>वय</th>
+                <th>उंची</th><th>वजन</th>
+                <th>निरीक्षण</th><th>तोंडीकाम</th><th>प्रयोग</th><th>उपक्रम</th><th>प्रकल्प</th><th>चाचणी</th><th>स्वाध्याय</th>
                 <th>एकूण</th><th>श्रेणी</th>
               </tr>
             </thead>
@@ -133,10 +133,12 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                 const r = termRecords[p.id] || {};
                 return `
                   <tr>
-                    <td>${i + 1}</td>
-                    <td>${p.serialNumber || ''}</td>
-                    <td>${p.name}</td>
+                    <td>${p.serialNumber || i+1}</td>
+                    <td class="name-cell">${p.name}</td>
                     <td>${p.gender === 'Female' ? 'महिला' : 'पुरुष'}</td>
+                    <td>${p.age}</td>
+                    <td>${r.height || p.height || '-'}</td>
+                    <td>${r.weight || p.weight || '-'}</td>
                     <td>${r.nirikshan || '-'}</td>
                     <td>${r.tondikam || '-'}</td>
                     <td>${r.pratyashike || '-'}</td>
@@ -173,7 +175,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">इयत्ता {std} - परीक्षा नोंदणी</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Female group listed first</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Comprehensive Profile</p>
           </div>
         </div>
 
@@ -186,7 +188,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
               activeTerm === 'First' ? "bg-primary text-white shadow-lg" : "text-muted-foreground"
             )}
           >
-            <CalendarDays className="w-4 h-4 mr-2" /> प्रथम सत्र
+            प्रथम सत्र
           </Button>
           <Button 
             variant={activeTerm === 'Second' ? "default" : "ghost"}
@@ -196,7 +198,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
               activeTerm === 'Second' ? "bg-primary text-white shadow-lg" : "text-muted-foreground"
             )}
           >
-            <CalendarDays className="w-4 h-4 mr-2" /> द्वितीय सत्र
+            द्वितीय सत्र
           </Button>
         </div>
       </div>
@@ -215,29 +217,31 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow>
               <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[220px] sticky left-0 bg-muted/95 z-30">विद्यार्थ्याचे नाव</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">लिंग</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">निरीक्षण</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">तोंडीकाम</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">प्रयोग</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">उपक्रम</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">प्रकल्प</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">चाचणी</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[60px]">स्वाध्याय</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[80px] bg-primary/10">एकूण</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">वय</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px] bg-accent/5">उंची (cm)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px] bg-accent/5">वजन (kg)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">निरीक्षण</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">तोंडी</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">प्रयोग</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">उपक्रम</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">प्रकल्प</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">चाचणी</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">स्वाध्याय</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">एकूण</TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">श्रेणी</TableHead>
-              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
+              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">जतन करा</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {playersInStd.length === 0 ? (
-              <TableRow><TableCell colSpan={16} className="text-center py-20 text-muted-foreground font-bold uppercase tracking-widest opacity-30">या वर्गात कोणतेही विद्यार्थी नाहीत</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center py-20 text-muted-foreground font-bold uppercase tracking-widest opacity-30">या वर्गात कोणतेही विद्यार्थी नाहीत</TableCell></TableRow>
             ) : (
               playersInStd.map((p: any) => {
                 const r = termRecords[p.id] || {};
                 const total = calculateTotal(p.id);
                 return (
                   <TableRow key={p.id} className="border-b hover:bg-primary/5 h-14 transition-colors">
-                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 ios-blur">
+                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                            <span className="text-[9px] font-black text-primary/40">#{p.serialNumber || '0'}</span>
@@ -246,17 +250,19 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                         <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">{p.gender} • Term: {activeTerm}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r p-0 text-center text-[10px] font-bold">{p.gender === 'Female' ? 'महिला' : 'पुरुष'}</TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0 text-center text-[11px] font-black text-muted-foreground">{p.age}</TableCell>
+                    <TableCell className="border-r p-0 bg-accent/[0.02]"><Input type="number" placeholder="cm" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0 bg-accent/[0.02]"><Input type="number" placeholder="kg" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
                     <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary text-sm">{total}</TableCell>
                     <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary text-xs">{getGrade(total)}</TableCell>
-                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10 ios-blur">
+                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
                       <Button variant="ghost" size="icon" className="h-14 w-full rounded-none text-primary" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
                         {isSaving === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       </Button>
@@ -271,3 +277,4 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     </div>
   );
 }
+
