@@ -33,7 +33,9 @@ import {
   Flame,
   Globe,
   BarChart3,
-  Dumbbell
+  Dumbbell,
+  Star,
+  Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -159,6 +161,34 @@ export default function WaghambaApp() {
     });
   }, [schoolData.data.players]);
 
+  const topPerformers = useMemo(() => {
+    if (selectedSection !== 'sports' || !schoolData.data.players) return [];
+    const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+    
+    return sports.map(sport => {
+      const athletesInSport = schoolData.data.players.filter(p => 
+        p.category === 'athlete' && p.sports?.includes(sport)
+      );
+      
+      let topPlayer: any = null;
+      let highestScore = -1;
+
+      athletesInSport.forEach(p => {
+        // Skill scores are stored in a map keyed by playerId_sportName
+        const skill = schoolData.data.sportSkills[`${p.id}_${sport}`];
+        if (skill) {
+          const score = parseFloat(skill.score) || 0;
+          if (score > highestScore) {
+            highestScore = score;
+            topPlayer = p;
+          }
+        }
+      });
+
+      return { sport, player: topPlayer, score: highestScore };
+    }).filter(item => item.player !== null);
+  }, [selectedSection, schoolData.data.players, schoolData.data.sportSkills]);
+
   const enterHub = (section: 'sports' | 'general') => {
     setSelectedSection(section);
     setStage('hub');
@@ -234,7 +264,61 @@ export default function WaghambaApp() {
                       </div>
                     </Card>
                   </div>
-                  {birthdaysToday.length > 0 && (
+
+                  {selectedSection === 'sports' && topPerformers.length > 0 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <Star className="w-6 h-6 text-accent fill-accent" />
+                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Discipline Leaders</h3>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {topPerformers.map((item, idx) => (
+                          <Card key={idx} className="google-card p-5 border-l-4 border-accent relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{item.sport}</span>
+                              <p className="font-black text-primary uppercase text-sm truncate">{item.player.name}</p>
+                              <Badge variant="outline" className="w-fit text-[9px] font-black border-accent/20 text-accent bg-accent/5">
+                                Score: {item.score}
+                              </Badge>
+                            </div>
+                            <Trophy className="absolute -right-2 -bottom-2 w-12 h-12 text-accent/5 group-hover:scale-110 transition-transform" />
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedSection === 'general' && birthdaysToday.length > 0 && (
+                    <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Gift className="w-32 h-32 text-accent" />
+                      </div>
+                      <div className="flex items-center gap-4 mb-6 relative z-10">
+                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
+                          <Cake className="w-7 h-7 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Happy Birthday!</h3>
+                          <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Celebrating our students today</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+                        {birthdaysToday.map((student: any) => (
+                          <div key={student.id} className="bg-white/80 backdrop-blur p-5 rounded-[2rem] shadow-sm flex items-center gap-4 border border-white/50">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xl shadow-inner border border-primary/5">
+                              {student.name[0]}
+                            </div>
+                            <div>
+                              <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
+                              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {student.std} • Happy Wishes!</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+                  
+                  {selectedSection === 'sports' && birthdaysToday.length > 0 && (
                     <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10">
                       <div className="flex items-center gap-4 mb-6">
                         <Cake className="w-8 h-8 text-accent" />

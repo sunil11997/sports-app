@@ -1,61 +1,49 @@
 
 /**
- * Waghamba Sports Hub - Service Worker
- * Strategy: Network First with Cache Fallback
- * Optimized for high-resilience PWA performance.
+ * WGB Hub - Network First Service Worker
+ * Prioritizes latest registry data while ensuring offline resilience.
+ * Satisfies Android Chrome PWA installation requirements.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.1';
-const STATIC_ASSETS = [
-  '/',
-  '/manifest.webmanifest',
-  '/icon-512.png'
-];
+const CACHE_NAME = 'wgb-hub-v3.2';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
       );
     })
   );
-  self.clients.claim();
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
+  // Strategy: Network First for high reliability of registry data
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/'))
+    );
+    return;
+  }
 
-  // We only handle GET requests
-  if (request.method !== 'GET') return;
-
-  // Skip browser extensions and non-http protocols
-  if (!request.url.startsWith('http')) return;
-
+  // Handle static assets with network first, falling back to cache
   event.respondWith(
-    fetch(request)
+    fetch(event.request)
       .then((response) => {
-        // If response is valid, clone it and put in cache
-        if (response && response.status === 200) {
-          const responseToCache = response.clone();
+        // Cache successful responses for offline fallback
+        if (response.status === 200) {
+          const cacheCopy = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
+            cache.put(event.request, cacheCopy);
           });
         }
         return response;
       })
-      .catch(() => {
-        // If network fails, serve from cache
-        return caches.match(request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });
