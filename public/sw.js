@@ -1,65 +1,58 @@
 /**
- * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First with Cache Fallback for dynamic chunks.
- * Ensures the app stays up-to-date while supporting offline access.
+ * Waghamba Sports Hub - Service Worker
+ * Strategy: Network First (Full-Resilience)
+ * Required for Android PWA installation and offline mode.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'wgb-v3.2';
+const STATIC_ASSETS = [
   '/',
+  '/manifest.webmanifest',
   '/icon-512.png',
-  '/manifest.webmanifest'
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log('WGB: Pre-caching static assets');
+      return cache.addAll(STATIC_ASSETS);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
     })
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignore non-GET and browser extension requests
-  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
-    return;
-  }
+  // Use Network First strategy to ensure the latest code chunks are loaded when online.
+  // This prevents ChunkLoadErrors during active development/updates.
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        // If valid network response, clone and cache it
-        if (response && response.status === 200) {
-          const resClone = response.clone();
+      .then((networkResponse) => {
+        // Cache successful network responses for static assets
+        if (event.request.url.includes('/_next/static/') || STATIC_ASSETS.includes(new URL(event.request.url).pathname)) {
+          const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, resClone);
+            cache.put(event.request, responseClone);
           });
         }
-        return response;
+        return networkResponse;
       })
       .catch(() => {
-        // Offline fallback: Try cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          
-          // Return offline landing if it's a page navigation
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
-          return null;
-        });
+        // Fallback to cache if network fails (Offline mode)
+        return caches.match(event.request);
       })
   );
 });

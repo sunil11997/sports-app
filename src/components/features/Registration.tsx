@@ -14,11 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Camera, XCircle, ImageIcon, Fingerprint, Phone, MapPin, ScanLine, ClipboardList, Upload, ShieldAlert, RefreshCw, Hash, UserCircle2, Medal } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
-// Updated Schema: Only Name and Std are required.
+/**
+ * Unified Enrollment Schema
+ * Optimized for speed: Only Name and Std are compulsory.
+ */
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   std: z.string().min(1, "Standard is required"),
@@ -45,7 +47,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const aadharUploadRef = useRef<HTMLInputElement>(null);
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -177,7 +178,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              {/* Photo & Aadhar (Optional) */}
+              {/* Photo & Aadhar Section */}
               <div className="lg:col-span-4 space-y-6">
                 <div className="space-y-2">
                   <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
@@ -206,7 +207,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 </div>
               </div>
 
-              {/* Required & Optional Fields */}
+              {/* Data Fields */}
               <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="col-span-full bg-accent/5 p-6 rounded-[2rem] border-2 border-dashed border-accent/20 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField control={form.control} name="category" render={({ field }) => (
@@ -231,7 +232,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   )} />
 
                   <FormField control={form.control} name="std" render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="col-span-full md:col-span-1">
                       <FormLabel className="font-black text-primary uppercase text-[10px] tracking-[0.2em]">Standard (Std) *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger className="h-14 font-black border-2 bg-white rounded-2xl"><SelectValue /></SelectTrigger></FormControl>
@@ -242,7 +243,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   )} />
                 </div>
 
-                {/* Secondary Optional Fields */}
+                {/* Secondary Fields (Optional) */}
                 <FormField control={form.control} name="gender" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Gender</FormLabel>
@@ -258,29 +259,29 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
                 <FormField control={form.control} name="serialNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Serial No (Optional)</FormLabel>
+                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Serial No</FormLabel>
                     <FormControl><Input placeholder="Hajeri No" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
                   </FormItem>
                 )} />
 
                 <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">GR Number (Optional)</FormLabel>
+                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">GR Number</FormLabel>
                     <FormControl><Input placeholder="GR-XXXX" className="h-12 font-bold rounded-xl border-2" {...field} /></FormControl>
                   </FormItem>
                 )} />
 
                 <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Mobile (Optional)</FormLabel>
+                    <FormLabel className="font-black text-muted-foreground uppercase text-[10px]">Mobile</FormLabel>
                     <FormControl><Input placeholder="10 Digits" className="h-12 font-mono border-2 rounded-xl" {...field} /></FormControl>
                   </FormItem>
                 )} />
 
                 {form.watch('category') === 'athlete' && (
                   <div className="col-span-full space-y-4">
-                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Select Games (Athletes Only)</FormLabel>
-                    <div className="grid grid-cols-3 gap-2 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10 shadow-inner">
+                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Select Institutional Games</FormLabel>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10 shadow-inner">
                       {SPORTS_LIST.map(sport => (
                         <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
                           <FormItem className="flex flex-row items-center space-x-2 space-y-0">
