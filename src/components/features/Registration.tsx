@@ -66,6 +66,8 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
+  const profileUploadRef = useRef<HTMLInputElement>(null);
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -149,6 +151,20 @@ export function Registration({ store, section, language = 'English' }: { store: 
     if (stream) stream.getTracks().forEach(track => track.stop());
     setStream(null);
     setActiveCam(null);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        if (type === 'profile') form.setValue('photoUrl', dataUrl);
+        else form.setValue('aadharPhotoUrl', dataUrl);
+        toast({ title: "Photo Ready", description: "Identity document captured successfully." });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -243,9 +259,15 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     )}
                   </div>
                   {!activeCam && (
-                    <Button type="button" onClick={() => startCamera('profile')} className="w-full bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest hover:bg-primary/10 transition-all">
-                      <Camera className="w-4 h-4 mr-2" /> Start Profile Camera
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="button" onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest hover:bg-primary/10 transition-all">
+                        <Camera className="w-4 h-4 mr-2" /> Camera
+                      </Button>
+                      <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="w-14 h-14 p-0 rounded-2xl border-2">
+                        <Upload className="w-6 h-6" />
+                      </Button>
+                      <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                    </div>
                   )}
                 </div>
 
@@ -269,9 +291,15 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     )}
                   </div>
                   {!activeCam && (
-                    <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="w-full bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest hover:bg-accent/10 transition-all">
-                      <Fingerprint className="w-4 h-4 mr-2" /> Scan Aadhar Card
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest hover:bg-accent/10 transition-all">
+                        <Fingerprint className="w-4 h-4 mr-2" /> Live Scan
+                      </Button>
+                      <Button type="button" onClick={() => aadharUploadRef.current?.click()} variant="outline" className="w-12 h-12 p-0 rounded-2xl border-2">
+                        <Upload className="w-5 h-5" />
+                      </Button>
+                      <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                    </div>
                   )}
                 </div>
               </div>

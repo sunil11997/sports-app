@@ -1,66 +1,50 @@
-/**
- * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First for dynamic chunks, Cache-First for assets.
- * Resolves 404 ChunkLoadErrors and enables PWA installation.
- */
-
-const CACHE_NAME = 'wgb-hub-v3.1';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'wgb-cache-v3.1';
+const ASSETS_TO_CACHE = [
   '/',
-  '/manifest.webmanifest',
   '/icon-512.png',
-  '/favicon.ico'
+  '/manifest.webmanifest'
 ];
 
+/**
+ * Institutional Service Worker - Optimized for Resilience
+ * Uses a Network-First strategy with Cache Fallback to ensure latest chunks
+ * are always loaded when online, avoiding common 404 errors in production.
+ */
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('WGB: Pre-caching core shell');
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
     })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // Strategy: Network-First for code chunks to avoid 404/sync errors
-  if (url.pathname.includes('/_next/static/chunks/') || url.pathname.includes('/api/')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
+  // Ignore external API calls and analytics
+  if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // Strategy: Cache-First for static images and common assets
+  // Network-First with Cache Fallback
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((networkResponse) => {
-        // Cache successful responses for next time
-        if (networkResponse.ok) {
-          const cacheCopy = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, cacheCopy));
-        }
-        return networkResponse;
-      });
-    }).catch(() => {
-      // Offline Fallback
-      if (event.request.mode === 'navigate') {
-        return caches.match('/');
-      }
-    })
+    fetch(event.request)
+      .then((response) => {
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
