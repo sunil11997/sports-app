@@ -163,6 +163,7 @@ export default function WaghambaApp() {
     setActiveTab('home');
   };
 
+  // Stage: Hub
   if (stage === 'hub' && selectedSection) {
     const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
     return (
@@ -296,6 +297,7 @@ export default function WaghambaApp() {
     );
   }
 
+  // Stage: Selector
   if (stage === 'selector') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -323,6 +325,7 @@ export default function WaghambaApp() {
     );
   }
 
+  // Stage: Landing
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
@@ -345,7 +348,10 @@ export default function WaghambaApp() {
         </div>
         <div className="flex flex-col gap-4 max-w-sm mx-auto">
           <Button 
-            onClick={() => setStage('selector')}
+            onClick={() => {
+              console.log("WGB: Transitioning to Selector Stage");
+              setStage('selector');
+            }}
             className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group"
           >
             {isUserLoading && isMounted ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
