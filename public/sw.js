@@ -1,44 +1,36 @@
-
 /**
- * Waghamba Sports Hub - Service Worker
- * Required for PWA Installability on Android and Offline Capability.
+ * Waghamba Sports Hub - Service Worker v3.0
+ * Provides mandatory offline fetch handling for Android PWA installation.
  */
 
-const CACHE_NAME = 'wgb-sports-cache-v3';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/manifest.webmanifest',
-  '/icon-512.png'
-];
+const CACHE_NAME = 'wgb-cache-v3';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
+  event.waitUntil(clients.claim());
 });
 
+/**
+ * Mandatory fetch listener for PWA status.
+ * Ensures the app is recognized as offline-capable.
+ */
 self.addEventListener('fetch', (event) => {
-  // Required fetch listener for PWA installation
+  // Check if request is for Firebase/Cloud functions or static assets
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/');
+      })
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
     })
   );
 });

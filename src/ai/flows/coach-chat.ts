@@ -20,6 +20,7 @@ const CoachChatInputSchema = z.object({
   history: z.array(MessageSchema).describe('The conversation history.'),
   playerContext: z.string().optional().describe('Context about the student being discussed.'),
   language: z.string().describe('The language for the response (English or Marathi).'),
+  engine: z.enum(['Genkit', 'Gemini']).optional().describe('The selected AI engine.'),
 });
 export type CoachChatInput = z.infer<typeof CoachChatInputSchema>;
 
@@ -37,16 +38,20 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
+    const selectedModel = input.engine === 'Gemini' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
+
     let attempts = 0;
     const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       try {
         const {text} = await ai.generate({
-          model: googleAI.model('gemini-2.5-flash'),
+          model: googleAI.model(selectedModel),
           system: `You are Coach Sunil Deshmukh, the head physical education teacher and sports coach at Waghamba Ashram Shala. 
           You are helpful, encouraging, and provide scientifically-backed sports training and health advice.
           You speak with the authority and warmth of a respected school coach.
+          
+          AI ENGINE CONTEXT: You are responding via the ${input.engine || 'Genkit Standard'} engine.
           
           IMPORTANT: You MUST respond entirely in ${input.language}.
           

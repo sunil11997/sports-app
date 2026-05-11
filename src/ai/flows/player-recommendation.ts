@@ -25,6 +25,7 @@ const PlayerRecommendationInputSchema = z.object({
   histDetail: z.string().optional().describe('Details of sport history, if any.'),
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
   language: z.string().describe('The language for the output (English or Marathi).'),
+  engine: z.enum(['Genkit', 'Gemini']).optional().describe('The selected AI engine.'),
   // Enhanced Fitness Test Results
   fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds.'),
   fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds.'),
@@ -62,10 +63,12 @@ export type PlayerRecommendationOutput = z.infer<typeof PlayerRecommendationOutp
 
 const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
-  model: googleAI.model('gemini-2.5-flash'),
+  model: googleAI.model('gemini-2.5-flash'), // Default, can be overridden in generate call
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
   prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. Your task is to analyze a player's aggregated data and provide your professional recommendations for their athletic development and well-being.
+
+AI ENGINE CONTEXT: You are performing this analysis via the {{engine}} engine.
 
 IMPORTANT: You MUST provide all sections of your response in {{{language}}}.
 
@@ -115,13 +118,17 @@ const playerRecommendationFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
+    const selectedModel = input.engine === 'Gemini' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
+
     let attempts = 0;
     const maxAttempts = 3; 
     let lastError: any = null;
 
     while (attempts < maxAttempts) {
       try {
-        const {output} = await playerRecommendationPrompt(input);
+        const {output} = await playerRecommendationPrompt(input, {
+          model: googleAI.model(selectedModel)
+        });
         if (!output) throw new Error('AI returned an empty response.');
         return output;
       } catch (error: any) {

@@ -22,7 +22,8 @@ import {
   Send,
   User,
   Bot,
-  Apple
+  Apple,
+  Cpu
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
@@ -40,6 +41,7 @@ export function AIAdvice({ store }: { store: any }) {
   const { isOnline } = usePWA();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [language, setLanguage] = useState("English");
+  const [aiEngine, setAiEngine] = useState<'Genkit' | 'Gemini'>('Genkit');
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
   
@@ -85,7 +87,8 @@ export function AIAdvice({ store }: { store: any }) {
         message: userMsg,
         history: chatHistory,
         playerContext: getPlayerContext(),
-        language: language
+        language: language,
+        engine: aiEngine
       });
       setChatHistory(prev => [...prev, { role: 'model', content: response }]);
     } catch (error) {
@@ -136,6 +139,7 @@ export function AIAdvice({ store }: { store: any }) {
         histDetail: p.histDetail || "None",
         medical: p.medical || "None",
         language: language,
+        engine: aiEngine,
         fitnessShuttleRun: fit.shuttleRun || "N/A",
         fitnessRun50m: fit.run50m || "N/A",
         fitnessRun600m: fit.run600m || "N/A",
@@ -218,7 +222,7 @@ export function AIAdvice({ store }: { store: any }) {
           </section>
 
           <footer style="margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 10px; color: #888;">
-            AI generated report from Waghamba Sports Hub.
+            AI generated report from Waghamba Sports Hub using ${aiEngine} Engine.
           </footer>
         </body>
       </html>
@@ -249,19 +253,36 @@ export function AIAdvice({ store }: { store: any }) {
             </p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase flex items-center gap-1">
-                <Languages className="w-3 h-3" /> Select Language
-              </label>
-              <Select onValueChange={setLanguage} value={language}>
-                <SelectTrigger className="rounded-2xl border-2 h-12 text-md font-bold bg-white">
-                  <SelectValue placeholder="Select Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="English">English</SelectItem>
-                  <SelectItem value="Marathi">Marathi</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-primary uppercase flex items-center gap-1">
+                  <Languages className="w-3 h-3" /> Language
+                </label>
+                <Select onValueChange={setLanguage} value={language}>
+                  <SelectTrigger className="rounded-2xl border-2 h-12 text-xs font-bold bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="Marathi">Marathi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-primary uppercase flex items-center gap-1">
+                  <Cpu className="w-3 h-3" /> AI Engine
+                </label>
+                <Select onValueChange={(v: any) => setAiEngine(v)} value={aiEngine}>
+                  <SelectTrigger className="rounded-2xl border-2 h-12 text-xs font-bold bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Genkit">Genkit Hub</SelectItem>
+                    <SelectItem value="Gemini">Gemini Direct</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -324,6 +345,7 @@ export function AIAdvice({ store }: { store: any }) {
                   <p className="text-xl font-medium leading-relaxed text-foreground/90 italic">
                     "{advice.summary}"
                   </p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-4">Generated using: {aiEngine} Engine</p>
                 </CardContent>
               </Card>
 
@@ -396,7 +418,7 @@ export function AIAdvice({ store }: { store: any }) {
                   <Bot className="w-7 h-7 text-accent-foreground" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-black text-primary uppercase tracking-tight">Coach Sunil Deshmukh's AI Assistant</CardTitle>
+                  <CardTitle className="text-xl font-black text-primary uppercase tracking-tight">Coach Sunil's {aiEngine} AI</CardTitle>
                   <div className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live Institutional AI Support
                   </div>
