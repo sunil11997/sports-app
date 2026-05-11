@@ -1,24 +1,43 @@
 /**
- * Waghamba Sports Hub - PWA Service Worker
- * Required for modern "Add to Home Screen" eligibility.
+ * Waghamba Sports Hub - Service Worker
+ * Enables PWA installability and basic offline capabilities.
  */
 
 const CACHE_NAME = 'wgb-hub-v3';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/icon-512.png',
+  '/manifest.webmanifest'
+];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
 });
 
-// The fetch event is MANDATORY for Chrome/Android to recognize the app as a PWA
 self.addEventListener('fetch', (event) => {
-  // Pass-through strategy - Required to satisfy the "offline-capable" audit
+  // Required for PWA recognition. 
+  // We prioritize network and fall back to cache for recognized static assets.
   event.respondWith(
     fetch(event.request).catch(() => {
-      // In a real offline scenario, you could return a cached page here
       return caches.match(event.request);
     })
   );
