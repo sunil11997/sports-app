@@ -207,7 +207,10 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               key={cat.id}
               variant={activeCategory === cat.id ? "default" : "ghost"}
               size="sm"
-              className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
+              className={cn(
+                "h-8 rounded px-3 text-[10px] font-black uppercase transition-all",
+                activeCategory === cat.id ? 'bg-primary text-white' : 'text-muted-foreground'
+              )}
               onClick={() => setActiveCategory(cat.id)}
             >
               {cat.label}
@@ -295,7 +298,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                            <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
-                           <span className="uppercase truncate w-[140px]">{player.name}</span>
+                           <span className="uppercase truncate w-[140px] text-primary">{player.name}</span>
                         </div>
                         <span className="text-[8px] uppercase text-muted-foreground font-black ml-6">{player.gender} • Std {player.std}</span>
                       </div>

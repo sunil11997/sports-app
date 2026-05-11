@@ -36,7 +36,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body className="antialiased font-body">
+      <body className="antialiased font-body" suppressHydrationWarning>
         <FirebaseClientProvider>
           <PWAProvider>
             <ServiceWorkerRegister />

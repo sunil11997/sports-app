@@ -355,7 +355,7 @@ export default function WaghambaApp() {
             </h1>
           </div>
         </div>
-        <div className="flex flex-col gap-4 max-w-sm mx-auto">
+        <div className="flex flex-col gap-4 max-sm mx-auto">
           <Button 
             onClick={() => {
               console.log("WGB: Transitioning to Selector Stage");
