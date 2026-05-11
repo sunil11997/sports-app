@@ -1,30 +1,22 @@
 
-/**
- * Waghamba Sports Hub - Service Worker
- * Strategy: Network First (Ensures latest institutional data while allowing offline access)
- */
+const CACHE_NAME = 'wgb-sports-hub-v3';
 
-const CACHE_NAME = 'wgb-sports-v3.1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/manifest.webmanifest',
-  '/icon-512.png'
-];
+// Mandatory Service Worker for Android Chrome PWA Support
+// Implements a Network-First strategy to ensure latest data while maintaining offline reliability.
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
       );
     })
   );
@@ -32,25 +24,26 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  // Only handle GET requests and exclude Firebase auth/firestore calls
+  if (event.request.method !== 'GET' || event.request.url.includes('firestore.googleapis.com')) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache static assets and chunks for faster subsequent loads
-        if (response.status === 200 && (
-          event.request.url.includes('_next/static') || 
-          event.request.url.includes('.png') ||
-          event.request.url.includes('.js')
-        )) {
-          const resClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        // If valid response, clone and cache it
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
         }
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
         return response;
       })
       .catch(() => {
-        // Fallback to cache if network fails (Offline mode)
+        // Fallback to cache if network fails
         return caches.match(event.request);
       })
   );

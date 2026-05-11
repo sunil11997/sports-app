@@ -45,7 +45,6 @@ import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons'
 // Force dynamic to prevent prerendering errors with Firebase
 export const dynamic = 'force-dynamic';
 
-// Renamed 'dynamic' import to 'NextDynamic' to avoid collision with 'export const dynamic'
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -94,7 +93,6 @@ export default function WaghambaApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   
-  // High-performance lazy load: Only start heavy data hooks when entering the hub
   const schoolData = useSchoolData(stage === 'hub');
   
   const { user, isUserLoading } = useUser();
@@ -134,7 +132,6 @@ export default function WaghambaApp() {
   const generalTabs = [
     { id: "home", label: t.home, icon: Home },
     { id: "registration", label: t.enroll, icon: UserPlus },
-    { id: "dashboard", label: t.roster, icon: LayoutDashboard },
     { id: "history", label: t.history, icon: BarChart3 },
     { id: "classes", label: t.registry, icon: LayoutGrid },
     { id: "exams", label: t.exams, icon: FileText },
@@ -175,7 +172,6 @@ export default function WaghambaApp() {
     </div>
   );
 
-  // Stage: Hub
   if (stage === 'hub' && selectedSection) {
     const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
     return (
@@ -309,7 +305,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // Stage: Selector
   if (stage === 'selector') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -337,7 +332,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // Stage: Landing
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
