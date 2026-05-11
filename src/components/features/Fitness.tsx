@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -7,11 +6,36 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Printer, Scale, Save, Loader2, Calendar, ShieldAlert } from 'lucide-react';
+import { 
+  Activity, 
+  Printer, 
+  Scale, 
+  Save, 
+  Loader2, 
+  Calendar, 
+  ShieldAlert, 
+  BrainCircuit, 
+  Info,
+  ChevronRight,
+  Sparkles,
+  Trophy,
+  Zap,
+  Dumbbell
+} from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { analyzeFitness, getTestInstructions, type FitnessAnalysisOutput } from '@/ai/flows/fitness-analysis';
+import { usePWA } from '@/components/providers/pwa-provider';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -25,10 +49,18 @@ const CATEGORIES = [
 
 export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
+  const { isOnline } = usePWA();
   const [assessments, setAssessments] = useState<Record<string, any>>({});
   const [activeCategory, setActiveCategory] = useState("all");
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
+
+  // AI Modal States
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<FitnessAnalysisOutput | null>(null);
+  const [activeInstruction, setActiveInstruction] = useState<string>("");
+  const [analyzingPlayer, setAnalyzingPlayer] = useState<any>(null);
 
   const isGeneral = section === 'general';
 
@@ -49,148 +81,112 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
-        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-
-        // 2. Sort by Gender (Female first)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Female' ? -1 : 1;
-        }
-
-        // 3. Sort by Serial Number
+        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory]);
 
   const handleChange = (id: string, field: string, value: string) => {
-    let finalVal = value;
-    if (value !== '') {
-      const numVal = parseFloat(value);
-      if (!isNaN(numVal)) {
-        if (field !== 'examMarks') {
-          if (numVal < 0) finalVal = "0";
-        }
-      }
-    }
-
     setAssessments(prev => ({
       ...prev,
       [id]: {
-        ...(prev[id] || store.data.fitness[id] || { 
-          shuttleRun: '', run50m: '', run600m: '', sitAndReach: '', boardJump: '', sitUps: '', 
-          strengthScore: '', enduranceScore: '', score: '', status: '', height: '', weight: '', examMarks: ''
-        }),
-        [field]: finalVal
+        ...(prev[id] || store.data.fitness[id] || {}),
+        [field]: value
       }
     }));
   };
 
-  const calculateAutoScores = (id: string) => {
-    const current = assessments[id] || store.data.fitness[id] || {};
-    const situps = parseInt(current.sitUps) || 0;
-    const boardJump = parseInt(current.boardJump) || 0;
-    const situpsRating = Math.min(60, (situps / 35) * 60);
-    const jumpRating = Math.min(40, (boardJump / 220) * 40);
-    const strength = Math.round(situpsRating + jumpRating);
-
-    const run60Parts = (current.run600m || "").split(':');
-    let run600Seconds = 0;
-    if (run60Parts.length === 2) {
-      run600Seconds = (parseInt(run60Parts[0]) * 60) + parseInt(run60Parts[1]);
-    } else {
-      run600Seconds = parseInt(run60Parts[0]) || 0;
-    }
-    
-    let endurance = 0;
-    if (run600Seconds > 0) {
-      endurance = Math.max(0, Math.min(100, Math.round(100 - (run600Seconds - 130) * 0.5)));
-    }
-
-    return { strength, endurance };
-  };
-
   const handleSave = async (player: any) => {
     const id = player.id;
-    const { strength, endurance } = calculateAutoScores(id);
     const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
     setIsSaving(id);
     
-    let status = 'Logged';
-    if (!isGeneral) {
-      current.strengthScore = strength.toString();
-      current.enduranceScore = endurance.toString();
-      const fields = ['shuttleRun', 'run50m', 'sitAndReach', 'boardJump', 'sitUps'];
-      let sum = (strength + endurance);
-      let count = 2;
-      fields.forEach(f => {
-        const val = parseFloat(current[f]);
-        if (!isNaN(val)) { sum += (val > 100 ? 100 : val); count++; }
-      });
-      const scoreNum = count > 0 ? Math.round(sum / count) : 0;
-      current.score = scoreNum.toString();
-      if (scoreNum >= 85) status = 'Level A (Elite)';
-      else if (scoreNum >= 70) status = 'Level B (Advanced)';
-      else if (scoreNum >= 50) status = 'Level C (Developing)';
-      else status = 'Level D (Needs Support)';
-    } else {
-      status = 'Updated';
-      current.score = current.examMarks || "0";
-    }
+    // Auto-calculate score
+    const fields = ['shuttleRun', 'run50m', 'sitAndReach', 'boardJump', 'sitUps'];
+    let sum = 0;
+    let count = 0;
+    fields.forEach(f => {
+      const val = parseFloat(current[f]);
+      if (!isNaN(val)) { sum += Math.min(100, val); count++; }
+    });
+    const scoreNum = count > 0 ? Math.round(sum / count) : 0;
+    current.score = scoreNum.toString();
+    current.status = scoreNum >= 85 ? 'Level A (Elite)' : scoreNum >= 70 ? 'Level B' : scoreNum >= 50 ? 'Level C' : 'Level D';
 
-    store.setFitness(id, { ...current, status });
+    store.setFitness(id, current);
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
-    toast({ title: "Instant Sync Complete", description: "Record archived across all devices." });
+    toast({ title: "Instant Sync Complete", description: "Record archived." });
+  };
+
+  const handleAiAnalysis = async (player: any) => {
+    if (!isOnline) {
+      toast({ title: "Offline", description: "AI analysis requires internet connection.", variant: "destructive" });
+      return;
+    }
+
+    const fit = assessments[player.id] || store.data.fitness[player.id] || {};
+    if (!fit.score || fit.score === "0") {
+      toast({ title: "No Data", description: "Please enter fitness scores before analysis.", variant: "destructive" });
+      return;
+    }
+
+    setAnalyzingPlayer(player);
+    setAiLoading(true);
+    setAiModalOpen(true);
+    setSelectedAnalysis(null);
+
+    try {
+      const result = await analyzeFitness({
+        age: player.age,
+        gender: player.gender,
+        testName: "Overall Performance",
+        score: fit.score,
+        language: "English"
+      });
+      setSelectedAnalysis(result);
+      
+      const instr = await getTestInstructions({
+        testName: "Beep Test",
+        language: "English"
+      });
+      setActiveInstruction(instr);
+    } catch (error) {
+      toast({ title: "AI Error", description: "Could not generate analysis.", variant: "destructive" });
+      setAiModalOpen(false);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handlePrint = () => {
-    const currentMonth = format(new Date(), 'MMMM yyyy');
     const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
     const printContent = `
       <html>
         <head>
-          <title>${isGeneral ? 'Growth Report' : 'Athletic Profile'} - ${categoryLabel}</title>
+          <title>Institutional Performance Registry</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; color: #333; }
-            .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #235C36; padding-bottom: 10px; }
-            h1 { color: #235C36; text-transform: uppercase; margin: 0; }
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; }
+            h1 { color: #221d1d; text-transform: uppercase; border-bottom: 2px solid #333; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-            th { background-color: #f8f8f8; font-weight: bold; font-size: 8px; text-transform: uppercase; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background: #f4f4f4; }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>INSTITUTIONAL PERFORMANCE REGISTRY</h1>
-            <p>Period: ${currentMonth} | Category: ${categoryLabel.toUpperCase()}</p>
-          </div>
+          <h1>Performance Registry: ${categoryLabel}</h1>
           <table>
             <thead>
-              <tr>
-                <th>SNR</th>
-                <th>STUDENT NAME</th>
-                <th>GENDER</th>
-                ${isGeneral ? '<th>HT (cm)</th><th>WT (kg)</th><th>EXAM SC</th>' : '<th>10x6 (sec)</th><th>50M (sec)</th><th>600M (min:sec)</th><th>REACH (cm)</th><th>JUMP (cm)</th><th>SITUPS (count)</th><th>ENDURANCE %</th><th>STRENGTH %</th>'}
-                <th>AGGREGATE</th>
-                <th>LEVEL</th>
-              </tr>
+              <tr><th>SNR</th><th>NAME</th><th>STD</th><th>GENDER</th><th>SCORE</th><th>STATUS</th></tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness[p.id] || {};
-                return `
-                  <tr>
-                    <td>${p.serialNumber || ''}</td>
-                    <td><strong>${p.name}</strong> (Std ${p.std})</td>
-                    <td>${p.gender}</td>
-                    ${isGeneral ? `<td>${fit.height || '-'}</td><td>${fit.weight || '-'}</td><td>${fit.examMarks || '-'}</td>` : `<td>${fit.shuttleRun || '-'}</td><td>${fit.run50m || '-'}</td><td>${fit.run600m || '-'}</td><td>${fit.sitAndReach || '-'}</td><td>${fit.boardJump || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.enduranceScore || '-'}%</td><td>${fit.strengthScore || '-'}%</td>`}
-                    <td>${fit.score || '0'}${isGeneral ? '' : '%'}</td>
-                    <td><strong>${fit.status || 'PENDING'}</strong></td>
-                  </tr>
-                `;
+                return `<tr><td>${p.serialNumber || ''}</td><td>${p.name}</td><td>${p.std}</td><td>${p.gender}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -209,36 +205,33 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto">
         {CATEGORIES.map(cat => (
-          <Button
+          <button
             key={cat.id}
-            variant={activeCategory === cat.id ? "default" : "ghost"}
-            size="sm"
-            className={`h-8 rounded px-3 text-[10px] font-black uppercase transition-all ${activeCategory === cat.id ? '' : 'text-muted-foreground'}`}
+            className={cn(
+              "h-8 rounded px-3 text-[10px] font-black uppercase transition-all",
+              activeCategory === cat.id ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
+            )}
             onClick={() => setActiveCategory(cat.id)}
           >
             {cat.label}
-          </Button>
+          </button>
         ))}
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
-          {isGeneral ? <Scale className="w-6 h-6 text-primary" /> : <Activity className="w-6 h-6 text-accent" />}
+          <Activity className="w-6 h-6 text-accent" />
           <div>
-            <h2 className="text-xl font-black text-primary uppercase tracking-tight">
-              {isGeneral ? 'Monthly Growth Registry' : 'Advanced Athletic Hub'}
-            </h2>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
             <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
               <Calendar className="w-3 h-3" /> {format(new Date(), 'MMMM yyyy')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {!isGeneral && (
-            <Badge variant="outline" className="bg-white border-2 border-accent text-accent-foreground font-black uppercase text-[9px] px-3 h-9 hidden md:flex items-center gap-2">
-              <ShieldAlert className="w-3 h-3" /> Auto-Scoring Active
-            </Badge>
-          )}
+          <Badge variant="outline" className="bg-white border-2 border-primary/20 text-primary font-black uppercase text-[9px] px-3 h-9 hidden md:flex items-center gap-2">
+            <BrainCircuit className="w-3 h-3" /> AI Expert Ready
+          </Badge>
           <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary hover:bg-primary/90 text-white">
             <Printer className="w-4 h-4 mr-2" /> Print Sheet
           </Button>
@@ -248,28 +241,16 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm overflow-x-auto">
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
-            <TableRow className="border-b">
+            <TableRow>
               <TableHead className="border-r h-10 px-4 font-black text-[11px] uppercase w-[180px] sticky left-0 bg-muted/95 z-30">Athlete</TableHead>
-              {isGeneral ? (
-                <>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">HT (cm)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">WT (kg)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[90px]">Exam Sc</TableHead>
-                </>
-              ) : (
-                <>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">10x6 (s)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">50M (s)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[75px]">600M (m:s)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach (cm)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump (cm)</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Endurance %</TableHead>
-                  <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-accent/5">Strength %</TableHead>
-                </>
-              )}
-              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[120px]">Final Level</TableHead>
-              <TableHead className="h-10 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">10x6 (s)</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">50M (s)</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[75px]">600M (m:s)</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Reach (cm)</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Jump (cm)</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[60px]">Situps</TableHead>
+              <TableHead className="border-r h-10 px-2 font-black text-[10px] uppercase text-center w-[120px] bg-primary/5">Final Status</TableHead>
+              <TableHead className="h-10 px-2 font-black text-[10px] uppercase text-right w-[100px] sticky right-0 bg-muted/95 z-30">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -278,50 +259,39 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             ) : (
               filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness[player.id] || {};
-                const { strength, endurance } = !isGeneral ? calculateAutoScores(player.id) : { strength: 0, endurance: 0 };
                 const isPulse = lastSavedId === player.id;
                 
                 return (
                   <TableRow key={player.id} className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-12", isPulse && "animate-success-pulse")}>
                     <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10">
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                           <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
-                           <span className="text-primary uppercase truncate w-[120px]">{player.name}</span>
-                        </div>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">{player.gender} • Std {player.std}</span>
+                        <span className="text-primary uppercase truncate w-[120px]">{player.name}</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">#{player.serialNumber || '0'} • Std {player.std}</span>
                       </div>
                     </TableCell>
                     
-                    {isGeneral ? (
-                      <>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.height || ''} onChange={(e) => handleChange(player.id, 'height', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="kg" className="h-12 text-center text-xs border-0 bg-transparent focus:bg-white" value={current.weight || ''} onChange={(e) => handleChange(player.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="Marks" className="h-12 text-center text-xs font-black text-primary border-0 bg-transparent focus:bg-white" value={current.examMarks || ''} onChange={(e) => handleChange(player.id, 'examMarks', e.target.value)} /></TableCell>
-                      </>
-                    ) : (
-                      <>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="sec" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="sec" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input placeholder="MM:SS" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="count" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0 text-center bg-accent/[0.03] text-[10px] font-black">{endurance}%</TableCell>
-                        <TableCell className="border-r p-0 text-center bg-accent/[0.03] text-[10px] font-black">{strength}%</TableCell>
-                      </>
-                    )}
+                    <TableCell className="border-r p-0"><Input type="number" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.boardJump || ''} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                    <TableCell className="border-r p-0"><Input type="number" className="h-12 text-center text-[10px] font-bold border-0 bg-transparent focus:bg-white" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
 
                     <TableCell className="border-r p-1 text-center bg-primary/5">
                       <div className="flex flex-col items-center">
-                        <span className="text-[11px] font-black text-primary">{current.score || '0'}{isGeneral ? '' : '%'}</span>
+                        <span className="text-[11px] font-black text-primary">{current.score || '0'}%</span>
                         <span className="text-[7px] font-black uppercase text-muted-foreground truncate w-full px-1">{current.status || 'Pending'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
-                      <Button variant="ghost" size="icon" className="h-12 w-full text-primary" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
-                        {isSaving === player.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      </Button>
+                      <div className="flex items-center h-full">
+                        <Button variant="ghost" size="icon" className="h-12 w-10 text-primary" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
+                          {isSaving === player.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-12 w-10 text-accent" onClick={() => handleAiAnalysis(player)}>
+                          <BrainCircuit className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -330,6 +300,106 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           </TableBody>
         </Table>
       </div>
+
+      {/* AI Analysis Dialog */}
+      <Dialog open={aiModalOpen} onOpenChange={setAiModalOpen}>
+        <DialogContent className="sm:max-w-[700px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="bg-primary/5 p-8 border-b">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg text-white">
+                <BrainCircuit className="w-8 h-8" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black text-primary uppercase tracking-tight">AI Coach Hub</DialogTitle>
+                <DialogDescription className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest">
+                  Analyzing performance for: {analyzingPlayer?.name}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto">
+            {aiLoading ? (
+              <div className="py-20 text-center space-y-6">
+                <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+                <p className="text-sm font-black uppercase tracking-widest text-primary/40 animate-pulse">Consulting Sports Scientist...</p>
+              </div>
+            ) : (
+              <>
+                {/* 1. Expert Instructions */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
+                    <Info className="w-4 h-4" /> Test Mastery Guide
+                  </h4>
+                  <div className="bg-muted/30 p-6 rounded-3xl border-2 border-dashed border-muted text-sm font-medium leading-relaxed italic text-foreground/70">
+                    "{activeInstruction}"
+                  </div>
+                </div>
+
+                {/* 2. Analysis Report */}
+                {selectedAnalysis && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center justify-between">
+                       <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-accent" /> Data-Driven Analysis
+                      </h4>
+                      <Badge className={cn(
+                        "font-black uppercase text-[10px] px-4 py-1 rounded-full",
+                        selectedAnalysis.status === 'Excellent' ? "bg-emerald-500 text-white" : 
+                        selectedAnalysis.status === 'Average' ? "bg-accent text-white" : 
+                        "bg-destructive text-white"
+                      )}>
+                        {selectedAnalysis.status} Result
+                      </Badge>
+                    </div>
+
+                    <Card className="border-2 rounded-3xl p-6 bg-primary/[0.02]">
+                      <div className="flex gap-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                          <Activity className="w-5 h-5 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-foreground/80 leading-relaxed">
+                          {selectedAnalysis.feedback}
+                        </p>
+                      </div>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card className="border-2 rounded-3xl p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <Dumbbell className="w-5 h-5 text-accent" />
+                          <h5 className="text-[10px] font-black uppercase text-primary tracking-widest">Coaching Drills</h5>
+                        </div>
+                        <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                          {selectedAnalysis.recommendations}
+                        </p>
+                      </Card>
+                      <Card className="border-2 rounded-3xl p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <Trophy className="w-5 h-5 text-emerald-600" />
+                          <h5 className="text-[10px] font-black uppercase text-primary tracking-widest">Sports Benefits</h5>
+                        </div>
+                        <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                          {selectedAnalysis.sportsBenefit}
+                        </p>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="p-8 bg-muted/10 border-t">
+            <Button 
+              onClick={() => setAiModalOpen(false)}
+              className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl"
+            >
+              Back to Registry
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
