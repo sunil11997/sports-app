@@ -1,10 +1,11 @@
 /**
  * Waghamba Sports Hub - High Resilience Service Worker
- * Optimizes chunk loading speed and enables Android PWA installation.
+ * Strategy: Network First, falling back to cache.
+ * This prevents 404 chunk errors during development and updates.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.0.0';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'wgb-v3-cache';
+const ASSETS_TO_CACHE = [
   '/',
   '/icon-512.png',
   '/manifest.webmanifest'
@@ -13,8 +14,7 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('WGB: Pre-caching institutional assets');
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
   self.skipWaiting();
@@ -22,42 +22,39 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
       );
     })
   );
   self.clients.claim();
 });
 
-/**
- * Cache-First Strategy for speed
- * Network-First fallback for data sync
- */
 self.addEventListener('fetch', (event) => {
-  // We only cache static assets and chunks, not Firestore calls or dynamic API routes
-  if (
-    event.request.url.includes('/_next/static/') ||
-    event.request.url.includes('/images/') ||
-    event.request.url.endsWith('.png') ||
-    event.request.url.endsWith('.ico')
-  ) {
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        return fetch(event.request).then((response) => {
-          if (!response || response.status !== 200) return response;
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
+  // Network First Strategy
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // If valid response, clone it and update cache
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
-          return response;
-        });
+        }
+        return response;
       })
-    );
-  } else {
-    // Default network-only/network-first for everything else
-    event.respondWith(fetch(event.request));
-  }
+      .catch(() => {
+        // If network fails, try the cache
+        return caches.match(event.request);
+      })
+  );
 });
