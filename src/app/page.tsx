@@ -164,6 +164,8 @@ export default function WaghambaApp() {
     setActiveTab('home');
   };
 
+  if (!isMounted) return null;
+
   // Stage: Hub
   if (stage === 'hub' && selectedSection) {
     const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;

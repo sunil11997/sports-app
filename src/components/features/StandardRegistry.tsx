@@ -103,28 +103,54 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
 
   const handlePrintTerm = () => {
     const termLabel = activeTerm === 'First' ? 'प्रथम सत्र' : 'द्वितीय सत्र';
+    const academicYear = store.selectedYear || "2024-25";
     const printContent = `
       <html>
         <head>
-          <title>परीक्षा नोंदणी - इयत्ता ${std}</title>
+          <title>परीक्षा नोंदणी - इयत्ता ${std} - ${academicYear}</title>
           <style>
-            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 9px; }
-            h1 { text-align: center; color: #221d1d; border-bottom: 2px solid #333; margin-bottom: 10px; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #000; padding: 4px; text-align: center; }
-            .name-cell { text-align: left; font-weight: bold; }
+            @media print { @page { size: landscape; margin: 1cm; } }
+            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; line-height: 1.2; }
+            .header { text-align: center; border-bottom: 3px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .sub-header { font-size: 14px; font-weight: 800; margin-top: 5px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+            th { background-color: #f5f5f5; font-weight: 900; text-transform: uppercase; font-size: 9px; }
+            .name-cell { text-align: left; font-weight: 900; min-width: 180px; }
+            .total-cell { background-color: #f0f0f0; font-weight: 900; }
+            .footer { margin-top: 50px; display: flex; justify-content: space-between; font-weight: 900; }
+            .sign { border-top: 1px solid #000; width: 220px; text-align: center; padding-top: 5px; }
           </style>
         </head>
         <body>
-          <h1>आश्रम शाळा वाघंबा - परीक्षा गुण व आरोग्य नोंदणी</h1>
-          <h2>इयत्ता: ${std} | ${termLabel}</h2>
+          <div class="header">
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
+            <div class="sub-header">परीक्षा गुण व आरोग्य नोंदणी वही - ${academicYear}</div>
+            <div style="margin-top: 5px; font-weight: 800;">इयत्ता: ${std} | सत्र: ${termLabel}</div>
+          </div>
           <table>
             <thead>
               <tr>
-                <th>Sr</th><th>विद्यार्थ्याचे नाव</th><th>लिंग</th><th>वय</th>
-                <th>उंची</th><th>वजन</th>
-                <th>निरीक्षण</th><th>तोंडीकाम</th><th>प्रयोग</th><th>उपक्रम</th><th>प्रकल्प</th><th>चाचणी</th><th>स्वाध्याय</th>
-                <th>एकूण</th><th>श्रेणी</th>
+                <th rowspan="2">अ.क्र.</th>
+                <th rowspan="2">विद्यार्थ्याचे नाव</th>
+                <th rowspan="2">लिंग</th>
+                <th rowspan="2">वय</th>
+                <th colspan="2">शारीरिक मोजमाप</th>
+                <th colspan="7">आकारिक मूल्यमापन चाचणी गुण (Out of 10)</th>
+                <th rowspan="2">एकूण गुण</th>
+                <th rowspan="2">श्रेणी</th>
+              </tr>
+              <tr>
+                <th>उंची (cm)</th>
+                <th>वजन (kg)</th>
+                <th>निरीक्षण</th>
+                <th>तोंडीकाम</th>
+                <th>प्रयोग</th>
+                <th>उपक्रम</th>
+                <th>प्रकल्प</th>
+                <th>चाचणी</th>
+                <th>स्वाध्याय</th>
               </tr>
             </thead>
             <tbody>
@@ -134,7 +160,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                 return `
                   <tr>
                     <td>${p.serialNumber || i+1}</td>
-                    <td class="name-cell">${p.name}</td>
+                    <td class="name-cell">${p.name.toUpperCase()}</td>
                     <td>${p.gender === 'Female' ? 'महिला' : 'पुरुष'}</td>
                     <td>${p.age}</td>
                     <td>${r.height || p.height || '-'}</td>
@@ -146,20 +172,24 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                     <td>${r.prakalp || '-'}</td>
                     <td>${r.chachani || '-'}</td>
                     <td>${r.swadhyay || '-'}</td>
-                    <td><strong>${total}</strong></td>
-                    <td><strong>${getGrade(total)}</strong></td>
+                    <td class="total-cell">${total}</td>
+                    <td class="total-cell">${getGrade(total)}</td>
                   </tr>
                 `;
               }).join('')}
             </tbody>
           </table>
+          <div class="footer">
+            <div class="sign">वर्ग शिक्षक</div>
+            <div class="sign">मुख्याध्यापक</div>
+          </div>
+          <script>window.print();</script>
         </body>
       </html>
     `;
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
-    win?.print();
   };
 
   if (!store.isLoaded) {
@@ -175,7 +205,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">इयत्ता {std} - परीक्षा नोंदणी</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Comprehensive Profile</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Academic Year {store.selectedYear}</p>
           </div>
         </div>
 
@@ -205,7 +235,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Button onClick={handlePrintTerm} className="h-16 rounded-2xl bg-white border-2 border-primary/10 text-primary hover:bg-primary/5 font-black uppercase text-xs tracking-widest shadow-md">
-          <Printer className="w-5 h-5 mr-2" /> पत्रक प्रिंट करा
+          <Printer className="w-5 h-5 mr-2" /> पत्रक प्रिंट करा (Year: {store.selectedYear})
         </Button>
         <Button className="h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase text-xs tracking-widest shadow-xl">
           <FileText className="w-5 h-5 mr-2" /> वार्षिक निकाल प्रिंट करा
@@ -277,4 +307,3 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     </div>
   );
 }
-
