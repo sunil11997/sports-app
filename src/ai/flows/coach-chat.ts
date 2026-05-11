@@ -38,8 +38,11 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    // Use latest resilient models.
-    const selectedModel = input.engine === 'Gemini' ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
+    // Default to Flash for reliability.
+    let selectedModel = 'gemini-2.5-flash';
+    if (input.engine === 'Gemini') {
+      selectedModel = 'gemini-3.1-pro-preview';
+    }
 
     let attempts = 0;
     const maxAttempts = 3;
@@ -68,6 +71,13 @@ const coachChatFlow = ai.defineFlow(
         return text;
       } catch (error: any) {
         attempts++;
+        
+        // Automatic Fallback on Resource Exhaustion
+        if (error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429')) {
+          console.warn("WGB AI Chat: Quota hit, falling back to Flash model...");
+          selectedModel = 'gemini-2.5-flash';
+        }
+
         console.error(`Coach Chat Attempt ${attempts} failed:`, error.message || error);
         if (attempts >= maxAttempts) throw error;
         await new Promise(resolve => setTimeout(resolve, 2000 * attempts));

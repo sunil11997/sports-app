@@ -115,8 +115,11 @@ const playerRecommendationFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
-    // Use latest high-performance models.
-    const selectedModel = input.engine === 'Gemini' ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
+    // Default to high-resilience model first due to quota restrictions on Pro.
+    let selectedModel = 'gemini-2.5-flash';
+    if (input.engine === 'Gemini') {
+      selectedModel = 'gemini-3.1-pro-preview';
+    }
 
     let attempts = 0;
     const maxAttempts = 3; 
@@ -132,9 +135,16 @@ const playerRecommendationFlow = ai.defineFlow(
       } catch (error: any) {
         lastError = error;
         attempts++;
+        
+        // Automatic Fallback on Resource Exhaustion
+        if (error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429')) {
+          console.warn("WGB AI: Quota hit, falling back to Flash model...");
+          selectedModel = 'gemini-2.5-flash';
+        }
+
         console.error(`AI Recommendation Attempt ${attempts} failed:`, error?.message || error);
         if (attempts >= maxAttempts) throw error;
-        await new Promise(resolve => setTimeout(resolve, 3000 * attempts));
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
       }
     }
     throw lastError || new Error('Failed to generate recommendations.');
