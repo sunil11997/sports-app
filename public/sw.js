@@ -1,15 +1,16 @@
-const CACHE_NAME = 'wgb-cache-v3.1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/icon-512.png',
-  '/manifest.webmanifest'
-];
 
 /**
- * Institutional Service Worker - Optimized for Resilience
- * Uses a Network-First strategy with Cache Fallback to ensure latest chunks
- * are always loaded when online, avoiding common 404 errors in production.
+ * Waghamba Sports Hub - Service Worker
+ * Strategy: Network First (Ensures latest institutional data while allowing offline access)
  */
+
+const CACHE_NAME = 'wgb-sports-v3.1';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/manifest.webmanifest',
+  '/icon-512.png'
+];
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -21,30 +22,36 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
       );
     })
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignore external API calls and analytics
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
 
-  // Network-First with Cache Fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        // Cache static assets and chunks for faster subsequent loads
+        if (response.status === 200 && (
+          event.request.url.includes('_next/static') || 
+          event.request.url.includes('.png') ||
+          event.request.url.includes('.js')
+        )) {
+          const resClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => {
+        // Fallback to cache if network fails (Offline mode)
+        return caches.match(event.request);
+      })
   );
 });

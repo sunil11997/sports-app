@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -29,7 +30,8 @@ import {
   Medal,
   HeartPulse,
   History as HistoryIcon,
-  Ruler
+  Ruler,
+  RefreshCcw
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -37,7 +39,7 @@ import { cn } from '@/lib/utils';
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
 /**
- * Unified Enrollment Schema - COMPLETE VERSION
+ * Unified Enrollment Schema
  * Only Name and Std are compulsory as requested.
  */
 const formSchema = z.object({
@@ -124,6 +126,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
     } catch (error) {
       toast({ variant: 'destructive', title: 'Camera Error', description: 'Please check permissions.' });
     }
+  };
+
+  const toggleCamera = () => {
+    if (!activeCam) return;
+    const nextMode = facingMode === 'user' ? 'environment' : 'user';
+    startCamera(activeCam, nextMode);
   };
 
   const takePhoto = () => {
@@ -252,9 +260,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest">Awaiting Capture</span></div>
                     )}
                     {activeCam === 'profile' && (
-                      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 px-6 z-20">
-                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-14 rounded-2xl shadow-xl active-scale">CAPTURE</Button>
-                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-14 h-14 p-0 rounded-2xl shadow-xl"><XCircle className="w-6 h-6" /></Button>
+                      <div className="absolute bottom-6 left-0 right-0 flex flex-col gap-3 px-6 z-20">
+                        <Button type="button" onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 backdrop-blur h-10 rounded-xl font-black text-[9px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Flip Camera</Button>
+                        <div className="flex gap-3">
+                          <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-14 rounded-2xl shadow-xl active-scale">CAPTURE</Button>
+                          <Button type="button" variant="destructive" onClick={stopCamera} className="w-14 h-14 p-0 rounded-2xl shadow-xl"><XCircle className="w-6 h-6" /></Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -284,9 +295,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /><span className="text-[8px] font-black uppercase tracking-widest mt-2">No Document Scanned</span></div>
                     )}
                     {activeCam === 'aadhar' && (
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-6">
-                        <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
-                        <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                      <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-6">
+                        <Button type="button" onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Switch Camera</Button>
+                        <div className="flex gap-2">
+                          <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
+                          <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -352,7 +366,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
                     <Ruler className="w-5 h-5" />
-                    <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical Measurement</h3>
+                    <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical & Aadhar</h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <FormField control={form.control} name="height" render={({ field }) => (
@@ -368,9 +382,15 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Contact No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-mono" {...field} /></FormControl></FormItem>
                     )} />
                   </div>
-                  <FormField control={form.control} name="medical" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions (if any)</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries, Allergies..." {...field} /></FormControl></FormItem>
-                  )} />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField control={form.control} name="aadharNumber" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-primary">Aadhar Number (12-Digit)</FormLabel><FormControl><Input placeholder="0000 0000 0000" className="h-14 font-mono font-black border-2 rounded-2xl text-center text-lg" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="medical" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions</FormLabel><FormControl><Textarea className="min-h-[56px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries..." {...field} /></FormControl></FormItem>
+                    )} />
+                  </div>
                 </div>
 
                 {/* Sports Specific Section */}
@@ -397,7 +417,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       </div>
                     </div>
                     <FormField control={form.control} name="histDetail" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><HistoryIcon className="w-3 h-3" /> Competition History</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="Previous participation in Zilla Parishad or Inter-school meets..." {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><HistoryIcon className="w-3 h-3" /> Competition History</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="Previous participation details..." {...field} /></FormControl></FormItem>
                     )} />
                   </div>
                 )}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -100,6 +101,12 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     }
   };
 
+  const toggleCamera = () => {
+    if (!activeCam) return;
+    const nextMode = facingMode === 'user' ? 'environment' : 'user';
+    startCamera(activeCam, nextMode);
+  };
+
   const stopCamera = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -153,6 +160,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const filteredPlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => {
+        // In general section, we show EVERYONE (both regular students and athletes)
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
           (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
@@ -263,7 +271,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center shadow-inner">
             {isGeneral ? <GraduationCap className="w-5 h-5 text-primary" /> : <Medal className="w-5 h-5 text-primary" />}
           </div>
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry' : 'Athlete Roster'}</h2>
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry (All)' : 'Athlete Roster'}</h2>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
@@ -351,9 +359,12 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                              <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase">No Photo</span></div>
                            )}
                            {activeCam === 'profile' && (
-                             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-20">
-                               <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
-                               <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><XCircle className="w-6 h-6" /></Button>
+                             <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-4 z-20">
+                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/90 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Switch Camera</Button>
+                               <div className="flex gap-2">
+                                 <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
+                                 <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><XCircle className="w-6 h-6" /></Button>
+                               </div>
                              </div>
                            )}
                         </div>
@@ -377,9 +388,12 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                              <div className="w-full h-full flex flex-col items-center justify-center opacity-30"><Fingerprint className="w-8 h-8" /></div>
                            )}
                            {activeCam === 'aadhar' && (
-                             <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 px-4">
-                               <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[9px] rounded-xl">SCAN</Button>
-                               <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-4 h-4" /></Button>
+                             <div className="absolute bottom-2 left-0 right-0 flex flex-col gap-1.5 px-4">
+                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/90 h-6 rounded font-black text-[7px] uppercase">Flip Cam</Button>
+                               <div className="flex gap-2">
+                                 <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[9px] rounded-xl">SCAN</Button>
+                                 <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-4 h-4" /></Button>
+                               </div>
                              </div>
                            )}
                         </div>
@@ -408,7 +422,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Mobile</Label><Input value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-10 font-mono border-2" /></div>
                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup || 'None'} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                         </div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-mono font-black border-2 text-center" /></div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input placeholder="0000 0000 0000" value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-mono font-black border-2 text-center" /></div>
                         <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-10 font-bold border-2" /></div>
                         <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-10 font-bold border-2" /></div>
                       </div>
