@@ -7,7 +7,7 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 
 /**
  * initializeFirebase - Institutional Registry Engine
- * Optimized for high-resilience persistence using IndexedDB.
+ * Optimized for high-resilience persistence and Native Android environments.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
@@ -29,7 +29,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   const auth = getAuth(firebaseApp);
   
   if (isClient) {
-    // 1. Set Robust Auth Persistence (IndexedDB is best for PWAs)
+    // 1. Set Robust Auth Persistence (IndexedDB is best for native-like PWAs)
     try {
       setPersistence(auth, indexedDBLocalPersistence);
     } catch (e) {
@@ -37,12 +37,14 @@ export function getSdks(firebaseApp: FirebaseApp) {
     }
 
     // 2. Initialize Firestore with Multi-Tab Offline Persistence
+    // Added experimentalAutoDetectLongPolling for Android WebView compatibility
     let firestore: Firestore;
     try {
       firestore = initializeFirestore(firebaseApp, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
-        })
+        }),
+        experimentalAutoDetectLongPolling: true
       });
     } catch (e: any) {
       firestore = getFirestore(firebaseApp);

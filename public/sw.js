@@ -1,53 +1,39 @@
 /**
- * Institutional Service Worker - Native Android Optimization
- * Version: 3.2.1
- * 
- * Strategically configured to handle local asset serving for Capacitor
- * while ensuring that cloud-synced data is always prioritized.
+ * WGB Sports Hub - High-Availability Service Worker
+ * Strategy: Network First, falling back to cache.
+ * Purpose: Ensures the latest code chunks are used, preventing 404 ChunkLoadErrors.
  */
 
-const CACHE_NAME = 'wgb-institutional-v3.2.1';
+const CACHE_NAME = 'wgb-institutional-v3.2';
 
-// 1. Force immediate update logic to resolve "old app" issues
+// 1. Immediate Activation
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  console.log('WGB SW: Installing new version and forcing immediate takeover...');
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.filter((cacheName) => {
-          return cacheName !== CACHE_NAME;
-        }).map((cacheName) => {
-          console.log('WGB SW: Deleting obsolete cache:', cacheName);
-          return caches.delete(cacheName);
-        })
+        cacheNames.filter((cacheName) => cacheName !== CACHE_NAME)
+                  .map((cacheName) => caches.delete(cacheName))
       );
-    }).then(() => {
-      console.log('WGB SW: Cache cleared. App updated.');
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// 2. Network-First Strategy for App Stability
+// 2. Network-First Fetching
 self.addEventListener('fetch', (event) => {
-  // Bypass for Firebase internal calls and Chrome extensions
-  if (
-    event.request.url.includes('firestore.googleapis.com') ||
-    event.request.url.includes('firebaseinstallations.googleapis.com') ||
-    event.request.url.includes('chrome-extension')
-  ) {
+  // Skip cross-origin or chrome-extension requests (like Firebase background auth)
+  if (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('firebasestorage')) {
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If network request is successful, clone it into cache
-        if (response && response.status === 200 && response.type === 'basic') {
+        // Cache valid successful responses
+        if (response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -56,7 +42,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // If network fails, serve from cache
+        // Fallback to cache if network is unavailable
         return caches.match(event.request);
       })
   );
