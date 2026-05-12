@@ -4,6 +4,7 @@ import { MetadataRoute } from 'next'
  * Waghamba Sports Hub - PWA Manifest
  * Configures how the app appears when installed on a device.
  * Meets all criteria for modern browser "Add to Home Screen" eligibility.
+ * PURPOSES: 'maskable' ensures the icon covers the full area on Android.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {

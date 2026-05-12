@@ -174,17 +174,15 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       })
       .sort((a: any, b: any) => {
         if (isGeneral) {
-          // General Section: Sort by Standard Primary
           const stdA = parseInt(a.std) || 0;
           const stdB = parseInt(b.std) || 0;
           if (stdA !== stdB) return stdA - stdB;
           return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
         } else {
-          // Sports Section: Sort by "Under" Category (Age + Gender)
           const getCategoryRank = (p: any) => {
             const age = parseInt(p.age) || 0;
             const genderRank = p.gender === 'Female' ? 0 : 1;
-            let ageRank = 2; // Senior
+            let ageRank = 2;
             if (age < 14) ageRank = 0;
             else if (age < 17) ageRank = 1;
             return genderRank * 10 + ageRank; 
@@ -281,6 +279,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
+    win?.print();
   };
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;

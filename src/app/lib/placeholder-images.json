@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "institutional-logo",
-      "description": "Professional Physical Education torch logo with vibrant blue identity.",
+      "description": "Sports-themed logo with colorful circles and an athlete silhouette.",
       "imageUrl": "/icon-512.png",
-      "imageHint": "Torch Logo"
+      "imageHint": "Sports Logo"
     },
     {
       "id": "school-sports-hero",
