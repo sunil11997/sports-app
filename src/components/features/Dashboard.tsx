@@ -195,33 +195,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       });
   }, [store.data.players, isGeneral, searchTerm]);
 
-  const getHealthStatus = (bmi: string) => {
-    const val = parseFloat(bmi);
-    if (!val || isNaN(val)) return { label: 'Pending', color: 'bg-muted text-muted-foreground' };
-    if (val < 18.5) return { label: 'Underweight', color: 'bg-orange-100 text-orange-700 border-orange-200' };
-    if (val <= 24.9) return { label: 'Fit', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
-    return { label: 'Overweight', color: 'bg-red-100 text-red-700 border-red-200' };
-  };
-
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      const dobDate = editingPlayer.dob ? new Date(editingPlayer.dob) : null;
-      const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : editingPlayer.age;
-      
-      let bmi = editingPlayer.bmi;
-      if (editingPlayer.height && editingPlayer.weight) {
-        const h = parseFloat(editingPlayer.height) / 100;
-        const w = parseFloat(editingPlayer.weight);
-        bmi = (w / (h * h)).toFixed(1);
-      }
-      
-      store.updatePlayer({
-        ...editingPlayer,
-        age: isNaN(age) ? 0 : age,
-        bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi
-      });
+      store.updatePlayer(editingPlayer);
       setEditingPlayer(null);
-      toast({ title: "Record Updated", description: `${editingPlayer.name}'s profile saved.` });
+      toast({ title: "Record Updated" });
     }
   };
 
@@ -233,72 +211,20 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     }
   };
 
-  const handlePrint = () => {
-    const printContent = `
-      <html>
-        <head>
-          <title>Institutional Registry - ${section}</title>
-          <style>
-            @media print { @page { size: A4; margin: 1cm; } .no-print { display: none; } }
-            body { font-family: Inter, sans-serif; padding: 20px; color: #111; font-size: 11px; }
-            .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 18px; font-weight: 900; color: #235C36; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background: #f4f4f4; font-weight: bold; text-transform: uppercase; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div style="font-weight: 800;">${isGeneral ? 'GENERAL REGISTRY' : 'ATHLETE ROSTER'} - ${store.selectedYear}</div>
-          </div>
-          <table>
-            <thead>
-              <tr><th>SR. NO</th><th>GR NO.</th><th>NAME</th><th>GENDER</th><th>${isGeneral ? 'STD' : 'CATEGORY'}</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
-            </thead>
-            <tbody>
-              ${filteredPlayers.map((p: any) => `
-                <tr>
-                  <td>${p.serialNumber || '-'}</td>
-                  <td>${p.generalRegisterNumber || '-'}</td>
-                  <td><strong>${p.name.toUpperCase()}</strong></td>
-                  <td>${p.gender}</td>
-                  <td>${isGeneral ? 'Std ' + p.std : getAgeCategory(p.age, p.gender)}</td>
-                  <td>${p.height}/${p.weight}</td>
-                  <td>${p.bmi}</td>
-                  <td>${getHealthStatus(p.bmi).label}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <script>window.print();</script>
-        </body>
-      </html>
-    `;
-    const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
-    win?.print();
-  };
-
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center shadow-inner">
+          <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center">
             {isGeneral ? <GraduationCap className="w-5 h-5 text-primary" /> : <Medal className="w-5 h-5 text-primary" />}
           </div>
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry (Std-wise)' : 'Athlete Roster (Under-wise)'}</h2>
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry' : 'Athlete Roster'}</h2>
         </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search name or GR number..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-          <Button onClick={handlePrint} size="icon" variant="outline" className="rounded-full h-11 w-11 hover:bg-primary/5 border-muted"><Printer className="w-4 h-4" /></Button>
+        <div className="relative flex-1 md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search name or GR number..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
       </div>
 
@@ -308,28 +234,23 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
             <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Category'}</TableHead>
-            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">BMI Index</TableHead>
-            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Status</TableHead>
+            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Aadhar Number</TableHead>
             <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow> : 
+            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow> : 
             filteredPlayers.map((p: any) => {
-              const health = getHealthStatus(p.bmi);
               return (
                 <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
                   <TableCell className="px-6 text-sm font-black text-primary/60">#{p.serialNumber || '0'}</TableCell>
                   <TableCell className="px-4">
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-11 h-11 border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform" onClick={() => setViewingPhoto(p.photoUrl || null)}>
+                      <Avatar className="w-11 h-11 border-2 border-white shadow-sm" onClick={() => setViewingPhoto(p.photoUrl || null)}>
                         <AvatarImage src={p.photoUrl} className="object-cover" />
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
-                          {p.category === 'athlete' && <Badge className="h-4 px-1.5 bg-accent text-[7px] font-black uppercase">ATHLETE</Badge>}
-                        </div>
+                        <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} • GR: {p.generalRegisterNumber || 'N/A'}</p>
                       </div>
                     </div>
@@ -341,12 +262,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                       <Badge className="rounded-full px-3 py-0.5 bg-accent text-accent-foreground text-[10px] font-black">{getAgeCategory(p.age, p.gender)}</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="px-4 text-center font-mono font-black text-xs text-primary/70">{p.bmi}</TableCell>
-                  <TableCell className="px-4 text-center">
-                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase px-3 py-1 rounded-full border-2", health.color)}>
-                      {health.label}
-                    </Badge>
-                  </TableCell>
+                  <TableCell className="px-4 text-center font-mono font-black text-xs text-primary/70">{p.aadharNumber || 'Pending'}</TableCell>
                   <TableCell className="px-6 text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
@@ -363,8 +279,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
         <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
           <DialogHeader className="bg-primary/5 p-8 border-b shrink-0">
-            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Comprehensive Profile Editor</DialogTitle>
-            <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Multi-Registry Sync</p>
+            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Edit Student Profile</DialogTitle>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto">
@@ -380,11 +295,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                            ) : editingPlayer.photoUrl ? (
                              <img src={editingPlayer.photoUrl} alt="Profile" className="w-full h-full object-cover" />
                            ) : (
-                             <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase">No Photo</span></div>
+                             <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /></div>
                            )}
                            {activeCam === 'profile' && (
                              <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-4 z-20">
-                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/90 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Switch Camera</Button>
+                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Flip Camera</Button>
                                <div className="flex gap-2">
                                  <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
                                  <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><XCircle className="w-6 h-6" /></Button>
@@ -394,38 +309,8 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                         </div>
                         {!activeCam && (
                           <div className="flex gap-2">
-                            <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary text-white rounded-xl h-10 font-black text-[10px] uppercase"><Camera className="w-3 h-3 mr-2" /> Recapture</Button>
-                            <Button variant="outline" onClick={() => profileUploadRef.current?.click()} className="w-10 h-10 p-0 border-2 rounded-xl"><Upload className="w-4 h-4" /></Button>
+                            <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary text-white rounded-xl h-10 font-black text-[10px] uppercase">Recapture</Button>
                             <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ScanLine className="w-4 h-4" /> Aadhar Scan</Label>
-                        <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
-                           {activeCam === 'aadhar' ? (
-                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                           ) : editingPlayer.aadharPhotoUrl ? (
-                             <img src={editingPlayer.aadharPhotoUrl} alt="Aadhar" className="w-full h-full object-cover" />
-                           ) : (
-                             <div className="w-full h-full flex flex-col items-center justify-center opacity-30"><Fingerprint className="w-8 h-8" /></div>
-                           )}
-                           {activeCam === 'aadhar' && (
-                             <div className="absolute bottom-2 left-0 right-0 flex flex-col gap-1.5 px-4">
-                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/90 h-6 rounded font-black text-[7px] uppercase">Flip Cam</Button>
-                               <div className="flex gap-2">
-                                 <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[9px] rounded-xl">SCAN</Button>
-                                 <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-4 h-4" /></Button>
-                               </div>
-                             </div>
-                           )}
-                        </div>
-                        {!activeCam && (
-                          <div className="flex gap-2">
-                            <Button onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/10 text-accent-foreground border-2 border-accent/20 rounded-xl h-10 font-black text-[10px] uppercase">New Scan</Button>
-                            <Button variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-10 h-10 p-0 border-2 rounded-xl"><Upload className="w-4 h-4" /></Button>
-                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                           </div>
                         )}
                       </div>
@@ -433,49 +318,15 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
                    <div className="space-y-6">
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-10 font-bold border-2" /></div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={v => setEditingPlayer({...editingPlayer, gender: v as any})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Std</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Sr No</Label><Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-10 font-black border-2" /></div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">GR No</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-10 font-black border-2" /></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number (12 Digit)</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Mobile</Label><Input value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-10 font-mono border-2" /></div>
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup || 'None'} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Roll No</Label><Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-10 font-black border-2" /></div>
                         </div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input placeholder="0000 0000 0000" value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-mono font-black border-2 text-center" /></div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-10 font-bold border-2" /></div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-10 font-bold border-2" /></div>
                       </div>
-                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t pt-10">
-                   <div className="space-y-6">
-                      <div className="flex items-center gap-2 text-primary border-b pb-2"><HeartPulse className="w-4 h-4" /><h3 className="text-xs font-black uppercase">Medical & Recovery</h3></div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-10 border-2" /></div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-10 border-2" /></div>
-                      </div>
-                      <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Clinical Notes</Label><Textarea value={editingPlayer.medical} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[80px] border-2" /></div>
-                   </div>
-                   <div className="space-y-6">
-                      <div className="flex items-center gap-2 text-primary border-b pb-2"><Medal className="w-4 h-4" /><h3 className="text-xs font-black uppercase">Sports Participation</h3></div>
-                      <div className="bg-muted/30 p-5 rounded-2xl border-2 border-dashed grid grid-cols-2 gap-x-6 gap-y-2">
-                         {SPORTS_LIST.map(sport => (
-                           <div key={sport} className="flex items-center space-x-2">
-                             <Checkbox id={`ed-${sport}`} checked={editingPlayer.sports?.includes(sport)} onCheckedChange={c => {
-                               const s = editingPlayer.sports || [];
-                               setEditingPlayer({...editingPlayer, sports: c ? [...s, sport] : s.filter(x => x !== sport)});
-                             }} />
-                             <label htmlFor={`ed-${sport}`} className="text-[9px] font-bold uppercase cursor-pointer">{sport}</label>
-                           </div>
-                         ))}
-                      </div>
-                      <div className="space-y-1"><Label className="text-[9px] font-black opacity-60">Performance History</Label><Textarea value={editingPlayer.histDetail} onChange={e => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="min-h-[80px] border-2" /></div>
                    </div>
                 </div>
               </div>
@@ -485,27 +336,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
             <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-8 font-black uppercase text-[10px] h-14">Discard</Button>
             <Button onClick={handleUpdatePlayer} className="bg-primary px-16 rounded-full font-black uppercase text-[10px] shadow-xl text-white h-14">
-              Sync Record to Cloud
+              Update Profile
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      <AlertDialog open={!!deletingPlayerId} onOpenChange={() => setDeletingPlayerId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] p-8 border-none">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black uppercase text-destructive">Permanently Delete Record?</AlertDialogTitle>
-            <AlertDialogDescription className="font-medium text-foreground/70">
-              This action cannot be undone. All historical data including attendance and fitness logs for this student will be lost.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-8 gap-4">
-            <AlertDialogCancel className="rounded-2xl h-14 font-black uppercase text-[10px] border-2">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="rounded-2xl h-14 font-black uppercase text-[10px] bg-destructive text-white hover:bg-destructive/90 shadow-lg">Confirm Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <canvas ref={canvasRef} hidden />
     </div>
   );

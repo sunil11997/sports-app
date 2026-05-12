@@ -1,39 +1,45 @@
 /**
- * WGB Sports Hub - High-Availability Service Worker
- * Strategy: Network First, falling back to cache.
- * Purpose: Ensures the latest code chunks are used, preventing 404 ChunkLoadErrors.
+ * WGB Sports Hub - High-Resilience Service Worker
+ * Strategy: Network First (falls back to cache)
+ * Purpose: Ensures the latest code is always fetched while providing offline native support.
  */
 
-const CACHE_NAME = 'wgb-institutional-v3.2';
+const CACHE_NAME = 'wgb-hub-v3.2';
+const STATIC_ASSETS = [
+  '/',
+  '/manifest.webmanifest',
+  '/icon-512.png',
+];
 
-// 1. Immediate Activation
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.filter((cacheName) => cacheName !== CACHE_NAME)
-                  .map((cacheName) => caches.delete(cacheName))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
-// 2. Network-First Fetching
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin or chrome-extension requests (like Firebase background auth)
-  if (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('firebasestorage')) {
-    return;
-  }
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache valid successful responses
-        if (response.status === 200 && response.type === 'basic') {
+        // If valid response, clone and cache it
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -42,7 +48,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache if network is unavailable
+        // Fallback to cache if network fails
         return caches.match(event.request);
       })
   );

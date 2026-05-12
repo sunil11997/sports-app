@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -38,10 +37,6 @@ import { cn } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
 
-/**
- * Unified Enrollment Schema
- * Only Name and Std are compulsory as requested.
- */
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   std: z.string().min(1, "Standard is required"),
@@ -53,7 +48,7 @@ const formSchema = z.object({
   weight: z.string().optional().default(""),
   bloodGroup: z.string().optional().default("None"),
   generalRegisterNumber: z.string().optional().default(""),
-  aadharNumber: z.string().optional().default(""),
+  aadharNumber: z.string().min(12, "Aadhar must be 12 digits").optional().or(z.literal("")),
   mobileNumber: z.string().optional().default(""),
   address: z.string().optional().default(""),
   sports: z.array(z.string()).optional().default([]),
@@ -245,11 +240,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              {/* Profile Images Column */}
               <div className="lg:col-span-4 space-y-10">
                 <div className="space-y-4">
                   <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4" /> Identity Photo (Profile)
+                    <ImageIcon className="w-4 h-4" /> Identity Photo
                   </FormLabel>
                   <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-2xl group">
                     {activeCam === 'profile' ? (
@@ -309,18 +303,13 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest hover:bg-accent/10 transition-all">
                         <Fingerprint className="w-4 h-4 mr-2" /> Live Scan
                       </Button>
-                      <Button type="button" onClick={() => aadharUploadRef.current?.click()} variant="outline" className="w-12 h-12 p-0 rounded-2xl border-2">
-                        <Upload className="w-5 h-5" />
-                      </Button>
                       <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Data Fields Column */}
               <div className="lg:col-span-8 space-y-12">
-                {/* Core Identification Section */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
                     <Hash className="w-5 h-5" />
@@ -362,7 +351,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   </div>
                 </div>
 
-                {/* Health & Physicals Section */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
                     <Ruler className="w-5 h-5" />
@@ -385,7 +373,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField control={form.control} name="aadharNumber" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-primary">Aadhar Number (12-Digit)</FormLabel><FormControl><Input placeholder="0000 0000 0000" className="h-14 font-mono font-black border-2 rounded-2xl text-center text-lg" {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-primary">Aadhar Number (12-Digit)</FormLabel><FormControl><Input placeholder="0000 0000 0000" className="h-14 font-mono font-black border-2 rounded-2xl text-center text-lg" {...field} maxLength={12} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="medical" render={({ field }) => (
                       <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions</FormLabel><FormControl><Textarea className="min-h-[56px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries..." {...field} /></FormControl></FormItem>
@@ -393,7 +381,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   </div>
                 </div>
 
-                {/* Sports Specific Section */}
                 {form.watch('category') === 'athlete' && (
                   <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
@@ -416,9 +403,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         ))}
                       </div>
                     </div>
-                    <FormField control={form.control} name="histDetail" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><HistoryIcon className="w-3 h-3" /> Competition History</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="Previous participation details..." {...field} /></FormControl></FormItem>
-                    )} />
                   </div>
                 )}
                 
