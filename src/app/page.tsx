@@ -450,8 +450,8 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="w-32 h-32 bg-white p-6 rounded-[3rem] shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center relative">
-            <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover" />
+          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center relative overflow-hidden">
+            <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
