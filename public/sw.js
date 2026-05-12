@@ -1,42 +1,52 @@
 /**
- * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First with Aggressive Update
- * Resolves 404 ChunkLoadErrors and ensures the Android app updates immediately.
+ * Institutional Service Worker - Native Android Optimization
+ * Version: 3.2.1
+ * 
+ * Strategically configured to handle local asset serving for Capacitor
+ * while ensuring that cloud-synced data is always prioritized.
  */
 
-const CACHE_NAME = 'wgb-cache-v3.2';
+const CACHE_NAME = 'wgb-institutional-v3.2.1';
 
-// 1. Force immediate activation of the new Service Worker
+// 1. Force immediate update logic to resolve "old app" issues
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  console.log('WGB SW: Installing new version and forcing immediate takeover...');
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    Promise.all([
-      // Take control of all pages immediately
-      self.clients.claim(),
-      // Delete old caches
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.filter((name) => name !== CACHE_NAME)
-            .map((name) => caches.delete(name))
-        );
-      })
-    ])
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.filter((cacheName) => {
+          return cacheName !== CACHE_NAME;
+        }).map((cacheName) => {
+          console.log('WGB SW: Deleting obsolete cache:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+    }).then(() => {
+      console.log('WGB SW: Cache cleared. App updated.');
+      return self.clients.claim();
+    })
   );
-  console.log('WGB: Service Worker Active & Cache Purged');
 });
 
-// 2. Network-First Fetch Strategy
+// 2. Network-First Strategy for App Stability
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  // Bypass for Firebase internal calls and Chrome extensions
+  if (
+    event.request.url.includes('firestore.googleapis.com') ||
+    event.request.url.includes('firebaseinstallations.googleapis.com') ||
+    event.request.url.includes('chrome-extension')
+  ) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If valid network response, clone and cache it
+        // If network request is successful, clone it into cache
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -46,7 +56,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache if network fails (Offline mode)
+        // If network fails, serve from cache
         return caches.match(event.request);
       })
   );
