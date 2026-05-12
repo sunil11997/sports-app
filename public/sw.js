@@ -1,69 +1,71 @@
 /**
- * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First (Attempt server, fallback to cache)
- * Prevents Next.js 404 ChunkLoadErrors and enables Android installation.
+ * Waghamba Sports Hub - Network-First Service Worker
+ * 
+ * Strategy:
+ * 1. Network First for JS Chunks and HTML Navigation to prevent 404 ChunkLoadErrors.
+ * 2. Stale-while-revalidate for static images and assets.
+ * 
+ * This resolves the "Cannot read properties of undefined (reading 'call')" error
+ * by ensuring the latest bundle is always used.
  */
 
-const CACHE_NAME = 'wgb-sports-v3.1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/icon-512.png',
-  '/manifest.webmanifest'
-];
+const CACHE_NAME = 'wgb-registry-cache-v3';
 
-// Install Event - Pre-cache basic institutional assets
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('WGB: Pre-caching core assets');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate Event - Clean up old cache versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('WGB: Clearing legacy cache:', cache);
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
-// Fetch Event - Network First Strategy
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests for standard resources
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
+  const url = new URL(request.url);
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If network is successful, clone to cache and return
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, resClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        // If offline or network fails, fallback to cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          
-          // If neither network nor cache works (rare)
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
+  // Network First for Next.js internal chunks and Page Navigation
+  if (
+    request.mode === 'navigate' || 
+    url.pathname.includes('/_next/static/') ||
+    url.pathname.endsWith('.js')
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
-        });
-      })
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for everything else (images, etc)
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request).then((networkResponse) => {
+        if (networkResponse.status === 200) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse.clone()));
+        }
+        return networkResponse;
+      });
+      return cachedResponse || fetchPromise;
+    })
   );
 });
