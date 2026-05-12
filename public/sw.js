@@ -1,22 +1,22 @@
 /**
  * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First with Cache Fallback.
- * This ensures the latest institutional code is used while online, 
- * but the registry remains accessible offline.
+ * Implements a "Network-First" strategy for JS/CSS chunks to prevent 404s.
+ * Ensures the app is installable on Android.
  */
 
-const CACHE_NAME = 'wgb-institutional-v3.1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'wgb-hub-v3.1';
+const STATIC_ASSETS = [
   '/',
+  '/manifest.webmanifest',
   '/icon-512.png',
-  '/manifest.webmanifest'
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
 });
@@ -25,7 +25,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
     })
   );
@@ -33,24 +33,39 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin and Firebase/Google API requests to avoid CORs/Quota issues
-  if (!event.request.url.startsWith(self.location.origin)) return;
+  const url = new URL(event.request.url);
 
+  // Network-First for code chunks and style files to avoid 404s during deployments
+  if (url.pathname.includes('/_next/static/') || url.pathname.includes('.js') || url.pathname.includes('.css')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-First for internal images and logos
+  if (url.pathname.includes('/images/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((response) => {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Default: Network-First with Offline fallback for the main page
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        // If network succeeds, clone to cache
-        if (response && response.status === 200) {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // If network fails, serve from cache
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request) || caches.match('/'))
   );
 });

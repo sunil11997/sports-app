@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -157,10 +156,16 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
   const isGeneral = section === 'general';
 
+  const getAgeCategory = (age: number, gender: string) => {
+    const g = gender === 'Female' ? 'Girls' : 'Boys';
+    if (age < 14) return `${g} U14`;
+    if (age < 17) return `${g} U17`;
+    return `${g} Senior`;
+  };
+
   const filteredPlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => {
-        // In general section, we show EVERYONE (both regular students and athletes)
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
           (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
@@ -168,11 +173,27 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         return matchesSection && matchesSearch;
       })
       .sort((a: any, b: any) => {
-        const stdA = parseInt(a.std) || 0;
-        const stdB = parseInt(b.std) || 0;
-        if (stdA !== stdB) return stdA - stdB;
-        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
-        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+        if (isGeneral) {
+          // General Section: Sort by Standard Primary
+          const stdA = parseInt(a.std) || 0;
+          const stdB = parseInt(b.std) || 0;
+          if (stdA !== stdB) return stdA - stdB;
+          return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+        } else {
+          // Sports Section: Sort by "Under" Category (Age + Gender)
+          const getCategoryRank = (p: any) => {
+            const age = parseInt(p.age) || 0;
+            const genderRank = p.gender === 'Female' ? 0 : 1;
+            let ageRank = 2; // Senior
+            if (age < 14) ageRank = 0;
+            else if (age < 17) ageRank = 1;
+            return genderRank * 10 + ageRank; 
+          };
+          const rankA = getCategoryRank(a);
+          const rankB = getCategoryRank(b);
+          if (rankA !== rankB) return rankA - rankB;
+          return a.name.localeCompare(b.name);
+        }
       });
   }, [store.data.players, isGeneral, searchTerm]);
 
@@ -236,7 +257,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </div>
           <table>
             <thead>
-              <tr><th>SR. NO</th><th>GR NO.</th><th>NAME</th><th>GENDER</th><th>STD</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
+              <tr><th>SR. NO</th><th>GR NO.</th><th>NAME</th><th>GENDER</th><th>${isGeneral ? 'STD' : 'CATEGORY'}</th><th>HT/WT</th><th>BMI</th><th>HEALTH</th></tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => `
@@ -245,7 +266,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   <td>${p.generalRegisterNumber || '-'}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td>${p.gender}</td>
-                  <td>${p.std}</td>
+                  <td>${isGeneral ? 'Std ' + p.std : getAgeCategory(p.age, p.gender)}</td>
                   <td>${p.height}/${p.weight}</td>
                   <td>${p.bmi}</td>
                   <td>${getHealthStatus(p.bmi).label}</td>
@@ -271,7 +292,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center shadow-inner">
             {isGeneral ? <GraduationCap className="w-5 h-5 text-primary" /> : <Medal className="w-5 h-5 text-primary" />}
           </div>
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry (All)' : 'Athlete Roster'}</h2>
+          <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry (Std-wise)' : 'Athlete Roster (Under-wise)'}</h2>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
@@ -287,7 +308,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           <TableHeader className="bg-muted/30"><TableRow>
             <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
-            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Standard</TableHead>
+            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Category'}</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">BMI Index</TableHead>
             <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Status</TableHead>
             <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
@@ -315,7 +336,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                     </div>
                   </TableCell>
                   <TableCell className="px-4 text-center">
-                    <Badge variant="outline" className="rounded-full px-3 py-0.5 border-muted text-[10px] font-black text-muted-foreground">Std {p.std}</Badge>
+                    {isGeneral ? (
+                      <Badge variant="outline" className="rounded-full px-3 py-0.5 border-muted text-[10px] font-black text-muted-foreground">Std {p.std}</Badge>
+                    ) : (
+                      <Badge className="rounded-full px-3 py-0.5 bg-accent text-accent-foreground text-[10px] font-black">{getAgeCategory(p.age, p.gender)}</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="px-4 text-center font-mono font-black text-xs text-primary/70">{p.bmi}</TableCell>
                   <TableCell className="px-4 text-center">
