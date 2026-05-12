@@ -35,7 +35,9 @@ import {
   BarChart3,
   Dumbbell,
   Star,
-  Gift
+  Gift,
+  User,
+  School
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -174,7 +176,6 @@ export default function WaghambaApp() {
       let highestScore = -1;
 
       athletesInSport.forEach(p => {
-        // Skill scores are stored in a map keyed by playerId_sportName
         const skill = schoolData.data.sportSkills[`${p.id}_${sport}`];
         if (skill) {
           const score = parseFloat(skill.score) || 0;
@@ -206,6 +207,8 @@ export default function WaghambaApp() {
 
   if (stage === 'hub' && selectedSection) {
     const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
+    const teacher = schoolData.data.schoolProfile;
+
     return (
       <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
@@ -236,7 +239,23 @@ export default function WaghambaApp() {
             <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
               {!schoolData.isLoaded ? <StatsSkeleton /> : (
                 <div className="space-y-8">
-                  <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Welcome</h2>
+                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-1">
+                      <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Welcome, {teacher.teacherName.split(' ')[0]}</h2>
+                      <p className="text-muted-foreground font-medium text-sm">Dashboard Overview • Academic Year {schoolData.selectedYear}</p>
+                    </div>
+                    <Card className="p-4 rounded-2xl bg-white border-2 flex items-center gap-4 shadow-sm border-primary/10">
+                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <User className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Head Instructor</p>
+                        <p className="font-black text-primary uppercase text-xs mt-1">{teacher.teacherName}</p>
+                        <p className="text-[8px] font-bold text-muted-foreground/60 uppercase">{teacher.role}</p>
+                      </div>
+                    </Card>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden">
                       <h3 className="text-5xl font-black tracking-tight">
@@ -263,6 +282,33 @@ export default function WaghambaApp() {
                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Logs</p>
                       </div>
                     </Card>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                     <Card className="rounded-[2rem] border-2 p-8 bg-white shadow-sm flex flex-col md:flex-row gap-6 items-center">
+                        <div className="w-20 h-20 bg-primary/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-primary/10">
+                           <School className="w-10 h-10 text-primary" />
+                        </div>
+                        <div className="space-y-1 text-center md:text-left">
+                           <h4 className="text-xl font-black text-primary uppercase tracking-tight">{teacher.schoolName}</h4>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{teacher.taluka}, {teacher.district}</p>
+                           <div className="flex gap-2 mt-3 justify-center md:justify-start">
+                              <Badge variant="outline" className="text-[8px] font-black border-primary/20">{teacher.qualification}</Badge>
+                              <Badge className="bg-emerald-500 text-white text-[8px] font-black">CERTIFIED HUB</Badge>
+                           </div>
+                        </div>
+                     </Card>
+
+                     <Card className="rounded-[2rem] border-2 p-8 bg-accent/[0.03] shadow-sm border-accent/10 flex flex-col md:flex-row gap-6 items-center">
+                        <div className="w-20 h-20 bg-accent/10 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-accent/10">
+                           <Activity className="w-10 h-10 text-accent" />
+                        </div>
+                        <div className="space-y-1 text-center md:text-left">
+                           <h4 className="text-xl font-black text-primary uppercase tracking-tight">Active Activity Flow</h4>
+                           <p className="text-sm font-medium text-foreground/60 leading-tight">Monitoring {schoolData.data.activities.length} institutional drills and sessions for the current term.</p>
+                           <Button variant="ghost" onClick={() => setActiveTab('ai')} className="text-[10px] font-black text-accent uppercase p-0 h-auto mt-2 hover:bg-transparent">Open AI Analysis Assistant <ArrowRight className="w-3 h-3 ml-2" /></Button>
+                        </div>
+                     </Card>
                   </div>
 
                   {selectedSection === 'sports' && topPerformers.length > 0 && (
