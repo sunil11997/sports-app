@@ -1,30 +1,32 @@
 /**
- * WGB Sports Hub - High-Resilience Service Worker
- * Strategy: Network First (falls back to cache)
- * Purpose: Ensures the latest code is always fetched while providing offline native support.
+ * Waghamba Sports Hub - Network-First Service Worker
+ * Ensures high reliability for Next.js static chunks on Android.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.2';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'wgb-institutional-cache-v3.2';
+
+// Assets that must be cached for basic offline functionality
+const PRECACHE_ASSETS = [
   '/',
-  '/manifest.webmanifest',
+  '/offline.html',
   '/icon-512.png',
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
       );
     })
   );
@@ -32,24 +34,38 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
+  // We only cache GET requests
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+
+  // Network-First Strategy for static chunks and data
+  // This prevents the "ChunkLoadError" by always trying to get fresh code first.
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        // If valid response, clone and cache it
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
-        return response;
+        return networkResponse;
       })
       .catch(() => {
-        // Fallback to cache if network fails
-        return caches.match(event.request);
+        // Fallback to cache if network is unavailable
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          
+          // If both fail, and it's a navigation request, show offline page
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          return new Response('Network error occurred', {
+            status: 408,
+            headers: { 'Content-Type': 'text/plain' },
+          });
+        });
       })
   );
 });

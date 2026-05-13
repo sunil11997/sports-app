@@ -395,6 +395,7 @@ export default function WaghambaApp() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                data-active={activeTab === tab.id}
                 className={cn(
                   "google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all",
                   activeTab === tab.id ? "text-primary" : "text-muted-foreground"
@@ -406,7 +407,7 @@ export default function WaghambaApp() {
                 )}>
                   <tab.icon className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                <span className="google-nav-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                   {tab.label}
                 </span>
               </button>
