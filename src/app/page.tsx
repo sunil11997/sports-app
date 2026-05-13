@@ -237,7 +237,7 @@ export default function WaghambaApp() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
               <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative">
-                <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
+                <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
               </div>
               <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? "Sports" : "Students"}
@@ -446,7 +446,7 @@ export default function WaghambaApp() {
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
             <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden relative">
-              <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
+              <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
             </button>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
@@ -474,7 +474,7 @@ export default function WaghambaApp() {
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
           <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center relative overflow-hidden">
-            <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" />
+            <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
