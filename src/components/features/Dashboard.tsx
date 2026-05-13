@@ -16,11 +16,20 @@ import {
   XCircle, 
   RefreshCw,
   ImageIcon,
-  Filter
+  Filter,
+  ScanLine,
+  Fingerprint,
+  Upload,
+  ShieldCheck,
+  Hash,
+  Ruler,
+  HeartPulse
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
@@ -43,14 +52,13 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState("all");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null);
-  const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
-
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const profileUploadRef = useRef<HTMLInputElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
   
-  const [activeCam, setActiveCam] = useState<'profile' | null>(null);
+  const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -60,7 +68,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     }
   }, [stream, activeCam]);
 
-  const startCamera = async (type: 'profile', mode: 'user' | 'environment' = 'user') => {
+  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
@@ -104,18 +112,26 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         }
         ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        if (activeCam === 'profile') {
+          setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        } else {
+          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
+        }
         stopCamera();
       }
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
     const file = e.target.files?.[0];
     if (file && editingPlayer) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
+        if (type === 'profile') {
+          setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
+        } else {
+          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: reader.result as string });
+        }
         toast({ title: "Photo Updated" });
       };
       reader.readAsDataURL(file);
@@ -150,13 +166,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       })
       .sort((a: any, b: any) => {
         if (isGeneral) {
-          // Student Registry: Std-wise sorting
           const stdA = parseInt(a.std) || 0;
           const stdB = parseInt(b.std) || 0;
           if (stdA !== stdB) return stdA - stdB;
           return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
         } else {
-          // Sports Hub: Under-wise (Age Category) sorting
           const ageRankA = getAgeRank(parseInt(a.age) || 0);
           const ageRankB = getAgeRank(parseInt(b.age) || 0);
           if (ageRankA !== ageRankB) return ageRankA - ageRankB;
@@ -272,15 +286,16 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
         <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
           <DialogHeader className="bg-primary/5 p-8 border-b shrink-0">
-            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Edit Student Profile</DialogTitle>
+            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Restore Profile Details</DialogTitle>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto">
             {editingPlayer && (
-              <div className="p-8 space-y-10">
+              <div className="p-8 space-y-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                   <div className="space-y-6">
-                      <div className="space-y-2">
+                   {/* Left Column: Photos */}
+                   <div className="space-y-8">
+                      <div className="space-y-3">
                         <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
                         <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 group">
                            {activeCam === 'profile' ? (
@@ -302,24 +317,105 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                         </div>
                         {!activeCam && (
                           <div className="flex gap-2">
-                            <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary text-white rounded-xl h-10 font-black text-[10px] uppercase">Recapture</Button>
-                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={handleFileUpload} />
+                            <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-xl h-11 font-black text-[10px] uppercase">Recapture</Button>
+                            <Button variant="outline" onClick={() => profileUploadRef.current?.click()} className="w-11 h-11 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ScanLine className="w-4 h-4" /> Aadhar Identity Scan</Label>
+                        <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
+                          {activeCam === 'aadhar' ? (
+                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                          ) : editingPlayer.aadharPhotoUrl ? (
+                            <img src={editingPlayer.aadharPhotoUrl} alt="Aadhar" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
+                          )}
+                          {activeCam === 'aadhar' && (
+                            <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-6">
+                              <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Switch Camera</Button>
+                              <div className="flex gap-2">
+                                <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
+                                <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {!activeCam && (
+                          <div className="flex gap-2">
+                            <Button onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-xl h-11 font-black text-[10px] uppercase">Live Scan</Button>
+                            <Button variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-11 h-11 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                           </div>
                         )}
                       </div>
                    </div>
 
-                   <div className="space-y-6">
+                   {/* Right Column: Form Fields */}
+                   <div className="space-y-8">
                       <div className="space-y-4">
+                        <div className="flex items-center gap-3 text-primary border-b pb-2">
+                          <Hash className="w-4 h-4" />
+                          <h3 className="font-black uppercase text-[11px] tracking-widest">Institutional Info</h3>
+                        </div>
                         <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-10 font-bold border-2" /></div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Roll No</Label><Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-10 font-black border-2" /></div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Roll No (Serial)</Label><Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-10 font-black border-2" /></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-10 font-bold border-2" /></div>
+                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                          </div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-10 font-bold border-2" /></div>
                         </div>
                       </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 text-primary border-b pb-2">
+                          <Ruler className="w-4 h-4" />
+                          <h3 className="font-black uppercase text-[11px] tracking-widest">Physical & Aadhar</h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-10 font-bold border-2" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-10 font-bold border-2" /></div>
+                        </div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number (12-Digit)</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 text-primary border-b pb-2">
+                          <HeartPulse className="w-4 h-4" />
+                          <h3 className="font-black uppercase text-[11px] tracking-widest">Health & Medical</h3>
+                        </div>
+                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Medical Conditions</Label><Textarea value={editingPlayer.medical || ''} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[60px] border-2" /></div>
+                      </div>
+
+                      {editingPlayer.category === 'athlete' && (
+                        <div className="space-y-4 p-5 bg-accent/5 rounded-3xl border-2 border-dashed border-accent/20">
+                          <Label className="font-black text-accent uppercase text-[9px] tracking-widest">Selected Games</Label>
+                          <div className="grid grid-cols-2 gap-y-2">
+                            {SPORTS_LIST.map(sport => (
+                              <div key={sport} className="flex items-center gap-2">
+                                <Checkbox 
+                                  checked={editingPlayer.sports?.includes(sport)} 
+                                  onCheckedChange={(checked) => {
+                                    const curr = editingPlayer.sports || [];
+                                    const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                                    setEditingPlayer({...editingPlayer, sports: next});
+                                  }} 
+                                  className="w-4 h-4 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                                />
+                                <span className="text-[10px] font-black uppercase text-foreground/70">{sport}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                    </div>
                 </div>
               </div>
