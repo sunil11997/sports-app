@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -38,15 +37,14 @@ export function getSdks(firebaseApp: FirebaseApp) {
     }
 
     // 2. Initialize Firestore with Multi-Tab Offline Persistence
-    // Added experimentalAutoDetectLongPolling for Android WebView compatibility
-    // This resolves the 10-second backend timeout warning.
+    // Forcing Long Polling to resolve the 10-second backend timeout in workstation/mobile environments.
     let firestore: Firestore;
     try {
       firestore = initializeFirestore(firebaseApp, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         }),
-        experimentalAutoDetectLongPolling: true
+        experimentalForceLongPolling: true
       });
     } catch (e: any) {
       firestore = getFirestore(firebaseApp);
