@@ -1,53 +1,50 @@
 /**
- * Waghamba Sports Hub - Network-First Service Worker
- * Optimizes for high-availability in native Android environments.
+ * Waghamba Sports Hub - High-Resilience Service Worker
+ * Strategy: Network-First with Cache Fallback
  */
 
-const CACHE_NAME = 'wgb-institutional-cache-v3.2';
+const CACHE_NAME = 'wgb-sports-hub-v3.2';
 
-// Assets to cache immediately on install
-const PRECACHE_ASSETS = [
-  '/',
-  '/manifest.webmanifest',
-  '/icon-512.png',
-];
-
+// 1. Install Event - Skip waiting to activate immediately
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
-  );
 });
 
+// 2. Activate Event - Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('WGB: Purging old cache', cache);
+            return caches.delete(cache);
+          }
+        })
       );
     })
   );
   self.clients.claim();
 });
 
+// 3. Fetch Event - Network First Strategy
 self.addEventListener('fetch', (event) => {
-  // Strategy: Network First, falling back to Cache
-  // This ensures the user always sees the latest registry updates when online.
-  
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If we have a valid response, clone it and put it in cache
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+        // If network is successful, cache the response and return it
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
         }
+
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
         return response;
       })
       .catch(() => {

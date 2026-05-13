@@ -38,7 +38,7 @@ import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { analyzeFitness, getTestInstructions, type FitnessAnalysisOutput } from '@/ai/flows/fitness-analysis';
 import { usePWA } from '@/components/providers/pwa-provider';
 
-const CATEGORIES = [
+const SPORTS_CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'boys-u14', label: 'Boys U14' },
   { id: 'boys-u17', label: 'Boys U17' },
@@ -46,6 +46,14 @@ const CATEGORIES = [
   { id: 'girls-u14', label: 'Girls U14' },
   { id: 'girls-u17', label: 'Girls U17' },
   { id: 'girls-senior', label: 'Girls Senior' },
+];
+
+const GENERAL_CATEGORIES = [
+  { id: 'all', label: 'All' },
+  ...Array.from({ length: 12 }, (_, i) => ({ 
+    id: (i + 1).toString(), 
+    label: `Std ${i + 1}` 
+  }))
 ];
 
 export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
@@ -63,8 +71,10 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const [analyzingPlayer, setAnalyzingPlayer] = useState<any>(null);
 
   const isGeneral = section === 'general';
+  const categories = isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES;
 
   const getPlayerCategory = (p: any) => {
+    if (isGeneral) return p.std;
     const age = parseInt(p.age) || 0;
     const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
     let agePart = 'senior';
@@ -104,10 +114,9 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
     setIsSaving(id);
     
-    // Institutional Score Logic - Expanded for new tests
     const speedVal = 100 - (parseFloat(current.run50m) * 5); 
-    const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4); // Agility factor
-    const flexVal = (parseFloat(current.sitAndReach) || 0) * 3; // Flexibility factor
+    const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4);
+    const flexVal = (parseFloat(current.sitAndReach) || 0) * 3;
     
     const staminaParts = (current.run600m || "0:0").split(':');
     const staminaSeconds = (parseInt(staminaParts[0]) * 60 + parseInt(staminaParts[1])) || 0;
@@ -180,13 +189,18 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   };
 
   const handlePrint = () => {
-    const categoryLabel = CATEGORIES.find(c => c.id === activeCategory)?.label || "All";
+    const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
     const printContent = `
       <html>
         <head>
           <title>Institutional Physical Performance Registry</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; }
+            @media print { 
+              @page { size: landscape; margin: 1cm; } 
+              .no-print { display: none !important; } 
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
             h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px double #333; padding-bottom: 10px; text-align: center; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #111; padding: 6px; text-align: center; }
@@ -241,7 +255,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
       <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/30 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
-        {CATEGORIES.map(cat => (
+        {categories.map(cat => (
           <button
             key={cat.id}
             className={cn(
