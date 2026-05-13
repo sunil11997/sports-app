@@ -8,51 +8,27 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Edit, 
   Search, 
-  Printer, 
   User, 
   Medal, 
   GraduationCap, 
-  Phone, 
-  Fingerprint, 
-  MapPin, 
-  ClipboardList, 
-  Hash, 
   Trash2, 
-  AlertTriangle, 
-  Calendar, 
-  HeartPulse, 
-  History,
-  Camera,
-  Upload,
-  XCircle,
+  Camera, 
+  XCircle, 
   RefreshCw,
   ImageIcon,
-  ScanLine
+  Filter
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import { differenceInYears, isValid } from 'date-fns';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
 interface DashboardProps {
   store: any;
@@ -65,16 +41,16 @@ interface DashboardProps {
 export function Dashboard({ store, section, language = 'English', t, onTabChange }: DashboardProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSport, setSelectedSport] = useState("all");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [deletingPlayerId, setDeletingPlayerId] = useState<string | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const aadharUploadRef = useRef<HTMLInputElement>(null);
   const profileUploadRef = useRef<HTMLInputElement>(null);
   
-  const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
+  const [activeCam, setActiveCam] = useState<'profile' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -84,7 +60,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     }
   }, [stream, activeCam]);
 
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
+  const startCamera = async (type: 'profile', mode: 'user' | 'environment' = 'user') => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
@@ -128,27 +104,19 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         }
         ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') {
-          setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        } else {
-          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-        }
+        setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
         stopCamera();
       }
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && editingPlayer) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (type === 'profile') {
-          setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
-        } else {
-          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: reader.result as string });
-        }
-        toast({ title: "Photo Updated", description: "Identity document captured successfully." });
+        setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
+        toast({ title: "Photo Updated" });
       };
       reader.readAsDataURL(file);
     }
@@ -163,6 +131,12 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     return `${g} Senior`;
   };
 
+  const getAgeRank = (age: number) => {
+    if (age < 14) return 1;
+    if (age < 17) return 2;
+    return 3;
+  };
+
   const filteredPlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => {
@@ -170,44 +144,33 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
           (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
           (p.generalRegisterNumber && p.generalRegisterNumber.toLowerCase().includes(searchTerm.toLowerCase()));
-        return matchesSection && matchesSearch;
+        const matchesSport = selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport));
+        
+        return matchesSection && matchesSearch && matchesSport;
       })
       .sort((a: any, b: any) => {
         if (isGeneral) {
+          // Student Registry: Std-wise sorting
           const stdA = parseInt(a.std) || 0;
           const stdB = parseInt(b.std) || 0;
           if (stdA !== stdB) return stdA - stdB;
           return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
         } else {
-          const getCategoryRank = (p: any) => {
-            const age = parseInt(p.age) || 0;
-            const genderRank = p.gender === 'Female' ? 0 : 1;
-            let ageRank = 2;
-            if (age < 14) ageRank = 0;
-            else if (age < 17) ageRank = 1;
-            return genderRank * 10 + ageRank; 
-          };
-          const rankA = getCategoryRank(a);
-          const rankB = getCategoryRank(b);
-          if (rankA !== rankB) return rankA - rankB;
+          // Sports Hub: Under-wise (Age Category) sorting
+          const ageRankA = getAgeRank(parseInt(a.age) || 0);
+          const ageRankB = getAgeRank(parseInt(b.age) || 0);
+          if (ageRankA !== ageRankB) return ageRankA - ageRankB;
+          if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
           return a.name.localeCompare(b.name);
         }
       });
-  }, [store.data.players, isGeneral, searchTerm]);
+  }, [store.data.players, isGeneral, searchTerm, selectedSport]);
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
       store.updatePlayer(editingPlayer);
       setEditingPlayer(null);
       toast({ title: "Record Updated" });
-    }
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deletingPlayerId) {
-      store.deletePlayer(deletingPlayerId);
-      setDeletingPlayerId(null);
-      toast({ title: "Record Deleted", variant: "destructive" });
     }
   };
 
@@ -222,30 +185,50 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </div>
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry' : 'Athlete Roster'}</h2>
         </div>
-        <div className="relative flex-1 md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search name or GR number..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+          {!isGeneral && (
+            <div className="relative">
+              <Select value={selectedSport} onValueChange={setSelectedSport}>
+                <SelectTrigger className="w-full md:w-[180px] h-11 rounded-full bg-muted/30 border-none shadow-inner font-black uppercase text-[10px]">
+                  <Filter className="w-3.5 h-3.5 mr-2 opacity-40" />
+                  <SelectValue placeholder="Sport Wise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">ALL GAMES</SelectItem>
+                  {SPORTS_LIST.map(s => <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search name..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
         </div>
       </div>
 
       <div className="google-card overflow-hidden overflow-x-auto">
         <Table className="min-w-max border-collapse">
-          <TableHeader className="bg-muted/30"><TableRow>
-            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
-            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
-            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Category'}</TableHead>
-            <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">Aadhar Number</TableHead>
-            <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
-          </TableRow></TableHeader>
+          <TableHeader className="bg-muted/30">
+            <TableRow>
+              <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Age Category'}</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Aadhar' : 'Participating Sports'}</TableHead>
+              <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
-            {filteredPlayers.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow> : 
-            filteredPlayers.map((p: any) => {
-              return (
+            {filteredPlayers.length === 0 ? (
+              <TableRow><TableCell colSpan={5} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow>
+            ) : (
+              filteredPlayers.map((p: any) => (
                 <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
                   <TableCell className="px-6 text-sm font-black text-primary/60">#{p.serialNumber || '0'}</TableCell>
                   <TableCell className="px-4">
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-11 h-11 border-2 border-white shadow-sm" onClick={() => setViewingPhoto(p.photoUrl || null)}>
+                      <Avatar className="w-11 h-11 border-2 border-white shadow-sm">
                         <AvatarImage src={p.photoUrl} className="object-cover" />
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
                       </Avatar>
@@ -257,21 +240,31 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   </TableCell>
                   <TableCell className="px-4 text-center">
                     {isGeneral ? (
-                      <Badge variant="outline" className="rounded-full px-3 py-0.5 border-muted text-[10px] font-black text-muted-foreground">Std {p.std}</Badge>
+                      <Badge variant="outline" className="rounded-full px-3 py-0.5 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
                     ) : (
                       <Badge className="rounded-full px-3 py-0.5 bg-accent text-accent-foreground text-[10px] font-black">{getAgeCategory(p.age, p.gender)}</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="px-4 text-center font-mono font-black text-xs text-primary/70">{p.aadharNumber || 'Pending'}</TableCell>
+                  <TableCell className="px-4 text-center">
+                    {isGeneral ? (
+                      <span className="font-mono font-black text-xs text-primary/70">{p.aadharNumber || 'Pending'}</span>
+                    ) : (
+                      <div className="flex flex-wrap justify-center gap-1">
+                        {(p.sports || []).map((s: string) => (
+                          <Badge key={s} variant="outline" className="text-[8px] font-black border-accent/30 text-accent uppercase px-1.5">{s}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="px-6 text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => setDeletingPlayerId(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              );
-            })}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -310,7 +303,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                         {!activeCam && (
                           <div className="flex gap-2">
                             <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary text-white rounded-xl h-10 font-black text-[10px] uppercase">Recapture</Button>
-                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={handleFileUpload} />
                           </div>
                         )}
                       </div>
@@ -320,7 +313,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-10 font-bold border-2" /></div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number (12 Digit)</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
+                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
