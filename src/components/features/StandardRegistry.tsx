@@ -133,7 +133,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
               </tr>
             </thead>
             <tbody>
-              ${playersInStd.map((p, i) => {
+              ${playersInStd.map((p: any, i: number) => {
                 const total = calculateTotal(p.id);
                 const r = termRecords[p.id] || {};
                 return `

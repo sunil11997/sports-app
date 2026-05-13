@@ -99,7 +99,7 @@ export default function WaghambaApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   
-  const schoolData = useSchoolData(stage === 'hub');
+  const schoolData = useSchoolData(stage === 'hub' && isMounted);
   
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
