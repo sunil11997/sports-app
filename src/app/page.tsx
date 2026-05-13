@@ -47,7 +47,7 @@ import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 import splashAnim from './lib/splash-animation.json';
 
-// Lottie is browser-only, so we load it dynamically
+// Lottie is browser-only
 const Lottie = NextDynamic(() => import('lottie-react'), { ssr: false });
 
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
