@@ -38,18 +38,19 @@ export interface SchoolProfile {
 }
 
 export interface AttendanceRecord {
-  [key: string]: 'P' | 'A' | undefined | null; // key: playerId_dateString (YYYY-MM-DD)
+  [key: string]: 'P' | 'A' | undefined | null; // key: playerId_dateString_session
 }
 
 export interface FitnessAssessment {
   shuttleRun?: string;   // 10*6 Shuttle Run (Agility)
   run50m?: string;       // 50 Meter Run (Speed)
-  run600m?: string;      // 600 Meter Run (Endurance)
+  run600m?: string;      // 600 Meter Run (Endurance / Stamina)
   sitAndReach?: string;  // Flexibility
   boardJump?: string;    // Power / Broad Jump
   sitUps?: string;       // Core Strength
-  strengthScore?: string; // Specific Strength Rating
-  enduranceScore?: string; // Specific Endurance Rating
+  strengthScore?: string; // Specific Strength Rating (0-100)
+  enduranceScore?: string; // Specific Endurance Rating (0-100)
+  speedScore?: string;    // Specific Speed Rating (0-100)
   score: string;
   status: string;
   date?: string;

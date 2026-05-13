@@ -19,7 +19,10 @@ import {
   Calendar,
   History as HistoryIcon,
   Cake,
-  Users
+  Users,
+  Timer,
+  Wind,
+  Dumbbell
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -33,10 +36,17 @@ import {
   ComposedChart,
   Area,
   Line,
-  Legend
+  Legend,
+  BarChart,
+  Bar,
+  Cell,
+  PieChart,
+  Pie
 } from 'recharts';
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+const CHART_COLORS = ['#0048A0', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
 
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -71,6 +81,20 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
+  const skillMasteryData = useMemo(() => {
+    if (!selectedPlayerId) return [];
+    // Calculate mastery based on drill completions
+    const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+    return sports.map(sport => {
+      const skill = store.data.sportSkills[`${selectedPlayerId}_${sport}`];
+      return {
+        name: sport,
+        score: parseFloat(skill?.score) || 0,
+        participation: Object.keys(store.data.drillCompletions).filter(k => k.startsWith(selectedPlayerId)).length // Mock participation for visualization
+      };
+    }).filter(s => s.score > 0);
+  }, [selectedPlayerId, store.data.sportSkills, store.data.drillCompletions]);
+
   const playerAttendance = useMemo(() => {
     if (!selectedPlayerId) return { present: 0, total: 0 };
     let present = 0;
@@ -86,7 +110,8 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       date: format(new Date(f.updatedAt || f.date || new Date()), 'MMM yy'),
       score: parseFloat(f.score) || 0,
       strength: parseFloat(f.strengthScore) || 0,
-      endurance: parseFloat(f.enduranceScore) || 0
+      stamina: parseFloat(f.enduranceScore) || 0,
+      speed: parseFloat(f.speedScore) || 0
     }));
   }, [playerFitness]);
 
@@ -99,22 +124,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return `${gender} Senior Squad`;
   }, [player]);
 
-  const analyticalInsights = useMemo(() => {
-    if (!player) return { plus: [], weak: [] };
-    const plus: string[] = [];
-    const weak: string[] = [];
-    
-    const latestFit = playerFitness[playerFitness.length - 1] || store.data.fitness[player.id] || {};
-    const bmi = parseFloat(latestFit.bmi || player.bmi || "0.0");
-    if (bmi < 18.5) weak.push("Underweight (Nutrition priority)");
-    else if (bmi >= 18.5 && bmi <= 24.9) plus.push("Optimal Body Mass Index");
-    
-    const fitScore = parseFloat(latestFit.score || "0");
-    if (fitScore > 80) plus.push("Elite Performance Readiness");
-    
-    return { plus, weak };
-  }, [player, playerFitness, store.data.fitness]);
-
   const handlePrint = () => {
     if (!player) return;
     
@@ -122,19 +131,10 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       ? `<img src="${player.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`
       : '<div style="background:#eee;height:100%;"></div>';
 
-    const fitnessRows = playerFitness.map((f: any) => `
-      <tr>
-        <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
-        <td>${f.score}%</td>
-        <td>${f.strengthScore || 'N/A'}%</td>
-        <td>${f.status}</td>
-      </tr>
-    `).join('');
-
     const htmlContent = `
       <html>
         <head>
-          <title>Institutional Dossier - ${player.name}</title>
+          <title>Institutional Performance Dossier - ${player.name}</title>
           <style>
             @media print { 
               @page { size: A4; margin: 1cm; } 
@@ -161,10 +161,9 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
-
           <div class="header">
             <div class="school-name">ASHRAM SHALA WAGHAMBA</div>
-            <div style="font-weight: 800; font-size: 14px;">ATHLETE PERFORMANCE DOSSIER</div>
+            <div style="font-weight: 800; font-size: 14px;">INSTITUTIONAL PERFORMANCE DOSSIER</div>
           </div>
           <div class="profile-grid">
             <div class="photo-box">${photoHtml}</div>
@@ -172,14 +171,24 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               <tr><td style="font-weight:900;">STUDENT NAME:</td><td>${player.name.toUpperCase()}</td></tr>
               <tr><td style="font-weight:900;">GR / SERIAL:</td><td>${player.generalRegisterNumber || 'N/A'} / #${player.serialNumber || '0'}</td></tr>
               <tr><td style="font-weight:900;">CATEGORY:</td><td>${teamCategory}</td></tr>
+              <tr><td style="font-weight:900;">ATTENDANCE:</td><td>${playerAttendance.present} / ${playerAttendance.total} sessions</td></tr>
             </table>
           </div>
-          <h3>Historical Progress Registry</h3>
+          <h3>Institutional Growth Registry</h3>
           <table class="data-table">
-            <thead><tr><th>DATE</th><th>SCORE</th><th>STRENGTH</th><th>STATUS</th></tr></thead>
-            <tbody>${fitnessRows}</tbody>
+            <thead><tr><th>DATE</th><th>SPEED %</th><th>STAMINA %</th><th>CORE %</th><th>TOTAL %</th></tr></thead>
+            <tbody>
+              ${playerFitness.map((f: any) => `
+                <tr>
+                  <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
+                  <td>${f.speedScore || '-'}%</td>
+                  <td>${f.enduranceScore || '-'}%</td>
+                  <td>${f.strengthScore || '-'}%</td>
+                  <td><strong>${f.score}%</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
           </table>
-          <div class="box"><strong>INSIGHTS:</strong> ${analyticalInsights.plus.join(', ')}</div>
         </body>
       </html>
     `;
@@ -199,47 +208,58 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             <BarChart3 className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Athlete Analytics</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Institutional Dossier Hub</p>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Analytics</h2>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
-            <SelectTrigger className="h-12 text-md font-bold bg-white rounded-xl border-2 shadow-sm">
-              <SelectValue placeholder="Select Profile..." />
+            <SelectTrigger className="h-14 text-md font-bold bg-white rounded-2xl border-2 shadow-sm focus:border-primary">
+              <SelectValue placeholder="Identify Athlete..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-2xl">
               {availablePlayers.map((p: any) => (
                 <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black uppercase text-xs tracking-widest active-scale">
+          <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 font-black uppercase text-xs tracking-widest active-scale shadow-xl">
             <Printer className="w-4 h-4 mr-2" /> Export Performance Dossier
           </Button>
         </div>
       </div>
 
       {!selectedPlayerId ? (
-        <div className="p-24 text-center text-muted-foreground border-4 border-dashed rounded-[3rem] opacity-30">
-          <TrendingUp className="w-16 h-16 mx-auto mb-4" />
-          <p className="font-black uppercase text-sm tracking-widest">Identify an athlete to access metrics</p>
+        <div className="p-24 text-center text-muted-foreground border-4 border-dashed rounded-[3.5rem] opacity-30 bg-white/50 backdrop-blur-sm">
+          <TrendingUp className="w-20 h-20 mx-auto mb-6 text-primary" />
+          <p className="font-black uppercase text-lg tracking-widest text-primary">Identify an entry to access institutional metrics</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
+            <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden group">
               <div className="h-2 w-full bg-accent" />
-              <CardContent className="p-8 space-y-6 text-center">
-                <Avatar className="w-32 h-32 border-4 border-primary/10 shadow-2xl mx-auto">
+              <CardContent className="p-8 space-y-8 text-center">
+                <Avatar className="w-40 h-40 border-4 border-primary/10 shadow-2xl mx-auto group-hover:scale-105 transition-transform duration-500">
                   <AvatarImage src={player?.photoUrl} className="object-cover" />
-                  <AvatarFallback className="bg-primary/5 text-primary font-black text-4xl uppercase">{player?.name?.[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/5 text-primary font-black text-5xl uppercase">{player?.name?.[0]}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <h3 className="font-black uppercase text-2xl text-primary leading-tight">{player?.name}</h3>
-                  <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-[10px] font-black border-accent/30 text-accent uppercase">{teamCategory}</Badge>
-                    <Badge className="bg-primary text-white text-[10px] font-black uppercase">GR: {player?.generalRegisterNumber || 'N/A'}</Badge>
+                <div className="space-y-3">
+                  <h3 className="font-black uppercase text-3xl text-primary leading-tight tracking-tight">{player?.name}</h3>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Badge variant="outline" className="text-[10px] font-black border-accent/30 text-accent uppercase bg-accent/5 px-3">{teamCategory}</Badge>
+                    <Badge className="bg-primary text-white text-[10px] font-black uppercase px-3 shadow-md">GR: {player?.generalRegisterNumber || 'N/A'}</Badge>
+                  </div>
+                </div>
+                
+                <div className="pt-6 border-t grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted/30 rounded-2xl text-center">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Standard</p>
+                    <p className="text-xl font-black text-primary">Std {player?.std}</p>
+                  </div>
+                  <div className="p-4 bg-muted/30 rounded-2xl text-center">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Attendance</p>
+                    <p className="text-xl font-black text-primary">{playerAttendance.present}</p>
                   </div>
                 </div>
               </CardContent>
@@ -247,20 +267,23 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
 
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-destructive/5 border-b p-6">
-                <CardTitle className="text-sm font-black uppercase text-destructive flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> Recent Incidents
+                <CardTitle className="text-xs font-black uppercase text-destructive flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" /> Medical History Log
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {playerIncidents.length === 0 ? (
-                  <p className="text-[10px] font-black uppercase opacity-20 text-center">No incidents logged</p>
+                  <div className="py-10 text-center opacity-20">
+                    <Stethoscope className="w-10 h-10 mx-auto mb-2" />
+                    <p className="text-[9px] font-black uppercase tracking-widest">No medical alerts recorded</p>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {playerIncidents.map((inc: any) => (
-                      <div key={inc.id} className="flex gap-3 border-l-4 border-destructive/20 pl-4 py-1">
+                      <div key={inc.id} className="flex gap-4 border-l-4 border-destructive/20 pl-4 py-2 bg-destructive/[0.02] rounded-r-xl">
                         <div>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase">{format(new Date(inc.date), 'dd MMM yy')}</p>
-                          <p className="text-xs font-bold text-foreground/80 leading-snug">{inc.description}</p>
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">{format(new Date(inc.date), 'dd MMM yyyy')}</p>
+                          <p className="text-sm font-bold text-foreground/80 leading-relaxed italic">"{inc.description}"</p>
                         </div>
                       </div>
                     ))}
@@ -270,36 +293,114 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </Card>
           </div>
 
-          <div className="lg:col-span-8 space-y-6">
-            <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
-              <CardHeader className="bg-muted/30 border-b p-6">
-                <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
-                  <ChartLine className="w-4 h-4 text-accent" /> Institutional Trends
+          <div className="lg:col-span-8 space-y-8">
+            <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
+              <CardHeader className="bg-slate-50 border-b p-8 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-3">
+                  <ChartLine className="w-5 h-5 text-accent" /> Institutional Growth Trends
                 </CardTitle>
+                <div className="flex gap-4">
+                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Total</span></div>
+                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Stamina</span></div>
+                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Speed</span></div>
+                </div>
               </CardHeader>
-              <CardContent className="p-8">
+              <CardContent className="p-10">
                 {chartData.length < 2 ? (
-                   <div className="h-[300px] flex flex-col items-center justify-center opacity-20">
-                      <TrendingUp className="w-12 h-12" />
-                      <p className="font-black uppercase text-xs">Insufficient trend data</p>
+                   <div className="h-[350px] flex flex-col items-center justify-center opacity-20 border-4 border-dashed rounded-[2rem]">
+                      <TrendingUp className="w-16 h-16 mb-4" />
+                      <p className="font-black uppercase text-sm tracking-widest">Insufficient trend data for visualization</p>
                    </div>
                 ) : (
-                  <div className="h-[350px] w-full">
+                  <div className="h-[400px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.05} />
-                        <Line type="monotone" dataKey="strength" stroke="#F59E0B" strokeWidth={2} dot={{ r: 4 }} />
-                        <Legend iconType="circle" />
+                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748b' }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748b' }} domain={[0, 100]} />
+                        <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
+                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={5} fill="#0048A0" fillOpacity={0.08} />
+                        <Line type="monotone" dataKey="stamina" stroke="#f59e0b" strokeWidth={3} dot={{ r: 5, fill: '#f59e0b', strokeWidth: 2, stroke: '#fff' }} />
+                        <Line type="monotone" dataKey="speed" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
+                        <Legend verticalAlign="top" height={36} iconType="circle" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-lg">
+                  <CardHeader className="bg-primary/5 border-b p-6">
+                    <CardTitle className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                      <Target className="w-4 h-4" /> Skill Mastery Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    {skillMasteryData.length === 0 ? (
+                       <div className="h-[250px] flex flex-col items-center justify-center opacity-10">
+                          <Trophy className="w-12 h-12" />
+                          <p className="text-[9px] font-black uppercase mt-2">No skill data</p>
+                       </div>
+                    ) : (
+                      <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={skillMasteryData}>
+                            <XAxis dataKey="name" hide />
+                            <Tooltip cursor={{ fill: 'transparent' }} />
+                            <Bar dataKey="score" radius={[10, 10, 0, 0]}>
+                               {skillMasteryData.map((entry, index) => (
+                                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                               ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                        <div className="flex flex-wrap gap-2 justify-center mt-4">
+                          {skillMasteryData.map((s, i) => (
+                             <Badge key={i} variant="outline" className="text-[8px] font-black uppercase border-primary/20">
+                                {s.name}: {s.score}
+                             </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+               </Card>
+
+               <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-lg flex flex-col">
+                  <CardHeader className="bg-emerald-50 border-b p-6">
+                    <CardTitle className="text-[10px] font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" /> Attendance Consistency
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-10 flex-1 flex flex-col items-center justify-center text-center space-y-6">
+                     <div className="relative w-40 h-40">
+                        <svg className="w-full h-full transform -rotate-90">
+                           <circle cx="80" cy="80" r="70" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
+                           <circle 
+                              cx="80" cy="80" r="70" 
+                              stroke="#10b981" 
+                              strokeWidth="12" 
+                              fill="transparent" 
+                              strokeDasharray="440" 
+                              strokeDashoffset={440 - (440 * (playerAttendance.present / (playerAttendance.total || 1)))} 
+                              strokeLinecap="round"
+                              className="transition-all duration-1000"
+                           />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                           <span className="text-4xl font-black text-primary">{Math.round((playerAttendance.present / (playerAttendance.total || 1)) * 100)}%</span>
+                           <span className="text-[9px] font-black text-muted-foreground uppercase">Stability</span>
+                        </div>
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-foreground/70 uppercase tracking-tight">{playerAttendance.present} of {playerAttendance.total} Total Sessions</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Registry Log Analysis</p>
+                     </div>
+                  </CardContent>
+               </Card>
+            </div>
           </div>
         </div>
       )}
