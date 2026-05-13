@@ -207,7 +207,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {playersInStd.map((p) => {
+            {playersInStd.map((p: any) => {
               const r = termRecords[p.id] || {};
               const total = calculateTotal(p.id);
               return (

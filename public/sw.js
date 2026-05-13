@@ -1,9 +1,9 @@
-const CACHE_NAME = 'wgb-sports-hub-v3.1';
-
 /**
- * MANDATORY Network-First Service Worker for Waghamba Sports Hub.
- * Optimized for native Android reliability and forced version updates.
+ * Waghamba Sports Hub - High-Resilience Service Worker
+ * Strategy: Network-First with forced updates to resolve 404 chunk errors.
  */
+
+const CACHE_NAME = 'wgb-hub-v3.1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -25,30 +25,23 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // We use a NETWORK-FIRST strategy to avoid the "Old App" problem
-  // and resolve Next.js chunk 404 errors.
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/');
-      })
-    );
-    return;
-  }
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache static assets and pages
-        if (response.status === 200) {
-          const responseClone = response.clone();
+        // Cache successful responses
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
+            cache.put(event.request, responseToCache);
           });
         }
         return response;
       })
       .catch(() => {
+        // Fallback to cache if network fails
         return caches.match(event.request);
       })
   );

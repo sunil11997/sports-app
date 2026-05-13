@@ -210,7 +210,7 @@ export default function WaghambaApp() {
              {isMounted && <Lottie animationData={splashAnim} loop={true} />}
            </div>
            <div className="space-y-2">
-             <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.2</h2>
+             <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.1</h2>
              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">Registry Synchronizing...</p>
            </div>
         </div>
@@ -464,7 +464,7 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/5 flex items-center justify-center relative overflow-hidden">
+          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center relative overflow-hidden">
             <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">
