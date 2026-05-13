@@ -2,9 +2,7 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * Configures how the app appears when installed on a device.
- * Meets all criteria for modern browser "Add to Home Screen" eligibility.
- * PURPOSES: 'maskable' ensures the icon covers the full area on Android.
+ * Configured for HD Maskable Icons and Native Splash Screens.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -13,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
+    background_color: '#1e3a8a', // Matching primary blue for splash screen
     theme_color: '#1e3a8a',
     orientation: 'portrait',
     icons: [
