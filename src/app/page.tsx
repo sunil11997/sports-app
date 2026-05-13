@@ -206,7 +206,7 @@ export default function WaghambaApp() {
     return (
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
         <div className="max-w-xs w-full text-center space-y-8">
-           <div className="w-48 h-48 mx-auto">
+           <div className="w-48 h-48 mx-auto relative">
              {isMounted && <Lottie animationData={splashAnim} loop={true} />}
            </div>
            <div className="space-y-2">
@@ -227,7 +227,7 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative">
+              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative shrink-0">
                 <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
               </div>
               <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
@@ -436,7 +436,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden relative">
+            <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden relative shrink-0">
               <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
             </button>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
