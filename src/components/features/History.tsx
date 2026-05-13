@@ -38,16 +38,10 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/**
- * Institutional History & Analytics Hub
- * Restores the signature "Institutional Performance Dossier" design.
- * Features: High-density growth charts, medical incident logs, and A4 professional printing.
- */
 export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
 
-  // 1. Memoized Players List
   const availablePlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
@@ -60,7 +54,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       });
   }, [store.data.players, isGeneral]);
 
-  // 2. Active Player Context
   const player = useMemo(() => 
     store.data.players.find((p: any) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
@@ -112,101 +105,88 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     const weak: string[] = [];
     
     const latestFit = playerFitness[playerFitness.length - 1] || store.data.fitness[player.id] || {};
-    const bmi = parseFloat(latestFit.bmi || player.bmi || "0");
+    const bmi = parseFloat(latestFit.bmi || player.bmi || "0.0");
     if (bmi < 18.5) weak.push("Underweight (Nutrition priority)");
     else if (bmi >= 18.5 && bmi <= 24.9) plus.push("Optimal Body Mass Index");
-    else if (bmi > 25) weak.push("Overweight (Aerobic priority)");
-
+    
     const fitScore = parseFloat(latestFit.score || "0");
-    if (fitScore > 80) plus.push("Elite Physical Preparedness");
-    if (fitScore < 50 && fitScore > 0) weak.push("Foundational Strength Deficit");
+    if (fitScore > 80) plus.push("Elite Performance Readiness");
     
     return { plus, weak };
   }, [player, playerFitness, store.data.fitness]);
 
-  // 3. Printing Engine (Dossier Layout)
   const handlePrint = () => {
     if (!player) return;
     
     const photoHtml = player.photoUrl 
       ? `<img src="${player.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`
-      : '<div style="background:#eee;height:100%;display:flex;align-items:center;justify-center;font-size:10px;">ID PHOTO</div>';
+      : '<div style="background:#eee;height:100%;"></div>';
 
     const fitnessRows = playerFitness.map((f: any) => `
       <tr>
         <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
         <td>${f.score}%</td>
         <td>${f.strengthScore || 'N/A'}%</td>
-        <td>${f.enduranceScore || 'N/A'}%</td>
         <td>${f.status}</td>
       </tr>
     `).join('');
-
-    const insightsPlus = analyticalInsights.plus.map(p => `<li>${p}</li>`).join('');
-    const insightsWeak = analyticalInsights.weak.map(w => `<li>${w}</li>`).join('');
-    const medicalLogs = playerIncidents.length === 0 
-      ? 'No recorded health incidents.' 
-      : playerIncidents.map((i: any) => `${format(new Date(i.date), 'dd MMM yy')}: ${i.description}`).join('; ');
-
-    const win = window.open('', '_blank');
-    if (!win) return;
 
     const htmlContent = `
       <html>
         <head>
           <title>Institutional Dossier - ${player.name}</title>
           <style>
-            @media print { @page { size: A4; margin: 1cm; } }
+            @media print { 
+              @page { size: A4; margin: 1cm; } 
+              .no-print { display: none !important; } 
+              body { padding-top: 0 !important; }
+            }
             body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 12px; }
             .header { text-align: center; border-bottom: 4px double #0048A0; padding-bottom: 10px; margin-bottom: 25px; }
             .school-name { font-size: 22px; font-weight: 900; color: #0048A0; text-transform: uppercase; }
             .profile-grid { display: grid; grid-template-columns: 100px 1fr; gap: 20px; margin-bottom: 20px; }
             .photo-box { width: 100px; height: 120px; border: 1px solid #ddd; overflow: hidden; }
             .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            .data-table th, .data-table td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 11px; }
-            .data-table th { background: #f5f5f5; }
-            h3 { border-left: 4px solid #F59E0B; padding-left: 8px; text-transform: uppercase; font-size: 13px; margin-top: 20px; color: #0048A0; }
-            .insight-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
-            .box { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
-            .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; }
-            .sign { border-top: 1px solid #000; width: 180px; text-align: center; padding-top: 5px; }
+            .data-table th, .data-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            .box { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; margin-top: 10px; }
+            
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #0048A0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #F59E0B; color: white; }
           </style>
         </head>
-        <body>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+
           <div class="header">
             <div class="school-name">ASHRAM SHALA WAGHAMBA</div>
-            <div style="font-weight: 800; font-size: 14px;">OFFICIAL ATHLETE PERFORMANCE DOSSIER</div>
+            <div style="font-weight: 800; font-size: 14px;">ATHLETE PERFORMANCE DOSSIER</div>
           </div>
           <div class="profile-grid">
             <div class="photo-box">${photoHtml}</div>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="font-weight:900; width: 120px;">STUDENT NAME:</td><td>${player.name.toUpperCase()}</td></tr>
-              <tr><td style="font-weight:900;">GR / SERIAL NO:</td><td>${player.generalRegisterNumber || 'N/A'} / #${player.serialNumber || '0'}</td></tr>
-              <tr><td style="font-weight:900;">CLASS / SQUAD:</td><td>Std ${player.std} / ${teamCategory}</td></tr>
-              <tr><td style="font-weight:900;">GENDER / AGE:</td><td>${player.gender} / ${player.age} Yrs</td></tr>
-              <tr><td style="font-weight:900;">ATTENDANCE:</td><td>${playerAttendance.present} Sessions Present</td></tr>
+            <table style="width: 100%;">
+              <tr><td style="font-weight:900;">STUDENT NAME:</td><td>${player.name.toUpperCase()}</td></tr>
+              <tr><td style="font-weight:900;">GR / SERIAL:</td><td>${player.generalRegisterNumber || 'N/A'} / #${player.serialNumber || '0'}</td></tr>
+              <tr><td style="font-weight:900;">CATEGORY:</td><td>${teamCategory}</td></tr>
             </table>
           </div>
-          <h3>1. Historical Progress Registry</h3>
+          <h3>Historical Progress Registry</h3>
           <table class="data-table">
-            <thead><tr><th>DATE</th><th>SCORE</th><th>STRENGTH %</th><th>ENDURANCE %</th><th>INSTITUTIONAL STATUS</th></tr></thead>
+            <thead><tr><th>DATE</th><th>SCORE</th><th>STRENGTH</th><th>STATUS</th></tr></thead>
             <tbody>${fitnessRows}</tbody>
           </table>
-          <h3>2. Athletic Growth Analysis</h3>
-          <div class="insight-box">
-            <div class="box"><strong>STRENGTHS (+):</strong><ul>${insightsPlus || 'No specific strengths recorded'}</ul></div>
-            <div class="box"><strong>DEVELOPMENT AREAS (-):</strong><ul>${insightsWeak || 'Performing at standard levels'}</ul></div>
-          </div>
-          <h3>3. Health & Medical Log</h3>
-          <div class="box">${medicalLogs}</div>
-          <div class="footer"><div class="sign">Teacher Sunil Deshmukh</div><div class="sign">Institutional Principal</div></div>
-          <script>window.print();</script>
+          <div class="box"><strong>INSIGHTS:</strong> ${analyticalInsights.plus.join(', ')}</div>
         </body>
       </html>
     `;
     
-    win.document.write(htmlContent);
-    win.document.close();
+    const win = window.open('', '_blank');
+    win?.document.write(htmlContent);
+    win?.document.close();
   };
 
   if (!store.isLoaded) return <DashboardHomeSkeleton />;
@@ -220,13 +200,13 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Athlete Analytics</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">360° Institutional Dossier Hub</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Institutional Dossier Hub</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
             <SelectTrigger className="h-12 text-md font-bold bg-white rounded-xl border-2 shadow-sm">
-              <SelectValue placeholder="Select Athlete Profile..." />
+              <SelectValue placeholder="Select Profile..." />
             </SelectTrigger>
             <SelectContent>
               {availablePlayers.map((p: any) => (
@@ -234,7 +214,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               ))}
             </SelectContent>
           </Select>
-          <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black uppercase text-xs tracking-widest shadow-md active-scale">
+          <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white hover:bg-primary/90 rounded-xl h-12 font-black uppercase text-xs tracking-widest active-scale">
             <Printer className="w-4 h-4 mr-2" /> Export Performance Dossier
           </Button>
         </div>
@@ -243,11 +223,10 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       {!selectedPlayerId ? (
         <div className="p-24 text-center text-muted-foreground border-4 border-dashed rounded-[3rem] opacity-30">
           <TrendingUp className="w-16 h-16 mx-auto mb-4" />
-          <p className="font-black uppercase text-sm tracking-widest">Identify an athlete to access progress metrics</p>
+          <p className="font-black uppercase text-sm tracking-widest">Identify an athlete to access metrics</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Sidebar Profiler */}
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <div className="h-2 w-full bg-accent" />
@@ -263,37 +242,22 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                     <Badge className="bg-primary text-white text-[10px] font-black uppercase">GR: {player?.generalRegisterNumber || 'N/A'}</Badge>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-dashed">
-                  <div className="space-y-1">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1 justify-center"><Cake className="w-3 h-3" /> Birthday</p>
-                    <p className="text-xs font-bold text-primary">{player?.dob ? format(new Date(player.dob), 'dd MMM yyyy') : 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1 justify-center"><Users className="w-3 h-3" /> Attendance</p>
-                    <p className="text-xs font-bold text-primary">{playerAttendance.present} Logged</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-destructive/5 border-b p-6">
                 <CardTitle className="text-sm font-black uppercase text-destructive flex items-center gap-2">
-                  <Stethoscope className="w-4 h-4" /> Medical Context
+                  <AlertCircle className="w-4 h-4" /> Recent Incidents
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {playerIncidents.length === 0 ? (
-                  <div className="py-8 text-center space-y-2 opacity-20">
-                    <CheckCircle2 className="w-10 h-10 mx-auto" />
-                    <p className="text-[10px] font-black uppercase">Cleared Medical Registry</p>
-                  </div>
+                  <p className="text-[10px] font-black uppercase opacity-20 text-center">No incidents logged</p>
                 ) : (
                   <div className="space-y-4">
                     {playerIncidents.map((inc: any) => (
                       <div key={inc.id} className="flex gap-3 border-l-4 border-destructive/20 pl-4 py-1">
-                        <div className="shrink-0 pt-1"><AlertCircle className="w-3 h-3 text-destructive" /></div>
                         <div>
                           <p className="text-[9px] font-black text-muted-foreground uppercase">{format(new Date(inc.date), 'dd MMM yy')}</p>
                           <p className="text-xs font-bold text-foreground/80 leading-snug">{inc.description}</p>
@@ -306,47 +270,18 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
             </Card>
           </div>
 
-          {/* Metrics Visualization */}
           <div className="lg:col-span-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-2 rounded-[2.5rem] bg-emerald-50/50 p-6 border-emerald-100">
-                <h4 className="text-xs font-black text-emerald-800 uppercase flex items-center gap-2 mb-4">
-                  <Star className="w-5 h-5 text-emerald-600 fill-emerald-600" /> Plus Points (+)
-                </h4>
-                <div className="space-y-3">
-                  {analyticalInsights.plus.length > 0 ? analyticalInsights.plus.map((p, i) => (
-                    <div key={i} className="flex gap-2 text-xs font-bold text-emerald-900/70">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" /> {p}
-                    </div>
-                  )) : <p className="text-[10px] font-bold text-muted-foreground uppercase">Gathering performance baseline...</p>}
-                </div>
-              </Card>
-              <Card className="border-2 rounded-[2.5rem] bg-orange-50/50 p-6 border-orange-100">
-                <h4 className="text-xs font-black text-orange-800 uppercase flex items-center gap-2 mb-4">
-                  <Zap className="w-5 h-5 text-orange-600 fill-orange-600" /> Target Areas (-)
-                </h4>
-                <div className="space-y-3">
-                  {analyticalInsights.weak.length > 0 ? analyticalInsights.weak.map((w, i) => (
-                    <div key={i} className="flex gap-2 text-xs font-bold text-orange-900/70">
-                      <Target className="w-3 h-3 text-orange-600 mt-0.5 shrink-0" /> {w}
-                    </div>
-                  )) : <p className="text-[10px] font-bold text-muted-foreground uppercase">Stable performance across metrics.</p>}
-                </div>
-              </Card>
-            </div>
-
             <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
-              <CardHeader className="bg-muted/30 border-b p-6 flex flex-row items-center justify-between">
+              <CardHeader className="bg-muted/30 border-b p-6">
                 <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
-                  <ChartLine className="w-4 h-4 text-accent" /> Institutional Growth Trends
+                  <ChartLine className="w-4 h-4 text-accent" /> Institutional Trends
                 </CardTitle>
-                <Badge variant="outline" className="text-[8px] font-black uppercase bg-white">Standard: {player?.std}</Badge>
               </CardHeader>
               <CardContent className="p-8">
                 {chartData.length < 2 ? (
-                   <div className="h-[300px] flex flex-col items-center justify-center space-y-4 opacity-20 text-center">
+                   <div className="h-[300px] flex flex-col items-center justify-center opacity-20">
                       <TrendingUp className="w-12 h-12" />
-                      <p className="font-black uppercase text-xs">Awaiting subsequent physical test results<br/>to generate trend analytics.</p>
+                      <p className="font-black uppercase text-xs">Insufficient trend data</p>
                    </div>
                 ) : (
                   <div className="h-[350px] w-full">
@@ -355,11 +290,10 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                         <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} domain={[0, 100]} />
-                        <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.05} name="Total Agg." />
-                        <Line type="monotone" dataKey="strength" stroke="#F59E0B" strokeWidth={2} dot={{ r: 4 }} name="Strength %" />
-                        <Line type="monotone" dataKey="endurance" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} name="Endurance %" />
-                        <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }} />
+                        <Tooltip />
+                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.05} />
+                        <Line type="monotone" dataKey="strength" stroke="#F59E0B" strokeWidth={2} dot={{ r: 4 }} />
+                        <Legend iconType="circle" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>

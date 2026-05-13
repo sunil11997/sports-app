@@ -109,21 +109,36 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   const handlePrint = () => {
     const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
-    const sessionLabel = activeSession === 'Morning' ? 'Morning (सकाळ)' : 'Evening (संध्याकाळ)';
+    const sessionLabel = activeSession === 'Morning' ? 'Morning' : 'Evening';
     const printContent = `
       <html>
         <head>
           <title>Attendance Report - ${format(currentDate, 'MMMM yyyy')}</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; }
+            @media print { 
+              @page { size: A4 landscape; margin: 1cm; } 
+              .no-print { display: none !important; } 
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
             h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 10px; }
             .meta { font-weight: bold; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             .name-cell { text-align: left; font-weight: bold; width: 120px; }
+            
+            /* Mobile Print Controls */
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
           <h1>Attendance (${section.toUpperCase()}): ${format(currentDate, 'MMMM yyyy')}</h1>
           <div class="meta">Category: ${categoryLabel.toUpperCase()} | Session: ${sessionLabel.toUpperCase()}</div>
           <table>
@@ -155,7 +170,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
-    win?.print();
   };
 
   if (!isMounted || !store.isLoaded) {
@@ -164,39 +178,15 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   return (
     <div className="space-y-4">
-      {/* Offline Alert */}
       {!isOnline && (
-        <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top duration-500">
+        <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             <WifiOff className="w-5 h-5 text-amber-600" />
             <div>
-              <p className="text-sm font-black text-amber-900 uppercase leading-none">Offline Mode Active</p>
+              <p className="text-sm font-black text-amber-900 uppercase">Offline Mode Active</p>
               <p className="text-[10px] font-bold text-amber-700 uppercase mt-1">Attendance will sync when internet returns</p>
             </div>
           </div>
-          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 font-black">LOCAL SAVE</Badge>
-        </div>
-      )}
-
-      {/* Sync Status */}
-      {store.pendingSyncCount > 0 && isOnline && (
-        <div className="bg-primary/5 border-2 border-primary/10 p-4 rounded-2xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <RefreshCw className={cn("w-5 h-5 text-primary", store.isSyncing && "animate-spin")} />
-            <div>
-              <p className="text-sm font-black text-primary uppercase leading-none">Pending Synchronization</p>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{store.pendingSyncCount} items queued for cloud upload</p>
-            </div>
-          </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={store.syncOfflineAttendance} 
-            disabled={store.isSyncing}
-            className="rounded-full h-8 px-4 font-black uppercase text-[9px] border-primary/20 text-primary"
-          >
-            {store.isSyncing ? "Syncing..." : "Sync Now"}
-          </Button>
         </div>
       )}
 
@@ -248,7 +238,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         <div>
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">Monthly Presence Log</h2>
           <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-2">
-            Session: <span className="text-primary">{activeSession}</span> • Filter: {categories.find(c => c.id === activeCategory)?.label}
+            Session: <span className="text-primary">{activeSession}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -284,24 +274,14 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={days.length + 2} className="text-center py-8 text-muted-foreground font-black uppercase text-xs opacity-40">
-                  No records found in this category.
-                </TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={days.length + 2} className="text-center py-8">No records found.</TableCell></TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
                 let monthlyTotal = 0;
                 return (
-                  <TableRow key={player.id} className="border-b even:bg-muted/30 hover:bg-primary/5 transition-colors h-10">
-                    <TableCell className="border-r p-2 text-xs font-bold sticky left-0 bg-white z-10">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                           <span className="text-[9px] font-black text-primary/40">#{player.serialNumber || '0'}</span>
-                           <span className="uppercase truncate w-[140px] text-primary">{player.name}</span>
-                        </div>
-                        <span className="text-[8px] uppercase text-muted-foreground font-black ml-6">{player.gender} • Std {player.std}</span>
-                      </div>
+                  <TableRow key={player.id} className="border-b even:bg-muted/30 h-10">
+                    <TableCell className="border-r p-2 text-xs font-bold sticky left-0 bg-white z-10 truncate w-[180px]">
+                      {player.name.toUpperCase()}
                     </TableCell>
                     {days.map(day => {
                       const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
@@ -311,7 +291,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                       return (
                         <TableCell 
                           key={day.toString()} 
-                          className="border-r p-0 text-center cursor-pointer hover:bg-primary/10 transition-colors"
+                          className="border-r p-0 text-center cursor-pointer"
                           onClick={() => handleToggle(player.id, day)}
                         >
                           <div className={cn(

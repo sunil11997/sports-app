@@ -24,7 +24,6 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     setReportDate(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
-  // 1. Fetch Activities logged today
   const activitiesToday = useMemo(() => {
     if (!isMounted || !reportDate) return [];
     return store.data.activities.filter((a: any) => 
@@ -32,7 +31,6 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     );
   }, [store.data.activities, reportDate, isMounted, targetCategory]);
 
-  // 2. Fetch Health Incidents logged today
   const healthToday = useMemo(() => {
     if (!isMounted || !reportDate) return [];
     return store.data.healthIncidents.filter((h: any) => 
@@ -40,7 +38,6 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     );
   }, [store.data.healthIncidents, reportDate, isMounted, section]);
 
-  // 3. Aggregate Attendance Summary
   const attendanceSummary = useMemo(() => {
     if (!isMounted || !reportDate) return { morning: 0, evening: 0 };
     let morning = 0;
@@ -67,7 +64,11 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
         <head>
           <title>Daily Briefing - ${reportDate}</title>
           <style>
-            @media print { @page { size: A4; margin: 1.5cm; } .no-print { display: none; } }
+            @media print { 
+              @page { size: A4; margin: 1.5cm; } 
+              .no-print { display: none !important; } 
+              body { padding-top: 0 !important; }
+            }
             body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 13px; }
             .header { text-align: center; border-bottom: 4px double #221d1d; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
@@ -79,10 +80,20 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             .stat-item { border: 1px solid #eee; padding: 10px; border-radius: 5px; text-align: center; }
             .footer { margin-top: 50px; display: flex; justify-content: space-between; font-weight: 900; }
             .sign { border-top: 1px solid #333; width: 220px; text-align: center; padding-top: 5px; }
-            .critical { color: #991b1b; background: #fee2e2; border-color: #f87171; }
+            
+            /* Mobile Print Controls */
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; transition: all 0.2s; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
             <div class="report-title">Daily Institutional Activity Briefing (${section.toUpperCase()})</div>
@@ -102,21 +113,20 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
           <div class="box">${autoSummary}</div>
 
           <h3>3. Health & Medical Log</h3>
-          <div class="box ${healthToday.length > 0 ? 'critical' : ''}">
+          <div class="box">
             ${healthToday.length === 0 
-              ? 'No medical incidents or injuries reported today.' 
+              ? 'No medical incidents reported today.' 
               : healthToday.map((h: any) => `ALERT: [${h.playerName}] ${h.description}`).join('\n')
             }
           </div>
 
           <h3>4. Head Instructor Observations</h3>
-          <div class="box">${manualNotes || 'Standard operations conducted without additional specific observations.'}</div>
+          <div class="box">${manualNotes || 'Standard operations conducted.'}</div>
 
           <div class="footer">
-            <div class="sign">Teacher Sunil Deshmukh<br/>(Physical Education Director)</div>
-            <div class="sign">Institutional Principal<br/>(Official Signature)</div>
+            <div class="sign">Teacher Sunil Deshmukh</div>
+            <div class="sign">Principal Signature</div>
           </div>
-          <script>window.print();</script>
         </body>
       </html>
     `;
@@ -182,7 +192,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             </CardHeader>
             <CardContent className="p-8">
               {healthToday.length === 0 ? (
-                <p className="text-sm font-bold text-muted-foreground italic text-center opacity-40">No health incidents logged in registry for this date.</p>
+                <p className="text-sm font-bold text-muted-foreground italic text-center opacity-40">No health incidents logged today.</p>
               ) : (
                 <div className="space-y-4">
                   {healthToday.map((h: any, i: number) => (
@@ -222,10 +232,6 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
                   <p className="text-[9px] font-bold uppercase text-primary/60 mt-1">Present Today</p>
                 </div>
               </div>
-              <div className="p-4 bg-muted/20 rounded-2xl flex items-center gap-3">
-                 <ClipboardCheck className="w-5 h-5 text-emerald-600" />
-                 <p className="text-[10px] font-black uppercase text-muted-foreground leading-tight">Data verified from institutional presence log</p>
-              </div>
             </CardContent>
           </Card>
 
@@ -235,16 +241,13 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             </CardHeader>
             <CardContent className="p-8 space-y-4">
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Weather Conditions</label>
+                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Weather</label>
                  <Select value={weather} onValueChange={setWeather}>
-                   <SelectTrigger className="h-12 border-2 rounded-xl">
-                     <SelectValue />
-                   </SelectTrigger>
+                   <SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger>
                    <SelectContent>
                      <SelectItem value="Sunny">Sunny ☀️</SelectItem>
                      <SelectItem value="Rainy">Rainy 🌧️</SelectItem>
                      <SelectItem value="Overcast">Overcast ☁️</SelectItem>
-                     <SelectItem value="Cold">Cold ❄️</SelectItem>
                    </SelectContent>
                  </Select>
                </div>
@@ -253,7 +256,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
                  <Textarea 
                   value={manualNotes} 
                   onChange={(e) => setManualSummary(e.target.value)} 
-                  placeholder="e.g. Ground preparation for Zilla Parishad meet..." 
+                  placeholder="Notes..." 
                   className="min-h-[150px] rounded-2xl border-2 p-6 font-medium text-sm" 
                  />
                </div>

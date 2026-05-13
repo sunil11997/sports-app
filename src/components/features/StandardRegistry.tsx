@@ -20,9 +20,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     return store.data.players
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
-        if (a.gender !== b.gender) {
-          return a.gender === 'Female' ? -1 : 1;
-        }
+        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std]);
@@ -36,15 +34,11 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
       const history = (store.data.fitnessHistory[p.id] || [])
         .find((h: any) => h.term === activeTerm);
       
-      if (history) {
-        newRecords[p.id] = history;
-      } else {
-        newRecords[p.id] = {
-          nirikshan: '', tondikam: '', pratyashike: '', 
-          upkram: '', prakalp: '', chachani: '', swadhyay: '',
-          height: p.height || '', weight: p.weight || ''
-        };
-      }
+      newRecords[p.id] = history || {
+        nirikshan: '', tondikam: '', pratyashike: '', 
+        upkram: '', prakalp: '', chachani: '', swadhyay: '',
+        height: p.height || '', weight: p.weight || ''
+      };
     });
     setTermRecords(newRecords);
   }, [activeTerm, playersInStd, store.data.fitnessHistory, store.isLoaded]);
@@ -52,10 +46,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const handleChange = (id: string, field: string, value: string) => {
     setTermRecords(prev => ({
       ...prev,
-      [id]: {
-        ...(prev[id] || {}),
-        [field]: value
-      }
+      [id]: { ...(prev[id] || {}), [field]: value }
     }));
   };
 
@@ -69,12 +60,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     if (total >= 63) return "अ-1"; 
     if (total >= 56) return "अ-2";
     if (total >= 49) return "ब-1";
-    if (total >= 42) return "ब-2";
-    if (total >= 35) return "क-1";
-    if (total >= 28) return "क-2";
-    if (total >= 21) return "ड";
-    if (total >= 14) return "ई-1";
-    return "ई-2";
+    return "ब-2";
   };
 
   const handleSave = async (player: any) => {
@@ -83,106 +69,93 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     const total = calculateTotal(id);
     const grade = getGrade(total);
     
-    const dataToSave = {
+    store.setFitness(id, {
       ...(termRecords[id] || {}),
       term: activeTerm,
       score: total.toString(),
-      status: grade,
-      height: termRecords[id]?.height || player.height,
-      weight: termRecords[id]?.weight || player.weight
-    };
-
-    store.setFitness(id, dataToSave);
-    setIsSaving(null);
-    toast({ 
-      title: "रेकॉर्ड जतन केला", 
-      description: `${player.name} ची माहिती अपडेट झाली.` 
+      status: grade
     });
+    setIsSaving(null);
+    toast({ title: "Record Saved" });
   };
 
   const handlePrintTerm = () => {
-    const termLabel = activeTerm === 'First' ? 'प्रथम सत्र' : 'द्वितीय सत्र';
-    const academicYear = store.selectedYear || "2024-25";
+    const termLabel = activeTerm === 'First' ? 'First Term' : 'Second Term';
     const printContent = `
       <html>
         <head>
-          <title>परीक्षा नोंदणी - इयत्ता ${std} - ${academicYear}</title>
+          <title>Institutional Exam Registry - Std ${std}</title>
           <style>
-            @media print { @page { size: landscape; margin: 1cm; } }
-            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; line-height: 1.2; }
+            @media print { 
+              @page { size: landscape; margin: 1cm; } 
+              .no-print { display: none !important; }
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
             .header { text-align: center; border-bottom: 3px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
-            .sub-header { font-size: 14px; font-weight: 800; margin-top: 5px; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
             th, td { border: 1px solid #000; padding: 6px; text-align: center; }
-            th { background-color: #f5f5f5; font-weight: 900; text-transform: uppercase; font-size: 9px; }
+            th { background-color: #f5f5f5; font-weight: 900; }
             .name-cell { text-align: left; font-weight: 900; min-width: 180px; }
-            .total-cell { background-color: #f0f0f0; font-weight: 900; }
-            .footer { margin-top: 50px; display: flex; justify-content: space-between; font-weight: 900; }
-            .sign { border-top: 1px solid #000; width: 220px; text-align: center; padding-top: 5px; }
+            
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #F59E0B; color: white; }
           </style>
         </head>
-        <body>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div class="sub-header">परीक्षा गुण व आरोग्य नोंदणी वही - ${academicYear}</div>
-            <div style="margin-top: 5px; font-weight: 800;">इयत्ता: ${std} | सत्र: ${termLabel}</div>
+            <div style="font-weight: 800; margin-top: 5px;">Exam & Health Registry - Std: ${std} | Term: ${termLabel}</div>
           </div>
           <table>
             <thead>
               <tr>
-                <th rowspan="2">अ.क्र.</th>
-                <th rowspan="2">विद्यार्थ्याचे नाव</th>
-                <th rowspan="2">लिंग</th>
-                <th rowspan="2">वय</th>
-                <th colspan="2">शारीरिक मोजमाप</th>
-                <th colspan="7">आकारिक मूल्यमापन चाचणी गुण (Out of 10)</th>
-                <th rowspan="2">एकूण गुण</th>
-                <th rowspan="2">श्रेणी</th>
-              </tr>
-              <tr>
-                <th>उंची (cm)</th>
-                <th>वजन (kg)</th>
-                <th>निरीक्षण</th>
-                <th>तोंडीकाम</th>
-                <th>प्रयोग</th>
-                <th>उपक्रम</th>
-                <th>प्रकल्प</th>
-                <th>चाचणी</th>
-                <th>स्वाध्याय</th>
+                <th>SNR</th>
+                <th>STUDENT NAME</th>
+                <th>GEN</th>
+                <th>HT</th>
+                <th>WT</th>
+                <th>OBS</th>
+                <th>ORAL</th>
+                <th>PRAC</th>
+                <th>ACT</th>
+                <th>PROJ</th>
+                <th>TEST</th>
+                <th>TOT</th>
+                <th>GRD</th>
               </tr>
             </thead>
             <tbody>
-              ${playersInStd.map((p: any, i: number) => {
+              ${playersInStd.map((p, i) => {
                 const total = calculateTotal(p.id);
                 const r = termRecords[p.id] || {};
                 return `
                   <tr>
                     <td>${p.serialNumber || i+1}</td>
                     <td class="name-cell">${p.name.toUpperCase()}</td>
-                    <td>${p.gender === 'Female' ? 'महिला' : 'पुरुष'}</td>
-                    <td>${p.age}</td>
-                    <td>${r.height || p.height || '-'}</td>
-                    <td>${r.weight || p.weight || '-'}</td>
+                    <td>${p.gender[0]}</td>
+                    <td>${r.height || '-'}</td>
+                    <td>${r.weight || '-'}</td>
                     <td>${r.nirikshan || '-'}</td>
                     <td>${r.tondikam || '-'}</td>
                     <td>${r.pratyashike || '-'}</td>
                     <td>${r.upkram || '-'}</td>
                     <td>${r.prakalp || '-'}</td>
                     <td>${r.chachani || '-'}</td>
-                    <td>${r.swadhyay || '-'}</td>
-                    <td class="total-cell">${total}</td>
-                    <td class="total-cell">${getGrade(total)}</td>
+                    <td><strong>${total}</strong></td>
+                    <td><strong>${getGrade(total)}</strong></td>
                   </tr>
                 `;
               }).join('')}
             </tbody>
           </table>
-          <div class="footer">
-            <div class="sign">वर्ग शिक्षक</div>
-            <div class="sign">मुख्याध्यापक</div>
-          </div>
-          <script>window.print();</script>
         </body>
       </html>
     `;
@@ -191,115 +164,74 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     win?.document.close();
   };
 
-  if (!store.isLoaded) {
-    return <TableSkeleton rows={10} cols={11} />;
-  }
+  if (!store.isLoaded) return <TableSkeleton rows={10} cols={11} />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
       <div className="bg-white p-8 rounded-[3rem] border-2 border-primary/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex items-center gap-6">
-          <div className="bg-amber-100 p-4 rounded-[1.5rem] border-2 border-amber-200 shadow-inner">
+          <div className="bg-amber-100 p-4 rounded-[1.5rem] border-2 border-amber-200">
             <ClipboardList className="w-10 h-10 text-amber-700" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">इयत्ता {std} - परीक्षा नोंदणी</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Institutional Exam Registry • Academic Year {store.selectedYear}</p>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Std {std} Exam Hub</h2>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Term Registry</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
-          <Button 
-            variant={activeTerm === 'First' ? "default" : "ghost"}
-            onClick={() => setActiveTerm('First')}
-            className={cn(
-              "rounded-xl px-6 font-black uppercase text-xs tracking-wider transition-all",
-              activeTerm === 'First' ? "bg-primary text-white shadow-lg" : "text-muted-foreground"
-            )}
-          >
-            प्रथम सत्र
-          </Button>
-          <Button 
-            variant={activeTerm === 'Second' ? "default" : "ghost"}
-            onClick={() => setActiveTerm('Second')}
-            className={cn(
-              "rounded-xl px-6 font-black uppercase text-xs tracking-wider transition-all",
-              activeTerm === 'Second' ? "bg-primary text-white shadow-lg" : "text-muted-foreground"
-            )}
-          >
-            द्वितीय सत्र
-          </Button>
+          <Button variant={activeTerm === 'First' ? "default" : "ghost"} onClick={() => setActiveTerm('First')} className="rounded-xl px-6 font-black uppercase text-xs">First Term</Button>
+          <Button variant={activeTerm === 'Second' ? "default" : "ghost"} onClick={() => setActiveTerm('Second')} className="rounded-xl px-6 font-black uppercase text-xs">Second Term</Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Button onClick={handlePrintTerm} className="h-16 rounded-2xl bg-white border-2 border-primary/10 text-primary hover:bg-primary/5 font-black uppercase text-xs tracking-widest shadow-md">
-          <Printer className="w-5 h-5 mr-2" /> पत्रक प्रिंट करा (Year: {store.selectedYear})
-        </Button>
-        <Button className="h-16 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase text-xs tracking-widest shadow-xl">
-          <FileText className="w-5 h-5 mr-2" /> वार्षिक निकाल प्रिंट करा
-        </Button>
-      </div>
+      <Button onClick={handlePrintTerm} className="h-16 w-full rounded-2xl bg-white border-2 border-primary/10 text-primary hover:bg-primary/5 font-black uppercase text-xs tracking-widest shadow-md">
+        <Printer className="w-5 h-5 mr-2" /> Print Term Sheet
+      </Button>
 
       <div className="border border-border rounded-3xl overflow-hidden bg-white shadow-2xl overflow-x-auto">
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow>
-              <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[220px] sticky left-0 bg-muted/95 z-30">विद्यार्थ्याचे नाव</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">वय</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px] bg-accent/5">उंची (cm)</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px] bg-accent/5">वजन (kg)</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">निरीक्षण</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">तोंडी</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">प्रयोग</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">उपक्रम</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">प्रकल्प</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">चाचणी</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">स्वाध्याय</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">एकूण</TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">श्रेणी</TableHead>
-              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">जतन करा</TableHead>
+              <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[220px] sticky left-0 bg-muted/95 z-30">Student Name</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Ht (cm)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Wt (kg)</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">OBS</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">ORAL</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">PRAC</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">ACT</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">PROJ</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[50px]">TEST</TableHead>
+              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">TOTAL</TableHead>
+              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {playersInStd.length === 0 ? (
-              <TableRow><TableCell colSpan={14} className="text-center py-20 text-muted-foreground font-bold uppercase tracking-widest opacity-30">या वर्गात कोणतेही विद्यार्थी नाहीत</TableCell></TableRow>
-            ) : (
-              playersInStd.map((p: any) => {
-                const r = termRecords[p.id] || {};
-                const total = calculateTotal(p.id);
-                return (
-                  <TableRow key={p.id} className="border-b hover:bg-primary/5 h-14 transition-colors">
-                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                           <span className="text-[9px] font-black text-primary/40">#{p.serialNumber || '0'}</span>
-                           <span className="uppercase text-primary">{p.name}</span>
-                        </div>
-                        <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 ml-6">{p.gender} • Term: {activeTerm}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="border-r p-0 text-center text-[11px] font-black text-muted-foreground">{p.age}</TableCell>
-                    <TableCell className="border-r p-0 bg-accent/[0.02]"><Input type="number" placeholder="cm" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0 bg-accent/[0.02]"><Input type="number" placeholder="kg" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center text-[11px] font-bold border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary text-sm">{total}</TableCell>
-                    <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary text-xs">{getGrade(total)}</TableCell>
-                    <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
-                      <Button variant="ghost" size="icon" className="h-14 w-full rounded-none text-primary" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
-                        {isSaving === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+            {playersInStd.map((p) => {
+              const r = termRecords[p.id] || {};
+              const total = calculateTotal(p.id);
+              return (
+                <TableRow key={p.id} className="border-b h-14">
+                  <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[220px]">
+                    {p.name.toUpperCase()}
+                  </TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.height || ''} onChange={(e) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.weight || ''} onChange={(e) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0 text-center bg-primary/5 font-black">{total}</TableCell>
+                  <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
+                    <Button variant="ghost" className="h-14 w-full rounded-none" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
+                      {isSaving === p.id ? <Loader2 className="animate-spin" /> : <Save className="w-4 h-4" />}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
