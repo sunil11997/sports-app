@@ -1,39 +1,22 @@
-
-/**
- * Waghamba Sports Hub - High-Resilience Service Worker
- * Strategy: Network-First with forced activation.
- * Purpose: Resolves Next.js 404 ChunkLoadErrors and "Old App" content display.
- */
-
 const CACHE_NAME = 'wgb-hub-v3.2';
 
+// Network-First Strategy for high-availability sports registry
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
+  event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {
-  // We only cache GET requests
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If valid response, clone and cache it
+        // If we have a valid network response, cache it and return it
         if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -43,7 +26,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // If network fails, serve from cache
+        // If network fails (Offline), try the cache
         return caches.match(event.request);
       })
   );

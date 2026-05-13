@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -213,7 +212,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0 animate-in fade-in duration-500">
         <div className="max-w-xs w-full text-center space-y-8">
            <div className="w-48 h-48 mx-auto">
-             <Lottie animationData={splashAnim} loop={true} />
+             {isMounted && <Lottie animationData={splashAnim} loop={true} />}
            </div>
            <div className="space-y-2">
              <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.2</h2>
