@@ -1,12 +1,25 @@
-const CACHE_NAME = 'wgb-hub-v3.2';
+/**
+ * Waghamba Sports Hub - High-Resilience Service Worker
+ * Strategy: Network-First (Prevents 404 chunk errors and ensures latest code)
+ */
 
-// Network-First Strategy for high-availability sports registry
+const CACHE_NAME = 'wgb-institutional-cache-v3.2';
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -16,8 +29,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If we have a valid network response, cache it and return it
-        if (response && response.status === 200) {
+        // Only cache successful standard responses
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -26,7 +39,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // If network fails (Offline), try the cache
+        // Fallback to cache if network is unavailable
         return caches.match(event.request);
       })
   );

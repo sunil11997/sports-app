@@ -45,8 +45,10 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
-import Lottie from 'lottie-react';
 import splashAnim from './lib/splash-animation.json';
+
+// Lottie is browser-only, so we load it dynamically
+const Lottie = NextDynamic(() => import('lottie-react'), { ssr: false });
 
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
@@ -198,21 +200,14 @@ export default function WaghambaApp() {
     setActiveTab('home');
   };
 
-  if (!isMounted) return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
-      <div className="space-y-4">
-        <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-        <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.3em]">Waghamba Hub V3.2...</p>
-      </div>
-    </div>
-  );
+  if (!isMounted) return null;
 
   if (showSplash) {
     return (
-      <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0 animate-in fade-in duration-500">
+      <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
         <div className="max-w-xs w-full text-center space-y-8">
            <div className="w-48 h-48 mx-auto">
-             {isMounted && <Lottie animationData={splashAnim} loop={true} />}
+             <Lottie animationData={splashAnim} loop={true} />
            </div>
            <div className="space-y-2">
              <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.2</h2>

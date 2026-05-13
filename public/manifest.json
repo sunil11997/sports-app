@@ -1,23 +1,24 @@
 {
-    "name": "Waghamba Sports Health Hub",
-      "short_name": "Sports Hub",
-        "description": "Sports coaching and student management app",
-          "start_url": "/",
-            "display": "standalone",
-              "background_color": "#ffffff",
-                "theme_color": "#1e3a8a",
-                  "orientation": "portrait",
-                    "icons": [
-                        {
-                              "src": "/icon-192.png",
-                                    "sizes": "192x192",
-                                          "type": "image/png"
-                                              },
-                                                  {
-                                                        "src": "/icon-512.png",
-                                                              "sizes": "512x512",
-                                                                    "type": "image/png"
-                                                                        }
-                                                                          ]
-                                                                          }
+  "name": "Waghamba Institutional Sports & Health Hub",
+  "short_name": "WGB Sports",
+  "description": "Professional Physical Education & Sports Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
