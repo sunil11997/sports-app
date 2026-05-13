@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.sunil.physical',
   appName: 'Physical Education App',
   webDir: 'out',
-  bundledWebRuntime: false,
   server: {
     androidScheme: 'https'
   }
