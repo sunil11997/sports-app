@@ -49,9 +49,6 @@ import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons'
 import Lottie from 'lottie-react';
 import splashAnim from './lib/splash-animation.json';
 
-// Force dynamic to prevent prerendering errors with Firebase
-export const dynamic = 'force-dynamic';
-
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
@@ -490,7 +487,6 @@ export default function WaghambaApp() {
         <div className="flex flex-col gap-4 max-sm mx-auto">
           <Button 
             onClick={() => {
-              console.log("WGB: Transitioning to Selector Stage");
               setStage('selector');
             }}
             className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group"

@@ -1,20 +1,14 @@
 
 /**
- * Waghamba Sports Hub - High-Availability Service Worker
- * Strategy: Network-First with Immediate Activation
- * Ensures Next.js chunks are always fresh on Android native devices.
+ * Waghamba Sports Hub - High-Resilience Service Worker
+ * Strategy: Network-First with forced activation.
+ * Purpose: Resolves Next.js 404 ChunkLoadErrors and "Old App" content display.
  */
 
-const CACHE_NAME = 'wgb-sports-v3.2';
-const OFFLINE_URL = '/';
+const CACHE_NAME = 'wgb-hub-v3.2';
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force active immediately
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([OFFLINE_URL]);
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -29,19 +23,18 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim(); // Take control of all open clients
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
+  // We only cache GET requests
   if (event.request.method !== 'GET') return;
 
-  // Strategy: Network First, falling back to cache
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If valid response, clone it to cache
-        if (response && response.status === 200 && response.type === 'basic') {
+        // If valid response, clone and cache it
+        if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -50,15 +43,8 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          
-          // If even cache fails for a navigation, show home
-          if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_URL);
-          }
-        });
+        // If network fails, serve from cache
+        return caches.match(event.request);
       })
   );
 });
