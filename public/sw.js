@@ -1,48 +1,43 @@
+
 /**
- * Waghamba Sports Hub - Network-First Service Worker
- * Critical for Native Android stability and PWA Installability.
+ * Waghamba Sports Hub - High-Resilience Service Worker
+ * Strategy: Network-First with Aggressive Cache Clearing
+ * Purpose: Fixes 404 ChunkLoadErrors and "Old App" content issues on Android.
  */
 
-const CACHE_NAME = 'wgb-registry-v3.2';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest',
-  '/icon-512.png'
-];
+const CACHE_NAME = 'wgb-sports-v3.2';
 
+// 1. Install Event - Force Activation
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
+  console.log('WGB SW: Installing & Skipping Waiting');
 });
 
+// 2. Activate Event - Clean Old Caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('WGB: Clearing old cache:', cache);
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('WGB SW: Deleting Old Cache:', cacheName);
+            return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  return self.clients.claim();
 });
 
+// 3. Fetch Event - Network-First Strategy
 self.addEventListener('fetch', (event) => {
-  // Use Network-First strategy for Next.js app chunks
-  // This prevents the "old app" issue by checking the network for updates first.
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If valid response, clone it and update cache
+        // If valid response, clone and store in cache
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -52,7 +47,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // If offline, serve from cache
+        // If network fails (Offline), try the cache
         return caches.match(event.request);
       })
   );

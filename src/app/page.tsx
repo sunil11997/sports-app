@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -45,6 +46,8 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
+import Lottie from 'lottie-react';
+import splashAnim from './lib/splash-animation.json';
 
 // Force dynamic to prevent prerendering errors with Firebase
 export const dynamic = 'force-dynamic';
@@ -92,6 +95,7 @@ const translations = {
 
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [stage, setStage] = useState<'landing' | 'selector' | 'hub'>('landing');
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
@@ -104,6 +108,8 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -204,6 +210,22 @@ export default function WaghambaApp() {
       </div>
     </div>
   );
+
+  if (showSplash) {
+    return (
+      <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0 animate-in fade-in duration-500">
+        <div className="max-w-xs w-full text-center space-y-8">
+           <div className="w-48 h-48 mx-auto">
+             <Lottie animationData={splashAnim} loop={true} />
+           </div>
+           <div className="space-y-2">
+             <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.2</h2>
+             <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">Registry Synchronizing...</p>
+           </div>
+        </div>
+      </div>
+    );
+  }
 
   if (stage === 'hub' && selectedSection) {
     const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
