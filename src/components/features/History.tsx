@@ -22,7 +22,8 @@ import {
   Users,
   Timer,
   Wind,
-  Dumbbell
+  Dumbbell,
+  Ruler
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -83,14 +84,13 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
 
   const skillMasteryData = useMemo(() => {
     if (!selectedPlayerId) return [];
-    // Calculate mastery based on drill completions
     const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
     return sports.map(sport => {
       const skill = store.data.sportSkills[`${selectedPlayerId}_${sport}`];
       return {
         name: sport,
         score: parseFloat(skill?.score) || 0,
-        participation: Object.keys(store.data.drillCompletions).filter(k => k.startsWith(selectedPlayerId)).length // Mock participation for visualization
+        participation: Object.keys(store.data.drillCompletions).filter(k => k.startsWith(selectedPlayerId)).length 
       };
     }).filter(s => s.score > 0);
   }, [selectedPlayerId, store.data.sportSkills, store.data.drillCompletions]);
@@ -109,9 +109,10 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     return playerFitness.map((f: any) => ({
       date: format(new Date(f.updatedAt || f.date || new Date()), 'MMM yy'),
       score: parseFloat(f.score) || 0,
-      strength: parseFloat(f.strengthScore) || 0,
+      agility: parseFloat(f.agilityScore) || 0,
       stamina: parseFloat(f.enduranceScore) || 0,
-      speed: parseFloat(f.speedScore) || 0
+      speed: parseFloat(f.speedScore) || 0,
+      flex: parseFloat(f.flexScore) || 0
     }));
   }, [playerFitness]);
 
@@ -141,13 +142,14 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               .no-print { display: none !important; } 
               body { padding-top: 0 !important; }
             }
-            body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 12px; }
+            body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 11px; }
             .header { text-align: center; border-bottom: 4px double #0048A0; padding-bottom: 10px; margin-bottom: 25px; }
             .school-name { font-size: 22px; font-weight: 900; color: #0048A0; text-transform: uppercase; }
             .profile-grid { display: grid; grid-template-columns: 100px 1fr; gap: 20px; margin-bottom: 20px; }
             .photo-box { width: 100px; height: 120px; border: 1px solid #ddd; overflow: hidden; }
             .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            .data-table th, .data-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            .data-table th, .data-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+            .data-table th { background: #f1f5f9; font-weight: 900; font-size: 9px; }
             .box { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; margin-top: 10px; }
             
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #0048A0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
@@ -167,20 +169,22 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
           </div>
           <div class="profile-grid">
             <div class="photo-box">${photoHtml}</div>
-            <table style="width: 100%;">
-              <tr><td style="font-weight:900;">STUDENT NAME:</td><td>${player.name.toUpperCase()}</td></tr>
-              <tr><td style="font-weight:900;">GR / SERIAL:</td><td>${player.generalRegisterNumber || 'N/A'} / #${player.serialNumber || '0'}</td></tr>
-              <tr><td style="font-weight:900;">CATEGORY:</td><td>${teamCategory}</td></tr>
-              <tr><td style="font-weight:900;">ATTENDANCE:</td><td>${playerAttendance.present} / ${playerAttendance.total} sessions</td></tr>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="font-weight:900; padding: 4px;">STUDENT NAME:</td><td style="padding: 4px;">${player.name.toUpperCase()}</td></tr>
+              <tr><td style="font-weight:900; padding: 4px;">GR / SERIAL:</td><td style="padding: 4px;">${player.generalRegisterNumber || 'N/A'} / #${player.serialNumber || '0'}</td></tr>
+              <tr><td style="font-weight:900; padding: 4px;">CATEGORY:</td><td style="padding: 4px;">${teamCategory}</td></tr>
+              <tr><td style="font-weight:900; padding: 4px;">ATTENDANCE:</td><td style="padding: 4px;">${playerAttendance.present} / ${playerAttendance.total} sessions</td></tr>
             </table>
           </div>
           <h3>Institutional Growth Registry</h3>
           <table class="data-table">
-            <thead><tr><th>DATE</th><th>SPEED %</th><th>STAMINA %</th><th>CORE %</th><th>TOTAL %</th></tr></thead>
+            <thead><tr><th>DATE</th><th>AGILITY %</th><th>FLEX %</th><th>SPEED %</th><th>STAMINA %</th><th>CORE %</th><th>TOTAL %</th></tr></thead>
             <tbody>
               ${playerFitness.map((f: any) => `
                 <tr>
                   <td>${format(new Date(f.updatedAt || f.date || new Date()), 'PP')}</td>
+                  <td>${f.agilityScore || '-'}%</td>
+                  <td>${f.flexScore || '-'}%</td>
                   <td>${f.speedScore || '-'}%</td>
                   <td>${f.enduranceScore || '-'}%</td>
                   <td>${f.strengthScore || '-'}%</td>
@@ -300,9 +304,9 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                   <ChartLine className="w-5 h-5 text-accent" /> Institutional Growth Trends
                 </CardTitle>
                 <div className="flex gap-4">
-                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Total</span></div>
+                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Score</span></div>
                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Stamina</span></div>
-                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Speed</span></div>
+                   <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[9px] font-bold text-muted-foreground uppercase">Agility</span></div>
                 </div>
               </CardHeader>
               <CardContent className="p-10">
@@ -321,7 +325,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                         <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
                         <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={5} fill="#0048A0" fillOpacity={0.08} />
                         <Line type="monotone" dataKey="stamina" stroke="#f59e0b" strokeWidth={3} dot={{ r: 5, fill: '#f59e0b', strokeWidth: 2, stroke: '#fff' }} />
-                        <Line type="monotone" dataKey="speed" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
+                        <Line type="monotone" dataKey="agility" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
                         <Legend verticalAlign="top" height={36} iconType="circle" />
                       </ComposedChart>
                     </ResponsiveContainer>
@@ -395,7 +399,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                         </div>
                      </div>
                      <div>
-                        <p className="text-sm font-bold text-foreground/70 uppercase tracking-tight">{playerAttendance.present} of {playerAttendance.total} Total Sessions</p>
+                        <p className="text-sm font-bold text-foreground/70 uppercase tracking-tight">{playerAttendance.present} of {playerAttendance.total} Sessions</p>
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Registry Log Analysis</p>
                      </div>
                   </CardContent>

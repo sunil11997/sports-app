@@ -9,21 +9,19 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Activity, 
   Printer, 
-  Scale, 
   Save, 
   Loader2, 
   Calendar, 
-  ShieldAlert, 
   BrainCircuit, 
   Info,
-  ChevronRight,
   Sparkles,
   Trophy,
   Zap,
   Dumbbell,
   Timer,
   Flame,
-  Wind
+  Wind,
+  Ruler
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -106,17 +104,31 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
     setIsSaving(id);
     
-    // Institutional Score Logic
-    const speedVal = 100 - (parseFloat(current.run50m) * 5); // Simple inversion: lower time is better
-    const staminaVal = (parseFloat(current.run600m.split(':')[0]) * 60 + parseFloat(current.run600m.split(':')[1])) || 0;
-    const enduranceScore = staminaVal > 0 ? Math.max(0, 100 - (staminaVal / 3)) : 0;
+    // Institutional Score Logic - Expanded for new tests
+    const speedVal = 100 - (parseFloat(current.run50m) * 5); 
+    const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4); // Agility factor
+    const flexVal = (parseFloat(current.sitAndReach) || 0) * 3; // Flexibility factor
+    
+    const staminaParts = (current.run600m || "0:0").split(':');
+    const staminaSeconds = (parseInt(staminaParts[0]) * 60 + parseInt(staminaParts[1])) || 0;
+    const enduranceScore = staminaSeconds > 0 ? Math.max(0, 100 - (staminaSeconds / 3)) : 0;
+    
     const strengthScore = (parseFloat(current.sitUps) || 0) * 2;
     
     current.speedScore = Math.min(100, Math.max(0, speedVal)).toFixed(0);
     current.enduranceScore = Math.min(100, Math.max(0, enduranceScore)).toFixed(0);
     current.strengthScore = Math.min(100, Math.max(0, strengthScore)).toFixed(0);
+    current.agilityScore = Math.min(100, Math.max(0, shuttleVal)).toFixed(0);
+    current.flexScore = Math.min(100, Math.max(0, flexVal)).toFixed(0);
 
-    const avgScore = (parseFloat(current.speedScore) + parseFloat(current.enduranceScore) + parseFloat(current.strengthScore)) / 3;
+    const avgScore = (
+      parseFloat(current.speedScore) + 
+      parseFloat(current.enduranceScore) + 
+      parseFloat(current.strengthScore) +
+      parseFloat(current.agilityScore) +
+      parseFloat(current.flexScore)
+    ) / 5;
+    
     current.score = Math.round(avgScore).toString();
     current.status = avgScore >= 85 ? 'Elite' : avgScore >= 70 ? 'Optimal' : avgScore >= 50 ? 'Developing' : 'Priority';
 
@@ -148,14 +160,14 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       const result = await analyzeFitness({
         age: player.age,
         gender: player.gender,
-        testName: "Speed, Stamina & Core Assessment",
+        testName: "Full Athletic Assessment",
         score: fit.score,
         language: "English"
       });
       setSelectedAnalysis(result);
       
       const instr = await getTestInstructions({
-        testName: "Beep Test",
+        testName: "Sit and Reach",
         language: "English"
       });
       setActiveInstruction(instr);
@@ -174,10 +186,10 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         <head>
           <title>Institutional Physical Performance Registry</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 30px; font-size: 11px; }
+            body { font-family: Inter, sans-serif; padding: 30px; font-size: 10px; }
             h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px double #333; padding-bottom: 10px; text-align: center; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #111; padding: 10px; text-align: center; }
+            th, td { border: 1px solid #111; padding: 6px; text-align: center; }
             th { background: #f1f5f9; font-weight: 900; }
             .meta { font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; }
             
@@ -200,17 +212,19 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 <th>SNR</th>
                 <th>NAME</th>
                 <th>STD</th>
+                <th>10x6 SHUTTLE</th>
+                <th>SIT & REACH</th>
                 <th>SPEED (50m)</th>
                 <th>STAMINA (600m)</th>
                 <th>CORE (Situps)</th>
-                <th>TOTAL %</th>
+                <th>SCORE %</th>
                 <th>STATUS</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness[p.id] || {};
-                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
+                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -269,10 +283,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             <TableHeader className="bg-slate-50 sticky top-0 z-20">
               <TableRow className="h-16">
                 <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[220px] sticky left-0 bg-slate-50/95 backdrop-blur z-30">Student Profile</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-cyan-600"><Zap className="w-3 h-3 mx-auto mb-1" /> 10x6 Shuttle</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-purple-600"><Ruler className="w-3 h-3 mx-auto mb-1" /> Sit & Reach</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-accent"><Timer className="w-3 h-3 mx-auto mb-1" /> Speed (50m)</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-primary"><Wind className="w-3 h-3 mx-auto mb-1" /> Stamina (600m)</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-emerald-600"><Dumbbell className="w-3 h-3 mx-auto mb-1" /> Core (Situps)</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[80px]"><Activity className="w-3 h-3 mx-auto mb-1" /> Agility</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[130px] bg-primary/5">Institutional Score</TableHead>
                 <TableHead className="px-6 font-black text-[10px] uppercase text-right w-[120px] sticky right-0 bg-slate-50/95 backdrop-blur z-30">Archive</TableHead>
               </TableRow>
@@ -294,10 +309,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                         </div>
                       </TableCell>
                       
+                      <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                      <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
                       <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
                       <TableCell className="border-r p-0"><Input placeholder="m:s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
                       <TableCell className="border-r p-0"><Input type="number" placeholder="reps" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                      <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
 
                       <TableCell className="border-r p-2 text-center bg-primary/5">
                         <div className="flex flex-col items-center gap-0.5">

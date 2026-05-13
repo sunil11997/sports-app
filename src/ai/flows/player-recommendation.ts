@@ -26,26 +26,14 @@ const PlayerRecommendationInputSchema = z.object({
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
   language: z.string().describe('The language for the output (English or Marathi).'),
   engine: z.enum(['Genkit', 'Gemini']).optional().describe('The selected AI engine.'),
-  fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds.'),
-  fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds.'),
-  fitnessRun600m: z.string().optional().describe('600 Meter Run result.'),
+  fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds (Agility).'),
+  fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds (Speed).'),
+  fitnessRun600m: z.string().optional().describe('600 Meter Run result (Endurance).'),
   fitnessSitAndReach: z.string().optional().describe('Flexibility / Sit and Reach in CM.'),
   fitnessBoardJump: z.string().optional().describe('Power / Board Jump in CM.'),
   fitnessSitUps: z.string().optional().describe('Core Strength / Sit Ups count.'),
   fitnessScore: z.string().optional().describe('Overall fitness score.'),
   fitnessStatus: z.string().optional().describe('School Fitness Level (A/B/C/D).'),
-  sportSkill1: z.string().optional().describe('First specific skill for their primary/selected sport.'),
-  sportSkill2: z.string().optional().describe('Second specific skill for their primary/selected sport.'),
-  sportSkillScore: z.string().optional().describe('Overall skill score for their primary/selected sport.'),
-  detailedKabaddiSkills: z.record(z.string()).optional().describe('For Kabaddi, a list of all technical moves and their scores out of 10.'),
-  detailedVolleyballSkills: z.record(z.string()).optional().describe('For Volleyball, a list of technical moves and scores out of 10.'),
-  detailedHandballSkills: z.record(z.string()).optional().describe('For Handball, a list of technical moves and scores out of 10.'),
-  detailedKhoKhoSkills: z.record(z.string()).optional().describe('For Kho Kho, a list of technical moves and scores out of 10.'),
-  detailedRunningSkills: z.record(z.string()).optional().describe('For Running, a list of technical moves and scores out of 10.'),
-  detailedShotPutSkills: z.record(z.string()).optional().describe('For Shot Put, a list of technical moves and scores out of 10.'),
-  detailedJavlineSkills: z.record(z.string()).optional().describe('For Javelin Throw, a list of technical moves and scores out of 10.'),
-  detailedLongJumpSkills: z.record(z.string()).optional().describe('For Long Jump, a list of technical moves and scores out of 10.'),
-  detailedHighJumpSkills: z.record(z.string()).optional().describe('For High Jump, a list of technical moves and scores out of 10.'),
   pastHealthIncidents: z.string().optional().describe('Summarized list of past health incidents for the player.'),
 });
 export type PlayerRecommendationInput = z.infer<typeof PlayerRecommendationInputSchema>;
@@ -81,19 +69,18 @@ Player Profile:
 - Medical History: {{{medical}}}
 
 Institutional Fitness Assessment:
-- 10x6 Shuttle Run: {{{fitnessShuttleRun}}}
-- 50 Meter Run: {{{fitnessRun50m}}}
-- 600 Meter Run: {{{fitnessRun600m}}}
-- Sit and Reach: {{{fitnessSitAndReach}}}
-- Board Jump: {{{fitnessBoardJump}}}
-- Sit Ups: {{{fitnessSitUps}}}
-- Overall Score: {{{fitnessScore}}}
+- 10x6 Shuttle Run (Agility): {{{fitnessShuttleRun}}}
+- 50 Meter Run (Speed): {{{fitnessRun50m}}}
+- 600 Meter Run (Endurance): {{{fitnessRun600m}}}
+- Sit and Reach (Flexibility): {{{fitnessSitAndReach}}}
+- Sit Ups (Core): {{{fitnessSitUps}}}
+- Overall Score: {{{fitnessScore}}}%
 - School Fitness Level: {{{fitnessStatus}}}
 
 Health Context: {{{pastHealthIncidents}}}
 
 Based on this granular data, provide highly specific coaching recommendations. 
-Analyze which specific tests (e.g., endurance vs agility) or technical moves (for the selected sports) need more work. 
+Pay close attention to Agility (Shuttle Run) and Flexibility (Sit and Reach) as these are critical for sports like Kabaddi and Kho Kho.
 
 IMPORTANT: Provide a detailed DIET PLAN section that addresses their BMI category and energy requirements for their specific sports.
 
@@ -108,14 +95,12 @@ const playerRecommendationFlow = ai.defineFlow(
     outputSchema: PlayerRecommendationOutputSchema,
   },
   async (input) => {
-    // Safety check for API Key
     if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
       throw new Error(input.language === 'Marathi' 
         ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key .env फाईलमध्ये जोडा." 
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
-    // Default to high-resilience model first.
     let selectedModel = 'gemini-2.5-flash';
     if (input.engine === 'Gemini') {
       selectedModel = 'gemini-3.1-pro-preview';
@@ -135,20 +120,14 @@ const playerRecommendationFlow = ai.defineFlow(
       } catch (error: any) {
         lastError = error;
         attempts++;
-        
-        // Automatic Fallback on Resource Exhaustion OR Unavailable
         const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
         const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
         if (isQuota || isUnavailable) {
-          console.warn(`WGB AI: Model ${selectedModel} is busy or limited. Falling back to high-resilience Flash...`);
           selectedModel = 'gemini-2.5-flash';
         }
 
-        console.error(`AI Recommendation Attempt ${attempts} failed:`, error?.message || error);
         if (attempts >= maxAttempts) throw error;
-        
-        // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(1.5, attempts)));
       }
     }

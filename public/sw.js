@@ -1,21 +1,30 @@
 /**
  * Waghamba Sports Hub - Network-First Service Worker
- * Ensuring high availability and immediate updates for Android PWA.
+ * Optimizes for high-availability in native Android environments.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.2';
+const CACHE_NAME = 'wgb-institutional-cache-v3.2';
 
-// 1. Install Event - Force Activation
+// Assets to cache immediately on install
+const PRECACHE_ASSETS = [
+  '/',
+  '/manifest.webmanifest',
+  '/icon-512.png',
+];
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
+  );
 });
 
-// 2. Activate Event - Clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.filter((name) => name !== CACHE_NAME)
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
     })
@@ -23,16 +32,16 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. Fetch Event - Network First Strategy
-// This prevents 404 chunk errors by always trying the network first.
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
+  // Strategy: Network First, falling back to Cache
+  // This ensures the user always sees the latest registry updates when online.
+  
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If valid network response, clone it to cache
+        // If we have a valid response, clone it and put it in cache
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
