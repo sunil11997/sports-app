@@ -27,7 +27,8 @@ import {
   Send,
   Bot,
   Sparkles,
-  ClipboardList
+  ClipboardList,
+  Medal
 } from 'lucide-react';
 import { 
   Dialog, 
