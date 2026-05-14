@@ -11,12 +11,18 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
 const DETAILED_SKILLS: Record<string, string[]> = {
   'Volleyball': ['Serving', 'Passing', 'Setting', 'Spiking', 'Blocking'],
-  'Kabaddi': ['Raiding', 'Ankle Hold', 'Thigh Hold', 'Hand Touch', 'Dubki'],
+  'Kabaddi': [
+    'Cant (Continuous Chanting)', 'Toe Touch', 'Hand Touch', 'Running Hand Touch', 
+    'Side Kick', 'Mule Kick', 'Back Kick', 'Dubki', 'Escape Skills', 'Bonus Line Skill',
+    'Ankle Hold', 'Thigh Hold', 'Waist Hold', 'Block', 'Dash', 'Chain Formation', 
+    'Corner Play', 'Cover Positioning'
+  ],
   'Kho Kho': ['Chasing', 'Running', 'Pole Turning', 'Diving', 'Kho Timing'],
   'Handball': ['Shooting', 'Passing', 'Dribbling', 'Goalkeeping', 'Piston Movement'],
   'Running': ['Start', 'Finish', 'Posture', 'Breathing'],
@@ -46,7 +52,6 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
     if (!editingDetailedPlayer) return;
     const { player, sport } = editingDetailedPlayer;
     
-    // Calculate aggregate score (avg of sub-skills)
     const skills = DETAILED_SKILLS[sport] || [];
     let total = 0;
     skills.forEach(s => {
@@ -225,8 +230,8 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
       </div>
 
       <Dialog open={!!editingDetailedPlayer} onOpenChange={() => setEditingDetailedPlayer(null)}>
-        <DialogContent className="sm:max-w-[550px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-primary p-10 text-white relative">
+        <DialogContent className="sm:max-w-[550px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[90vh]">
+          <DialogHeader className="bg-primary p-10 text-white relative shrink-0">
             <div className="flex items-center gap-6 relative z-10">
               <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30 shadow-xl">
                  <Target className="w-8 h-8 text-white" />
@@ -239,32 +244,34 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
             <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
 
-          <div className="p-10 space-y-8">
-             <div className="grid grid-cols-1 gap-6">
-                {(DETAILED_SKILLS[editingDetailedPlayer?.sport || ''] || []).map(skill => (
-                  <div key={skill} className="space-y-3 bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all">
-                    <div className="flex justify-between items-center px-1">
-                      <Label className="text-[10px] font-black uppercase text-primary tracking-widest">{skill}</Label>
-                      <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 100</span>
+          <ScrollArea className="flex-1">
+            <div className="p-10 space-y-8">
+               <div className="grid grid-cols-1 gap-6">
+                  {(DETAILED_SKILLS[editingDetailedPlayer?.sport || ''] || []).map(skill => (
+                    <div key={skill} className="space-y-3 bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all">
+                      <div className="flex justify-between items-center px-1">
+                        <Label className="text-[10px] font-black uppercase text-primary tracking-widest">{skill}</Label>
+                        <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 100</span>
+                      </div>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        max="100"
+                        value={localDetailedSkills[skill] || ''} 
+                        placeholder="0-100"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
+                        }} 
+                        className="h-12 text-center text-lg font-black rounded-xl border-2 shadow-inner focus:ring-accent" 
+                      />
                     </div>
-                    <Input 
-                      type="number" 
-                      min="0"
-                      max="100"
-                      value={localDetailedSkills[skill] || ''} 
-                      placeholder="0-100"
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
-                      }} 
-                      className="h-12 text-center text-lg font-black rounded-xl border-2 shadow-inner focus:ring-accent" 
-                    />
-                  </div>
-                ))}
-             </div>
-          </div>
+                  ))}
+               </div>
+            </div>
+          </ScrollArea>
 
-          <DialogFooter className="p-10 bg-slate-50 border-t">
+          <DialogFooter className="p-10 bg-slate-50 border-t shrink-0">
             <Button onClick={handleSave} className="w-full bg-primary text-white h-16 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl active-scale text-xs">
               Archive Technical Profile
             </Button>

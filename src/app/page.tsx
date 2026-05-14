@@ -211,7 +211,7 @@ export default function WaghambaApp() {
            </div>
            <div className="space-y-2">
              <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.1</h2>
-             <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">Registry Synchronizing...</p>
+             <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Registry Synchronizing...</p>
            </div>
         </div>
       </div>
