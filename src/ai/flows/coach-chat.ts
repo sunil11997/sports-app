@@ -19,8 +19,9 @@ const CoachChatInputSchema = z.object({
   message: z.string().describe('The user\'s current message.'),
   history: z.array(MessageSchema).describe('The conversation history.'),
   playerContext: z.string().optional().describe('Context about the student being discussed.'),
+  teacherContext: z.string().optional().describe('Context about the teacher/coach from their Google profile.'),
   language: z.string().describe('The language for the response (English or Marathi).'),
-  engine: z.enum(['Genkit', 'Gemini']).optional().describe('The selected AI engine.'),
+  engine: z.enum(['Genkit', 'Gemini Pro']).optional().describe('The selected AI engine.'),
 });
 export type CoachChatInput = z.infer<typeof CoachChatInputSchema>;
 
@@ -39,7 +40,7 @@ const coachChatFlow = ai.defineFlow(
     }
 
     let selectedModel = 'gemini-2.5-flash';
-    if (input.engine === 'Gemini') {
+    if (input.engine === 'Gemini Pro') {
       selectedModel = 'gemini-3.1-pro-preview';
     }
 
@@ -50,9 +51,12 @@ const coachChatFlow = ai.defineFlow(
       try {
         const {text} = await ai.generate({
           model: googleAI.model(selectedModel),
-          system: `You are Coach Sunil Deshmukh, the head physical education teacher and sports coach at Waghamba Ashram Shala. 
+          system: `You are Coach Sunil Deshmukh (or the acting head coach based on account profile), the head physical education teacher and sports coach at Waghamba Ashram Shala. 
           You are helpful, encouraging, and provide scientifically-backed sports training and health advice.
           You speak with the authority and warmth of a respected school coach.
+          
+          INSTITUTIONAL CONTEXT:
+          ${input.teacherContext || 'Acting Head Coach at Waghamba'}
           
           AI ENGINE CONTEXT: You are responding via the ${input.engine || 'Genkit Standard'} engine.
           

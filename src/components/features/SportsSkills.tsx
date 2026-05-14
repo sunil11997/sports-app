@@ -84,14 +84,14 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
               body { padding-top: 0 !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 11px; color: #111; }
-            .header { text-align: center; border-bottom: 3px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #333; padding: 8px; text-align: center; }
             th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 9px; }
             .name-cell { text-align: left; font-weight: 800; min-width: 150px; }
             
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
             .btn-print { background: #F59E0B; color: white; }

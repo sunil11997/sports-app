@@ -35,11 +35,6 @@ import { useToast } from '@/hooks/use-toast';
 import { coachChat } from '@/ai/flows/coach-chat';
 import { usePWA } from '@/components/providers/pwa-provider';
 
-interface ChatMessage {
-  role: 'user' | 'model';
-  content: string;
-}
-
 const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], lessonPlan?: string[] }> = {
   'Kabaddi': {
     skills: [
@@ -351,4 +346,9 @@ export function SportsDrills({ store }: { store: any }) {
       )}
     </div>
   );
+}
+
+interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
 }

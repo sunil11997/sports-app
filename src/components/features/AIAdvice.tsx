@@ -23,7 +23,8 @@ import {
   User,
   Bot,
   Apple,
-  Cpu
+  Cpu,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
@@ -41,7 +42,7 @@ export function AIAdvice({ store }: { store: any }) {
   const { isOnline } = usePWA();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [language, setLanguage] = useState("English");
-  const [aiEngine, setAiEngine] = useState<'Genkit' | 'Gemini'>('Genkit');
+  const [aiEngine, setAiEngine] = useState<'Genkit' | 'Gemini Pro'>('Genkit');
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
   
@@ -77,11 +78,14 @@ export function AIAdvice({ store }: { store: any }) {
     try {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
       const context = p ? `Player: ${p.name}, Std: ${p.std}, Age: ${p.age}.` : "General inquiry.";
+      const profile = store.data.schoolProfile;
+      const tContext = `Teacher: ${profile.teacherName}, School: ${profile.schoolName}, Role: ${profile.role}`;
       
       const response = await coachChat({
         message: userMsg,
         history: chatHistory,
         playerContext: context,
+        teacherContext: tContext,
         language: language,
         engine: aiEngine
       });
@@ -111,7 +115,7 @@ export function AIAdvice({ store }: { store: any }) {
       
       const input = {
         id: p.id, name: p.name, gender: p.gender, std: p.std, age: p.age.toString(), height: p.height, weight: p.weight, bmi: p.bmi,
-        sports: p.sports || [], history: p.history, medical: p.medical || "None", language: language, engine: aiEngine,
+        sports: p.sports || [], history: p.history, medical: p.medical || "None", language: language, engine: aiEngine === 'Gemini Pro' ? 'Gemini' : 'Genkit' as any,
         fitnessScore: fit.score || "N/A", fitnessStatus: fit.status || "N/A"
       };
 
@@ -139,8 +143,8 @@ export function AIAdvice({ store }: { store: any }) {
               body { padding-top: 0 !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; color: #333; line-height: 1.6; }
-            h1 { color: #235C36; border-bottom: 4px solid #8AF075; margin-bottom: 20px; }
-            h2 { color: #1b4b3a; margin-top: 30px; border-left: 5px solid #8AF075; padding-left: 15px; text-transform: uppercase; font-size: 14px; }
+            h1 { color: #1e3a8a; border-bottom: 4px solid #f59e0b; margin-bottom: 20px; text-transform: uppercase; }
+            h2 { color: #1e3a8a; margin-top: 30px; border-left: 5px solid #f59e0b; padding-left: 15px; text-transform: uppercase; font-size: 14px; }
             section { margin-bottom: 30px; }
             
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -175,7 +179,7 @@ export function AIAdvice({ store }: { store: any }) {
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
               <BrainCircuit className="w-10 h-10 text-accent" /> AI Hub
             </h2>
-            <p className="text-lg font-medium text-foreground/70">Personalized institutional performance analysis.</p>
+            <p className="text-lg font-medium text-foreground/70">Personalized performance analysis with Google Gemini Pro.</p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
             <div className="grid grid-cols-2 gap-4">
@@ -185,7 +189,10 @@ export function AIAdvice({ store }: { store: any }) {
               </Select>
               <Select onValueChange={(v: any) => setAiEngine(v)} value={aiEngine}>
                 <SelectTrigger className="rounded-2xl border-2 h-12 text-xs font-bold bg-white"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="Genkit">Genkit</SelectItem><SelectItem value="Gemini">Gemini</SelectItem></SelectContent>
+                <SelectContent>
+                  <SelectItem value="Genkit">Genkit Std</SelectItem>
+                  <SelectItem value="Gemini Pro">Gemini Pro 💎</SelectItem>
+                </SelectContent>
               </Select>
             </div>
             <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
@@ -198,7 +205,7 @@ export function AIAdvice({ store }: { store: any }) {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted/40 p-2 h-auto gap-4 rounded-3xl border">
-          <TabsTrigger value="report" className="rounded-2xl py-3 px-8 font-black uppercase text-xs">Report</TabsTrigger>
+          <TabsTrigger value="report" className="rounded-2xl py-3 px-8 font-black uppercase text-xs">Tactical Report</TabsTrigger>
           <TabsTrigger value="chat" className="rounded-2xl py-3 px-8 font-black uppercase text-xs">Coach Chat</TabsTrigger>
         </TabsList>
 
@@ -219,6 +226,10 @@ export function AIAdvice({ store }: { store: any }) {
                 <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-accent"><Printer className="mr-2 h-4 w-4" /> Print PDF</Button>
               </CardHeader>
               <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6 p-4 bg-primary/5 rounded-2xl border">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Generated by {aiEngine} Intelligence</p>
+                </div>
                 <p className="text-sm italic font-medium leading-relaxed">"{advice.summary}"</p>
               </CardContent>
             </Card>
@@ -227,7 +238,10 @@ export function AIAdvice({ store }: { store: any }) {
 
         <TabsContent value="chat" className="mt-0">
           <Card className="border-2 rounded-[3rem] overflow-hidden bg-white h-[600px] flex flex-col">
-            <CardHeader className="bg-accent/5 border-b p-6"><CardTitle className="text-xl font-black text-primary uppercase">Coach Sunil's AI</CardTitle></CardHeader>
+            <CardHeader className="bg-accent/5 border-b p-6 flex flex-row justify-between items-center">
+              <CardTitle className="text-xl font-black text-primary uppercase">Coach Sunil's AI</CardTitle>
+              {aiEngine === 'Gemini Pro' && <Badge className="bg-accent text-white font-black text-[9px] px-3">PRO ENGINE ACTIVE</Badge>}
+            </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col">
               <ScrollArea className="flex-1 p-8 space-y-6">
                 {chatHistory.map((msg, idx) => (
@@ -238,7 +252,7 @@ export function AIAdvice({ store }: { store: any }) {
                 <div ref={scrollRef} />
               </ScrollArea>
               <div className="p-8 bg-white border-t flex gap-4">
-                <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendChat()} placeholder="Ask a question..." className="flex-1 h-14 rounded-2xl border-2 px-6" />
+                <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendChat()} placeholder={`Discuss tactics with ${aiEngine}...`} className="flex-1 h-14 rounded-2xl border-2 px-6" />
                 <Button onClick={handleSendChat} disabled={chatLoading || !isOnline} className="w-14 h-14 rounded-2xl bg-accent text-white shadow-lg"><Send className="w-6 h-6" /></Button>
               </div>
             </CardContent>
