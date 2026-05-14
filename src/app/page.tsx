@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -190,7 +189,7 @@ export default function WaghambaApp() {
              {isMounted && <Lottie animationData={splashAnim} loop={true} />}
            </div>
            <div className="space-y-2">
-             <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.1</h2>
+             <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.2</h2>
              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Synchronizing Registry...</p>
            </div>
         </div>
@@ -206,7 +205,7 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative shrink-0" style={{ position: 'relative' }}>
+              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative shrink-0">
                 <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
               </div>
               <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
@@ -317,30 +316,6 @@ export default function WaghambaApp() {
                       </div>
                     </div>
                   )}
-
-                  {selectedSection === 'general' && birthdaysToday.length > 0 && (
-                    <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-8 opacity-10"><Gift className="w-32 h-32 text-accent" /></div>
-                      <div className="flex items-center gap-4 mb-6 relative z-10">
-                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg"><Cake className="w-7 h-7 text-white" /></div>
-                        <div>
-                          <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Celebrations Today</h3>
-                          <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Happy Birthday to our students</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
-                        {birthdaysToday.map((student: any) => (
-                          <div key={student.id} className="bg-white/80 backdrop-blur p-5 rounded-[2rem] shadow-sm flex items-center gap-4 border border-white/50">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xl shadow-inner border border-primary/5">{student.name[0]}</div>
-                            <div>
-                              <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
-                              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {student.std} • Special Wishes!</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
-                  )}
                 </div>
               )}
             </TabsContent>
@@ -388,7 +363,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div style={{ position: 'relative' }} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0 relative">
               <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
             </div>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
@@ -416,7 +391,7 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div style={{ position: 'relative' }} className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden">
+          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden relative">
             <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">

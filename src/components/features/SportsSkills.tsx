@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -19,7 +18,7 @@ const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', '
 const DETAILED_SKILLS: Record<string, string[]> = {
   'Volleyball': ['Serving', 'Passing', 'Setting', 'Spiking', 'Blocking'],
   'Kabaddi': [
-    'Cant (Continuous Chanting)', 'Toe Touch', 'Hand Touch', 'Running Hand Touch', 
+    'Cant (Raiding)', 'Toe Touch', 'Hand Touch', 'Running Hand Touch', 
     'Side Kick', 'Mule Kick', 'Back Kick', 'Dubki', 'Escape Skills', 'Bonus Line Skill',
     'Ankle Hold', 'Thigh Hold', 'Waist Hold', 'Block', 'Dash', 'Chain Formation', 
     'Corner Play', 'Cover Positioning'
