@@ -1,7 +1,8 @@
+
 {
-  "name": "Waghamba Institutional Sports & Health Hub",
+  "name": "Waghamba Institutional Sports Hub",
   "short_name": "WGB Sports",
-  "description": "Professional Physical Education & Sports Management System",
+  "description": "Professional Physical Education & Student Management System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1e3a8a",

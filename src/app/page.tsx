@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -47,7 +48,7 @@ import { cn } from '@/lib/utils';
 import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons';
 import splashAnim from './lib/splash-animation.json';
 
-// Lottie is browser-only
+// Lottie is browser-only and must be wrapped for SSR stability
 const Lottie = NextDynamic(() => import('lottie-react'), { ssr: false });
 
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
@@ -76,8 +77,7 @@ const translations = {
     switchHub: "Switch Hub",
     home: "Home", register: "Enroll", roster: "List", promote: "Next Year", tourney: "Tourney", teams: "Teams", report: "Report", history: "Analytics", presence: "Attendance", fitness: "Tests", skills: "Skills", drills: "Coach", health: "Health", aiHub: "AI Hub", settings: "Settings", enroll: "Enroll", registry: "Registry", exams: "Exams", session: "Session", activities: "Activities", rules: "Rules",
     coreHub: "Core Hub",
-    enter: "ACCESS HUB", syncNote: "Registry available on this device", onlineStatus: "Online", offlineStatus: "Local",
-    installApp: "INSTALL APP"
+    enter: "ACCESS HUB", syncNote: "Registry available on this device", onlineStatus: "Online", onlineDesc: "Cloud Sync Enabled", offlineDesc: "Local Persistence Active"
   },
   Marathi: {
     schoolName: "शासकीय आश्रम शाळा वाघंबा",
@@ -86,8 +86,7 @@ const translations = {
     switchHub: "हब बदला",
     home: "मुख्यपृष्ठ", register: "नोंदणी", roster: "यादी", promote: "प्रमोशन", tourney: "स्पर्धा", teams: "संघ", report: "अहवाल", history: "Analytics", presence: "उपस्थिती", fitness: "चाचणी", skills: "कौशल्ये", drills: "कोचिंग", health: "आरोग्य", aiHub: "AI केंद्र", settings: "सेटिंग्ज", enroll: "नावनोंदणी", registry: "नोंदणी वही", exams: "परीक्षा", session: "सत्र", activities: "उपक्रम", rules: "नियम",
     coreHub: "प्रशिक्षण",
-    enter: "हब मध्ये प्रवेश करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", offlineStatus: "ऑफलाइन",
-    installApp: "ॲप इन्स्टॉल करा"
+    enter: "हब मध्ये प्रवेश करा", syncNote: "डेटा या डिव्हाइसवर उपलब्ध असेल", onlineStatus: "ऑनलाइन", onlineDesc: "क्लाउड सिंक सुरू आहे", offlineDesc: "लोकल डेटा उपलब्ध"
   }
 };
 
@@ -100,7 +99,6 @@ export default function WaghambaApp() {
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   
   const schoolData = useSchoolData(stage === 'hub' && isMounted);
-  
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
@@ -112,9 +110,7 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     if (isMounted && !isUserLoading && !user && auth) {
-      const timer = setTimeout(() => {
-        initiateAnonymousSignIn(auth);
-      }, 1000);
+      const timer = setTimeout(() => initiateAnonymousSignIn(auth), 1000);
       return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, auth, isMounted]);
@@ -159,7 +155,6 @@ export default function WaghambaApp() {
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
-
     return schoolData.data.players.filter(p => {
       if (!p.dob) return false;
       const d = new Date(p.dob);
@@ -170,35 +165,20 @@ export default function WaghambaApp() {
   const topPerformers = useMemo(() => {
     if (selectedSection !== 'sports' || !schoolData.data.players) return [];
     const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
-    
     return sports.map(sport => {
-      const athletesInSport = schoolData.data.players.filter(p => 
-        p.category === 'athlete' && p.sports?.includes(sport)
-      );
-      
+      const athletesInSport = schoolData.data.players.filter(p => p.category === 'athlete' && p.sports?.includes(sport));
       let topPlayer: any = null;
       let highestScore = -1;
-
       athletesInSport.forEach(p => {
         const skill = schoolData.data.sportSkills[`${p.id}_${sport}`];
         if (skill) {
           const score = parseFloat(skill.score) || 0;
-          if (score > highestScore) {
-            highestScore = score;
-            topPlayer = p;
-          }
+          if (score > highestScore) { highestScore = score; topPlayer = p; }
         }
       });
-
       return { sport, player: topPlayer, score: highestScore };
     }).filter(item => item.player !== null);
   }, [selectedSection, schoolData.data.players, schoolData.data.sportSkills]);
-
-  const enterHub = (section: 'sports' | 'general') => {
-    setSelectedSection(section);
-    setStage('hub');
-    setActiveTab('home');
-  };
 
   if (!isMounted) return null;
 
@@ -211,7 +191,7 @@ export default function WaghambaApp() {
            </div>
            <div className="space-y-2">
              <h2 className="text-white text-2xl font-black uppercase tracking-widest animate-pulse">WGB HUB V3.1</h2>
-             <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Registry Synchronizing...</p>
+             <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Synchronizing Registry...</p>
            </div>
         </div>
       </div>
@@ -221,26 +201,24 @@ export default function WaghambaApp() {
   if (stage === 'hub' && selectedSection) {
     const currentTabs = selectedSection === 'sports' ? sportsTabs : generalTabs;
     const teacher = schoolData.data.schoolProfile;
-
     return (
       <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative shrink-0">
+              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border relative shrink-0" style={{ position: 'relative' }}>
                 <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
               </div>
               <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
-                {selectedSection === 'sports' ? "Sports" : "Students"}
+                {selectedSection === 'sports' ? "Sports Hub" : "Student Registry"}
               </h1>
             </div>
-            
             <div className="flex items-center gap-3">
               <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
                 <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
               </Select>
-              <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary">
+              <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary hover:bg-primary/5">
                 <Menu className="w-5 h-5" />
               </Button>
             </div>
@@ -255,7 +233,7 @@ export default function WaghambaApp() {
                   <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-1">
                       <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Welcome, {teacher.teacherName.split(' ')[0]}</h2>
-                      <p className="text-muted-foreground font-medium text-sm">Dashboard Overview • Academic Year {schoolData.selectedYear}</p>
+                      <p className="text-muted-foreground font-medium text-sm">Registry Overview • {schoolData.selectedYear}</p>
                     </div>
                     <Card className="p-4 rounded-2xl bg-white border-2 flex items-center gap-4 shadow-sm border-primary/10">
                       <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -272,27 +250,23 @@ export default function WaghambaApp() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden">
                       <h3 className="text-5xl font-black tracking-tight">
-                        {selectedSection === 'general' 
-                          ? schoolData.data.players.length 
-                          : schoolData.data.players.filter(p => p.category === 'athlete').length}
+                        {selectedSection === 'general' ? schoolData.data.players.length : schoolData.data.players.filter(p => p.category === 'athlete').length}
                       </h3>
-                      <p className="text-sm font-bold opacity-60 uppercase mt-2">Registered Registry</p>
-                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 mt-6 shadow-lg">
-                        Add New
-                      </Button>
+                      <p className="text-sm font-bold opacity-60 uppercase mt-2">Active Enrollment</p>
+                      <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 mt-6 shadow-lg">Register New</Button>
                     </Card>
-                    <Card onClick={() => setActiveTab('dashboard')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
-                      <ClipboardList className="w-10 h-10 text-accent" />
+                    <Card onClick={() => setActiveTab('dashboard')} className="google-card p-8 flex flex-col justify-between cursor-pointer group hover:bg-primary/[0.02]">
+                      <ClipboardList className="w-10 h-10 text-accent group-hover:scale-110 transition-transform" />
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">Open</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Full Registry</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Full Database</p>
                       </div>
                     </Card>
-                    <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between cursor-pointer group">
-                      <Activity className="w-10 h-10 text-primary" />
+                    <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between cursor-pointer group hover:bg-primary/[0.02]">
+                      <Activity className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">{Object.keys(schoolData.data.fitness).length}</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Logs</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Metrics Logged</p>
                       </div>
                     </Card>
                   </div>
@@ -311,15 +285,14 @@ export default function WaghambaApp() {
                            </div>
                         </div>
                      </Card>
-
                      <Card className="rounded-[2rem] border-2 p-8 bg-accent/[0.03] shadow-sm border-accent/10 flex flex-col md:flex-row gap-6 items-center">
                         <div className="w-20 h-20 bg-accent/10 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-accent/10">
                            <Activity className="w-10 h-10 text-accent" />
                         </div>
                         <div className="space-y-1 text-center md:text-left">
-                           <h4 className="text-xl font-black text-primary uppercase tracking-tight">Active Activity Flow</h4>
-                           <p className="text-sm font-medium text-foreground/60 leading-tight">Monitoring {schoolData.data.activities.length} institutional drills and sessions for the current term.</p>
-                           <Button variant="ghost" onClick={() => setActiveTab('ai')} className="text-[10px] font-black text-accent uppercase p-0 h-auto mt-2 hover:bg-transparent">Open AI Analysis Assistant <ArrowRight className="w-3 h-3 ml-2" /></Button>
+                           <h4 className="text-xl font-black text-primary uppercase tracking-tight">AI Training Feed</h4>
+                           <p className="text-sm font-medium text-foreground/60 leading-tight">Analyzing {schoolData.data.activities.length} sessions for current performance suggestions.</p>
+                           <Button variant="ghost" onClick={() => setActiveTab('ai')} className="text-[10px] font-black text-accent uppercase p-0 h-auto mt-2 hover:bg-transparent">Launch AI Analyst <ArrowRight className="w-3 h-3 ml-2" /></Button>
                         </div>
                      </Card>
                   </div>
@@ -328,7 +301,7 @@ export default function WaghambaApp() {
                     <div className="space-y-6">
                       <div className="flex items-center gap-3">
                         <Star className="w-6 h-6 text-accent fill-accent" />
-                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Discipline Leaders</h3>
+                        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Technical Leaders</h3>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {topPerformers.map((item, idx) => (
@@ -336,9 +309,7 @@ export default function WaghambaApp() {
                             <div className="flex flex-col gap-1">
                               <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{item.sport}</span>
                               <p className="font-black text-primary uppercase text-sm truncate">{item.player.name}</p>
-                              <Badge variant="outline" className="w-fit text-[9px] font-black border-accent/20 text-accent bg-accent/5">
-                                Score: {item.score}
-                              </Badge>
+                              <Badge variant="outline" className="w-fit text-[9px] font-black border-accent/20 text-accent bg-accent/5">Mastery: {item.score}%</Badge>
                             </div>
                             <Trophy className="absolute -right-2 -bottom-2 w-12 h-12 text-accent/5 group-hover:scale-110 transition-transform" />
                           </Card>
@@ -349,27 +320,21 @@ export default function WaghambaApp() {
 
                   {selectedSection === 'general' && birthdaysToday.length > 0 && (
                     <Card className="rounded-[2.5rem] border-none bg-accent/5 p-8 shadow-inner border border-accent/10 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <Gift className="w-32 h-32 text-accent" />
-                      </div>
+                      <div className="absolute top-0 right-0 p-8 opacity-10"><Gift className="w-32 h-32 text-accent" /></div>
                       <div className="flex items-center gap-4 mb-6 relative z-10">
-                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
-                          <Cake className="w-7 h-7 text-white" />
-                        </div>
+                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg"><Cake className="w-7 h-7 text-white" /></div>
                         <div>
-                          <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Happy Birthday!</h3>
-                          <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Celebrating our students today</p>
+                          <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Celebrations Today</h3>
+                          <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Happy Birthday to our students</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
                         {birthdaysToday.map((student: any) => (
                           <div key={student.id} className="bg-white/80 backdrop-blur p-5 rounded-[2rem] shadow-sm flex items-center gap-4 border border-white/50">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xl shadow-inner border border-primary/5">
-                              {student.name[0]}
-                            </div>
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xl shadow-inner border border-primary/5">{student.name[0]}</div>
                             <div>
                               <p className="font-black text-primary uppercase text-sm leading-none">{student.name}</p>
-                              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {student.std} • Happy Wishes!</p>
+                              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {student.std} • Special Wishes!</p>
                             </div>
                           </div>
                         ))}
@@ -405,24 +370,11 @@ export default function WaghambaApp() {
         <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
           <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
             {currentTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                data-active={activeTab === tab.id}
-                className={cn(
-                  "google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all",
-                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                <div className={cn(
-                  "google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all",
-                  activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
-                )}>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} data-active={activeTab === tab.id} className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}>
+                <div className={cn("google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all", activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted")}>
                   <tab.icon className="w-6 h-6" />
                 </div>
-                <span className="google-nav-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                  {tab.label}
-                </span>
+                <span className="google-nav-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -436,21 +388,18 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div 
-              style={{ position: 'relative' }}
-              className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0"
-            >
+            <div style={{ position: 'relative' }} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0">
               <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
             </div>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <button onClick={() => enterHub('sports')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
+            <button onClick={() => { setSelectedSection('sports'); setStage('hub'); setActiveTab('home'); }} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
               <Medal className="w-12 h-12 text-primary mx-auto mb-8 transition-transform group-hover:scale-110" />
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.sportsHub}</h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Athletics & Coaching</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Athletics & Training</p>
             </button>
-            <button onClick={() => enterHub('general')} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
+            <button onClick={() => { setSelectedSection('general'); setStage('hub'); setActiveTab('home'); }} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
               <GraduationCap className="w-12 h-12 text-primary mx-auto mb-8 transition-transform group-hover:scale-110" />
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">{t.studentRegistry}</h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Student Profiles</p>
@@ -467,16 +416,13 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div 
-            style={{ position: 'relative' }}
-            className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden"
-          >
+          <div style={{ position: 'relative' }} className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden">
             <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
               <Flame className="w-4 h-4 text-accent animate-pulse" />
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Excellence</span>
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Hub</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tighter leading-tight uppercase">
               {language === 'Marathi' ? "शासकीय माध्यमिक" : "ASHRAM SHALA"}<br/>
@@ -485,19 +431,11 @@ export default function WaghambaApp() {
           </div>
         </div>
         <div className="flex flex-col gap-4 max-sm mx-auto">
-          <Button 
-            onClick={() => {
-              setStage('selector');
-            }}
-            className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group"
-          >
+          <Button onClick={() => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group">
             {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
           </Button>
-          <button 
-            onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')}
-            className="text-[10px] font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-          >
-            <Globe className="w-4 h-4" /> {language === 'English' ? 'Marathi' : 'English'}
+          <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+            <Globe className="w-4 h-4" /> {language === 'English' ? 'मराठी (Marathi)' : 'English'}
           </button>
         </div>
       </div>

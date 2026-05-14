@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -8,6 +9,7 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 /**
  * initializeFirebase - Institutional Registry Engine
  * Optimized for high-resilience persistence and Native Android environments.
+ * Forcing Long Polling to resolve the 10-second backend timeout in workstation/mobile environments.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
@@ -37,14 +39,13 @@ export function getSdks(firebaseApp: FirebaseApp) {
     }
 
     // 2. Initialize Firestore with Multi-Tab Offline Persistence
-    // Forcing Long Polling to resolve the 10-second backend timeout in workstation/mobile environments.
     let firestore: Firestore;
     try {
       firestore = initializeFirestore(firebaseApp, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         }),
-        experimentalForceLongPolling: true
+        experimentalForceLongPolling: true // CRITICAL: Resolve 10s connection timeouts
       });
     } catch (e: any) {
       firestore = getFirestore(firebaseApp);

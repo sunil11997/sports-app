@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -30,13 +31,6 @@ import {
   ClipboardList,
   Medal
 } from 'lucide-react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { coachChat } from '@/ai/flows/coach-chat';
@@ -49,7 +43,12 @@ interface ChatMessage {
 
 const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], lessonPlan?: string[] }> = {
   'Kabaddi': {
-    skills: ["Toe Touch", "Hand Touch", "Dubki", "Ankle Hold", "Block", "Chain Defense", "Cant", "Mule Kick", "Back Kick", "Escape Skills", "Bonus Line Skill", "Thigh Hold", "Waist Hold", "Dash", "Corner Play", "Cover Positioning"],
+    skills: [
+      "Cant (Continuous Chanting)", "Toe Touch", "Hand Touch", "Running Hand Touch", 
+      "Side Kick", "Mule Kick", "Back Kick", "Dubki", "Escape Skills", "Bonus Line Skill",
+      "Ankle Hold", "Thigh Hold", "Waist Hold", "Block", "Dash", "Chain Formation", 
+      "Corner Play", "Cover Positioning"
+    ],
     dailyPlan: ["10 min warm-up", "Raid practice", "Defense drills", "Mini match", "Cool down"],
     lessonPlan: ["Introduction to Kabaddi", "Warm-up activities", "Skill demonstration", "Practice session", "Mini game", "Cool down"]
   },
@@ -126,7 +125,6 @@ export function SportsDrills({ store }: { store: any }) {
     setChatLoading(true);
 
     try {
-      const fit = store.data.fitness[selectedPlayerId] || {};
       const context = `Student: ${selectedPlayer.name}, Std: ${selectedPlayer.std}, Age: ${selectedPlayer.age}. Sport: ${activeSport}. Drills completed count: ${Object.keys(store.data.drillCompletions).filter(k => k.startsWith(selectedPlayerId)).length}`;
       
       const response = await coachChat({
