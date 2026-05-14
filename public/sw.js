@@ -1,46 +1,50 @@
 /**
  * Waghamba Sports Hub - Network-First Service Worker
- * Resolves 404 chunk errors and ensures the latest version is always served.
+ * Resolves 404 chunk errors and ensures the latest version is always displayed.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.1';
+const CACHE_NAME = 'wgb-v3.1-cache';
 
-// We prioritize the network to prevent "old app" display issues
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If network succeeds, update cache and return
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, resClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        // If network fails, try the cache
-        return caches.match(event.request);
-      })
-  );
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
-// Force update on activation
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
+// Network-First Strategy for JS/CSS chunks to prevent 404s
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/'))
+    );
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });

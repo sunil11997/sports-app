@@ -6,52 +6,87 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Trophy, Save, Printer, UserCircle, TrendingUp } from 'lucide-react';
+import { Trophy, Save, Printer, UserCircle, Star, Target, ShieldCheck, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { LineChart, Line, ResponsiveContainer, YAxis, XAxis, Tooltip } from 'recharts';
-import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+
+const DETAILED_SKILLS: Record<string, string[]> = {
+  'Volleyball': ['Serving', 'Passing', 'Setting', 'Spiking', 'Blocking'],
+  'Kabaddi': ['Raiding', 'Ankle Hold', 'Thigh Hold', 'Hand Touch', 'Dubki'],
+  'Kho Kho': ['Chasing', 'Running', 'Pole Turning', 'Diving', 'Kho Timing'],
+  'Handball': ['Shooting', 'Passing', 'Dribbling', 'Goalkeeping', 'Piston Movement'],
+  'Running': ['Start', 'Finish', 'Posture', 'Breathing'],
+  'Shot Put': ['Grip', 'Glide', 'Release', 'Follow-through'],
+  'Javline': ['Grip', 'Approach', 'Release', 'Arch'],
+  'Long Jump': ['Approach', 'Take-off', 'Flight', 'Landing'],
+  'High Jump': ['Approach', 'Take-off', 'Arch', 'Clearance']
+};
 
 export function SportsSkills({ store, section = 'sports' }: { store: any, section?: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(sportsList[0]);
-  const [skills, setSkills] = useState<Record<string, any>>(store.data.sportSkills);
+  const [localDetailedSkills, setLocalDetailedSkills] = useState<Record<string, string>>({});
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
 
-  const handleSave = (id: string) => {
-    const sportName = isGeneral ? 'General P.E.' : activeSport;
-    const key = `${id}_${sportName}`;
-    if (skills[key]) store.setSportSkill(id, sportName, skills[key]);
-    toast({ title: "Score Saved" });
+  const handleOpenEvaluation = (player: any, sport: string) => {
+    const key = `${player.id}_${sport}`;
+    const existingData = store.data.sportSkills[key] || {};
+    setLocalDetailedSkills(existingData.detailedSkills || {});
+    setEditingDetailedPlayer({ player, sport });
+  };
+
+  const handleSave = () => {
+    if (!editingDetailedPlayer) return;
+    const { player, sport } = editingDetailedPlayer;
+    
+    // Calculate aggregate score (avg of sub-skills)
+    const skills = DETAILED_SKILLS[sport] || [];
+    let total = 0;
+    skills.forEach(s => {
+      total += parseFloat(localDetailedSkills[s]) || 0;
+    });
+    const aggregate = skills.length > 0 ? (total / skills.length).toFixed(1) : "0";
+
+    store.setSportSkill(player.id, sport, {
+      score: aggregate,
+      detailedSkills: localDetailedSkills,
+      playerId: player.id,
+      sportName: sport
+    });
+
+    toast({ title: "Evaluation Archived", description: `Detailed moves for ${player.name} saved to registry.` });
     setEditingDetailedPlayer(null);
   };
 
   const handlePrint = () => {
     const sportName = isGeneral ? 'General P.E.' : activeSport;
+    const skills = DETAILED_SKILLS[sportName] || [];
     const printContent = `
       <html>
         <head>
-          <title>Skill Sheet - ${sportName}</title>
+          <title>Skill Mastery Sheet - ${sportName}</title>
           <style>
             @media print { 
-              @page { size: A4; margin: 1.5cm; } 
+              @page { size: landscape; margin: 1cm; } 
               .no-print { display: none !important; }
               body { padding-top: 0 !important; }
             }
-            body { font-family: Inter, sans-serif; padding: 20px; font-size: 14px; color: #111; }
-            .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 20px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            body { font-family: Inter, sans-serif; padding: 20px; font-size: 11px; color: #111; }
+            .header { text-align: center; border-bottom: 3px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #333; padding: 10px; text-align: left; }
-            th { background-color: #f4f4f4; text-transform: uppercase; font-size: 11px; }
+            th, td { border: 1px solid #333; padding: 8px; text-align: center; }
+            th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 9px; }
+            .name-cell { text-align: left; font-weight: 800; min-width: 150px; }
             
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
             .btn-print { background: #F59E0B; color: white; }
@@ -64,14 +99,24 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
           </div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div style="font-weight: 800; text-transform: uppercase;">Technical Registry: ${sportName}</div>
+            <div style="font-weight: 800; text-transform: uppercase;">Technical Mastery Registry: ${sportName.toUpperCase()}</div>
           </div>
           <table>
-            <thead><tr><th>SNR</th><th>NAME</th><th>STD</th><th>GENDER</th><th>SCORE</th></tr></thead>
+            <thead>
+              <tr>
+                <th>SNR</th>
+                <th>STUDENT NAME</th>
+                <th>STD</th>
+                ${skills.map(s => `<th>${s.toUpperCase()}</th>`).join('')}
+                <th>TOTAL %</th>
+              </tr>
+            </thead>
             <tbody>
               ${filteredPlayers.map((p: any, i: number) => {
-                const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
-                return `<tr><td>${p.serialNumber || i+1}</td><td><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${p.gender}</td><td>${s.score}</td></tr>`;
+                const s = store.data.sportSkills[`${p.id}_${sportName}`] || {};
+                const detailed = s.detailedSkills || {};
+                const skillCells = skills.map(skill => `<td>${detailed[skill] || '-'}</td>`).join('');
+                return `<tr><td>${p.serialNumber || i+1}</td><td class="name-cell">${p.name.toUpperCase()}</td><td>${p.std}</td>${skillCells}<td><strong>${s.score || '0'}%</strong></td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -85,7 +130,7 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
 
   const filteredPlayers = useMemo(() => {
     return store.data.players
-      .filter((p: any) => p.category === targetCategory && (isGeneral || p.sports?.includes(activeSport)))
+      .filter((p: any) => p.category === targetCategory && (isGeneral || (p.sports && p.sports.includes(activeSport))))
       .sort((a: any, b: any) => {
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
@@ -96,30 +141,36 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
   }, [store.data.players, targetCategory, isGeneral, activeSport]);
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2rem] border-2 shadow-sm gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-accent" />
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-[3rem] border-2 shadow-xl gap-6">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center border-2 border-accent/20">
+            <Trophy className="w-8 h-8 text-accent animate-pulse" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Technical Mastery Hub</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5">Performance Registry</p>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Technical Mastery</h2>
+            <div className="flex items-center gap-3 mt-1">
+              <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Institutional Scorecard</Badge>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Professional Standards</span>
+            </div>
           </div>
         </div>
-        <Button onClick={handlePrint} className="bg-primary text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-xl px-8 shadow-lg">
-          <Printer className="w-4 h-4 mr-2" /> Print Score Sheet
+        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl px-10 shadow-2xl active-scale transition-all">
+          <Printer className="w-5 h-5 mr-2" /> Export Technical Registry
         </Button>
       </div>
       
       {!isGeneral && (
-        <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-xl border overflow-x-auto scrollbar-hide">
+        <div className="flex flex-wrap gap-2 p-2 bg-muted/40 rounded-[2rem] border-2 shadow-inner overflow-x-auto scrollbar-hide">
           {sportsList.map(sport => (
             <Button 
               key={sport} 
               variant={activeSport === sport ? "default" : "ghost"} 
               size="sm" 
-              className={cn("h-9 px-4 text-[10px] font-black uppercase", activeSport === sport ? "bg-primary text-white shadow-sm" : "text-muted-foreground")}
+              className={cn(
+                "h-11 px-6 rounded-xl text-[10px] font-black uppercase transition-all", 
+                activeSport === sport ? "bg-primary text-white shadow-lg scale-105" : "text-muted-foreground hover:bg-white"
+              )}
               onClick={() => setActiveSport(sport)}
             >
               {sport}
@@ -128,60 +179,95 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
         </div>
       )}
 
-      <div className="border rounded-2xl overflow-hidden bg-white shadow-sm">
-        <Table className="min-w-max">
+      <div className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl">
+        <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="font-black text-[10px] uppercase h-12 px-6">Athlete Details</TableHead>
-              <TableHead className="font-black text-[10px] uppercase text-center w-[150px]">Technical Score</TableHead>
-              <TableHead className="font-black text-[10px] uppercase text-right px-6">Actions</TableHead>
+            <TableRow className="h-14">
+              <TableHead className="font-black text-[11px] uppercase px-8">Student Athlete</TableHead>
+              <TableHead className="font-black text-[11px] uppercase text-center w-[200px]">Aggregate Mastery</TableHead>
+              <TableHead className="font-black text-[11px] uppercase text-right px-8">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPlayers.map((p: any) => {
-              const sportName = isGeneral ? 'General P.E.' : activeSport;
-              const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
-              return (
-                <TableRow key={p.id} className="h-16 hover:bg-primary/5 transition-colors">
-                  <TableCell className="px-6 font-bold uppercase text-xs text-primary">{p.name}</TableCell>
-                  <TableCell className="text-center font-black text-primary text-base">{s.score}</TableCell>
-                  <TableCell className="text-right px-6">
-                    <Button variant="outline" size="sm" onClick={() => setEditingDetailedPlayer({ player: p, sport: sportName })} className="font-black text-[9px] uppercase rounded-lg">Score technical moves</Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {filteredPlayers.length === 0 ? (
+              <TableRow><TableCell colSpan={3} className="text-center py-32 font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
+            ) : (
+              filteredPlayers.map((p: any) => {
+                const sportName = isGeneral ? 'General P.E.' : activeSport;
+                const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
+                return (
+                  <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-all group border-b last:border-0">
+                    <TableCell className="px-8">
+                       <div className="flex flex-col">
+                          <span className="font-black uppercase text-sm text-primary leading-none">{p.name}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Roll No: #{p.serialNumber || '0'} • Std {p.std}</span>
+                       </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="inline-flex flex-col items-center">
+                        <span className="text-2xl font-black text-primary leading-none">{s.score}%</span>
+                        <div className="w-16 h-1 bg-muted rounded-full mt-2 overflow-hidden">
+                           <div className="h-full bg-accent" style={{ width: `${s.score}%` }} />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right px-8">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenEvaluation(p, sportName)} className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-white transition-all h-10 px-6">
+                        Evaluate Technical Moves <ChevronRight className="w-3 h-3 ml-2" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>
 
       <Dialog open={!!editingDetailedPlayer} onOpenChange={() => setEditingDetailedPlayer(null)}>
-        <DialogContent className="sm:max-w-[500px] rounded-[2.5rem]">
-          <DialogHeader><DialogTitle className="text-xl font-black uppercase text-center text-primary">Technical Evaluation</DialogTitle></DialogHeader>
-          <div className="p-4 space-y-4">
-             {editingDetailedPlayer && (
-               <div className="space-y-4">
-                  <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20">
-                    <p className="text-[10px] font-black uppercase text-muted-foreground">STUDENT: <span className="text-primary">${editingDetailedPlayer.player.name}</span></p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase">Technical Score (Aggregate)</Label>
+        <DialogContent className="sm:max-w-[550px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
+          <DialogHeader className="bg-primary p-10 text-white relative">
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30 shadow-xl">
+                 <Target className="w-8 h-8 text-white" />
+              </div>
+              <div className="space-y-1">
+                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Technical Assessment</DialogTitle>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">{editingDetailedPlayer?.player.name} • {editingDetailedPlayer?.sport}</p>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
+          </DialogHeader>
+
+          <div className="p-10 space-y-8">
+             <div className="grid grid-cols-1 gap-6">
+                {(DETAILED_SKILLS[editingDetailedPlayer?.sport || ''] || []).map(skill => (
+                  <div key={skill} className="space-y-3 bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all">
+                    <div className="flex justify-between items-center px-1">
+                      <Label className="text-[10px] font-black uppercase text-primary tracking-widest">{skill}</Label>
+                      <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 100</span>
+                    </div>
                     <Input 
                       type="number" 
-                      value={skills[`${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`]?.score || ''} 
+                      min="0"
+                      max="100"
+                      value={localDetailedSkills[skill] || ''} 
+                      placeholder="0-100"
                       onChange={(e) => {
                         const val = e.target.value;
-                        const key = `${editingDetailedPlayer.player.id}_${editingDetailedPlayer.sport}`;
-                        setSkills(prev => ({ ...prev, [key]: { ...prev[key], score: val } }));
+                        setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
                       }} 
-                      className="h-14 text-2xl font-black text-center rounded-2xl border-2" 
+                      className="h-12 text-center text-lg font-black rounded-xl border-2 shadow-inner focus:ring-accent" 
                     />
                   </div>
-               </div>
-             )}
+                ))}
+             </div>
           </div>
-          <DialogFooter className="p-4">
-            <Button onClick={() => handleSave(editingDetailedPlayer!.player.id)} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg">ARCHIVE SCORE</Button>
+
+          <DialogFooter className="p-10 bg-slate-50 border-t">
+            <Button onClick={handleSave} className="w-full bg-primary text-white h-16 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl active-scale text-xs">
+              Archive Technical Profile
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
