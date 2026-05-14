@@ -436,9 +436,12 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <button onClick={() => setStage('landing')} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden relative shrink-0">
+            <div 
+              style={{ position: 'relative' }}
+              className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0"
+            >
               <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
-            </button>
+            </div>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -464,7 +467,10 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center relative overflow-hidden">
+          <div 
+            style={{ position: 'relative' }}
+            className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden"
+          >
             <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">
