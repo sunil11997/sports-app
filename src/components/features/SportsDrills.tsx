@@ -64,6 +64,11 @@ const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], less
   }
 };
 
+interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+}
+
 export function SportsDrills({ store }: { store: any }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
@@ -346,9 +351,4 @@ export function SportsDrills({ store }: { store: any }) {
       )}
     </div>
   );
-}
-
-interface ChatMessage {
-  role: 'user' | 'model';
-  content: string;
 }
