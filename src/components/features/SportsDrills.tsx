@@ -20,9 +20,6 @@ import {
   User, 
   PlayCircle, 
   ShieldCheck,
-  Globe,
-  BarChart3,
-  Users2,
   MessageSquare,
   Send,
   Bot,
@@ -124,12 +121,15 @@ export function SportsDrills({ store }: { store: any }) {
     setChatLoading(true);
 
     try {
-      const context = `Student: ${selectedPlayer.name}, Std: ${selectedPlayer.std}, Age: ${selectedPlayer.age}. Sport: ${activeSport}. Drills completed count: ${Object.keys(store.data.drillCompletions).filter(k => k.startsWith(selectedPlayerId)).length}`;
+      const profile = store.data.schoolProfile;
+      const tContext = `Teacher: ${profile.teacherName}, School: ${profile.schoolName}`;
+      const context = `Student: ${selectedPlayer.name}, Std: ${selectedPlayer.std}, Age: ${selectedPlayer.age}. Sport: ${activeSport}.`;
       
       const response = await coachChat({
         message: userMsg,
         history: chatHistory,
         playerContext: context,
+        teacherContext: tContext,
         language: "English"
       });
       setChatHistory(prev => [...prev, { role: 'model', content: response }]);
@@ -151,7 +151,7 @@ export function SportsDrills({ store }: { store: any }) {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="flex-1 space-y-2">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <PlayCircle className="w-10 h-10 text-cyan-600" /> PE Drills & Practice
+              <PlayCircle className="w-10 h-10 text-accent" /> PE Drills & Practice
             </h2>
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="text-primary font-black uppercase text-[10px] tracking-widest bg-white">
@@ -268,7 +268,7 @@ export function SportsDrills({ store }: { store: any }) {
 
               <TabsContent value="assistant" className="mt-0">
                 <Card className="border-2 border-primary/10 shadow-2xl rounded-[3rem] overflow-hidden bg-white flex flex-col h-[600px]">
-                  <CardHeader className="bg-accent/5 border-b p-6 flex flex-row items-center justify-between">
+                  <CardHeader className="bg-accent/5 border-b p-6 flex flex-row justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center shadow-lg">
                         <Bot className="w-7 h-7 text-accent-foreground" />
