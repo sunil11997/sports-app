@@ -1,41 +1,39 @@
-const CACHE_NAME = 'wgb-sports-hub-v3';
+/**
+ * Waghamba Sports Hub - Network-First Service Worker
+ * Ensures Teacher Sunil always has the latest registry data.
+ */
 
-// Network-First Strategy: Always fetch fresh code, fallback to cache if offline
-self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate' || 
-     (event.request.method === 'GET' && event.request.headers.get('accept').includes('text/html'))) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/'))
-    );
-    return;
-  }
+const CACHE_NAME = 'wgb-hub-v3.1';
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
       );
     })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
+  // Network-First Strategy for Next.js assets and API calls
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        const resClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, resClone);
+        });
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

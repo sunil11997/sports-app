@@ -205,7 +205,7 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border shrink-0 flex items-center justify-center">
+              <div style={{ position: 'relative' }} className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border shrink-0 flex items-center justify-center">
                 <Image src={LOGO_PATH} alt="Logo" width={36} height={36} unoptimized className="object-cover" priority />
               </div>
               <h1 className="text-base font-black uppercase text-primary leading-none tracking-tight">
@@ -255,14 +255,14 @@ export default function WaghambaApp() {
                       <Button onClick={() => setActiveTab('registration')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 mt-6 shadow-lg">Register New</Button>
                     </Card>
                     <Card onClick={() => setActiveTab('dashboard')} className="google-card p-8 flex flex-col justify-between cursor-pointer group hover:bg-primary/[0.02]">
-                      <ClipboardList className="w-10 h-10 text-accent group-hover:scale-110 transition-transform" />
+                      <ClipboardList className="w-10 h-10 text-accent" />
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">Open</p>
                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Full Database</p>
                       </div>
                     </Card>
                     <Card onClick={() => setActiveTab('fitness')} className="google-card p-8 flex flex-col justify-between cursor-pointer group hover:bg-primary/[0.02]">
-                      <Activity className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
+                      <Activity className="w-10 h-10 text-primary" />
                       <div className="mt-4">
                         <p className="text-4xl font-black text-primary">{Object.keys(schoolData.data.fitness).length}</p>
                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Metrics Logged</p>
@@ -363,7 +363,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0 flex items-center justify-center">
+            <div style={{ position: 'relative' }} className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0 flex items-center justify-center">
               <Image src={LOGO_PATH} alt="Logo" width={64} height={64} unoptimized className="object-cover" priority />
             </div>
             <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
@@ -391,7 +391,7 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden">
+          <div style={{ position: 'relative' }} className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden">
             <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">

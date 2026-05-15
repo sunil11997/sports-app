@@ -1,4 +1,4 @@
-n
+
 # शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub
 
 This is the Sports & Health Management System for the Waghamba School, built with Next.js, Firebase, and Genkit.
