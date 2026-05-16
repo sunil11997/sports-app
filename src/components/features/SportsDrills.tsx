@@ -34,21 +34,22 @@ import { usePWA } from '@/components/providers/pwa-provider';
 const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], lessonPlan?: string[] }> = {
   'Kabaddi': {
     skills: [
-      "Cant (Continuous Chanting)", "Toe Touch", "Hand Touch", "Running Hand Touch", 
-      "Side Kick", "Mule Kick", "Back Kick", "Dubki", "Escape Skills", "Bonus Line Skill",
-      "Ankle Hold", "Thigh Hold", "Waist Hold", "Block", "Dash", "Chain Formation", 
-      "Corner Play", "Cover Positioning"
+      "Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill",
+      "Bonus line drill", "Running raid drill", "Escape practice drill", "Ankle hold drill",
+      "Thigh hold drill", "Chain tackle drill", "Dash practice drill", "Corner defense drill",
+      "Reaction speed drill", "Agility ladder drill", "Shuttle run drill", "Shadow raiding drill",
+      "Mat movement drill", "Team coordination drill", "Match simulation drill", "Fitness endurance drill"
     ],
-    dailyPlan: ["10 min warm-up", "Raid practice", "Defense drills", "Mini match", "Cool down"],
-    lessonPlan: ["Introduction to Kabaddi", "Warm-up activities", "Skill demonstration", "Practice session", "Mini game", "Cool down"]
+    dailyPlan: ["10 min warm-up", "Specific technical drills", "Raid/Defense coordination", "Match simulation", "Cool down"],
+    lessonPlan: ["Introduction to Kabaddi techniques", "Drill demonstration", "Supervised practice", "Performance feedback"]
   },
   'Volleyball': {
     skills: [
-      "Target Serving Drill", "Partner Passing Drill", "Wall Setting Drill", 
-      "Toss and Spike Drill", "Blocking Jump Drill", "Digging Defense Drill", 
-      "Circle Passing Drill", "Serve Receive Drill", "3-Touch Drill", 
-      "Rotation Drill", "Transition Drill", "Game Simulation Drill", 
-      "Ladder Footwork Drill", "Shadow Movement Drill", "Reaction Ball Drill"
+      "Target serving drill", "Partner passing drill", "Wall setting drill", 
+      "Toss and spike drill", "Blocking jump drill", "Digging defense drill", 
+      "Circle passing drill", "Serve receive drill", "3-touch drill", 
+      "Rotation drill", "Transition drill", "Game simulation drill", 
+      "Ladder footwork drill", "Shadow movement drill", "Reaction ball drill"
     ],
     dailyPlan: ["Wall set practice", "Service consistency", "Digging drills", "Spike approach", "Team rotation"]
   },
@@ -265,7 +266,7 @@ export function SportsDrills({ store, preselectedSport, defaultView = 'checklist
                     </Card>
                   )}
 
-                  {activeSport === "Kabaddi" && SPORTS_DATA[activeSport]?.lessonPlan && (
+                  {SPORTS_DATA[activeSport]?.lessonPlan && (
                     <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-primary/20">
                       <CardHeader className="bg-primary/5 border-b p-6">
                         <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
