@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -175,8 +174,18 @@ export default function WaghambaApp() {
             
             <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
               <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 shadow-inner">
-                <Button variant={subTab === "overview" ? "default" : "ghost"} onClick={() => setSubTab("overview")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Overview</Button>
-                <Button variant={subTab === "roster" ? "default" : "ghost"} onClick={() => setSubTab("roster")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Full Roster</Button>
+                <button 
+                  onClick={() => setSubTab("overview")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "overview" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Overview</button>
+                <button 
+                  onClick={() => setSubTab("roster")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "roster" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Full Roster</button>
+                <button 
+                  onClick={() => setSubTab("enroll")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "enroll" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >New Enrollment</button>
               </div>
 
               {subTab === "overview" && (
@@ -194,18 +203,18 @@ export default function WaghambaApp() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5" /> Today&apos;s Practice</p>
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5 text-accent" /> Today&apos;s Practice</p>
                               <p className="text-2xl font-black uppercase tracking-tight">Kabaddi Drills</p>
                               <p className="text-sm font-bold text-white/60">16:30 • Main Ground</p>
                            </div>
                            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5" /> Enrolled Athletes</p>
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5 text-accent" /> Enrolled Athletes</p>
                               <p className="text-4xl font-black uppercase tracking-tighter">{athleteCount}</p>
                               <p className="text-sm font-bold text-white/60">Active Registry</p>
                            </div>
                         </div>
 
-                        <Button onClick={() => setSubTab('roster')} className="h-16 w-full md:w-auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
+                        <Button onClick={() => setSubTab('roster')} className="h-20 w-full md:w-auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
                           Manage Students <ArrowRight className="ml-4 w-6 h-6" />
                         </Button>
                       </div>
@@ -222,7 +231,7 @@ export default function WaghambaApp() {
 
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                            <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center"><Trophy className="text-amber-400 w-6 h-6" /></div>
+                              <div className="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center"><Trophy className="text-orange-400 w-6 h-6" /></div>
                               <Badge variant="outline" className="text-white/40 border-white/10 text-[9px] uppercase">Coming Soon</Badge>
                            </div>
                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Upcoming Tournament</p>
@@ -268,7 +277,7 @@ export default function WaghambaApp() {
                      <Card onClick={() => setSubTab('enroll')} className="group cursor-pointer bg-white rounded-[2.5rem] border-2 border-accent/10 p-2 overflow-hidden shadow-lg active-scale transition-all">
                         <div className="flex items-center justify-between p-6">
                            <div className="flex items-center gap-6">
-                              <div className="w-20 h-20 bg-accent/5 rounded-[1.5rem] flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-500">
+                              <div className="w-20 h-20 bg-accent/5 rounded-[1.5rem] flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all duration-500">
                                  <UserCircle className="w-10 h-10" />
                               </div>
                               <div>
@@ -281,37 +290,6 @@ export default function WaghambaApp() {
                            </div>
                         </div>
                      </Card>
-                  </div>
-
-                  {/* Institutional Info Section */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-dashed">
-                     <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                           <School className="w-5 h-5 text-primary" />
-                           <h4 className="text-xs font-black uppercase text-primary tracking-widest">Primary Campus</h4>
-                        </div>
-                        <Card className="rounded-[2.5rem] p-8 bg-white border shadow-sm">
-                           <p className="text-xl font-black text-primary uppercase tracking-tight">{teacher.schoolName}</p>
-                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{teacher.taluka}, {teacher.district}</p>
-                           <div className="flex gap-2 mt-4">
-                              <Badge className="bg-primary/5 text-primary border-primary/20 text-[9px] uppercase font-black">{teacher.qualification}</Badge>
-                              <Badge className="bg-emerald-500 text-white text-[9px] uppercase font-black">Authorized Hub</Badge>
-                           </div>
-                        </Card>
-                     </div>
-                     <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                           <Activity className="w-5 h-5 text-accent" />
-                           <h4 className="text-xs font-black uppercase text-primary tracking-widest">System Health</h4>
-                        </div>
-                        <Card className="rounded-[2.5rem] p-8 bg-accent/5 border-2 border-accent/10 shadow-sm flex items-center justify-between">
-                           <div className="space-y-1">
-                              <p className="text-lg font-black text-primary uppercase">Registry Live</p>
-                              <p className="text-[10px] font-medium text-foreground/60 leading-tight">All local data is currently synchronized with the cloud vault.</p>
-                           </div>
-                           <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg"><Star className="w-5 h-5 fill-current" /></div>
-                        </Card>
-                     </div>
                   </div>
                 </div>
               )}
@@ -326,10 +304,22 @@ export default function WaghambaApp() {
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
               <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 overflow-x-auto scrollbar-hide max-w-full shadow-inner">
-                <Button variant={subTab === "attendance" ? "default" : "ghost"} onClick={() => setSubTab("attendance")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Attendance</Button>
-                <Button variant={subTab === "performance" ? "default" : "ghost"} onClick={() => setSubTab("performance")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Performance</Button>
-                <Button variant={subTab === "medical" ? "default" : "ghost"} onClick={() => setSubTab("medical")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Medical</Button>
-                <Button variant={subTab === "fitness" ? "default" : "ghost"} onClick={() => setSubTab("fitness")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Fitness</Button>
+                <button 
+                  onClick={() => setSubTab("attendance")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "attendance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Attendance</button>
+                <button 
+                  onClick={() => setSubTab("performance")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "performance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Performance</button>
+                <button 
+                  onClick={() => setSubTab("medical")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "medical" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Medical Reports</button>
+                <button 
+                  onClick={() => setSubTab("fitness")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "fitness" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Fitness Tracking</button>
               </div>
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
@@ -340,8 +330,14 @@ export default function WaghambaApp() {
 
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">
                <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 shadow-inner">
-                <Button variant={subTab === "profile" ? "default" : "ghost"} onClick={() => setSubTab("profile")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Teacher Profile</Button>
-                <Button variant={subTab === "settings" ? "default" : "ghost"} onClick={() => setSubTab("settings")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Settings</Button>
+                <button 
+                  onClick={() => setSubTab("profile")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "profile" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Teacher Profile</button>
+                <button 
+                  onClick={() => setSubTab("settings")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "settings" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Settings</button>
               </div>
               {subTab === "profile" ? <SchoolRegistration store={schoolData} /> : <Settings language={language} setLanguage={setLanguage} />}
             </TabsContent>
@@ -352,7 +348,12 @@ export default function WaghambaApp() {
         <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
           <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
             {sportsTabs.map((tab) => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'students' ? 'attendance' : 'skills'); }} data-active={activeTab === tab.id} className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}>
+              <button 
+                key={tab.id} 
+                onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'students' ? 'attendance' : 'skills'); }} 
+                data-active={activeTab === tab.id} 
+                className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}
+              >
                 <div className={cn("google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all", activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted")}>
                   <tab.icon className="w-6 h-6" />
                 </div>
