@@ -32,7 +32,13 @@ const DETAILED_SKILLS: Record<string, string[]> = {
     'Coordination', 'Balance', 'Agility', 'Reflex action', 'Team communication', 
     'Court awareness', 'Defensive movement', 'Offensive movement'
   ],
-  'Handball': ['Shooting', 'Passing', 'Dribbling', 'Goalkeeping', 'Piston Movement'],
+  'Handball': [
+    'Passing', 'Catching', 'Dribbling', 'Shooting', 'Jump shot', 
+    'Bounce shot', 'Goalkeeping', 'Blocking', 'Footwork', 'Dodging', 
+    'Fake movement', 'Defensive positioning', 'Attacking movement', 
+    'Team coordination', 'Speed running', 'Agility', 'Balance', 
+    'Reaction speed', 'Court awareness', 'Communication'
+  ],
   'Athletics': ['Start Phase', 'Finish Sprint', 'Posture/Alignment', 'Breathing Rhythm'],
 };
 

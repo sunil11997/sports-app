@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -64,7 +63,13 @@ const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], less
     dailyPlan: ["Agility circuit", "Kho timing drills", "Pole turning speed", "Sudden turn practice"]
   },
   'Handball': {
-    skills: ["Dribbling", "Passing", "Shooting", "Goalkeeping", "Jump Shot", "Piston Movement"],
+    skills: [
+      "Partner passing drill", "Wall passing drill", "Zig-zag dribbling drill", "Cone dribbling drill",
+      "Target shooting drill", "Jump shot drill", "Bounce shot drill", "Goalkeeper reaction drill",
+      "Fast break drill", "Defensive blocking drill", "Passing in motion drill", "Shuttle run drill",
+      "Agility ladder drill", "Reaction speed drill", "Team coordination drill", "Shadow movement drill",
+      "Mini match drill", "Court movement drill", "Match simulation drill", "Fitness endurance drill"
+    ],
     dailyPlan: ["Shooting accuracy", "Fast break transitions", "Goalkeeper reflexes", "Defensive wall setup"]
   },
   'Athletics': {
