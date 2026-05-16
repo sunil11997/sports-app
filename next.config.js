@@ -8,7 +8,14 @@ const nextConfig = {
   },
   trailingSlash: true,
   // Fixed: Exclude OTel and Genkit from client bundling to resolve "Critical dependency" warnings
-  serverExternalPackages: ['@opentelemetry/sdk-node', 'genkit', '@genkit-ai/core', '@genkit-ai/google-genai'],
+  serverExternalPackages: [
+    '@opentelemetry/sdk-node', 
+    '@opentelemetry/instrumentation',
+    '@opentelemetry/api',
+    'genkit', 
+    '@genkit-ai/core', 
+    '@genkit-ai/google-genai'
+  ],
 };
 
 module.exports = nextConfig;
