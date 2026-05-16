@@ -1,13 +1,12 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // NOTE: Remove 'export' for Vercel to support GenAI (Server Actions)
-  // Re-enable 'output: export' ONLY when building for Capacitor/Android
   images: {
     unoptimized: true,
   },
   trailingSlash: true,
-  // Fixed: Exclude OTel and Genkit from client bundling to resolve "Critical dependency" warnings
+  // Resolved: Prevent Webpack from bundling Node-specific telemetry in client chunks
   serverExternalPackages: [
     '@opentelemetry/sdk-node', 
     '@opentelemetry/instrumentation',
