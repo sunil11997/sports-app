@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -16,12 +17,16 @@ import {
   ShieldCheck,
   Flame,
   Zap,
-  PlayCircle
+  PlayCircle,
+  Stethoscope,
+  FileText
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
 import { TournamentRosters } from './TournamentRosters';
 import { Teams } from './Teams';
+import { HealthIncidents } from './HealthIncidents';
+import { DailyReport } from './DailyReport';
 import { cn } from '@/lib/utils';
 
 const GAMES = [
@@ -37,7 +42,7 @@ export function GameHub({ store }: { store: any }) {
 
   if (selectedGame) {
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+      <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border-2 border-primary/10 shadow-sm">
           <div className="flex items-center gap-4">
             <Button 
@@ -63,11 +68,13 @@ export function GameHub({ store }: { store: any }) {
         <Tabs defaultValue="skills" className="space-y-8">
           <div className="flex items-center justify-center">
             <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner overflow-x-auto scrollbar-hide max-w-full">
-              <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Skills</TabsTrigger>
-              <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Drills</TabsTrigger>
-              <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Practice Plan</TabsTrigger>
-              <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Teams</TabsTrigger>
-              <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Tournament</TabsTrigger>
+              <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
+              <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
+              <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Practice Plan</TabsTrigger>
+              <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
+              <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
+              <TabsTrigger value="health" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap">Health</TabsTrigger>
+              <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap">Reports</TabsTrigger>
             </TabsList>
           </div>
 
@@ -90,13 +97,21 @@ export function GameHub({ store }: { store: any }) {
           <TabsContent value="tournament" className="mt-0">
             <TournamentRosters store={store} preselectedSport={selectedGame} />
           </TabsContent>
+
+          <TabsContent value="health" className="mt-0">
+            <HealthIncidents store={store} section="sports" />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-0">
+            <DailyReport store={store} section="sports" />
+          </TabsContent>
         </Tabs>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
+    <div className="space-y-12 animate-in fade-in duration-700 pb-20">
       <div className="bg-primary/5 p-12 rounded-[3.5rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
         <div className="relative z-10 space-y-4">
           <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
@@ -104,7 +119,7 @@ export function GameHub({ store }: { store: any }) {
           </div>
           <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Game Hub</h2>
           <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
-            Select a discipline to access technical mastery, training logs, and tournament selection.
+            Select a discipline to access technical mastery, training logs, health, and auto-reports.
           </p>
         </div>
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
@@ -133,8 +148,8 @@ export function GameHub({ store }: { store: any }) {
                 <span className="text-[8px] font-black uppercase text-muted-foreground">Drills</span>
               </div>
               <div className="flex flex-col items-center">
-                <UsersRound className="w-4 h-4 text-muted-foreground/30 mb-1" />
-                <span className="text-[8px] font-black uppercase text-muted-foreground">Teams</span>
+                <Stethoscope className="w-4 h-4 text-muted-foreground/30 mb-1" />
+                <span className="text-[8px] font-black uppercase text-muted-foreground">Health</span>
               </div>
             </div>
 

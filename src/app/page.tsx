@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -303,39 +304,42 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 overflow-x-auto scrollbar-hide max-w-full shadow-inner">
-                <button 
-                  onClick={() => setSubTab("attendance")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "attendance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Attendance</button>
-                <button 
-                  onClick={() => setSubTab("performance")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "performance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Performance</button>
-                <button 
-                  onClick={() => setSubTab("fitness")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "fitness" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Fitness Tracking</button>
-                <button 
-                  onClick={() => setSubTab("exams")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "exams" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Exam Hub</button>
-                <button 
-                  onClick={() => setSubTab("classes")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "classes" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Classes Hub</button>
-                <button 
-                  onClick={() => setSubTab("promotion")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "promotion" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Promotion Hub</button>
-                <button 
-                  onClick={() => setSubTab("medical")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "medical" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Medical Reports</button>
-                <button 
-                  onClick={() => setSubTab("reports")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "reports" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Daily Reports</button>
+              <div className="relative group/scroll">
+                <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
+                  <button 
+                    onClick={() => setSubTab("attendance")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "attendance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Attendance</button>
+                  <button 
+                    onClick={() => setSubTab("performance")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "performance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Performance</button>
+                  <button 
+                    onClick={() => setSubTab("fitness")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "fitness" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Fitness Tracking</button>
+                  <button 
+                    onClick={() => setSubTab("exams")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "exams" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Exam Hub</button>
+                  <button 
+                    onClick={() => setSubTab("classes")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "classes" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Classes Hub</button>
+                  <button 
+                    onClick={() => setSubTab("promotion")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "promotion" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Promotion Hub</button>
+                  <button 
+                    onClick={() => setSubTab("medical")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "medical" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Medical Reports</button>
+                  <button 
+                    onClick={() => setSubTab("reports")} 
+                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "reports" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                  >Daily Reports</button>
+                </div>
+                <div className="absolute right-0 top-0 bottom-6 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
               </div>
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, FileText, Activity, AlertTriangle, Users, ClipboardCheck, History } from 'lucide-react';
+import { Printer, FileText, Activity, AlertTriangle, Users, ClipboardCheck, History, Trophy, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -53,10 +54,44 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     return { morning, evening };
   }, [store.data.attendance, reportDate, isMounted]);
 
+  const fitnessLogsToday = useMemo(() => {
+    if (!isMounted || !reportDate) return [];
+    // Note: Fitness registry keys are formatted as ${playerId}_${dateId}
+    return Object.values(store.data.fitness).filter((f: any) => f.date === reportDate);
+  }, [store.data.fitness, reportDate, isMounted]);
+
+  const drillsCompletedToday = useMemo(() => {
+    if (!isMounted || !reportDate) return [];
+    return Object.values(store.data.drillCompletions || {}).filter((d: any) => d.timestamp?.startsWith(reportDate));
+  }, [store.data.drillCompletions, reportDate, isMounted]);
+
   const autoSummary = useMemo(() => {
-    if (activitiesToday.length === 0) return `No ${section === 'sports' ? 'athletic training' : 'physical education'} activities were recorded in the registry for this date.`;
-    return activitiesToday.map((a: any) => `• [Std ${a.std}] ${a.type} (${a.duration}): ${a.summary}`).join('\n\n');
-  }, [activitiesToday, section]);
+    let summaryLines: string[] = [];
+    
+    if (activitiesToday.length > 0) {
+      summaryLines.push("### RECORDED ACTIVITIES");
+      activitiesToday.forEach((a: any) => summaryLines.push(`• [Std ${a.std}] ${a.type} (${a.duration}): ${a.summary}`));
+      summaryLines.push("");
+    }
+
+    if (drillsCompletedToday.length > 0) {
+      summaryLines.push("### DRILLS MASTERED");
+      summaryLines.push(`${drillsCompletedToday.length} technical drills successfully logged today across the registry.`);
+      summaryLines.push("");
+    }
+
+    if (fitnessLogsToday.length > 0) {
+      summaryLines.push("### FITNESS EVALUATIONS");
+      summaryLines.push(`${fitnessLogsToday.length} physical test scores updated in the institutional performance registry.`);
+      summaryLines.push("");
+    }
+
+    if (summaryLines.length === 0) {
+      return `No automatic activity, drills, or fitness metrics were archived for this date in the ${section === 'sports' ? 'Sport Hub' : 'General Registry'}.`;
+    }
+
+    return summaryLines.join('\n');
+  }, [activitiesToday, drillsCompletedToday, fitnessLogsToday, section]);
 
   const handlePrint = () => {
     const printContent = `
@@ -138,22 +173,22 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
   if (!isMounted) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4 text-center md:text-left">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center justify-center md:justify-start gap-3">
-              <FileText className="w-10 h-10 text-accent" /> Official Briefing
+              <FileText className="w-10 h-10 text-accent" /> Auto-Report
             </h2>
-            <p className="text-lg font-medium text-foreground/70">Automatic daily aggregation from across the institutional registry.</p>
+            <p className="text-lg font-medium text-foreground/70">Registry engine automatically aggregates all session data for archival.</p>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-primary uppercase ml-2 tracking-widest">Target Date</label>
+              <label className="text-[10px] font-black text-primary uppercase ml-2 tracking-widest">Select Date</label>
               <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="rounded-2xl border-2 h-14 font-black shadow-sm" />
             </div>
             <Button onClick={handlePrint} className="bg-primary text-white h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active-scale">
-              <Printer className="w-5 h-5 mr-2" /> Generate Official Brief
+              <Printer className="w-5 h-5 mr-2" /> Print Daily Brief
             </Button>
           </div>
         </div>
@@ -164,9 +199,9 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
           <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
             <CardHeader className="bg-accent/5 border-b p-6 flex flex-row justify-between items-center">
               <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <History className="w-4 h-4 text-primary" /> Daily Activity Stream
+                <History className="w-4 h-4 text-primary" /> Automatic Activity Stream
               </CardTitle>
-              <Badge variant="outline" className="font-black border-accent/20 text-accent">Auto-Aggregated</Badge>
+              <Badge variant="outline" className="font-black border-accent/20 text-accent">Real-Time Sync</Badge>
             </CardHeader>
             <CardContent className="p-8">
               <div className="bg-muted/30 p-8 rounded-[2rem] border-2 border-dashed border-muted font-medium text-sm text-foreground/60 whitespace-pre-wrap leading-relaxed min-h-[300px]">
@@ -187,12 +222,12 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
                 "text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2",
                 healthToday.length > 0 ? "text-destructive" : "text-primary"
               )}>
-                <AlertTriangle className="w-4 h-4" /> Medical Briefing
+                <AlertTriangle className="w-4 h-4" /> Health Registry Alerts
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
               {healthToday.length === 0 ? (
-                <p className="text-sm font-bold text-muted-foreground italic text-center opacity-40">No health incidents logged today.</p>
+                <p className="text-sm font-bold text-muted-foreground italic text-center opacity-40">No medical alerts recorded for this period.</p>
               ) : (
                 <div className="space-y-4">
                   {healthToday.map((h: any, i: number) => (
@@ -213,35 +248,39 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
         </div>
 
         <div className="space-y-6">
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b p-6">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary" /> Session Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/5 text-center">
-                  <p className="text-[10px] font-black uppercase text-primary/40 mb-2">Morning Session</p>
-                  <h4 className="text-4xl font-black text-primary">{attendanceSummary.morning}</h4>
-                  <p className="text-[9px] font-bold uppercase text-primary/60 mt-1">Present Today</p>
-                </div>
-                <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/5 text-center">
-                  <p className="text-[10px] font-black uppercase text-primary/40 mb-2">Evening Session</p>
-                  <h4 className="text-4xl font-black text-primary">{attendanceSummary.evening}</h4>
-                  <p className="text-[9px] font-bold uppercase text-primary/60 mt-1">Present Today</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-2 gap-4">
+             <div className="bg-white p-6 rounded-[2rem] border-2 shadow-sm text-center">
+                <Users className="w-5 h-5 text-primary mx-auto mb-2" />
+                <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Morning Presence</p>
+                <p className="text-3xl font-black text-primary">{attendanceSummary.morning}</p>
+             </div>
+             <div className="bg-white p-6 rounded-[2rem] border-2 shadow-sm text-center">
+                <Users className="w-5 h-5 text-primary mx-auto mb-2" />
+                <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Evening Presence</p>
+                <p className="text-3xl font-black text-primary">{attendanceSummary.evening}</p>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+             <div className="bg-white p-6 rounded-[2rem] border-2 shadow-sm text-center">
+                <Trophy className="w-5 h-5 text-accent mx-auto mb-2" />
+                <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Drills Logged</p>
+                <p className="text-3xl font-black text-accent">{drillsCompletedToday.length}</p>
+             </div>
+             <div className="bg-white p-6 rounded-[2rem] border-2 shadow-sm text-center">
+                <Zap className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
+                <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Fitness Evaluations</p>
+                <p className="text-3xl font-black text-emerald-500">{fitnessLogsToday.length}</p>
+             </div>
+          </div>
 
           <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
             <CardHeader className="bg-primary/5 border-b p-6">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.2em]">Extra Observations</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em]">Observations</CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-4">
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Weather</label>
+                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Weather Context</label>
                  <Select value={weather} onValueChange={setWeather}>
                    <SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger>
                    <SelectContent>
@@ -252,11 +291,11 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
                  </Select>
                </div>
                <div className="space-y-2">
-                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Daily Remark</label>
+                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Head Instructor Remark</label>
                  <Textarea 
                   value={manualNotes} 
                   onChange={(e) => setManualSummary(e.target.value)} 
-                  placeholder="Notes..." 
+                  placeholder="Record summary observations..." 
                   className="min-h-[150px] rounded-2xl border-2 p-6 font-medium text-sm" 
                  />
                </div>
