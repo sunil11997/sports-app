@@ -79,6 +79,18 @@ const History = dynamic(() => import('@/components/features/History').then(mod =
 const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(mod => mod.NotificationCenter), { 
   ssr: false 
 });
+const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(mod => mod.ExamsHub), { 
+  ssr: false,
+  loading: () => <TableSkeleton /> 
+});
+const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(mod => mod.PromotionHub), { 
+  ssr: false,
+  loading: () => <TableSkeleton /> 
+});
+const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(mod => mod.ClassesSection), { 
+  ssr: false,
+  loading: () => <TableSkeleton /> 
+});
 
 const translations = {
   English: {
@@ -305,6 +317,18 @@ export default function WaghambaApp() {
                   className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "fitness" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
                 >Fitness Tracking</button>
                 <button 
+                  onClick={() => setSubTab("exams")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "exams" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Exam Hub</button>
+                <button 
+                  onClick={() => setSubTab("classes")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "classes" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Classes Hub</button>
+                <button 
+                  onClick={() => setSubTab("promotion")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "promotion" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Promotion Hub</button>
+                <button 
                   onClick={() => setSubTab("medical")} 
                   className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "medical" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
                 >Medical Reports</button>
@@ -317,6 +341,9 @@ export default function WaghambaApp() {
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
               {subTab === "performance" && <History store={schoolData} section={selectedSection} />}
               {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}
+              {subTab === "exams" && <ExamsHub store={schoolData} />}
+              {subTab === "classes" && <ClassesSection store={schoolData} />}
+              {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection} />}
               {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection} />}
             </TabsContent>
