@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -21,7 +22,11 @@ import {
   Menu,
   Star,
   Loader2,
-  Settings as SettingsIcon
+  CalendarDays,
+  Target,
+  Timer,
+  Zap,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -105,34 +110,14 @@ export default function WaghambaApp() {
     { id: "profile", label: t.profile, icon: UserCircle },
   ];
 
-  const topPerformers = useMemo(() => {
-    if (selectedSection !== 'sports' || !schoolData.data.players) return [];
-    const sports = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
-    return sports.map(sport => {
-      const athletesInSport = schoolData.data.players.filter(p => p.category === 'athlete' && p.sports?.includes(sport));
-      let topPlayer: any = null;
-      let highestScore = -1;
-      athletesInSport.forEach(p => {
-        const skill = schoolData.data.sportSkills[`${p.id}_${sport}`];
-        if (skill) {
-          const score = parseFloat(skill.score) || 0;
-          if (score > highestScore) { highestScore = score; topPlayer = p; }
-        }
-      });
-      return { sport, player: topPlayer, score: highestScore };
-    }).filter(item => item.player !== null);
-  }, [selectedSection, schoolData.data.players, schoolData.data.sportSkills]);
-
   if (!isMounted) return null;
 
   if (showSplash) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 z-[9999] fixed inset-0">
-        {/* Background Glow Effect */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
         </div>
-
         <div className="max-w-xs w-full text-center space-y-12 relative z-10">
            <div className="w-56 h-56 mx-auto relative drop-shadow-[0_0_35px_rgba(59,130,246,0.5)]">
              <Lottie animationData={splashAnim} loop={true} />
@@ -147,7 +132,6 @@ export default function WaghambaApp() {
              </div>
            </div>
         </div>
-
         <style jsx global>{`
           @keyframes loader-progress {
             0% { transform: translateX(-100%); }
@@ -160,6 +144,8 @@ export default function WaghambaApp() {
 
   if (stage === 'hub' && selectedSection) {
     const teacher = schoolData.data.schoolProfile;
+    const athleteCount = schoolData.data.players.filter(p => p.category === 'athlete').length;
+    
     return (
       <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
@@ -188,99 +174,145 @@ export default function WaghambaApp() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             
             <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
-                <Button variant={subTab === "overview" ? "default" : "ghost"} onClick={() => setSubTab("overview")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Overview</Button>
-                <Button variant={subTab === "roster" ? "default" : "ghost"} onClick={() => setSubTab("roster")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Roster</Button>
-                <Button variant={subTab === "enroll" ? "default" : "ghost"} onClick={() => setSubTab("enroll")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Enroll New</Button>
+              <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 shadow-inner">
+                <Button variant={subTab === "overview" ? "default" : "ghost"} onClick={() => setSubTab("overview")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Overview</Button>
+                <Button variant={subTab === "roster" ? "default" : "ghost"} onClick={() => setSubTab("roster")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Full Roster</Button>
               </div>
 
               {subTab === "overview" && (
-                <div className="space-y-8">
-                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-1">
-                      <h2 className="text-3xl font-display font-black text-primary uppercase tracking-tight">Welcome, {teacher.teacherName.split(' ')[0]}</h2>
-                      <p className="text-muted-foreground font-medium text-sm">Registry Overview • {schoolData.selectedYear}</p>
-                    </div>
-                    <Card className="p-4 rounded-2xl bg-white border-2 flex items-center gap-4 shadow-sm border-primary/10">
-                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Head Instructor</p>
-                        <p className="font-black text-primary uppercase text-xs mt-1">{teacher.teacherName}</p>
-                        <p className="text-[8px] font-bold text-muted-foreground/60 uppercase">{teacher.role}</p>
-                      </div>
-                    </Card>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="rounded-[2.5rem] p-10 bg-primary text-white shadow-xl relative overflow-hidden">
-                      <h3 className="text-5xl font-display font-black tracking-tight">
-                        {schoolData.data.players.filter(p => p.category === 'athlete').length}
-                      </h3>
-                      <p className="text-sm font-bold opacity-60 uppercase mt-2">Active Athletes</p>
-                      <Button onClick={() => setSubTab('enroll')} className="bg-white text-primary rounded-full font-black uppercase text-[10px] px-8 h-10 mt-6 shadow-lg">Add New Student</Button>
-                    </Card>
-                    <Card onClick={() => setSubTab('roster')} className="google-card p-8 flex flex-col justify-between cursor-pointer group hover:bg-primary/[0.02]">
-                      <ClipboardList className="w-10 h-10 text-accent" />
-                      <div className="mt-4">
-                        <p className="text-4xl font-display font-black text-primary">Open</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Full Database</p>
-                      </div>
-                    </Card>
-                    <Card className="google-card p-8 flex flex-col justify-between group">
-                      <Activity className="w-10 h-10 text-primary" />
-                      <div className="mt-4">
-                        <p className="text-4xl font-display font-black text-primary">{Object.keys(schoolData.data.fitness).length}</p>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mt-1">Metrics Logged</p>
-                      </div>
-                    </Card>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                     <Card className="rounded-[2rem] border-2 p-8 bg-white shadow-sm flex flex-col md:flex-row gap-6 items-center">
-                        <div className="w-20 h-20 bg-primary/5 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-primary/10">
-                           <School className="w-10 h-10 text-primary" />
+                <div className="space-y-10">
+                  {/* FEATURED DASHBOARD COMMAND CENTER */}
+                  <Card className="rounded-[3.5rem] bg-primary p-12 text-white shadow-2xl relative overflow-hidden group border-none">
+                    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                      <div className="lg:col-span-7 space-y-8">
+                        <div className="space-y-3">
+                          <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">Institutional Dashboard</Badge>
+                          <h2 className="text-5xl font-display font-black leading-tight tracking-tighter uppercase">
+                            Welcome Back,<br/>{teacher.teacherName.split(' ')[0]}
+                          </h2>
                         </div>
-                        <div className="space-y-1 text-center md:text-left">
-                           <h4 className="text-xl font-display font-black text-primary uppercase tracking-tight">{teacher.schoolName}</h4>
-                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{teacher.taluka}, {teacher.district}</p>
-                           <div className="flex gap-2 mt-3 justify-center md:justify-start">
-                              <Badge variant="outline" className="text-[8px] font-black border-primary/20">{teacher.qualification}</Badge>
-                              <Badge className="bg-emerald-500 text-white text-[8px] font-black">CERTIFIED HUB</Badge>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5" /> Today&apos;s Practice</p>
+                              <p className="text-2xl font-black uppercase tracking-tight">Kabaddi Drills</p>
+                              <p className="text-sm font-bold text-white/60">16:30 • Main Ground</p>
+                           </div>
+                           <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5" /> Enrolled Athletes</p>
+                              <p className="text-4xl font-black uppercase tracking-tighter">{athleteCount}</p>
+                              <p className="text-sm font-bold text-white/60">Active Registry</p>
+                           </div>
+                        </div>
+
+                        <Button onClick={() => setSubTab('roster')} className="h-16 w-full md:w-auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
+                          Manage Students <ArrowRight className="ml-4 w-6 h-6" />
+                        </Button>
+                      </div>
+
+                      <div className="lg:col-span-5 grid grid-cols-1 gap-4">
+                         <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
+                           <div className="flex justify-between items-start mb-6">
+                              <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center"><Activity className="text-emerald-400 w-6 h-6" /></div>
+                              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full">Synchronized</span>
+                           </div>
+                           <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Attendance consistency</p>
+                           <p className="text-3xl font-black">94% <span className="text-sm font-bold text-emerald-400 ml-2">↑ 2%</span></p>
+                         </div>
+
+                         <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
+                           <div className="flex justify-between items-start mb-6">
+                              <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center"><Trophy className="text-amber-400 w-6 h-6" /></div>
+                              <Badge variant="outline" className="text-white/40 border-white/10 text-[9px] uppercase">Coming Soon</Badge>
+                           </div>
+                           <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Upcoming Tournament</p>
+                           <p className="text-2xl font-black uppercase tracking-tight">District Kabaddi</p>
+                           <p className="text-xs font-bold text-white/40 mt-1 flex items-center gap-2"><CalendarDays className="w-3 h-3" /> 15th October 2024</p>
+                         </div>
+
+                         <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
+                           <div className="flex justify-between items-start mb-6">
+                              <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center"><Target className="text-blue-400 w-6 h-6" /></div>
+                              <Zap className="w-5 h-5 text-blue-400 animate-pulse" />
+                           </div>
+                           <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Institutional Fitness Goal</p>
+                           <p className="text-2xl font-black uppercase tracking-tight">90% Peak Fitness</p>
+                           <div className="w-full h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
+                              <div className="h-full bg-blue-400 w-[78%]" />
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none group-hover:bg-accent/30 transition-all duration-700" />
+                  </Card>
+
+                  {/* Quick Action Bars */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <Card onClick={() => setActiveTab('sport')} className="group cursor-pointer bg-white rounded-[2.5rem] border-2 border-primary/10 p-2 overflow-hidden shadow-lg active-scale transition-all">
+                        <div className="flex items-center justify-between p-6">
+                           <div className="flex items-center gap-6">
+                              <div className="w-20 h-20 bg-primary/5 rounded-[1.5rem] flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                                 <Zap className="w-10 h-10" />
+                              </div>
+                              <div>
+                                 <h3 className="text-2xl font-black text-primary uppercase tracking-tighter">Open Training Deck</h3>
+                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Access technical drills</p>
+                              </div>
+                           </div>
+                           <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center group-hover:translate-x-2 transition-transform">
+                              <ChevronRight className="w-6 h-6 text-primary" />
                            </div>
                         </div>
                      </Card>
-                     <Card className="rounded-[2rem] border-2 p-8 bg-accent/[0.03] shadow-sm border-accent/10 flex flex-col md:flex-row gap-6 items-center">
-                        <div className="w-20 h-20 bg-accent/10 rounded-[1.5rem] flex items-center justify-center shrink-0 border border-accent/20">
-                           <Activity className="w-10 h-10 text-accent" />
-                        </div>
-                        <div className="space-y-1 text-center md:text-left">
-                           <h4 className="text-xl font-display font-black text-primary uppercase tracking-tight">System Health</h4>
-                           <p className="text-sm font-medium text-foreground/60 leading-tight">All local data is currently synchronized with the institutional cloud vault.</p>
+
+                     <Card onClick={() => setSubTab('enroll')} className="group cursor-pointer bg-white rounded-[2.5rem] border-2 border-accent/10 p-2 overflow-hidden shadow-lg active-scale transition-all">
+                        <div className="flex items-center justify-between p-6">
+                           <div className="flex items-center gap-6">
+                              <div className="w-20 h-20 bg-accent/5 rounded-[1.5rem] flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-500">
+                                 <UserCircle className="w-10 h-10" />
+                              </div>
+                              <div>
+                                 <h3 className="text-2xl font-black text-primary uppercase tracking-tighter">New Registration</h3>
+                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Enroll a new student</p>
+                              </div>
+                           </div>
+                           <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center group-hover:translate-x-2 transition-transform">
+                              <ChevronRight className="w-6 h-6 text-accent" />
+                           </div>
                         </div>
                      </Card>
                   </div>
-                  
-                  {topPerformers.length > 0 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3">
-                        <Star className="w-6 h-6 text-accent fill-accent" />
-                        <h3 className="text-2xl font-display font-black text-primary uppercase tracking-tight">Technical Leaders</h3>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {topPerformers.map((item, idx) => (
-                          <Card key={idx} className="google-card p-5 border-l-4 border-accent relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{item.sport}</span>
-                              <p className="font-black text-primary uppercase text-sm truncate">{item.player.name}</p>
-                              <Badge variant="outline" className="w-fit text-[9px] font-black border-accent/20 text-accent bg-accent/5">Mastery: {item.score}%</Badge>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
+                  {/* Institutional Info Section */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-dashed">
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                           <School className="w-5 h-5 text-primary" />
+                           <h4 className="text-xs font-black uppercase text-primary tracking-widest">Primary Campus</h4>
+                        </div>
+                        <Card className="rounded-[2.5rem] p-8 bg-white border shadow-sm">
+                           <p className="text-xl font-black text-primary uppercase tracking-tight">{teacher.schoolName}</p>
+                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{teacher.taluka}, {teacher.district}</p>
+                           <div className="flex gap-2 mt-4">
+                              <Badge className="bg-primary/5 text-primary border-primary/20 text-[9px] uppercase font-black">{teacher.qualification}</Badge>
+                              <Badge className="bg-emerald-500 text-white text-[9px] uppercase font-black">Authorized Hub</Badge>
+                           </div>
+                        </Card>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                           <Activity className="w-5 h-5 text-accent" />
+                           <h4 className="text-xs font-black uppercase text-primary tracking-widest">System Health</h4>
+                        </div>
+                        <Card className="rounded-[2.5rem] p-8 bg-accent/5 border-2 border-accent/10 shadow-sm flex items-center justify-between">
+                           <div className="space-y-1">
+                              <p className="text-lg font-black text-primary uppercase">Registry Live</p>
+                              <p className="text-[10px] font-medium text-foreground/60 leading-tight">All local data is currently synchronized with the cloud vault.</p>
+                           </div>
+                           <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg"><Star className="w-5 h-5 fill-current" /></div>
+                        </Card>
+                     </div>
+                  </div>
                 </div>
               )}
 
@@ -293,11 +325,11 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6 overflow-x-auto scrollbar-hide max-w-full">
-                <Button variant={subTab === "attendance" ? "default" : "ghost"} onClick={() => setSubTab("attendance")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Attendance</Button>
-                <Button variant={subTab === "performance" ? "default" : "ghost"} onClick={() => setSubTab("performance")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Performance</Button>
-                <Button variant={subTab === "medical" ? "default" : "ghost"} onClick={() => setSubTab("medical")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Medical Reports</Button>
-                <Button variant={subTab === "fitness" ? "default" : "ghost"} onClick={() => setSubTab("fitness")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Fitness Tracking</Button>
+              <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 overflow-x-auto scrollbar-hide max-w-full shadow-inner">
+                <Button variant={subTab === "attendance" ? "default" : "ghost"} onClick={() => setSubTab("attendance")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Attendance</Button>
+                <Button variant={subTab === "performance" ? "default" : "ghost"} onClick={() => setSubTab("performance")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Performance</Button>
+                <Button variant={subTab === "medical" ? "default" : "ghost"} onClick={() => setSubTab("medical")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Medical</Button>
+                <Button variant={subTab === "fitness" ? "default" : "ghost"} onClick={() => setSubTab("fitness")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest">Fitness</Button>
               </div>
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
@@ -307,9 +339,9 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">
-               <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
-                <Button variant={subTab === "profile" ? "default" : "ghost"} onClick={() => setSubTab("profile")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Teacher Profile</Button>
-                <Button variant={subTab === "settings" ? "default" : "ghost"} onClick={() => setSubTab("settings")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Sync Settings</Button>
+               <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 shadow-inner">
+                <Button variant={subTab === "profile" ? "default" : "ghost"} onClick={() => setSubTab("profile")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Teacher Profile</Button>
+                <Button variant={subTab === "settings" ? "default" : "ghost"} onClick={() => setSubTab("settings")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest">Settings</Button>
               </div>
               {subTab === "profile" ? <SchoolRegistration store={schoolData} /> : <Settings language={language} setLanguage={setLanguage} />}
             </TabsContent>
