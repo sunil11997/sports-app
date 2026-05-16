@@ -43,7 +43,13 @@ const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], less
     lessonPlan: ["Introduction to Kabaddi", "Warm-up activities", "Skill demonstration", "Practice session", "Mini game", "Cool down"]
   },
   'Volleyball': {
-    skills: ["Serving", "Passing", "Setting", "Spiking", "Blocking"],
+    skills: [
+      "Target Serving Drill", "Partner Passing Drill", "Wall Setting Drill", 
+      "Toss and Spike Drill", "Blocking Jump Drill", "Digging Defense Drill", 
+      "Circle Passing Drill", "Serve Receive Drill", "3-Touch Drill", 
+      "Rotation Drill", "Transition Drill", "Game Simulation Drill", 
+      "Ladder Footwork Drill", "Shadow Movement Drill", "Reaction Ball Drill"
+    ],
     dailyPlan: ["Wall set practice", "Service consistency", "Digging drills", "Spike approach", "Team rotation"]
   },
   'Kho Kho': {
