@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -137,7 +138,7 @@ export function SportsDrills({ store, preselectedSport, defaultView = 'checklist
     } catch (error) {
       toast({ title: "Chat Error", description: "Failed to reach AI Coach.", variant: "destructive" });
     } finally {
-      setLoading(false);
+      setChatLoading(false);
     }
   };
 

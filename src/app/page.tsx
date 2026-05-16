@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -22,7 +23,8 @@ import {
   Target,
   Timer,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -68,6 +70,13 @@ const Settings = dynamic(() => import('@/components/features/Settings').then(mod
   ssr: false 
 });
 const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(mod => mod.SchoolRegistration), { 
+  ssr: false 
+});
+const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { 
+  ssr: false,
+  loading: () => <TableSkeleton /> 
+});
+const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(mod => mod.NotificationCenter), { 
   ssr: false 
 });
 
@@ -139,7 +148,7 @@ export default function WaghambaApp() {
              <Lottie animationData={splashAnim} loop={true} />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.1</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.3</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-blue-500 w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -288,6 +297,10 @@ export default function WaghambaApp() {
                   className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "attendance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
                 >Attendance</button>
                 <button 
+                  onClick={() => setSubTab("performance")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "performance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Performance</button>
+                <button 
                   onClick={() => setSubTab("fitness")} 
                   className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all", subTab === "fitness" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
                 >Fitness Tracking</button>
@@ -302,6 +315,7 @@ export default function WaghambaApp() {
               </div>
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
+              {subTab === "performance" && <History store={schoolData} section={selectedSection} />}
               {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}
               {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection} />}
               {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection} />}
@@ -314,11 +328,15 @@ export default function WaghambaApp() {
                   className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "profile" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
                 >Teacher Profile</button>
                 <button 
+                  onClick={() => setSubTab("alerts")} 
+                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "alerts" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                >Alert Hub</button>
+                <button 
                   onClick={() => setSubTab("settings")} 
                   className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "settings" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
                 >Settings</button>
               </div>
-              {subTab === "profile" ? <SchoolRegistration store={schoolData} /> : <Settings language={language} setLanguage={setLanguage} />}
+              {subTab === "profile" ? <SchoolRegistration store={schoolData} /> : subTab === "alerts" ? <NotificationCenter store={schoolData} /> : <Settings language={language} setLanguage={setLanguage} />}
             </TabsContent>
 
           </Tabs>
