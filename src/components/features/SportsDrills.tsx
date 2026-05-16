@@ -54,7 +54,13 @@ const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], less
     dailyPlan: ["Wall set practice", "Service consistency", "Digging drills", "Spike approach", "Team rotation"]
   },
   'Kho Kho': {
-    skills: ["Pole Dive", "Giving Kho", "Zig-Zag Running", "Dodging", "Pole Turning", "Fake Kho"],
+    skills: [
+      "Pole dive drill", "Zig-zag running drill", "Chase and tag drill", "Giving kho drill",
+      "Direction change drill", "Reaction speed drill", "Sitting position drill", "Dodging practice drill",
+      "Shuttle run drill", "Circle chase drill", "Speed endurance drill", "Agility ladder drill",
+      "Relay running drill", "Shadow practice drill", "Coordination drill", "Team strategy drill",
+      "Court movement drill", "Match simulation drill", "Warm-up running drill", "Fitness conditioning drill"
+    ],
     dailyPlan: ["Agility circuit", "Kho timing drills", "Pole turning speed", "Sudden turn practice"]
   },
   'Handball': {
