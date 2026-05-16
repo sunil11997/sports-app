@@ -73,7 +73,13 @@ const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], less
     dailyPlan: ["Shooting accuracy", "Fast break transitions", "Goalkeeper reflexes", "Defensive wall setup"]
   },
   'Athletics': {
-    skills: ["Block Start", "Baton Exchange", "Pacing", "Stamina"],
+    skills: [
+      "Sprint start drill", "Acceleration drill", "Shuttle run drill", "Relay baton exchange drill",
+      "Long jump take-off drill", "Sand pit landing drill", "High jump approach drill", "Scissor jump drill",
+      "Cone running drill", "Agility ladder drill", "Endurance running drill", "Interval running drill",
+      "Hurdle jump drill", "Reaction speed drill", "Skipping drill", "Bounding drill",
+      "Strength conditioning drill", "Flexibility stretching drill", "Warm-up running drill", "Fitness endurance drill"
+    ],
     dailyPlan: ["Warm-up jogging", "Interval sprints", "Reaction time drills", "Form correction"]
   }
 };

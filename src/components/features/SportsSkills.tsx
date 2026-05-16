@@ -39,7 +39,13 @@ const DETAILED_SKILLS: Record<string, string[]> = {
     'Team coordination', 'Speed running', 'Agility', 'Balance', 
     'Reaction speed', 'Court awareness', 'Communication'
   ],
-  'Athletics': ['Start Phase', 'Finish Sprint', 'Posture/Alignment', 'Breathing Rhythm'],
+  'Athletics': [
+    'Running', 'Sprinting', 'Long jump', 'High jump', 'Relay exchange', 
+    'Starting technique', 'Finishing technique', 'Hurdling', 'Throwing', 
+    'Endurance running', 'Speed', 'Agility', 'Balance', 'Coordination', 
+    'Flexibility', 'Stamina', 'Jumping technique', 'Arm action', 
+    'Breathing control', 'Body posture'
+  ],
 };
 
 export function SportsSkills({ store, section = 'sports', preselectedSport }: { store: any, section?: 'sports' | 'general', preselectedSport?: string }) {
@@ -58,7 +64,14 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
   const handleOpenEvaluation = (player: any, sport: string) => {
     const key = `${player.id}_${sport}`;
     const existingData = store.data.sportSkills[key] || {};
-    setLocalDetailedSkills(existingData.detailedSkills || {});
+    // Ensure scores stored as 0-100 are displayed as 0-10
+    const rawSkills = existingData.detailedSkills || {};
+    const normalized: Record<string, string> = {};
+    Object.keys(rawSkills).forEach(k => {
+      const val = parseFloat(rawSkills[k]);
+      normalized[k] = isNaN(val) ? '' : (val / 10).toString();
+    });
+    setLocalDetailedSkills(normalized);
     setEditingDetailedPlayer({ player, sport });
   };
 
@@ -67,20 +80,27 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
     const { player, sport } = editingDetailedPlayer;
     
     const skills = DETAILED_SKILLS[sport] || [];
-    let total = 0;
+    let totalScore = 0;
+    const skillsToSave: Record<string, string> = {};
+
     skills.forEach(s => {
-      total += parseFloat(localDetailedSkills[s]) || 0;
+      const val = parseFloat(localDetailedSkills[s]) || 0;
+      // Internally save as 0-100 for compatibility with other components
+      const normalized = Math.min(10, Math.max(0, val)) * 10;
+      skillsToSave[s] = normalized.toString();
+      totalScore += normalized;
     });
-    const aggregate = skills.length > 0 ? (total / skills.length).toFixed(1) : "0";
+
+    const aggregate = skills.length > 0 ? (totalScore / skills.length).toFixed(1) : "0";
 
     store.setSportSkill(player.id, sport, {
       score: aggregate,
-      detailedSkills: localDetailedSkills,
+      detailedSkills: skillsToSave,
       playerId: player.id,
       sportName: sport
     });
 
-    toast({ title: "Evaluation Archived", description: `Detailed moves for ${player.name} saved to registry.` });
+    toast({ title: "Evaluation Archived", description: `Technical moves for ${player.name} saved to registry.` });
     setEditingDetailedPlayer(null);
   };
 
@@ -134,7 +154,7 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
               ${filteredPlayers.map((p: any, i: number) => {
                 const s = store.data.sportSkills[`${p.id}_${sportName}`] || {};
                 const detailed = s.detailedSkills || {};
-                const skillCells = skills.map(skill => `<td>${detailed[skill] || '-'}</td>`).join('');
+                const skillCells = skills.map(skill => `<td>${detailed[skill] ? (parseFloat(detailed[skill])/10) : '-'}</td>`).join('');
                 return `<tr><td>${p.serialNumber || i+1}</td><td class="name-cell">${p.name.toUpperCase()}</td><td>${p.std}</td>${skillCells}<td><strong>${s.score || '0'}%</strong></td></tr>`;
               }).join('')}
             </tbody>
@@ -170,7 +190,7 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">{activeSport} Mastery</h2>
             <div className="flex items-center gap-3 mt-1">
               <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Institutional Scorecard</Badge>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Professional Standards</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> 10-Point Grading Active</span>
             </div>
           </div>
         </div>
@@ -265,14 +285,15 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
                     <div key={skill} className="space-y-3 bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all">
                       <div className="flex justify-between items-center px-1">
                         <Label className="text-[10px] font-black uppercase text-primary tracking-widest">{skill}</Label>
-                        <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 100</span>
+                        <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 10</span>
                       </div>
                       <Input 
                         type="number" 
                         min="0"
-                        max="100"
+                        max="10"
+                        step="0.1"
                         value={localDetailedSkills[skill] || ''} 
-                        placeholder="0-100"
+                        placeholder="0-10"
                         onChange={(e) => {
                           const val = e.target.value;
                           setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
