@@ -26,7 +26,12 @@ const DETAILED_SKILLS: Record<string, string[]> = {
     'Thigh hold', 'Waist hold', 'Chain tackle', 'Dash', 'Coordination', 
     'Footwork', 'Balance', 'Agility', 'Team communication', 'Defensive positioning'
   ],
-  'Kho Kho': ['Chasing', 'Running', 'Pole Turning', 'Diving', 'Kho Timing'],
+  'Kho Kho': [
+    'Sitting technique', 'Pole diving', 'Dodging', 'Zig-zag running', 'Giving kho', 
+    'Chasing', 'Direction change', 'Fake movement', 'Turning skills', 'Speed running', 
+    'Coordination', 'Balance', 'Agility', 'Reflex action', 'Team communication', 
+    'Court awareness', 'Defensive movement', 'Offensive movement'
+  ],
   'Handball': ['Shooting', 'Passing', 'Dribbling', 'Goalkeeping', 'Piston Movement'],
   'Athletics': ['Start Phase', 'Finish Sprint', 'Posture/Alignment', 'Breathing Rhythm'],
 };
