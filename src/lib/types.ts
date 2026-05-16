@@ -70,6 +70,16 @@ export interface FitnessAssessment {
   swadhyay?: string;     
 }
 
+export interface ExamLabels {
+  nirikshan: string;
+  tondikam: string;
+  pratyashike: string;
+  upkram: string;
+  prakalp: string;
+  chachani: string;
+  swadhyay: string;
+}
+
 export interface SportSkill {
   skill1: string;
   score1: string;

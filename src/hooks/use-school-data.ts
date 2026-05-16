@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { collection, doc, query, where, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@/firebase';
-import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile } from '@/lib/types';
+import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile, ExamLabels } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
@@ -34,6 +34,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [sportSkills, setSportSkillsData] = useState<Record<string, SportSkill>>({});
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [gameRules, setGameRulesData] = useState<Record<string, any>>({});
+  const [examConfigs, setExamConfigs] = useState<Record<string, ExamLabels>>({});
 
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || isSyncing) return;
@@ -187,12 +188,25 @@ export function useSchoolData(isActive: boolean = true) {
       setGameRulesData(rulesMap);
     });
 
+    const examConfigQuery = query(
+      collection(db, 'exam_configs'),
+      where('schoolId', '==', user.uid)
+    );
+    const unsubExamConfigs = onSnapshot(examConfigQuery, (snapshot) => {
+      const configMap: Record<string, ExamLabels> = {};
+      snapshot.docs.forEach(doc => {
+        configMap[doc.id] = doc.data().labels as ExamLabels;
+      });
+      setExamConfigs(configMap);
+    });
+
     return () => {
       window.removeEventListener('online', syncOfflineAttendance);
       unsubAtt();
       unsubFit();
       unsubSkills();
       unsubRules();
+      unsubExamConfigs();
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
@@ -237,6 +251,7 @@ export function useSchoolData(isActive: boolean = true) {
     skillsHistory,
     drillCompletions,
     gameRules,
+    examConfigs,
     healthIncidents: healthIncidents || [],
     activities: (activities || []).map((a: any) => ({ ...a, category: a.category || (a.std ? 'student' : 'athlete') })),
     schoolProfile: schoolProfile || {
@@ -249,7 +264,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: new Date().toISOString()
     }
-  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, schoolProfile]);
+  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, examConfigs, schoolProfile]);
 
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user || !db) return;
@@ -302,6 +317,13 @@ export function useSchoolData(isActive: boolean = true) {
     const fitnessRef = doc(db, 'fitness_registry', `${playerId}_${dateId}`);
     setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
   }, [db, user, selectedYear]);
+
+  const setExamLabels = useCallback((std: string, term: string, labels: ExamLabels) => {
+    if (!user || !db) return;
+    const configId = `${std}_${term}`;
+    const configRef = doc(db, 'exam_configs', configId);
+    setDocumentNonBlocking(configRef, { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
+  }, [db, user]);
 
   const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
     if (!user || !db) return;
@@ -358,6 +380,6 @@ export function useSchoolData(isActive: boolean = true) {
     setSelectedYear,
     pendingSyncCount: pendingCount,
     isSyncing,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setExamLabels, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance
   };
 }
