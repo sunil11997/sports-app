@@ -78,7 +78,7 @@
   }
 
   .google-card {
-    @apply bg-white rounded-[2rem] border-none shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.06)] hover:shadow-lg transition-shadow duration-300;
+    @apply bg-white rounded-[2.5rem] border-none shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.06)] hover:shadow-lg transition-shadow duration-300;
   }
 
   .ios-blur {

@@ -230,7 +230,7 @@ export default function WaghambaApp() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5 text-accent" /> Today&apos;s Practice</p>
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5 text-accent" /> Today's Practice</p>
                               <p className="text-2xl font-black uppercase tracking-tight">Kabaddi Drills</p>
                               <p className="text-sm font-bold text-white/60">16:30 • Main Ground</p>
                            </div>
@@ -435,8 +435,8 @@ export default function WaghambaApp() {
               <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Hub</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-display font-black text-primary tracking-tighter leading-tight uppercase">
-              {language === 'Marathi' ? "शासकीय माध्यमिक" : "ASHRAM SHALA"}<br/>
-              <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "WAGHAMBA HUB"}</span>
+              {language === 'Marathi' ? "शासकीय माध्यमिक" : "आश्रम शाळा"}<br/>
+              <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "वाघंबा स्पोर्ट्स हब"}</span>
             </h1>
           </div>
         </div>
