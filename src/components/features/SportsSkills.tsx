@@ -16,7 +16,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const sportsList = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
 const DETAILED_SKILLS: Record<string, string[]> = {
-  'Volleyball': ['Serving', 'Passing', 'Setting', 'Spiking', 'Blocking'],
+  'Volleyball': [
+    'Serving', 'Passing', 'Setting', 'Spiking', 'Blocking', 
+    'Digging', 'Footwork', 'Rolling', 'Communication', 'Court positioning'
+  ],
   'Kabaddi': [
     'Cant (Raiding)', 'Toe Touch', 'Hand Touch', 'Running Hand Touch', 
     'Side Kick', 'Mule Kick', 'Back Kick', 'Dubki', 'Escape Skills', 'Bonus Line Skill',
