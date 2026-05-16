@@ -38,6 +38,9 @@ const Lottie = NextDynamic(() => import('lottie-react'), { ssr: false });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
+const History = NextDynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
+const HealthIncidents = NextDynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
+const Fitness = NextDynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { ssr: false, loading: () => <TableSkeleton /> });
 const GameHub = NextDynamic(() => import('@/components/features/GameHub').then(mod => mod.GameHub), { ssr: false, loading: () => <TableSkeleton /> });
 const DailyReport = NextDynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
 const Settings = NextDynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
@@ -273,11 +276,17 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
-                <Button variant={subTab === "attendance" ? "default" : "ghost"} onClick={() => setSubTab("attendance")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Attendance</Button>
-                <Button variant={subTab === "report" ? "default" : "ghost"} onClick={() => setSubTab("report")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Daily Report</Button>
+              <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6 overflow-x-auto scrollbar-hide max-w-full">
+                <Button variant={subTab === "attendance" ? "default" : "ghost"} onClick={() => setSubTab("attendance")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Attendance</Button>
+                <Button variant={subTab === "performance" ? "default" : "ghost"} onClick={() => setSubTab("performance")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Performance</Button>
+                <Button variant={subTab === "medical" ? "default" : "ghost"} onClick={() => setSubTab("medical")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Medical Reports</Button>
+                <Button variant={subTab === "fitness" ? "default" : "ghost"} onClick={() => setSubTab("fitness")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] whitespace-nowrap">Fitness Tracking</Button>
               </div>
-              {subTab === "attendance" ? <Attendance store={schoolData} section={selectedSection} /> : <DailyReport store={schoolData} section={selectedSection} />}
+              
+              {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
+              {subTab === "performance" && <History store={schoolData} section={selectedSection} />}
+              {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection} />}
+              {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}
             </TabsContent>
 
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">
@@ -294,7 +303,7 @@ export default function WaghambaApp() {
         <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
           <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
             {sportsTabs.map((tab) => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : 'skills'); }} data-active={activeTab === tab.id} className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}>
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'students' ? 'attendance' : 'skills'); }} data-active={activeTab === tab.id} className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}>
                 <div className={cn("google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all", activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted")}>
                   <tab.icon className="w-6 h-6" />
                 </div>
