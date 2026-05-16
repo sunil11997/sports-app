@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import NextDynamic from 'next/dynamic';
+import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -12,9 +12,7 @@ import {
   Trophy, 
   UsersRound, 
   UserCircle,
-  ClipboardList,
   Activity,
-  User,
   School,
   ArrowRight,
   Flame,
@@ -36,19 +34,48 @@ import { StatsSkeleton, TableSkeleton } from '@/components/ui/loading-skeletons'
 import splashAnim from './lib/splash-animation.json';
 
 // Lottie is browser-only and must be wrapped for SSR stability
-const Lottie = NextDynamic(() => import('lottie-react'), { ssr: false });
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
-// Feature Components
-const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
-const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
-const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
-const History = NextDynamic(() => import('@/components/features/History').then(mod => mod.History), { ssr: false, loading: () => <TableSkeleton /> });
-const HealthIncidents = NextDynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { ssr: false, loading: () => <TableSkeleton /> });
-const Fitness = NextDynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { ssr: false, loading: () => <TableSkeleton /> });
-const GameHub = NextDynamic(() => import('@/components/features/GameHub').then(mod => mod.GameHub), { ssr: false, loading: () => <TableSkeleton /> });
-const DailyReport = NextDynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
-const Settings = NextDynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
-const SchoolRegistration = NextDynamic(() => import('@/components/features/SchoolRegistration').then(mod => mod.SchoolRegistration), { ssr: false });
+// Dynamically Imported Feature Components
+const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const GameHub = dynamic(() => import('@/components/features/GameHub').then(mod => mod.GameHub), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { 
+  ssr: false, 
+  loading: () => <TableSkeleton /> 
+});
+const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
+  ssr: false, 
+  loading: () => <StatsSkeleton /> 
+});
+const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(mod => mod.SchoolRegistration), { 
+  ssr: false 
+});
 
 const translations = {
   English: {
@@ -150,7 +177,7 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border shrink-0 flex items-center justify-center relative">
+              <div className="relative rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border shrink-0 flex items-center justify-center">
                 <Image src={LOGO_PATH} alt="Logo" width={36} height={36} unoptimized className="object-cover" priority />
               </div>
               <h1 className="text-base font-display font-black uppercase text-primary leading-none tracking-tight">
@@ -371,7 +398,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0 flex items-center justify-center relative">
+            <div className="relative w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden shrink-0 flex items-center justify-center">
               <Image src={LOGO_PATH} alt="Logo" width={64} height={64} unoptimized className="object-cover" priority />
             </div>
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
@@ -399,7 +426,7 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden relative">
+          <div className="relative w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden">
             <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover" priority />
           </div>
           <div className="space-y-4">
