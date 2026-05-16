@@ -38,9 +38,7 @@ const Lottie = NextDynamic(() => import('lottie-react'), { ssr: false });
 const Dashboard = NextDynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { ssr: false, loading: () => <TableSkeleton /> });
 const Registration = NextDynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { ssr: false, loading: () => <TableSkeleton /> });
 const Attendance = NextDynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { ssr: false, loading: () => <TableSkeleton /> });
-const Fitness = NextDynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { ssr: false, loading: () => <TableSkeleton /> });
-const SportsSkills = NextDynamic(() => import('@/components/features/SportsSkills').then(mod => mod.SportsSkills), { ssr: false, loading: () => <TableSkeleton /> });
-const SportsDrills = NextDynamic(() => import('@/components/features/SportsDrills').then(mod => mod.SportsDrills), { ssr: false, loading: () => <TableSkeleton /> });
+const GameHub = NextDynamic(() => import('@/components/features/GameHub').then(mod => mod.GameHub), { ssr: false, loading: () => <TableSkeleton /> });
 const DailyReport = NextDynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { ssr: false, loading: () => <TableSkeleton /> });
 const Settings = NextDynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { ssr: false, loading: () => <StatsSkeleton /> });
 const SchoolRegistration = NextDynamic(() => import('@/components/features/SchoolRegistration').then(mod => mod.SchoolRegistration), { ssr: false });
@@ -106,7 +104,7 @@ export default function WaghambaApp() {
 
   const topPerformers = useMemo(() => {
     if (selectedSection !== 'sports' || !schoolData.data.players) return [];
-    const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+    const sports = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
     return sports.map(sport => {
       const athletesInSport = schoolData.data.players.filter(p => p.category === 'athlete' && p.sports?.includes(sport));
       let topPlayer: any = null;
@@ -169,7 +167,6 @@ export default function WaghambaApp() {
         <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             
-            {/* TAB 1: HOME (Dashboard Purpose) */}
             <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
               <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
                 <Button variant={subTab === "overview" ? "default" : "ghost"} onClick={() => setSubTab("overview")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Overview</Button>
@@ -271,16 +268,10 @@ export default function WaghambaApp() {
               {subTab === "enroll" && <Registration store={schoolData} section={selectedSection} language={language} />}
             </TabsContent>
 
-            {/* TAB 2: SPORT (All games and drills) */}
             <TabsContent value="sport" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
-                <Button variant={subTab === "skills" ? "default" : "ghost"} onClick={() => setSubTab("skills")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Technical Mastery</Button>
-                <Button variant={subTab === "drills" ? "default" : "ghost"} onClick={() => setSubTab("drills")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Drills & Plans</Button>
-              </div>
-              {subTab === "skills" ? <SportsSkills store={schoolData} section={selectedSection} /> : <SportsDrills store={schoolData} />}
+              <GameHub store={schoolData} />
             </TabsContent>
 
-            {/* TAB 3: STUDENTS (Attendance and report) */}
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
               <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
                 <Button variant={subTab === "attendance" ? "default" : "ghost"} onClick={() => setSubTab("attendance")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Attendance</Button>
@@ -289,7 +280,6 @@ export default function WaghambaApp() {
               {subTab === "attendance" ? <Attendance store={schoolData} section={selectedSection} /> : <DailyReport store={schoolData} section={selectedSection} />}
             </TabsContent>
 
-            {/* TAB 4: PROFILE (Setting and teacher profile) */}
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">
                <div className="flex bg-muted/40 p-1 rounded-2xl border w-fit mb-6">
                 <Button variant={subTab === "profile" ? "default" : "ghost"} onClick={() => setSubTab("profile")} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">Teacher Profile</Button>
@@ -304,7 +294,7 @@ export default function WaghambaApp() {
         <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50 overflow-x-auto scrollbar-hide">
           <div className="h-full flex items-center justify-start md:justify-center gap-4 px-6 min-w-max">
             {sportsTabs.map((tab) => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'sport' ? 'skills' : tab.id === 'students' ? 'attendance' : 'profile'); }} data-active={activeTab === tab.id} className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}>
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : 'skills'); }} data-active={activeTab === tab.id} className={cn("google-nav-item min-w-[80px] md:min-w-[100px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}>
                 <div className={cn("google-nav-icon w-14 h-8 flex items-center justify-center rounded-full transition-all", activeTab === tab.id ? "bg-primary/10 text-primary" : "hover:bg-muted")}>
                   <tab.icon className="w-6 h-6" />
                 </div>

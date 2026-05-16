@@ -53,7 +53,7 @@ const SPORTS_DATA: Record<string, { skills: string[], dailyPlan?: string[], less
     skills: ["Dribbling", "Passing", "Shooting", "Goalkeeping", "Jump Shot", "Piston Movement"],
     dailyPlan: ["Shooting accuracy", "Fast break transitions", "Goalkeeper reflexes", "Defensive wall setup"]
   },
-  'Running': {
+  'Athletics': {
     skills: ["Block Start", "Baton Exchange", "Pacing", "Stamina"],
     dailyPlan: ["Warm-up jogging", "Interval sprints", "Reaction time drills", "Form correction"]
   }
@@ -64,14 +64,17 @@ interface ChatMessage {
   content: string;
 }
 
-export function SportsDrills({ store }: { store: any }) {
+export function SportsDrills({ store, preselectedSport, defaultView = 'checklist' }: { store: any, preselectedSport?: string, defaultView?: 'checklist' | 'plans' }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
-  const [activeSport, setActiveSport] = useState('Kabaddi');
+  const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
-  // Chat States
+  useEffect(() => {
+    if (preselectedSport) setActiveSport(preselectedSport);
+  }, [preselectedSport]);
+
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -134,7 +137,7 @@ export function SportsDrills({ store }: { store: any }) {
     } catch (error) {
       toast({ title: "Chat Error", description: "Failed to reach AI Coach.", variant: "destructive" });
     } finally {
-      setChatLoading(false);
+      setLoading(false);
     }
   };
 
@@ -145,40 +148,53 @@ export function SportsDrills({ store }: { store: any }) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="flex-1 space-y-2">
-            <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <PlayCircle className="w-10 h-10 text-accent" /> PE Drills Hub
-            </h2>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline" className="text-primary font-black uppercase text-[10px] tracking-widest bg-white">
-                <ShieldCheck className="w-3 h-3 mr-1.5" /> Institutional Coaching
-              </Badge>
+      {!preselectedSport && (
+        <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex-1 space-y-2">
+              <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
+                <PlayCircle className="w-10 h-10 text-accent" /> PE Drills Hub
+              </h2>
+              <div className="flex items-center gap-4">
+                <Badge variant="outline" className="text-primary font-black uppercase text-[10px] tracking-widest bg-white">
+                  <ShieldCheck className="w-3 h-3 mr-1.5" /> Institutional Coaching
+                </Badge>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full lg:w-auto">
+              <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); setSelectedPlayerId(""); setChatHistory([]); }}>
+                <SelectTrigger className="h-14 rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+              <Select value={selectedPlayerId} onValueChange={(v) => { setSelectedPlayerId(v); setChatHistory([]); }}>
+                <SelectTrigger className="h-14 rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue placeholder="Identify Athlete" /></SelectTrigger>
+                <SelectContent>{playersInSport.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>)}</SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full lg:w-auto">
-            <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); setSelectedPlayerId(""); setChatHistory([]); }}>
-              <SelectTrigger className="h-14 rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-            <Select value={selectedPlayerId} onValueChange={(v) => { setSelectedPlayerId(v); setChatHistory([]); }}>
-              <SelectTrigger className="h-14 rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue placeholder="Identify Athlete" /></SelectTrigger>
-              <SelectContent>{playersInSport.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
         </div>
-      </div>
+      )}
+
+      {preselectedSport && (
+        <div className="flex justify-center mb-4">
+           <div className="w-full max-w-md">
+             <Select value={selectedPlayerId} onValueChange={(v) => { setSelectedPlayerId(v); setChatHistory([]); }}>
+               <SelectTrigger className="h-14 rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-xl"><SelectValue placeholder="Pick Athlete for this Session" /></SelectTrigger>
+               <SelectContent>{playersInSport.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>)}</SelectContent>
+             </Select>
+           </div>
+        </div>
+      )}
 
       {!selectedPlayerId ? (
         <Card className="border-dashed border-4 p-24 flex flex-col items-center opacity-30 rounded-[3rem] bg-white/50">
           <User className="w-16 h-16 mb-4 text-primary" />
-          <p className="text-xl font-black uppercase tracking-[0.2em] text-primary">Identify an athlete to access practice deck</p>
+          <p className="text-xl font-black uppercase tracking-[0.2em] text-primary text-center">Identify an athlete to access practice deck</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-8">
-            <Tabs defaultValue="checklist" className="space-y-6">
+            <Tabs defaultValue={defaultView} className="space-y-6">
               <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner inline-flex">
                 <TabsTrigger value="checklist" className="rounded-full px-8 py-3 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Skills & Drills</TabsTrigger>
                 <TabsTrigger value="plans" className="rounded-full px-8 py-3 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Practice Plans</TabsTrigger>

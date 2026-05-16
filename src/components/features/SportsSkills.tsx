@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-const sportsList = ['Volleyball', 'Kabaddi', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+const sportsList = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
 const DETAILED_SKILLS: Record<string, string[]> = {
   'Volleyball': ['Serving', 'Passing', 'Setting', 'Spiking', 'Blocking'],
@@ -25,18 +25,18 @@ const DETAILED_SKILLS: Record<string, string[]> = {
   ],
   'Kho Kho': ['Chasing', 'Running', 'Pole Turning', 'Diving', 'Kho Timing'],
   'Handball': ['Shooting', 'Passing', 'Dribbling', 'Goalkeeping', 'Piston Movement'],
-  'Running': ['Start', 'Finish', 'Posture', 'Breathing'],
-  'Shot Put': ['Grip', 'Glide', 'Release', 'Follow-through'],
-  'Javline': ['Grip', 'Approach', 'Release', 'Arch'],
-  'Long Jump': ['Approach', 'Take-off', 'Flight', 'Landing'],
-  'High Jump': ['Approach', 'Take-off', 'Arch', 'Clearance']
+  'Athletics': ['Start Phase', 'Finish Sprint', 'Posture/Alignment', 'Breathing Rhythm'],
 };
 
-export function SportsSkills({ store, section = 'sports' }: { store: any, section?: 'sports' | 'general' }) {
+export function SportsSkills({ store, section = 'sports', preselectedSport }: { store: any, section?: 'sports' | 'general', preselectedSport?: string }) {
   const { toast } = useToast();
-  const [activeSport, setActiveSport] = useState(sportsList[0]);
+  const [activeSport, setActiveSport] = useState(preselectedSport || sportsList[0]);
   const [localDetailedSkills, setLocalDetailedSkills] = useState<Record<string, string>>({});
   const [editingDetailedPlayer, setEditingDetailedPlayer] = useState<{player: any, sport: string} | null>(null);
+
+  useEffect(() => {
+    if (preselectedSport) setActiveSport(preselectedSport);
+  }, [preselectedSport]);
 
   const isGeneral = section === 'general';
   const targetCategory = isGeneral ? 'student' : 'athlete';
@@ -146,14 +146,14 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
   }, [store.data.players, targetCategory, isGeneral, activeSport]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-[3rem] border-2 shadow-xl gap-6">
         <div className="flex items-center gap-6">
           <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center border-2 border-accent/20">
             <Trophy className="w-8 h-8 text-accent animate-pulse" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Technical Mastery</h2>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">{activeSport} Mastery</h2>
             <div className="flex items-center gap-3 mt-1">
               <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Institutional Scorecard</Badge>
               <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Professional Standards</span>
@@ -165,7 +165,7 @@ export function SportsSkills({ store, section = 'sports' }: { store: any, sectio
         </Button>
       </div>
       
-      {!isGeneral && (
+      {!isGeneral && !preselectedSport && (
         <div className="flex flex-wrap gap-2 p-2 bg-muted/40 rounded-[2rem] border-2 shadow-inner overflow-x-auto scrollbar-hide">
           {sportsList.map(sport => (
             <Button 

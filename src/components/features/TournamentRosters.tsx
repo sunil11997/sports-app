@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Printer, Users, Target, Star, Medal } from 'lucide-react';
 import { format } from 'date-fns';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
-export function TournamentRosters({ store }: { store: any }) {
-  const [selectedSport, setSelectedSport] = useState(SPORTS_LIST[0]);
+export function TournamentRosters({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
+  const [selectedSport, setSelectedSport] = useState(preselectedSport || SPORTS_LIST[0]);
+
+  useEffect(() => {
+    if (preselectedSport) setSelectedSport(preselectedSport);
+  }, [preselectedSport]);
 
   const getCategory = (p: any) => {
     const age = parseInt(p.age) || 0;
@@ -113,26 +117,28 @@ export function TournamentRosters({ store }: { store: any }) {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
-      <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="flex items-center gap-6">
-          <div className="bg-white p-4 rounded-[1.5rem] border-2 border-primary/10 shadow-inner">
-            <Medal className="w-10 h-10 text-primary" />
+    <div className="space-y-6">
+      {!preselectedSport && (
+        <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="bg-white p-4 rounded-[1.5rem] border-2 border-primary/10 shadow-inner">
+              <Medal className="w-10 h-10 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Tournament Selection</h2>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Institutional Squad Generation</p>
+            </div>
           </div>
-          <div className="space-y-1">
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Tournament Selection</h2>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Institutional Squad Generation</p>
+          
+          <div className="w-full md:w-80 space-y-2">
+            <label className="text-[10px] font-black text-primary uppercase ml-2">Select Discipline</label>
+            <Select value={selectedSport} onValueChange={setSelectedSport}>
+              <SelectTrigger className="h-14 text-lg font-black bg-white rounded-2xl border-2 border-primary/20 shadow-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>{SPORTS_LIST.map(sport => <SelectItem key={sport} value={sport}>{sport}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
         </div>
-        
-        <div className="w-full md:w-80 space-y-2">
-          <label className="text-[10px] font-black text-primary uppercase ml-2">Select Discipline</label>
-          <Select value={selectedSport} onValueChange={setSelectedSport}>
-            <SelectTrigger className="h-14 text-lg font-black bg-white rounded-2xl border-2 border-primary/20 shadow-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>{SPORTS_LIST.map(sport => <SelectItem key={sport} value={sport}>{sport}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {categories.map(cat => (
