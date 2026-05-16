@@ -15,12 +15,10 @@ import {
   BookOpen, 
   Clock, 
   ClipboardCheck, 
-  History, 
   Loader2, 
   User, 
   PlayCircle, 
   ShieldCheck,
-  MessageSquare,
   Send,
   Bot,
   Sparkles,
@@ -151,11 +149,11 @@ export function SportsDrills({ store }: { store: any }) {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="flex-1 space-y-2">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <PlayCircle className="w-10 h-10 text-accent" /> PE Drills & Practice
+              <PlayCircle className="w-10 h-10 text-accent" /> PE Drills Hub
             </h2>
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="text-primary font-black uppercase text-[10px] tracking-widest bg-white">
-                <ShieldCheck className="w-3 h-3 mr-1.5" /> Institutional Coaching Hub
+                <ShieldCheck className="w-3 h-3 mr-1.5" /> Institutional Coaching
               </Badge>
             </div>
           </div>
