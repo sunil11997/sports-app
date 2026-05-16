@@ -19,7 +19,8 @@ import {
   Zap,
   PlayCircle,
   Stethoscope,
-  FileText
+  FileText,
+  Activity
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
@@ -67,14 +68,18 @@ export function GameHub({ store }: { store: any }) {
 
         <Tabs defaultValue="skills" className="space-y-8">
           <div className="flex items-center justify-center">
-            <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner overflow-x-auto scrollbar-hide max-w-full">
+            <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner overflow-x-auto scrollbar-hide max-w-full gap-1">
               <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
               <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
               <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Practice Plan</TabsTrigger>
               <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
-              <TabsTrigger value="health" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap">Health</TabsTrigger>
-              <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap">Reports</TabsTrigger>
+              <TabsTrigger value="health" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <Stethoscope className="w-3 h-3" /> Health
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <Activity className="w-3 h-3" /> Auto Reports
+              </TabsTrigger>
             </TabsList>
           </div>
 

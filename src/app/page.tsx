@@ -25,7 +25,13 @@ import {
   Zap,
   ChevronRight,
   Bell,
-  ClipboardList
+  ClipboardList,
+  GraduationCap,
+  FileText,
+  ArrowUpCircle,
+  Stethoscope,
+  BarChart3,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -304,43 +310,54 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="relative group/scroll">
-                <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
-                  <button 
-                    onClick={() => setSubTab("attendance")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "attendance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Attendance</button>
-                  <button 
-                    onClick={() => setSubTab("performance")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "performance" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Performance</button>
-                  <button 
-                    onClick={() => setSubTab("fitness")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "fitness" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Fitness Tracking</button>
-                  <button 
-                    onClick={() => setSubTab("exams")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "exams" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Exam Hub</button>
-                  <button 
-                    onClick={() => setSubTab("classes")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "classes" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Classes Hub</button>
-                  <button 
-                    onClick={() => setSubTab("promotion")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "promotion" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Promotion Hub</button>
-                  <button 
-                    onClick={() => setSubTab("medical")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "medical" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Medical Reports</button>
-                  <button 
-                    onClick={() => setSubTab("reports")} 
-                    className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0", subTab === "reports" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                  >Daily Reports</button>
+              {/* High Visibility Sub-Navigation Grid if no subTab is active, or a bar if one is active */}
+              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" ? (
+                <div className="relative group/scroll">
+                  <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
+                    {[
+                      { id: "attendance", label: "Attendance", icon: CalendarDays },
+                      { id: "performance", label: "Performance", icon: BarChart3 },
+                      { id: "fitness", label: "Fitness Tracking", icon: Activity },
+                      { id: "exams", label: "Exam Hub", icon: FileText },
+                      { id: "classes", label: "Classes Hub", icon: GraduationCap },
+                      { id: "promotion", label: "Promotion Hub", icon: ArrowUpCircle },
+                      { id: "medical", label: "Medical Logs", icon: Stethoscope },
+                      { id: "reports", label: "Daily Reports", icon: ClipboardList }
+                    ].map(item => (
+                      <button 
+                        key={item.id}
+                        onClick={() => setSubTab(item.id)} 
+                        className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0 flex items-center gap-2", subTab === item.id ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
+                      >
+                        <item.icon className="w-3.5 h-3.5" /> {item.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="absolute right-0 top-0 bottom-6 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
                 </div>
-                <div className="absolute right-0 top-0 bottom-6 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                   {[
+                      { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
+                      { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart3, color: "bg-indigo-500" },
+                      { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
+                      { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
+                      { id: "classes", label: "Classes Registry", desc: "Standard wise data", icon: GraduationCap, color: "bg-purple-500" },
+                      { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: ArrowUpCircle, color: "bg-rose-500" },
+                      { id: "medical", label: "Medical & Health", desc: "Incident logging", icon: Stethoscope, color: "bg-red-500" },
+                      { id: "reports", label: "Daily Briefings", desc: "Archival summaries", icon: ClipboardList, color: "bg-slate-700" }
+                    ].map(item => (
+                      <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
+                          <item.icon className="w-7 h-7" />
+                        </div>
+                        <h3 className="text-xl font-black text-primary uppercase tracking-tight">{item.label}</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{item.desc}</p>
+                        <ChevronRight className="absolute bottom-8 right-8 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+                      </Card>
+                    ))}
+                </div>
+              )}
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
               {subTab === "performance" && <History store={schoolData} section={selectedSection} />}
@@ -378,7 +395,7 @@ export default function WaghambaApp() {
             {sportsTabs.map((tab) => (
               <button 
                 key={tab.id} 
-                onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'students' ? 'attendance' : 'profile'); }} 
+                onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'students' ? 'all' : 'profile'); }} 
                 data-active={activeTab === tab.id} 
                 className={cn("google-nav-item min-w-[70px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}
               >
