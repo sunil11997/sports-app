@@ -21,10 +21,10 @@ const DETAILED_SKILLS: Record<string, string[]> = {
     'Digging', 'Footwork', 'Rolling', 'Communication', 'Court positioning'
   ],
   'Kabaddi': [
-    'Cant (Raiding)', 'Toe Touch', 'Hand Touch', 'Running Hand Touch', 
-    'Side Kick', 'Mule Kick', 'Back Kick', 'Dubki', 'Escape Skills', 'Bonus Line Skill',
-    'Ankle Hold', 'Thigh Hold', 'Waist Hold', 'Block', 'Dash', 'Chain Formation', 
-    'Corner Play', 'Cover Positioning'
+    'Raiding', 'Cant (Kabaddi chanting)', 'Hand touch', 'Toe touch', 'Kick', 
+    'Dubki', 'Running hand touch', 'Escape skills', 'Blocking', 'Ankle hold', 
+    'Thigh hold', 'Waist hold', 'Chain tackle', 'Dash', 'Coordination', 
+    'Footwork', 'Balance', 'Agility', 'Team communication', 'Defensive positioning'
   ],
   'Kho Kho': ['Chasing', 'Running', 'Pole Turning', 'Diving', 'Kho Timing'],
   'Handball': ['Shooting', 'Passing', 'Dribbling', 'Goalkeeping', 'Piston Movement'],
