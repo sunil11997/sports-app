@@ -36,7 +36,6 @@ import {
   Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
@@ -130,6 +129,7 @@ export default function WaghambaApp() {
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [subTab, setSubTab] = useState<string>("overview");
   const [todayFormatted, setTodayFormatted] = useState("");
+  const [headerDate, setHeaderDate] = useState("");
   
   const schoolData = useSchoolData(stage === 'hub' && isMounted);
   const { user, isUserLoading } = useUser();
@@ -138,6 +138,7 @@ export default function WaghambaApp() {
   useEffect(() => {
     setIsMounted(true);
     setTodayFormatted(format(new Date(), 'EEEE, do MMMM yyyy'));
+    setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     const timer = setTimeout(() => setShowSplash(false), 2500);
     return () => clearTimeout(timer);
   }, []);
@@ -214,10 +215,10 @@ export default function WaghambaApp() {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <Select value={schoolData.selectedYear} onValueChange={schoolData.setSelectedYear}>
-                <SelectTrigger className="h-8 border bg-white font-black uppercase text-[9px] w-[90px] rounded-full"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="2024-25">2024-25</SelectItem><SelectItem value="2023-24">2023-24</SelectItem></SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
+                <CalendarDays className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[10px] font-black text-primary uppercase whitespace-nowrap tracking-widest">{headerDate}</span>
+              </div>
               <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary hover:bg-primary/5">
                 <Menu className="w-5 h-5" />
               </Button>
