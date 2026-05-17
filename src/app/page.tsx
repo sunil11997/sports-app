@@ -39,10 +39,6 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import splashAnim from './lib/splash-animation.json';
-
-// Lottie is browser-only and must be wrapped for SSR stability
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 // Dynamically Imported Feature Components
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
@@ -158,21 +154,26 @@ export default function WaghambaApp() {
 
   if (showSplash) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 z-[9999] fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
-        </div>
+      <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
         <div className="max-w-xs w-full text-center space-y-12 relative z-10">
-           <div className="w-56 h-56 mx-auto relative drop-shadow-[0_0_35px_rgba(59,130,246,0.5)]">
-             <Lottie animationData={splashAnim} loop={true} />
+           <div className="w-64 h-64 mx-auto relative drop-shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-in zoom-in duration-700">
+             <Image 
+               src={LOGO_PATH} 
+               alt="Institutional Logo" 
+               fill 
+               unoptimized 
+               className="object-contain" 
+               priority 
+             />
            </div>
            <div className="space-y-4">
              <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.4</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-                 <div className="h-full bg-blue-500 w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
+                 <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
                </div>
-               <p className="text-blue-400/60 text-[10px] font-display font-black uppercase tracking-[0.5em]">Synchronizing Registry</p>
+               <p className="text-white/40 text-[10px] font-display font-black uppercase tracking-[0.5em]">Synchronizing Registry</p>
              </div>
            </div>
         </div>
@@ -195,8 +196,8 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="relative rounded-full w-9 h-9 shadow-sm overflow-hidden bg-white border shrink-0 flex items-center justify-center">
-                <Image src={LOGO_PATH} alt="Logo" width={36} height={36} unoptimized className="object-cover" priority />
+              <div className="relative w-10 h-10 shrink-0 flex items-center justify-center">
+                <Image src={LOGO_PATH} alt="Logo" width={40} height={40} unoptimized className="object-contain" priority />
               </div>
               <h1 className="text-base font-display font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? "Sports Hub" : "Student Registry"}
@@ -415,8 +416,8 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div className="relative w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto border border-primary/5 active-scale mb-4 overflow-hidden flex items-center justify-center">
-              <Image src={LOGO_PATH} alt="Logo" width={64} height={64} unoptimized className="object-cover" priority />
+            <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              <Image src={LOGO_PATH} alt="Logo" width={80} height={80} unoptimized className="object-contain" priority />
             </div>
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
@@ -443,8 +444,8 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="relative w-32 h-32 bg-white rounded-full shadow-2xl mx-auto border-2 border-primary/10 flex items-center justify-center overflow-hidden">
-            <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover" priority />
+          <div className="relative w-40 h-40 mx-auto flex items-center justify-center overflow-hidden">
+            <Image src={LOGO_PATH} alt="Logo" width={160} height={160} unoptimized className="object-contain" priority />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">

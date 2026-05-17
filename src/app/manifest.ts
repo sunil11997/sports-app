@@ -4,6 +4,7 @@ import { MetadataRoute } from 'next'
 /**
  * Waghamba Sports Hub - PWA Manifest
  * Configured for Institutional Branding and Native Android Splash Screens.
+ * Using -icon41.png as the primary identity.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -12,15 +13,27 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',
-    background_color: '#1e3a8a', // Matching primary blue for native splash screen
+    background_color: '#1e3a8a', // Institutional Dark Blue
     theme_color: '#1e3a8a',
     orientation: 'portrait',
     icons: [
       {
         src: '/-icon41.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable'
+      },
+      {
+        src: '/-icon41.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable'
+      },
+      {
+        src: '/-icon41.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any'
       },
       {
         src: '/-icon41.png',
