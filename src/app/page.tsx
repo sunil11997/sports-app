@@ -141,7 +141,7 @@ export default function WaghambaApp() {
   }, [user, isUserLoading, auth, isMounted]);
 
   const t = translations[language];
-  const LOGO_PATH = "/-icon41.png";
+  const LOGO_PATH = "/icon-192.png";
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },

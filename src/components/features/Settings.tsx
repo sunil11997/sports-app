@@ -53,7 +53,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
   
-  const LOGO_INAPP = "/-icon41.png";
+  const LOGO_INAPP = "/icon-192.png";
 
   const handleManualExport = () => {
     schoolData.exportBackupData();
@@ -177,7 +177,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
-        {isInstallable && (
+        {isOnline && isInstallable && (
           <div className="bg-primary/5 border-2 border-primary/20 p-6 rounded-[2.5rem] shadow-lg animate-in zoom-in-95 duration-500">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-xl">

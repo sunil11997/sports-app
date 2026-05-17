@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * Updated to use -icon41.png as the primary identity for high-visibility Android installation.
+ * Updated to use icon-192.png as the primary identity for high-visibility Android installation.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -17,31 +17,31 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait',
     icons: [
       {
-        src: '/-icon41.png',
+        src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable'
       },
       {
-        src: '/-icon41.png',
+        src: '/icon-192.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable'
       },
       {
-        src: '/-icon41.png',
+        src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/-icon41.png',
+        src: '/icon-192.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/-icon41.png',
+        src: '/icon-192.png',
         sizes: '144x144',
         type: 'image/png',
         purpose: 'any'
