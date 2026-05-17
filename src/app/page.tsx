@@ -31,7 +31,9 @@ import {
   ArrowUpCircle,
   Stethoscope,
   BarChart3,
-  Search
+  Search,
+  Clock,
+  Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,6 +41,7 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { format } from 'date-fns';
 
 // Dynamically Imported Feature Components
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
@@ -94,6 +97,10 @@ const ClassesSection = dynamic(() => import('@/components/features/ClassesSectio
   ssr: false,
   loading: () => <TableSkeleton /> 
 });
+const SportsKnowledge = dynamic(() => import('@/components/features/SportsKnowledge').then(mod => mod.SportsKnowledge), { 
+  ssr: false,
+  loading: () => <TableSkeleton /> 
+});
 
 const translations = {
   English: {
@@ -122,6 +129,7 @@ export default function WaghambaApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [subTab, setSubTab] = useState<string>("overview");
+  const [todayFormatted, setTodayFormatted] = useState("");
   
   const schoolData = useSchoolData(stage === 'hub' && isMounted);
   const { user, isUserLoading } = useUser();
@@ -129,6 +137,7 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
+    setTodayFormatted(format(new Date(), 'EEEE, do MMMM yyyy'));
     const timer = setTimeout(() => setShowSplash(false), 2500);
     return () => clearTimeout(timer);
   }, []);
@@ -164,7 +173,7 @@ export default function WaghambaApp() {
                width={224}
                height={224}
                unoptimized 
-               className="object-cover w-full h-full" 
+               className="object-contain w-full h-full" 
                priority 
              />
            </div>
@@ -198,7 +207,7 @@ export default function WaghambaApp() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
               <div className="relative w-10 h-10 shrink-0 flex items-center justify-center bg-white rounded-full border shadow-sm overflow-hidden">
-                <Image src={LOGO_PATH} alt="Logo" width={40} height={40} unoptimized className="object-cover w-full h-full" priority />
+                <Image src={LOGO_PATH} alt="Logo" width={40} height={40} unoptimized className="object-contain w-full h-full" priority />
               </div>
               <h1 className="text-base font-display font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? "Sports Hub" : "Student Registry"}
@@ -236,7 +245,7 @@ export default function WaghambaApp() {
               </div>
 
               {subTab === "overview" && (
-                <div className="space-y-10">
+                <div className="space-y-12">
                   <Card className="rounded-[3.5rem] bg-primary p-12 text-white shadow-2xl relative overflow-hidden group border-none">
                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                       <div className="lg:col-span-7 space-y-8">
@@ -300,6 +309,25 @@ export default function WaghambaApp() {
                     </div>
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none" />
                   </Card>
+
+                  {/* New Today's Pulse Section */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-8 space-y-8">
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                            <Newspaper className="w-7 h-7 text-primary" />
+                            <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Pulse</h3>
+                         </div>
+                         <Badge className="bg-primary/5 text-primary border-primary/10 px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
+                           <CalendarDays className="w-3.5 h-3.5" /> {todayFormatted}
+                         </Badge>
+                      </div>
+                      <SportsKnowledge type="news" />
+                    </div>
+                    <div className="lg:col-span-4">
+                      <SportsKnowledge type="history" />
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -421,7 +449,7 @@ export default function WaghambaApp() {
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
             <div className="relative w-32 h-32 mx-auto mb-4 flex items-center justify-center bg-white rounded-full shadow-2xl border-4 border-primary/10 overflow-hidden">
-              <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-cover w-full h-full" priority />
+              <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-contain w-full h-full" priority />
             </div>
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
@@ -449,7 +477,7 @@ export default function WaghambaApp() {
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
           <div className="relative w-64 h-64 mx-auto flex items-center justify-center overflow-hidden bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-primary/5">
-            <Image src={LOGO_PATH} alt="Logo" width={256} height={256} unoptimized className="object-cover w-full h-full" priority />
+            <Image src={LOGO_PATH} alt="Logo" width={256} height={256} unoptimized className="object-contain w-full h-full" priority />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
