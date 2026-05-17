@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -24,14 +25,12 @@ import {
 import { usePWA } from "@/components/providers/pwa-provider";
 
 import {
-  CalendarCheck,
   ChevronLeft,
   ChevronRight,
   Printer,
   Sun,
   Moon,
   WifiOff,
-  RefreshCw,
   CloudSun,
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
@@ -56,18 +55,19 @@ const GENERAL_CATEGORIES = [
 
 export function Attendance({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [isMounted, setIsMounted] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
   const { isOnline } = usePWA();
 
   useEffect(() => {
     setIsMounted(true);
+    setCurrentDate(new Date());
   }, []);
 
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const days = isMounted ? eachDayOfInterval({ start: monthStart, end: monthEnd }) : [];
+  const monthStart = currentDate ? startOfMonth(currentDate) : null;
+  const monthEnd = currentDate ? endOfMonth(currentDate) : null;
+  const days = (isMounted && monthStart && monthEnd) ? eachDayOfInterval({ start: monthStart, end: monthEnd }) : [];
 
   const isGeneral = section === 'general';
   const categories = isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES;
@@ -108,6 +108,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   };
 
   const handlePrint = () => {
+    if (!currentDate) return;
     const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
     const sessionLabel = activeSession === 'Morning' ? 'Morning' : 'Evening';
     const printContent = `
@@ -127,7 +128,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             .name-cell { text-align: left; font-weight: bold; width: 120px; }
             
-            /* Mobile Print Controls */
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -243,13 +243,13 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-white p-1 rounded-lg border shadow-sm">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <span className="font-black text-primary uppercase text-[11px] min-w-[120px] text-center">
-              {format(currentDate, 'MMMM yyyy')}
+              {currentDate ? format(currentDate, 'MMMM yyyy') : 'Loading...'}
             </span>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>

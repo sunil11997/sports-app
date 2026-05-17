@@ -6,11 +6,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  ArrowUpCircle, 
+  CircleArrowUp, 
   Users, 
   ChevronRight, 
   GraduationCap, 
-  CheckCircle2,
+  CircleCheck,
   AlertCircle,
   Loader2
 } from 'lucide-react';
@@ -71,7 +71,7 @@ export function PromotionHub({ store, section }: { store: any, section: 'sports'
       <div className="bg-primary/5 p-10 rounded-[3rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
         <div className="relative z-10 space-y-4">
           <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
-            <ArrowUpCircle className="w-10 h-10 text-primary" />
+            <CircleArrowUp className="w-10 h-10 text-primary" />
           </div>
           <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Standard Promotion Hub</h2>
           <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto">
@@ -128,7 +128,7 @@ export function PromotionHub({ store, section }: { store: any, section: 'sports'
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      <ArrowUpCircle className="w-5 h-5 mr-2" /> 
+                      <CircleArrowUp className="w-5 h-5 mr-2" /> 
                       {isFinalStd ? "Mark as Graduated" : `Promote Standard`}
                     </>
                   )}
@@ -148,7 +148,7 @@ export function PromotionHub({ store, section }: { store: any, section: 'sports'
             This action is permanent and should only be performed at the start of a new term or year."
           </p>
           <div className="flex items-center justify-center gap-2 pt-6">
-             <CheckCircle2 className="w-5 h-5 text-primary" />
+             <CircleCheck className="w-5 h-5 text-primary" />
              <span className="text-[11px] font-black text-primary/60 uppercase tracking-[0.3em]">Registry Synchronized • V3.0 Hub</span>
           </div>
         </div>

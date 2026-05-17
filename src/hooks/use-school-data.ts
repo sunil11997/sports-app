@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -262,7 +263,7 @@ export function useSchoolData(isActive: boolean = true) {
       id: "default",
       qualification: "B.P.Ed / M.P.Ed",
       role: "Physical Education Director",
-      updatedAt: new Date().toISOString()
+      updatedAt: "2024-01-01T00:00:00.000Z"
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, examConfigs, schoolProfile]);
 

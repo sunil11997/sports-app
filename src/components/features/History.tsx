@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -5,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  BarChart3, 
+  BarChart, 
   Printer, 
   Stethoscope,
   TrendingUp,
@@ -15,7 +16,7 @@ import {
   Zap,
   Target,
   AlertCircle,
-  CheckCircle2,
+  CircleCheck,
   Calendar,
   History as HistoryIcon,
   Cake,
@@ -38,7 +39,7 @@ import {
   Area,
   Line,
   Legend,
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
   Cell,
   PieChart,
@@ -209,7 +210,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/10 shadow-lg">
         <div className="flex items-center gap-6">
           <div className="bg-white p-4 rounded-2xl border-2 border-primary/10 shadow-inner">
-            <BarChart3 className="w-10 h-10 text-primary" />
+            <BarChart className="w-10 h-10 text-primary" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Analytics</h2>
@@ -350,7 +351,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                     ) : (
                       <div className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={skillMasteryData}>
+                          <RechartsBarChart data={skillMasteryData}>
                             <XAxis dataKey="name" hide />
                             <Tooltip cursor={{ fill: 'transparent' }} />
                             <Bar dataKey="score" radius={[10, 10, 0, 0]}>
@@ -358,7 +359,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                                ))}
                             </Bar>
-                          </BarChart>
+                          </RechartsBarChart>
                         </ResponsiveContainer>
                         <div className="flex flex-wrap gap-2 justify-center mt-4">
                           {skillMasteryData.map((s, i) => (
@@ -375,7 +376,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
                <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-lg flex flex-col">
                   <CardHeader className="bg-emerald-50 border-b p-6">
                     <CardTitle className="text-[10px] font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" /> Attendance Consistency
+                      <CircleCheck className="w-4 h-4" /> Attendance Consistency
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-10 flex-1 flex flex-col items-center justify-center text-center space-y-6">
