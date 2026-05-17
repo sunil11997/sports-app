@@ -251,6 +251,7 @@ export function useSchoolData(isActive: boolean = true) {
     sportSkills,
     skillsHistory,
     drillCompletions,
+    drillCompletionsRaw: drillComps || [],
     gameRules,
     examConfigs,
     healthIncidents: healthIncidents || [],
@@ -265,7 +266,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, examConfigs, schoolProfile]);
+  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile]);
 
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user || !db) return;

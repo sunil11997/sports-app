@@ -61,7 +61,13 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
   }
 };
 
-export function SportsDrills({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
+interface SportsDrillsProps {
+  store: any;
+  preselectedSport?: string;
+  defaultView?: string;
+}
+
+export function SportsDrills({ store, preselectedSport, defaultView }: SportsDrillsProps) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
   const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi'].skills[0]);

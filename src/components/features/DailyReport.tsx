@@ -61,9 +61,9 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
   }, [store.data.fitness, reportDate, isMounted]);
 
   const drillsCompletedToday = useMemo(() => {
-    if (!isMounted || !reportDate) return [];
-    return Object.values(store.data.drillCompletions || {}).filter((d: any) => d.timestamp?.startsWith(reportDate));
-  }, [store.data.drillCompletions, reportDate, isMounted]);
+    if (!isMounted || !reportDate || !store.data.drillCompletionsRaw) return [];
+    return store.data.drillCompletionsRaw.filter((d: any) => d.timestamp?.startsWith(reportDate));
+  }, [store.data.drillCompletionsRaw, reportDate, isMounted]);
 
   const autoSummary = useMemo(() => {
     let summaryLines: string[] = [];
