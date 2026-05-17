@@ -167,7 +167,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
         <div className="max-w-xs w-full text-center space-y-12 relative z-10">
-           <div className="w-56 h-56 mx-auto relative bg-white rounded-full p-4 shadow-[0_0_80px_rgba(255,255,255,0.4)] animate-in zoom-in duration-700 flex items-center justify-center overflow-hidden">
+           <div className="w-56 h-56 mx-auto relative bg-white rounded-full p-2 shadow-[0_0_80px_rgba(255,255,255,0.4)] animate-in zoom-in duration-700 flex items-center justify-center overflow-hidden border-4 border-white/20">
              <Image 
                src={LOGO_PATH} 
                alt="Institutional Logo" 
