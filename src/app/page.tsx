@@ -145,7 +145,7 @@ export default function WaghambaApp() {
   }, [user, isUserLoading, auth, isMounted]);
 
   const t = translations[language];
-  const LOGO_PATH = "/icon-512.png";
+  const LOGO_PATH = "/-icon41.png";
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },
@@ -167,7 +167,7 @@ export default function WaghambaApp() {
              <Lottie animationData={splashAnim} loop={true} />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.3</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.4</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-blue-500 w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -310,7 +310,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              {/* High Visibility Sub-Navigation Grid if no subTab is active, or a bar if one is active */}
+              {/* Registry Selection Grid */}
               {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" ? (
                 <div className="relative group/scroll">
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
@@ -333,7 +333,6 @@ export default function WaghambaApp() {
                       </button>
                     ))}
                   </div>
-                  <div className="absolute right-0 top-0 bottom-6 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

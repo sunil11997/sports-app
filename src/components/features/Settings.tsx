@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -52,7 +53,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
   
-  const LOGO_INAPP = "/icon-512.png";
+  const LOGO_INAPP = "/-icon41.png";
 
   const handleManualExport = () => {
     schoolData.exportBackupData();
@@ -109,8 +110,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       });
     } catch (error: any) {
       console.error("Auth Action Error:", error.code, error.message);
-      let errorMessage = "Sync Error. Please try again.";
-      toast({ title: "Sync Error", description: errorMessage, variant: "destructive" });
+      toast({ title: "Sync Error", description: "Identity sync failed. Please check credentials.", variant: "destructive" });
     } finally {
       setIsSyncing(false);
     }
@@ -173,7 +173,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={80} height={80} unoptimized className="object-contain w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.1</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.4</p>
       </div>
 
       <div className="space-y-6">
@@ -194,7 +194,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </div>
         )}
 
-        {/* Teacher Registration Section */}
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <UserCheck className="w-3 h-3 text-primary" /> Institutional Profile
@@ -267,16 +266,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                     {isSyncing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : authMode === 'sync' ? <><UserPlus className="w-5 h-5 mr-2" /> Register & Sync Data</> : <><LogIn className="w-5 h-5 mr-2" /> Log In to Hub</>}
                   </Button>
                 </div>
-                
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-dashed" /></div>
-                  <div className="relative flex justify-center text-[8px] font-black uppercase"><span className="bg-white px-4 text-muted-foreground">OR USE GOOGLE</span></div>
-                </div>
-
-                <Button onClick={handleGoogleLogin} disabled={isSyncing} className="w-full h-14 rounded-2xl bg-white border-2 border-primary/10 text-primary hover:bg-primary/5 font-black uppercase text-[10px] tracking-widest shadow-md transition-all active-scale">
-                  {isSyncing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Globe className="w-5 h-5 mr-2" />}
-                  Sync with Google ID
-                </Button>
               </div>
             )}
           </div>
