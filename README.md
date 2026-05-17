@@ -1,16 +1,15 @@
 
-# शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub v3.4.0
+# शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub v3.7.0
 
-This is the comprehensive Sports & Institutional Management System for the Waghamba School, optimized for Android and Web.
+The definitive physical education and sports management platform for the Waghamba Institutional Registry.
 
-## Key Features in v3.4.0
-- **Editable Exam Registry**: Customize assessment labels (Oral, Practical, etc.) class-wise.
-- **Exhaustive Sports Deck**: 20+ technical drills and skills for Kabaddi, Volleyball, Kho Kho, Handball, and Athletics.
-- **Fully Automatic Reports**: Daily summaries that auto-record attendance, health, and drills.
-- **Institutional Notification Hub**: Push alerts for practice, tournaments, and attendance.
-- **10-Point Mastery Scoring**: Professional athletic evaluation system with percentage conversion.
-- **High-Visibility Registries**: Access all 8 student modules (Exams, Promotions, Classes, etc.) from a single grid.
-- **Server Resilience**: Optimized Next.js configuration to resolve OpenTelemetry dependency issues.
+## Key Features in v3.7.0
+- **14-Player Dual-Squad Session**: Automatically generates a 7-Female + 7-Male training squad for every technical drill with instant rotation.
+- **Geographic News Pulse**: Real-time sports intelligence sequenced specifically for Maharashtra, India, and World events.
+- **High-Resolution Branding**: Standardized icon-512.png across PWA installation, splash screens, and internal UI headers.
+- **Mastery Vault**: Archive technical proficiency and restore athletes to training queues with a single tap.
+- **Under-wise Priority**: Daily squads strictly prioritize lower-standard (younger) athletes for foundational training.
+- **Institutional Reports**: Automated daily briefings aggregating attendance, health alerts, and drill completions.
 
 ## Technology Stack
 - **Framework**: Next.js 15 (App Router)

@@ -173,7 +173,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.4.1</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.7.0</p>
       </div>
 
       <div className="space-y-6">
@@ -220,8 +220,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         ) : (
           <div className="bg-emerald-50 border-2 border-emerald-100 p-6 rounded-[2rem] flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-4">
-               <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <CheckCircle2 className="text-white w-6 h-6" />
+               <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center shadow-lg">
+                  <CheckCircle2 className="text-emerald-600 w-6 h-6" />
                </div>
                <div>
                   <p className="font-black text-emerald-900 uppercase text-sm">Cloud Sync Active</p>

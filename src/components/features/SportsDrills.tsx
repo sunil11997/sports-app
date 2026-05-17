@@ -82,7 +82,7 @@ export function SportsDrills({ store, preselectedSport }: { store: any, preselec
 
   const drillKey = `${activeSport}_${activeDrill}`;
 
-  // Logic: 7 Female Players who haven't mastered the drill
+  // Logic: 7 Female Players who haven't mastered the drill (Under-wise priority)
   const femaleSquad = useMemo(() => {
     return playersInSport
       .filter((p: any) => p.gender === 'Female' && !store.data.drillCompletions[`${p.id}_${drillKey}`])
@@ -90,7 +90,7 @@ export function SportsDrills({ store, preselectedSport }: { store: any, preselec
       .slice(0, 7);
   }, [playersInSport, drillKey, store.data.drillCompletions]);
 
-  // Logic: 7 Male Players who haven't mastered the drill
+  // Logic: 7 Male Players who haven't mastered the drill (Under-wise priority)
   const maleSquad = useMemo(() => {
     return playersInSport
       .filter((p: any) => p.gender === 'Male' && !store.data.drillCompletions[`${p.id}_${drillKey}`])
@@ -189,7 +189,7 @@ export function SportsDrills({ store, preselectedSport }: { store: any, preselec
         ))}
         {Array.from({ length: 7 - squad.length }).map((_, i) => (
           <div key={`empty-${i}`} className={cn("flex items-center justify-center p-4 rounded-2xl border-2 border-dashed opacity-20", emptyColor)}>
-             <span className="text-[8px] font-black uppercase tracking-widest">Slot Found</span>
+             <span className="text-[8px] font-black uppercase tracking-widest">Slot Available</span>
           </div>
         ))}
       </div>
@@ -233,7 +233,7 @@ export function SportsDrills({ store, preselectedSport }: { store: any, preselec
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
                   <ShieldCheck className="w-7 h-7 text-accent" /> Dual Squad Rotation
                 </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">7 Female + 7 Male Athletes • Under-wise Priority</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">7 Female + 7 Male Athletes • Under-wise Priority (v3.7)</p>
               </div>
               <Button onClick={handleNextDrill} className="bg-accent text-white font-black uppercase text-xs h-12 px-8 rounded-xl shadow-lg active-scale">
                 <RefreshCcw className="w-4 h-4 mr-2" /> Next Technical Skill
@@ -299,7 +299,7 @@ export function SportsDrills({ store, preselectedSport }: { store: any, preselec
                     <div key={p.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100 group">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white border overflow-hidden shadow-sm">
-                          <img src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.name}`} className="w-full h-full object-cover" />
+                          <img src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.name}`} className="w-full h-full object-cover" alt="Profile" />
                         </div>
                         <span className="text-[10px] font-black text-emerald-800 uppercase truncate max-w-[100px]">{p.name}</span>
                       </div>
