@@ -169,11 +169,11 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="text-center space-y-3 py-6">
-        <div className="w-24 h-24 rounded-full shadow-2xl overflow-hidden relative mx-auto mb-4 border-4 border-white bg-white flex items-center justify-center p-3">
-          <Image src={LOGO_INAPP} alt="Logo" width={72} height={72} unoptimized className="object-contain" />
+        <div className="w-24 h-24 rounded-full shadow-2xl overflow-hidden relative mx-auto mb-4 border-4 border-white bg-white flex items-center justify-center p-0">
+          <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.4</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.4.1</p>
       </div>
 
       <div className="space-y-6">
