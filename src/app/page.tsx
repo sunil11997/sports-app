@@ -157,11 +157,12 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
         <div className="max-w-xs w-full text-center space-y-12 relative z-10">
-           <div className="w-72 h-72 mx-auto relative drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] animate-in zoom-in duration-700">
+           <div className="w-64 h-64 mx-auto relative bg-white rounded-full p-8 shadow-[0_0_80px_rgba(255,255,255,0.4)] animate-in zoom-in duration-700 flex items-center justify-center">
              <Image 
                src={LOGO_PATH} 
                alt="Institutional Logo" 
-               fill 
+               width={160}
+               height={160}
                unoptimized 
                className="object-contain" 
                priority 
@@ -196,8 +197,8 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="relative w-10 h-10 shrink-0 flex items-center justify-center">
-                <Image src={LOGO_PATH} alt="Logo" width={40} height={40} unoptimized className="object-contain" priority />
+              <div className="relative w-10 h-10 shrink-0 flex items-center justify-center bg-white rounded-full border shadow-sm p-1.5">
+                <Image src={LOGO_PATH} alt="Logo" width={28} height={28} unoptimized className="object-contain" priority />
               </div>
               <h1 className="text-base font-display font-black uppercase text-primary leading-none tracking-tight">
                 {selectedSection === 'sports' ? "Sports Hub" : "Student Registry"}
@@ -419,7 +420,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div className="relative w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+            <div className="relative w-32 h-32 mx-auto mb-4 flex items-center justify-center bg-white rounded-full shadow-2xl border-4 border-primary/10 p-4">
               <Image src={LOGO_PATH} alt="Logo" width={96} height={96} unoptimized className="object-contain" priority />
             </div>
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
@@ -447,8 +448,8 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="relative w-56 h-56 mx-auto flex items-center justify-center overflow-hidden drop-shadow-2xl">
-            <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-contain" priority />
+          <div className="relative w-64 h-64 mx-auto flex items-center justify-center overflow-hidden bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-primary/5 p-8">
+            <Image src={LOGO_PATH} alt="Logo" width={180} height={180} unoptimized className="object-contain" priority />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
@@ -473,3 +474,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+
