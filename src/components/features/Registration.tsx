@@ -35,7 +35,7 @@ import {
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball', 'Long Jump', 'High Jump', 'Shot Put', 'Javline'];
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -302,6 +302,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     <div className="flex gap-2">
                       <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest hover:bg-accent/10 transition-all">
                         <Fingerprint className="w-4 h-4 mr-2" /> Live Scan
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-12 h-12 p-0 rounded-2xl border-2">
+                        <Upload className="w-6 h-6" />
                       </Button>
                       <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                     </div>
