@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -15,12 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   UserPlus, 
   Camera, 
-  XCircle, 
+  CircleX, 
   ImageIcon, 
   Fingerprint, 
   Phone, 
   MapPin, 
-  ScanLine, 
+  Scan, 
   ClipboardList, 
   Upload, 
   ShieldAlert, 
@@ -258,7 +259,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <Button type="button" onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 backdrop-blur h-10 rounded-xl font-black text-[9px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Flip Camera</Button>
                         <div className="flex gap-3">
                           <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-14 rounded-2xl shadow-xl active-scale">CAPTURE</Button>
-                          <Button type="button" variant="destructive" onClick={stopCamera} className="w-14 h-14 p-0 rounded-2xl shadow-xl"><XCircle className="w-6 h-6" /></Button>
+                          <Button type="button" variant="destructive" onClick={stopCamera} className="w-14 h-14 p-0 rounded-2xl shadow-xl"><CircleX className="w-6 h-6" /></Button>
                         </div>
                       </div>
                     )}
@@ -278,7 +279,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
                 <div className="space-y-4">
                   <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                    <ScanLine className="w-4 h-4" /> Aadhar Identity Scan
+                    <Scan className="w-4 h-4" /> Aadhar Identity Scan
                   </FormLabel>
                   <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20 shadow-inner">
                     {activeCam === 'aadhar' ? (
@@ -293,7 +294,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <Button type="button" onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Switch Camera</Button>
                         <div className="flex gap-2">
                           <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
-                          <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                          <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><CircleX className="w-5 h-5" /></Button>
                         </div>
                       </div>
                     )}

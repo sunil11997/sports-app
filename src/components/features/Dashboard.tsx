@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -13,11 +14,11 @@ import {
   GraduationCap, 
   Trash2, 
   Camera, 
-  XCircle, 
+  CircleX, 
   RefreshCw,
   ImageIcon,
   Filter,
-  ScanLine,
+  Scan,
   Fingerprint,
   Upload,
   ShieldCheck,
@@ -310,7 +311,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                                <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Flip Camera</Button>
                                <div className="flex gap-2">
                                  <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
-                                 <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><XCircle className="w-6 h-6" /></Button>
+                                 <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><CircleX className="w-6 h-6" /></Button>
                                </div>
                              </div>
                            )}
@@ -325,7 +326,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                       </div>
 
                       <div className="space-y-3">
-                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ScanLine className="w-4 h-4" /> Aadhar Identity Scan</Label>
+                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Scan className="w-4 h-4" /> Aadhar Identity Scan</Label>
                         <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
                           {activeCam === 'aadhar' ? (
                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
@@ -339,7 +340,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Switch Camera</Button>
                               <div className="flex gap-2">
                                 <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
-                                <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><XCircle className="w-5 h-5" /></Button>
+                                <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><CircleX className="w-5 h-5" /></Button>
                               </div>
                             </div>
                           )}

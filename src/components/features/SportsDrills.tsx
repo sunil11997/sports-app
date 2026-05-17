@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -10,14 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
-  CheckCircle, 
+  CircleCheck, 
   Dumbbell, 
   BookOpen, 
   Clock, 
   ClipboardCheck, 
   Loader2, 
   User, 
-  PlayCircle, 
+  CirclePlay, 
   ShieldCheck,
   Send,
   Bot,
@@ -178,7 +179,7 @@ export function SportsDrills({ store, preselectedSport, defaultView = 'checklist
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="flex-1 space-y-2">
               <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                <PlayCircle className="w-10 h-10 text-accent" /> PE Drills Hub
+                <CirclePlay className="w-10 h-10 text-accent" /> PE Drills Hub
               </h2>
               <div className="flex items-center gap-4">
                 <Badge variant="outline" className="text-primary font-black uppercase text-[10px] tracking-widest bg-white">
@@ -237,7 +238,7 @@ export function SportsDrills({ store, preselectedSport, defaultView = 'checklist
                   <CardContent className="p-8 space-y-4">
                     {currentSkills.length === 0 ? (
                       <div className="py-20 text-center space-y-4 opacity-20">
-                        <CheckCircle className="w-16 h-16 mx-auto text-emerald-500" />
+                        <CircleCheck className="w-16 h-16 mx-auto text-emerald-500" />
                         <p className="font-black uppercase tracking-widest text-lg">All Technical Drills Logged</p>
                       </div>
                     ) : (
@@ -294,7 +295,7 @@ export function SportsDrills({ store, preselectedSport, defaultView = 'checklist
                         <ul className="space-y-3">
                           {SPORTS_DATA[activeSport].lessonPlan?.map((item, i) => (
                             <li key={i} className="flex items-start gap-4 p-3 bg-primary/5 rounded-xl border border-primary/10">
-                              <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-1" />
+                              <CircleCheck className="w-4 h-4 text-primary shrink-0 mt-1" />
                               <span className="text-sm font-bold text-primary/80">{item}</span>
                             </li>
                           ))}

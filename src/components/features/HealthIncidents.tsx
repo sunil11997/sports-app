@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,10 +54,15 @@ const INCIDENT_TYPES = [
 export function HealthIncidents({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [selectedPlayer, setSelectedPlayer] = useState("");
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [severity, setSeverity] = useState("Minor");
+
+  useEffect(() => {
+    // Set initial date on client only
+    setDate(format(new Date(), 'yyyy-MM-dd'));
+  }, []);
 
   const isGeneral = section === 'general';
   

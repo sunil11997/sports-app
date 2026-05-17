@@ -22,6 +22,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
 
   useEffect(() => {
     setIsMounted(true);
+    // Initialize date only on client to avoid hydration mismatch
     setReportDate(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
@@ -56,7 +57,6 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
 
   const fitnessLogsToday = useMemo(() => {
     if (!isMounted || !reportDate) return [];
-    // Note: Fitness registry keys are formatted as ${playerId}_${dateId}
     return Object.values(store.data.fitness).filter((f: any) => f.date === reportDate);
   }, [store.data.fitness, reportDate, isMounted]);
 
@@ -94,6 +94,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
   }, [activitiesToday, drillsCompletedToday, fitnessLogsToday, section]);
 
   const handlePrint = () => {
+    if (!reportDate) return;
     const printContent = `
       <html>
         <head>
@@ -116,7 +117,6 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             .footer { margin-top: 50px; display: flex; justify-content: space-between; font-weight: 900; }
             .sign { border-top: 1px solid #333; width: 220px; text-align: center; padding-top: 5px; }
             
-            /* Mobile Print Controls */
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; transition: all 0.2s; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }

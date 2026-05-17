@@ -28,9 +28,9 @@ import {
   ClipboardList,
   GraduationCap,
   FileText,
-  ArrowUpCircle,
+  CircleArrowUp,
   Stethoscope,
-  BarChart3,
+  BarChart,
   Search,
   Clock,
   Newspaper
@@ -137,6 +137,7 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Initialize dates only on client to avoid hydration mismatch
     setTodayFormatted(format(new Date(), 'EEEE, do MMMM yyyy'));
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     const timer = setTimeout(() => setShowSplash(false), 2500);
@@ -347,11 +348,11 @@ export default function WaghambaApp() {
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
                     {[
                       { id: "attendance", label: "Attendance", icon: CalendarDays },
-                      { id: "performance", label: "Performance", icon: BarChart3 },
+                      { id: "performance", label: "Performance", icon: BarChart },
                       { id: "fitness", label: "Fitness Tracking", icon: Activity },
                       { id: "exams", label: "Exam Hub", icon: FileText },
                       { id: "classes", label: "Classes Hub", icon: GraduationCap },
-                      { id: "promotion", label: "Promotion Hub", icon: ArrowUpCircle },
+                      { id: "promotion", label: "Promotion Hub", icon: CircleArrowUp },
                       { id: "medical", label: "Medical Logs", icon: Stethoscope },
                       { id: "reports", label: "Daily Reports", icon: ClipboardList }
                     ].map(item => (
@@ -372,11 +373,11 @@ export default function WaghambaApp() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
                       { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
-                      { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart3, color: "bg-indigo-500" },
+                      { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart, color: "bg-indigo-500" },
                       { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
                       { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
                       { id: "classes", label: "Classes Registry", desc: "Standard wise data", icon: GraduationCap, color: "bg-purple-500" },
-                      { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: ArrowUpCircle, color: "bg-rose-500" },
+                      { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
                       { id: "medical", label: "Medical & Health", desc: "Incident logging", icon: Stethoscope, color: "bg-red-500" },
                       { id: "reports", label: "Daily Briefings", desc: "Archival summaries", icon: ClipboardList, color: "bg-slate-700" }
                     ].map(item => (
@@ -492,7 +493,7 @@ export default function WaghambaApp() {
           </div>
         </div>
         <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
-          <Button onClick={() => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group">
+          <Button onClick={isUserLoading ? undefined : () => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group">
             {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
           </Button>
           <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-display font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">

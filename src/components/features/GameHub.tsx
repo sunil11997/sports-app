@@ -17,7 +17,7 @@ import {
   ShieldCheck,
   Flame,
   Zap,
-  PlayCircle,
+  CirclePlay,
   Stethoscope,
   FileText,
   Activity
@@ -120,7 +120,7 @@ export function GameHub({ store }: { store: any }) {
       <div className="bg-primary/5 p-12 rounded-[3.5rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
         <div className="relative z-10 space-y-4">
           <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
-            <PlayCircle className="w-10 h-10 text-primary" />
+            <CirclePlay className="w-10 h-10 text-primary" />
           </div>
           <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Game Hub</h2>
           <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
