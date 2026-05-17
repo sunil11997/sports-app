@@ -157,7 +157,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
         <div className="max-w-xs w-full text-center space-y-12 relative z-10">
-           <div className="w-64 h-64 mx-auto relative drop-shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-in zoom-in duration-700">
+           <div className="w-72 h-72 mx-auto relative drop-shadow-[0_0_60px_rgba(255,255,255,0.4)] animate-in zoom-in duration-700">
              <Image 
                src={LOGO_PATH} 
                alt="Institutional Logo" 
@@ -311,7 +311,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              {/* Registry Selection Grid */}
+              {/* Sub-Navigation Control */}
               {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" ? (
                 <div className="relative group/scroll">
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
@@ -333,6 +333,9 @@ export default function WaghambaApp() {
                         <item.icon className="w-3.5 h-3.5" /> {item.label}
                       </button>
                     ))}
+                    <button onClick={() => setSubTab("all")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] text-muted-foreground hover:bg-white border-l ml-2 flex items-center gap-2 shrink-0">
+                      <Menu className="w-3.5 h-3.5" /> Back to Selector
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -416,8 +419,8 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-              <Image src={LOGO_PATH} alt="Logo" width={80} height={80} unoptimized className="object-contain" priority />
+            <div className="relative w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+              <Image src={LOGO_PATH} alt="Logo" width={96} height={96} unoptimized className="object-contain" priority />
             </div>
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
@@ -444,8 +447,8 @@ export default function WaghambaApp() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="relative w-40 h-40 mx-auto flex items-center justify-center overflow-hidden">
-            <Image src={LOGO_PATH} alt="Logo" width={160} height={160} unoptimized className="object-contain" priority />
+          <div className="relative w-56 h-56 mx-auto flex items-center justify-center overflow-hidden drop-shadow-2xl">
+            <Image src={LOGO_PATH} alt="Logo" fill unoptimized className="object-contain" priority />
           </div>
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
