@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * v3.4.1: Prioritizing icon-512.png as the high-resolution primary identity.
+ * v3.4.1: Prioritizing icon-512.png as the high-resolution primary identity for professional Android installation.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
