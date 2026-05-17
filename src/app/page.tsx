@@ -137,7 +137,6 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    // Initialize dates only on client to avoid hydration mismatch
     setTodayFormatted(format(new Date(), 'EEEE, do MMMM yyyy'));
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     const timer = setTimeout(() => setShowSplash(false), 2500);
@@ -152,7 +151,7 @@ export default function WaghambaApp() {
   }, [user, isUserLoading, auth, isMounted]);
 
   const t = translations[language];
-  const LOGO_PATH = "/icon-192.png";
+  const LOGO_PATH = "/icon-512.png";
 
   const sportsTabs = [
     { id: "home", label: t.home, icon: Home },

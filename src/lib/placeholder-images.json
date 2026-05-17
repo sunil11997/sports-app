@@ -1,10 +1,10 @@
 {
   "placeholderImages": [
     {
-      "id": "adivasi-vikas-logo",
-      "description": "Official high-resolution institutional logo for internal application use.",
+      "id": "institutional-logo",
+      "description": "Official high-resolution institutional logo for internal application use and startup splash screen.",
       "imageUrl": "/icon-512.png",
-      "imageHint": "High-Res Logo"
+      "imageHint": "Physical Education"
     }
   ]
 }

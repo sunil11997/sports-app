@@ -53,7 +53,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
   
-  const LOGO_INAPP = "/icon-192.png";
+  const LOGO_INAPP = "/icon-512.png";
 
   const handleManualExport = () => {
     schoolData.exportBackupData();
