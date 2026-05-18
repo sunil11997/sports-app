@@ -89,43 +89,49 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
     return (sequence[a.category as keyof typeof sequence] || 99) - (sequence[b.category as keyof typeof sequence] || 99);
   });
 
+  // Assign icon to a capitalized variable for safe JSX rendering
+  const NewsIcon = selectedNews?.icon;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedNews.map((item, i) => (
-          <Card 
-            key={i} 
-            onClick={() => setSelectedNews(item)}
-            className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary transition-all shadow-xl bg-white relative cursor-pointer active:scale-[0.98]"
-          >
-            <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <item.icon className="w-4 h-4 text-primary" />
+        {sortedNews.map((item, i) => {
+          const ItemIcon = item.icon;
+          return (
+            <Card 
+              key={i} 
+              onClick={() => setSelectedNews(item)}
+              className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary transition-all shadow-xl bg-white relative cursor-pointer active:scale-[0.98]"
+            >
+              <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <ItemIcon className="w-4 h-4 text-primary" />
+                  </div>
+                  <CardTitle className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                    {item.category}
+                  </CardTitle>
                 </div>
-                <CardTitle className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                  {item.category}
-                </CardTitle>
-              </div>
-              <Badge className={cn(
-                "font-black text-[9px] uppercase px-3",
-                item.date === 'LIVE' ? "bg-destructive text-white animate-pulse" : "bg-accent text-accent-foreground"
-              )}>{item.date}</Badge>
-            </CardHeader>
-            <CardContent className="p-8">
-              <h4 className="text-lg font-black text-primary uppercase leading-tight mb-3 group-hover:text-accent transition-colors">{item.title}</h4>
-              <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-3">
-                {item.desc}
-              </p>
-              <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
-                <div className="flex items-center text-[9px] font-black text-primary uppercase tracking-widest group-hover:gap-2 transition-all">
-                  Read Details <ChevronRightIcon className="w-3 h-3 ml-1" />
+                <Badge className={cn(
+                  "font-black text-[9px] uppercase px-3",
+                  item.date === 'LIVE' ? "bg-destructive text-white animate-pulse" : "bg-accent text-accent-foreground"
+                )}>{item.date}</Badge>
+              </CardHeader>
+              <CardContent className="p-8">
+                <h4 className="text-lg font-black text-primary uppercase leading-tight mb-3 group-hover:text-accent transition-colors">{item.title}</h4>
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-3">
+                  {item.desc}
+                </p>
+                <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
+                  <div className="flex items-center text-[9px] font-black text-primary uppercase tracking-widest group-hover:gap-2 transition-all">
+                    Read Details <ChevronRightIcon className="w-3 h-3 ml-1" />
+                  </div>
+                  <Newspaper className="w-4 h-4 text-muted-foreground/20" />
                 </div>
-                <Newspaper className="w-4 h-4 text-muted-foreground/20" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
@@ -133,7 +139,7 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
           <DialogHeader className="bg-primary p-10 text-white relative">
             <div className="flex items-center gap-6 relative z-10">
               <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
-                {selectedNews?.icon && <selectedNews.icon className="w-8 h-8 text-white" />}
+                {NewsIcon && <NewsIcon className="w-8 h-8 text-white" />}
               </div>
               <div className="space-y-1">
                 <DialogTitle className="text-2xl font-black uppercase tracking-tight">{selectedNews?.title}</DialogTitle>

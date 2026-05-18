@@ -23,25 +23,29 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
   useEffect(() => {
     setIsMounted(true);
     // Initialize date only on client to avoid hydration mismatch
-    setReportDate(format(new Date(), 'yyyy-MM-dd'));
+    try {
+      setReportDate(format(new Date(), 'yyyy-MM-dd'));
+    } catch (e) {
+      console.warn("WGB: Date initialization issue", e);
+    }
   }, []);
 
   const activitiesToday = useMemo(() => {
-    if (!isMounted || !reportDate) return [];
+    if (!isMounted || !reportDate || !store?.data?.activities) return [];
     return store.data.activities.filter((a: any) => 
       a.date === reportDate && a.category === targetCategory
     );
-  }, [store.data.activities, reportDate, isMounted, targetCategory]);
+  }, [store?.data?.activities, reportDate, isMounted, targetCategory]);
 
   const healthToday = useMemo(() => {
-    if (!isMounted || !reportDate) return [];
+    if (!isMounted || !reportDate || !store?.data?.healthIncidents) return [];
     return store.data.healthIncidents.filter((h: any) => 
       h.date === reportDate && (section === 'general' ? true : h.category === 'athlete')
     );
-  }, [store.data.healthIncidents, reportDate, isMounted, section]);
+  }, [store?.data?.healthIncidents, reportDate, isMounted, section]);
 
   const attendanceSummary = useMemo(() => {
-    if (!isMounted || !reportDate) return { morning: 0, evening: 0 };
+    if (!isMounted || !reportDate || !store?.data?.attendance) return { morning: 0, evening: 0 };
     let morning = 0;
     let evening = 0;
     
@@ -53,17 +57,17 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
     });
     
     return { morning, evening };
-  }, [store.data.attendance, reportDate, isMounted]);
+  }, [store?.data?.attendance, reportDate, isMounted]);
 
   const fitnessLogsToday = useMemo(() => {
-    if (!isMounted || !reportDate) return [];
+    if (!isMounted || !reportDate || !store?.data?.fitness) return [];
     return Object.values(store.data.fitness).filter((f: any) => f.date === reportDate);
-  }, [store.data.fitness, reportDate, isMounted]);
+  }, [store?.data?.fitness, reportDate, isMounted]);
 
   const drillsCompletedToday = useMemo(() => {
-    if (!isMounted || !reportDate || !store.data.drillCompletionsRaw) return [];
+    if (!isMounted || !reportDate || !store?.data?.drillCompletionsRaw) return [];
     return store.data.drillCompletionsRaw.filter((d: any) => d.timestamp?.startsWith(reportDate));
-  }, [store.data.drillCompletionsRaw, reportDate, isMounted]);
+  }, [store?.data?.drillCompletionsRaw, reportDate, isMounted]);
 
   const autoSummary = useMemo(() => {
     let summaryLines: string[] = [];
@@ -134,7 +138,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             <div class="report-title">Daily Institutional Activity Briefing (${section.toUpperCase()})</div>
           </div>
           <div class="meta">
-            <span>DATE: ${format(new Date(reportDate), 'PPPP')}</span>
+            <span>DATE: ${reportDate ? format(new Date(reportDate), 'PPPP') : '---'}</span>
             <span>WEATHER: ${weather.toUpperCase()}</span>
           </div>
 
