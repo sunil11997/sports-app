@@ -10,7 +10,6 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
-import { Landmark, MapPin, Globe } from 'lucide-react';
 
 const NewsItemSchema = z.object({
   category: z.enum(['Maharashtra', 'India', 'World']),
@@ -28,6 +27,7 @@ export type NewsOutput = z.infer<typeof NewsOutputSchema>;
 
 const newsPrompt = ai.definePrompt({
   name: 'newsPrompt',
+  model: googleAI.model('gemini-2.5-flash'),
   input: {
     schema: z.object({
       date: z.string(),
@@ -49,6 +49,7 @@ const newsPrompt = ai.definePrompt({
 });
 
 export async function getSportsNews(date: string, language: string = 'English'): Promise<NewsOutput> {
+  // Pass the model explicitly or rely on the prompt's defined model
   const {output} = await newsPrompt({date, language});
   if (!output) throw new Error('Failed to generate news pulse.');
   return output;
