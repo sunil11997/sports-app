@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -12,7 +12,9 @@ import {
   Landmark, 
   Info,
   ChevronRight as ChevronRightIcon,
-  CircleCheck
+  CircleCheck,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -24,6 +26,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getSportsNews, type NewsOutput } from '@/ai/flows/sports-news';
+import { usePWA } from '@/components/providers/pwa-provider';
+import { format } from 'date-fns';
 
 const HISTORY_DATA = [
   { date: "May 20, 1936", event: "Jesse Owens sets world records in Berlin." },
@@ -31,35 +36,31 @@ const HISTORY_DATA = [
   { date: "October 14, 1954", event: "Formation of institutional Sports Authority in Maharashtra." }
 ];
 
-const NEWS_DATA = [
-  { 
-    category: 'Maharashtra', 
-    title: "State Kabaddi Trials", 
-    date: "TODAY", 
-    desc: "Maharashtra state-level selection trials for junior athletes begin in Nashik district.",
-    details: "The Maharashtra State Kabaddi Association has announced the commencement of selection trials for the U-17 and U-19 categories. The trials are being held at the Chhatrapati Shivaji Stadium in Nashik. Over 500 athletes from various districts are expected to participate. Selected players will represent the state in the upcoming National School Games. Coaches are advised to ensure all students have their institutional ID and medical clearance ready.",
-    icon: Landmark
-  },
-  { 
-    category: 'India', 
-    title: "National Athletics Meet", 
-    date: "LIVE", 
-    desc: "Indian sprinters break seasonal records at the National Inter-State Senior Championships.",
-    details: "Day 3 of the National Inter-State Senior Athletics Championships has seen spectacular performances in the 100m and 400m sprints. New seasonal bests were set by the top three finishers in the men's category. This meet serves as a primary qualifier for international invitational events later this year. The Athletics Federation of India (AFI) has emphasized the importance of scientific training modules used by institutional coaches across the country.",
-    icon: MapPin
-  },
-  { 
-    category: 'World', 
-    title: "World Cup Qualifiers", 
-    date: "UPDATE", 
-    desc: "International football and cricket qualifiers see major shifts in global rankings.",
-    details: "In a series of high-stakes matches across the globe, the international sports landscape is shifting. Recent qualifying results have seen traditional underdogs rising in the rankings, while established teams struggle to maintain consistency. These shifts highlight the evolving nature of global athletic preparation and the critical role of grassroots sports hubs in identifying elite talent early in their development.",
-    icon: Globe
-  }
-];
-
 export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' }) {
+  const { isOnline } = usePWA();
   const [selectedNews, setSelectedNews] = useState<any>(null);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchNews = async () => {
+    if (!isOnline) return;
+    setIsLoading(true);
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const result = await getSportsNews(today);
+      setNewsItems(result.items);
+    } catch (error) {
+      console.error("WGB News: Failed to sync pulse", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (type === 'news') {
+      fetchNews();
+    }
+  }, [type]);
 
   if (type === 'history') {
     return (
@@ -84,55 +85,80 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
   }
 
   // Geographic sequence: Maharashtra -> India -> World
-  const sortedNews = [...NEWS_DATA].sort((a, b) => {
+  const sortedNews = [...newsItems].sort((a, b) => {
     const sequence = { 'Maharashtra': 1, 'India': 2, 'World': 3 };
     return (sequence[a.category as keyof typeof sequence] || 99) - (sequence[b.category as keyof typeof sequence] || 99);
   });
 
-  // Assign icon to a capitalized variable for safe JSX rendering
-  const NewsIcon = selectedNews?.icon;
+  const getIconForCategory = (cat: string) => {
+    switch (cat) {
+      case 'Maharashtra': return Landmark;
+      case 'India': return MapPin;
+      default: return Globe;
+    }
+  };
+
+  const NewsIcon = selectedNews ? getIconForCategory(selectedNews.category) : null;
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedNews.map((item, i) => {
-          const ItemIcon = item.icon;
-          return (
-            <Card 
-              key={i} 
-              onClick={() => setSelectedNews(item)}
-              className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary transition-all shadow-xl bg-white relative cursor-pointer active:scale-[0.98]"
-            >
-              <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <ItemIcon className="w-4 h-4 text-primary" />
-                  </div>
-                  <CardTitle className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                    {item.category}
-                  </CardTitle>
-                </div>
-                <Badge className={cn(
-                  "font-black text-[9px] uppercase px-3",
-                  item.date === 'LIVE' ? "bg-destructive text-white animate-pulse" : "bg-accent text-accent-foreground"
-                )}>{item.date}</Badge>
-              </CardHeader>
-              <CardContent className="p-8">
-                <h4 className="text-lg font-black text-primary uppercase leading-tight mb-3 group-hover:text-accent transition-colors">{item.title}</h4>
-                <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-3">
-                  {item.desc}
-                </p>
-                <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
-                  <div className="flex items-center text-[9px] font-black text-primary uppercase tracking-widest group-hover:gap-2 transition-all">
-                    Read Details <ChevronRightIcon className="w-3 h-3 ml-1" />
-                  </div>
-                  <Newspaper className="w-4 h-4 text-muted-foreground/20" />
-                </div>
-              </CardContent>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="border-2 rounded-[2.5rem] h-[250px] flex items-center justify-center bg-white/50 animate-pulse">
+              <Loader2 className="w-8 h-8 text-primary/20 animate-spin" />
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : sortedNews.length === 0 ? (
+        <div className="py-20 text-center border-4 border-dashed rounded-[3rem] opacity-20">
+          <Newspaper className="w-16 h-16 mx-auto mb-4" />
+          <p className="font-black uppercase tracking-widest">Pulse Registry Offline</p>
+          <Button variant="ghost" onClick={fetchNews} className="mt-4 font-black uppercase text-[10px]">
+            <RefreshCw className="w-3 h-3 mr-2" /> Try Sync
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sortedNews.map((item, i) => {
+            const ItemIcon = getIconForCategory(item.category);
+            return (
+              <Card 
+                key={i} 
+                onClick={() => setSelectedNews(item)}
+                className="border-2 rounded-[2.5rem] overflow-hidden group hover:border-primary transition-all shadow-xl bg-white relative cursor-pointer active:scale-[0.98]"
+              >
+                <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <ItemIcon className="w-4 h-4 text-primary" />
+                    </div>
+                    <CardTitle className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                      {item.category}
+                    </CardTitle>
+                  </div>
+                  <Badge className={cn(
+                    "font-black text-[9px] uppercase px-3",
+                    item.date === 'LIVE' ? "bg-destructive text-white animate-pulse" : "bg-accent text-accent-foreground"
+                  )}>{item.date}</Badge>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <h4 className="text-lg font-black text-primary uppercase leading-tight mb-3 group-hover:text-accent transition-colors">{item.title}</h4>
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-3">
+                    {item.desc}
+                  </p>
+                  <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
+                    <div className="flex items-center text-[9px] font-black text-primary uppercase tracking-widest group-hover:gap-2 transition-all">
+                      Read Details <ChevronRightIcon className="w-3 h-3 ml-1" />
+                    </div>
+                    <Newspaper className="w-4 h-4 text-muted-foreground/20" />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
@@ -183,3 +209,4 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
     </div>
   );
 }
+
