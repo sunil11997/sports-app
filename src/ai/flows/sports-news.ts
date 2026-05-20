@@ -2,9 +2,7 @@
 /**
  * @fileOverview A Genkit flow for generating daily regional sports news briefings.
  *
- * - getSportsNews - Generates sports news for specific regions and dates.
- * - NewsInput - The input type for the news flow.
- * - NewsOutput - The return type for the news flow.
+ * - getSportsNews - Generates sports news for specific regions and dates with retry logic.
  */
 
 import {ai} from '@/ai/genkit';
@@ -48,9 +46,40 @@ const newsPrompt = ai.definePrompt({
   Ensure the "details" section provides enough technical depth for a school sports coach.`,
 });
 
+/**
+ * getSportsNews
+ * Generates regional sports news with a high-resilience retry loop.
+ */
 export async function getSportsNews(date: string, language: string = 'English'): Promise<NewsOutput> {
-  // Pass the model explicitly or rely on the prompt's defined model
-  const {output} = await newsPrompt({date, language});
-  if (!output) throw new Error('Failed to generate news pulse.');
-  return output;
+  let attempts = 0;
+  const maxAttempts = 3;
+  let lastError: any = null;
+
+  while (attempts < maxAttempts) {
+    try {
+      const {output} = await newsPrompt({date, language});
+      if (!output) throw new Error('AI returned an empty news pulse.');
+      return output;
+    } catch (error: any) {
+      lastError = error;
+      attempts++;
+      
+      const isQuotaOrUnavailable = 
+        error.message?.includes('RESOURCE_EXHAUSTED') || 
+        error.message?.includes('429') ||
+        error.message?.includes('UNAVAILABLE') || 
+        error.message?.includes('503');
+
+      if (isQuotaOrUnavailable && attempts < maxAttempts) {
+        console.warn(`WGB News Pulse: Demand spike detected (Attempt ${attempts}). Retrying with backoff...`);
+        // Exponential backoff: 2s, 4s, etc.
+        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempts)));
+        continue;
+      }
+      
+      console.error("WGB News Pulse: AI generation failed:", error.message);
+      throw error;
+    }
+  }
+  throw lastError || new Error('Failed to generate news pulse after multiple attempts.');
 }
