@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -26,66 +25,88 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getSportsNews, type NewsOutput } from '@/ai/flows/sports-news';
+import { getSportsNews } from '@/ai/flows/sports-news';
+import { getSportsHistory } from '@/ai/flows/sports-history';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { format } from 'date-fns';
-
-const HISTORY_DATA = [
-  { date: "May 20, 1936", event: "Jesse Owens sets world records in Berlin." },
-  { date: "August 15, 2008", event: "Usain Bolt wins 100m gold in world record time." },
-  { date: "October 14, 1954", event: "Formation of institutional Sports Authority in Maharashtra." }
-];
 
 export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' }) {
   const { isOnline } = usePWA();
   const [selectedNews, setSelectedNews] = useState<any>(null);
-  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchNews = async () => {
+  const fetchData = async () => {
     if (!isOnline) return;
     setIsLoading(true);
     try {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const result = await getSportsNews(today);
-      setNewsItems(result.items);
+      if (type === 'news') {
+        const result = await getSportsNews(today);
+        setItems(result.items);
+      } else if (type === 'history') {
+        const result = await getSportsHistory(today);
+        setItems(result.items);
+      }
     } catch (error) {
-      console.error("WGB News: Failed to sync pulse", error);
+      console.error(`WGB ${type}: Failed to sync registry pulse`, error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (type === 'news') {
-      fetchNews();
-    }
+    fetchData();
   }, [type]);
 
   if (type === 'history') {
     return (
       <div className="space-y-4">
-        <h3 className="text-2xl font-black text-primary uppercase flex items-center gap-3 mb-6">
-          <Clock className="w-6 h-6" /> Today in History
-        </h3>
-        {HISTORY_DATA.map((item, i) => (
-          <Card key={i} className="border-2 rounded-[1.5rem] bg-white shadow-sm hover:border-primary/10 transition-all">
-            <CardContent className="p-6 flex items-center gap-6">
-              <div className="text-center min-w-[100px]">
-                <span className="block text-2xl font-black text-primary">{item.date.split(' ')[1].replace(',', '')}</span>
-                <span className="block text-[10px] font-black uppercase text-muted-foreground">{item.date.split(' ')[0]}</span>
-              </div>
-              <div className="h-10 w-px bg-muted" />
-              <p className="text-sm font-bold text-foreground/80 leading-relaxed italic">"{item.event}"</p>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-black text-primary uppercase flex items-center gap-3">
+            <Clock className="w-6 h-6" /> Today in History
+          </h3>
+          <Button variant="ghost" size="icon" onClick={fetchData} disabled={isLoading || !isOnline} className="rounded-full h-8 w-8 hover:bg-primary/5">
+            <RefreshCw className={cn("w-4 h-4 text-primary", isLoading && "animate-spin")} />
+          </Button>
+        </div>
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="border-2 rounded-[1.5rem] h-[100px] flex items-center justify-center bg-white/50 animate-pulse">
+                <Loader2 className="w-6 h-6 text-primary/10 animate-spin" />
+              </Card>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-20 text-center border-4 border-dashed rounded-[3rem] opacity-20">
+            <Clock className="w-16 h-16 mx-auto mb-4" />
+            <p className="font-black uppercase tracking-widest">History Vault Offline</p>
+            <Button variant="ghost" onClick={fetchData} className="mt-4 font-black uppercase text-[10px]">
+              <RefreshCw className="w-3 h-3 mr-2" /> Try Sync
+            </Button>
+          </div>
+        ) : (
+          items.map((item, i) => (
+            <Card key={i} className="border-2 rounded-[1.5rem] bg-white shadow-sm hover:border-primary/10 transition-all group active:scale-[0.98]">
+              <CardContent className="p-6 flex items-center gap-6">
+                <div className="text-center min-w-[100px] group-hover:scale-110 transition-transform">
+                  <span className="block text-2xl font-black text-primary leading-none">{item.date.split(',')[0].split(' ').pop()}</span>
+                  <span className="block text-[10px] font-black uppercase text-muted-foreground mt-1">{item.date.split(',')[0].split(' ')[0]}</span>
+                </div>
+                <div className="h-10 w-px bg-muted" />
+                <p className="text-sm font-bold text-foreground/80 leading-relaxed italic">"{item.event}"</p>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     );
   }
 
   // Geographic sequence: Maharashtra -> India -> World
-  const sortedNews = [...newsItems].sort((a, b) => {
+  const sortedNews = [...items].sort((a, b) => {
     const sequence = { 'Maharashtra': 1, 'India': 2, 'World': 3 };
     return (sequence[a.category as keyof typeof sequence] || 99) - (sequence[b.category as keyof typeof sequence] || 99);
   });
@@ -114,7 +135,7 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
         <div className="py-20 text-center border-4 border-dashed rounded-[3rem] opacity-20">
           <Newspaper className="w-16 h-16 mx-auto mb-4" />
           <p className="font-black uppercase tracking-widest">Pulse Registry Offline</p>
-          <Button variant="ghost" onClick={fetchNews} className="mt-4 font-black uppercase text-[10px]">
+          <Button variant="ghost" onClick={fetchData} className="mt-4 font-black uppercase text-[10px]">
             <RefreshCw className="w-3 h-3 mr-2" /> Try Sync
           </Button>
         </div>
@@ -209,4 +230,3 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
     </div>
   );
 }
-
