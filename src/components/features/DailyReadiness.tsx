@@ -22,7 +22,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { format } from 'date-fns';
 
 /**
  * CoachAlertSystem
@@ -138,6 +137,7 @@ export function DailyReadiness({ store }: { store: any }) {
   }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
 
   const teamReadiness = useMemo(() => {
+    if (!isMounted) return [];
     return players.map((p: any) => {
       const data = store.data.dailyReadiness[p.id] || {};
       const analysis = CoachAlertSystem.evaluateAthleteReadiness({
@@ -149,7 +149,7 @@ export function DailyReadiness({ store }: { store: any }) {
       });
       return { player: p, analysis, hasData: !!store.data.dailyReadiness[p.id] };
     });
-  }, [players, store.data.dailyReadiness]);
+  }, [players, store.data.dailyReadiness, isMounted]);
 
   const handleSave = async () => {
     if (!selectedPlayerId) return;
