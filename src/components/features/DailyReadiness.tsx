@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -104,17 +103,12 @@ export function DailyReadiness({ store }: { store: any }) {
     [store.data.players]
   );
 
-  const selectedPlayer = useMemo(() => 
-    players.find((p: any) => p.id === selectedPlayerId),
-    [selectedPlayerId, players]
-  );
-
   const calculatePhvOffset = (player: any) => {
     if (!player?.height || !player?.weight || !player?.age) return 0;
     const h = parseFloat(player.height);
     const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
     const w = parseFloat(player.weight);
-    const age = player.age;
+    const age = Number(player.age) || 0;
     const legL = h - sH;
     let offset = 0;
     if (player.gender === 'Male') {
@@ -124,6 +118,11 @@ export function DailyReadiness({ store }: { store: any }) {
     }
     return offset;
   };
+
+  const selectedPlayer = useMemo(() => 
+    players.find((p: any) => p.id === selectedPlayerId),
+    [selectedPlayerId, players]
+  );
 
   const coachAlert = useMemo(() => {
     if (!selectedPlayer) return null;
@@ -252,43 +251,45 @@ export function DailyReadiness({ store }: { store: any }) {
            </div>
            
            <div className="flex-1 overflow-y-auto max-h-[800px] scrollbar-hide p-6 space-y-4">
-              {teamReadiness.map(({ player, analysis, hasData }) => (
-                <div key={player.id} className={cn(
-                  "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
-                  hasData ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" : "bg-muted/10 border-transparent opacity-40 grayscale"
-                )}>
-                   <div className="relative">
-                      <Avatar className="w-14 h-14 border-2 border-white shadow-md">
-                        <AvatarImage src={player.photoUrl} className="object-cover" />
-                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">{player.name[0]}</AvatarFallback>
-                      </Avatar>
-                      {hasData && <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", analysis.dot)} />}
-                   </div>
-                   
-                   <div className="flex-1 min-w-0 space-y-3">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                        <div>
-                          <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors">{player.name}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std} • Age {player.age}</p>
+              {teamReadiness.map(({ player, analysis, hasData }) => {
+                return (
+                  <div key={player.id} className={cn(
+                    "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
+                    hasData ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" : "bg-muted/10 border-transparent opacity-40 grayscale"
+                  )}>
+                    <div className="relative">
+                        <Avatar className="w-14 h-14 border-2 border-white shadow-md">
+                          <AvatarImage src={player.photoUrl} className="object-cover" />
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">{player.name[0]}</AvatarFallback>
+                        </Avatar>
+                        {hasData && <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", analysis.dot)} />}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                          <div>
+                            <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors">{player.name}</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std} • Age {player.age}</p>
+                          </div>
+                          {hasData && (
+                            <Badge className={cn("font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap", analysis.bg, analysis.color, "border-0 shadow-none")}>
+                              {analysis.action}
+                            </Badge>
+                          )}
                         </div>
+                        
                         {hasData && (
-                          <Badge className={cn("font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap", analysis.bg, analysis.color, "border-0 shadow-none")}>
-                            {analysis.action}
-                          </Badge>
+                          <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
+                            <div className="flex items-start gap-2">
+                                <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+                                <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">"{analysis.advice}"</p>
+                            </div>
+                          </div>
                         )}
-                      </div>
-                      
-                      {hasData && (
-                        <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
-                           <div className="flex items-start gap-2">
-                              <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-                              <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">"{analysis.advice}"</p>
-                           </div>
-                        </div>
-                      )}
-                   </div>
-                </div>
-              ))}
+                    </div>
+                  </div>
+                );
+              })}
            </div>
 
            <div className="p-8 bg-primary/5 border-t text-center">
