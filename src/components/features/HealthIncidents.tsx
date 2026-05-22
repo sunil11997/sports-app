@@ -8,7 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Stethoscope, Plus, History, Printer, AlertTriangle, ShieldCheck, HeartPulse, Info } from 'lucide-react';
+import { 
+  Stethoscope, 
+  Plus, 
+  History, 
+  Printer, 
+  AlertTriangle, 
+  ShieldCheck, 
+  HeartPulse, 
+  Info,
+  ShieldAlert
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -51,6 +61,15 @@ const INCIDENT_TYPES = [
   }
 ];
 
+const BODY_PARTS = [
+  { id: 'ankle', label: 'Ankle (घोटा)' },
+  { id: 'knee', label: 'Knee (गुडघा)' },
+  { id: 'shoulder', label: 'Shoulder (खांदा)' },
+  { id: 'wrist', label: 'Wrist (मनगट)' },
+  { id: 'back', label: 'Lower Back (कमर/पाठ)' },
+  { id: 'hamstring', label: 'Hamstring (मांडीचे स्नायू)' }
+];
+
 export function HealthIncidents({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const [selectedPlayer, setSelectedPlayer] = useState("");
@@ -58,9 +77,9 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
   const [description, setDescription] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [severity, setSeverity] = useState("Minor");
+  const [selectedBodyPart, setSelectedBodyPart] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set initial date on client only
     setDate(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
@@ -70,17 +89,10 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     store.data.players
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
-        // 1. Sort by Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-
-        // 2. Sort by Gender (Female first)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Female' ? -1 : 1;
-        }
-
-        // 3. Sort by Serial Number
+        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       }),
     [store.data.players, isGeneral]
@@ -95,7 +107,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     setSelectedType(val);
     const typeData = INCIDENT_TYPES.find(t => t.value === val);
     if (typeData) {
-      setDescription(`TYPE: ${typeData.label}\n\nSUGGESTED TREATMENT:\n${typeData.treatment}\n\nNOTES: `);
+      setDescription(`प्रकार: ${typeData.label}\n\nSUGGESTED TREATMENT:\n${typeData.treatment}\n\nटिप्पणी: `);
       if (val === 'head' || val === 'fracture') {
         setSeverity("Critical");
       } else {
@@ -111,12 +123,14 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     }
 
     const player = store.data.players.find((p: any) => p.id === selectedPlayer);
+    const bodyPartInfo = selectedBodyPart ? `[भाग: ${selectedBodyPart}] ` : '';
+    
     const incident = {
       id: Math.random().toString(36).substr(2, 9),
       playerId: selectedPlayer,
       playerName: player?.name || "Unknown",
       date,
-      description: `[${severity.toUpperCase()}] ${description}`,
+      description: `[${severity.toUpperCase()}] ${bodyPartInfo}${description}`,
       severity,
       category: player?.category || 'student'
     };
@@ -125,9 +139,10 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     setDescription("");
     setSelectedType("");
     setSelectedPlayer("");
+    setSelectedBodyPart(null);
     toast({ 
-      title: severity === "Critical" ? "CRITICAL ALERT LOGGED" : "Incident Logged", 
-      description: "Health record has been updated and synced to cloud.",
+      title: severity === "Critical" ? "CRITICAL ALERT LOGGED" : "Injury Hub Updated", 
+      description: "Health record has been archived in the cloud vault.",
       variant: severity === "Critical" ? "destructive" : "default"
     });
   };
@@ -140,7 +155,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     const printContent = `
       <html>
         <head>
-          <title>Health History Log - Waghamba School</title>
+          <title>Injury Registry - Waghamba Hub</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 40px; }
             h1 { color: #8A1515; border-bottom: 2px solid #ddd; text-transform: uppercase; }
@@ -154,7 +169,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
           </style>
         </head>
         <body>
-          <h1>Complete Medical & Injury Log - ${section === 'sports' ? 'Sports Hub' : 'Student Registry'}</h1>
+          <h1>Complete Injury & Medical Log - ${section.toUpperCase()} HUB</h1>
           <p>Institutional Record - Teacher Sunil Deshmukh</p>
           <hr/>
           ${incidentsToPrint.map((inc: any) => {
@@ -176,7 +191,6 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
-    win?.print();
   };
 
   const incidentsList = store.data.healthIncidents.filter((inc: any) => 
@@ -184,20 +198,20 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
   );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700 pb-20">
       <div className="lg:col-span-1 space-y-6">
         <Card className="border-2 border-primary/10 shadow-xl rounded-[2rem] overflow-hidden bg-white">
-          <CardHeader className="bg-primary/5 border-b border-primary/10">
-            <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
-              <Plus className="w-5 h-5" /> Smart Incident Log
+          <CardHeader className="bg-destructive/5 border-b border-destructive/10">
+            <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-3">
+              <ShieldAlert className="w-6 h-6 text-destructive" /> Injury Hub Registry
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-6 space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase">1. Select Student</label>
+              <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">1. Select Student Athlete</label>
               <Select onValueChange={setSelectedPlayer} value={selectedPlayer}>
-                <SelectTrigger className="rounded-xl border-2 h-12">
-                  <SelectValue placeholder="Choose student..." />
+                <SelectTrigger className="rounded-2xl border-2 h-14 font-black bg-white">
+                  <SelectValue placeholder="Identify student..." />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredPlayers.map((p: any) => (
@@ -207,10 +221,30 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
               </Select>
             </div>
 
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">2. Body Part (Quick Selection)</label>
+              <div className="flex flex-wrap gap-2">
+                {BODY_PARTS.map((part) => (
+                  <button
+                    key={part.id}
+                    onClick={() => setSelectedBodyPart(part.label)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-[9px] font-black uppercase transition-all border-2",
+                      selectedBodyPart === part.label 
+                        ? "bg-destructive text-white border-destructive shadow-lg scale-105" 
+                        : "bg-white text-foreground/70 border-muted-foreground/10 hover:border-destructive/30"
+                    )}
+                  >
+                    {part.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase">2. Incident Type</label>
+              <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">3. Diagnosis Type</label>
               <Select onValueChange={handleTypeChange} value={selectedType}>
-                <SelectTrigger className="rounded-xl border-2 h-12 bg-accent/5">
+                <SelectTrigger className="rounded-2xl border-2 h-12 bg-accent/5 font-bold">
                   <SelectValue placeholder="What happened?" />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,39 +259,39 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
               <div className="bg-accent/10 p-4 rounded-xl border border-accent/20 animate-in zoom-in-95 duration-300">
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldCheck className="w-4 h-4 text-primary" />
-                  <span className="text-[10px] font-black text-primary uppercase">Auto-Suggested Treatment</span>
+                  <span className="text-[9px] font-black text-primary uppercase">Institutional Protocol</span>
                 </div>
-                <p className="text-xs text-foreground/80 leading-relaxed font-medium italic">
+                <p className="text-[11px] text-foreground/80 leading-relaxed font-medium italic">
                   {currentTypeData.treatment}
                 </p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-primary uppercase">3. Date</label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-xl border-2 h-12" />
+                <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">4. Date</label>
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-2xl border-2 h-12 font-bold" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-primary uppercase">4. Severity</label>
+                <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">5. Severity</label>
                 <Select onValueChange={setSeverity} value={severity}>
-                  <SelectTrigger className={cn("rounded-xl border-2 h-12 font-bold", severity === "Critical" ? "text-destructive border-destructive/30" : "text-primary border-primary/10")}>
+                  <SelectTrigger className={cn("rounded-2xl border-2 h-12 font-black", severity === "Critical" ? "text-destructive border-destructive/30" : "text-primary border-primary/10")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Minor">Minor</SelectItem>
-                    <SelectItem value="Moderate">Moderate</SelectItem>
-                    <SelectItem value="Critical">Critical</SelectItem>
+                    <SelectItem value="Minor">Minor (कमी)</SelectItem>
+                    <SelectItem value="Moderate">Moderate (मध्यम)</SelectItem>
+                    <SelectItem value="Critical">Critical (गंभीर)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-primary uppercase">5. Detailed Log & Treatment</label>
+              <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">6. Treatment Log</label>
               <Textarea 
                 placeholder="Details of the incident and actions taken..." 
-                className="rounded-xl border-2 min-h-[150px] text-sm"
+                className="rounded-2xl border-2 min-h-[120px] text-sm font-medium"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -265,13 +299,13 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
 
             <Button 
               className={cn(
-                "w-full rounded-2xl font-black py-7 text-lg uppercase tracking-widest transition-all shadow-lg active-scale",
+                "w-full rounded-2xl font-black py-8 text-lg uppercase tracking-[0.2em] transition-all shadow-xl active-scale",
                 severity === "Critical" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-primary hover:bg-primary/90 text-white"
               )} 
               onClick={handleSave}
             >
-              {severity === "Critical" ? <AlertTriangle className="w-6 h-6 mr-2 animate-pulse" /> : <HeartPulse className="w-6 h-6 mr-2" />}
-              Save Record
+              {severity === "Critical" ? <AlertTriangle className="w-6 h-6 mr-3 animate-pulse" /> : <ShieldAlert className="w-6 h-6 mr-3" />}
+              Archive Injury Record
             </Button>
           </CardContent>
         </Card>
@@ -279,20 +313,25 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
 
       <div className="lg:col-span-2 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-          <div className="flex items-center gap-3">
-            <History className="w-8 h-8 text-primary" />
-            <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Health Registry ({section === 'sports' ? 'Sports' : 'General'})</h3>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border-2 border-primary/5">
+              <History className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Health History</h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Registry Sync • {section.toUpperCase()} SECTION</p>
+            </div>
           </div>
-          <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-2 h-12 px-6 shadow-sm ios-spring">
-            <Printer className="w-5 h-5 mr-2 text-primary" /> Print Full History
+          <Button variant="outline" onClick={handlePrint} className="rounded-2xl font-black border-2 h-14 px-8 shadow-sm text-xs uppercase tracking-widest">
+            <Printer className="w-5 h-5 mr-3 text-primary" /> Full Medical Audit
           </Button>
         </div>
         
         <div className="space-y-4">
           {incidentsList.length === 0 ? (
-            <Card className="border-dashed border-4 p-20 flex flex-col items-center text-muted-foreground rounded-[2.5rem] bg-white/50 backdrop-blur-sm">
-              <Stethoscope className="w-16 h-16 mb-6 opacity-10" />
-              <p className="text-xl font-bold uppercase tracking-widest opacity-30">No health logs found for this section</p>
+            <Card className="border-dashed border-4 p-20 flex flex-col items-center text-muted-foreground rounded-[3rem] bg-white/50 backdrop-blur-sm">
+              <Stethoscope className="w-20 h-20 mb-6 opacity-10" />
+              <p className="text-2xl font-black uppercase tracking-widest opacity-30">No health logs recorded</p>
             </Card>
           ) : (
             incidentsList.slice().reverse().map((inc: any) => {
@@ -301,43 +340,43 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
                 <Card 
                   key={inc.id} 
                   className={cn(
-                    "border-2 transition-all rounded-[1.5rem] shadow-sm bg-white overflow-hidden group",
+                    "border-2 transition-all rounded-[2rem] shadow-sm bg-white overflow-hidden group",
                     isCritical ? "border-destructive/30 shadow-destructive/5" : "border-primary/10 hover:border-primary/30"
                   )}
                 >
                   <CardContent className="p-0">
-                    <div className={cn("h-1.5 w-full", isCritical ? "bg-destructive" : "bg-primary/20")} />
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-4">
+                    <div className={cn("h-2 w-full", isCritical ? "bg-destructive" : "bg-primary/20")} />
+                    <div className="p-8">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-6">
                           <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-transform group-hover:scale-110 duration-300",
+                            "w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl transition-transform group-hover:scale-110 duration-500",
                             isCritical ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
                           )}>
                             {inc.playerName[0]}
                           </div>
                           <div>
-                            <h4 className="font-black text-primary uppercase text-lg leading-tight">{inc.playerName}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] font-black text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase">
+                            <h4 className="font-black text-primary uppercase text-xl leading-tight">{inc.playerName}</h4>
+                            <div className="flex items-center gap-3 mt-2">
+                              <Badge className="font-black text-[9px] uppercase px-3 bg-muted text-muted-foreground">
                                 {format(new Date(inc.date), 'dd MMM yyyy')}
-                              </span>
+                              </Badge>
                               {isCritical && (
-                                <Badge className="bg-destructive text-white text-[8px] font-black uppercase px-2 py-0 animate-pulse">
-                                  Critical
+                                <Badge className="bg-destructive text-white text-[9px] font-black uppercase px-4 py-0.5 animate-pulse">
+                                  CRITICAL ALERT
                                 </Badge>
                               )}
                             </div>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground/30 hover:text-destructive rounded-full">
-                          <Info className="w-4 h-4" />
-                        </Button>
+                        <div className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center opacity-40">
+                          <Info className="w-5 h-5" />
+                        </div>
                       </div>
-                      <div className="relative pl-6 py-1">
-                        <div className={cn("absolute left-0 top-0 bottom-0 w-1 rounded-full", isCritical ? "bg-destructive" : "bg-accent")} />
-                        <p className="text-sm font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                          {inc.description.replace('[CRITICAL] ', '').replace('[MINOR] ', '')}
+                      <div className="relative pl-8 py-2">
+                        <div className={cn("absolute left-0 top-0 bottom-0 w-1.5 rounded-full", isCritical ? "bg-destructive" : "bg-accent")} />
+                        <p className="text-base font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap italic">
+                          "{inc.description.replace('[CRITICAL] ', '').replace('[MINOR] ', '')}"
                         </p>
                       </div>
                     </div>

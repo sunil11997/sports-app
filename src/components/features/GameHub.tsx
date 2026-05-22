@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -73,16 +74,13 @@ export function GameHub({ store }: { store: any }) {
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
               <TabsTrigger value="injury" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <ShieldAlert className="w-3.5 h-3.5" /> Injury Log
+                <ShieldAlert className="w-3.5 h-3.5" /> Injury Hub
               </TabsTrigger>
               <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
               <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
               <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Practice Plan</TabsTrigger>
               <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
-              <TabsTrigger value="health" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Stethoscope className="w-3 h-3" /> Health History
-              </TabsTrigger>
               <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <Activity className="w-3 h-3" /> Auto Reports
               </TabsTrigger>
@@ -94,7 +92,7 @@ export function GameHub({ store }: { store: any }) {
           </TabsContent>
 
           <TabsContent value="injury" className="mt-0">
-            <InjuryLogger store={store} />
+            <HealthIncidents store={store} section="sports" />
           </TabsContent>
 
           <TabsContent value="skills" className="mt-0">
@@ -115,10 +113,6 @@ export function GameHub({ store }: { store: any }) {
 
           <TabsContent value="tournament" className="mt-0">
             <TournamentRosters store={store} preselectedSport={selectedGame} />
-          </TabsContent>
-
-          <TabsContent value="health" className="mt-0">
-            <HealthIncidents store={store} section="sports" />
           </TabsContent>
 
           <TabsContent value="reports" className="mt-0">
@@ -167,8 +161,8 @@ export function GameHub({ store }: { store: any }) {
                 <span className="text-[8px] font-black uppercase text-muted-foreground">Drills</span>
               </div>
               <div className="flex flex-col items-center">
-                <Stethoscope className="w-4 h-4 text-muted-foreground/30 mb-1" />
-                <span className="text-[8px] font-black uppercase text-muted-foreground">Health</span>
+                <ShieldAlert className="w-4 h-4 text-muted-foreground/30 mb-1" />
+                <span className="text-[8px] font-black uppercase text-muted-foreground">Injuries</span>
               </div>
             </div>
 

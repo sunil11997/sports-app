@@ -34,7 +34,8 @@ import {
   Search,
   Clock,
   Newspaper,
-  Gauge
+  Gauge,
+  ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -283,7 +284,7 @@ export default function WaghambaApp() {
                       <div className="lg:col-span-5 grid grid-cols-1 gap-4">
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                            <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center"><Activity className="text-emerald-400 w-6 h-6" /></div>
+                              <div className="w-12 h-12 bg-emerald-50/20 rounded-2xl flex items-center justify-center"><Activity className="text-emerald-400 w-6 h-6" /></div>
                               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full">Synchronized</span>
                            </div>
                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Attendance consistency</p>
@@ -292,7 +293,7 @@ export default function WaghambaApp() {
 
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                            <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center"><Trophy className="text-orange-400 w-6 h-6" /></div>
+                              <div className="w-12 h-12 bg-orange-50/20 rounded-2xl flex items-center justify-center"><Trophy className="text-orange-400 w-6 h-6" /></div>
                               <Badge variant="outline" className="text-white/40 border-white/10 text-[9px] uppercase">Coming Soon</Badge>
                            </div>
                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Upcoming Tournament</p>
@@ -302,7 +303,7 @@ export default function WaghambaApp() {
 
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                            <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center"><Target className="text-blue-400 w-6 h-6" /></div>
+                              <div className="w-12 h-12 bg-blue-50/20 rounded-2xl flex items-center justify-center"><Target className="text-blue-400 w-6 h-6" /></div>
                               <Zap className="w-5 h-5 text-blue-400 animate-pulse" />
                            </div>
                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Fitness Goal</p>
@@ -358,7 +359,7 @@ export default function WaghambaApp() {
                       { id: "exams", label: "Exam Hub", icon: FileText },
                       { id: "classes", label: "Classes Hub", icon: GraduationCap },
                       { id: "promotion", label: "Promotion Hub", icon: CircleArrowUp },
-                      { id: "medical", label: "Medical Logs", icon: Stethoscope },
+                      { id: "medical", label: "Injury Hub", icon: ShieldAlert },
                       { id: "reports", label: "Daily Reports", icon: ClipboardList }
                     ].map(item => (
                       <button 
@@ -384,7 +385,7 @@ export default function WaghambaApp() {
                       { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
                       { id: "classes", label: "Classes Registry", desc: "Standard wise data", icon: GraduationCap, color: "bg-purple-500" },
                       { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
-                      { id: "medical", label: "Medical & Health", desc: "Incident logging", icon: Stethoscope, color: "bg-red-500" },
+                      { id: "medical", label: "Injury Hub", desc: "Advanced medical log", icon: ShieldAlert, color: "bg-red-500" },
                       { id: "reports", label: "Daily Briefings", desc: "Archival summaries", icon: ClipboardList, color: "bg-slate-700" }
                     ].map(item => (
                       <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
