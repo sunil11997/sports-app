@@ -39,6 +39,10 @@ service cloud.firestore {
     match /game_rules_registry/{document=**} {
       allow read, write: if isSignedIn();
     }
+    
+    match /readiness_registry/{document=**} {
+      allow read, write: if isSignedIn();
+    }
 
     // Global Activity and Incident logs
     match /all_health_incidents/{document=**} {

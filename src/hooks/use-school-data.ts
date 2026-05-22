@@ -320,6 +320,20 @@ export function useSchoolData(isActive: boolean = true) {
     setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
   }, [db, user, selectedYear]);
 
+  const setReadiness = useCallback((playerId: string, data: any) => {
+    if (!user || !db) return;
+    const dateId = new Date().toISOString().split('T')[0];
+    const ref = doc(db, 'readiness_registry', `${playerId}_${dateId}`);
+    setDocumentNonBlocking(ref, { 
+      ...data, 
+      playerId, 
+      schoolId: user.uid, 
+      date: dateId, 
+      timestamp: new Date().toISOString(),
+      academicYear: selectedYear 
+    }, { merge: true });
+  }, [db, user, selectedYear]);
+
   const setExamLabels = useCallback((std: string, term: string, labels: ExamLabels) => {
     if (!user || !db) return;
     const configId = `${std}_${term}`;
@@ -382,6 +396,6 @@ export function useSchoolData(isActive: boolean = true) {
     setSelectedYear,
     pendingSyncCount: pendingCount,
     isSyncing,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setExamLabels, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setExamLabels, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance, setReadiness
   };
 }

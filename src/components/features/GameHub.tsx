@@ -20,7 +20,8 @@ import {
   CirclePlay,
   Stethoscope,
   FileText,
-  Activity
+  Activity,
+  HeartPulse
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
@@ -28,6 +29,7 @@ import { TournamentRosters } from './TournamentRosters';
 import { Teams } from './Teams';
 import { HealthIncidents } from './HealthIncidents';
 import { DailyReport } from './DailyReport';
+import { DailyReadiness } from './DailyReadiness';
 import { cn } from '@/lib/utils';
 
 const GAMES = [
@@ -69,6 +71,9 @@ export function GameHub({ store }: { store: any }) {
         <Tabs defaultValue="skills" className="space-y-8">
           <div className="flex items-center justify-center">
             <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner overflow-x-auto scrollbar-hide max-w-full gap-1">
+              <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <HeartPulse className="w-3.5 h-3.5" /> Readiness
+              </TabsTrigger>
               <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
               <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
               <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Practice Plan</TabsTrigger>
@@ -82,6 +87,10 @@ export function GameHub({ store }: { store: any }) {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="readiness" className="mt-0">
+            <DailyReadiness store={store} />
+          </TabsContent>
 
           <TabsContent value="skills" className="mt-0">
             <SportsSkills store={store} section="sports" preselectedSport={selectedGame} />
