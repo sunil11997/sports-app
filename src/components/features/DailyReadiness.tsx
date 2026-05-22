@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -22,10 +23,6 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/**
- * CoachAlertSystem
- * Multi-factor physiological risk assessment engine.
- */
 const CoachAlertSystem = {
   evaluateAthleteReadiness: (input: {
     sleepHours: number;
@@ -48,16 +45,16 @@ const CoachAlertSystem = {
       };
     }
 
-    const isGoingThroughGrowthSpurt = !isNaN(phvOffset) && phvOffset >= -0.5 && phvOffset <= 0.5;
+    const isGrowthSpurt = !isNaN(phvOffset) && phvOffset >= -0.5 && phvOffset <= 0.5;
     const strainScore = soreness + fatigue;
 
     if (strainScore >= 7 || sleepHours < 6) {
       return {
         statusColor: "YELLOW",
         action: "सराव मर्यादित करा",
-        advice: isGoingThroughGrowthSpurt 
-            ? "मुलगा 'ग्रोथ स्पर्ट' (उंची वाढण्याच्या वेगवान टप्प्यात) मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे (Jumps) आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
-            : "थकवा जास्त आहे आणि झोप कमी झाली आहे. धावण्याचा आणि ताकदीचा सराव कमी करून हलका तांत्रिक सराव (Tactical Drills) घ्या.",
+        advice: isGrowthSpurt 
+            ? "मुलगा 'ग्रोथ स्पर्ट' मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
+            : "थकवा जास्त आहे आणि झोप कमी झाली आहे. धावण्याचा आणि ताकदीचा सराव कमी करून हलका तांत्रिक सराव घ्या.",
         color: "text-amber-600",
         bg: "bg-amber-50",
         border: "border-amber-200",
@@ -68,9 +65,9 @@ const CoachAlertSystem = {
     return {
       statusColor: "GREEN",
       action: "पूर्ण सराव",
-      advice: isGoingThroughGrowthSpurt
-          ? "खेळाडू फिट आहे, पण उंची वाढण्याचा काळ सुरू असल्याने सराव करताना खेळाडूच्या धावण्याच्या तंत्रावर (Running Mechanics) लक्ष ठेवा."
-          : "खेळाडू पूर्णपणे सज्ज आहे. आज तुम्ही मॅक्सिमम ताकद, गती (Speed) आणि सामन्याचा सराव (Match Practice) घेऊ शकता.",
+      advice: isGrowthSpurt
+          ? "खेळाडू फिट आहे, पण उंची वाढण्याचा काळ सुरू असल्याने सराव करताना खेळाडूच्या धावण्याच्या तंत्रावर लक्ष ठेवा."
+          : "खेळाडू पूर्णपणे सज्ज आहे. आज तुम्ही मॅक्सिमम ताकद, गती आणि सामन्याचा सराव घेऊ शकता.",
       color: "text-emerald-600",
       bg: "bg-emerald-50",
       border: "border-emerald-200",
@@ -79,10 +76,6 @@ const CoachAlertSystem = {
   }
 };
 
-/**
- * calculatePhvOffset
- * Mirwald PHV Maturity estimation logic.
- */
 const calculatePhvOffset = (player: any) => {
   if (!player?.height || !player?.weight || !player?.age) return 0;
   
@@ -121,26 +114,10 @@ export function DailyReadiness({ store }: { store: any }) {
 
   const players = useMemo(() => {
     if (!store?.data?.players) return [];
-    return store.data.players
+    return [...store.data.players]
       .filter((p: any) => p && p.category === 'athlete')
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [store?.data?.players]);
-
-  const selectedPlayer = useMemo(() => {
-    if (!selectedPlayerId || !players) return null;
-    return players.find((p: any) => p.id === selectedPlayerId) || null;
-  }, [selectedPlayerId, players]);
-
-  const coachAlert = useMemo(() => {
-    if (!selectedPlayer || !isMounted) return null;
-    return CoachAlertSystem.evaluateAthleteReadiness({
-      sleepHours,
-      soreness: sorenessScore,
-      fatigue: fatigueScore,
-      injuryStatus,
-      phvOffset: calculatePhvOffset(selectedPlayer)
-    });
-  }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus, isMounted]);
 
   const teamReadiness = useMemo(() => {
     if (!isMounted || !players) return [];
@@ -157,13 +134,28 @@ export function DailyReadiness({ store }: { store: any }) {
     });
   }, [players, store.data.dailyReadiness, isMounted]);
 
-  // Pre-calculate JSX for better build worker stability
+  const selectedPlayer = useMemo(() => {
+    if (!selectedPlayerId) return null;
+    return players.find((p: any) => p.id === selectedPlayerId) || null;
+  }, [selectedPlayerId, players]);
+
+  const activeAlert = useMemo(() => {
+    if (!selectedPlayer) return null;
+    return CoachAlertSystem.evaluateAthleteReadiness({
+      sleepHours,
+      soreness: sorenessScore,
+      fatigue: fatigueScore,
+      injuryStatus,
+      phvOffset: calculatePhvOffset(selectedPlayer)
+    });
+  }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
+
   const squadView = useMemo(() => {
     if (!isMounted || teamReadiness.length === 0) {
       return (
         <div className="py-20 text-center opacity-20">
           <Users className="w-10 h-10 mx-auto mb-2" />
-          <p className="text-[10px] font-black uppercase">No athlete data synchronized</p>
+          <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Registry Sync</p>
         </div>
       );
     }
@@ -182,10 +174,10 @@ export function DailyReadiness({ store }: { store: any }) {
                 {player.name ? player.name[0] : '?'}
               </AvatarFallback>
             </Avatar>
-            {hasData && (
+            {hasData && analysis && (
               <div className={cn(
                 "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
-                analysis?.dot || "bg-emerald-500"
+                analysis.dot
               )} />
             )}
           </div>
@@ -200,23 +192,23 @@ export function DailyReadiness({ store }: { store: any }) {
                   Std {player.std} • Age {player.age}
                 </p>
               </div>
-              {hasData && (
+              {hasData && analysis && (
                 <Badge className={cn(
-                  "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0 shadow-none", 
-                  analysis?.bg || "bg-primary/10", 
-                  analysis?.color || "text-primary"
+                  "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0", 
+                  analysis.bg, 
+                  analysis.color
                 )}>
-                  {analysis?.action || "Check"}
+                  {analysis.action}
                 </Badge>
               )}
             </div>
             
-            {hasData && (
+            {hasData && analysis && (
               <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
                 <div className="flex items-start gap-2">
                   <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
                   <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
-                    "{analysis?.advice || "No advice available."}"
+                    "{analysis.advice}"
                   </p>
                 </div>
               </div>
@@ -236,13 +228,9 @@ export function DailyReadiness({ store }: { store: any }) {
         sorenessScore, 
         fatigueScore, 
         injuryStatus,
-        readinessStatus: coachAlert?.statusColor || "GREEN"
+        readinessStatus: activeAlert?.statusColor || "GREEN"
       });
-      toast({ 
-        title: "यशस्वी", 
-        description: "आजचा आरोग्य डेटा जतन केला!", 
-        className: "bg-emerald-600 text-white" 
-      });
+      toast({ title: "यशस्वी", description: "आजचा आरोग्य डेटा जतन केला!" });
     } catch (error) {
       toast({ title: "Sync Error", variant: "destructive" });
     } finally {
@@ -261,15 +249,13 @@ export function DailyReadiness({ store }: { store: any }) {
               <HeartPulse className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-2xl font-black text-primary uppercase tracking-tight leading-none">आरोग्य सज्जता नोंद</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Entry Form (Coach सुनील)</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">WGB Athlete Portal</p>
           </div>
         </div>
 
         <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white space-y-8">
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2 flex items-center gap-2">
-              <Users className="w-3 h-3" /> खेळाडू निवडा
-            </label>
+            <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2 flex items-center gap-2">खेळाडू निवडा</label>
             <Select value={selectedPlayerId} onValueChange={setSelectedPlayerId}>
               <SelectTrigger className="h-14 rounded-2xl border-2 font-bold bg-white text-lg">
                 <SelectValue placeholder="खेळाडू निवडा..." />
@@ -282,33 +268,33 @@ export function DailyReadiness({ store }: { store: any }) {
             </Select>
           </div>
 
-          {coachAlert ? (
+          {activeAlert ? (
             <div className={cn(
               "p-8 rounded-[2rem] border-2 space-y-6 transition-all shadow-sm", 
-              coachAlert.bg, 
-              coachAlert.border
+              activeAlert.bg, 
+              activeAlert.border
             )}>
                <div className="flex items-center gap-4">
-                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-inner", coachAlert.color)}>
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-inner", activeAlert.color)}>
                     <Activity className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
                     <Badge className={cn(
                       "font-black uppercase text-[9px] px-3", 
-                      coachAlert.statusColor === 'RED' ? 'bg-red-600' : 
-                      coachAlert.statusColor === 'YELLOW' ? 'bg-amber-500' : 
+                      activeAlert.statusColor === 'RED' ? 'bg-red-600' : 
+                      activeAlert.statusColor === 'YELLOW' ? 'bg-amber-500' : 
                       'bg-emerald-600'
                     )}>
-                      {coachAlert.statusColor} Alert
+                      {activeAlert.statusColor} Alert
                     </Badge>
-                    <h3 className={cn("text-xl font-black uppercase leading-none mt-1.5", coachAlert.color)}>
-                      {coachAlert.action}
+                    <h3 className={cn("text-xl font-black uppercase leading-none mt-1.5", activeAlert.color)}>
+                      {activeAlert.action}
                     </h3>
                   </div>
                </div>
                <div className="bg-white/60 p-5 rounded-2xl border border-white/50">
                 <p className="text-xs font-bold text-foreground/80 leading-relaxed italic">
-                  "{coachAlert.advice}"
+                  "{activeAlert.advice}"
                 </p>
                </div>
             </div>
@@ -322,60 +308,32 @@ export function DailyReadiness({ store }: { store: any }) {
           <div className="space-y-8 py-2">
              <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
-                    <Moon className="w-4 h-4 text-blue-500" /> झोप (तास)
-                  </h4>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-black">
-                    {sleepHours} तास
-                  </Badge>
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2"><Moon className="w-4 h-4 text-blue-500" /> झोप (तास)</h4>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-black">{sleepHours} तास</Badge>
                 </div>
-                <Slider 
-                  value={[sleepHours]} 
-                  onValueChange={(val) => setSleepHours(val[0])} 
-                  min={4} 
-                  max={12} 
-                  step={0.5} 
-                />
+                <Slider value={[sleepHours]} onValueChange={(val) => setSleepHours(val[0])} min={4} max={12} step={0.5} />
              </div>
              
              <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-orange-500" /> स्नायू थकवा (Soreness)
-                  </h4>
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2"><Activity className="w-4 h-4 text-orange-500" /> स्नायू थकवा</h4>
                   <Badge className="bg-orange-500 text-white font-black">{sorenessScore}</Badge>
                 </div>
-                <Slider 
-                  value={[sorenessScore]} 
-                  onValueChange={(val) => setSorenessScore(val[0])} 
-                  min={1} 
-                  max={5} 
-                  step={1} 
-                />
+                <Slider value={[sorenessScore]} onValueChange={(val) => setSorenessScore(val[0])} min={1} max={5} step={1} />
              </div>
 
              <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-red-500" /> शारीरिक थकवा (Fatigue)
-                  </h4>
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2"><Activity className="w-4 h-4 text-red-500" /> शारीरिक थकवा</h4>
                   <Badge className="bg-red-500 text-white font-black">{fatigueScore}</Badge>
                 </div>
-                <Slider 
-                  value={[fatigueScore]} 
-                  onValueChange={(val) => setFatigueScore(val[0])} 
-                  min={1} 
-                  max={5} 
-                  step={1} 
-                />
+                <Slider value={[fatigueScore]} onValueChange={(val) => setFatigueScore(val[0])} min={1} max={5} step={1} />
              </div>
 
              <div className="space-y-2">
                 <h4 className="text-xs font-black text-primary uppercase ml-2">दुखापत स्टेटस</h4>
                 <Select value={injuryStatus} onValueChange={setInjuryStatus}>
-                  <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Fit to Train">तंदुरुस्त (Fit)</SelectItem>
                     <SelectItem value="Restricted">हलका सराव (Restricted)</SelectItem>
@@ -402,13 +360,13 @@ export function DailyReadiness({ store }: { store: any }) {
               <ClipboardCheck className="w-8 h-8 text-primary" />
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">सज्जता डॅशबोर्ड (Squad View)</h3>
            </div>
-           <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-4 py-1.5 rounded-full bg-white shadow-sm">आजची स्थिती</Badge>
+           <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-4 py-1.5 rounded-full bg-white shadow-sm">Real-Time Pulse</Badge>
         </div>
 
         <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[700px]">
            <div className="bg-muted/30 p-6 border-b flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase text-primary tracking-widest">खेळाडू यादी (Athlete Roster)</span>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">{players.length} Total Athletes</span>
+              <span className="text-[10px] font-black uppercase text-primary tracking-widest">Athlete Roster</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">{players.length} Total</span>
            </div>
            
            <div className="flex-1 overflow-y-auto max-h-[800px] scrollbar-hide p-6 space-y-4">
