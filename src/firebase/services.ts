@@ -42,12 +42,16 @@ export function getSdks(firebaseApp: FirebaseApp) {
     try {
       firestore = initializeFirestore(firebaseApp, {
         localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager()
+          tabManager: persistentMultipleTabManager(),
+          // Configured for 100MB cache budget as requested for local athlete data
+          cacheSizeBytes: 100 * 1024 * 1024 
         }),
         experimentalForceLongPolling: true // CRITICAL: Resolve 10s connection timeouts
       });
+      console.log("WGB: Firestore Registry initialized with 100MB persistent cache.");
     } catch (e: any) {
       firestore = getFirestore(firebaseApp);
+      console.warn('WGB: Firestore standard initialization fallback.', e);
     }
 
     return {
