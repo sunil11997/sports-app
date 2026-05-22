@@ -31,9 +31,12 @@ import {
   Sun,
   Moon,
   WifiOff,
-  CloudSun,
+  Gauge,
+  ClipboardCheck,
+  ChevronDown
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
+import { TrainingLoad } from './TrainingLoad';
 
 const SPORTS_CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -58,6 +61,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
+  const [showFatigueReport, setShowFatigueReport] = useState(false);
   const { isOnline } = usePWA();
 
   useEffect(() => {
@@ -177,7 +181,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {!isOnline && (
         <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -313,6 +317,40 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
           </TableBody>
         </Table>
       </div>
+
+      {/* Institutional End-of-Session Fatigue Report (Web Integration) */}
+      <div className="pt-8">
+        <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+          <div 
+            onClick={() => setShowFatigueReport(!showFatigueReport)}
+            className="p-6 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-all border-b group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
+                <Gauge className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-primary uppercase tracking-tight">End-of-Session Fatigue Report</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest">Post-training Exertion & Load Archival</p>
+              </div>
+            </div>
+            <div className={cn("transition-transform duration-300", showFatigueReport ? "rotate-180" : "")}>
+              <ChevronDown className="w-6 h-6 text-primary/30 group-hover:text-primary" />
+            </div>
+          </div>
+          
+          {showFatigueReport && (
+            <div className="p-8 animate-in slide-in-from-top-4 duration-500">
+               <TrainingLoad store={store} />
+               <div className="mt-8 flex items-center gap-4 p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/10">
+                  <ClipboardCheck className="w-5 h-5 text-primary opacity-40" />
+                  <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Load metrics will be archived in the individual Athlete Performance Dossier.</p>
+               </div>
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
+
