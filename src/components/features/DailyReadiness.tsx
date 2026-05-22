@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -13,7 +14,9 @@ import {
   Save, 
   Loader2, 
   Users,
-  ShieldCheck
+  ShieldCheck,
+  Zap,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -33,33 +36,73 @@ export function DailyReadiness({ store }: { store: any }) {
     [store.data.players]
   );
 
-  const readiness = useMemo(() => {
-    const totalScore = sorenessScore + fatigueScore;
-    if (injuryStatus === "Sidelined") return { 
-      status: "RED", 
-      label: "पूर्ण विश्रांतीची गरज!", 
-      desc: "धोका / दुखापत", 
-      color: "text-destructive", 
-      bg: "bg-destructive/10", 
-      border: "border-destructive" 
+  const selectedPlayer = useMemo(() => 
+    players.find((p: any) => p.id === selectedPlayerId),
+    [selectedPlayerId, players]
+  );
+
+  // PHV Offset Calculation Logic (Mirwald)
+  const calculatePhvOffset = (player: any) => {
+    if (!player?.height || !player?.weight || !player?.age) return 0;
+    
+    const h = parseFloat(player.height);
+    const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
+    const w = parseFloat(player.weight);
+    const age = player.age;
+    const legL = h - sH;
+
+    let offset = 0;
+    if (player.gender === 'Male') {
+      offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
+    } else {
+      offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
+    }
+    return offset;
+  };
+
+  // CoachAlertSystem logic integrated
+  const coachAlert = useMemo(() => {
+    if (!selectedPlayer) return null;
+
+    const phvOffset = calculatePhvOffset(selectedPlayer);
+    const strainScore = sorenessScore + fatigueScore;
+    const isGoingThroughGrowthSpurt = phvOffset >= -0.5 && phvOffset <= 0.5;
+
+    if (injuryStatus === "Sidelined") {
+      return {
+        statusColor: "RED",
+        action: "विश्रांती द्या",
+        advice: "खेळाडूला आज मैदानावरील सरावातून पूर्ण विश्रांती द्या आणि फिजिओथेरपी किंवा डॉक्टरांचा सल्ला घ्या.",
+        color: "text-destructive",
+        bg: "bg-destructive/10",
+        border: "border-destructive"
+      };
+    }
+
+    if (strainScore >= 7 || sleepHours < 6) {
+      return {
+        statusColor: "YELLOW",
+        action: "सराव मर्यादित करा",
+        advice: isGoingThroughGrowthSpurt 
+            ? "मुलगा 'ग्रोथ स्पर्ट' (उंची वाढण्याच्या वेगवान टप्प्यात) मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे (Jumps) आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
+            : "थकवा जास्त आहे आणि झोप कमी झाली आहे. धावण्याचा आणि ताकदीचा सराव कमी करून हलका तांत्रिक सराव (Tactical Drills) घ्या.",
+        color: "text-amber-600",
+        bg: "bg-amber-50",
+        border: "border-amber-200"
+      };
+    }
+
+    return {
+      statusColor: "GREEN",
+      action: "पूर्ण सराव",
+      advice: isGoingThroughGrowthSpurt
+          ? "खेळाडू फिट आहे, पण उंची वाढण्याचा काळ सुरू असल्याने सराव करताना खेळाडूच्या धावण्याच्या तंत्रावर (Running Mechanics) लक्ष ठेवा."
+          : "खेळाडू पूर्णपणे सज्ज आहे. आज तुम्ही मॅक्सिमम ताकद, गती (Speed) आणि सामन्याचा सराव (Match Practice) घेऊ शकता.",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200"
     };
-    if (totalScore >= 7 || sleepHours < 6) return { 
-      status: "YELLOW", 
-      label: "कमी ताकदीचा सराव द्यावा", 
-      desc: "मध्यम ताण", 
-      color: "text-amber-600", 
-      bg: "bg-amber-50", 
-      border: "border-amber-200" 
-    };
-    return { 
-      status: "GREEN", 
-      label: "सराव करण्यासाठी सज्ज!", 
-      desc: "उत्तम स्थिती", 
-      color: "text-emerald-600", 
-      bg: "bg-emerald-50", 
-      border: "border-emerald-200" 
-    };
-  }, [sleepHours, sorenessScore, fatigueScore, injuryStatus]);
+  }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
 
   const handleSave = async () => {
     if (!selectedPlayerId) {
@@ -74,7 +117,7 @@ export function DailyReadiness({ store }: { store: any }) {
         sorenessScore,
         fatigueScore,
         injuryStatus,
-        readinessStatus: readiness.status
+        readinessStatus: coachAlert?.statusColor || "GREEN"
       });
       toast({ 
         title: "यशस्वी", 
@@ -118,15 +161,40 @@ export function DailyReadiness({ store }: { store: any }) {
           </Select>
         </div>
 
-        <div className={cn("p-6 rounded-[1.5rem] border-2 flex items-center gap-6 transition-all shadow-sm", readiness.bg, readiness.border)}>
-           <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-inner bg-white", readiness.color)}>
-              <Activity className="w-6 h-6 animate-pulse" />
-           </div>
-           <div>
-              <h3 className={cn("text-xl font-black uppercase leading-none", readiness.color)}>{readiness.label}</h3>
-              <p className="text-[10px] font-bold text-foreground/60 uppercase mt-2 tracking-widest">आजची स्थिती: {readiness.desc}</p>
-           </div>
-        </div>
+        {coachAlert ? (
+          <div className={cn("p-8 rounded-[2rem] border-2 space-y-6 transition-all shadow-sm relative overflow-hidden", coachAlert.bg, coachAlert.border)}>
+             <div className="flex items-center gap-6 relative z-10">
+                <div className={cn("w-16 h-16 rounded-full flex items-center justify-center shadow-inner bg-white shrink-0", coachAlert.color)}>
+                  <Activity className="w-8 h-8 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Badge className={cn("px-4 py-1 rounded-full font-black uppercase text-[10px]", coachAlert.statusColor === 'RED' ? 'bg-red-600' : coachAlert.statusColor === 'YELLOW' ? 'bg-amber-500' : 'bg-emerald-600')}>
+                      {coachAlert.statusColor} Alert
+                    </Badge>
+                    <span className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">System evaluated</span>
+                  </div>
+                  <h3 className={cn("text-2xl font-black uppercase leading-none mt-2", coachAlert.color)}>{coachAlert.action}</h3>
+                </div>
+             </div>
+
+             <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-white/50 space-y-3 relative z-10">
+                <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest">
+                  <Info className="w-4 h-4 text-accent" /> प्रशिक्षकांसाठी सल्ला (Advice):
+                </div>
+                <p className="text-sm font-bold text-foreground/80 leading-relaxed italic">
+                  "{coachAlert.advice}"
+                </p>
+             </div>
+             
+             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full translate-x-1/2 -translate-y-1/2" />
+          </div>
+        ) : (
+          <div className="p-10 text-center border-4 border-dashed rounded-[2rem] opacity-20">
+             <Zap className="w-12 h-12 mx-auto mb-4" />
+             <p className="text-sm font-black uppercase tracking-widest">Identify athlete to run readiness engine</p>
+          </div>
+        )}
 
         <div className="space-y-10 py-4">
            {/* 1. Sleep */}
