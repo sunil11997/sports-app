@@ -33,7 +33,8 @@ import {
   BarChart,
   Search,
   Clock,
-  Newspaper
+  Newspaper,
+  Gauge
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -97,6 +98,10 @@ const ClassesSection = dynamic(() => import('@/components/features/ClassesSectio
   loading: () => <TableSkeleton /> 
 });
 const SportsKnowledge = dynamic(() => import('@/components/features/SportsKnowledge').then(mod => mod.SportsKnowledge), { 
+  ssr: false,
+  loading: () => <TableSkeleton /> 
+});
+const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(mod => mod.TrainingLoad), { 
   ssr: false,
   loading: () => <TableSkeleton /> 
 });
@@ -342,12 +347,13 @@ export default function WaghambaApp() {
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
               {/* Sub-Navigation Control */}
-              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" ? (
+              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" ? (
                 <div className="relative group/scroll">
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
                     {[
                       { id: "attendance", label: "Attendance", icon: CalendarDays },
                       { id: "performance", label: "Performance", icon: BarChart },
+                      { id: "loads", label: "Training Load", icon: Gauge },
                       { id: "fitness", label: "Fitness Tracking", icon: Activity },
                       { id: "exams", label: "Exam Hub", icon: FileText },
                       { id: "classes", label: "Classes Hub", icon: GraduationCap },
@@ -373,6 +379,7 @@ export default function WaghambaApp() {
                    {[
                       { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
                       { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart, color: "bg-indigo-500" },
+                      { id: "loads", label: "Training Load (RPE)", desc: "Periodization metrics", icon: Gauge, color: "bg-orange-600" },
                       { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
                       { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
                       { id: "classes", label: "Classes Registry", desc: "Standard wise data", icon: GraduationCap, color: "bg-purple-500" },
@@ -394,6 +401,7 @@ export default function WaghambaApp() {
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
               {subTab === "performance" && <History store={schoolData} section={selectedSection} />}
+              {subTab === "loads" && <TrainingLoad store={schoolData} />}
               {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}
               {subTab === "exams" && <ExamsHub store={schoolData} />}
               {subTab === "classes" && <ClassesSection store={schoolData} />}
