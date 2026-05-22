@@ -45,7 +45,7 @@ const historyPrompt = ai.definePrompt({
 
 /**
  * getSportsHistory
- * Generates historical sports events with retry logic.
+ * Generates historical sports events with an aggressive cooldown for quota limits.
  */
 export async function getSportsHistory(date: string, language: string = 'English'): Promise<HistoryOutput> {
   let attempts = 0;
@@ -64,10 +64,16 @@ export async function getSportsHistory(date: string, language: string = 'English
       const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
       const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
-      if ((isQuota || isUnavailable) && attempts < maxAttempts) {
-        // Quota hits require longer cooldowns to allow the window to reset
-        const delay = isQuota ? 10000 : (2000 * Math.pow(2, attempts));
-        console.warn(`WGB History Vault: Retry ${attempts}/${maxAttempts} due to AI demand spike.`);
+      if (isQuota && attempts < maxAttempts) {
+        // Quota hits require a fixed long delay to clear the window
+        console.warn(`WGB History Vault: Quota hit. Cooling down for 40s (Attempt ${attempts})...`);
+        await new Promise(resolve => setTimeout(resolve, 40000));
+        continue;
+      }
+
+      if (isUnavailable && attempts < maxAttempts) {
+        const delay = 2000 * Math.pow(2, attempts);
+        console.warn(`WGB History Vault: AI demand spike. Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }

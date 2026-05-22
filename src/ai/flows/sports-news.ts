@@ -48,7 +48,7 @@ const newsPrompt = ai.definePrompt({
 
 /**
  * getSportsNews
- * Generates regional sports news with a high-resilience retry loop.
+ * Generates regional sports news with an aggressive cooldown for quota limits.
  */
 export async function getSportsNews(date: string, language: string = 'English'): Promise<NewsOutput> {
   let attempts = 0;
@@ -67,10 +67,16 @@ export async function getSportsNews(date: string, language: string = 'English'):
       const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
       const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
-      if ((isQuota || isUnavailable) && attempts < maxAttempts) {
-        // If quota hit, we wait significantly longer (baseline 10s)
-        const delay = isQuota ? 10000 : (2000 * Math.pow(2, attempts));
-        console.warn(`WGB News Pulse: Retry ${attempts}/${maxAttempts} (Delay: ${delay}ms) due to: ${isQuota ? 'Quota' : 'Service Busy'}`);
+      if (isQuota && attempts < maxAttempts) {
+        // Gemini Quota hits require a significant cooldown (~35-40s)
+        console.warn(`WGB News Pulse: Quota hit. Waiting 40s for AI engine cooldown (Attempt ${attempts})...`);
+        await new Promise(resolve => setTimeout(resolve, 40000));
+        continue;
+      }
+
+      if (isUnavailable && attempts < maxAttempts) {
+        const delay = 2000 * Math.pow(2, attempts);
+        console.warn(`WGB News Pulse: Service busy. Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
