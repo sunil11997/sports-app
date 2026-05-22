@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -83,6 +84,26 @@ class CoachAlertSystem {
   }
 }
 
+/**
+ * calculatePhvOffset
+ * Mirwald PHV Maturity estimation.
+ */
+const calculatePhvOffset = (player: any) => {
+  if (!player?.height || !player?.weight || !player?.age) return 0;
+  const h = parseFloat(player.height);
+  const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
+  const w = parseFloat(player.weight);
+  const age = Number(player.age) || 0;
+  const legL = h - sH;
+  let offset = 0;
+  if (player.gender === 'Male') {
+    offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
+  } else {
+    offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
+  }
+  return offset;
+};
+
 export function DailyReadiness({ store }: { store: any }) {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -98,26 +119,11 @@ export function DailyReadiness({ store }: { store: any }) {
   }, []);
 
   const players = useMemo(() => 
-    store.data.players.filter((p: any) => p.category === 'athlete')
-      .sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    store.data.players
+      .filter((p: any) => p && p.category === 'athlete')
+      .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
     [store.data.players]
   );
-
-  const calculatePhvOffset = (player: any) => {
-    if (!player?.height || !player?.weight || !player?.age) return 0;
-    const h = parseFloat(player.height);
-    const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
-    const w = parseFloat(player.weight);
-    const age = Number(player.age) || 0;
-    const legL = h - sH;
-    let offset = 0;
-    if (player.gender === 'Male') {
-      offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
-    } else {
-      offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
-    }
-    return offset;
-  };
 
   const selectedPlayer = useMemo(() => 
     players.find((p: any) => p.id === selectedPlayerId),
@@ -125,7 +131,7 @@ export function DailyReadiness({ store }: { store: any }) {
   );
 
   const coachAlert = useMemo(() => {
-    if (!selectedPlayer) return null;
+    if (!selectedPlayer || !isMounted) return null;
     return CoachAlertSystem.evaluateAthleteReadiness({
       sleepHours,
       soreness: sorenessScore,
@@ -133,12 +139,12 @@ export function DailyReadiness({ store }: { store: any }) {
       injuryStatus,
       phvOffset: calculatePhvOffset(selectedPlayer)
     });
-  }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
+  }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus, isMounted]);
 
   const teamReadiness = useMemo(() => {
     if (!isMounted) return [];
     return players.map((p: any) => {
-      const data = store.data.dailyReadiness[p.id] || {};
+      const data = store.data.dailyReadiness?.[p.id] || {};
       const analysis = CoachAlertSystem.evaluateAthleteReadiness({
         sleepHours: data.sleepHours || 8,
         soreness: data.sorenessScore || 1,
@@ -146,12 +152,12 @@ export function DailyReadiness({ store }: { store: any }) {
         injuryStatus: data.injuryStatus || "Fit to Train",
         phvOffset: calculatePhvOffset(p)
       });
-      return { player: p, analysis, hasData: !!store.data.dailyReadiness[p.id] };
+      return { player: p, analysis, hasData: !!store.data.dailyReadiness?.[p.id] };
     });
   }, [players, store.data.dailyReadiness, isMounted]);
 
   const handleSave = async () => {
-    if (!selectedPlayerId) return;
+    if (!selectedPlayerId || !isMounted) return;
     setIsSaving(true);
     try {
       await store.setReadiness(selectedPlayerId, {
@@ -260,7 +266,9 @@ export function DailyReadiness({ store }: { store: any }) {
                     <div className="relative">
                         <Avatar className="w-14 h-14 border-2 border-white shadow-md">
                           <AvatarImage src={player.photoUrl} className="object-cover" />
-                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">{player.name[0]}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">
+                            {player.name ? player.name[0] : '?'}
+                          </AvatarFallback>
                         </Avatar>
                         {hasData && <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", analysis.dot)} />}
                     </div>
@@ -302,3 +310,4 @@ export function DailyReadiness({ store }: { store: any }) {
     </div>
   );
 }
+

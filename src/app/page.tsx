@@ -44,67 +44,34 @@ import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { format } from 'date-fns';
 
-// Dynamically Imported Feature Components
-const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(mod => mod.Dashboard), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
-const Registration = dynamic(() => import('@/components/features/Registration').then(mod => mod.Registration), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
-const Attendance = dynamic(() => import('@/components/features/Attendance').then(mod => mod.Attendance), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
-const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(mod => mod.HealthIncidents), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
-const Fitness = dynamic(() => import('@/components/features/Fitness').then(mod => mod.Fitness), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
+// Static Imports for core components to resolve chunk load conflicts
+import { Dashboard } from '@/components/features/Dashboard';
+import { Registration } from '@/components/features/Registration';
+import { Attendance } from '@/components/features/Attendance';
+import { HealthIncidents } from '@/components/features/HealthIncidents';
+import { Fitness } from '@/components/features/Fitness';
+import { DailyReport } from '@/components/features/DailyReport';
+import { History } from '@/components/features/History';
+import { ExamsHub } from '@/components/features/ExamsHub';
+import { PromotionHub } from '@/components/features/PromotionHub';
+import { ClassesSection } from '@/components/features/ClassesSection';
+import { SportsKnowledge } from '@/components/features/SportsKnowledge';
+import { TrainingLoad } from '@/components/features/TrainingLoad';
+
+// Keep GameHub dynamic as it is a large container
 const GameHub = dynamic(() => import('@/components/features/GameHub').then(mod => mod.GameHub), { 
   ssr: false, 
   loading: () => <TableSkeleton /> 
 });
-const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(mod => mod.DailyReport), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
+
 const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
   ssr: false 
 });
 const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(mod => mod.SchoolRegistration), { 
   ssr: false 
 });
-const History = dynamic(() => import('@/components/features/History').then(mod => mod.History), { 
-  ssr: false,
-  loading: () => <TableSkeleton /> 
-});
 const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(mod => mod.NotificationCenter), { 
   ssr: false 
-});
-const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(mod => mod.ExamsHub), { 
-  ssr: false,
-  loading: () => <TableSkeleton /> 
-});
-const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(mod => mod.PromotionHub), { 
-  ssr: false,
-  loading: () => <TableSkeleton /> 
-});
-const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(mod => mod.ClassesSection), { 
-  ssr: false,
-  loading: () => <TableSkeleton /> 
-});
-const SportsKnowledge = dynamic(() => import('@/components/features/SportsKnowledge').then(mod => mod.SportsKnowledge), { 
-  ssr: false,
-  loading: () => <TableSkeleton /> 
-});
-const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(mod => mod.TrainingLoad), { 
-  ssr: false,
-  loading: () => <TableSkeleton /> 
 });
 
 const translations = {
@@ -185,7 +152,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.7.0</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.7.2</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -512,3 +479,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+
