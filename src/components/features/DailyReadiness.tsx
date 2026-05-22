@@ -98,6 +98,72 @@ const calculatePhvOffset = (player: any) => {
   return isNaN(offset) ? 0 : offset;
 };
 
+/**
+ * SquadItem Component
+ * Extracted to ensure clean JSX tree for Next.js build worker.
+ */
+function SquadItem({ data }: { data: any }) {
+  const { player, analysis, hasData } = data;
+  if (!player) return null;
+
+  return (
+    <div key={player.id} className={cn(
+      "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
+      hasData 
+        ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" 
+        : "bg-muted/10 border-transparent opacity-40 grayscale"
+    )}>
+      <div className="relative">
+        <Avatar className="w-14 h-14 border-2 border-white shadow-md">
+          <AvatarImage src={player.photoUrl} className="object-cover" />
+          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">
+            {player.name ? player.name[0] : '?'}
+          </AvatarFallback>
+        </Avatar>
+        {hasData && analysis && (
+          <div className={cn(
+            "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
+            analysis.dot
+          )} />
+        )}
+      </div>
+      
+      <div className="flex-1 min-w-0 space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors truncate">
+              {player.name}
+            </p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">
+              Std {player.std} • Age {player.age}
+            </p>
+          </div>
+          {hasData && analysis && (
+            <Badge className={cn(
+              "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0", 
+              analysis.bg, 
+              analysis.color
+            )}>
+              {analysis.action}
+            </Badge>
+          )}
+        </div>
+        
+        {hasData && analysis && (
+          <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
+            <div className="flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+              <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
+                "{analysis.advice}"
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function DailyReadiness({ store }: { store: any }) {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -159,64 +225,7 @@ export function DailyReadiness({ store }: { store: any }) {
         </div>
       );
     }
-
-    return teamReadiness.map(({ player, analysis, hasData }) => {
-      if (!player) return null;
-      return (
-        <div key={player.id} className={cn(
-          "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
-          hasData ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" : "bg-muted/10 border-transparent opacity-40 grayscale"
-        )}>
-          <div className="relative">
-            <Avatar className="w-14 h-14 border-2 border-white shadow-md">
-              <AvatarImage src={player.photoUrl} className="object-cover" />
-              <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">
-                {player.name ? player.name[0] : '?'}
-              </AvatarFallback>
-            </Avatar>
-            {hasData && analysis && (
-              <div className={cn(
-                "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
-                analysis.dot
-              )} />
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0 space-y-3">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors truncate">
-                  {player.name}
-                </p>
-                <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">
-                  Std {player.std} • Age {player.age}
-                </p>
-              </div>
-              {hasData && analysis && (
-                <Badge className={cn(
-                  "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0", 
-                  analysis.bg, 
-                  analysis.color
-                )}>
-                  {analysis.action}
-                </Badge>
-              )}
-            </div>
-            
-            {hasData && analysis && (
-              <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
-                <div className="flex items-start gap-2">
-                  <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-                  <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
-                    "{analysis.advice}"
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    });
+    return teamReadiness.map((data) => <SquadItem key={data.player.id} data={data} />);
   }, [teamReadiness, isMounted]);
 
   const handleSave = async () => {
