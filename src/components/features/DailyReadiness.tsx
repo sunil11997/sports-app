@@ -98,10 +98,6 @@ const calculatePhvOffset = (player: any) => {
   return isNaN(offset) ? 0 : offset;
 };
 
-/**
- * SquadItem Component
- * Fixed unescaped entities for production.
- */
 function SquadItem({ data }: { data: any }) {
   if (!data?.player) return null;
   const { player, analysis, hasData } = data;
@@ -200,21 +196,18 @@ export function DailyReadiness({ store }: { store: any }) {
     });
   }, [players, store.data.dailyReadiness, isMounted]);
 
-  const selectedPlayer = useMemo(() => {
-    if (!selectedPlayerId) return null;
-    return players.find((p: any) => p.id === selectedPlayerId) || null;
-  }, [selectedPlayerId, players]);
-
   const activeAlert = useMemo(() => {
-    if (!selectedPlayer) return null;
+    if (!selectedPlayerId) return null;
+    const p = players.find((p: any) => p.id === selectedPlayerId);
+    if (!p) return null;
     return CoachAlertSystem.evaluateAthleteReadiness({
       sleepHours,
       soreness: sorenessScore,
       fatigue: fatigueScore,
       injuryStatus,
-      phvOffset: calculatePhvOffset(selectedPlayer)
+      phvOffset: calculatePhvOffset(p)
     });
-  }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
+  }, [selectedPlayerId, players, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
 
   const handleSave = async () => {
     if (!selectedPlayerId || !isMounted) return;
@@ -373,8 +366,8 @@ export function DailyReadiness({ store }: { store: any }) {
                   <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Registry Sync</p>
                 </div>
               ) : (
-                teamReadiness.map((data: any) => (
-                  <SquadItem key={data.player?.id || Math.random()} data={data} />
+                teamReadiness.map((data: any, idx: number) => (
+                  <SquadItem key={data.player?.id || `squad-idx-${idx}`} data={data} />
                 ))
               )}
            </div>
@@ -389,3 +382,4 @@ export function DailyReadiness({ store }: { store: any }) {
     </div>
   );
 }
+

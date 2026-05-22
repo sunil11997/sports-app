@@ -98,7 +98,7 @@ export function NotificationCenter({ store }: { store: any }) {
         {[
           { id: 'practice', icon: Dumbbell, color: 'text-blue-600', label: 'Practice Reminders', desc: 'Alerts 15 mins before sessions', test: () => simulateNotification("Practice Alert", "Kabaddi drills starting in 15 mins at Main Ground.") },
           { id: 'tournament', icon: Trophy, color: 'text-orange-600', label: 'Tournament Alerts', desc: 'Institutional event updates', test: () => simulateNotification("Tournament Update", "District Kabaddi Meet entries closing tomorrow.") },
-          { id: 'attendance', icon: ClipboardCheck, color: 'text-emerald-600', label: 'Attendance Prompts', desc: 'Daily registry sync reminder', test: () => simulateNotification("Registry Sync", "Don't forget to mark today's evening presence.") }
+          { id: 'attendance', icon: ClipboardCheck, color: 'text-emerald-600', label: 'Attendance Prompts', desc: 'Daily registry sync reminder', test: () => simulateNotification("Registry Sync", "Don&apos;t forget to mark today&apos;s evening presence.") }
         ].map((item) => (
           <Card key={item.id} className="border-2 rounded-[2.5rem] p-8 bg-white shadow-xl hover:border-primary/20 transition-all group">
             <div className="flex flex-col h-full space-y-6">
@@ -144,3 +144,4 @@ export function NotificationCenter({ store }: { store: any }) {
     </div>
   );
 }
+
