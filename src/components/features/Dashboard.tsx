@@ -24,7 +24,9 @@ import {
   ShieldCheck,
   Hash,
   Ruler,
-  HeartPulse
+  HeartPulse,
+  UserPlus,
+  Trophy
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -38,7 +40,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 interface DashboardProps {
   store: any;
@@ -53,6 +55,8 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState("all");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [convertingPlayer, setConvertingPlayer] = useState<Player | null>(null);
+  const [selectedSportsForConversion, setSelectedSportsForConversion] = useState<string[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -189,6 +193,22 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
     }
   };
 
+  const handleConvertAction = () => {
+    if (convertingPlayer) {
+      store.updatePlayer({
+        ...convertingPlayer,
+        category: 'athlete',
+        sports: selectedSportsForConversion
+      });
+      toast({ 
+        title: "Promotion Success", 
+        description: `${convertingPlayer.name} has been promoted to the Athlete Roster.` 
+      });
+      setConvertingPlayer(null);
+      setSelectedSportsForConversion([]);
+    }
+  };
+
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
 
   return (
@@ -273,6 +293,11 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                   </TableCell>
                   <TableCell className="px-6 text-right">
                     <div className="flex justify-end gap-2">
+                      {isGeneral && p.category === 'student' && (
+                        <Button variant="ghost" size="icon" title="Convert to Athlete" className="rounded-full hover:bg-emerald-50 text-emerald-600" onClick={() => { setConvertingPlayer(p); setSelectedSportsForConversion([]); }}>
+                          <Trophy className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
@@ -431,6 +456,48 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!convertingPlayer} onOpenChange={() => setConvertingPlayer(null)}>
+        <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
+          <DialogHeader className="bg-emerald-600 p-8 text-white text-center">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
+              <UserPlus className="w-8 h-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Athlete Promotion</DialogTitle>
+            <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em] mt-1">Assign sports to: {convertingPlayer?.name}</p>
+          </DialogHeader>
+
+          <div className="p-8 space-y-6">
+            <div className="space-y-4">
+              <Label className="font-black text-primary uppercase text-[10px] tracking-widest ml-1">Select Specialized Sports</Label>
+              <div className="grid grid-cols-2 gap-4">
+                {SPORTS_LIST.map(sport => (
+                  <div key={sport} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-xl border-2 border-transparent hover:border-emerald-200 transition-all">
+                    <Checkbox 
+                      id={`convert-${sport}`}
+                      checked={selectedSportsForConversion.includes(sport)} 
+                      onCheckedChange={(checked) => {
+                        if (checked) setSelectedSportsForConversion([...selectedSportsForConversion, sport]);
+                        else setSelectedSportsForConversion(selectedSportsForConversion.filter(s => s !== sport));
+                      }}
+                      className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                    />
+                    <label htmlFor={`convert-${sport}`} className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="p-8 bg-slate-50 border-t gap-3 flex-col sm:flex-row">
+            <Button variant="ghost" onClick={() => setConvertingPlayer(null)} className="flex-1 font-black uppercase text-[10px] h-12 rounded-xl">Cancel</Button>
+            <Button onClick={handleConvertAction} disabled={selectedSportsForConversion.length === 0} className="flex-1 bg-emerald-600 text-white h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active-scale">
+              Promote to Athlete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <canvas ref={canvasRef} hidden />
     </div>
   );

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -13,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-const sportsList = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
+const sportsList = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 const DETAILED_SKILLS: Record<string, string[]> = {
   'Volleyball': [
@@ -39,12 +40,27 @@ const DETAILED_SKILLS: Record<string, string[]> = {
     'Team coordination', 'Speed running', 'Agility', 'Balance', 
     'Reaction speed', 'Court awareness', 'Communication'
   ],
-  'Athletics': [
-    'Running', 'Sprinting', 'Long jump', 'High jump', 'Relay exchange', 
-    'Starting technique', 'Finishing technique', 'Hurdling', 'Throwing', 
-    'Endurance running', 'Speed', 'Agility', 'Balance', 'Coordination', 
-    'Flexibility', 'Stamina', 'Jumping technique', 'Arm action', 
-    'Breathing control', 'Body posture'
+  'Running': [
+    'Starting technique', 'Linear acceleration', 'Maximum velocity', 'Running posture', 'Arm action', 
+    'Breathing control', 'Finishing lean', 'Lane discipline', 'Reaction time', 'Stamina'
+  ],
+  'Shot Put': [
+    'Grip', 'Stance', 'Glide technique', 'Rotation', 'Power position', 
+    'Extension', 'Wrist flick', 'Reverse/Recovery', 'Balance', 'Angle of release'
+  ],
+  'Javelin Throw': [
+    'Grip', 'Carry', 'Approach run', 'Cross-over steps', 'Withdrawal', 
+    'Power position', 'Delivery', 'Recovery', 'Flick', 'Tip control'
+  ],
+  'Disc Throw': [
+    'Grip', 'Initial stance', 'Swing', 'Turn/Pivot', 'Power position', 
+    'Release', 'Reverse/Recovery', 'Centrifugal control', 'Balance', 'Angle of release'
+  ],
+  'Long Jump': [
+    'Approach run', 'Take-off', 'Flight phase', 'Landing technique', 'Speed maintenance'
+  ],
+  'High Jump': [
+    'Approach curve', 'Take-off point', 'Body arch', 'Bar clearance', 'Landing safety'
   ],
 };
 

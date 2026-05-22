@@ -36,7 +36,7 @@ import {
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),

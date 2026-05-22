@@ -51,6 +51,30 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
       "Target shooting drill", "Jump shot drill", "Bounce shot drill", "Goalkeeper reaction drill"
     ]
   },
+  'Running': {
+    skills: [
+      "Sprint start drill", "Acceleration drill", "Shuttle run drill", "High-knee drive",
+      "Baton exchange drill", "Stride length drill", "Explosive reaction drill", "Interval pacing"
+    ]
+  },
+  'Shot Put': {
+    skills: [
+      "Glide technique", "Grip and carry", "Initial stance", "Power position",
+      "Extension and push", "Wrist flick", "Reverse recovery", "Balance maintenance"
+    ]
+  },
+  'Javelin Throw': {
+    skills: [
+      "Grip and carry", "Approach run", "Cross-over steps", "Withdrawal",
+      "Power position", "Delivery strike", "Recovery step", "Tip control"
+    ]
+  },
+  'Disc Throw': {
+    skills: [
+      "Grip technique", "Initial stance", "Wind-up", "Turning rhythm",
+      "Power position", "Release and flick", "Reverse/Recovery", "Spin control"
+    ]
+  },
   'Athletics': {
     skills: [
       "Sprint start drill", "Acceleration drill", "Shuttle run drill", "Relay baton exchange drill",
@@ -353,4 +377,3 @@ export function SportsDrills({ store, preselectedSport, defaultView }: SportsDri
     </div>
   );
 }
-
