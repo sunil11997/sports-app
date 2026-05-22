@@ -27,19 +27,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
  * Multi-factor physiological risk assessment engine.
  */
 const CoachAlertSystem = {
-  evaluateAthleteReadiness: ({
-    sleepHours,
-    soreness,
-    fatigue,
-    injuryStatus,
-    phvOffset,
-  }: {
+  evaluateAthleteReadiness: (input: {
     sleepHours: number;
     soreness: number;
     fatigue: number;
     injuryStatus: string;
     phvOffset: number;
   }) => {
+    const { sleepHours, soreness, fatigue, injuryStatus, phvOffset } = input;
+
     if (injuryStatus === "Sidelined") {
       return {
         statusColor: "RED",
@@ -52,7 +48,7 @@ const CoachAlertSystem = {
       };
     }
 
-    const isGoingThroughGrowthSpurt = phvOffset >= -0.5 && phvOffset <= 0.5;
+    const isGoingThroughGrowthSpurt = !isNaN(phvOffset) && phvOffset >= -0.5 && phvOffset <= 0.5;
     const strainScore = soreness + fatigue;
 
     if (strainScore >= 7 || sleepHours < 6) {
@@ -89,18 +85,24 @@ const CoachAlertSystem = {
  */
 const calculatePhvOffset = (player: any) => {
   if (!player?.height || !player?.weight || !player?.age) return 0;
+  
   const h = parseFloat(player.height);
   const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
   const w = parseFloat(player.weight);
   const age = Number(player.age) || 0;
+  
+  if (isNaN(h) || isNaN(w) || isNaN(age)) return 0;
+
   const legL = h - sH;
   let offset = 0;
+  
   if (player.gender === 'Male') {
     offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
   } else {
     offset = -9.376 + (0.0001881 * (legL * sH)) + (0.022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
   }
-  return offset;
+  
+  return isNaN(offset) ? 0 : offset;
 };
 
 export function DailyReadiness({ store }: { store: any }) {
@@ -131,18 +133,13 @@ export function DailyReadiness({ store }: { store: any }) {
 
   const coachAlert = useMemo(() => {
     if (!selectedPlayer || !isMounted) return null;
-    try {
-      return CoachAlertSystem.evaluateAthleteReadiness({
-        sleepHours,
-        soreness: sorenessScore,
-        fatigue: fatigueScore,
-        injuryStatus,
-        phvOffset: calculatePhvOffset(selectedPlayer)
-      });
-    } catch (e) {
-      console.warn("Readiness: Evaluation error", e);
-      return null;
-    }
+    return CoachAlertSystem.evaluateAthleteReadiness({
+      sleepHours,
+      soreness: sorenessScore,
+      fatigue: fatigueScore,
+      injuryStatus,
+      phvOffset: calculatePhvOffset(selectedPlayer)
+    });
   }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus, isMounted]);
 
   const teamReadiness = useMemo(() => {
@@ -159,6 +156,76 @@ export function DailyReadiness({ store }: { store: any }) {
       return { player: p, analysis, hasData: !!store.data.dailyReadiness?.[p.id] };
     });
   }, [players, store.data.dailyReadiness, isMounted]);
+
+  // Pre-calculate JSX for better build worker stability
+  const squadView = useMemo(() => {
+    if (!isMounted || teamReadiness.length === 0) {
+      return (
+        <div className="py-20 text-center opacity-20">
+          <Users className="w-10 h-10 mx-auto mb-2" />
+          <p className="text-[10px] font-black uppercase">No athlete data synchronized</p>
+        </div>
+      );
+    }
+
+    return teamReadiness.map(({ player, analysis, hasData }) => {
+      if (!player) return null;
+      return (
+        <div key={player.id} className={cn(
+          "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
+          hasData ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" : "bg-muted/10 border-transparent opacity-40 grayscale"
+        )}>
+          <div className="relative">
+            <Avatar className="w-14 h-14 border-2 border-white shadow-md">
+              <AvatarImage src={player.photoUrl} className="object-cover" />
+              <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">
+                {player.name ? player.name[0] : '?'}
+              </AvatarFallback>
+            </Avatar>
+            {hasData && (
+              <div className={cn(
+                "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
+                analysis?.dot || "bg-emerald-500"
+              )} />
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors truncate">
+                  {player.name}
+                </p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">
+                  Std {player.std} • Age {player.age}
+                </p>
+              </div>
+              {hasData && (
+                <Badge className={cn(
+                  "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0 shadow-none", 
+                  analysis?.bg || "bg-primary/10", 
+                  analysis?.color || "text-primary"
+                )}>
+                  {analysis?.action || "Check"}
+                </Badge>
+              )}
+            </div>
+            
+            {hasData && (
+              <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
+                <div className="flex items-start gap-2">
+                  <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+                  <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
+                    "{analysis?.advice || "No advice available."}"
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    });
+  }, [teamReadiness, isMounted]);
 
   const handleSave = async () => {
     if (!selectedPlayerId || !isMounted) return;
@@ -218,8 +285,8 @@ export function DailyReadiness({ store }: { store: any }) {
           {coachAlert ? (
             <div className={cn(
               "p-8 rounded-[2rem] border-2 space-y-6 transition-all shadow-sm", 
-              coachAlert.bg || "bg-primary/5", 
-              coachAlert.border || "border-primary/10"
+              coachAlert.bg, 
+              coachAlert.border
             )}>
                <div className="flex items-center gap-4">
                   <div className={cn("w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-inner", coachAlert.color)}>
@@ -345,68 +412,7 @@ export function DailyReadiness({ store }: { store: any }) {
            </div>
            
            <div className="flex-1 overflow-y-auto max-h-[800px] scrollbar-hide p-6 space-y-4">
-              {teamReadiness && teamReadiness.length > 0 ? teamReadiness.map(({ player, analysis, hasData }) => {
-                if (!player) return null;
-                return (
-                  <div key={player.id} className={cn(
-                    "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
-                    hasData ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" : "bg-muted/10 border-transparent opacity-40 grayscale"
-                  )}>
-                    <div className="relative">
-                        <Avatar className="w-14 h-14 border-2 border-white shadow-md">
-                          <AvatarImage src={player.photoUrl} className="object-cover" />
-                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">
-                            {player.name ? player.name[0] : '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                        {hasData && analysis && (
-                          <div className={cn(
-                            "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
-                            analysis.dot || "bg-emerald-500"
-                          )} />
-                        )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 space-y-3">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors truncate">
-                              {player.name}
-                            </p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">
-                              Std {player.std} • Age {player.age}
-                            </p>
-                          </div>
-                          {hasData && analysis && (
-                            <Badge className={cn(
-                              "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0 shadow-none", 
-                              analysis.bg || "bg-primary/10", 
-                              analysis.color || "text-primary"
-                            )}>
-                              {analysis.action}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        {hasData && analysis && (
-                          <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
-                            <div className="flex items-start gap-2">
-                                <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-                                <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
-                                  "{analysis.advice}"
-                                </p>
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                );
-              }) : (
-                <div className="py-20 text-center opacity-20">
-                   <Users className="w-10 h-10 mx-auto mb-2" />
-                   <p className="text-[10px] font-black uppercase">No athlete data synchronized</p>
-                </div>
-              )}
+              {squadView}
            </div>
 
            <div className="p-8 bg-primary/5 border-t text-center">
