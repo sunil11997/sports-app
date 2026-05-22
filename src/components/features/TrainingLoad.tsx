@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -185,7 +186,7 @@ export function TrainingLoad({ store }: { store: any }) {
                   {BORG_DESCRIPTIONS[rpe].label}
                 </p>
                 <p className="text-sm font-medium text-foreground/60 italic leading-relaxed">
-                  "{BORG_DESCRIPTIONS[rpe].desc}"
+                  &quot;{BORG_DESCRIPTIONS[rpe].desc}&quot;
                 </p>
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-1 border rounded-full">
                   <ShieldCheck className="w-4 h-4 text-emerald-500 inline mr-2" />
@@ -197,13 +198,13 @@ export function TrainingLoad({ store }: { store: any }) {
 
           <div className="pt-10">
             <Button 
-              onClick={handleSave}
+              onClick={handleSave} 
               className="w-full h-20 bg-primary hover:bg-primary/90 text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl active-scale flex items-center justify-center gap-4 text-lg"
             >
               <Save className="w-6 h-6" /> Archive Load Registry
             </Button>
             <p className="text-[9px] font-black text-muted-foreground uppercase text-center mt-6 tracking-[0.3em] opacity-40">
-              Registry Engine • WGB Hub V3.7.0
+              Registry Engine • WGB Hub V3.7.9
             </p>
           </div>
         </Card>

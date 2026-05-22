@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -114,7 +115,7 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
                   <span className="block text-[10px] font-black uppercase text-muted-foreground mt-1">{item.date.split(',')[0].split(' ')[0]}</span>
                 </div>
                 <div className="h-10 w-px bg-muted" />
-                <p className="text-sm font-bold text-foreground/80 leading-relaxed italic">"{item.event}"</p>
+                <p className="text-sm font-bold text-foreground/80 leading-relaxed italic">&quot;{item.event}&quot;</p>
               </CardContent>
             </Card>
           ))
@@ -223,7 +224,7 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
                     <h4 className="text-[11px] font-black uppercase tracking-[0.2em]">Detailed Briefing</h4>
                   </div>
                   <p className="text-sm font-medium text-foreground/80 leading-relaxed italic border-l-4 border-accent/20 pl-6">
-                    "{selectedNews.details}"
+                    &quot;{selectedNews.details}&quot;
                   </p>
                 </div>
 

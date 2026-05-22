@@ -327,7 +327,7 @@ export function SportsDrills({ store, preselectedSport, defaultView }: SportsDri
                  </div>
                </div>
                <p className="text-xs font-medium text-white/60 leading-relaxed italic">
-                 "Today's session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group."
+                 &quot;Today&apos;s session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group.&quot;
                </p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[80px]" />

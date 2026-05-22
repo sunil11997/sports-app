@@ -139,7 +139,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.7.7</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.7.9</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -219,7 +219,7 @@ export default function WaghambaApp() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5 text-accent" /> Today's Practice</p>
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5 text-accent" /> Today&apos;s Practice</p>
                               <p className="text-2xl font-black uppercase tracking-tight">Kabaddi Drills</p>
                               <p className="text-sm font-bold text-white/60">16:30 • Main Ground</p>
                            </div>
@@ -277,7 +277,7 @@ export default function WaghambaApp() {
                       <div className="flex items-center justify-between">
                          <div className="flex items-center gap-3">
                             <Newspaper className="w-7 h-7 text-primary" />
-                            <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today's Pulse</h3>
+                            <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today&apos;s Pulse</h3>
                          </div>
                          <Badge className="bg-primary/5 text-primary border-primary/10 px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
                            <CalendarDays className="w-3.5 h-3.5" /> {todayFormatted}

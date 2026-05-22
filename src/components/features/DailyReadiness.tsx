@@ -100,7 +100,7 @@ const calculatePhvOffset = (player: any) => {
 
 /**
  * SquadItem Component
- * Standardized for Next.js compiler stability.
+ * Fixed unescaped entities for production.
  */
 function SquadItem({ data }: { data: any }) {
   if (!data?.player) return null;
@@ -154,7 +154,7 @@ function SquadItem({ data }: { data: any }) {
             <div className="flex items-start gap-2">
               <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
               <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
-                "{analysis.advice}"
+                &quot;{analysis.advice}&quot;
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export function DailyReadiness({ store }: { store: any }) {
                </div>
                <div className="bg-white/60 p-5 rounded-2xl border border-white/50">
                 <p className="text-xs font-bold text-foreground/80 leading-relaxed italic">
-                  "{activeAlert.advice}"
+                  &quot;{activeAlert.advice}&quot;
                 </p>
                </div>
             </div>
