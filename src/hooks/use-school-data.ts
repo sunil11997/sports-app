@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -6,6 +5,7 @@ import { collection, doc, query, where, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@/firebase';
 import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile, ExamLabels } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { format } from 'date-fns';
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
@@ -36,6 +36,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [gameRules, setGameRulesData] = useState<Record<string, any>>({});
   const [examConfigs, setExamConfigs] = useState<Record<string, ExamLabels>>({});
+  const [dailyReadiness, setDailyReadinessData] = useState<Record<string, any>>({});
 
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || isSyncing) return;
@@ -201,6 +202,21 @@ export function useSchoolData(isActive: boolean = true) {
       setExamConfigs(configMap);
     });
 
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const readinessQuery = query(
+      collection(db, 'readiness_registry'),
+      where('schoolId', '==', user.uid),
+      where('date', '==', today)
+    );
+    const unsubReadiness = onSnapshot(readinessQuery, (snapshot) => {
+      const map: Record<string, any> = {};
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        map[data.playerId] = data;
+      });
+      setDailyReadinessData(map);
+    });
+
     return () => {
       window.removeEventListener('online', syncOfflineAttendance);
       unsubAtt();
@@ -208,6 +224,7 @@ export function useSchoolData(isActive: boolean = true) {
       unsubSkills();
       unsubRules();
       unsubExamConfigs();
+      unsubReadiness();
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
@@ -254,6 +271,7 @@ export function useSchoolData(isActive: boolean = true) {
     drillCompletionsRaw: drillComps || [],
     gameRules,
     examConfigs,
+    dailyReadiness,
     healthIncidents: healthIncidents || [],
     activities: (activities || []).map((a: any) => ({ ...a, category: a.category || (a.std ? 'student' : 'athlete') })),
     schoolProfile: schoolProfile || {
@@ -266,7 +284,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile]);
+  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile, dailyReadiness]);
 
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user || !db) return;
