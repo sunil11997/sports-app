@@ -69,9 +69,14 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     setCurrentDate(new Date());
   }, []);
 
-  const monthStart = currentDate ? startOfMonth(currentDate) : null;
-  const monthEnd = currentDate ? endOfMonth(currentDate) : null;
-  const days = (isMounted && monthStart && monthEnd) ? eachDayOfInterval({ start: monthStart, end: monthEnd }) : [];
+  const monthStart = useMemo(() => currentDate ? startOfMonth(currentDate) : null, [currentDate]);
+  const monthEnd = useMemo(() => currentDate ? endOfMonth(currentDate) : null, [currentDate]);
+  const days = useMemo(() => {
+    if (isMounted && monthStart && monthEnd) {
+      return eachDayOfInterval({ start: monthStart, end: monthEnd });
+    }
+    return [];
+  }, [isMounted, monthStart, monthEnd]);
 
   const isGeneral = section === 'general';
   const categories = isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES;
@@ -126,7 +131,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               body { padding-top: 0 !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
-            h1 { color: #235C36; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 10px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 10px; }
             .meta { font-weight: bold; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
@@ -181,7 +186,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       {!isOnline && (
         <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -318,7 +323,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </Table>
       </div>
 
-      {/* Institutional End-of-Session Fatigue Report (Web Integration) */}
       <div className="pt-8">
         <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
           <div 
@@ -353,4 +357,3 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     </div>
   );
 }
-

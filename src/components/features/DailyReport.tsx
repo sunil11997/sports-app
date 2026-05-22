@@ -22,12 +22,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
 
   useEffect(() => {
     setIsMounted(true);
-    // Initialize date only on client to avoid hydration mismatch
-    try {
-      setReportDate(format(new Date(), 'yyyy-MM-dd'));
-    } catch (e) {
-      console.warn("WGB: Date initialization issue", e);
-    }
+    setReportDate(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
   const activitiesToday = useMemo(() => {
@@ -111,10 +106,10 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; line-height: 1.4; color: #111; font-size: 13px; }
             .header { text-align: center; border-bottom: 4px double #221d1d; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
             .report-title { font-weight: 800; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
             .meta { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid #eee; padding: 10px 0; margin-bottom: 20px; }
-            h3 { color: #111; border-left: 5px solid #235C36; padding-left: 10px; margin-top: 25px; text-transform: uppercase; font-size: 14px; }
+            h3 { color: #111; border-left: 5px solid #1e3a8a; padding-left: 10px; margin-top: 25px; text-transform: uppercase; font-size: 14px; }
             .box { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; border-radius: 8px; white-space: pre-wrap; min-height: 100px; margin-top: 5px; }
             .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
             .stat-item { border: 1px solid #eee; padding: 10px; border-radius: 5px; text-align: center; }
@@ -177,7 +172,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
   if (!isMounted) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20" suppressHydrationWarning>
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4 text-center md:text-left">
