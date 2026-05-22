@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +10,10 @@ import {
   HeartPulse, 
   Moon, 
   Activity, 
-  AlertCircle, 
-  CheckCircle2, 
-  ShieldCheck,
-  Save,
-  Loader2,
-  Users
+  Save, 
+  Loader2, 
+  Users,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -25,7 +22,7 @@ export function DailyReadiness({ store }: { store: any }) {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [sleepHours, setSleepHours] = useState(8);
-  const [sorenessScore, setSorenessScore] = useState(1); // 1 = Great, 5 = High Pain
+  const [sorenessScore, setSorenessScore] = useState(1); // 1 = उत्तम, 5 = प्रचंड थकवा
   const [fatigueScore, setFatigueScore] = useState(1);
   const [injuryStatus, setInjuryStatus] = useState("Fit to Train");
   const [isSaving, setIsSaving] = useState(false);
@@ -38,9 +35,30 @@ export function DailyReadiness({ store }: { store: any }) {
 
   const readiness = useMemo(() => {
     const totalScore = sorenessScore + fatigueScore;
-    if (injuryStatus === "Sidelined") return { status: "RED", label: "पूर्ण विश्रांतीची गरज!", desc: "धोका / दुखापत", color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive" };
-    if (totalScore >= 7 || sleepHours < 6) return { status: "YELLOW", label: "कमी ताकदीचा सराव द्यावा", desc: "मध्यम ताण", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" };
-    return { status: "GREEN", label: "सराव करण्यासाठी सज्ज!", desc: "उत्तम स्थिती", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" };
+    if (injuryStatus === "Sidelined") return { 
+      status: "RED", 
+      label: "पूर्ण विश्रांतीची गरज!", 
+      desc: "धोका / दुखापत", 
+      color: "text-destructive", 
+      bg: "bg-destructive/10", 
+      border: "border-destructive" 
+    };
+    if (totalScore >= 7 || sleepHours < 6) return { 
+      status: "YELLOW", 
+      label: "कमी ताकदीचा सराव द्यावा", 
+      desc: "मध्यम ताण", 
+      color: "text-amber-600", 
+      bg: "bg-amber-50", 
+      border: "border-amber-200" 
+    };
+    return { 
+      status: "GREEN", 
+      label: "सराव करण्यासाठी सज्ज!", 
+      desc: "उत्तम स्थिती", 
+      color: "text-emerald-600", 
+      bg: "bg-emerald-50", 
+      border: "border-emerald-200" 
+    };
   }, [sleepHours, sorenessScore, fatigueScore, injuryStatus]);
 
   const handleSave = async () => {
@@ -78,7 +96,7 @@ export function DailyReadiness({ store }: { store: any }) {
             <HeartPulse className="w-8 h-8 text-primary" />
           </div>
           <h2 className="text-3xl font-black text-primary uppercase tracking-tight">दैनंदिन आरोग्य सज्जता</h2>
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Daily Athlete Readiness (v3.8)</p>
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Daily Athlete Readiness System</p>
         </div>
         <div className="absolute top-0 right-0 w-48 h-48 bg-accent/10 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
       </div>
@@ -114,7 +132,7 @@ export function DailyReadiness({ store }: { store: any }) {
            {/* 1. Sleep */}
            <div className="space-y-6">
               <div className="flex justify-between items-center px-2">
-                <h4 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2"><Moon className="w-4 h-4 text-blue-500" /> १. गेल्या रात्रीची झोप</h4>
+                <h4 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2"><Moon className="w-4 h-4 text-blue-500" /> १. गेल्या रात्री किती तास झोप झाली?</h4>
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-black text-xs px-4 h-8">{sleepHours} तास</Badge>
               </div>
               <Slider value={[sleepHours]} onValueChange={(val) => setSleepHours(val[0])} min={4} max={12} step={0.5} className="cursor-pointer" />
@@ -124,17 +142,17 @@ export function DailyReadiness({ store }: { store: any }) {
            {/* 2. Soreness */}
            <div className="space-y-6">
               <div className="flex justify-between items-center px-2">
-                <h4 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2"><Activity className="w-4 h-4 text-orange-500" /> २. स्नायूंचा थकवा (Soreness)</h4>
+                <h4 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2"><Activity className="w-4 h-4 text-orange-500" /> २. स्नायूंचा थकवा किंवा दुखावा (Soreness) किती आहे?</h4>
                 <Badge className="bg-orange-500 text-white font-black text-xs px-4 h-8">स्तर: {sorenessScore}</Badge>
               </div>
               <Slider value={[sorenessScore]} onValueChange={(val) => setSorenessScore(val[0])} min={1} max={5} step={1} className="cursor-pointer" />
-              <div className="flex justify-between px-1"><span className="text-[9px] font-bold text-muted-foreground uppercase">अजिबात नाही (१)</span><span className="text-[9px] font-bold text-muted-foreground uppercase">प्रचंड थकवा (५)</span></div>
+              <div className="flex justify-between px-1"><span className="text-[9px] font-bold text-muted-foreground uppercase">१ - अजिबात नाही</span><span className="text-[9px] font-bold text-muted-foreground uppercase">५ - प्रचंड दुखावा</span></div>
            </div>
 
            {/* 3. Fatigue */}
            <div className="space-y-6">
               <div className="flex justify-between items-center px-2">
-                <h4 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2"><Activity className="w-4 h-4 text-deep-orange-500" /> ३. शारीरिक थकवा (Fatigue)</h4>
+                <h4 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2"><Activity className="w-4 h-4 text-red-500" /> ३. सध्या शरीरात थकवा किती जाणवतोय?</h4>
                 <Badge className="bg-red-500 text-white font-black text-xs px-4 h-8">स्तर: {fatigueScore}</Badge>
               </div>
               <Slider value={[fatigueScore]} onValueChange={(val) => setFatigueScore(val[0])} min={1} max={5} step={1} className="cursor-pointer" />

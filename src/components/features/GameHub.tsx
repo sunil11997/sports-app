@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -9,9 +8,6 @@ import {
   Trophy, 
   Target, 
   Dumbbell, 
-  CalendarRange, 
-  UsersRound, 
-  Medal, 
   ArrowLeft,
   ChevronRight,
   ShieldCheck,
@@ -19,9 +15,9 @@ import {
   Zap,
   CirclePlay,
   Stethoscope,
-  FileText,
   Activity,
-  HeartPulse
+  HeartPulse,
+  Medal
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
@@ -68,7 +64,7 @@ export function GameHub({ store }: { store: any }) {
           </div>
         </div>
 
-        <Tabs defaultValue="skills" className="space-y-8">
+        <Tabs defaultValue="readiness" className="space-y-8">
           <div className="flex items-center justify-center">
             <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner overflow-x-auto scrollbar-hide max-w-full gap-1">
               <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
