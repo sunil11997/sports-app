@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -13,7 +13,7 @@ import {
   Save, 
   Loader2, 
   Users,
-  Cross
+  CircleHelp
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,6 @@ export function InjuryLogger({ store }: { store: any }) {
       </div>
 
       <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white space-y-8">
-        {/* Step 0: Player Selection */}
         <div className="space-y-3">
           <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2 flex items-center gap-2">
             <Users className="w-3 h-3" /> खेळाडू निवडा
@@ -111,7 +110,6 @@ export function InjuryLogger({ store }: { store: any }) {
           </Select>
         </div>
 
-        {/* Step 1: Body Part */}
         <div className="space-y-4">
           <label className="text-sm font-black text-primary uppercase ml-1">१. शरीराचा कोणता भाग दुखावला आहे?</label>
           <div className="flex flex-wrap gap-2">
@@ -132,7 +130,6 @@ export function InjuryLogger({ store }: { store: any }) {
           </div>
         </div>
 
-        {/* Step 2: Injury Type */}
         <div className="space-y-4">
           <label className="text-sm font-black text-primary uppercase ml-1">२. दुखापतीचा प्रकार निवडा:</label>
           <Select value={selectedInjuryType || ""} onValueChange={setSelectedInjuryType}>
@@ -147,14 +144,13 @@ export function InjuryLogger({ store }: { store: any }) {
           </Select>
         </div>
 
-        {/* Step 3: Severity */}
         <div className="space-y-4">
           <label className="text-sm font-black text-primary uppercase ml-1">३. दुखापतीची तीव्रता (Severity):</label>
           <RadioGroup value={severity} onValueChange={setSeverity} className="flex flex-wrap justify-between bg-muted/20 p-6 rounded-2xl border-2 border-dashed">
             {['Mild (कमी)', 'Moderate (मध्यम)', 'Severe (गंभीर)'].map((level) => (
               <div key={level} className="flex items-center space-x-2">
-                <RadioGroupItem value={level} id={level} className="text-destructive border-destructive" />
-                <Label htmlFor={level} className="text-xs font-black uppercase text-foreground/70 cursor-pointer">{level}</Label>
+                <RadioGroupItem value={level} id={`severity-${level}`} className="text-destructive border-destructive" />
+                <Label htmlFor={`severity-${level}`} className="text-xs font-black uppercase text-foreground/70 cursor-pointer">{level}</Label>
               </div>
             ))}
           </RadioGroup>
