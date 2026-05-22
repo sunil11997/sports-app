@@ -17,7 +17,8 @@ import {
   Stethoscope,
   Activity,
   HeartPulse,
-  Medal
+  Medal,
+  ShieldAlert
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
@@ -26,6 +27,7 @@ import { Teams } from './Teams';
 import { HealthIncidents } from './HealthIncidents';
 import { DailyReport } from './DailyReport';
 import { DailyReadiness } from './DailyReadiness';
+import { InjuryLogger } from './InjuryLogger';
 import { cn } from '@/lib/utils';
 
 const GAMES = [
@@ -70,13 +72,16 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
+              <TabsTrigger value="injury" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <ShieldAlert className="w-3.5 h-3.5" /> Injury Log
+              </TabsTrigger>
               <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
               <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
               <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Practice Plan</TabsTrigger>
               <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
               <TabsTrigger value="health" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Stethoscope className="w-3 h-3" /> Health
+                <Stethoscope className="w-3 h-3" /> Health History
               </TabsTrigger>
               <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <Activity className="w-3 h-3" /> Auto Reports
@@ -86,6 +91,10 @@ export function GameHub({ store }: { store: any }) {
 
           <TabsContent value="readiness" className="mt-0">
             <DailyReadiness store={store} />
+          </TabsContent>
+
+          <TabsContent value="injury" className="mt-0">
+            <InjuryLogger store={store} />
           </TabsContent>
 
           <TabsContent value="skills" className="mt-0">
