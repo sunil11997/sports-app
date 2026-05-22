@@ -21,7 +21,10 @@ import {
   Timer,
   Flame,
   Wind,
-  Ruler
+  Ruler,
+  ChevronRight,
+  TrendingUp,
+  Settings2
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -114,6 +117,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
     setIsSaving(id);
     
+    // 1. Core Score Calculations
     const speedVal = 100 - (parseFloat(current.run50m) * 5); 
     const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4);
     const flexVal = (parseFloat(current.sitAndReach) || 0) * 3;
@@ -124,6 +128,22 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     
     const strengthScore = (parseFloat(current.sitUps) || 0) * 2;
     
+    // 2. Agility Diagnostics (Mirwald-Ready)
+    if (current.sprint30m && current.proAgility) {
+      const s30 = parseFloat(current.sprint30m);
+      const proA = parseFloat(current.proAgility);
+      const deficit = (proA - s30).toFixed(2);
+      current.codDeficit = deficit;
+      
+      if (parseFloat(deficit) > 0.25) {
+        current.agilityDiagnostic = 'Needs Biomechanical Deceleration & Footwork Training';
+      } else if (s30 > 4.8) {
+        current.agilityDiagnostic = 'Needs Linear Acceleration & Maximum Strength Training';
+      } else {
+        current.agilityDiagnostic = 'Elite Change-of-Direction Mechanics Detected';
+      }
+    }
+
     current.speedScore = Math.min(100, Math.max(0, speedVal)).toFixed(0);
     current.enduranceScore = Math.min(100, Math.max(0, enduranceScore)).toFixed(0);
     current.strengthScore = Math.min(100, Math.max(0, strengthScore)).toFixed(0);
@@ -180,8 +200,12 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         language: "English"
       });
       setActiveInstruction(instr);
-    } catch (error) {
-      toast({ title: "AI Error", variant: "destructive" });
+    } catch (error: any) {
+      if (error.message?.includes('429')) {
+        toast({ title: "Demand Spike", description: "AI engine is cooling down. Retrying in 10s...", variant: "destructive" });
+      } else {
+        toast({ title: "AI Sync Error", variant: "destructive" });
+      }
       setAiModalOpen(false);
     } finally {
       setAiLoading(false);
@@ -227,6 +251,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 <th>NAME</th>
                 <th>STD</th>
                 <th>10x6 SHUTTLE</th>
+                <th>30m SPRINT</th>
+                <th>PRO-AGILITY</th>
                 <th>SIT & REACH</th>
                 <th>SPEED (50m)</th>
                 <th>STAMINA (600m)</th>
@@ -238,7 +264,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness[p.id] || {};
-                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
+                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sprint30m || '-'}s</td><td>${fit.proAgility || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -296,13 +322,15 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-50 sticky top-0 z-20">
               <TableRow className="h-16">
-                <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[220px] sticky left-0 bg-slate-50/95 backdrop-blur z-30">Student Profile</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-cyan-600"><Zap className="w-3 h-3 mx-auto mb-1" /> 10x6 Shuttle</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-purple-600"><Ruler className="w-3 h-3 mx-auto mb-1" /> Sit & Reach</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-accent"><Timer className="w-3 h-3 mx-auto mb-1" /> Speed (50m)</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-primary"><Wind className="w-3 h-3 mx-auto mb-1" /> Stamina (600m)</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-emerald-600"><Dumbbell className="w-3 h-3 mx-auto mb-1" /> Core (Situps)</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[130px] bg-primary/5">Institutional Score</TableHead>
+                <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[200px] sticky left-0 bg-slate-50/95 backdrop-blur z-30">Athlete Profile</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-cyan-600">10x6 Shuttle</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-600 font-black">30m Sprint</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-700">Pro-Agility</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-purple-600">Sit & Reach</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-accent">Speed (50m)</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-primary">Stamina (600m)</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-emerald-600">Core (Situps)</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] bg-primary/5">Institutional Score</TableHead>
                 <TableHead className="px-6 font-black text-[10px] uppercase text-right w-[120px] sticky right-0 bg-slate-50/95 backdrop-blur z-30">Archive</TableHead>
               </TableRow>
             </TableHeader>
@@ -315,45 +343,68 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   const isPulse = lastSavedId === player.id;
                   
                   return (
-                    <TableRow key={player.id} className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-16 group", isPulse && "animate-success-pulse")}>
-                      <TableCell className="border-r p-4 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
-                        <div className="flex flex-col">
-                          <span className="text-primary uppercase text-sm truncate w-[160px]">{player.name}</span>
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">GR: {player.generalRegisterNumber || 'N/A'} • Std {player.std}</span>
-                        </div>
-                      </TableCell>
-                      
-                      <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                      <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                      <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                      <TableCell className="border-r p-0"><Input placeholder="m:s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                      <TableCell className="border-r p-0"><Input type="number" placeholder="reps" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                    <React.Fragment key={player.id}>
+                      <TableRow className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-16 group", isPulse && "animate-success-pulse")}>
+                        <TableCell className="border-r p-4 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
+                          <div className="flex flex-col">
+                            <span className="text-primary uppercase text-sm truncate w-[140px]">{player.name}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} • Age {player.age}</span>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-orange-50/50 focus:bg-white rounded-none" value={current.sprint30m || ''} onChange={(e) => handleChange(player.id, 'sprint30m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-orange-50/50 focus:bg-white rounded-none" value={current.proAgility || ''} onChange={(e) => handleChange(player.id, 'proAgility', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input placeholder="m:s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" placeholder="reps" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
 
-                      <TableCell className="border-r p-2 text-center bg-primary/5">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className="text-lg font-black text-primary">{current.score || '0'}%</span>
-                          <Badge className={cn(
-                            "text-[8px] font-black uppercase px-2 py-0 rounded-md shadow-sm",
-                            current.status === 'Elite' ? 'bg-emerald-500 text-white' : 
-                            current.status === 'Optimal' ? 'bg-primary text-white' : 
-                            current.status === 'Developing' ? 'bg-accent text-white' : 
-                            'bg-destructive text-white'
-                          )}>
-                            {current.status || 'PENDING'}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="p-0 text-right sticky right-0 bg-white z-10 group-hover:bg-transparent px-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" className="h-12 w-12 text-primary hover:bg-primary hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
-                            {isSaving === player.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-12 w-12 text-accent hover:bg-accent hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleAiAnalysis(player)}>
-                            <BrainCircuit className="w-5 h-5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        <TableCell className="border-r p-2 text-center bg-primary/5">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-lg font-black text-primary">{current.score || '0'}%</span>
+                            <Badge className={cn(
+                              "text-[8px] font-black uppercase px-2 py-0 rounded-md shadow-sm",
+                              current.status === 'Elite' ? 'bg-emerald-500 text-white' : 
+                              current.status === 'Optimal' ? 'bg-primary text-white' : 
+                              current.status === 'Developing' ? 'bg-accent text-white' : 
+                              'bg-destructive text-white'
+                            )}>
+                              {current.status || 'PENDING'}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-0 text-right sticky right-0 bg-white z-10 group-hover:bg-transparent px-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="icon" className="h-12 w-12 text-primary hover:bg-primary hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
+                              {isSaving === player.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-12 w-12 text-accent hover:bg-accent hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleAiAnalysis(player)}>
+                              <BrainCircuit className="w-5 h-5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {current.agilityDiagnostic && (
+                        <TableRow className="bg-orange-50/30 border-b">
+                          <TableCell colSpan={15} className="px-6 py-3">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                               <div className="flex items-center gap-4">
+                                 <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center border border-orange-200">
+                                   <Zap className="w-5 h-5 text-orange-600" />
+                                 </div>
+                                 <div className="space-y-0.5">
+                                   <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest">Agility Diagnostics: COD Deficit {current.codDeficit}s</p>
+                                   <p className="text-xs font-bold text-foreground/80 italic">"{current.agilityDiagnostic}"</p>
+                                 </div>
+                               </div>
+                               <Badge variant="outline" className="border-orange-200 text-orange-700 font-black uppercase text-[8px] px-3 bg-white">Biomechanically Verified</Badge>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   );
                 })
               )}

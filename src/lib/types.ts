@@ -49,6 +49,10 @@ export interface FitnessAssessment {
   sitAndReach?: string;  // Flexibility
   boardJump?: string;    // Power / Broad Jump
   sitUps?: string;       // Core Strength
+  sprint30m?: string;    // Raw 30m Linear Sprint
+  proAgility?: string;   // Pro-Agility (5-10-5) Shuttle
+  codDeficit?: string;   // Calculated Change of Direction Deficit
+  agilityDiagnostic?: string; // Classification Text
   strengthScore?: string; // Specific Strength Rating (0-100)
   enduranceScore?: string; // Specific Endurance Rating (0-100)
   speedScore?: string;    // Specific Speed Rating (0-100)

@@ -52,7 +52,7 @@ const newsPrompt = ai.definePrompt({
  */
 export async function getSportsNews(date: string, language: string = 'English'): Promise<NewsOutput> {
   let attempts = 0;
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   let lastError: any = null;
 
   while (attempts < maxAttempts) {
@@ -64,16 +64,14 @@ export async function getSportsNews(date: string, language: string = 'English'):
       lastError = error;
       attempts++;
       
-      const isQuotaOrUnavailable = 
-        error.message?.includes('RESOURCE_EXHAUSTED') || 
-        error.message?.includes('429') ||
-        error.message?.includes('UNAVAILABLE') || 
-        error.message?.includes('503');
+      const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
+      const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
-      if (isQuotaOrUnavailable && attempts < maxAttempts) {
-        console.warn(`WGB News Pulse: Demand spike detected (Attempt ${attempts}). Retrying with backoff...`);
-        // Exponential backoff: 2s, 4s, etc.
-        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempts)));
+      if ((isQuota || isUnavailable) && attempts < maxAttempts) {
+        // If quota hit, we wait significantly longer (baseline 10s)
+        const delay = isQuota ? 10000 : (2000 * Math.pow(2, attempts));
+        console.warn(`WGB News Pulse: Retry ${attempts}/${maxAttempts} (Delay: ${delay}ms) due to: ${isQuota ? 'Quota' : 'Service Busy'}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
       
