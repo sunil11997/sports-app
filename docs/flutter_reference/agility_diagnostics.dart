@@ -1,38 +1,58 @@
 /**
- * AgilityDiagnostics - Biomechanical Performance Analytics
+ * AgilityDiagnostics Service
  * 
- * Provides automated classification of speed and agility bottlenecks.
+ * A specialized sports science service for analyzing linear velocity 
+ * and Change of Direction (COD) efficiency in youth athletes.
  */
 class AgilityDiagnostics {
+  // Standard distance used for youth athletic testing in the Waghamba Registry.
+  static const double sprintDistanceMeters = 30.0;
   
-  /// Calculates linear velocity in meters per second (m/s)
-  double calculateLinearVelocity(double raw30mTime) {
-    if (raw30mTime <= 0) return 0.0;
-    return 30.0 / raw30mTime;
+  // Scientific threshold for COD deficit (seconds). 
+  // Values > 0.25s typically indicate poor turning mechanics relative to raw speed.
+  static const double codDeficitThreshold = 0.25;
+
+  // Velocity threshold (m/s). 
+  // For U17 athletes, < 7.0 m/s (approx > 4.28s for 30m) indicates a need for power work.
+  static const double velocityThreshold = 7.0;
+
+  /// Calculates the linear velocity in meters per second (m/s).
+  /// Formula: Distance (30m) / Time
+  double calculateLinearVelocity(double sprint30mTime) {
+    if (sprint30mTime <= 0) return 0.0;
+    return sprintDistanceMeters / sprint30mTime;
   }
 
-  /// Calculates the deficit between linear speed and turning efficiency
-  double calculateCODDeficit(double proAgilityTime, double linear30mTime) {
-    return proAgilityTime - linear30mTime;
+  /// Calculates the Change of Direction Deficit.
+  /// This metric isolates the athlete's ability to change direction by 
+  /// subtracting linear speed from shuttle/agility test time.
+  double calculateCODDeficit(double proAgilityTime, double sprint30mTime) {
+    return proAgilityTime - sprint30mTime;
   }
 
-  /// Classifies the athlete's specific training requirement
+  /// Automatically classifies the athlete's primary training bottleneck.
+  /// 
+  /// Returns:
+  /// - 'Needs Biomechanical Deceleration & Footwork Training' if the turn is inefficient.
+  /// - 'Needs Linear Acceleration & Maximum Strength Training' if the raw speed is slow.
+  /// - 'Performance is Balanced. Maintain Current Periodization.' if both are optimal.
   String classifyBottleneck({
     required double proAgilityTime,
-    required double linear30mTime,
+    required double sprint30mTime,
   }) {
-    final deficit = calculateCODDeficit(proAgilityTime, linear30mTime);
-    
-    // High deficit (> 0.25s) indicates inefficient turning mechanics
-    if (deficit > 0.25) {
+    final deficit = calculateCODDeficit(proAgilityTime, sprint30mTime);
+    final velocity = calculateLinearVelocity(sprint30mTime);
+
+    // Prioritize biomechanical turn deficiency
+    if (deficit > codDeficitThreshold) {
       return 'Needs Biomechanical Deceleration & Footwork Training';
     }
-    
-    // Low deficit but slow times indicates a raw power/strength issue
-    if (linear30mTime > 4.5) {
+
+    // Identify raw power/acceleration deficiency
+    if (velocity < velocityThreshold) {
       return 'Needs Linear Acceleration & Maximum Strength Training';
     }
 
-    return 'Optimal Balance: Focus on Sport-Specific Reactive Drills';
+    return 'Performance is Balanced. Maintain Current Periodization.';
   }
 }
