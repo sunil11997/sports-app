@@ -100,11 +100,11 @@ const calculatePhvOffset = (player: any) => {
 
 /**
  * SquadItem Component
- * Extracted and production-hardened for Next.js compiler stability.
+ * Standardized for Next.js compiler stability.
  */
 function SquadItem({ data }: { data: any }) {
+  if (!data?.player) return null;
   const { player, analysis, hasData } = data;
-  if (!player) return null;
 
   return (
     <div className={cn(
@@ -215,21 +215,6 @@ export function DailyReadiness({ store }: { store: any }) {
       phvOffset: calculatePhvOffset(selectedPlayer)
     });
   }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
-
-  const squadView = useMemo(() => {
-    if (!isMounted || teamReadiness.length === 0) {
-      return (
-        <div className="py-20 text-center opacity-20">
-          <Users className="w-10 h-10 mx-auto mb-2" />
-          <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Registry Sync</p>
-        </div>
-      );
-    }
-    return teamReadiness.map((data) => {
-      if (!data.player?.id) return null;
-      return <SquadItem key={data.player.id} data={data} />;
-    });
-  }, [teamReadiness, isMounted]);
 
   const handleSave = async () => {
     if (!selectedPlayerId || !isMounted) return;
@@ -382,7 +367,16 @@ export function DailyReadiness({ store }: { store: any }) {
            </div>
            
            <div className="flex-1 overflow-y-auto max-h-[800px] scrollbar-hide p-6 space-y-4">
-              {squadView}
+              {teamReadiness.length === 0 ? (
+                <div className="py-20 text-center opacity-20">
+                  <Users className="w-10 h-10 mx-auto mb-2" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Registry Sync</p>
+                </div>
+              ) : (
+                teamReadiness.map((data: any) => (
+                  <SquadItem key={data.player?.id || Math.random()} data={data} />
+                ))
+              )}
            </div>
 
            <div className="p-8 bg-primary/5 border-t text-center">
