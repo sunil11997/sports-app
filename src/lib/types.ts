@@ -6,7 +6,8 @@ export interface Player {
   serialNumber?: string; // Class Serial Number
   dob: string;
   age: number;
-  height: string;
+  height: string; // Standing Height (cm)
+  sittingHeight?: string; // Sitting Height (cm)
   weight: string;
   bmi: string;
   bloodGroup?: string;
