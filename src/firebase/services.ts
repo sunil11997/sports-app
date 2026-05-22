@@ -12,18 +12,22 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
-  if (!getApps().length) {
+  const apps = getApps();
+  if (!apps.length) {
     try {
       firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
       firebaseApp = initializeApp();
     }
   } else {
-    firebaseApp = getApp();
+    firebaseApp = apps[0];
   }
 
   return getSdks(firebaseApp);
 }
+
+// Singleton tracker to prevent "failed-precondition" during multiple initialization attempts
+const initializedFirestoreApps = new Set<string>();
 
 export function getSdks(firebaseApp: FirebaseApp) {
   const isClient = typeof window !== 'undefined';
@@ -39,19 +43,32 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
     // 2. Initialize Firestore with Multi-Tab Offline Persistence
     let firestore: Firestore;
-    try {
-      firestore = initializeFirestore(firebaseApp, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-          // Configured for 100MB cache budget as requested for local athlete data
-          cacheSizeBytes: 100 * 1024 * 1024 
-        }),
-        experimentalForceLongPolling: true // CRITICAL: Resolve 10s connection timeouts
-      });
-      console.log("WGB: Firestore Registry initialized with 100MB persistent cache.");
-    } catch (e: any) {
+    const appKey = firebaseApp.name || '[default]';
+
+    if (!initializedFirestoreApps.has(appKey)) {
+      try {
+        firestore = initializeFirestore(firebaseApp, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager(),
+            // Configured for 100MB cache budget as requested for local athlete data
+            cacheSizeBytes: 100 * 1024 * 1024 
+          }),
+          experimentalForceLongPolling: true // CRITICAL: Resolve 10s connection timeouts
+        });
+        initializedFirestoreApps.add(appKey);
+        console.log("WGB: Firestore Registry initialized with 100MB persistent cache.");
+      } catch (e: any) {
+        firestore = getFirestore(firebaseApp);
+        // If already initialized (common during HMR), we just use the existing instance
+        if (e.code === 'failed-precondition') {
+          initializedFirestoreApps.add(appKey);
+          console.log("WGB: Firestore persistence already active.");
+        } else {
+          console.warn('WGB: Firestore initialization fallback.', e.code, e.message);
+        }
+      }
+    } else {
       firestore = getFirestore(firebaseApp);
-      console.warn('WGB: Firestore standard initialization fallback.', e);
     }
 
     return {
