@@ -100,14 +100,14 @@ const calculatePhvOffset = (player: any) => {
 
 /**
  * SquadItem Component
- * Extracted to ensure clean JSX tree for Next.js build worker.
+ * Extracted and production-hardened for Next.js compiler stability.
  */
 function SquadItem({ data }: { data: any }) {
   const { player, analysis, hasData } = data;
   if (!player) return null;
 
   return (
-    <div key={player.id} className={cn(
+    <div className={cn(
       "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
       hasData 
         ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" 
@@ -225,7 +225,10 @@ export function DailyReadiness({ store }: { store: any }) {
         </div>
       );
     }
-    return teamReadiness.map((data) => <SquadItem key={data.player.id} data={data} />);
+    return teamReadiness.map((data) => {
+      if (!data.player?.id) return null;
+      return <SquadItem key={data.player.id} data={data} />;
+    });
   }, [teamReadiness, isMounted]);
 
   const handleSave = async () => {
