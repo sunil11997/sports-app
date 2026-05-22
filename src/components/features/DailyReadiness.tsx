@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -16,13 +17,12 @@ import {
   ShieldCheck,
   Zap,
   Info,
-  Circle,
-  User,
   ClipboardCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { format } from 'date-fns';
 
 /**
  * CoachAlertSystem
@@ -93,6 +93,11 @@ export function DailyReadiness({ store }: { store: any }) {
   const [fatigueScore, setFatigueScore] = useState(1);
   const [injuryStatus, setInjuryStatus] = useState("Fit to Train");
   const [isSaving, setIsSaving] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const players = useMemo(() => 
     store.data.players.filter((p: any) => p.category === 'athlete')
@@ -161,6 +166,8 @@ export function DailyReadiness({ store }: { store: any }) {
       setIsSaving(false);
     }
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-700 pb-20">
@@ -271,15 +278,13 @@ export function DailyReadiness({ store }: { store: any }) {
                         )}
                       </div>
                       
-                      {hasData ? (
+                      {hasData && (
                         <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
                            <div className="flex items-start gap-2">
                               <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
                               <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">"{analysis.advice}"</p>
                            </div>
                         </div>
-                      ) : (
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest italic opacity-60">आजचा डेटा प्रलंबित आहे (Pending Data Entry)</p>
                       )}
                    </div>
                 </div>
