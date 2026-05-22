@@ -98,7 +98,7 @@ const calculatePhvOffset = (player: any) => {
   if (player.gender === 'Male') {
     offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
   } else {
-    offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
+    offset = -9.376 + (0.0001881 * (legL * sH)) + (0.022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
   }
   return offset;
 };
@@ -118,29 +118,35 @@ export function DailyReadiness({ store }: { store: any }) {
   }, []);
 
   const players = useMemo(() => {
+    if (!store?.data?.players) return [];
     return store.data.players
       .filter((p: any) => p && p.category === 'athlete')
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
-  }, [store.data.players]);
+  }, [store?.data?.players]);
 
   const selectedPlayer = useMemo(() => {
-    if (!selectedPlayerId) return null;
-    return players.find((p: any) => p.id === selectedPlayerId);
+    if (!selectedPlayerId || !players) return null;
+    return players.find((p: any) => p.id === selectedPlayerId) || null;
   }, [selectedPlayerId, players]);
 
   const coachAlert = useMemo(() => {
     if (!selectedPlayer || !isMounted) return null;
-    return CoachAlertSystem.evaluateAthleteReadiness({
-      sleepHours,
-      soreness: sorenessScore,
-      fatigue: fatigueScore,
-      injuryStatus,
-      phvOffset: calculatePhvOffset(selectedPlayer)
-    });
+    try {
+      return CoachAlertSystem.evaluateAthleteReadiness({
+        sleepHours,
+        soreness: sorenessScore,
+        fatigue: fatigueScore,
+        injuryStatus,
+        phvOffset: calculatePhvOffset(selectedPlayer)
+      });
+    } catch (e) {
+      console.warn("Readiness: Evaluation error", e);
+      return null;
+    }
   }, [selectedPlayer, sleepHours, sorenessScore, fatigueScore, injuryStatus, isMounted]);
 
   const teamReadiness = useMemo(() => {
-    if (!isMounted) return [];
+    if (!isMounted || !players) return [];
     return players.map((p: any) => {
       const data = store.data.dailyReadiness?.[p.id] || {};
       const analysis = CoachAlertSystem.evaluateAthleteReadiness({
@@ -210,7 +216,11 @@ export function DailyReadiness({ store }: { store: any }) {
           </div>
 
           {coachAlert ? (
-            <div className={cn("p-8 rounded-[2rem] border-2 space-y-6 transition-all shadow-sm", coachAlert.bg, coachAlert.border)}>
+            <div className={cn(
+              "p-8 rounded-[2rem] border-2 space-y-6 transition-all shadow-sm", 
+              coachAlert.bg || "bg-primary/5", 
+              coachAlert.border || "border-primary/10"
+            )}>
                <div className="flex items-center gap-4">
                   <div className={cn("w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-inner", coachAlert.color)}>
                     <Activity className="w-6 h-6 animate-pulse" />
@@ -335,7 +345,8 @@ export function DailyReadiness({ store }: { store: any }) {
            </div>
            
            <div className="flex-1 overflow-y-auto max-h-[800px] scrollbar-hide p-6 space-y-4">
-              {teamReadiness.map(({ player, analysis, hasData }) => {
+              {teamReadiness && teamReadiness.length > 0 ? teamReadiness.map(({ player, analysis, hasData }) => {
+                if (!player) return null;
                 return (
                   <div key={player.id} className={cn(
                     "p-5 rounded-[1.5rem] border-2 transition-all group flex items-start gap-5",
@@ -348,10 +359,10 @@ export function DailyReadiness({ store }: { store: any }) {
                             {player.name ? player.name[0] : '?'}
                           </AvatarFallback>
                         </Avatar>
-                        {hasData && (
+                        {hasData && analysis && (
                           <div className={cn(
                             "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
-                            analysis.dot
+                            analysis.dot || "bg-emerald-500"
                           )} />
                         )}
                     </div>
@@ -366,18 +377,18 @@ export function DailyReadiness({ store }: { store: any }) {
                               Std {player.std} • Age {player.age}
                             </p>
                           </div>
-                          {hasData && (
+                          {hasData && analysis && (
                             <Badge className={cn(
                               "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0 shadow-none", 
-                              analysis.bg, 
-                              analysis.color
+                              analysis.bg || "bg-primary/10", 
+                              analysis.color || "text-primary"
                             )}>
                               {analysis.action}
                             </Badge>
                           )}
                         </div>
                         
-                        {hasData && (
+                        {hasData && analysis && (
                           <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
                             <div className="flex items-start gap-2">
                                 <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
@@ -390,7 +401,12 @@ export function DailyReadiness({ store }: { store: any }) {
                     </div>
                   </div>
                 );
-              })}
+              }) : (
+                <div className="py-20 text-center opacity-20">
+                   <Users className="w-10 h-10 mx-auto mb-2" />
+                   <p className="text-[10px] font-black uppercase">No athlete data synchronized</p>
+                </div>
+              )}
            </div>
 
            <div className="p-8 bg-primary/5 border-t text-center">

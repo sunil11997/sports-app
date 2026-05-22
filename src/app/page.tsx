@@ -43,7 +43,7 @@ import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { format } from 'date-fns';
 
-// Static Imports for core components to resolve chunk load conflicts
+// Static Imports for core components to resolve chunk load conflicts and module mapping errors
 import { Dashboard } from '@/components/features/Dashboard';
 import { Registration } from '@/components/features/Registration';
 import { Attendance } from '@/components/features/Attendance';
@@ -56,22 +56,10 @@ import { PromotionHub } from '@/components/features/PromotionHub';
 import { ClassesSection } from '@/components/features/ClassesSection';
 import { SportsKnowledge } from '@/components/features/SportsKnowledge';
 import { TrainingLoad } from '@/components/features/TrainingLoad';
-
-// Keep GameHub dynamic as it is a large container
-const GameHub = dynamic(() => import('@/components/features/GameHub').then(mod => mod.GameHub), { 
-  ssr: false, 
-  loading: () => <TableSkeleton /> 
-});
-
-const Settings = dynamic(() => import('@/components/features/Settings').then(mod => mod.Settings), { 
-  ssr: false 
-});
-const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(mod => mod.SchoolRegistration), { 
-  ssr: false 
-});
-const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(mod => mod.NotificationCenter), { 
-  ssr: false 
-});
+import { GameHub } from '@/components/features/GameHub';
+import { Settings } from '@/components/features/Settings';
+import { SchoolRegistration } from '@/components/features/SchoolRegistration';
+import { NotificationCenter } from '@/components/features/NotificationCenter';
 
 const translations = {
   English: {
@@ -151,7 +139,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.7.2</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.7.5</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
