@@ -15,7 +15,6 @@ import {
   Flame,
   Zap,
   CirclePlay,
-  Stethoscope,
   Activity,
   HeartPulse,
   Medal,
@@ -28,7 +27,6 @@ import { Teams } from './Teams';
 import { HealthIncidents } from './HealthIncidents';
 import { DailyReport } from './DailyReport';
 import { DailyReadiness } from './DailyReadiness';
-import { InjuryLogger } from './InjuryLogger';
 import { cn } from '@/lib/utils';
 
 const GAMES = [
@@ -78,7 +76,6 @@ export function GameHub({ store }: { store: any }) {
               </TabsTrigger>
               <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
               <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
-              <TabsTrigger value="plans" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Practice Plan</TabsTrigger>
               <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
               <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
@@ -101,10 +98,6 @@ export function GameHub({ store }: { store: any }) {
 
           <TabsContent value="drills" className="mt-0">
             <SportsDrills store={store} preselectedSport={selectedGame} defaultView="checklist" />
-          </TabsContent>
-
-          <TabsContent value="plans" className="mt-0">
-            <SportsDrills store={store} preselectedSport={selectedGame} defaultView="plans" />
           </TabsContent>
 
           <TabsContent value="teams" className="mt-0">
