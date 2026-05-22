@@ -13,7 +13,8 @@ import {
   ChevronRight as ChevronRightIcon,
   CircleCheck,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -35,21 +36,24 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
   const [selectedNews, setSelectedNews] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!isOnline) return;
     setIsLoading(true);
+    setError(null);
     try {
       const today = format(new Date(), 'yyyy-MM-dd');
       if (type === 'news') {
         const result = await getSportsNews(today);
-        setItems(result.items);
+        setItems(result.items || []);
       } else if (type === 'history') {
         const result = await getSportsHistory(today);
-        setItems(result.items);
+        setItems(result.items || []);
       }
-    } catch (error) {
-      console.error(`WGB ${type}: Failed to sync registry pulse`, error);
+    } catch (err: any) {
+      console.error(`WGB ${type}: Registry pulse sync failed`, err);
+      setError(err.message || "Failed to connect to AI engine.");
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +62,20 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
   useEffect(() => {
     fetchData();
   }, [type]);
+
+  if (error) {
+    return (
+      <div className="py-10 text-center space-y-4">
+        <div className="bg-destructive/10 p-6 rounded-[2rem] border-2 border-destructive/20 max-w-sm mx-auto">
+          <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
+          <p className="text-xs font-black text-destructive uppercase tracking-widest">{error}</p>
+          <Button variant="outline" onClick={fetchData} className="mt-4 rounded-xl font-black uppercase text-[10px] h-10 border-destructive/20 text-destructive hover:bg-destructive/5">
+            <RefreshCw className="w-3 h-3 mr-2" /> Retry Connection
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (type === 'history') {
     return (
@@ -105,7 +123,6 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
     );
   }
 
-  // Geographic sequence: Maharashtra -> India -> World
   const sortedNews = [...items].sort((a, b) => {
     const sequence = { 'Maharashtra': 1, 'India': 2, 'World': 3 };
     return (sequence[a.category as keyof typeof sequence] || 99) - (sequence[b.category as keyof typeof sequence] || 99);
@@ -118,8 +135,6 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
       default: return Globe;
     }
   };
-
-  const NewsIcon = selectedNews ? getIconForCategory(selectedNews.category) : null;
 
   return (
     <div className="space-y-6">
@@ -183,48 +198,52 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
 
       <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="bg-primary p-10 text-white relative">
-            <div className="flex items-center gap-6 relative z-10">
-              <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
-                {NewsIcon && <NewsIcon className="w-8 h-8 text-white" />}
-              </div>
-              <div className="space-y-1">
-                <DialogTitle className="text-2xl font-black uppercase tracking-tight">{selectedNews?.title}</DialogTitle>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-accent text-white font-black text-[8px] uppercase px-3">{selectedNews?.category}</Badge>
-                  <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">{selectedNews?.date} UPDATE</span>
+          {selectedNews && (
+            <>
+              <DialogHeader className="bg-primary p-10 text-white relative">
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
+                    <Globe className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tight">{selectedNews.title}</DialogTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-accent text-white font-black text-[8px] uppercase px-3">{selectedNews.category}</Badge>
+                      <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">{selectedNews.date} UPDATE</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
+              </DialogHeader>
+
+              <div className="p-10 space-y-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Info className="w-4 h-4" />
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em]">Detailed Briefing</h4>
+                  </div>
+                  <p className="text-sm font-medium text-foreground/80 leading-relaxed italic border-l-4 border-accent/20 pl-6">
+                    "{selectedNews.details}"
+                  </p>
+                </div>
+
+                <div className="bg-muted/30 p-6 rounded-2xl border-2 border-dashed border-muted text-center">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
+                    <CircleCheck className="w-4 h-4 text-emerald-500" /> Source Verified • Official Sports Pulse
+                  </p>
                 </div>
               </div>
-            </div>
-            <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
-          </DialogHeader>
 
-          <div className="p-10 space-y-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary">
-                <Info className="w-4 h-4" />
-                <h4 className="text-[11px] font-black uppercase tracking-[0.2em]">Detailed Briefing</h4>
-              </div>
-              <p className="text-sm font-medium text-foreground/80 leading-relaxed italic border-l-4 border-accent/20 pl-6">
-                "{selectedNews?.details}"
-              </p>
-            </div>
-
-            <div className="bg-muted/30 p-6 rounded-2xl border-2 border-dashed border-muted text-center">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-                <CircleCheck className="w-4 h-4 text-emerald-500" /> Source Verified • Official Sports Pulse
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter className="p-10 bg-slate-50 border-t">
-            <Button 
-              onClick={() => setSelectedNews(null)}
-              className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active-scale"
-            >
-              Close Briefing
-            </Button>
-          </DialogFooter>
+              <DialogFooter className="p-10 bg-slate-50 border-t">
+                <Button 
+                  onClick={() => setSelectedNews(null)}
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active-scale"
+                >
+                  Close Briefing
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

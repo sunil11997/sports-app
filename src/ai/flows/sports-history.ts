@@ -45,11 +45,15 @@ const historyPrompt = ai.definePrompt({
 
 /**
  * getSportsHistory
- * Generates historical sports events with an aggressive cooldown for quota limits.
+ * Generates historical sports events with an optimized cooldown for Server Action stability.
  */
 export async function getSportsHistory(date: string, language: string = 'English'): Promise<HistoryOutput> {
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
+    throw new Error("AI Configuration Missing: GEMINI_API_KEY not found.");
+  }
+
   let attempts = 0;
-  const maxAttempts = 5;
+  const maxAttempts = 3;
   let lastError: any = null;
 
   while (attempts < maxAttempts) {
@@ -65,14 +69,13 @@ export async function getSportsHistory(date: string, language: string = 'English
       const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
       if (isQuota && attempts < maxAttempts) {
-        // Quota hits require a fixed long delay to clear the window
-        console.warn(`WGB History Vault: Quota hit. Cooling down for 40s (Attempt ${attempts})...`);
-        await new Promise(resolve => setTimeout(resolve, 40000));
+        console.warn(`WGB History Vault: Quota hit. Waiting 15s (Attempt ${attempts})...`);
+        await new Promise(resolve => setTimeout(resolve, 15000));
         continue;
       }
 
       if (isUnavailable && attempts < maxAttempts) {
-        const delay = 2000 * Math.pow(2, attempts);
+        const delay = 3000 * Math.pow(1.5, attempts);
         console.warn(`WGB History Vault: AI demand spike. Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;

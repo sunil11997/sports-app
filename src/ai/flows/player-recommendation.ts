@@ -107,7 +107,7 @@ const playerRecommendationFlow = ai.defineFlow(
     }
 
     let attempts = 0;
-    const maxAttempts = 5; 
+    const maxAttempts = 3; 
     let lastError: any = null;
 
     while (attempts < maxAttempts) {
@@ -124,14 +124,14 @@ const playerRecommendationFlow = ai.defineFlow(
         const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
         if (isQuota && attempts < maxAttempts) {
-          console.warn(`WGB Rec Engine: Quota limit reached. Waiting 40s (Attempt ${attempts})...`);
-          await new Promise(resolve => setTimeout(resolve, 40000));
-          selectedModel = 'gemini-2.5-flash'; // Always drop to Flash for quota issues
+          console.warn(`WGB Rec Engine: Quota limit reached. Waiting 15s (Attempt ${attempts})...`);
+          await new Promise(resolve => setTimeout(resolve, 15000));
+          selectedModel = 'gemini-2.5-flash'; // Fallback to Flash for quota issues
           continue;
         }
 
         if (isUnavailable && attempts < maxAttempts) {
-          const delay = 2000 * Math.pow(2, attempts);
+          const delay = 3000 * Math.pow(1.5, attempts);
           console.warn(`WGB Rec Engine: Service busy. Retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;

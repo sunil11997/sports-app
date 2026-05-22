@@ -48,11 +48,16 @@ const newsPrompt = ai.definePrompt({
 
 /**
  * getSportsNews
- * Generates regional sports news with an aggressive cooldown for quota limits.
+ * Generates regional sports news with an optimized cooldown for Server Action stability.
  */
 export async function getSportsNews(date: string, language: string = 'English'): Promise<NewsOutput> {
+  // Safety check for API Key to avoid "Unexpected response" errors
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
+    throw new Error("AI Configuration Missing: GEMINI_API_KEY not found.");
+  }
+
   let attempts = 0;
-  const maxAttempts = 5;
+  const maxAttempts = 3;
   let lastError: any = null;
 
   while (attempts < maxAttempts) {
@@ -68,14 +73,14 @@ export async function getSportsNews(date: string, language: string = 'English'):
       const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
       if (isQuota && attempts < maxAttempts) {
-        // Gemini Quota hits require a significant cooldown (~35-40s)
-        console.warn(`WGB News Pulse: Quota hit. Waiting 40s for AI engine cooldown (Attempt ${attempts})...`);
-        await new Promise(resolve => setTimeout(resolve, 40000));
+        // Optimized wait: 15s is enough to clear small windows without timing out the action
+        console.warn(`WGB News Pulse: Quota hit. Waiting 15s for reset (Attempt ${attempts})...`);
+        await new Promise(resolve => setTimeout(resolve, 15000));
         continue;
       }
 
       if (isUnavailable && attempts < maxAttempts) {
-        const delay = 2000 * Math.pow(2, attempts);
+        const delay = 3000 * Math.pow(1.5, attempts);
         console.warn(`WGB News Pulse: Service busy. Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
