@@ -26,8 +26,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
  * CoachAlertSystem
  * Multi-factor physiological risk assessment engine.
  */
-class CoachAlertSystem {
-  static evaluateAthleteReadiness({
+const CoachAlertSystem = {
+  evaluateAthleteReadiness: ({
     sleepHours,
     soreness,
     fatigue,
@@ -39,7 +39,7 @@ class CoachAlertSystem {
     fatigue: number;
     injuryStatus: string;
     phvOffset: number;
-  }) {
+  }) => {
     if (injuryStatus === "Sidelined") {
       return {
         statusColor: "RED",
@@ -81,11 +81,11 @@ class CoachAlertSystem {
       dot: "bg-emerald-600"
     };
   }
-}
+};
 
 /**
  * calculatePhvOffset
- * Mirwald PHV Maturity estimation.
+ * Mirwald PHV Maturity estimation logic.
  */
 const calculatePhvOffset = (player: any) => {
   if (!player?.height || !player?.weight || !player?.age) return 0;
@@ -117,17 +117,16 @@ export function DailyReadiness({ store }: { store: any }) {
     setIsMounted(true);
   }, []);
 
-  const players = useMemo(() => 
-    store.data.players
+  const players = useMemo(() => {
+    return store.data.players
       .filter((p: any) => p && p.category === 'athlete')
-      .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
-    [store.data.players]
-  );
+      .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
+  }, [store.data.players]);
 
-  const selectedPlayer = useMemo(() => 
-    players.find((p: any) => p.id === selectedPlayerId),
-    [selectedPlayerId, players]
-  );
+  const selectedPlayer = useMemo(() => {
+    if (!selectedPlayerId) return null;
+    return players.find((p: any) => p.id === selectedPlayerId);
+  }, [selectedPlayerId, players]);
 
   const coachAlert = useMemo(() => {
     if (!selectedPlayer || !isMounted) return null;
@@ -160,10 +159,17 @@ export function DailyReadiness({ store }: { store: any }) {
     setIsSaving(true);
     try {
       await store.setReadiness(selectedPlayerId, {
-        sleepHours, sorenessScore, fatigueScore, injuryStatus,
+        sleepHours, 
+        sorenessScore, 
+        fatigueScore, 
+        injuryStatus,
         readinessStatus: coachAlert?.statusColor || "GREEN"
       });
-      toast({ title: "यशस्वी", description: "आजचा आरोग्य डेटा जतन केला!", className: "bg-emerald-600 text-white" });
+      toast({ 
+        title: "यशस्वी", 
+        description: "आजचा आरोग्य डेटा जतन केला!", 
+        className: "bg-emerald-600 text-white" 
+      });
     } catch (error) {
       toast({ title: "Sync Error", variant: "destructive" });
     } finally {
@@ -192,50 +198,123 @@ export function DailyReadiness({ store }: { store: any }) {
               <Users className="w-3 h-3" /> खेळाडू निवडा
             </label>
             <Select value={selectedPlayerId} onValueChange={setSelectedPlayerId}>
-              <SelectTrigger className="h-14 rounded-2xl border-2 font-bold bg-white text-lg"><SelectValue placeholder="खेळाडू निवडा..." /></SelectTrigger>
-              <SelectContent>{players.map((p: any) => (<SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>))}</SelectContent>
+              <SelectTrigger className="h-14 rounded-2xl border-2 font-bold bg-white text-lg">
+                <SelectValue placeholder="खेळाडू निवडा..." />
+              </SelectTrigger>
+              <SelectContent>
+                {players.map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
           {coachAlert ? (
             <div className={cn("p-8 rounded-[2rem] border-2 space-y-6 transition-all shadow-sm", coachAlert.bg, coachAlert.border)}>
                <div className="flex items-center gap-4">
-                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-inner", coachAlert.color)}><Activity className="w-6 h-6 animate-pulse" /></div>
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-inner", coachAlert.color)}>
+                    <Activity className="w-6 h-6 animate-pulse" />
+                  </div>
                   <div>
-                    <Badge className={cn("font-black uppercase text-[9px] px-3", coachAlert.statusColor === 'RED' ? 'bg-red-600' : coachAlert.statusColor === 'YELLOW' ? 'bg-amber-500' : 'bg-emerald-600')}>{coachAlert.statusColor} Alert</Badge>
-                    <h3 className={cn("text-xl font-black uppercase leading-none mt-1.5", coachAlert.color)}>{coachAlert.action}</h3>
+                    <Badge className={cn(
+                      "font-black uppercase text-[9px] px-3", 
+                      coachAlert.statusColor === 'RED' ? 'bg-red-600' : 
+                      coachAlert.statusColor === 'YELLOW' ? 'bg-amber-500' : 
+                      'bg-emerald-600'
+                    )}>
+                      {coachAlert.statusColor} Alert
+                    </Badge>
+                    <h3 className={cn("text-xl font-black uppercase leading-none mt-1.5", coachAlert.color)}>
+                      {coachAlert.action}
+                    </h3>
                   </div>
                </div>
-               <div className="bg-white/60 p-5 rounded-2xl border border-white/50"><p className="text-xs font-bold text-foreground/80 leading-relaxed italic">"{coachAlert.advice}"</p></div>
+               <div className="bg-white/60 p-5 rounded-2xl border border-white/50">
+                <p className="text-xs font-bold text-foreground/80 leading-relaxed italic">
+                  "{coachAlert.advice}"
+                </p>
+               </div>
             </div>
           ) : (
-            <div className="p-10 text-center border-4 border-dashed rounded-[2rem] opacity-20"><Zap className="w-12 h-12 mx-auto mb-4" /><p className="text-sm font-black uppercase">Start entry to run engine</p></div>
+            <div className="p-10 text-center border-4 border-dashed rounded-[2rem] opacity-20">
+              <Zap className="w-12 h-12 mx-auto mb-4" />
+              <p className="text-sm font-black uppercase">Start entry to run engine</p>
+            </div>
           )}
 
           <div className="space-y-8 py-2">
              <div className="space-y-4">
-                <div className="flex justify-between items-center"><h4 className="text-xs font-black text-primary uppercase flex items-center gap-2"><Moon className="w-4 h-4 text-blue-500" /> झोप (तास)</h4><Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-black">{sleepHours} तास</Badge></div>
-                <Slider value={[sleepHours]} onValueChange={(val) => setSleepHours(val[0])} min={4} max={12} step={0.5} />
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
+                    <Moon className="w-4 h-4 text-blue-500" /> झोप (तास)
+                  </h4>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-black">
+                    {sleepHours} तास
+                  </Badge>
+                </div>
+                <Slider 
+                  value={[sleepHours]} 
+                  onValueChange={(val) => setSleepHours(val[0])} 
+                  min={4} 
+                  max={12} 
+                  step={0.5} 
+                />
              </div>
+             
              <div className="space-y-4">
-                <div className="flex justify-between items-center"><h4 className="text-xs font-black text-primary uppercase flex items-center gap-2"><Activity className="w-4 h-4 text-orange-500" /> स्नायू थकवा (Soreness)</h4><Badge className="bg-orange-500 text-white font-black">{sorenessScore}</Badge></div>
-                <Slider value={[sorenessScore]} onValueChange={(val) => setSorenessScore(val[0])} min={1} max={5} step={1} />
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-orange-500" /> स्नायू थकवा (Soreness)
+                  </h4>
+                  <Badge className="bg-orange-500 text-white font-black">{sorenessScore}</Badge>
+                </div>
+                <Slider 
+                  value={[sorenessScore]} 
+                  onValueChange={(val) => setSorenessScore(val[0])} 
+                  min={1} 
+                  max={5} 
+                  step={1} 
+                />
              </div>
+
              <div className="space-y-4">
-                <div className="flex justify-between items-center"><h4 className="text-xs font-black text-primary uppercase flex items-center gap-2"><Activity className="w-4 h-4 text-red-500" /> शारीरिक थकवा (Fatigue)</h4><Badge className="bg-red-500 text-white font-black">{fatigueScore}</Badge></div>
-                <Slider value={[fatigueScore]} onValueChange={(val) => setFatigueScore(val[0])} min={1} max={5} step={1} />
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-black text-primary uppercase flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-red-500" /> शारीरिक थकवा (Fatigue)
+                  </h4>
+                  <Badge className="bg-red-500 text-white font-black">{fatigueScore}</Badge>
+                </div>
+                <Slider 
+                  value={[fatigueScore]} 
+                  onValueChange={(val) => setFatigueScore(val[0])} 
+                  min={1} 
+                  max={5} 
+                  step={1} 
+                />
              </div>
+
              <div className="space-y-2">
                 <h4 className="text-xs font-black text-primary uppercase ml-2">दुखापत स्टेटस</h4>
                 <Select value={injuryStatus} onValueChange={setInjuryStatus}>
-                  <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="Fit to Train">तंदुरुस्त (Fit)</SelectItem><SelectItem value="Restricted">हलका सराव (Restricted)</SelectItem><SelectItem value="Sidelined">विश्रांती (Sidelined)</SelectItem></SelectContent>
+                  <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Fit to Train">तंदुरुस्त (Fit)</SelectItem>
+                    <SelectItem value="Restricted">हलका सराव (Restricted)</SelectItem>
+                    <SelectItem value="Sidelined">विश्रांती (Sidelined)</SelectItem>
+                  </SelectContent>
                 </Select>
              </div>
           </div>
 
-          <Button onClick={handleSave} disabled={!selectedPlayerId || isSaving} className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl active-scale">
-            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />} नोंद सबमिट करा
+          <Button 
+            onClick={handleSave} 
+            disabled={!selectedPlayerId || isSaving} 
+            className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl active-scale"
+          >
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />} 
+            नोंद सबमिट करा
           </Button>
         </Card>
       </div>
@@ -269,17 +348,30 @@ export function DailyReadiness({ store }: { store: any }) {
                             {player.name ? player.name[0] : '?'}
                           </AvatarFallback>
                         </Avatar>
-                        {hasData && <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", analysis.dot)} />}
+                        {hasData && (
+                          <div className={cn(
+                            "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
+                            analysis.dot
+                          )} />
+                        )}
                     </div>
                     
                     <div className="flex-1 min-w-0 space-y-3">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                          <div>
-                            <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors">{player.name}</p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std} • Age {player.age}</p>
+                          <div className="min-w-0">
+                            <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors truncate">
+                              {player.name}
+                            </p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">
+                              Std {player.std} • Age {player.age}
+                            </p>
                           </div>
                           {hasData && (
-                            <Badge className={cn("font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap", analysis.bg, analysis.color, "border-0 shadow-none")}>
+                            <Badge className={cn(
+                              "font-black uppercase text-[8px] px-3 py-1 rounded-full whitespace-nowrap border-0 shadow-none", 
+                              analysis.bg, 
+                              analysis.color
+                            )}>
                               {analysis.action}
                             </Badge>
                           )}
@@ -289,7 +381,9 @@ export function DailyReadiness({ store }: { store: any }) {
                           <div className="bg-muted/20 p-4 rounded-xl border border-dashed border-muted relative">
                             <div className="flex items-start gap-2">
                                 <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-                                <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">"{analysis.advice}"</p>
+                                <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
+                                  "{analysis.advice}"
+                                </p>
                             </div>
                           </div>
                         )}
