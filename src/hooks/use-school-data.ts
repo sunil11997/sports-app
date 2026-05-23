@@ -9,10 +9,6 @@ import { format } from 'date-fns';
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
-/**
- * useSchoolData - Optimized hook with conditional fetching
- * @param isActive If true, listeners will be established. Used for performance optimization.
- */
 export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
   const { user } = useUser();

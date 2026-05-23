@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,10 +85,9 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
 interface SportsDrillsProps {
   store: any;
   preselectedSport?: string;
-  defaultView?: string;
 }
 
-export function SportsDrills({ store, preselectedSport, defaultView }: SportsDrillsProps) {
+export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
   const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi'].skills[0]);
@@ -97,7 +95,6 @@ export function SportsDrills({ store, preselectedSport, defaultView }: SportsDri
   const [todayFocus, setTodayFocus] = useState<'U14' | 'U17'>('U14');
 
   useEffect(() => {
-    // Logic: Alternate based on the day of the month
     const date = new Date().getDate();
     setTodayFocus(date % 2 === 0 ? 'U14' : 'U17');
   }, []);
@@ -117,29 +114,26 @@ export function SportsDrills({ store, preselectedSport, defaultView }: SportsDri
 
   const drillKey = `${activeSport}_${activeDrill}`;
 
-  // Age Filtering Logic
-  const filterByFocus = (player: any) => {
+  const filterByFocus = useCallback((player: any) => {
     const age = parseInt(player.age) || 0;
     if (todayFocus === 'U14') return age < 14;
     if (todayFocus === 'U17') return age >= 14 && age < 17;
     return true;
-  };
+  }, [todayFocus]);
 
-  // Logic: 7 Female Players for the active age category
   const femaleSquad = useMemo(() => {
     return playersInSport
       .filter((p: any) => p.gender === 'Female' && filterByFocus(p) && !store.data.drillCompletions[`${p.id}_${drillKey}`])
       .sort((a: any, b: any) => (parseInt(a.std) || 0) - (parseInt(b.std) || 0))
       .slice(0, 7);
-  }, [playersInSport, drillKey, store.data.drillCompletions, todayFocus]);
+  }, [playersInSport, drillKey, store.data.drillCompletions, filterByFocus]);
 
-  // Logic: 7 Male Players for the active age category
   const maleSquad = useMemo(() => {
     return playersInSport
       .filter((p: any) => p.gender === 'Male' && filterByFocus(p) && !store.data.drillCompletions[`${p.id}_${drillKey}`])
       .sort((a: any, b: any) => (parseInt(a.std) || 0) - (parseInt(b.std) || 0))
       .slice(0, 7);
-  }, [playersInSport, drillKey, store.data.drillCompletions, todayFocus]);
+  }, [playersInSport, drillKey, store.data.drillCompletions, filterByFocus]);
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
@@ -163,7 +157,7 @@ export function SportsDrills({ store, preselectedSport, defaultView }: SportsDri
     } else {
       toast({ 
         title: "Practice Required", 
-        description: `${playerName} will automatically reappear in tomorrow's squad.`,
+        description: `${playerName} will automatically reappear in tomorrow&apos;s squad.`,
         variant: "destructive" 
       });
     }

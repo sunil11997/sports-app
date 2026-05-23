@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, FileText, Activity, AlertTriangle, Users, ClipboardCheck, History, Trophy, Zap } from 'lucide-react';
+import { Printer, FileText, AlertTriangle, Users, ClipboardCheck, History, Trophy, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -18,7 +17,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
 
-  const targetCategory = section === 'general' ? 'student' : 'athlete';
+  const targetCategory = useMemo(() => section === 'general' ? 'student' : 'athlete', [section]);
 
   useEffect(() => {
     setIsMounted(true);

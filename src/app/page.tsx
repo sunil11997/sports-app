@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
@@ -23,15 +22,11 @@ import {
   Timer,
   Zap,
   ChevronRight,
-  Bell,
   ClipboardList,
   GraduationCap,
   FileText,
   CircleArrowUp,
-  Stethoscope,
   BarChart,
-  Search,
-  Clock,
   Newspaper,
   Gauge,
   ShieldAlert
@@ -40,7 +35,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
-import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { format } from 'date-fns';
 
 // Static Imports to prevent ChunkLoadError and runtime registry collisions
@@ -80,6 +74,8 @@ const translations = {
   }
 };
 
+const LOGO_PATH = "/icon-512.png";
+
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -111,14 +107,13 @@ export default function WaghambaApp() {
   }, [user, isUserLoading, auth, isMounted]);
 
   const t = translations[language];
-  const LOGO_PATH = "/icon-512.png";
 
-  const sportsTabs = [
+  const sportsTabs = useMemo(() => [
     { id: "home", label: t.home, icon: Home },
     { id: "sport", label: t.sport, icon: Trophy },
     { id: "students", label: t.students, icon: UsersRound },
     { id: "profile", label: t.profile, icon: UserCircle },
-  ];
+  ], [t]);
 
   if (!isMounted) return null;
 
@@ -466,4 +461,3 @@ export default function WaghambaApp() {
     </div>
   );
 }
-

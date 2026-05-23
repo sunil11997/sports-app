@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 
 import { Card } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/loading-skeletons";
@@ -35,7 +34,6 @@ import {
   ClipboardCheck,
   ChevronDown
 } from "lucide-react";
-import { Badge } from '@/components/ui/badge';
 import { TrainingLoad } from './TrainingLoad';
 
 const SPORTS_CATEGORIES = [
@@ -79,9 +77,9 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   }, [isMounted, monthStart, monthEnd]);
 
   const isGeneral = section === 'general';
-  const categories = isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES;
+  const categories = useMemo(() => isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES, [isGeneral]);
 
-  const getPlayerCategory = (p: any) => {
+  const getPlayerCategory = useCallback((p: any) => {
     if (isGeneral) return p.std;
     const age = parseInt(p.age) || 0;
     const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
@@ -89,7 +87,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     if (age < 14) agePart = 'u14';
     else if (age < 17) agePart = 'u17';
     return `${genderPart}-${agePart}`;
-  };
+  }, [isGeneral]);
 
   const filteredPlayers = useMemo(() => {
     return store.data.players
@@ -107,7 +105,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         }
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, isGeneral, activeCategory]);
+  }, [store.data.players, isGeneral, activeCategory, getPlayerCategory]);
 
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}_${activeSession}`;

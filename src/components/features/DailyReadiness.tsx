@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -209,7 +208,7 @@ export function DailyReadiness({ store }: { store: any }) {
     });
   }, [selectedPlayerId, players, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!selectedPlayerId || !isMounted) return;
     setIsSaving(true);
     try {
@@ -226,7 +225,7 @@ export function DailyReadiness({ store }: { store: any }) {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [selectedPlayerId, isMounted, store, sleepHours, sorenessScore, fatigueScore, injuryStatus, activeAlert, toast]);
 
   if (!isMounted) return null;
 
@@ -366,8 +365,8 @@ export function DailyReadiness({ store }: { store: any }) {
                   <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Registry Sync</p>
                 </div>
               ) : (
-                teamReadiness.map((data: any, idx: number) => (
-                  <SquadItem key={data.player?.id || `squad-idx-${idx}`} data={data} />
+                teamReadiness.map((data: any) => (
+                  <SquadItem key={data.player?.id} data={data} />
                 ))
               )}
            </div>
@@ -382,4 +381,3 @@ export function DailyReadiness({ store }: { store: any }) {
     </div>
   );
 }
-

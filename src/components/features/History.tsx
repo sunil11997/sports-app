@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -8,21 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   BarChart, 
   Printer, 
-  Stethoscope,
-  TrendingUp,
-  Trophy,
-  ChartLine,
-  Zap,
-  Target,
-  AlertCircle,
-  CircleCheck,
-  History as HistoryIcon,
-  Timer,
-  Dumbbell,
-  Ruler,
-  Scale,
-  Activity,
-  Baby
+  TrendingUp, 
+  Trophy, 
+  ChartLine, 
+  Target, 
+  CircleCheck, 
+  Ruler, 
+  Scale, 
+  Activity, 
+  Baby 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -67,12 +60,11 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     [selectedPlayerId, store.data.players]
   );
 
-  // Mirwald PHV Calculation Logic
   const phvData = useMemo(() => {
     if (!player?.height || !player?.weight || !player?.age) return null;
     
     const h = parseFloat(player.height);
-    const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1)); // Estimation if missing
+    const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
     const w = parseFloat(player.weight);
     const age = player.age;
     const legL = h - sH;
@@ -92,12 +84,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
       legLength: legL.toFixed(1)
     };
   }, [player]);
-
-  const playerIncidents = useMemo(() => 
-    store.data.healthIncidents.filter((inc: any) => inc.playerId === selectedPlayerId)
-      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    [selectedPlayerId, store.data.healthIncidents]
-  );
 
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory[selectedPlayerId] || [])
@@ -206,7 +192,6 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
               </CardContent>
             </Card>
 
-            {/* High-Performance Analytics (PHV Maturity) */}
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-primary/5 border-b p-6">
                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">

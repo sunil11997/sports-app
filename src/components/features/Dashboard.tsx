@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,6 @@ import {
   Scan,
   Fingerprint,
   Upload,
-  ShieldCheck,
   Hash,
   Ruler,
   HeartPulse,
@@ -50,10 +48,10 @@ interface DashboardProps {
   onTabChange?: (tab: string) => void;
 }
 
-export function Dashboard({ store, section, language = 'English', t, onTabChange }: DashboardProps) {
+export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all", t }: DashboardProps) {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSport, setSelectedSport] = useState("all");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedSport, setSelectedSport] = useState(initialSport);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [convertingPlayer, setConvertingPlayer] = useState<Player | null>(null);
   const [selectedSportsForConversion, setSelectedSportsForConversion] = useState<string[]>([]);
@@ -145,18 +143,18 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
 
   const isGeneral = section === 'general';
 
-  const getAgeCategory = (age: number, gender: string) => {
+  const getAgeCategory = useCallback((age: number, gender: string) => {
     const g = gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${g} U14`;
     if (age < 17) return `${g} U17`;
     return `${g} Senior`;
-  };
+  }, []);
 
-  const getAgeRank = (age: number) => {
+  const getAgeRank = useCallback((age: number) => {
     if (age < 14) return 1;
     if (age < 17) return 2;
     return 3;
-  };
+  }, []);
 
   const filteredPlayers = useMemo(() => {
     return store.data.players
@@ -183,7 +181,7 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
           return a.name.localeCompare(b.name);
         }
       });
-  }, [store.data.players, isGeneral, searchTerm, selectedSport]);
+  }, [store.data.players, isGeneral, searchTerm, selectedSport, getAgeRank]);
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
@@ -319,7 +317,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
             {editingPlayer && (
               <div className="p-8 space-y-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                   {/* Left Column: Photos */}
                    <div className="space-y-8">
                       <div className="space-y-3">
                         <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
@@ -380,7 +377,6 @@ export function Dashboard({ store, section, language = 'English', t, onTabChange
                       </div>
                    </div>
 
-                   {/* Right Column: Form Fields */}
                    <div className="space-y-8">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3 text-primary border-b pb-2">
