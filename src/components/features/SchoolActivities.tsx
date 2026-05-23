@@ -78,7 +78,7 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
   };
 
   const activitiesList = useMemo(() => {
-    return store.data.activities
+    return (store.data.activities || [])
       .filter((a: any) => a.category === targetCategory)
       .slice().sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [store.data.activities, targetCategory]);

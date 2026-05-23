@@ -158,7 +158,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
-    toast({ title: "Metrics Archived", description: `${player.name}&apos;s institutional profile updated.` });
+    toast({ title: "Metrics Archived", description: `${player.name}'s institutional profile updated.` });
   };
 
   const handleAiAnalysis = async (player: any) => {
@@ -194,6 +194,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       });
       setActiveInstruction(instr);
     } catch (error: any) {
+      console.error(error);
       toast({ title: "AI Sync Error", description: "Demand spike or network failure.", variant: "destructive" });
       setAiModalOpen(false);
     } finally {

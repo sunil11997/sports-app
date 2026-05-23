@@ -87,7 +87,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
   const isGeneral = section === 'general';
   
   const filteredPlayers = useMemo(() => 
-    store.data.players
+    (store.data.players || [])
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
         const stdA = parseInt(a.std) || 0;

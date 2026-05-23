@@ -47,6 +47,8 @@ interface DashboardProps {
   language?: string;
   t: any;
   onTabChange?: (tab: string) => void;
+  searchTerm?: string;
+  selectedSport?: string;
 }
 
 export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all" }: DashboardProps) {
@@ -158,7 +160,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   }, []);
 
   const filteredPlayers = useMemo(() => {
-    return store.data.players
+    return (store.data.players || [])
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesSearch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 

@@ -108,7 +108,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   }, [preselectedSport]);
 
   const playersInSport = useMemo(() => 
-    store.data.players.filter((p: any) => 
+    (store.data.players || []).filter((p: any) => 
       p.category === 'athlete' && (p.sports?.includes(activeSport) || activeSport === 'Kabaddi')
     ),
   [store.data.players, activeSport]);
@@ -200,7 +200,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 <Image 
                   src={player.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${player.name}`} 
                   alt="Profile"
-                  fill
+                  width={40}
+                  height={40}
+                  unoptimized
                   className="object-cover"
                 />
               </div>
@@ -354,7 +356,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                           <Image 
                             src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.name}`} 
                             alt="Profile"
-                            fill
+                            width={32}
+                            height={32}
+                            unoptimized
                             className="object-cover"
                           />
                         </div>

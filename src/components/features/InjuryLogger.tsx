@@ -43,8 +43,9 @@ export function InjuryLogger({ store }: { store: any }) {
   const [isSaving, setIsSaving] = useState(false);
 
   const players = useMemo(() => 
-    store.data.players.filter((p: any) => p.category === 'athlete')
-      .sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    (store.data.players || [])
+      .filter((p: any) => p.category === 'athlete')
+      .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
     [store.data.players]
   );
 
@@ -78,6 +79,7 @@ export function InjuryLogger({ store }: { store: any }) {
       setSelectedInjuryType(null);
       setSeverity('Mild (कमी)');
     } catch (error) {
+      console.error(error);
       toast({ title: "Sync Error", variant: "destructive" });
     } finally {
       setIsSaving(false);

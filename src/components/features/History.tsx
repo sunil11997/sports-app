@@ -55,22 +55,22 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       });
   }, [store.data.players, isGeneral]);
 
-  const player = useMemo(() => 
+  const currentPlayer = useMemo(() => 
     (store.data.players || []).find((p: any) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
   );
 
   const phvData = useMemo(() => {
-    if (!player?.height || !player?.weight || !player?.age) return null;
+    if (!currentPlayer?.height || !currentPlayer?.weight || !currentPlayer?.age) return null;
     
-    const h = parseFloat(player.height);
-    const sH = parseFloat(player.sittingHeight || (h * 0.52).toFixed(1));
-    const w = parseFloat(player.weight);
-    const age = player.age;
+    const h = parseFloat(currentPlayer.height);
+    const sH = parseFloat(currentPlayer.sittingHeight || (h * 0.52).toFixed(1));
+    const w = parseFloat(currentPlayer.weight);
+    const age = currentPlayer.age;
     const legL = h - sH;
 
     let offset = 0;
-    if (player.gender === 'Male') {
+    if (currentPlayer.gender === 'Male') {
       offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
     } else {
       offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
@@ -83,7 +83,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       sittingHeight: sH,
       legLength: legL.toFixed(1)
     };
-  }, [player]);
+  }, [currentPlayer]);
 
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory?.[selectedPlayerId] || [])
@@ -123,16 +123,16 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
   }, [playerFitness]);
 
   const teamCategory = useMemo(() => {
-    if (!player) return "N/A";
-    const age = Number(player.age) || 0;
-    const gender = player.gender === 'Female' ? 'Girls' : 'Boys';
+    if (!currentPlayer) return "N/A";
+    const age = Number(currentPlayer.age) || 0;
+    const gender = currentPlayer.gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${gender} U14 Squad`;
     if (age < 17) return `${gender} U17 Squad`;
     return `${gender} Senior Squad`;
-  }, [player]);
+  }, [currentPlayer]);
 
   const handlePrint = () => {
-    if (!player) return;
+    if (!currentPlayer) return;
     window.print();
   };
 
@@ -179,14 +179,14 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               <div className="h-2 w-full bg-accent" />
               <CardContent className="p-8 space-y-8 text-center">
                 <Avatar className="w-40 h-40 border-4 border-primary/10 shadow-2xl mx-auto">
-                  <AvatarImage src={player?.photoUrl} className="object-cover" />
-                  <AvatarFallback className="bg-primary/5 text-primary font-black text-5xl uppercase">{player?.name?.[0]}</AvatarFallback>
+                  <AvatarImage src={currentPlayer?.photoUrl} className="object-cover" />
+                  <AvatarFallback className="bg-primary/5 text-primary font-black text-5xl uppercase">{currentPlayer?.name?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-3">
-                  <h3 className="font-black uppercase text-3xl text-primary leading-tight tracking-tight">{player?.name}</h3>
+                  <h3 className="font-black uppercase text-3xl text-primary leading-tight tracking-tight">{currentPlayer?.name}</h3>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <Badge variant="outline" className="text-[10px] font-black border-accent/30 text-accent uppercase">{teamCategory}</Badge>
-                    <Badge className="bg-primary text-white text-[10px] font-black uppercase">GR: {player?.generalRegisterNumber || 'N/A'}</Badge>
+                    <Badge className="bg-primary text-white text-[10px] font-black uppercase">GR: {currentPlayer?.generalRegisterNumber || 'N/A'}</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -203,12 +203,12 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                   <div className="bg-muted/30 p-4 rounded-2xl text-center">
                     <Ruler className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
                     <p className="text-[8px] font-black text-muted-foreground uppercase">Height</p>
-                    <p className="text-sm font-black text-primary">{player?.height}cm</p>
+                    <p className="text-sm font-black text-primary">{currentPlayer?.height}cm</p>
                   </div>
                   <div className="bg-muted/30 p-4 rounded-2xl text-center">
                     <Scale className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
                     <p className="text-[8px] font-black text-muted-foreground uppercase">Weight</p>
-                    <p className="text-sm font-black text-primary">{player?.weight}kg</p>
+                    <p className="text-sm font-black text-primary">{currentPlayer?.weight}kg</p>
                   </div>
                   <div className="bg-muted/30 p-4 rounded-2xl text-center">
                     <Baby className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
