@@ -470,7 +470,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Card className="border-2 rounded-[2rem] p-8 bg-accent/5 border-accent/10 hover:shadow-xl transition-all">
                         <div className="flex items-center gap-4 mb-6">
-                          <div className="p-3 bg-accent text-white rounded-xl shadow-lg"><Dumbbell className="w-6 h-6" /></div>
+                          <div className="p-3 bg-accent text-white rounded-xl shadow-lg"><DumbbellIcon className="w-6 h-6" /></div>
                           <h5 className="text-[11px] font-black uppercase text-primary tracking-[0.2em]">Drills</h5>
                         </div>
                         <p className="text-xs font-bold text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -507,7 +507,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   );
 }
 
-const Dumbbell = ({ className }: { className?: string }) => (
+const DumbbellIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
     width="24"

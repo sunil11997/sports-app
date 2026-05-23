@@ -324,7 +324,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                    <p className="text-3xl font-black">{playersInSport.filter(filterByFocus).length - masteredThisDrill.filter(filterByFocus).length}</p>
                  </div>
                  <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Drill Proficiency</p>
+                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Proficiency</p>
                    <p className="text-3xl font-black">{Math.round((masteredThisDrill.filter(filterByFocus).length / (playersInSport.filter(filterByFocus).length || 1)) * 100)}%</p>
                  </div>
                </div>
