@@ -88,6 +88,27 @@ interface SportsDrillsProps {
   preselectedSport?: string;
 }
 
+const DrillMedal = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
+    <path d="M11 12 5.12 2.2" />
+    <path d="m13 12 5.88-9.8" />
+    <path d="M8 7h8" />
+    <circle cx="12" cy="17" r="5" />
+    <path d="M12 18v-2" />
+  </svg>
+);
+
 export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
@@ -158,7 +179,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     } else {
       toast({ 
         title: "Practice Required", 
-        description: `${playerName} will automatically reappear in tomorrow&apos;s squad.`,
+        description: `${playerName} will automatically reappear in tomorrow's squad.`,
         variant: "destructive" 
       });
     }
@@ -198,7 +219,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full border-2 border-primary/5 overflow-hidden shadow-sm relative">
                 <Image 
-                  src={player.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${player.name}`} 
+                  src={player.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((player.name || '').trim())}`} 
                   alt="Profile"
                   width={40}
                   height={40}
@@ -329,7 +350,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                  </div>
                </div>
                <p className="text-xs font-medium text-white/60 leading-relaxed italic">
-                 &quot;Today&apos;s session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group.&quot;
+                 "Today's session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group."
                </p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[80px]" />
@@ -354,7 +375,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white border overflow-hidden shadow-sm relative">
                           <Image 
-                            src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.name}`} 
+                            src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((p.name || '').trim())}`} 
                             alt="Profile"
                             width={32}
                             height={32}
@@ -386,24 +407,3 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     </div>
   );
 }
-
-const DrillMedal = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
-    <path d="M11 12 5.12 2.2" />
-    <path d="m13 12 5.88-9.8" />
-    <path d="M8 7h8" />
-    <circle cx="12" cy="17" r="5" />
-    <path d="M12 18v-2" />
-  </svg>
-);
