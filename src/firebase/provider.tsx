@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -163,7 +164,7 @@ export const useUser = (): UserHookResult => {
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  // Fix: Pass an inline function to avoid "unknown dependencies" ESLint error
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoized = useMemo(() => {
     const result = factory();
     if (typeof result === 'object' && result !== null) {

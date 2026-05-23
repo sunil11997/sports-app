@@ -1,0 +1,30 @@
+
+> waghamba-sports-hub@3.8.2 build
+> next build
+
+   ▲ Next.js 15.1.11
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/firebase/provider.tsx
+173:6  Warning: React Hook useMemo was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies.  react-hooks/exhaustive-deps
+173:6  Warning: React Hook useMemo has a missing dependency: 'factory'. Either include it or remove the dependency array. If 'factory' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+Failed to compile.
+
+./src/components/features/GameHub.tsx:107:73
+Type error: Type '{ store: any; preselectedSport: string; defaultView: string; }' is not assignable to type 'IntrinsicAttributes & SportsDrillsProps'.
+  Property 'defaultView' does not exist on type 'IntrinsicAttributes & SportsDrillsProps'.
+
+[0m [90m 105 |[39m[0m
+[0m [90m 106 |[39m           [33m<[39m[33mTabsContent[39m value[33m=[39m[32m"drills"[39m className[33m=[39m[32m"mt-0"[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 107 |[39m             [33m<[39m[33mSportsDrills[39m store[33m=[39m{store} preselectedSport[33m=[39m{selectedGame} defaultView[33m=[39m[32m"checklist"[39m [33m/[39m[33m>[39m[0m
+[0m [90m     |[39m                                                                         [31m[1m^[22m[39m[0m
+[0m [90m 108 |[39m           [33m<[39m[33m/[39m[33mTabsContent[39m[33m>[39m[0m
+[0m [90m 109 |[39m[0m
+[0m [90m 110 |[39m           [33m<[39m[33mTabsContent[39m value[33m=[39m[32m"teams"[39m className[33m=[39m[32m"mt-0"[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

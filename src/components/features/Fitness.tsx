@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -292,7 +293,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           <div>
             <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
             <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1.5 mt-0.5 tracking-widest">
-              <Calendar className="w-3.5 h-3.5" /> Performance Registry • {format(new Date(), 'MMMM yyyy')}
+              <Calendar className="w-3.5 h-3.5" /> Performance Registry &bull; {format(new Date(), 'MMMM yyyy')}
             </p>
           </div>
         </div>
@@ -337,7 +338,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                         <TableCell className="border-r p-4 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
                           <div className="flex flex-col">
                             <span className="text-primary uppercase text-sm truncate w-[140px]">{player.name}</span>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} • Age {player.age}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} &bull; Age {player.age}</span>
                           </div>
                         </TableCell>
                         

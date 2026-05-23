@@ -104,7 +104,7 @@ export function GameHub({ store }: { store: any }) {
           </TabsContent>
 
           <TabsContent value="drills" className="mt-0">
-            <SportsDrills store={store} preselectedSport={selectedGame} defaultView="checklist" />
+            <SportsDrills store={store} preselectedSport={selectedGame} />
           </TabsContent>
 
           <TabsContent value="teams" className="mt-0">

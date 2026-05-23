@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -229,7 +230,7 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
 
                 <div className="bg-muted/30 p-6 rounded-2xl border-2 border-dashed border-muted text-center">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-                    <CircleCheck className="w-4 h-4 text-emerald-500" /> Source Verified • Official Sports Pulse
+                    <CircleCheck className="w-4 h-4 text-emerald-500" /> Source Verified &bull; Official Sports Pulse
                   </p>
                 </div>
               </div>
