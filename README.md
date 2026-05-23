@@ -1,9 +1,9 @@
 
-# शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub v3.7.0
+# शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub v3.8.1
 
 The definitive physical education and sports management platform for the Waghamba Institutional Registry.
 
-## Key Features in v3.7.0
+## Key Features in v3.8.1
 - **14-Player Dual-Squad Session**: Automatically generates a 7-Female + 7-Male training squad for every technical drill with instant rotation.
 - **Geographic News Pulse**: Real-time sports intelligence sequenced specifically for Maharashtra, India, and World events.
 - **High-Resolution Branding**: Standardized icon-512.png across PWA installation, splash screens, and internal UI headers.

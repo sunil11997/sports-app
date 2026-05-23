@@ -1,20 +1,15 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Activity, 
   Save, 
   Timer, 
   Gauge, 
-  Flame, 
-  Info,
-  ChevronRight,
   ShieldCheck,
   TrendingUp,
   BrainCircuit
@@ -64,19 +59,6 @@ export function TrainingLoad({ store }: { store: any }) {
 
     const player = store.data.players.find((p: any) => p.id === selectedPlayerId);
     
-    // In our Next.js architecture, we use the store's sync logic
-    // But for this specific feature request, we simulate the direct document push logic
-    const loadRecord = {
-      playerId: selectedPlayerId,
-      playerName: player?.name,
-      rpe,
-      duration: parseInt(duration),
-      totalLoad: trainingLoad,
-      date,
-      timestamp: new Date().toISOString()
-    };
-
-    // Assuming store has a method or we use setFitness as a proxy for load tracking
     store.setFitness(selectedPlayerId, {
       ...store.data.fitness[selectedPlayerId],
       lastTrainingLoad: trainingLoad.toString(),
@@ -204,7 +186,7 @@ export function TrainingLoad({ store }: { store: any }) {
               <Save className="w-6 h-6" /> Archive Load Registry
             </Button>
             <p className="text-[9px] font-black text-muted-foreground uppercase text-center mt-6 tracking-[0.3em] opacity-40">
-              Registry Engine • WGB Hub V3.7.9
+              Registry Engine &bull; WGB Hub V3.8.1
             </p>
           </div>
         </Card>

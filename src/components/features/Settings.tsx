@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -61,23 +60,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       title: language === 'Marathi' ? "डेटा एक्सपोर्ट झाला" : "Consolidated Registry Exported",
       description: language === 'Marathi' ? "तुमच्या शाळेचा संपूर्ण डेटा JSON फाईलमध्ये जतन केला आहे." : "A complete institutional JSON backup has been generated."
     });
-  };
-
-  const handleGoogleLogin = async () => {
-    if (!auth) return;
-    try {
-      setIsSyncing(true);
-      await initiateGoogleSignIn(auth);
-    } catch (error: any) {
-      console.error("Google Sync Error:", error);
-      toast({ 
-        title: "Google Sync Failed", 
-        description: "If Google login fails, please use the Email Sync option for higher reliability.", 
-        variant: "destructive" 
-      });
-    } finally {
-      setIsSyncing(false);
-    }
   };
 
   const handleAuthAction = async () => {
@@ -173,7 +155,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.7.0</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.8.1</p>
       </div>
 
       <div className="space-y-6">
