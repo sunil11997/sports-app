@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -77,7 +78,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -168,7 +169,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
         </head>
         <body>
           <h1>WAGHAMBA INSTITUTIONAL HEALTH REGISTRY</h1>
-          <div class="header-info">Official Injury Audit • Teacher Sunil Deshmukh</div>
+          <div class="header-info">Official Injury Audit &bull; Teacher Sunil Deshmukh</div>
           ${incidentsToPrint.slice().reverse().map((inc: any) => `
             <div class="incident ${inc.severity === 'Critical' ? 'critical' : ''}">
               <div style="display: flex; justify-content: space-between; align-items: center;">

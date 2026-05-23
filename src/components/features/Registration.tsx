@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -246,7 +247,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     {activeCam === 'profile' ? (
                       <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                     ) : form.watch('photoUrl') ? (
-                      <Image src={form.watch('photoUrl')} alt="Profile" fill className="object-cover" />
+                      <div className="relative w-full h-full">
+                        <Image src={form.watch('photoUrl')} alt="Profile" fill unoptimized className="object-cover" />
+                      </div>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest">Awaiting Capture</span></div>
                     )}
@@ -281,7 +284,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     {activeCam === 'aadhar' ? (
                       <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                     ) : form.watch('aadharPhotoUrl') ? (
-                      <Image src={form.watch('aadharPhotoUrl')} alt="Aadhar" fill className="object-cover" />
+                      <div className="relative w-full h-full">
+                        <Image src={form.watch('aadharPhotoUrl')} alt="Aadhar" fill unoptimized className="object-cover" />
+                      </div>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /><span className="text-[8px] font-black uppercase tracking-widest mt-2">No Document Scanned</span></div>
                     )}

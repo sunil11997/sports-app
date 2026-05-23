@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
@@ -13,14 +14,12 @@ import {
   CalendarRange, 
   Play, 
   Pause, 
-  RotateCcw, 
   ChevronRight, 
   ChevronLeft,
   Plus,
   Trash2,
   Printer,
   Search,
-  PenTool,
   Maximize2,
   Clock,
   CheckCircle2,
@@ -33,14 +32,34 @@ import {
   Eye,
   Youtube,
   Loader2,
-  BrainCircuit,
-  Info
+  BrainCircuit
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { videoSearch, type VideoSearchOutput } from '@/ai/flows/video-search';
+import { videoSearch } from '@/ai/flows/video-search';
 import { usePWA } from '@/components/providers/pwa-provider';
+
+const ListOrdered = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="10" y1="6" x2="21" y2="6" />
+    <line x1="10" y1="12" x2="21" y2="12" />
+    <line x1="10" y1="18" x2="21" y2="18" />
+    <path d="M4 6h1v4" />
+    <path d="M4 10h2" />
+    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+  </svg>
+);
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
@@ -57,22 +76,17 @@ const SPORT_VIDEOS: Record<string, string> = {
 };
 
 const DRILL_LIBRARY = [
-  // Kabaddi
   { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   { id: 'k4', category: 'Kabaddi', name: 'Hand Touch Reach', duration: '12m', level: 'Basic', description: 'Improving upper body reach during raiding.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
-  // Volleyball
   { id: 'v1', category: 'Volleyball', name: 'Jump Serve Peak', duration: '25m', level: 'Pro', description: 'Timing the vertical jump with ball toss peak.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
   { id: 'v2', category: 'Volleyball', name: 'Bump Pass Control', duration: '15m', level: 'Basic', description: 'Fundamental forearm pass accuracy drills.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
   { id: 'v3', category: 'Volleyball', name: 'Spike Approach', duration: '20m', level: 'Intermediate', description: '3-step approach and explosive takeoff.', video: 'https://www.youtube.com/watch?v=qf-1h-K2qRk' },
-  // Handball
   { id: 'h1', category: 'Handball', name: 'Jump Shot Power', duration: '20m', level: 'Intermediate', description: 'Generating power from air-borne position.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
   { id: 'h2', category: 'Handball', name: 'Piston Movement', duration: '15m', level: 'Advanced', description: 'Defensive coordination and lateral shifts.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
-  // Kho Kho
   { id: 'kh1', category: 'Kho Kho', name: 'Pole Turning Speed', duration: '15m', level: 'Intermediate', description: 'Minimizing radius during pole transitions.', video: 'https://www.youtube.com/watch?v=R9Vf8p0Urc' },
   { id: 'kh2', category: 'Kho Kho', name: 'Kho Timing', duration: '10m', level: 'Basic', description: 'Synchronized shoulder tap and verbal call.', video: 'https://www.youtube.com/watch?v=R9Vf8p0Urc' },
-  // Athletics
   { id: 'a1', category: 'Running', name: 'Block Start', duration: '15m', level: 'Intermediate', description: 'Explosive reaction time from starting blocks.', video: 'https://www.youtube.com/watch?v=7S08JbLwB_k' },
   { id: 'a2', category: 'Shot Put', name: 'Glide Technique', duration: '20m', level: 'Advanced', description: 'Mastering the linear glide across the circle.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   { id: 'a3', category: 'Long Jump', name: 'Hitch-Kick Flight', duration: '15m', level: 'Advanced', description: 'Managing body position during flight phase.', video: 'https://www.youtube.com/watch?v=_vC-T7qZ6_w' },
@@ -82,13 +96,13 @@ const DRILL_LIBRARY = [
 
 export function CoreHub({ store }: { store: any }) {
   const { toast } = useToast();
+  const { isOnline } = usePWA();
   const [activeHubTab, setActiveHubTab] = useState("analysis");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState("Kabaddi");
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("all");
   const [activeDrillName, setActiveDrillName] = useState<string>("Technical Mastery");
   
-  // Analysis States
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [analysisVideo, setAnalysisVideo] = useState(SPORT_VIDEOS['Kabaddi']);
@@ -128,7 +142,7 @@ export function CoreHub({ store }: { store: any }) {
   );
 
   const playersInSport = useMemo(() => {
-    return store.data.players.filter((p: any) => 
+    return (store.data.players || []).filter((p: any) => 
       p.category === 'athlete' && (!selectedSport || p.sports?.includes(selectedSport))
     );
   }, [store.data.players, selectedSport]);
@@ -456,24 +470,3 @@ export function CoreHub({ store }: { store: any }) {
     </div>
   );
 }
-
-const ListOrdered = ({ className }: { className?: string }) => (
-  <svg
-  className={className}
-  width="24"
-  height="24"
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  strokeWidth="3"
-  strokeLinecap="round"
-  strokeLinejoin="round"
->
-  <line x1="10" y1="6" x2="21" y2="6" />
-  <line x1="10" y1="12" x2="21" y2="12" />
-  <line x1="10" y1="18" x2="21" y2="18" />
-  <path d="M4 6h1v4" />
-  <path d="M4 10h2" />
-  <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
-</svg>
-);

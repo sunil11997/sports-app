@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -118,7 +119,7 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h4 className="text-2xl font-black text-primary uppercase">{act.type}</h4>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Std {act.std} • {format(new Date(act.date), 'dd MMM yyyy')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Std {act.std} &bull; {format(new Date(act.date), 'dd MMM yyyy')}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="icon" onClick={() => handlePrint(act)} className="h-10 w-10 border-2 rounded-xl text-primary"><Printer className="w-5 h-5" /></Button>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -146,17 +147,17 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
   const isGeneral = section === 'general';
 
+  const getAgeRank = useCallback((age: number) => {
+    if (age < 14) return 1;
+    if (age < 17) return 2;
+    return 3;
+  }, []);
+
   const getAgeCategory = useCallback((age: number, gender: string) => {
     const g = gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${g} U14`;
     if (age < 17) return `${g} U17`;
     return `${g} Senior`;
-  }, []);
-
-  const getAgeRank = useCallback((age: number) => {
-    if (age < 14) return 1;
-    if (age < 17) return 2;
-    return 3;
   }, []);
 
   const filteredPlayers = useMemo(() => {
@@ -327,7 +328,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                            {activeCam === 'profile' ? (
                              <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                            ) : editingPlayer.photoUrl ? (
-                             <Image src={editingPlayer.photoUrl} alt="Profile" fill className="object-cover" />
+                             <div className="relative w-full h-full">
+                               <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                             </div>
                            ) : (
                              <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /></div>
                            )}
@@ -356,7 +359,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                           {activeCam === 'aadhar' ? (
                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                           ) : editingPlayer.aadharPhotoUrl ? (
-                            <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill className="object-cover" />
+                            <div className="relative w-full h-full">
+                              <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                            </div>
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
                           )}

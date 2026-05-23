@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -17,8 +18,7 @@ import {
   Sparkles,
   Trophy,
   Zap,
-  Flame,
-  Dumbbell
+  Flame
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -158,7 +158,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
-    toast({ title: "Metrics Archived", description: `${player.name}'s institutional profile updated.` });
+    toast({ title: "Metrics Archived", description: `${player.name}&apos;s institutional profile updated.` });
   };
 
   const handleAiAnalysis = async (player: any) => {
@@ -229,7 +229,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <h1>ASHRAM SHALA WAGHAMBA - PHYSICAL EXCELLENCE REGISTRY</h1>
@@ -507,3 +507,25 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     </div>
   );
 }
+
+const Dumbbell = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m6.5 6.5 11 11" />
+    <path d="m11.8 5.8 5.2 5.2" />
+    <path d="m5.8 11.8 5.2 5.2" />
+    <path d="M7 21a2 2 0 1 0-4-4 2 2 0 0 0 4 4Z" />
+    <path d="M21 7a2 2 0 1 0-4-4 2 2 0 0 0 4 4Z" />
+    <path d="m18.8 2.8 2.4 2.4" />
+    <path d="m2.8 18.8 2.4 2.4" />
+  </svg>
+);
