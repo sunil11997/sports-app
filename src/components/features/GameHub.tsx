@@ -18,7 +18,8 @@ import {
   HeartPulse,
   Medal,
   ShieldAlert,
-  BrainCircuit
+  BrainCircuit,
+  Layout
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
@@ -28,6 +29,7 @@ import { HealthIncidents } from './HealthIncidents';
 import { DailyReport } from './DailyReport';
 import { DailyReadiness } from './DailyReadiness';
 import { TacticalAnalytics } from './TacticalAnalytics';
+import { TacticalPlaybook } from './TacticalPlaybook';
 import { cn } from '@/lib/utils';
 
 const GAMES = [
@@ -79,8 +81,11 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
+              <TabsTrigger value="playbook" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <Layout className="w-3.5 h-3.5" /> Playbook
+              </TabsTrigger>
               <TabsTrigger value="tactics" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <BrainCircuit className="w-3.5 h-3.5" /> Tactics
+                <BrainCircuit className="w-3.5 h-3.5" /> Decisions
               </TabsTrigger>
               <TabsTrigger value="injury" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <ShieldAlert className="w-3.5 h-3.5" /> Injury Hub
@@ -89,7 +94,7 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
               <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
-              <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+              <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-slate-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <Activity className="w-3 h-3" /> Auto Reports
               </TabsTrigger>
             </TabsList>
@@ -97,6 +102,10 @@ export function GameHub({ store }: { store: any }) {
 
           <TabsContent value="readiness" className="mt-0">
             <DailyReadiness store={store} />
+          </TabsContent>
+
+          <TabsContent value="playbook" className="mt-0">
+            <TacticalPlaybook store={store} preselectedSport={selectedGame} />
           </TabsContent>
 
           <TabsContent value="tactics" className="mt-0">
@@ -140,7 +149,7 @@ export function GameHub({ store }: { store: any }) {
           </div>
           <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Game Hub</h2>
           <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
-            Select a discipline to access technical mastery, training logs, health, and auto-reports.
+            Select a discipline to access technical mastery, tactical playbooks, and injury logs.
           </p>
         </div>
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
@@ -165,8 +174,8 @@ export function GameHub({ store }: { store: any }) {
                 <span className="text-[8px] font-black uppercase text-muted-foreground">Skills</span>
               </div>
               <div className="flex flex-col items-center">
-                <BrainCircuit className="w-4 h-4 text-muted-foreground/30 mb-1" />
-                <span className="text-[8px] font-black uppercase text-muted-foreground">Tactics</span>
+                <Layout className="w-4 h-4 text-muted-foreground/30 mb-1" />
+                <span className="text-[8px] font-black uppercase text-muted-foreground">Strategy</span>
               </div>
               <div className="flex flex-col items-center">
                 <ShieldAlert className="w-4 h-4 text-muted-foreground/30 mb-1" />
