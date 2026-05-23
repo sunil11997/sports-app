@@ -75,6 +75,20 @@ export interface FitnessAssessment {
   swadhyay?: string;     
 }
 
+export interface TacticalEvent {
+  id: string;
+  playerId: string;
+  playerName: string;
+  sport: string;
+  date: string;
+  situation: string;
+  decisionType: 'Positive' | 'Negative';
+  outcome: 'Success' | 'Failure';
+  description: string;
+  schoolId: string;
+  academicYear: string;
+}
+
 export interface ExamLabels {
   nirikshan: string;
   tondikam: string;
@@ -113,4 +127,6 @@ export interface HealthIncident {
   date: string;
   description: string;
   academicYear?: string;
+  severity: 'Minor' | 'Critical';
+  category: 'athlete' | 'student';
 }

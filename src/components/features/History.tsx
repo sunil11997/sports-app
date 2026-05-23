@@ -15,7 +15,10 @@ import {
   Ruler, 
   Scale, 
   Activity, 
-  Baby 
+  Baby,
+  BrainCircuit,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -84,6 +87,23 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       legLength: legL.toFixed(1)
     };
   }, [currentPlayer]);
+
+  const tacticalStats = useMemo(() => {
+    if (!selectedPlayerId) return null;
+    const events = (store.data.tacticalEvents || []).filter((e: any) => e.playerId === selectedPlayerId);
+    const positive = events.filter((e: any) => e.decisionType === 'Positive').length;
+    const negative = events.filter((e: any) => e.decisionType === 'Negative').length;
+    const success = events.filter((e: any) => e.outcome === 'Success').length;
+    const total = events.length;
+    
+    return {
+      total,
+      positive,
+      negative,
+      successRate: total > 0 ? Math.round((success / total) * 100) : 0,
+      recent: events.slice(0, 3)
+    };
+  }, [selectedPlayerId, store.data.tacticalEvents]);
 
   const playerFitness = useMemo(() => 
     (store.data.fitnessHistory?.[selectedPlayerId] || [])
@@ -250,6 +270,81 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
 
           <div className="lg:col-span-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
+                  <CardHeader className="bg-primary p-8 text-white">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
+                      <BrainCircuit className="w-5 h-5 text-accent" /> Tactical Analysis Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-8">
+                    {tacticalStats && tacticalStats.total > 0 ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-6">
+                           <div className="bg-primary/5 p-6 rounded-3xl text-center border-2 border-primary/5">
+                              <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Decision Accuracy</p>
+                              <p className="text-4xl font-black text-primary">{tacticalStats.successRate}%</p>
+                           </div>
+                           <div className="bg-accent/5 p-6 rounded-3xl text-center border-2 border-accent/5">
+                              <p className="text-[9px] font-black text-accent uppercase tracking-widest mb-1">Total Situation Logs</p>
+                              <p className="text-4xl font-black text-accent">{tacticalStats.total}</p>
+                           </div>
+                        </div>
+
+                        <div className="space-y-4">
+                           <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Recent Decisions</h4>
+                           <div className="space-y-3">
+                              {tacticalStats.recent.map((e: any) => (
+                                <div key={e.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-2xl border">
+                                   <div className="flex items-center gap-3">
+                                      {e.outcome === 'Success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                                      <span className="text-[10px] font-bold text-foreground/70 uppercase truncate max-w-[150px]">{e.situation}</span>
+                                   </div>
+                                   <Badge variant="outline" className={cn("text-[8px] font-black uppercase", e.decisionType === 'Positive' ? "text-emerald-600 border-emerald-200 bg-emerald-50" : "text-orange-600 border-orange-200 bg-orange-50")}>
+                                      {e.decisionType}
+                                   </Badge>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="py-20 text-center opacity-20 flex flex-col items-center gap-4">
+                        <BrainCircuit className="w-12 h-12" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">No Tactical Profile Built Yet</p>
+                      </div>
+                    )}
+                  </CardContent>
+               </Card>
+
+               <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
+                  <CardHeader className="bg-emerald-50 border-b p-8">
+                    <CardTitle className="text-xs font-black uppercase text-emerald-700 tracking-widest flex items-center gap-3">
+                      <CircleCheck className="w-5 h-5" /> Attendance Consistency
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-6">
+                     <div className="relative w-40 h-40">
+                        <svg className="w-full h-full transform -rotate-90">
+                           <circle cx="80" cy="80" r="70" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
+                           <circle 
+                              cx="80" cy="80" r="70" 
+                              stroke="#10b981" 
+                              strokeWidth="12" 
+                              fill="transparent" 
+                              strokeDasharray="440" 
+                              strokeDashoffset={440 - (440 * (playerAttendance.present / (playerAttendance.total || 1)))} 
+                              strokeLinecap="round"
+                           />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                           <span className="text-4xl font-black text-primary">{Math.round((playerAttendance.present / (playerAttendance.total || 1)) * 100)}%</span>
+                        </div>
+                     </div>
+                  </CardContent>
+               </Card>
+            </div>
+
             <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
               <CardHeader className="bg-slate-50 border-b p-8">
                 <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-3">
@@ -280,63 +375,34 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-lg flex flex-col">
-                  <CardHeader className="bg-emerald-50 border-b p-6">
-                    <CardTitle className="text-[10px] font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2">
-                      <CircleCheck className="w-4 h-4" /> Attendance Consistency
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-10 flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                     <div className="relative w-40 h-40">
-                        <svg className="w-full h-full transform -rotate-90">
-                           <circle cx="80" cy="80" r="70" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
-                           <circle 
-                              cx="80" cy="80" r="70" 
-                              stroke="#10b981" 
-                              strokeWidth="12" 
-                              fill="transparent" 
-                              strokeDasharray="440" 
-                              strokeDashoffset={440 - (440 * (playerAttendance.present / (playerAttendance.total || 1)))} 
-                              strokeLinecap="round"
-                           />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                           <span className="text-4xl font-black text-primary">{Math.round((playerAttendance.present / (playerAttendance.total || 1)) * 100)}%</span>
-                        </div>
-                     </div>
-                  </CardContent>
-               </Card>
-
-               <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-lg">
-                  <CardHeader className="bg-primary/5 border-b p-6">
-                    <CardTitle className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                      <Target className="w-4 h-4" /> Skill Mastery Distribution
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    {skillMasteryData.length === 0 ? (
-                       <div className="h-[250px] flex flex-col items-center justify-center opacity-10">
-                          <Trophy className="w-12 h-12" />
-                       </div>
-                    ) : (
-                      <div className="h-[250px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <RechartsBarChart data={skillMasteryData}>
-                            <XAxis dataKey="name" hide />
-                            <Tooltip cursor={{ fill: 'transparent' }} />
-                            <Bar dataKey="score" radius={[10, 10, 0, 0]}>
-                               {skillMasteryData.map((entry, index) => (
-                                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                               ))}
-                            </Bar>
-                          </RechartsBarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                  </CardContent>
-               </Card>
-            </div>
+            <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-lg">
+              <CardHeader className="bg-primary/5 border-b p-6">
+                <CardTitle className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                  <Target className="w-4 h-4" /> Skill Mastery Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                {skillMasteryData.length === 0 ? (
+                    <div className="h-[250px] flex flex-col items-center justify-center opacity-10">
+                      <Trophy className="w-12 h-12" />
+                    </div>
+                ) : (
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsBarChart data={skillMasteryData}>
+                        <XAxis dataKey="name" hide />
+                        <Tooltip cursor={{ fill: 'transparent' }} />
+                        <Bar dataKey="score" radius={[10, 10, 0, 0]}>
+                            {skillMasteryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                        </Bar>
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}

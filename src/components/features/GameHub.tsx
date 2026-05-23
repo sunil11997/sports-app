@@ -17,7 +17,8 @@ import {
   Activity,
   HeartPulse,
   Medal,
-  ShieldAlert
+  ShieldAlert,
+  BrainCircuit
 } from 'lucide-react';
 import { SportsSkills } from './SportsSkills';
 import { SportsDrills } from './SportsDrills';
@@ -26,6 +27,7 @@ import { Teams } from './Teams';
 import { HealthIncidents } from './HealthIncidents';
 import { DailyReport } from './DailyReport';
 import { DailyReadiness } from './DailyReadiness';
+import { TacticalAnalytics } from './TacticalAnalytics';
 import { cn } from '@/lib/utils';
 
 const GAMES = [
@@ -77,6 +79,9 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
+              <TabsTrigger value="tactics" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <BrainCircuit className="w-3.5 h-3.5" /> Tactics
+              </TabsTrigger>
               <TabsTrigger value="injury" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <ShieldAlert className="w-3.5 h-3.5" /> Injury Hub
               </TabsTrigger>
@@ -92,6 +97,10 @@ export function GameHub({ store }: { store: any }) {
 
           <TabsContent value="readiness" className="mt-0">
             <DailyReadiness store={store} />
+          </TabsContent>
+
+          <TabsContent value="tactics" className="mt-0">
+            <TacticalAnalytics store={store} preselectedSport={selectedGame} />
           </TabsContent>
 
           <TabsContent value="injury" className="mt-0">
@@ -156,8 +165,8 @@ export function GameHub({ store }: { store: any }) {
                 <span className="text-[8px] font-black uppercase text-muted-foreground">Skills</span>
               </div>
               <div className="flex flex-col items-center">
-                <Dumbbell className="w-4 h-4 text-muted-foreground/30 mb-1" />
-                <span className="text-[8px] font-black uppercase text-muted-foreground">Drills</span>
+                <BrainCircuit className="w-4 h-4 text-muted-foreground/30 mb-1" />
+                <span className="text-[8px] font-black uppercase text-muted-foreground">Tactics</span>
               </div>
               <div className="flex flex-col items-center">
                 <ShieldAlert className="w-4 h-4 text-muted-foreground/30 mb-1" />
