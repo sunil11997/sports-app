@@ -170,6 +170,6 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       (result as any).__memo = true;
     }
     return result;
-  }, deps);
+  }, [factory, ...deps]);
   return memoized;
 }

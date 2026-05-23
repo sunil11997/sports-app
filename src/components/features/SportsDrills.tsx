@@ -179,7 +179,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     } else {
       toast({ 
         title: "Practice Required", 
-        description: `${playerName} will automatically reappear in tomorrow's squad.`,
+        description: `${playerName} will automatically reappear in tomorrow&apos;s squad.`,
         variant: "destructive" 
       });
     }
@@ -229,7 +229,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               </div>
               <div className="min-w-0">
                 <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[100px]">{player.name}</p>
-                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std} • Age {player.age}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std} &bull; Age {player.age}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
@@ -308,7 +308,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
                   <ShieldCheck className="w-7 h-7 text-accent" /> {todayFocus} Squad Rotation
                 </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">7 Female + 7 Male Athletes • Scheduled Category (v3.7.5)</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">7 Female + 7 Male Athletes &bull; Scheduled Category (v3.7.5)</p>
               </div>
               <Button onClick={handleNextDrill} className="bg-accent text-white font-black uppercase text-xs h-12 px-8 rounded-xl shadow-lg active-scale">
                 <RefreshCcw className="w-4 h-4 mr-2" /> Next Technical Skill
@@ -350,7 +350,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                  </div>
                </div>
                <p className="text-xs font-medium text-white/60 leading-relaxed italic">
-                 "Today's session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group."
+                 &quot;Today&apos;s session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group.&quot;
                </p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[80px]" />
