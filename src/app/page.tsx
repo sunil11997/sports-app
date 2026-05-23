@@ -52,7 +52,7 @@ import { GameHub } from '@/components/features/GameHub';
 import { Settings } from '@/components/features/Settings';
 import { SchoolRegistration } from '@/components/features/SchoolRegistration';
 import { NotificationCenter } from '@/components/features/NotificationCenter';
-import { History } from '@/components/features/History';
+import { PerformanceDossier } from '@/components/features/History';
 
 const translations = {
   English: {
@@ -347,7 +347,7 @@ export default function WaghambaApp() {
               )}
               
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} />}
-              {subTab === "performance" && <History store={schoolData} section={selectedSection || 'general'} />}
+              {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "loads" && <TrainingLoad store={schoolData} />}
               {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "exams" && <ExamsHub store={schoolData} />}

@@ -39,12 +39,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const CHART_COLORS = ['#0048A0', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
 
-export function History({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function PerformanceDossier({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
 
   const availablePlayers = useMemo(() => {
-    return store.data.players
+    return (store.data.players || [])
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
         const stdA = Number(a.std) || 0;
@@ -56,7 +56,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
   }, [store.data.players, isGeneral]);
 
   const player = useMemo(() => 
-    store.data.players.find((p: any) => p.id === selectedPlayerId),
+    (store.data.players || []).find((p: any) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
   );
 
@@ -86,7 +86,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
   }, [player]);
 
   const playerFitness = useMemo(() => 
-    (store.data.fitnessHistory[selectedPlayerId] || [])
+    (store.data.fitnessHistory?.[selectedPlayerId] || [])
       .sort((a: any, b: any) => new Date(a.updatedAt || a.date || 0).getTime() - new Date(b.updatedAt || b.date || 0).getTime()),
     [selectedPlayerId, store.data.fitnessHistory]
   );
@@ -95,7 +95,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
     if (!selectedPlayerId) return [];
     const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball'];
     return sports.map(sport => {
-      const skill = store.data.sportSkills[`${selectedPlayerId}_${sport}`];
+      const skill = store.data.sportSkills?.[`${selectedPlayerId}_${sport}`];
       return {
         name: sport,
         score: parseFloat(skill?.score) || 0
@@ -104,7 +104,7 @@ export function History({ store, section }: { store: any, section: 'sports' | 'g
   }, [selectedPlayerId, store.data.sportSkills]);
 
   const playerAttendance = useMemo(() => {
-    if (!selectedPlayerId) return { present: 0, total: 0 };
+    if (!selectedPlayerId || !store.data.attendance) return { present: 0, total: 0 };
     let present = 0;
     const entries = Object.keys(store.data.attendance).filter(k => k.startsWith(selectedPlayerId));
     entries.forEach(k => {

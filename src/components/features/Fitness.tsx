@@ -82,7 +82,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   }, [isGeneral]);
 
   const filteredPlayers = useMemo(() => {
-    return store.data.players
+    return (store.data.players || [])
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
@@ -101,7 +101,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setAssessments(prev => ({
       ...prev,
       [id]: {
-        ...(prev[id] || store.data.fitness[id] || {}),
+        ...(prev[id] || store.data.fitness?.[id] || {}),
         [field]: value
       }
     }));
@@ -109,7 +109,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
   const handleSave = async (player: any) => {
     const id = player.id;
-    const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
+    const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
     setIsSaving(id);
     
     const speedVal = 100 - (parseFloat(current.run50m) * 5); 
@@ -144,11 +144,11 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     current.flexScore = Math.min(100, Math.max(0, flexVal)).toFixed(0);
 
     const avgScore = (
-      parseFloat(current.speedScore) + 
-      parseFloat(current.enduranceScore) + 
-      parseFloat(current.strengthScore) +
-      parseFloat(current.agilityScore) +
-      parseFloat(current.flexScore)
+      parseFloat(current.speedScore || '0') + 
+      parseFloat(current.enduranceScore || '0') + 
+      parseFloat(current.strengthScore || '0') +
+      parseFloat(current.agilityScore || '0') +
+      parseFloat(current.flexScore || '0')
     ) / 5;
     
     current.score = Math.round(avgScore).toString();
@@ -167,7 +167,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       return;
     }
 
-    const fit = assessments[player.id] || store.data.fitness[player.id] || {};
+    const fit = assessments[player.id] || store.data.fitness?.[player.id] || {};
     if (!fit.score || fit.score === "0") {
       toast({ title: "No Data", description: "Please enter fitness scores first.", variant: "destructive" });
       return;
@@ -252,7 +252,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
-                const fit = store.data.fitness[p.id] || {};
+                const fit = store.data.fitness?.[p.id] || {};
                 return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sprint30m || '-'}s</td><td>${fit.proAgility || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
               }).join('')}
             </tbody>
@@ -328,7 +328,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 <TableRow><TableCell colSpan={15} className="text-center py-32 text-muted-foreground font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
               ) : (
                 filteredPlayers.map((player: any) => {
-                  const current = assessments[player.id] || store.data.fitness[player.id] || {};
+                  const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                   const isPulse = lastSavedId === player.id;
                   
                   return (
