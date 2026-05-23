@@ -1,7 +1,7 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, setPersistence, indexedDBLocalPersistence } from 'firebase/auth';
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from 'firebase/firestore';
 
@@ -44,12 +44,13 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
     if (!initializedFirestoreApps.has(appKey)) {
       try {
+        // Standardized initialization for high-resilience environments.
+        // experimentalForceLongPolling removed to prevent 10s backend timeouts.
         firestore = initializeFirestore(firebaseApp, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager(),
             cacheSizeBytes: 100 * 1024 * 1024 
-          }),
-          experimentalForceLongPolling: true 
+          })
         });
         initializedFirestoreApps.add(appKey);
         console.log("WGB: Firestore Registry initialized with 100MB persistent cache.");

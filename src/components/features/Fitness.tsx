@@ -71,6 +71,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const categories = useMemo(() => isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES, [isGeneral]);
 
   const getPlayerCategory = useCallback((p: any) => {
+    if (!p) return 'all';
     if (isGeneral) return p.std;
     const age = parseInt(p.age) || 0;
     const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
@@ -441,7 +442,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 {selectedAnalysis && (
                   <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
                     <div className="flex items-center justify-between border-b-2 border-primary/5 pb-4">
-                       <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                       <h4 className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-primary">
                         <Sparkles className="w-4 h-4 text-accent" /> Personalized Strategy
                       </h4>
                       <Badge className={cn(
