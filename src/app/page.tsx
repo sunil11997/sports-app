@@ -37,14 +37,12 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-// Static Imports to prevent ChunkLoadError and runtime registry collisions
 import { Dashboard } from '@/components/features/Dashboard';
 import { Registration } from '@/components/features/Registration';
 import { Attendance } from '@/components/features/Attendance';
 import { HealthIncidents } from '@/components/features/HealthIncidents';
 import { Fitness } from '@/components/features/Fitness';
 import { DailyReport } from '@/components/features/DailyReport';
-import { History } from '@/components/features/History';
 import { ExamsHub } from '@/components/features/ExamsHub';
 import { PromotionHub } from '@/components/features/PromotionHub';
 import { ClassesSection } from '@/components/features/ClassesSection';
@@ -266,7 +264,6 @@ export default function WaghambaApp() {
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none" />
                   </Card>
 
-                  {/* Dynamic Today's Pulse Section */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-8 space-y-8">
                       <div className="flex items-center justify-between">
@@ -296,7 +293,6 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              {/* Sub-Navigation Control */}
               {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" ? (
                 <div className="relative group/scroll">
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
@@ -451,7 +447,7 @@ export default function WaghambaApp() {
         </div>
         <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
           <Button onClick={isUserLoading ? undefined : () => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group">
-            {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{t.enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+            {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{translations[language].enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
           </Button>
           <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-display font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
             <Star className="w-4 h-4" /> {language === 'English' ? 'मराठी (Marathi)' : 'English'}

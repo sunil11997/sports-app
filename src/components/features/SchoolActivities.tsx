@@ -7,23 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Zap, 
   Printer, 
-  Plus, 
-  History, 
-  Calendar, 
-  Users, 
-  Clock,
-  CheckCircle2,
-  Trash2,
-  BookOpen,
-  ShieldAlert,
-  ListOrdered
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 export function SchoolActivities({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();

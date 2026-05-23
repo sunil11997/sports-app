@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer, UsersRound, Trophy } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
 export function Teams({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const players = store.data.players;
   
-  const getCategory = (p: any) => {
+  const getCategory = useCallback((p: any) => {
     const age = parseInt(p.age) || 0;
     const gender = p.gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${gender} U14`;
     if (age < 17) return `${gender} U17`;
     return `${gender} Senior`;
-  };
+  }, []);
 
   const categories = useMemo(() => ['Girls U14', 'Girls U17', 'Boys U14', 'Boys U17', 'Boys Senior', 'Girls Senior'], []);
   
@@ -27,7 +27,7 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
       if (map[cat]) map[cat].push(p);
     });
     return map;
-  }, [players, preselectedSport, categories]);
+  }, [players, preselectedSport, categories, getCategory]);
 
   const handlePrint = () => {
     const printContent = `

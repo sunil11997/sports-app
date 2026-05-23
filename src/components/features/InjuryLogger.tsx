@@ -6,14 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Badge } from '@/components/ui/badge';
 import { 
   AlertCircle, 
   Stethoscope, 
   Save, 
   Loader2, 
-  Users,
-  CircleHelp
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -76,7 +74,6 @@ export function InjuryLogger({ store }: { store: any }) {
         className: "bg-emerald-600 text-white" 
       });
 
-      // Reset Form
       setSelectedBodyPart(null);
       setSelectedInjuryType(null);
       setSeverity('Mild (कमी)');

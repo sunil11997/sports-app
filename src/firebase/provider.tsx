@@ -46,10 +46,6 @@ export interface UserHookResult {
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
-/**
- * FirebaseProvider - High-Resilience Institutional Auth
- * Handles both SSR (null services) and Client (initialized services) states.
- */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
   firebaseApp = null,
@@ -168,7 +164,8 @@ export const useUser = (): UserHookResult => {
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
-  const memoized = useMemo(() => factory(), [factory, ...deps]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoized = useMemo(() => factory(), deps);
   if(typeof memoized !== 'object' || memoized === null) return memoized;
   (memoized as MemoFirebase<T>).__memo = true;
   return memoized;

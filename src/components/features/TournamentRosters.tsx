@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,13 +17,13 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     if (preselectedSport) setSelectedSport(preselectedSport);
   }, [preselectedSport]);
 
-  const getCategory = (p: any) => {
+  const getCategory = useCallback((p: any) => {
     const age = parseInt(p.age) || 0;
     const gender = p.gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${gender} U14`;
     if (age < 17) return `${gender} U17`;
     return `${gender} Senior`;
-  };
+  }, []);
 
   const categories = useMemo(() => ['Boys U14', 'Boys U17', 'Boys Senior', 'Girls U14', 'Girls U17', 'Girls Senior'], []);
   
@@ -46,7 +46,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     });
 
     return groups;
-  }, [selectedSport, store.data.players, store.data.sportSkills, store.data.fitness, categories]);
+  }, [selectedSport, store.data.players, store.data.sportSkills, store.data.fitness, categories, getCategory]);
 
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category];
@@ -103,10 +103,6 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
               `).join('')}
             </tbody>
           </table>
-          <div style="margin-top: 50px; display: flex; justify-content: space-between;">
-            <div style="border-top: 1px solid #000; width: 180px; text-align: center;">Physical Education Teacher</div>
-            <div style="border-top: 1px solid #000; width: 180px; text-align: center;">Principal Signature</div>
-          </div>
         </body>
       </html>
     `;

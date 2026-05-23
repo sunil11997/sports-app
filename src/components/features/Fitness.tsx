@@ -17,14 +17,8 @@ import {
   Sparkles,
   Trophy,
   Zap,
-  Dumbbell,
-  Timer,
   Flame,
-  Wind,
-  Ruler,
-  ChevronRight,
-  TrendingUp,
-  Settings2
+  Dumbbell
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -117,7 +111,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     const current = { ...(assessments[id] || store.data.fitness[id] || {}) };
     setIsSaving(id);
     
-    // 1. Core Score Calculations
     const speedVal = 100 - (parseFloat(current.run50m) * 5); 
     const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4);
     const flexVal = (parseFloat(current.sitAndReach) || 0) * 3;
@@ -128,7 +121,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     
     const strengthScore = (parseFloat(current.sitUps) || 0) * 2;
     
-    // 2. Agility Diagnostics (Mirwald-Ready)
     if (current.sprint30m && current.proAgility) {
       const s30 = parseFloat(current.sprint30m);
       const proA = parseFloat(current.proAgility);
@@ -201,11 +193,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       });
       setActiveInstruction(instr);
     } catch (error: any) {
-      if (error.message?.includes('429')) {
-        toast({ title: "Demand Spike", description: "AI engine is cooling down. Retrying in 10s...", variant: "destructive" });
-      } else {
-        toast({ title: "AI Sync Error", variant: "destructive" });
-      }
+      toast({ title: "AI Sync Error", description: "Demand spike or network failure.", variant: "destructive" });
       setAiModalOpen(false);
     } finally {
       setAiLoading(false);
@@ -324,7 +312,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               <TableRow className="h-16">
                 <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[200px] sticky left-0 bg-slate-50/95 backdrop-blur z-30">Athlete Profile</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-cyan-600">10x6 Shuttle</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-600 font-black">30m Sprint</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-600">30m Sprint</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-700">Pro-Agility</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-purple-600">Sit & Reach</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-accent">Speed (50m)</TableHead>
@@ -505,12 +493,12 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
           </div>
 
           <DialogFooter className="p-10 bg-slate-50 border-t flex items-center justify-center">
-            <Button 
+            <button 
               onClick={() => setAiModalOpen(false)}
               className="w-full md:w-80 h-16 bg-primary text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl active-scale"
             >
               Back to Performance Hub
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

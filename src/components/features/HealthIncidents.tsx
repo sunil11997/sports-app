@@ -8,14 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Plus, 
   History, 
   Printer, 
   AlertTriangle, 
-  ShieldCheck, 
   HeartPulse, 
-  Info,
-  ShieldAlert,
+  ShieldAlert, 
   CalendarDays,
   Activity,
   Stethoscope
@@ -41,10 +38,6 @@ const BODY_PARTS = [
   { id: 'hamstring', label: 'Hamstring (मांडीचे स्नायू)' }
 ];
 
-/**
- * InjuryRecoverySystem
- * Institutional logic for calculating recovery timelines and protocols.
- */
 class InjuryRecoverySystem {
   static calculateRecoveryTimeline(injuryType: string, severity: string) {
     let estimatedDaysOff = 0;
