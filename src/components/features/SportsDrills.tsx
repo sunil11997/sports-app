@@ -315,7 +315,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
           <Card className="border-2 rounded-[2.5rem] bg-primary text-white shadow-2xl relative overflow-hidden p-10">
             <div className="relative z-10 space-y-6">
                <div className="flex items-center gap-4">
-                 <Medal className="w-10 h-10 text-accent animate-pulse" />
+                 <DrillMedal className="w-10 h-10 text-accent animate-pulse" />
                  <h3 className="text-2xl font-black uppercase tracking-tight leading-none">Squad Intel</h3>
                </div>
                <div className="space-y-4 pt-4">
@@ -345,7 +345,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               <CardContent className="p-6 space-y-3">
                 {masteredThisDrill.length === 0 ? (
                   <div className="py-10 text-center opacity-20">
-                     <Medal className="w-10 h-10 mx-auto mb-2" />
+                     <DrillMedal className="w-10 h-10 mx-auto mb-2" />
                      <p className="text-[9px] font-black uppercase">No masteries today</p>
                   </div>
                 ) : (
@@ -387,7 +387,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   );
 }
 
-const Medal = ({ className }: { className?: string }) => (
+const DrillMedal = ({ className }: { className?: string }) => (
   <svg
     className={className}
     width="24"
