@@ -25,7 +25,9 @@ import {
   Ruler,
   HeartPulse,
   UserPlus,
-  Trophy
+  Trophy,
+  Flame,
+  ShieldCheck
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -38,6 +40,7 @@ import { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { format, subDays } from 'date-fns';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
@@ -159,6 +162,27 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     return `${g} Senior`;
   }, []);
 
+  // Gamification Check Helpers
+  const checkStreak = useCallback((playerId: string) => {
+    const attendance = store.data.attendance || {};
+    const today = new Date();
+    let streak = 0;
+    for (let i = 0; i < 15; i++) {
+      const d = format(subDays(today, i), 'yyyy-MM-dd');
+      if (attendance[`${playerId}_${d}_Morning`] === 'P' || attendance[`${playerId}_${d}_Evening`] === 'P') streak++;
+      else break;
+    }
+    return streak >= 15;
+  }, [store.data.attendance]);
+
+  const checkRecoveryChampion = useCallback((playerId: string) => {
+    const health = store.data.healthIncidents || [];
+    const fitness = store.data.fitness || {};
+    const hadCritical = health.some((h: any) => h.playerId === playerId && h.severity === 'Critical');
+    const fit = fitness[playerId] || {};
+    return hadCritical && (fit.status === 'Elite' || fit.status === 'Optimal');
+  }, [store.data.healthIncidents, store.data.fitness]);
+
   const filteredPlayers = useMemo(() => {
     return (store.data.players || [])
       .filter((p: any) => {
@@ -250,7 +274,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
             <TableRow>
               <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
               <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Age Category'}</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Performance Badges'}</TableHead>
               <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Aadhar' : 'Participating Sports'}</TableHead>
               <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
             </TableRow>
@@ -259,52 +283,68 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
             {filteredPlayers.length === 0 ? (
               <TableRow><TableCell colSpan={5} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow>
             ) : (
-              filteredPlayers.map((p: any) => (
-                <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
-                  <TableCell className="px-6 text-sm font-black text-primary/60">#{p.serialNumber || '0'}</TableCell>
-                  <TableCell className="px-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-11 h-11 border-2 border-white shadow-sm">
-                        <AvatarImage src={p.photoUrl} className="object-cover" />
-                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} • GR: {p.generalRegisterNumber || 'N/A'}</p>
+              filteredPlayers.map((p: any) => {
+                const isStreak = checkStreak(p.id);
+                const isFighter = checkRecoveryChampion(p.id);
+                return (
+                  <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
+                    <TableCell className="px-6 text-sm font-black text-primary/60">#{p.serialNumber || '0'}</TableCell>
+                    <TableCell className="px-4">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="w-11 h-11 border-2 border-white shadow-sm">
+                          <AvatarImage src={p.photoUrl} className="object-cover" />
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} • GR: {p.generalRegisterNumber || 'N/A'}</p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 text-center">
-                    {isGeneral ? (
-                      <Badge variant="outline" className="rounded-full px-3 py-0.5 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
-                    ) : (
-                      <Badge className="rounded-full px-3 py-0.5 bg-accent text-accent-foreground text-[10px] font-black">{getAgeCategory(p.age, p.gender)}</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-4 text-center">
-                    {isGeneral ? (
-                      <span className="font-mono font-black text-xs text-primary/70">{p.aadharNumber || 'Pending'}</span>
-                    ) : (
-                      <div className="flex flex-wrap justify-center gap-1">
-                        {(p.sports || []).map((s: string) => (
-                          <Badge key={s} variant="outline" className="text-[8px] font-black border-accent/30 text-accent uppercase px-1.5">{s}</Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-6 text-right">
-                    <div className="flex justify-end gap-2">
-                      {isGeneral && p.category === 'student' && (
-                        <Button variant="ghost" size="icon" title="Convert to Athlete" className="rounded-full hover:bg-emerald-50 text-emerald-600" onClick={() => { setConvertingPlayer(p); setSelectedSportsForConversion([]); }}>
-                          <Trophy className="w-4 h-4" />
-                        </Button>
+                    </TableCell>
+                    <TableCell className="px-4 text-center">
+                      {isGeneral ? (
+                        <Badge variant="outline" className="rounded-full px-3 py-0.5 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
+                      ) : (
+                        <div className="flex justify-center gap-2">
+                           {isStreak && (
+                             <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100 shadow-sm" title="Consistency King (15+ Days)">
+                               <Flame className="w-4 h-4 text-emerald-600" />
+                             </div>
+                           )}
+                           {isFighter && (
+                             <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100 shadow-sm" title="Recovery Champion">
+                               <ShieldCheck className="w-4 h-4 text-blue-600" />
+                             </div>
+                           )}
+                           {!isStreak && !isFighter && <Badge variant="outline" className="text-[8px] font-black opacity-30">No Badges</Badge>}
+                        </div>
                       )}
-                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell className="px-4 text-center">
+                      {isGeneral ? (
+                        <span className="font-mono font-black text-xs text-primary/70">{p.aadharNumber || 'Pending'}</span>
+                      ) : (
+                        <div className="flex flex-wrap justify-center gap-1">
+                          {(p.sports || []).map((s: string) => (
+                            <Badge key={s} variant="outline" className="text-[8px] font-black border-accent/30 text-accent uppercase px-1.5">{s}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-6 text-right">
+                      <div className="flex justify-end gap-2">
+                        {isGeneral && p.category === 'student' && (
+                          <Button variant="ghost" size="icon" title="Convert to Athlete" className="rounded-full hover:bg-emerald-50 text-emerald-600" onClick={() => { setConvertingPlayer(p); setSelectedSportsForConversion([]); }}>
+                            <Trophy className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
