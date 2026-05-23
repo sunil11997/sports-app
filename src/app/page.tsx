@@ -27,7 +27,6 @@ import {
   FileText,
   CircleArrowUp,
   BarChart,
-  Newspaper,
   Gauge,
   ShieldAlert
 } from 'lucide-react';
@@ -46,7 +45,6 @@ import { DailyReport } from '@/components/features/DailyReport';
 import { ExamsHub } from '@/components/features/ExamsHub';
 import { PromotionHub } from '@/components/features/PromotionHub';
 import { ClassesSection } from '@/components/features/ClassesSection';
-import { SportsKnowledge } from '@/components/features/SportsKnowledge';
 import { TrainingLoad } from '@/components/features/TrainingLoad';
 import { GameHub } from '@/components/features/GameHub';
 import { Settings } from '@/components/features/Settings';
@@ -83,7 +81,6 @@ export default function WaghambaApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [subTab, setSubTab] = useState<string>("overview");
-  const [todayFormatted, setTodayFormatted] = useState("");
   const [headerDate, setHeaderDate] = useState("");
   
   const schoolData = useSchoolData(stage === 'hub' && isMounted);
@@ -92,7 +89,6 @@ export default function WaghambaApp() {
 
   useEffect(() => {
     setIsMounted(true);
-    setTodayFormatted(format(new Date(), 'EEEE, do MMMM yyyy'));
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     const timer = setTimeout(() => setShowSplash(false), 2500);
     return () => clearTimeout(timer);
@@ -264,24 +260,6 @@ export default function WaghambaApp() {
                     </div>
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none" />
                   </Card>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-8 space-y-8">
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-3">
-                            <Newspaper className="w-7 h-7 text-primary" />
-                            <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Today&apos;s Pulse</h3>
-                         </div>
-                         <Badge className="bg-primary/5 text-primary border-primary/10 px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
-                           <CalendarDays className="w-3.5 h-3.5" /> {todayFormatted}
-                         </Badge>
-                      </div>
-                      <SportsKnowledge type="news" />
-                    </div>
-                    <div className="lg:col-span-4">
-                      <SportsKnowledge type="history" />
-                    </div>
-                  </div>
                 </div>
               )}
 
