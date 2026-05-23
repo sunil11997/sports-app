@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Trophy, 
   Crown, 
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { format, subDays, isSameDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 interface StudentPerformance {
   id: string;
