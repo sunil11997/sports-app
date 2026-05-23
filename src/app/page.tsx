@@ -106,7 +106,7 @@ export default function WaghambaApp() {
     }
   }, [user, isUserLoading, auth, isMounted]);
 
-  const t = translations[language];
+  const t = useMemo(() => translations[language], [language]);
 
   const sportsTabs = useMemo(() => [
     { id: "home", label: t.home, icon: Home },
@@ -134,7 +134,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.8.1</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.8.2</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -174,9 +174,9 @@ export default function WaghambaApp() {
                 <CalendarDays className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[10px] font-black text-primary uppercase whitespace-nowrap tracking-widest">{headerDate}</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary hover:bg-primary/5">
+              <button onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary hover:bg-primary/5 flex items-center justify-center transition-colors">
                 <Menu className="w-5 h-5" />
-              </Button>
+              </button>
             </div>
           </div>
         </header>
@@ -266,7 +266,7 @@ export default function WaghambaApp() {
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none" />
                   </Card>
 
-                  {/* Dynamic Today&apos;s Pulse Section */}
+                  {/* Dynamic Today's Pulse Section */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-8 space-y-8">
                       <div className="flex items-center justify-between">
@@ -287,8 +287,8 @@ export default function WaghambaApp() {
                 </div>
               )}
 
-              {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection} t={t} />}
-              {subTab === "enroll" && <Registration store={schoolData} section={selectedSection} language={language} />}
+              {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection || 'general'} t={t} />}
+              {subTab === "enroll" && <Registration store={schoolData} section={selectedSection || 'general'} language={language} />}
             </TabsContent>
 
             <TabsContent value="sport" className="mt-0 animate-in fade-in duration-700">
@@ -349,15 +349,15 @@ export default function WaghambaApp() {
                 </div>
               )}
               
-              {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection} />}
-              {subTab === "performance" && <History store={schoolData} section={selectedSection} />}
+              {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} />}
+              {subTab === "performance" && <History store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "loads" && <TrainingLoad store={schoolData} />}
-              {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection} />}
+              {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "exams" && <ExamsHub store={schoolData} />}
               {subTab === "classes" && <ClassesSection store={schoolData} />}
               {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} />}
-              {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection} />}
-              {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection} />}
+              {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection || 'general'} />}
+              {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection || 'general'} />}
             </TabsContent>
 
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">
