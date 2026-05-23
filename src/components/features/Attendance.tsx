@@ -143,7 +143,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <h1>Attendance (${section.toUpperCase()}): ${format(currentDate, 'MMMM yyyy')}</h1>
@@ -333,7 +333,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               </div>
               <div>
                 <h3 className="text-xl font-black text-primary uppercase tracking-tight">End-of-Session Fatigue Report</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest">Post-training Exertion & Load Archival</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest">Post-training Exertion & Archival</p>
               </div>
             </div>
             <div className={cn("transition-transform duration-300", showFatigueReport ? "rotate-180" : "")}>

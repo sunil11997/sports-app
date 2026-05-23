@@ -266,7 +266,7 @@ export default function WaghambaApp() {
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none" />
                   </Card>
 
-                  {/* Dynamic Today's Pulse Section */}
+                  {/* Dynamic Today&apos;s Pulse Section */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-8 space-y-8">
                       <div className="flex items-center justify-between">

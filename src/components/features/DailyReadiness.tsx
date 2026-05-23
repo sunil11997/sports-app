@@ -52,7 +52,7 @@ const CoachAlertSystem = {
         statusColor: "YELLOW",
         action: "सराव मर्यादित करा",
         advice: isGrowthSpurt 
-            ? "मुलगा 'ग्रोथ स्पर्ट' मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
+            ? "मुलगा &quot;ग्रोथ स्पर्ट&quot; मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
             : "थकवा जास्त आहे आणि झोप कमी झाली आहे. धावण्याचा आणि ताकदीचा सराव कमी करून हलका तांत्रिक सराव घ्या.",
         color: "text-amber-600",
         bg: "bg-amber-50",
@@ -130,7 +130,7 @@ function SquadItem({ data }: { data: any }) {
               {player.name}
             </p>
             <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">
-              Std {player.std} • Age {player.age}
+              Std {player.std} &bull; Age {player.age}
             </p>
           </div>
           {hasData && analysis && (
@@ -196,7 +196,7 @@ export function DailyReadiness({ store }: { store: any }) {
   }, [players, store.data.dailyReadiness, isMounted]);
 
   const activeAlert = useMemo(() => {
-    if (!selectedPlayerId) return null;
+    if (!selectedPlayerId || !players) return null;
     const p = players.find((p: any) => p.id === selectedPlayerId);
     if (!p) return null;
     return CoachAlertSystem.evaluateAthleteReadiness({
@@ -209,7 +209,7 @@ export function DailyReadiness({ store }: { store: any }) {
   }, [selectedPlayerId, players, sleepHours, sorenessScore, fatigueScore, injuryStatus]);
 
   const handleSave = useCallback(async () => {
-    if (!selectedPlayerId || !isMounted) return;
+    if (!selectedPlayerId || !isMounted || !store) return;
     setIsSaving(true);
     try {
       await store.setReadiness(selectedPlayerId, {
@@ -365,8 +365,8 @@ export function DailyReadiness({ store }: { store: any }) {
                   <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Registry Sync</p>
                 </div>
               ) : (
-                teamReadiness.map((data: any) => (
-                  <SquadItem key={data.player?.id} data={data} />
+                teamReadiness.map((data: any, idx: number) => (
+                  <SquadItem key={data.player?.id || idx} data={data} />
                 ))
               )}
            </div>

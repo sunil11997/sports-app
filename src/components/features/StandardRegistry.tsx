@@ -50,8 +50,8 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     if (!store.isLoaded) return;
     const newRecords: Record<string, any> = {};
     playersInStd.forEach((p: any) => {
-      const history = (store.data.fitnessHistory[p.id] || [])
-        .find((h: any) => h.term === activeTerm);
+      const historyList = store.data.fitnessHistory[p.id] || [];
+      const history = historyList.find((h: any) => h.term === activeTerm);
       
       newRecords[p.id] = history || {
         nirikshan: '', tondikam: '', pratyashike: '', 
@@ -134,7 +134,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
@@ -281,7 +281,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10">
               <Settings2 className="w-6 h-6 text-accent" /> Customize Column Labels
             </DialogTitle>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] relative z-10">Standard {std} • {activeTerm} Term</p>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] relative z-10">Standard {std} &bull; {activeTerm} Term</p>
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
 
