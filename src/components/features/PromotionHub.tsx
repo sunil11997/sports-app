@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -78,7 +77,7 @@ export function PromotionHub({ store, section }: { store: any, section: 'sports'
             Manage institutional transitions by moving entire classes to their next academic standard.
           </p>
         </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -144,8 +143,8 @@ export function PromotionHub({ store, section }: { store: any, section: 'sports'
           <AlertCircle className="w-16 h-16 text-muted-foreground/20 mx-auto" />
           <h4 className="text-xl font-black text-muted-foreground uppercase tracking-tight">Institutional Transfer Logic</h4>
           <p className="text-sm font-medium text-muted-foreground/60 leading-relaxed italic">
-            "Promoting a standard will instantly update the academic level for all students currently assigned to it. 
-            This action is permanent and should only be performed at the start of a new term or year."
+            &quot;Promoting a standard will instantly update the academic level for all students currently assigned to it. 
+            This action is permanent and should only be performed at the start of a new term or year.&quot;
           </p>
           <div className="flex items-center justify-center gap-2 pt-6">
              <CircleCheck className="w-5 h-5 text-primary" />

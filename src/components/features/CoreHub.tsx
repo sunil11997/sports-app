@@ -82,7 +82,6 @@ const DRILL_LIBRARY = [
 
 export function CoreHub({ store }: { store: any }) {
   const { toast } = useToast();
-  const { isOnline } = usePWA();
   const [activeHubTab, setActiveHubTab] = useState("analysis");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState("Kabaddi");
@@ -411,7 +410,7 @@ export function CoreHub({ store }: { store: any }) {
                       <div className="space-y-1"><h4 className="text-2xl font-black text-primary uppercase tracking-tight">{drill.name}</h4><div className="flex items-center gap-4"><span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="w-4 h-4" /> {drill.duration}</span><span className="text-[10px] font-black text-accent uppercase tracking-widest">{drill.level}</span></div></div>
                       <Button variant="ghost" size="icon" onClick={() => handleAddToPlan(drill)} className="text-primary hover:bg-primary/5 rounded-full h-12 w-12 border border-primary/10"><Plus className="w-6 h-6" /></Button>
                    </div>
-                   <p className="text-sm font-medium text-foreground/60 leading-relaxed italic border-l-4 border-accent/20 pl-4">"{drill.description}"</p>
+                   <p className="text-sm font-medium text-foreground/60 leading-relaxed italic border-l-4 border-accent/20 pl-4">&quot;{drill.description}&quot;</p>
                    <div className="grid grid-cols-2 gap-3 pt-2">
                      <Button variant="outline" onClick={() => handleViewTechnique(drill)} className="rounded-xl font-black uppercase text-[10px] border-2 h-11 flex items-center gap-2"><Eye className="w-3 h-3" /> View Technique</Button>
                      <Button variant="ghost" className="rounded-xl font-black uppercase text-[10px] h-11">Progression</Button>
@@ -442,7 +441,7 @@ export function CoreHub({ store }: { store: any }) {
                 <Card className="border-2 rounded-[3.5rem] overflow-hidden shadow-2xl bg-white min-h-[700px] flex flex-col">
                   <div className="bg-muted/40 p-8 border-b flex justify-between items-center sticky top-0 z-10"><div className="flex items-center gap-3"><ListOrdered className="w-5 h-5 text-primary" /><span className="text-xs font-black text-primary uppercase tracking-widest">Planned Activity Sequence</span></div><Badge className="font-black text-xs uppercase px-6 py-2 rounded-full bg-primary text-white">{currentPlan.length} Segments</Badge></div>
                   <div className="flex-1 p-10 space-y-6 overflow-y-auto">
-                    {currentPlan.length === 0 ? (<div className="h-full flex flex-col items-center justify-center opacity-20 space-y-6"><Dumbbell className="w-24 h-24" /><div className="text-center space-y-2"><p className="font-black uppercase text-xl tracking-widest">Planning Deck Empty</p><p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use "Auto-Plan" to start building your session.</p></div></div>) : (
+                    {currentPlan.length === 0 ? (<div className="h-full flex flex-col items-center justify-center opacity-20 space-y-6"><Dumbbell className="w-24 h-24" /><div className="text-center space-y-2"><p className="font-black uppercase text-xl tracking-widest">Planning Deck Empty</p><p className="text-sm font-bold max-w-xs mx-auto">Add drills from the library or use &quot;Auto-Plan&quot; to start building your session.</p></div></div>) : (
                       currentPlan.map((p, idx) => (
                         <div key={p.planId} className="bg-white p-8 rounded-[2rem] border-2 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all animate-in slide-in-from-right-4 duration-300"><div className="flex items-center gap-8"><div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-2xl text-primary shadow-inner border border-primary/5">{idx + 1}</div><div><p className="font-black text-2xl text-primary uppercase tracking-tight leading-none">{p.name}</p><div className="flex items-center gap-4 mt-2"><Badge variant="secondary" className="text-[9px] font-black uppercase">{p.category}</Badge><span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Target className="w-3 h-3" /> {p.level} Focus</span></div></div></div><div className="flex items-center gap-8"><div className="text-right"><p className="font-black text-2xl text-primary leading-none">{p.duration}</p><p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">Est. Time</p></div><Button variant="ghost" size="icon" onClick={() => setCurrentPlan(currentPlan.filter(i => i.planId !== p.planId))} className="text-destructive hover:bg-destructive/5 rounded-full h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-6 h-6" /></Button></div></div>
                       ))

@@ -287,7 +287,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
 
           <div className="p-8 space-y-6">
             <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
-              "Rename assessment categories to match official class requirements. Changes will apply to all students in this standard."
+              &quot;Rename assessment categories to match official class requirements. Changes will apply to all students in this standard.&quot;
             </p>
             
             <div className="grid grid-cols-1 gap-4">
