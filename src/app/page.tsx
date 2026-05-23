@@ -52,6 +52,7 @@ import { GameHub } from '@/components/features/GameHub';
 import { Settings } from '@/components/features/Settings';
 import { SchoolRegistration } from '@/components/features/SchoolRegistration';
 import { NotificationCenter } from '@/components/features/NotificationCenter';
+import { History } from '@/components/features/History';
 
 const translations = {
   English: {
