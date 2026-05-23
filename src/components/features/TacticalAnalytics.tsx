@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BrainCircuit, 
   Save, 
@@ -208,7 +209,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
             disabled={isSaving || !selectedPlayerId || !situation}
             className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale"
           >
-            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />} 
+            {isSaving ? <Clock className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />} 
             नोंद जतन करा
           </Button>
         </Card>
