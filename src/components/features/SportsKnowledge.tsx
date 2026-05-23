@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -39,7 +38,7 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!isOnline) return;
     setIsLoading(true);
     setError(null);
@@ -58,11 +57,11 @@ export function SportsKnowledge({ type }: { type: 'news' | 'events' | 'history' 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isOnline, type]);
 
   useEffect(() => {
     fetchData();
-  }, [type]);
+  }, [fetchData]);
 
   if (error) {
     return (

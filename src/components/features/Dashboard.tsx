@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,7 @@ interface DashboardProps {
   onTabChange?: (tab: string) => void;
 }
 
-export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all", t }: DashboardProps) {
+export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all" }: DashboardProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedSport, setSelectedSport] = useState(initialSport);
@@ -160,7 +161,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     return store.data.players
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        const matchesSearch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
           (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
           (p.generalRegisterNumber && p.generalRegisterNumber.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesSport = selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport));
@@ -178,7 +179,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           const ageRankB = getAgeRank(parseInt(b.age) || 0);
           if (ageRankA !== ageRankB) return ageRankA - ageRankB;
           if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
-          return a.name.localeCompare(b.name);
+          return (a.name || "").localeCompare(b.name || "");
         }
       });
   }, [store.data.players, isGeneral, searchTerm, selectedSport, getAgeRank]);
@@ -324,7 +325,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                            {activeCam === 'profile' ? (
                              <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                            ) : editingPlayer.photoUrl ? (
-                             <img src={editingPlayer.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                             <Image src={editingPlayer.photoUrl} alt="Profile" fill className="object-cover" />
                            ) : (
                              <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /></div>
                            )}
@@ -353,7 +354,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                           {activeCam === 'aadhar' ? (
                             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                           ) : editingPlayer.aadharPhotoUrl ? (
-                            <img src={editingPlayer.aadharPhotoUrl} alt="Aadhar" className="w-full h-full object-cover" />
+                            <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill className="object-cover" />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
                           )}

@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Users, Target, Star, Medal } from 'lucide-react';
-import { format } from 'date-fns';
+import { Printer, Medal } from 'lucide-react';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
@@ -26,7 +25,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     return `${gender} Senior`;
   };
 
-  const categories = ['Boys U14', 'Boys U17', 'Boys Senior', 'Girls U14', 'Girls U17', 'Girls Senior'];
+  const categories = useMemo(() => ['Boys U14', 'Boys U17', 'Boys Senior', 'Girls U14', 'Girls U17', 'Girls Senior'], []);
   
   const processedGroups = useMemo(() => {
     const groups: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
@@ -47,7 +46,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     });
 
     return groups;
-  }, [selectedSport, store.data.players, store.data.sportSkills, store.data.fitness]);
+  }, [selectedSport, store.data.players, store.data.sportSkills, store.data.fitness, categories]);
 
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category];

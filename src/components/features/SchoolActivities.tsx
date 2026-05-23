@@ -89,9 +89,11 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
     win?.document.close();
   };
 
-  const activitiesList = store.data.activities
-    .filter((a: any) => a.category === targetCategory)
-    .slice().sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const activitiesList = useMemo(() => {
+    return store.data.activities
+      .filter((a: any) => a.category === targetCategory)
+      .slice().sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [store.data.activities, targetCategory]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
@@ -128,14 +130,14 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h4 className="text-2xl font-black text-primary uppercase">{act.type}</h4>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Std ${act.std} • ${format(new Date(act.date), 'dd MMM yyyy')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Std {act.std} • {format(new Date(act.date), 'dd MMM yyyy')}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="icon" onClick={() => handlePrint(act)} className="h-10 w-10 border-2 rounded-xl text-primary"><Printer className="w-5 h-5" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => store.deleteActivity(act.id)} className="h-10 w-10 text-destructive"><Trash2 className="w-5 h-5" /></Button>
                 </div>
               </div>
-              <p className="text-foreground/80 font-medium leading-relaxed italic border-l-4 border-accent/30 pl-4">"${act.summary}"</p>
+              <p className="text-foreground/80 font-medium leading-relaxed italic border-l-4 border-accent/30 pl-4">&quot;{act.summary}&quot;</p>
             </div>
           </Card>
         ))}

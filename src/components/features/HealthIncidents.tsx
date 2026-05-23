@@ -266,7 +266,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
                   <Badge className="bg-accent text-white font-black text-[9px] uppercase px-3">{recoveryInfo.daysOff} दिवस</Badge>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-foreground/80 leading-relaxed italic border-l-2 border-accent/30 pl-3">"{recoveryInfo.protocol}"</p>
+                  <p className="text-xs font-bold text-foreground/80 leading-relaxed italic border-l-2 border-accent/30 pl-3">&quot;{recoveryInfo.protocol}&quot;</p>
                   <p className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1.5"><CalendarDays className="w-3 h-3" /> परत येण्याची तारीख: {recoveryInfo.expectedReturnDate}</p>
                 </div>
               </div>
@@ -328,7 +328,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
                       </div>
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap italic border-l-4 border-accent/20 pl-6">"{inc.description}"</p>
+                  <p className="text-sm font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap italic border-l-4 border-accent/20 pl-6">&quot;{inc.description}&quot;</p>
                 </div>
               </Card>
             ))

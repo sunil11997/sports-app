@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -138,7 +139,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const masteredThisDrill = useMemo(() => {
     return playersInSport
       .filter((p: any) => store.data.drillCompletions[`${p.id}_${drillKey}`])
-      .sort((a: any, b: any) => b.name.localeCompare(a.name));
+      .sort((a: any, b: any) => (b.name || "").localeCompare(a.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
 
   const handleMasteryToggle = async (playerId: string, mastered: boolean) => {
@@ -195,8 +196,13 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full border-2 border-primary/5 overflow-hidden shadow-sm">
-                <img src={player.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${player.name}`} className="w-full h-full object-cover" alt="Profile" />
+              <div className="w-10 h-10 bg-white rounded-full border-2 border-primary/5 overflow-hidden shadow-sm relative">
+                <Image 
+                  src={player.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${player.name}`} 
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                />
               </div>
               <div className="min-w-0">
                 <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[100px]">{player.name}</p>
@@ -344,8 +350,13 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                   masteredThisDrill.map((p: any) => (
                     <div key={p.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100 group">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white border overflow-hidden shadow-sm">
-                          <img src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.name}`} className="w-full h-full object-cover" alt="Profile" />
+                        <div className="w-8 h-8 rounded-full bg-white border overflow-hidden shadow-sm relative">
+                          <Image 
+                            src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.name}`} 
+                            alt="Profile"
+                            fill
+                            className="object-cover"
+                          />
                         </div>
                         <div className="min-w-0">
                           <span className="text-[10px] font-black text-emerald-800 uppercase truncate block max-w-[100px]">{p.name}</span>

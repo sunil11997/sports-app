@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Download, UsersRound, Trophy } from 'lucide-react';
+import { Printer, UsersRound, Trophy } from 'lucide-react';
 
 export function Teams({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const players = store.data.players;
@@ -17,9 +17,9 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
     return `${gender} Senior`;
   };
 
-  const categories = ['Girls U14', 'Girls U17', 'Boys U14', 'Boys U17', 'Boys Senior', 'Girls Senior'];
+  const categories = useMemo(() => ['Girls U14', 'Girls U17', 'Boys U14', 'Boys U17', 'Boys Senior', 'Girls Senior'], []);
   
-  const groups = React.useMemo(() => {
+  const groups = useMemo(() => {
     const map: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
     players.forEach((p: any) => {
       if (preselectedSport && !p.sports?.includes(preselectedSport)) return;
@@ -27,7 +27,7 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
       if (map[cat]) map[cat].push(p);
     });
     return map;
-  }, [players, preselectedSport]);
+  }, [players, preselectedSport, categories]);
 
   const handlePrint = () => {
     const printContent = `

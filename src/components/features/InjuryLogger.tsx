@@ -167,7 +167,7 @@ export function InjuryLogger({ store }: { store: any }) {
 
       <div className="flex items-center justify-center gap-4 p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10">
         <AlertCircle className="w-5 h-5 text-primary opacity-40" />
-        <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">नोंदवलेला डेटा 'आरोग्य हिस्ट्री' मध्ये आपोआप जतन केला जाईल.</p>
+        <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">नोंदवलेला डेटा &apos;आरोग्य हिस्ट्री&apos; मध्ये आपोआप जतन केला जाईल.</p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -74,9 +74,9 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
   const [analyzingPlayer, setAnalyzingPlayer] = useState<any>(null);
 
   const isGeneral = section === 'general';
-  const categories = isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES;
+  const categories = useMemo(() => isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES, [isGeneral]);
 
-  const getPlayerCategory = (p: any) => {
+  const getPlayerCategory = useCallback((p: any) => {
     if (isGeneral) return p.std;
     const age = parseInt(p.age) || 0;
     const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
@@ -84,7 +84,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     if (age < 14) agePart = 'u14';
     else if (age < 17) agePart = 'u17';
     return `${genderPart}-${agePart}`;
-  };
+  }, [isGeneral]);
 
   const filteredPlayers = useMemo(() => {
     return store.data.players
@@ -100,7 +100,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, isGeneral, activeCategory]);
+  }, [store.data.players, isGeneral, activeCategory, getPlayerCategory]);
 
   const handleChange = (id: string, field: string, value: string) => {
     setAssessments(prev => ({
@@ -165,7 +165,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
-    toast({ title: "Metrics Archived", description: `${player.name}'s institutional profile updated.` });
+    toast({ title: "Metrics Archived", description: `${player.name}&apos;s institutional profile updated.` });
   };
 
   const handleAiAnalysis = async (player: any) => {
@@ -396,7 +396,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                                  </div>
                                  <div className="space-y-0.5">
                                    <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest">Agility Diagnostics: COD Deficit {current.codDeficit}s</p>
-                                   <p className="text-xs font-bold text-foreground/80 italic">"{current.agilityDiagnostic}"</p>
+                                   <p className="text-xs font-bold text-foreground/80 italic">&quot;{current.agilityDiagnostic}&quot;</p>
                                  </div>
                                </div>
                                <Badge variant="outline" className="border-orange-200 text-orange-700 font-black uppercase text-[8px] px-3 bg-white">Biomechanically Verified</Badge>
@@ -446,7 +446,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                     <Info className="w-4 h-4 text-accent" /> Institutional Protocol
                   </h4>
                   <div className="bg-primary/5 p-8 rounded-[2rem] border-2 border-dashed border-primary/10 text-sm font-medium leading-relaxed italic text-primary/80 shadow-inner">
-                    "{activeInstruction}"
+                    &quot;{activeInstruction}&quot;
                   </div>
                 </div>
 
