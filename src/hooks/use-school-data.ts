@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { collection, doc, query, where, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@/firebase';
-import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile, ExamLabels, TacticalEvent } from '@/lib/types';
+import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile, ExamLabels, TacticalEvent, GoalRecord } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { format } from 'date-fns';
 
@@ -34,6 +34,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [examConfigs, setExamConfigs] = useState<Record<string, ExamLabels>>({});
   const [dailyReadiness, setDailyReadinessData] = useState<Record<string, any>>({});
   const [tacticalEvents, setTacticalEventsData] = useState<TacticalEvent[]>([]);
+  const [goals, setGoalsData] = useState<GoalRecord[]>([]);
 
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || isSyncing) return;
@@ -224,6 +225,16 @@ export function useSchoolData(isActive: boolean = true) {
       setTacticalEventsData(events.sort((a, b) => b.date.localeCompare(a.date)));
     });
 
+    const goalsQuery = query(
+      collection(db, 'goal_registry'),
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
+    const unsubGoals = onSnapshot(goalsQuery, (snapshot) => {
+      const list: GoalRecord[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as GoalRecord));
+      setGoalsData(list.sort((a, b) => b.month.localeCompare(a.month)));
+    });
+
     return () => {
       window.removeEventListener('online', syncOfflineAttendance);
       unsubAtt();
@@ -233,6 +244,7 @@ export function useSchoolData(isActive: boolean = true) {
       unsubExamConfigs();
       unsubReadiness();
       unsubTactical();
+      unsubGoals();
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
@@ -281,6 +293,7 @@ export function useSchoolData(isActive: boolean = true) {
     examConfigs,
     dailyReadiness,
     tacticalEvents,
+    goals,
     healthIncidents: healthIncidents || [],
     activities: (activities || []).map((a: any) => ({ ...a, category: a.category || (a.std ? 'student' : 'athlete') })),
     schoolProfile: schoolProfile || {
@@ -293,7 +306,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents]);
+  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals]);
 
   const saveSchoolProfile = useCallback((profile: any) => {
     if (!user || !db) return;
@@ -378,6 +391,23 @@ export function useSchoolData(isActive: boolean = true) {
     deleteDocumentNonBlocking(doc(db, 'tactical_registry', id));
   }, [db]);
 
+  const setGoal = useCallback((goalData: Omit<GoalRecord, 'id' | 'schoolId' | 'academicYear'>) => {
+    if (!user || !db) return;
+    const id = `${goalData.playerId}_${goalData.month}_${goalData.metric.replace(/\s+/g, '_')}`;
+    const ref = doc(db, 'goal_registry', id);
+    setDocumentNonBlocking(ref, { 
+      ...goalData, 
+      id, 
+      schoolId: user.uid, 
+      academicYear: selectedYear 
+    }, { merge: true });
+  }, [db, user, selectedYear]);
+
+  const deleteGoal = useCallback((id: string) => {
+    if (!db) return;
+    deleteDocumentNonBlocking(doc(db, 'goal_registry', id));
+  }, [db]);
+
   const setExamLabels = useCallback((std: string, term: string, labels: ExamLabels) => {
     if (!user || !db) return;
     const configId = `${std}_${term}`;
@@ -440,6 +470,6 @@ export function useSchoolData(isActive: boolean = true) {
     setSelectedYear,
     pendingSyncCount: pendingCount,
     isSyncing,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setExamLabels, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance, setReadiness, addTacticalEvent, deleteTacticalEvent
+    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setExamLabels, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance, setReadiness, addTacticalEvent, deleteTacticalEvent, setGoal, deleteGoal
   };
 }

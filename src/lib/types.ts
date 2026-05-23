@@ -89,6 +89,19 @@ export interface TacticalEvent {
   academicYear: string;
 }
 
+export interface GoalRecord {
+  id: string;
+  playerId: string;
+  playerName: string;
+  sport: string;
+  metric: string;
+  currentPB: string;
+  target: string;
+  month: string; // yyyy-MM
+  schoolId: string;
+  academicYear: string;
+}
+
 export interface ExamLabels {
   nirikshan: string;
   tondikam: string;

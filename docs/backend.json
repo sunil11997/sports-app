@@ -177,158 +177,21 @@
         "dateOfBirth"
       ]
     },
-    "AttendanceRecord": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AttendanceRecord",
+    "GoalSetting": {
+      "title": "GoalSetting",
       "type": "object",
-      "description": "Records the attendance status for a specific player on a given date.",
+      "description": "Self-improvement target for an athlete.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AttendanceRecord entity."
-        },
-        "playerId": {
-          "type": "string",
-          "description": "Reference to the Player whose attendance is being recorded. (Relationship: Player 1:N AttendanceRecord)"
-        },
-        "date": {
-          "type": "string",
-          "description": "The date of the attendance record.",
-          "format": "date"
-        },
-        "status": {
-          "type": "string",
-          "description": "The attendance status, e.g., 'P' for Present, 'A' for Absent."
-        }
+        "id": { "type": "string" },
+        "playerId": { "type": "string" },
+        "playerName": { "type": "string" },
+        "sport": { "type": "string" },
+        "metric": { "type": "string" },
+        "currentPB": { "type": "string" },
+        "target": { "type": "string" },
+        "month": { "type": "string" }
       },
-      "required": [
-        "id",
-        "playerId",
-        "date",
-        "status"
-      ]
-    },
-    "FitnessAssessment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "FitnessAssessment",
-      "type": "object",
-      "description": "Stores fitness test results and status for a specific player.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the FitnessAssessment entity."
-        },
-        "playerId": {
-          "type": "string",
-          "description": "Reference to the Player for whom this fitness assessment was conducted. (Relationship: Player 1:N FitnessAssessment)"
-        },
-        "assessmentDate": {
-          "type": "string",
-          "description": "The date when the fitness assessment was conducted.",
-          "format": "date"
-        },
-        "flexibilityScore": {
-          "type": "number",
-          "description": "The score for flexibility."
-        },
-        "enduranceScore": {
-          "type": "number",
-          "description": "The score for endurance."
-        },
-        "overallScore": {
-          "type": "number",
-          "description": "The overall fitness score."
-        },
-        "status": {
-          "type": "string",
-          "description": "The fitness status derived from the score (e.g., 'Fit', 'Need Training')."
-        }
-      },
-      "required": [
-        "id",
-        "playerId",
-        "assessmentDate",
-        "overallScore"
-      ]
-    },
-    "SportSkillAssessment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "SportSkillAssessment",
-      "type": "object",
-      "description": "Records specific skill assessments and scores for a player in a particular sport.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the SportSkillAssessment entity."
-        },
-        "playerId": {
-          "type": "string",
-          "description": "Reference to the Player. (Relationship: Player 1:N SportSkillAssessment)"
-        },
-        "sportName": {
-          "type": "string",
-          "description": "The name of the sport for which the skill is assessed."
-        },
-        "assessmentDate": {
-          "type": "string",
-          "description": "The date when the skill assessment was conducted.",
-          "format": "date"
-        },
-        "skillOneDescription": {
-          "type": "string",
-          "description": "Description of the first specific skill assessed for the sport (e.g., 'spike' for Volleyball)."
-        },
-        "skillTwoDescription": {
-          "type": "string",
-          "description": "Description of the second specific skill assessed for the sport."
-        },
-        "skillScore": {
-          "type": "number",
-          "description": "The score achieved for the assessed skills in this sport."
-        }
-      },
-      "required": [
-        "id",
-        "playerId",
-        "sportName",
-        "assessmentDate",
-        "skillScore"
-      ]
-    },
-    "HealthIncident": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "HealthIncident",
-      "type": "object",
-      "description": "Records details of a health-related incident or medical event for a player.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the HealthIncident entity."
-        },
-        "playerId": {
-          "type": "string",
-          "description": "Reference to the Player involved in the incident. (Relationship: Player 1:N HealthIncident)"
-        },
-        "playerName": {
-          "type": "string",
-          "description": "The name of the player at the time of the incident (denormalized for quick access)."
-        },
-        "incidentDate": {
-          "type": "string",
-          "description": "The date when the incident occurred.",
-          "format": "date"
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the health incident."
-        }
-      },
-      "required": [
-        "id",
-        "playerId",
-        "incidentDate",
-        "description"
-      ]
+      "required": ["id", "playerId", "metric", "currentPB", "target", "month"]
     }
   },
   "auth": {
@@ -346,152 +209,20 @@
           "schema": {
             "$ref": "#/backend/entities/SchoolProfile"
           },
-          "description": "Top-level collection for each registered school. The document ID (`{schoolId}`) should match the `id` field within the document. Includes denormalized 'ownerId' (Firebase UID of the creator) for primary authorization.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the school."
-            }
-          ]
+          "description": "Top-level school profile."
         }
       },
       {
-        "path": "/schools/{schoolId}/teachers/{teacherUid}",
+        "path": "/goal_registry/{goalId}",
         "definition": {
-          "entityName": "Teacher",
+          "entityName": "GoalSetting",
           "schema": {
-            "$ref": "#/backend/entities/Teacher"
+            "$ref": "#/backend/entities/GoalSetting"
           },
-          "description": "Subcollection for teacher profiles within a specific school. The document ID (`{teacherUid}`) should be the Firebase UID of the authenticated teacher. Each document includes denormalized 'schoolId' (from parent path) and 'schoolOwnerId' (from the parent SchoolProfile's ownerId field) for authorization independence. This collection serves as both teacher profile storage and a role lookup for DBAC.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the parent school."
-            },
-            {
-              "name": "teacherUid",
-              "description": "The Firebase UID of the teacher, also serving as the document ID for their profile and role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/schools/{schoolId}/players/{playerId}",
-        "definition": {
-          "entityName": "Player",
-          "schema": {
-            "$ref": "#/backend/entities/Player"
-          },
-          "description": "Subcollection for players registered under a specific school. The document ID (`{playerId}`) should match the `id` field within the document. Each document includes denormalized 'schoolId' (from parent path) and 'schoolOwnerId' (from the parent SchoolProfile's ownerId field) for authorization independence.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the parent school."
-            },
-            {
-              "name": "playerId",
-              "description": "The unique identifier for the player."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/schools/{schoolId}/players/{playerId}/attendanceRecords/{attendanceRecordId}",
-        "definition": {
-          "entityName": "AttendanceRecord",
-          "schema": {
-            "$ref": "#/backend/entities/AttendanceRecord"
-          },
-          "description": "Subcollection for attendance records of a specific player within a school. The document ID (`{attendanceRecordId}`) should match the `id` field within the document. Each document includes denormalized 'schoolId' (from grand-parent path), 'schoolOwnerId' (from the SchoolProfile's ownerId field), and 'playerId' (from parent path) for authorization independence.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the grand-parent school."
-            },
-            {
-              "name": "playerId",
-              "description": "The unique identifier for the parent player."
-            },
-            {
-              "name": "attendanceRecordId",
-              "description": "The unique identifier for the attendance record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/schools/{schoolId}/players/{playerId}/fitnessAssessments/{fitnessAssessmentId}",
-        "definition": {
-          "entityName": "FitnessAssessment",
-          "schema": {
-            "$ref": "#/backend/entities/FitnessAssessment"
-          },
-          "description": "Subcollection for fitness assessments of a specific player within a school. The document ID (`{fitnessAssessmentId}`) should match the `id` field within the document. Each document includes denormalized 'schoolId' (from grand-parent path), 'schoolOwnerId' (from the SchoolProfile's ownerId field), and 'playerId' (from parent path) for authorization independence.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the grand-parent school."
-            },
-            {
-              "name": "playerId",
-              "description": "The unique identifier for the parent player."
-            },
-            {
-              "name": "fitnessAssessmentId",
-              "description": "The unique identifier for the fitness assessment."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/schools/{schoolId}/players/{playerId}/sportSkillAssessments/{sportSkillAssessmentId}",
-        "definition": {
-          "entityName": "SportSkillAssessment",
-          "schema": {
-            "$ref": "#/backend/entities/SportSkillAssessment"
-          },
-          "description": "Subcollection for sport skill assessments of a specific player within a school. The document ID (`{sportSkillAssessmentId}`) should match the `id` field within the document. Each document includes denormalized 'schoolId' (from grand-parent path), 'schoolOwnerId' (from the SchoolProfile's ownerId field), and 'playerId' (from parent path) for authorization independence.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the grand-parent school."
-            },
-            {
-              "name": "playerId",
-              "description": "The unique identifier for the parent player."
-            },
-            {
-              "name": "sportSkillAssessmentId",
-              "description": "The unique identifier for the sport skill assessment."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/schools/{schoolId}/players/{playerId}/healthIncidents/{healthIncidentId}",
-        "definition": {
-          "entityName": "HealthIncident",
-          "schema": {
-            "$ref": "#/backend/entities/HealthIncident"
-          },
-          "description": "Subcollection for health incidents of a specific player within a school. The document ID (`{healthIncidentId}`) should match the `id` field within the document. Each document includes denormalized 'schoolId' (from grand-parent path), 'schoolOwnerId' (from the SchoolProfile's ownerId field), and 'playerId' (from parent path) for authorization independence.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique identifier for the grand-parent school."
-            },
-            {
-              "name": "playerId",
-              "description": "The unique identifier for the parent player."
-            },
-            {
-              "name": "healthIncidentId",
-              "description": "The unique identifier for the health incident record."
-            }
-          ]
+          "description": "Consolidated registry for athlete goals."
         }
       }
     ],
-    "reasoning": "The recommended Firestore data structure is designed to be highly secure, scalable, and debuggable, strictly adhering to the core design principles, especially Authorization Independence and QAPs. The central idea is to structure all school-related data hierarchically under a top-level `/schools/{schoolId}` collection. \n\n**Authorization Independence via Denormalization:**\nTo eliminate hierarchical authorization dependencies (`get()` calls in security rules), critical authorization context is denormalized into every relevant document:\n1.  **SchoolProfile**: The root document for a school (`/schools/{schoolId}`) will contain an `ownerId` field. This `ownerId` stores the Firebase User ID (UID) of the user who created and primarily administers the school. This field is self-contained within the school's document, making its access control direct.\n2.  **All Subcollections (Teacher, Player, AttendanceRecord, FitnessAssessment, SportSkillAssessment, HealthIncident)**: Every document within any subcollection nested under `/schools/{schoolId}` will explicitly include denormalized `schoolId` and `schoolOwnerId` fields. This ensures that any security rule applied to these documents can directly check `request.auth.uid` against `resource.data.schoolOwnerId` or against the `schoolId` for teacher role lookups (e.g., `exists(/schools/$(resource.data.schoolId)/teachers/$(request.auth.uid))`) without needing to perform a `get()` call to a parent `SchoolProfile` or `Player` document.\n\n**Structural Segregation for QAPs:**\nAll documents within a given collection path share a homogeneous security posture. For example, all `Teacher` documents under `/schools/{schoolId}/teachers/{teacherUid}` have the same access requirements. This segregation simplifies rules.\n\n**Access Modeling & QAPs (Queryable Authorization Patterns):**\n*   **School Ownership:** Managed by the `ownerId` field on the `SchoolProfile` document itself, allowing the creator/primary admin direct control.\n*   **Teacher Roles:** The `/schools/{schoolId}/teachers/{teacherUid}` collection serves a dual purpose: storing the teacher's profile data AND acting as a DBAC role indicator. The document ID (`{teacherUid}`) will be the Firebase UID of the authenticated teacher. This allows for efficient `exists()` checks in security rules (e.g., `exists(/databases/$(database)/documents/schools/$(schoolId)/teachers/$(request.auth.uid))`) to determine if a requesting user is a teacher within that school, without fetching document content. This approach specifically enables secure and efficient `list` operations (QAPs) for all data relevant to a school's teachers.\n*   **Player & Sub-Entities:** Access to player data and their related records (attendance, fitness, skills, health incidents) is granted to the `schoolOwnerId` or to any `teacherUid` (as determined by the `exists()` check mentioned above) within that specific school. The denormalized `schoolId` and `schoolOwnerId` in each document enable these rules to be simple and robust against complex `get()` dependencies.\n\nThis structure ensures that operations can be performed atomically (e.g., creating a player without needing to first `get()` the school's owner ID from a parent document) and that security rules remain straightforward and highly performable, facilitating easy debugging and maintenance."
+    "reasoning": "Standard registry pattern for institutional data scaling."
   }
 }
