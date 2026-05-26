@@ -5,7 +5,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  trailingSlash: true,
+  // Aligned with vercel.json to ensure consistent asset resolution
+  trailingSlash: false,
   // Resolved: Prevent Webpack from bundling Node-specific telemetry in client chunks
   serverExternalPackages: [
     '@opentelemetry/sdk-node', 

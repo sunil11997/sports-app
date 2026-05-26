@@ -2,16 +2,13 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Edit, 
   Search, 
-  User, 
-  Medal, 
-  GraduationCap, 
   Trash2, 
   Camera, 
   CircleX, 
@@ -27,7 +24,10 @@ import {
   UserPlus,
   Trophy,
   Flame,
-  ShieldCheck
+  ShieldCheck,
+  GraduationCap,
+  Medal,
+  Info
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -47,11 +47,9 @@ const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 
 interface DashboardProps {
   store: any;
   section: 'sports' | 'general';
-  language?: string;
-  t: any;
-  onTabChange?: (tab: string) => void;
   searchTerm?: string;
   selectedSport?: string;
+  t: any;
 }
 
 export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all" }: DashboardProps) {
@@ -155,14 +153,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     return 3;
   }, []);
 
-  const getAgeCategory = useCallback((age: number, gender: string) => {
-    const g = gender === 'Female' ? 'Girls' : 'Boys';
-    if (age < 14) return `${g} U14`;
-    if (age < 17) return `${g} U17`;
-    return `${g} Senior`;
-  }, []);
-
-  // Gamification Check Helpers
   const checkStreak = useCallback((playerId: string) => {
     const attendance = store.data.attendance || {};
     const today = new Date();
@@ -184,12 +174,14 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   }, [store.data.healthIncidents, store.data.fitness]);
 
   const filteredPlayers = useMemo(() => {
-    return (store.data.players || [])
+    const baseList = store.data.players || [];
+    return baseList
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
-        const matchesSearch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-          (p.aadharNumber && p.aadharNumber.includes(searchTerm)) ||
-          (p.generalRegisterNumber && p.generalRegisterNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+        const nameMatch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const aadharMatch = (p.aadharNumber || "").includes(searchTerm);
+        const grMatch = (p.generalRegisterNumber || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = nameMatch || aadharMatch || grMatch;
         const matchesSport = selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport));
         
         return matchesSection && matchesSearch && matchesSport;
@@ -236,6 +228,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
 
+  const athletesOnlyInSportsView = !isGeneral && store.data.players.length > filteredPlayers.length;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm">
@@ -268,6 +262,13 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </div>
       </div>
 
+      {athletesOnlyInSportsView && (
+        <div className="bg-primary/5 p-4 rounded-2xl border-2 border-dashed border-primary/10 flex items-center gap-3">
+          <Info className="w-4 h-4 text-primary opacity-40" />
+          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Showing Specialized Athletes only. Total Students: {store.data.players.length}</p>
+        </div>
+      )}
+
       <div className="google-card overflow-hidden overflow-x-auto">
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/30">
@@ -293,11 +294,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       <div className="flex items-center gap-4">
                         <Avatar className="w-11 h-11 border-2 border-white shadow-sm">
                           <AvatarImage src={p.photoUrl} className="object-cover" />
-                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} • GR: {p.generalRegisterNumber || 'N/A'}</p>
+                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name || "UNNAMED STUDENT"}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} &bull; GR: {p.generalRegisterNumber || 'N/A'}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -408,7 +409,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                             <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-6">
                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Switch Camera</Button>
                               <div className="flex gap-2">
-                                <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
+                                <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
                                 <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><CircleX className="w-5 h-5" /></Button>
                               </div>
                             </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -162,6 +163,10 @@ export const useUser = (): UserHookResult => {
   };
 };
 
+/**
+ * useMemoFirebase - Institutional Memoization Utility
+ * Refactored to satisfy Next.js 15 static analysis for dependency tracking.
+ */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoized = useMemo(() => {
@@ -170,6 +175,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       (result as any).__memo = true;
     }
     return result;
-  }, [factory, ...deps]);
+  }, deps); 
+  
   return memoized;
 }

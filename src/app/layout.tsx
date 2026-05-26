@@ -1,3 +1,4 @@
+
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
@@ -24,7 +25,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Waghamba Sports Hub",
   description: "Institutional Physical Education & Sports Management System",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -47,9 +48,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-      </head>
       <body className="antialiased font-sans" suppressHydrationWarning>
         <FirebaseClientProvider>
           <PWAProvider>

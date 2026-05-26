@@ -222,7 +222,7 @@ export function useSchoolData(isActive: boolean = true) {
     );
     const unsubTactical = onSnapshot(tacticalQuery, (snapshot) => {
       const events: TacticalEvent[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TacticalEvent));
-      setTacticalEventsData(events.sort((a, b) => b.date.localeCompare(a.date)));
+      setTacticalEventsData(events.sort((a, b) => (b.date || "").localeCompare(a.date || "")));
     });
 
     const goalsQuery = query(
@@ -232,7 +232,7 @@ export function useSchoolData(isActive: boolean = true) {
     );
     const unsubGoals = onSnapshot(goalsQuery, (snapshot) => {
       const list: GoalRecord[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as GoalRecord));
-      setGoalsData(list.sort((a, b) => b.month.localeCompare(a.month)));
+      setGoalsData(list.sort((a, b) => (b.month || "").localeCompare(a.month || "")));
     });
 
     return () => {
@@ -308,168 +308,130 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals]);
 
-  const saveSchoolProfile = useCallback((profile: any) => {
-    if (!user || !db) return;
-    const profileRef = doc(db, 'schools', user.uid);
-    setDocumentNonBlocking(profileRef, { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-  }, [db, user]);
-
-  const addPlayer = useCallback((playerData: any) => {
-    if (!user || !db) return;
-    const playerRef = doc(db, 'players', playerData.id);
-    setDocumentNonBlocking(playerRef, { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const updatePlayer = useCallback((player: any) => {
-    if (!db) return;
-    const docRef = doc(db, 'players', player.id);
-    updateDocumentNonBlocking(docRef, player);
-  }, [db]);
-
-  const deletePlayer = useCallback((playerId: string) => {
-    if (!db) return;
-    const docRef = doc(db, 'players', playerId);
-    deleteDocumentNonBlocking(docRef);
-  }, [db]);
-
-  const setAttendance = useCallback((records: AttendanceRecord) => {
-    if (!user) return;
-    setAttendanceData(prev => ({ ...prev, ...records }));
-    const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
-    const queue = JSON.parse(queueStr);
-    const updatedQueue = { ...queue, ...records };
-    localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(updatedQueue));
-    setPendingCount(Object.keys(updatedQueue).length);
-
-    if (db && navigator.onLine) {
-      Object.entries(records).forEach(([key, status]) => {
-        const parts = key.split('_');
-        if (parts.length < 3) return;
-        const attRef = doc(db, 'attendance_registry', `${parts[0]}_${parts[1]}_${parts[2]}`);
-        if (!status) deleteDocumentNonBlocking(attRef);
-        else setDocumentNonBlocking(attRef, { status, playerId: parts[0], date: parts[1], session: parts[2], schoolId: user.uid, academicYear: selectedYear }, { merge: true });
-      });
-      setTimeout(syncOfflineAttendance, 2000);
-    }
-  }, [db, user, selectedYear, syncOfflineAttendance]);
-
-  const setFitness = useCallback((playerId: string, assessment: FitnessAssessment) => {
-    if (!user || !db) return;
-    const dateId = new Date().toISOString().split('T')[0];
-    const fitnessRef = doc(db, 'fitness_registry', `${playerId}_${dateId}`);
-    setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const setReadiness = useCallback((playerId: string, data: any) => {
-    if (!user || !db) return;
-    const dateId = new Date().toISOString().split('T')[0];
-    const ref = doc(db, 'readiness_registry', `${playerId}_${dateId}`);
-    setDocumentNonBlocking(ref, { 
-      ...data, 
-      playerId, 
-      schoolId: user.uid, 
-      date: dateId, 
-      timestamp: new Date().toISOString(),
-      academicYear: selectedYear 
-    }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const addTacticalEvent = useCallback((eventData: Omit<TacticalEvent, 'id' | 'schoolId' | 'academicYear'>) => {
-    if (!user || !db) return;
-    const id = Math.random().toString(36).substr(2, 9);
-    const ref = doc(db, 'tactical_registry', id);
-    setDocumentNonBlocking(ref, { 
-      ...eventData, 
-      id, 
-      schoolId: user.uid, 
-      academicYear: selectedYear 
-    }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const deleteTacticalEvent = useCallback((id: string) => {
-    if (!db) return;
-    deleteDocumentNonBlocking(doc(db, 'tactical_registry', id));
-  }, [db]);
-
-  const setGoal = useCallback((goalData: Omit<GoalRecord, 'id' | 'schoolId' | 'academicYear'>) => {
-    if (!user || !db) return;
-    const id = `${goalData.playerId}_${goalData.month}_${goalData.metric.replace(/\s+/g, '_')}`;
-    const ref = doc(db, 'goal_registry', id);
-    setDocumentNonBlocking(ref, { 
-      ...goalData, 
-      id, 
-      schoolId: user.uid, 
-      academicYear: selectedYear 
-    }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const deleteGoal = useCallback((id: string) => {
-    if (!db) return;
-    deleteDocumentNonBlocking(doc(db, 'goal_registry', id));
-  }, [db]);
-
-  const setExamLabels = useCallback((std: string, term: string, labels: ExamLabels) => {
-    if (!user || !db) return;
-    const configId = `${std}_${term}`;
-    const configRef = doc(db, 'exam_configs', configId);
-    setDocumentNonBlocking(configRef, { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-  }, [db, user]);
-
-  const setSportSkill = useCallback((playerId: string, sport: string, skill: SportSkill) => {
-    if (!user || !db) return;
-    const timeId = new Date().getTime().toString();
-    const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}_${timeId}`);
-    setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const setDrillCompletion = useCallback((drillId: string, playerId: string, completed: boolean) => {
-    if (!user || !db) return;
-    const refId = `${playerId}_${drillId}`;
-    const drillRef = doc(db, 'drill_completions', refId);
-    if (completed) setDocumentNonBlocking(drillRef, { id: refId, schoolId: user.uid, playerId, drillId, timestamp: new Date().toISOString() }, { merge: true });
-    else deleteDocumentNonBlocking(drillRef);
-  }, [db, user]);
-
-  const setGameRule = useCallback((sportName: string, pdfData: string | null) => {
-    if (!user || !db) return;
-    const ruleRef = doc(db, 'game_rules_registry', sportName);
-    if (!pdfData) deleteDocumentNonBlocking(ruleRef);
-    else setDocumentNonBlocking(ruleRef, { sportName, pdfData, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-  }, [db, user]);
-
-  const addHealthIncident = useCallback((incident: HealthIncident) => {
-    if (!user || !db) return;
-    const globalIncRef = doc(db, 'all_health_incidents', incident.id);
-    setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const addActivity = useCallback((activityData: any) => {
-    if (!user || !db) return;
-    const activityRef = doc(db, 'school_activities', activityData.id);
-    setDocumentNonBlocking(activityRef, { ...activityData, schoolId: user.uid, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
-  }, [db, user, selectedYear]);
-
-  const deleteActivity = useCallback((id: string) => {
-    if (!db) return;
-    deleteDocumentNonBlocking(doc(db, 'school_activities', id));
-  }, [db]);
-
-  const exportBackupData = useCallback(() => {
-    const backup = { data: aggregatedData, timestamp: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click(); URL.revokeObjectURL(url);
-  }, [aggregatedData]);
-
   return {
     data: aggregatedData,
-    isLoaded: !playersLoading && !schoolsLoading && !!db && isActive,
+    isLoaded: isActive ? (!!db && !playersLoading && !schoolsLoading) : false,
     selectedYear,
     setSelectedYear,
     pendingSyncCount: pendingCount,
     isSyncing,
-    saveSchoolProfile, addPlayer, updatePlayer, deletePlayer, setAttendance, setFitness, setExamLabels, setSportSkill, setDrillCompletion, setGameRule, addHealthIncident, addActivity, deleteActivity, exportBackupData, syncOfflineAttendance, setReadiness, addTacticalEvent, deleteTacticalEvent, setGoal, deleteGoal
+    saveSchoolProfile: (profile: any) => {
+      if (!user || !db) return;
+      const profileRef = doc(db, 'schools', user.uid);
+      setDocumentNonBlocking(profileRef, { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    addPlayer: (playerData: any) => {
+      if (!user || !db) return;
+      const playerRef = doc(db, 'players', playerData.id);
+      setDocumentNonBlocking(playerRef, { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+    },
+    updatePlayer: (player: any) => {
+      if (!db) return;
+      const docRef = doc(db, 'players', player.id);
+      updateDocumentNonBlocking(docRef, player);
+    },
+    deletePlayer: (playerId: string) => {
+      if (!db) return;
+      const docRef = doc(db, 'players', playerId);
+      deleteDocumentNonBlocking(docRef);
+    },
+    setAttendance,
+    setFitness: (playerId: string, assessment: FitnessAssessment) => {
+      if (!user || !db) return;
+      const dateId = new Date().toISOString().split('T')[0];
+      const fitnessRef = doc(db, 'fitness_registry', `${playerId}_${dateId}`);
+      setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
+    },
+    setReadiness: (playerId: string, data: any) => {
+      if (!user || !db) return;
+      const dateId = new Date().toISOString().split('T')[0];
+      const ref = doc(db, 'readiness_registry', `${playerId}_${dateId}`);
+      setDocumentNonBlocking(ref, { 
+        ...data, 
+        playerId, 
+        schoolId: user.uid, 
+        date: dateId, 
+        timestamp: new Date().toISOString(),
+        academicYear: selectedYear 
+      }, { merge: true });
+    },
+    addTacticalEvent: (eventData: Omit<TacticalEvent, 'id' | 'schoolId' | 'academicYear'>) => {
+      if (!user || !db) return;
+      const id = Math.random().toString(36).substr(2, 9);
+      const ref = doc(db, 'tactical_registry', id);
+      setDocumentNonBlocking(ref, { 
+        ...eventData, 
+        id, 
+        schoolId: user.uid, 
+        academicYear: selectedYear 
+      }, { merge: true });
+    },
+    deleteTacticalEvent: (id: string) => {
+      if (!db) return;
+      deleteDocumentNonBlocking(doc(db, 'tactical_registry', id));
+    },
+    setGoal: (goalData: Omit<GoalRecord, 'id' | 'schoolId' | 'academicYear'>) => {
+      if (!user || !db) return;
+      const id = `${goalData.playerId}_${goalData.month}_${goalData.metric.replace(/\s+/g, '_')}`;
+      const ref = doc(db, 'goal_registry', id);
+      setDocumentNonBlocking(ref, { 
+        ...goalData, 
+        id, 
+        schoolId: user.uid, 
+        academicYear: selectedYear 
+      }, { merge: true });
+    },
+    deleteGoal: (id: string) => {
+      if (!db) return;
+      deleteDocumentNonBlocking(doc(db, 'goal_registry', id));
+    },
+    setExamLabels: (std: string, term: string, labels: ExamLabels) => {
+      if (!user || !db) return;
+      const configId = `${std}_${term}`;
+      const configRef = doc(db, 'exam_configs', configId);
+      setDocumentNonBlocking(configRef, { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    setSportSkill: (playerId: string, sport: string, skill: SportSkill) => {
+      if (!user || !db) return;
+      const timeId = new Date().getTime().toString();
+      const skillRef = doc(db, 'skills_registry', `${playerId}_${sport}_${timeId}`);
+      setDocumentNonBlocking(skillRef, { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
+    },
+    setDrillCompletion: (drillId: string, playerId: string, completed: boolean) => {
+      if (!user || !db) return;
+      const refId = `${playerId}_${drillId}`;
+      const drillRef = doc(db, 'drill_completions', refId);
+      if (completed) setDocumentNonBlocking(drillRef, { id: refId, schoolId: user.uid, playerId, drillId, timestamp: new Date().toISOString() }, { merge: true });
+      else deleteDocumentNonBlocking(drillRef);
+    },
+    setGameRule: (sportName: string, pdfData: string | null) => {
+      if (!user || !db) return;
+      const ruleRef = doc(db, 'game_rules_registry', sportName);
+      if (!pdfData) deleteDocumentNonBlocking(ruleRef);
+      else setDocumentNonBlocking(ruleRef, { sportName, pdfData, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    addHealthIncident: (incident: HealthIncident) => {
+      if (!user || !db) return;
+      const globalIncRef = doc(db, 'all_health_incidents', incident.id);
+      setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+    },
+    addActivity: (activityData: any) => {
+      if (!user || !db) return;
+      const activityRef = doc(db, 'school_activities', activityData.id);
+      setDocumentNonBlocking(activityRef, { ...activityData, schoolId: user.uid, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
+    },
+    deleteActivity: (id: string) => {
+      if (!db) return;
+      deleteDocumentNonBlocking(doc(db, 'school_activities', id));
+    },
+    exportBackupData: () => {
+      const backup = { data: aggregatedData, timestamp: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click(); URL.revokeObjectURL(url);
+    },
+    syncOfflineAttendance
   };
 }
