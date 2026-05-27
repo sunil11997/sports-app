@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -267,7 +268,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
           </p>
           <div className="flex items-center justify-center gap-2 pt-6">
              <ShieldCheck className="w-5 h-5 text-emerald-500" />
-             <span className="text-[11px] font-black text-primary/60 uppercase tracking-[0.3em]">Registry Synchronized • Tactical V4.0</span>
+             <span className="text-[11px] font-black text-primary/60 uppercase tracking-[0.3em]">Registry Synchronized • Tactical V3.9.4</span>
           </div>
         </div>
       </Card>

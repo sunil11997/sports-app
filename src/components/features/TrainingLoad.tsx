@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -186,7 +187,7 @@ export function TrainingLoad({ store }: { store: any }) {
               <Save className="w-6 h-6" /> Archive Load Registry
             </Button>
             <p className="text-[9px] font-black text-muted-foreground uppercase text-center mt-6 tracking-[0.3em] opacity-40">
-              Registry Engine &bull; WGB Hub V3.8.1
+              Registry Engine &bull; WGB Hub V3.9.4
             </p>
           </div>
         </Card>

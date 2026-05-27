@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -310,7 +311,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
                   <ShieldCheck className="w-7 h-7 text-accent" /> Ground Roster
                 </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.3</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.4</p>
               </div>
               
               <div className="flex items-center gap-3 w-full md:w-auto">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -155,7 +156,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.8.1</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v3.9.4</p>
       </div>
 
       <div className="space-y-6">
