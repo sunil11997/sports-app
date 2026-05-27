@@ -1,4 +1,3 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -7,11 +6,8 @@ const nextConfig = {
   },
   // Aligned with vercel.json to ensure consistent asset resolution
   trailingSlash: false,
-  // Resolved: Prevent Webpack from bundling Node-specific telemetry in client chunks
+  // Optimized: Standard Server External Packages for Next.js 15 stability
   serverExternalPackages: [
-    '@opentelemetry/sdk-node', 
-    '@opentelemetry/instrumentation',
-    '@opentelemetry/api',
     'genkit', 
     '@genkit-ai/core', 
     '@genkit-ai/google-genai'
