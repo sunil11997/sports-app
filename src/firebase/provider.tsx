@@ -164,15 +164,24 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened for Next.js 15. Sets the __memo flag immediately 
- * to ensure validation passes during the render phase.
+ * Hardened for Next.js 15. Assigns the __memo flag immediately
+ * during the memoization phase to ensure validation passes.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedValue = useMemo(() => {
     const val = factory();
     if (typeof val === 'object' && val !== null) {
-      (val as any).__memo = true;
+      try {
+        Object.defineProperty(val, '__memo', {
+          value: true,
+          configurable: true,
+          enumerable: false,
+          writable: true
+        });
+      } catch {
+        (val as any).__memo = true;
+      }
     }
     return val;
   }, deps);
