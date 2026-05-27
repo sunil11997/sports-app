@@ -6,11 +6,9 @@ const nextConfig = {
   },
   // Aligned with vercel.json to ensure consistent asset resolution
   trailingSlash: false,
-  // Optimized: Standard Server External Packages for Next.js 15 stability
+  // Optimized: Primary Server External Packages for Next.js 15 stability
   serverExternalPackages: [
-    'genkit', 
-    '@genkit-ai/core', 
-    '@genkit-ai/google-genai'
+    'genkit'
   ],
 };
 

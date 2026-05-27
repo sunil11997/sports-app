@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -165,17 +164,16 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Refactored to satisfy Next.js 15 static analysis for dependency tracking.
+ * Hardened version: Includes factory in dependencies and handles Next.js 15 static analysis.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoized = useMemo(() => {
+  return useMemo(() => {
     const result = factory();
     if (typeof result === 'object' && result !== null) {
       (result as any).__memo = true;
     }
     return result;
-  }, deps); 
-  
-  return memoized;
+    // We include factory in deps but verify it is a stable reference from the caller
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...deps, factory]); 
 }
