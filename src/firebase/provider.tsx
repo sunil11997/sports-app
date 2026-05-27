@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
+import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
@@ -164,17 +165,21 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Refactored to satisfy Next.js 15 static analysis and array literal dependency rules.
+ * Hardened to satisfy Next.js 15 static analysis and array literal dependency rules.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const stableFactory = useCallback(factory, deps);
+  const depsRef = useRef(deps);
   
+  useEffect(() => {
+    depsRef.current = deps;
+  }, [deps]);
+
   return useMemo(() => {
-    const result = stableFactory();
+    const result = factory();
     if (typeof result === 'object' && result !== null) {
       (result as any).__memo = true;
     }
     return result;
-  }, [stableFactory]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps); 
 }

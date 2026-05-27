@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -37,22 +39,27 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-import { Dashboard } from '@/components/features/Dashboard';
-import { Registration } from '@/components/features/Registration';
-import { Attendance } from '@/components/features/Attendance';
-import { HealthIncidents } from '@/components/features/HealthIncidents';
-import { Fitness } from '@/components/features/Fitness';
-import { DailyReport } from '@/components/features/DailyReport';
-import { ExamsHub } from '@/components/features/ExamsHub';
-import { PromotionHub } from '@/components/features/PromotionHub';
-import { ClassesSection } from '@/components/features/ClassesSection';
-import { TrainingLoad } from '@/components/features/TrainingLoad';
-import { GameHub } from '@/components/features/GameHub';
-import { Settings } from '@/components/features/Settings';
-import { SchoolRegistration } from '@/components/features/SchoolRegistration';
-import { NotificationCenter } from '@/components/features/NotificationCenter';
-import { PerformanceDossier } from '@/components/features/History';
-import { Gamification } from '@/components/features/Gamification';
+// Dynamic imports for high-performance chunk loading
+const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { 
+  loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" /> 
+});
+const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), {
+  loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" />
+});
+const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance));
+const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(m => m.HealthIncidents));
+const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness));
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport));
+const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub));
+const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub));
+const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection));
+const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(m => m.TrainingLoad));
+const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub));
+const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings));
+const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(m => m.SchoolRegistration));
+const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(m => m.NotificationCenter));
+const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier));
+const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification));
 
 const translations = {
   English: {
@@ -131,7 +138,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.9.6</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.9.7</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -282,6 +283,44 @@ export function useSchoolData(isActive: boolean = true) {
     return logs;
   }, [drillComps]);
 
+  const setAttendance = (newAttendance: AttendanceRecord) => {
+    if (!user || !db) return;
+    
+    setAttendanceData(prev => ({ ...prev, ...newAttendance }));
+
+    Object.entries(newAttendance).forEach(([key, status]) => {
+      const parts = key.split('_');
+      if (parts.length < 3) return;
+      
+      const playerId = parts[0];
+      const date = parts[1];
+      const session = parts[2];
+      
+      const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
+      
+      if (typeof window !== 'undefined' && !navigator.onLine) {
+        const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
+        const queue = JSON.parse(queueStr);
+        queue[key] = status;
+        localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
+        setPendingCount(Object.keys(queue).length);
+      } else {
+        if (!status) {
+          deleteDocumentNonBlocking(attRef);
+        } else {
+          setDocumentNonBlocking(attRef, { 
+            status, 
+            playerId, 
+            date, 
+            session,
+            schoolId: user.uid, 
+            academicYear: selectedYear 
+          }, { merge: true });
+        }
+      }
+    });
+  };
+
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -312,7 +351,6 @@ export function useSchoolData(isActive: boolean = true) {
 
   const isActuallyLoaded = useMemo(() => {
     if (!isActive) return false;
-    // We are loaded if we have a db and the primary collections have finished their initial load
     return !!db && !playersLoading && !schoolsLoading;
   }, [isActive, db, playersLoading, schoolsLoading]);
 
@@ -343,43 +381,7 @@ export function useSchoolData(isActive: boolean = true) {
       const docRef = doc(db, 'players', playerId);
       deleteDocumentNonBlocking(docRef);
     },
-    setAttendance: (newAttendance: AttendanceRecord) => {
-      if (!user || !db) return;
-      
-      setAttendanceData(prev => ({ ...prev, ...newAttendance }));
-
-      Object.entries(newAttendance).forEach(([key, status]) => {
-        const parts = key.split('_');
-        if (parts.length < 3) return;
-        
-        const playerId = parts[0];
-        const date = parts[1];
-        const session = parts[2];
-        
-        const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
-        
-        if (typeof window !== 'undefined' && !navigator.onLine) {
-          const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
-          const queue = JSON.parse(queueStr);
-          queue[key] = status;
-          localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
-          setPendingCount(Object.keys(queue).length);
-        } else {
-          if (!status) {
-            deleteDocumentNonBlocking(attRef);
-          } else {
-            setDocumentNonBlocking(attRef, { 
-              status, 
-              playerId, 
-              date, 
-              session,
-              schoolId: user.uid, 
-              academicYear: selectedYear 
-            }, { merge: true });
-          }
-        }
-      });
-    },
+    setAttendance,
     setFitness: (playerId: string, assessment: FitnessAssessment) => {
       if (!user || !db) return;
       const dateId = new Date().toISOString().split('T')[0];
