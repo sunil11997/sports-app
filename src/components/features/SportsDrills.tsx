@@ -131,10 +131,22 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   const drillKey = `${activeSport}_${activeDrill}`;
 
+  /**
+   * currentSessionPlayers - Hardened for Next.js 15
+   * Resolves the malformed template literal lookup around line 138-142.
+   */
   const currentSessionPlayers = useMemo(() => {
+    if (!sessionPlayerIds || !playersInSport) return [];
+    
     return sessionPlayerIds
-      .map((id) => playersInSport?.find((p: any) => p?.id === id))
-      .filter((p) => p && !store?.data?.drillCompletions?.[`${p.id}_${drillKey}`]);
+      .map((id) => playersInSport.find((p: any) => p?.id === id))
+      .filter((p): p is any => {
+        if (!p) return false;
+        // Correct interpolation syntax to prevent build worker crash
+        const key = `${p.id}_${drillKey}`;
+        const isMastered = store.data.drillCompletions[key];
+        return !isMastered;
+      });
   }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
 
   const femaleSquad = currentSessionPlayers.filter(p => p && p.gender === 'Female');
@@ -142,7 +154,10 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
-      .filter((p: any) => store.data.drillCompletions[`${p.id}_${drillKey}`])
+      .filter((p: any) => {
+        const key = `${p.id}_${drillKey}`;
+        return !!store.data.drillCompletions[key];
+      })
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
 

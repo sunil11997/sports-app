@@ -164,23 +164,27 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened for Next.js 15. Assigns the __memo flag immediately
- * during the memoization phase to ensure validation passes.
+ * Hardened for Next.js 15. Assigns the __memo flag IMMEDIATELY 
+ * during the factory phase to satisfy Firestore hook validation.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedValue = useMemo(() => {
     const val = factory();
-    if (typeof val === 'object' && val !== null) {
+    if (val && typeof val === 'object') {
       try {
+        // We set this property directly on the query/ref object 
+        // before returning it to ensures useCollection/useDoc see it 
+        // during the current render phase.
+        (val as any).__memo = true;
+      } catch (e) {
+        // Fallback for objects that might be partially sealed
         Object.defineProperty(val, '__memo', {
           value: true,
           configurable: true,
           enumerable: false,
           writable: true
         });
-      } catch {
-        (val as any).__memo = true;
       }
     }
     return val;
