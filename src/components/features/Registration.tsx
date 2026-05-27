@@ -27,7 +27,8 @@ import {
   Medal,
   HeartPulse,
   Ruler,
-  RefreshCcw
+  RefreshCcw,
+  Baby
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ const formSchema = z.object({
   serialNumber: z.string().optional().default(""),
   dob: z.string().optional().default(""),
   height: z.string().optional().default(""),
+  sittingHeight: z.string().optional().default(""),
   weight: z.string().optional().default(""),
   bloodGroup: z.string().optional().default("None"),
   generalRegisterNumber: z.string().optional().default(""),
@@ -85,6 +87,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
       serialNumber: "", 
       dob: "", 
       height: "", 
+      sittingHeight: "",
       weight: "",
       bloodGroup: "None", 
       aadharNumber: "", 
@@ -362,7 +365,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <FormField control={form.control} name="height" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Height (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">{isMarathi ? 'ताठ उंची (Standing Ht)' : 'Height (cm)'}</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="sittingHeight" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> {isMarathi ? 'बसून उंची (Sitting Ht)' : 'Sitting Ht (cm)'}</FormLabel><FormControl><Input type="number" placeholder="Optional" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="weight" render={({ field }) => (
                       <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Weight (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
@@ -370,19 +376,26 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     <FormField control={form.control} name="bloodGroup" render={({ field }) => (
                       <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Blood Group</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></FormItem>
                     )} />
-                    <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Contact No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-mono" {...field} /></FormControl></FormItem>
-                    )} />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField control={form.control} name="aadharNumber" render={({ field }) => (
                       <FormItem><FormLabel className="text-[10px] font-black uppercase text-primary">Aadhar Number (12-Digit)</FormLabel><FormControl><Input placeholder="0000 0000 0000" className="h-14 font-mono font-black border-2 rounded-2xl text-center text-lg" {...field} maxLength={12} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField control={form.control} name="medical" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions</FormLabel><FormControl><Textarea className="min-h-[56px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries..." {...field} /></FormControl></FormItem>
+                    <FormField control={form.control} name="mobileNumber" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Contact No</FormLabel><FormControl><Input className="h-14 border-2 rounded-2xl font-mono px-6" {...field} /></FormControl></FormItem>
                     )} />
                   </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                    <HeartPulse className="w-5 h-5" />
+                    <h3 className="font-black uppercase text-sm tracking-[0.2em]">Health & Medical</h3>
+                  </div>
+                  <FormField control={form.control} name="medical" render={({ field }) => (
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Medical Conditions & Alerts</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries, Surgeries..." {...field} /></FormControl></FormItem>
+                  )} />
                 </div>
 
                 {form.watch('category') === 'athlete' && (

@@ -27,7 +27,8 @@ import {
   ShieldCheck,
   GraduationCap,
   Medal,
-  Info
+  Info,
+  Baby
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -376,7 +377,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                            )}
                            {activeCam === 'profile' && (
                              <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-4 z-20">
-                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Flip Camera</Button>
+                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Flip Camera</Button>
                                <div className="flex gap-2">
                                  <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
                                  <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><CircleX className="w-6 h-6" /></Button>
@@ -407,7 +408,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                           )}
                           {activeCam === 'aadhar' && (
                             <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-6">
-                              <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCw className="w-3 h-3 mr-2" /> Switch Camera</Button>
+                              <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Switch Camera</Button>
                               <div className="flex gap-2">
                                 <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
                                 <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><CircleX className="w-5 h-5" /></Button>
@@ -448,13 +449,16 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       <div className="space-y-4">
                         <div className="flex items-center gap-3 text-primary border-b pb-2">
                           <Ruler className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-[11px] tracking-widest">Physical & Aadhar</h3>
+                          <h3 className="font-black uppercase text-[11px] tracking-widest">Physical Data</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-10 font-bold border-2" /></div>
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-10 font-bold border-2" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60 flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ''} onChange={e => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-10 font-bold border-2" /></div>
                         </div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar Number (12-Digit)</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-10 font-bold border-2" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar No</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
+                        </div>
                       </div>
 
                       <div className="space-y-4">

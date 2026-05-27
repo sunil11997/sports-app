@@ -18,7 +18,8 @@ import {
   Baby,
   BrainCircuit,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -67,9 +68,12 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     if (!currentPlayer?.height || !currentPlayer?.weight || !currentPlayer?.age) return null;
     
     const h = parseFloat(currentPlayer.height);
-    const sH = parseFloat(currentPlayer.sittingHeight || (h * 0.52).toFixed(1));
     const w = parseFloat(currentPlayer.weight);
     const age = currentPlayer.age;
+    
+    // Check if we have measured Sitting Height, otherwise use 52% estimate
+    const isMeasured = !!currentPlayer.sittingHeight;
+    const sH = parseFloat(currentPlayer.sittingHeight || (h * 0.52).toFixed(1));
     const legL = h - sH;
 
     let offset = 0;
@@ -84,7 +88,8 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       status: offset < 0 ? 'Pre-growth spurt' : 'Post-growth spurt',
       isPeak: Math.abs(offset) < 0.5,
       sittingHeight: sH,
-      legLength: legL.toFixed(1)
+      legLength: legL.toFixed(1),
+      isEstimated: !isMeasured
     };
   }, [currentPlayer]);
 
@@ -222,7 +227,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-muted/30 p-4 rounded-2xl text-center">
                     <Ruler className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
-                    <p className="text-[8px] font-black text-muted-foreground uppercase">Height</p>
+                    <p className="text-[8px] font-black text-muted-foreground uppercase">Standing Ht</p>
                     <p className="text-sm font-black text-primary">{currentPlayer?.height}cm</p>
                   </div>
                   <div className="bg-muted/30 p-4 rounded-2xl text-center">
@@ -230,10 +235,11 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                     <p className="text-[8px] font-black text-muted-foreground uppercase">Weight</p>
                     <p className="text-sm font-black text-primary">{currentPlayer?.weight}kg</p>
                   </div>
-                  <div className="bg-muted/30 p-4 rounded-2xl text-center">
+                  <div className="bg-muted/30 p-4 rounded-2xl text-center relative overflow-hidden">
                     <Baby className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
                     <p className="text-[8px] font-black text-muted-foreground uppercase">Sitting Ht</p>
                     <p className="text-sm font-black text-primary">{phvData?.sittingHeight}cm</p>
+                    {phvData?.isEstimated && <Badge className="absolute top-1 right-1 bg-muted text-muted-foreground text-[6px] px-1 py-0 border-0">EST</Badge>}
                   </div>
                   <div className="bg-muted/30 p-4 rounded-2xl text-center">
                     <Target className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
@@ -265,6 +271,13 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                     </div>
                   </div>
                 )}
+                
+                <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl">
+                   <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                   <p className="text-[9px] font-medium text-muted-foreground leading-tight italic">
+                     Measured sitting height ensures higher biological accuracy for maturity profiling.
+                   </p>
+                </div>
               </CardContent>
             </Card>
           </div>
