@@ -113,12 +113,12 @@ const DrillMedal = ({ className }: { className?: string }) => (
 export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
-  const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi'].skills[0]);
+  const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi']?.skills[0] || "Standard Drill");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [sessionPlayerIds, setSessionPlayerIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (preselectedSport) {
+    if (preselectedSport && SPORTS_DATA[preselectedSport]) {
       setActiveSport(preselectedSport);
       setActiveDrill(SPORTS_DATA[preselectedSport].skills[0]);
     }
@@ -138,8 +138,8 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .filter(p => !!p && !store.data.drillCompletions[`${p.id}_${drillKey}`]);
   }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
 
-  const femaleSquad = currentSessionPlayers.filter(p => p.gender === 'Female');
-  const maleSquad = currentSessionPlayers.filter(p => p.gender === 'Male');
+  const femaleSquad = currentSessionPlayers.filter(p => p && p.gender === 'Female');
+  const maleSquad = currentSessionPlayers.filter(p => p && p.gender === 'Male');
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
@@ -285,7 +285,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
           <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
             <div className="space-y-1">
               <label className="text-[9px] font-black uppercase text-muted-foreground ml-2">Discipline</label>
-              <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); setActiveDrill(SPORTS_DATA[val].skills[0]); setSessionPlayerIds([]); }}>
+              <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); if(SPORTS_DATA[val]) setActiveDrill(SPORTS_DATA[val].skills[0]); setSessionPlayerIds([]); }}>
                 <SelectTrigger className="h-14 md:w-[200px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
@@ -295,7 +295,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               <Select value={activeDrill} onValueChange={setActiveDrill}>
                 <SelectTrigger className="h-14 md:w-[250px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {SPORTS_DATA[activeSport].skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {SPORTS_DATA[activeSport]?.skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -311,7 +311,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
                   <ShieldCheck className="w-7 h-7 text-accent" /> Ground Roster
                 </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.6</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.9</p>
               </div>
               
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -323,7 +323,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <ScrollArea className="h-[300px]">
-                          {playersInSport.filter(p => !sessionPlayerIds.includes(p.id)).map(p => (
+                          {playersInSport.filter((p: any) => !sessionPlayerIds.includes(p.id)).map((p: any) => (
                             <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
                           ))}
                         </ScrollArea>
