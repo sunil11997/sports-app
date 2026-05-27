@@ -18,7 +18,11 @@ import {
   RotateCcw,
   ShieldCheck,
   CalendarDays,
-  Loader2
+  Loader2,
+  UserPlus,
+  Trash2,
+  Plus,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -115,6 +119,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi'].skills[0]);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [todayFocus, setTodayFocus] = useState<'U14' | 'U17'>('U14');
+  const [sessionPlayerIds, setSessionPlayerIds] = useState<string[]>([]);
 
   useEffect(() => {
     const date = new Date().getDate();
@@ -143,19 +148,33 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     return true;
   }, [todayFocus]);
 
-  const femaleSquad = useMemo(() => {
-    return playersInSport
-      .filter((p: any) => p.gender === 'Female' && filterByFocus(p) && !store.data.drillCompletions[`${p.id}_${drillKey}`])
-      .sort((a: any, b: any) => (parseInt(a.std) || 0) - (parseInt(b.std) || 0))
-      .slice(0, 7);
-  }, [playersInSport, drillKey, store.data.drillCompletions, filterByFocus]);
+  // Initial auto-population of the session
+  useEffect(() => {
+    if (playersInSport.length > 0 && sessionPlayerIds.length === 0) {
+      const initialFemale = playersInSport
+        .filter((p: any) => p.gender === 'Female' && filterByFocus(p) && !store.data.drillCompletions[`${p.id}_${drillKey}`])
+        .sort((a: any, b: any) => (parseInt(a.std) || 0) - (parseInt(b.std) || 0))
+        .slice(0, 7)
+        .map(p => p.id);
 
-  const maleSquad = useMemo(() => {
-    return playersInSport
-      .filter((p: any) => p.gender === 'Male' && filterByFocus(p) && !store.data.drillCompletions[`${p.id}_${drillKey}`])
-      .sort((a: any, b: any) => (parseInt(a.std) || 0) - (parseInt(b.std) || 0))
-      .slice(0, 7);
-  }, [playersInSport, drillKey, store.data.drillCompletions, filterByFocus]);
+      const initialMale = playersInSport
+        .filter((p: any) => p.gender === 'Male' && filterByFocus(p) && !store.data.drillCompletions[`${p.id}_${drillKey}`])
+        .sort((a: any, b: any) => (parseInt(a.std) || 0) - (parseInt(b.std) || 0))
+        .slice(0, 7)
+        .map(p => p.id);
+
+      setSessionPlayerIds([...initialFemale, ...initialMale]);
+    }
+  }, [playersInSport, todayFocus, drillKey, store.data.drillCompletions, filterByFocus, sessionPlayerIds.length]);
+
+  const currentSessionPlayers = useMemo(() => {
+    return sessionPlayerIds
+      .map(id => playersInSport.find(p => p.id === id))
+      .filter(p => !!p && !store.data.drillCompletions[`${p.id}_${drillKey}`]);
+  }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
+
+  const femaleSquad = currentSessionPlayers.filter(p => p.gender === 'Female');
+  const maleSquad = currentSessionPlayers.filter(p => p.gender === 'Male');
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
@@ -173,18 +192,33 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       store.setDrillCompletion(drillKey, playerId, true);
       toast({ 
         title: "Mastery Logged", 
-        description: `${playerName} successfully archived. Next athlete rotating in.`,
+        description: `${playerName} successfully archived.`,
         className: "bg-emerald-500 text-white" 
       });
+      // Removing from session is handled by the useMemo filtering drillCompletions
     } else {
       toast({ 
         title: "Practice Required", 
-        description: `${playerName} will automatically reappear in tomorrow&apos;s squad.`,
+        description: `${playerName} remains in the training pool.`,
         variant: "destructive" 
       });
     }
     
     setIsProcessing(null);
+  };
+
+  const handleRemoveFromSession = (playerId: string) => {
+    setSessionPlayerIds(prev => prev.filter(id => id !== playerId));
+    toast({ title: "Athlete Removed", description: "Removed from current practice session." });
+  };
+
+  const handleAddToSession = (playerId: string) => {
+    if (sessionPlayerIds.includes(playerId)) {
+      toast({ title: "Already Present", description: "Athlete is already in the session pool.", variant: "destructive" });
+      return;
+    }
+    setSessionPlayerIds(prev => [...prev, playerId]);
+    toast({ title: "Athlete Added", description: "Athlete joined the practice rotation.", className: "bg-primary text-white" });
   };
 
   const handleRestore = (playerId: string) => {
@@ -194,6 +228,11 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       title: "Athlete Restored", 
       description: `${playerName} moved back to active training registry.` 
     });
+  };
+
+  const handleResetSession = () => {
+    setSessionPlayerIds([]);
+    toast({ title: "Session Reset", description: "Rotation pool cleared. Re-generating based on focus..." });
   };
 
   const handleNextDrill = () => {
@@ -208,13 +247,13 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between px-2">
         <h4 className="font-black text-primary uppercase text-xs tracking-widest">{title}</h4>
-        <Badge variant="outline" className="text-[9px] font-black">{squad.length}/7 Active</Badge>
+        <Badge variant="outline" className="text-[9px] font-black">{squad.length} Active</Badge>
       </div>
       <div className="grid grid-cols-1 gap-3">
         {squad.map((player: any) => (
           <div 
             key={player.id} 
-            className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all group"
+            className="flex items-center justify-between bg-white p-4 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all group shadow-sm"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full border-2 border-primary/5 overflow-hidden shadow-sm relative">
@@ -234,6 +273,14 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             </div>
             <div className="flex items-center gap-1.5">
                <Button 
+                onClick={() => handleRemoveFromSession(player.id)}
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+               <Button 
                 onClick={() => handleMasteryToggle(player.id, false)}
                 disabled={isProcessing === `${player.id}_${drillKey}`}
                 variant="outline" 
@@ -252,11 +299,11 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             </div>
           </div>
         ))}
-        {Array.from({ length: 7 - squad.length }).map((_, i) => (
-          <div key={`empty-${i}`} className={cn("flex items-center justify-center p-4 rounded-2xl border-2 border-dashed opacity-20", emptyColor)}>
-             <span className="text-[8px] font-black uppercase tracking-widest">Slot Available</span>
+        {squad.length === 0 && (
+          <div className={cn("flex items-center justify-center py-12 rounded-2xl border-2 border-dashed opacity-20", emptyColor)}>
+             <span className="text-[8px] font-black uppercase tracking-widest">Empty Slot</span>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
@@ -272,30 +319,33 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                  todayFocus === 'U14' ? "bg-emerald-500 text-white" : "bg-blue-600 text-white"
                )}>
                  <CalendarDays className="w-3.5 h-3.5 mr-2" /> 
-                 Focus Today: {todayFocus} Category
+                 Rotation Focus: {todayFocus}
                </Badge>
-               <span className="text-[9px] font-bold text-muted-foreground uppercase">Alternates Daily</span>
+               <Button variant="ghost" onClick={handleResetSession} className="h-8 text-[9px] font-black uppercase text-primary hover:bg-primary/5">
+                 <RefreshCcw className="w-3 h-3 mr-1" /> Reset Pool
+               </Button>
             </div>
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <UsersRound className="w-10 h-10 text-accent" /> Daily 14-Player Session
+              <UsersRound className="w-10 h-10 text-accent" /> Active Drill Pool
             </h2>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline" className="text-primary font-black uppercase text-[10px] tracking-widest bg-white px-4 h-8 flex items-center gap-2">
-                <Target className="w-3.5 h-3.5 text-accent" /> Focus: {activeDrill}
-              </Badge>
-            </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
-            <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); setActiveDrill(SPORTS_DATA[val].skills[0]); }}>
-              <SelectTrigger className="h-14 md:w-[200px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-            <Select value={activeDrill} onValueChange={setActiveDrill}>
-              <SelectTrigger className="h-14 md:w-[250px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {SPORTS_DATA[activeSport].skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black uppercase text-muted-foreground ml-2">Discipline</label>
+              <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); setActiveDrill(SPORTS_DATA[val].skills[0]); setSessionPlayerIds([]); }}>
+                <SelectTrigger className="h-14 md:w-[200px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-black uppercase text-muted-foreground ml-2">Technical Skill</label>
+              <Select value={activeDrill} onValueChange={setActiveDrill}>
+                <SelectTrigger className="h-14 md:w-[250px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SPORTS_DATA[activeSport].skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
@@ -303,30 +353,46 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden min-h-[750px] flex flex-col">
-            <CardHeader className="bg-primary/5 border-b p-8 flex flex-row justify-between items-center">
+            <CardHeader className="bg-primary/5 border-b p-8 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                  <ShieldCheck className="w-7 h-7 text-accent" /> {todayFocus} Squad Rotation
+                  <ShieldCheck className="w-7 h-7 text-accent" /> Session Roster
                 </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">7 Female + 7 Male Athletes &bull; Scheduled Category (v3.7.5)</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual adjustments enabled &bull; Registry V3.9</p>
               </div>
-              <Button onClick={handleNextDrill} className="bg-accent text-white font-black uppercase text-xs h-12 px-8 rounded-xl shadow-lg active-scale">
-                <RefreshCcw className="w-4 h-4 mr-2" /> Next Technical Skill
-              </Button>
+              
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64">
+                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
+                   <Select onValueChange={handleAddToSession}>
+                      <SelectTrigger className="h-12 pl-9 rounded-xl border-2 font-black uppercase text-[10px] bg-white">
+                        <SelectValue placeholder="ADD ATHLETE..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {playersInSport.filter(p => !sessionPlayerIds.includes(p.id)).map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
+                        ))}
+                      </SelectContent>
+                   </Select>
+                </div>
+                <Button onClick={handleNextDrill} className="bg-accent text-white font-black uppercase text-xs h-12 px-6 rounded-xl shadow-lg active-scale shrink-0">
+                  Next Drill
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="p-8 flex-1">
+            <CardContent className="p-8 flex-1 bg-muted/10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <SquadList squad={femaleSquad} title={`Female ${todayFocus} (07)`} emptyColor="border-pink-300" />
-                <SquadList squad={maleSquad} title={`Male ${todayFocus} (07)`} emptyColor="border-blue-300" />
+                <SquadList squad={femaleSquad} title="Female Squad Pool" emptyColor="border-pink-300" />
+                <SquadList squad={maleSquad} title="Male Squad Pool" emptyColor="border-blue-300" />
               </div>
             </CardContent>
-            <div className="p-8 bg-primary/5 border-t flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="p-8 bg-white border-t flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-3 h-3 rounded-full bg-accent animate-pulse" />
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Registry Engine: {todayFocus} Under-wise Priority Active</p>
+                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Mastery removes athlete from the active session pool.</p>
               </div>
               <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full shadow-lg">
-                Daily Pool: 14 athletes
+                Session Count: {currentSessionPlayers.length} athletes
               </Badge>
             </div>
           </Card>
@@ -337,26 +403,26 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             <div className="relative z-10 space-y-6">
                <div className="flex items-center gap-4">
                  <DrillMedal className="w-10 h-10 text-accent animate-pulse" />
-                 <h3 className="text-2xl font-black uppercase tracking-tight leading-none">Squad Intel</h3>
+                 <h3 className="text-2xl font-black uppercase tracking-tight leading-none">Rotation Intel</h3>
                </div>
                <div className="space-y-4 pt-4">
                  <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">{todayFocus} Pool Unmastered</p>
-                   <p className="text-3xl font-black">{playersInSport.filter(filterByFocus).length - masteredThisDrill.filter(filterByFocus).length}</p>
+                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Roster Participation</p>
+                   <p className="text-3xl font-black">{sessionPlayerIds.length} / {playersInSport.length}</p>
                  </div>
                  <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Proficiency</p>
-                   <p className="text-3xl font-black">{Math.round((masteredThisDrill.filter(filterByFocus).length / (playersInSport.filter(filterByFocus).length || 1)) * 100)}%</p>
+                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Drill Mastery Rate</p>
+                   <p className="text-3xl font-black">{Math.round((masteredThisDrill.length / (playersInSport.length || 1)) * 100)}%</p>
                  </div>
                </div>
                <p className="text-xs font-medium text-white/60 leading-relaxed italic">
-                 &quot;Today&apos;s session is focused on the {todayFocus} category. Tomorrow the hub will automatically rotate to the next scheduled group.&quot;
+                 &quot;Adjust your session roster manually using the selector. Mastery data is archived instantly to the Cloud Registry.&quot;
                </p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[80px]" />
           </Card>
 
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden flex flex-col h-full max-h-[400px]">
+          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden flex flex-col h-full max-h-[450px]">
             <CardHeader className="bg-muted/30 border-b p-6">
                <CardTitle className="text-[11px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
                  <CircleCheck className="w-4 h-4 text-emerald-500" /> Mastery Vault
@@ -367,7 +433,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 {masteredThisDrill.length === 0 ? (
                   <div className="py-10 text-center opacity-20">
                      <DrillMedal className="w-10 h-10 mx-auto mb-2" />
-                     <p className="text-[9px] font-black uppercase">No masteries today</p>
+                     <p className="text-[9px] font-black uppercase">No logs yet</p>
                   </div>
                 ) : (
                   masteredThisDrill.map((p: any) => (
@@ -385,7 +451,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                         </div>
                         <div className="min-w-0">
                           <span className="text-[10px] font-black text-emerald-800 uppercase truncate block max-w-[100px]">{p.name}</span>
-                          <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Age {p.age}</span>
+                          <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Std {p.std}</span>
                         </div>
                       </div>
                       <Button 
