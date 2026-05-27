@@ -165,21 +165,17 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened to satisfy Next.js 15 static analysis and array literal dependency rules.
+ * Refactored for Next.js 15 static analysis compliance.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  const depsRef = useRef(deps);
-  
-  useEffect(() => {
-    depsRef.current = deps;
-  }, [deps]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableFactory = useCallback(factory, deps);
 
   return useMemo(() => {
-    const result = factory();
+    const result = stableFactory();
     if (typeof result === 'object' && result !== null) {
       (result as any).__memo = true;
     }
     return result;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps); 
+  }, [stableFactory]);
 }
