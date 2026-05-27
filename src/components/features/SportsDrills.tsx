@@ -131,10 +131,6 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   const drillKey = `${activeSport}_${activeDrill}`;
 
-  /**
-   * currentSessionPlayers - Hardened for Next.js 15
-   * Resolves the malformed template literal lookup around line 138-142.
-   */
   const currentSessionPlayers = useMemo(() => {
     if (!sessionPlayerIds || !playersInSport) return [];
     
@@ -142,7 +138,6 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .map((id) => playersInSport.find((p: any) => p?.id === id))
       .filter((p): p is any => {
         if (!p) return false;
-        // Correct interpolation syntax to prevent build worker crash
         const key = `${p.id}_${drillKey}`;
         const isMastered = store.data.drillCompletions[key];
         return !isMastered;
