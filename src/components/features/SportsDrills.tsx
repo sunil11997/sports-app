@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -144,7 +143,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const masteredThisDrill = useMemo(() => {
     return playersInSport
       .filter((p: any) => store.data.drillCompletions[`${p.id}_${drillKey}`])
-      .sort((a: any, b: any) => (b.name || "").localeCompare(a.name || ""));
+      .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
 
   const handleMasteryToggle = async (playerId: string, mastered: boolean) => {
@@ -311,7 +310,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
                   <ShieldCheck className="w-7 h-7 text-accent" /> Ground Roster
                 </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.4</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.6</p>
               </div>
               
               <div className="flex items-center gap-3 w-full md:w-auto">

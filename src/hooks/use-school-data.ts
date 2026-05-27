@@ -236,7 +236,9 @@ export function useSchoolData(isActive: boolean = true) {
     });
 
     return () => {
-      window.removeEventListener('online', syncOfflineAttendance);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', syncOfflineAttendance);
+      }
       unsubAtt();
       unsubFit();
       unsubSkills();
@@ -308,9 +310,15 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals]);
 
+  const isActuallyLoaded = useMemo(() => {
+    if (!isActive) return false;
+    // We are loaded if we have a db and the primary collections have finished their initial load
+    return !!db && !playersLoading && !schoolsLoading;
+  }, [isActive, db, playersLoading, schoolsLoading]);
+
   return {
     data: aggregatedData,
-    isLoaded: isActive ? (!!db && !playersLoading && !schoolsLoading) : false,
+    isLoaded: isActuallyLoaded,
     selectedYear,
     setSelectedYear,
     pendingSyncCount: pendingCount,
@@ -338,8 +346,7 @@ export function useSchoolData(isActive: boolean = true) {
     setAttendance: (newAttendance: AttendanceRecord) => {
       if (!user || !db) return;
       
-      const updated = { ...attendance, ...newAttendance };
-      setAttendanceData(updated);
+      setAttendanceData(prev => ({ ...prev, ...newAttendance }));
 
       Object.entries(newAttendance).forEach(([key, status]) => {
         const parts = key.split('_');
@@ -351,7 +358,7 @@ export function useSchoolData(isActive: boolean = true) {
         
         const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
         
-        if (!navigator.onLine) {
+        if (typeof window !== 'undefined' && !navigator.onLine) {
           const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
           const queue = JSON.parse(queueStr);
           queue[key] = status;
