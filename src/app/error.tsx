@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -30,7 +31,7 @@ export default function Error({
         <div className="space-y-3">
           <h2 className="text-3xl font-black text-primary uppercase tracking-tight">System Interruption</h2>
           <p className="text-muted-foreground text-sm font-medium leading-relaxed">
-            The Physical Ed & Sports Hub encountered a temporary issue. This is usually caused by a sync timeout or a missing internet connection.
+            The Physical Ed &amp; Sports Hub encountered a temporary issue. This is usually caused by a sync timeout or a missing internet connection.
           </p>
           {error.message && (
             <div className="mt-4 p-4 bg-muted/50 rounded-2xl text-[10px] font-mono text-muted-foreground break-all border border-dashed border-muted-foreground/20">
@@ -47,7 +48,7 @@ export default function Error({
             <RefreshCcw className="w-5 h-5 mr-2" /> Reload Institutional Registry
           </Button>
           <p className="mt-6 text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">
-            Waghamba Ashram Shala • Error Recovery Hub
+            Waghamba Ashram Shala &bull; Error Recovery Hub
           </p>
         </div>
       </div>
