@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
@@ -168,14 +167,14 @@ export const useUser = (): UserHookResult => {
  * Refactored for Next.js 15 static analysis compliance.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  const result = useMemo(() => {
-    const res = factory();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableFactory = useCallback(factory, deps);
+  
+  return useMemo(() => {
+    const res = stableFactory();
     if (typeof res === 'object' && res !== null) {
       (res as any).__memo = true;
     }
     return res;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
-
-  return result;
+  }, [stableFactory]);
 }

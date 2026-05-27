@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -31,7 +30,8 @@ import {
   BarChart,
   Gauge,
   ShieldAlert,
-  Medal
+  Medal,
+  BrainCircuit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
