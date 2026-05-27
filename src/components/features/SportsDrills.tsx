@@ -133,14 +133,8 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   const currentSessionPlayers = useMemo(() => {
     return sessionPlayerIds
-    .map((id) =>
-      playersInSport?.find((p: any) => p?.id === id)
-    )
-    .filter(
-      (p) =>
-        p &&
-        !store?.data?.drillCompletions?.[`${p.id}_${drillKey}`]
-    );
+      .map((id) => playersInSport?.find((p: any) => p?.id === id))
+      .filter((p) => p && !store?.data?.drillCompletions?.[`${p.id}_${drillKey}`]);
   }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
 
   const femaleSquad = currentSessionPlayers.filter(p => p && p.gender === 'Female');
