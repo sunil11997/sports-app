@@ -1,10 +1,6 @@
 'use server';
 /**
  * @fileOverview A Genkit flow for generating personalized recommendations for school sports players.
- *
- * - playerRecommendation - A function that generates AI-powered recommendations for a player.
- * - PlayerRecommendationInput - The input type for the playerRecommendation function.
- * - PlayerRecommendationOutput - The return type for the playerRecommendation function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -51,41 +47,25 @@ const playerRecommendationPrompt = ai.definePrompt({
   name: 'playerRecommendationPrompt',
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
-  prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. Your task is to analyze a player's aggregated data and provide your professional recommendations for their athletic development and well-being.
+  config: {
+    // Increased timeout config for Gemini 2.0 Flash complex reasoning
+    maxOutputTokens: 2048,
+    temperature: 0.5,
+  },
+  prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. 
+  IMPORTANT: Provide all sections in {{{language}}}.
 
-AI ENGINE CONTEXT: You are performing this analysis via Gemini 2.0 Flash.
+  Player Profile:
+  - Name: {{{name}}}
+  - Age/Std: {{{age}}}/{{{std}}}
+  - BMI: {{{bmi}}}
+  - Sports: {{#each sports}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
-IMPORTANT: You MUST provide all sections of your response in {{{language}}}.
+  Institutional Fitness:
+  - Overall Score: {{{fitnessScore}}}%
+  - Level: {{{fitnessStatus}}}
 
-Player Profile:
-- Name: {{{name}}}
-- Gender: {{{gender}}}
-- Standard: {{{std}}}
-- Age: {{{age}}}
-- Height: {{{height}}} cm
-- Weight: {{{weight}}} kg
-- BMI: {{{bmi}}}
-- Participating Sports: {{#each sports}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-- Medical History: {{{medical}}}
-
-Institutional Fitness Assessment:
-- 10x6 Shuttle Run (Agility): {{{fitnessShuttleRun}}}
-- 50 Meter Run (Speed): {{{fitnessRun50m}}}
-- 600 Meter Run (Endurance): {{{fitnessRun600m}}}
-- Sit and Reach (Flexibility): {{{fitnessSitAndReach}}}
-- Sit Ups (Core): {{{fitnessSitUps}}}
-- Overall Score: {{{fitnessScore}}}%
-- School Fitness Level: {{{fitnessStatus}}}
-
-Health Context: {{{pastHealthIncidents}}}
-
-Based on this granular data, provide highly specific coaching recommendations. 
-Pay close attention to Agility (Shuttle Run) and Flexibility (Sit and Reach) as these are critical for sports like Kabaddi and Kho Kho.
-
-IMPORTANT: Provide a detailed DIET PLAN section that addresses their BMI category and energy requirements for their specific sports.
-
-Focus on actionable advice for training, health, nutrition, and performance improvement. Use a professional, encouraging tone as Coach Sunil Deshmukh.
-`,
+  Provide specific coaching recommendations. Focus on actionable advice for training, health, nutrition, and performance.`,
 });
 
 const playerRecommendationFlow = ai.defineFlow(
@@ -96,17 +76,12 @@ const playerRecommendationFlow = ai.defineFlow(
   },
   async (input) => {
     if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
-      throw new Error(input.language === 'Marathi' 
-        ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key .env फाईलमध्ये जोडा." 
-        : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
+      throw new Error("AI Configuration Error: Missing API Key.");
     }
 
-    // Standardized engine uses gemini-2.0-flash
     const selectedModel = 'gemini-2.0-flash';
-
     let attempts = 0;
-    const maxAttempts = 3; 
-    let lastError: any = null;
+    const maxAttempts = 2; 
 
     while (attempts < maxAttempts) {
       try {
@@ -116,18 +91,12 @@ const playerRecommendationFlow = ai.defineFlow(
         if (!output) throw new Error('AI returned an empty response.');
         return output;
       } catch (error: any) {
-        lastError = error;
         attempts++;
-        
-        console.warn(`WGB Rec Engine: Sync Attempt ${attempts} failed.`, error.message);
-        
-        // Wait and retry
-        await new Promise(resolve => setTimeout(resolve, 3000 * Math.pow(1.5, attempts)));
-        
         if (attempts >= maxAttempts) throw error;
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
-    throw lastError || new Error('Failed to generate recommendations.');
+    throw new Error('Failed to generate recommendations after retries.');
   },
 );
 

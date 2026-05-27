@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -36,6 +35,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [dailyReadiness, setDailyReadinessData] = useState<Record<string, any>>({});
   const [tacticalEvents, setTacticalEventsData] = useState<TacticalEvent[]>([]);
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
+  const [drillCompletions, setDrillCompletionsData] = useState<Record<string, boolean>>({});
 
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || isSyncing) return;
@@ -236,6 +236,18 @@ export function useSchoolData(isActive: boolean = true) {
       setGoalsData(list.sort((a, b) => (b.month || "").localeCompare(a.month || "")));
     });
 
+    const drillsQuery = query(
+      collection(db, 'drill_completions'),
+      where('schoolId', '==', user.uid)
+    );
+    const unsubDrills = onSnapshot(drillsQuery, (snapshot) => {
+      const map: Record<string, boolean> = {};
+      snapshot.docs.forEach(doc => {
+        map[doc.id] = true;
+      });
+      setDrillCompletionsData(map);
+    });
+
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', syncOfflineAttendance);
@@ -248,6 +260,7 @@ export function useSchoolData(isActive: boolean = true) {
       unsubReadiness();
       unsubTactical();
       unsubGoals();
+      unsubDrills();
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
@@ -306,7 +319,7 @@ export function useSchoolData(isActive: boolean = true) {
     fitnessHistory,
     sportSkills,
     skillsHistory,
-    drillCompletions: {},
+    drillCompletions,
     gameRules,
     examConfigs,
     dailyReadiness,
@@ -324,7 +337,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals]);
+  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions]);
 
   const isActuallyLoaded = useMemo(() => {
     if (!isActive) return false;

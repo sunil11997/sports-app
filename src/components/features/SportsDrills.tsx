@@ -138,9 +138,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .map((id) => playersInSport.find((p: any) => p?.id === id))
       .filter((p): p is any => {
         if (!p) return false;
-        // Standard template literal syntax to prevent build worker crash
-        const key = `${p.id}_${drillKey}`;
-        const isMastered = store.data.drillCompletions[key];
+        // Corrected key lookup to prevent build crashes
+        const lookupKey = `${p.id}_${drillKey}`;
+        const isMastered = !!store.data.drillCompletions[lookupKey];
         return !isMastered;
       });
   }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
@@ -151,8 +151,8 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const masteredThisDrill = useMemo(() => {
     return playersInSport
       .filter((p: any) => {
-        const key = `${p.id}_${drillKey}`;
-        return !!store.data.drillCompletions[key];
+        const lookupKey = `${p.id}_${drillKey}`;
+        return !!store.data.drillCompletions[lookupKey];
       })
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
@@ -416,15 +416,13 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                           <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Std {p.std}</span>
                         </div>
                       </div>
-                      <Button 
+                      <button 
                         onClick={() => handleRestore(p.id)} 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
+                        className="h-8 w-8 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center"
                         title="Restore to session"
                       >
                         <RotateCcw className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </div>
                   ))
                 )}

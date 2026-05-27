@@ -1,9 +1,6 @@
 'use server';
 /**
  * @fileOverview A Genkit flow for a conversational AI sports coach.
- *
- * - coachChat - A function that handles a chat conversation with the AI coach.
- * - CoachChatInput - The input type for the chat.
  */
 
 import {ai} from '@/ai/genkit';
@@ -32,36 +29,29 @@ const coachChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (input) => {
-    // Safety check for API Key
     if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
       return input.language === 'Marathi' 
         ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key जोडा." 
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    // Default to gemini-2.0-flash as per institutional requirements
     const selectedModel = 'gemini-2.0-flash';
-
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 2;
     
     while (attempts < maxAttempts) {
       try {
         const {text} = await ai.generate({
           model: googleAI.model(selectedModel),
+          config: {
+            // Institutional timeout protection
+            maxOutputTokens: 1024,
+            temperature: 0.7,
+          },
           system: `You are Coach Sunil Deshmukh, the head physical education teacher and sports coach at Waghamba Ashram Shala. 
-          You are helpful, encouraging, and provide scientifically-backed sports training and health advice.
-          You speak with the authority and warmth of a respected school coach.
-          
-          INSTITUTIONAL CONTEXT:
-          ${input.teacherContext || 'Acting Head Coach at Waghamba'}
-          
-          AI ENGINE CONTEXT: You are responding via the ${input.engine || 'Genkit Standard'} engine powered by Gemini 2.0 Flash.
-          
-          IMPORTANT: You MUST respond entirely in ${input.language}.
-          
-          CONTEXT ON CURRENT STUDENT:
-          ${input.playerContext || 'General coaching inquiry'}`,
+          INSTITUTIONAL CONTEXT: ${input.teacherContext || 'Acting Head Coach at Waghamba'}
+          IMPORTANT: Respond entirely in ${input.language}.
+          CONTEXT ON CURRENT STUDENT: ${input.playerContext || 'General coaching inquiry'}`,
           messages: input.history.map(m => ({
             role: m.role,
             content: [{text: m.content}]
@@ -73,13 +63,11 @@ const coachChatFlow = ai.defineFlow(
       } catch (error: any) {
         attempts++;
         console.error(`WGB AI Chat Attempt ${attempts} failed:`, error.message || error);
-        
         if (attempts >= maxAttempts) throw error;
-        // Exponential backoff for quota/network recovery
-        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempts)));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    return "The AI coach is currently processing another request. Please try again in a few moments.";
+    return "The AI coach is currently processing another request. Please try again.";
   }
 );
 
