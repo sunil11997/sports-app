@@ -138,7 +138,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .map((id) => playersInSport.find((p: any) => p?.id === id))
       .filter((p): p is any => {
         if (!p) return false;
-        // Corrected key lookup to prevent build crashes
+        // Clean constant key lookup ensures build compatibility in v3.9.9
         const lookupKey = `${p.id}_${drillKey}`;
         const isMastered = !!store.data.drillCompletions[lookupKey];
         return !isMastered;

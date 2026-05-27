@@ -164,7 +164,7 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Refactored for Next.js 15 to set validation flags synchronously.
+ * Hardened for v3.9.9: Assigns validation flag synchronously during factory execution.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,14 +172,10 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
-        Object.defineProperty(val, '__memo', {
-          value: true,
-          configurable: true,
-          enumerable: false,
-          writable: true
-        });
-      } catch (e) {
+        // Immediate assignment ensures hooks don't fail on first render
         (val as any).__memo = true;
+      } catch (e) {
+        console.warn("WGB Memo: Failed to flag object", e);
       }
     }
     return val;

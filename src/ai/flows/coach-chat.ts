@@ -35,9 +35,10 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
+    // Standardized on gemini-2.0-flash for institutional stability
     const selectedModel = 'gemini-2.0-flash';
     let attempts = 0;
-    const maxAttempts = 2;
+    const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       try {
@@ -62,12 +63,19 @@ const coachChatFlow = ai.defineFlow(
         return text;
       } catch (error: any) {
         attempts++;
-        console.error(`WGB AI Chat Attempt ${attempts} failed:`, error.message || error);
-        if (attempts >= maxAttempts) throw error;
+        console.warn(`WGB AI Chat Attempt ${attempts} failed:`, error.message || error);
+        
+        if (attempts >= maxAttempts) {
+          return input.language === 'Marathi'
+            ? "AI सध्या व्यस्त आहे. कृपया थोड्या वेळाने प्रयत्न करा."
+            : "The AI coach is currently processing high demand. Please try again in a few moments.";
+        }
+        
+        // Cooldown before retry to prevent quota exhaustion
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    return "The AI coach is currently processing another request. Please try again.";
+    return "AI system synchronization error. Please refresh.";
   }
 );
 
