@@ -88,27 +88,6 @@ interface SportsDrillsProps {
   preselectedSport?: string;
 }
 
-const DrillMedal = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
-    <path d="M11 12 5.12 2.2" />
-    <path d="m13 12 5.88-9.8" />
-    <path d="M8 7h8" />
-    <circle cx="12" cy="17" r="5" />
-    <path d="M12 18v-2" />
-  </svg>
-);
-
 export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const { toast } = useToast();
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
@@ -138,7 +117,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .map((id) => playersInSport.find((p: any) => p?.id === id))
       .filter((p): p is any => {
         if (!p) return false;
-        // Clean constant key lookup ensures build compatibility in v3.9.9
+        // Fix for build error: standard template literal interpolation
         const lookupKey = `${p.id}_${drillKey}`;
         const isMastered = !!store.data.drillCompletions[lookupKey];
         return !isMastered;
@@ -160,54 +139,31 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const handleMasteryToggle = async (playerId: string, mastered: boolean) => {
     const opId = `${playerId}_${drillKey}`;
     setIsProcessing(opId);
-
     const playerName = store.data.players.find((p: any) => p.id === playerId)?.name;
 
     if (mastered) {
       store.setDrillCompletion(drillKey, playerId, true);
-      toast({ 
-        title: "Mastery Logged", 
-        description: `${playerName} successfully archived.`,
-        className: "bg-emerald-500 text-white" 
-      });
+      toast({ title: "Mastery Logged", description: `${playerName} archived.`, className: "bg-emerald-500 text-white" });
     } else {
-      toast({ 
-        title: "Practice Required", 
-        description: `${playerName} remains in the training pool.`,
-        variant: "destructive" 
-      });
+      toast({ title: "Practice Required", description: `${playerName} remains in pool.`, variant: "destructive" });
     }
-    
     setIsProcessing(null);
   };
 
   const handleRemoveFromSession = (playerId: string) => {
     setSessionPlayerIds(prev => prev.filter(id => id !== playerId));
-    toast({ title: "Athlete Removed", description: "Removed from current practice session." });
   };
 
   const handleAddToSession = (playerId: string) => {
-    if (sessionPlayerIds.includes(playerId)) {
-      toast({ title: "Already Present", description: "Athlete is already in the session pool.", variant: "destructive" });
-      return;
-    }
+    if (sessionPlayerIds.includes(playerId)) return;
     setSessionPlayerIds(prev => [...prev, playerId]);
-    toast({ title: "Athlete Added", description: "Athlete joined the practice rotation.", className: "bg-primary text-white" });
   };
 
   const handleRestore = (playerId: string) => {
-    const playerName = store.data.players.find((p: any) => p.id === playerId)?.name;
     store.setDrillCompletion(drillKey, playerId, false);
-    toast({ 
-      title: "Athlete Restored", 
-      description: `${playerName} moved back to active training registry.` 
-    });
   };
 
-  const handleResetSession = () => {
-    setSessionPlayerIds([]);
-    toast({ title: "Session Reset", description: "Rotation pool cleared. Please add athletes manually." });
-  };
+  const handleResetSession = () => setSessionPlayerIds([]);
 
   const SquadList = ({ squad, title, emptyColor }: { squad: any[], title: string, emptyColor: string }) => (
     <div className="space-y-4">
@@ -217,220 +173,93 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       </div>
       <div className="grid grid-cols-1 gap-3">
         {squad.map((player: any) => (
-          <div 
-            key={player.id} 
-            className="flex items-center justify-between bg-white p-4 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all group shadow-sm"
-          >
+          <div key={player.id} className="flex items-center justify-between bg-white p-4 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full border-2 border-primary/5 overflow-hidden shadow-sm relative">
-                <Image 
-                  src={player.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((player.name || '').trim())}`} 
-                  alt="Profile"
-                  width={40}
-                  height={40}
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+              <Avatar className="w-10 h-10 border-2 border-primary/5">
+                <AvatarImage src={player.photoUrl} className="object-cover" />
+                <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">{player.name[0]}</AvatarFallback>
+              </Avatar>
               <div className="min-w-0">
                 <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[120px]">{player.name}</p>
-                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std} &bull; Age {player.age}</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-               <Button 
-                onClick={() => handleRemoveFromSession(player.id)}
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-               <Button 
-                onClick={() => handleMasteryToggle(player.id, false)}
-                disabled={isProcessing === `${player.id}_${drillKey}`}
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9 rounded-xl border-2 border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-all shadow-sm"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-              <Button 
-                onClick={() => handleMasteryToggle(player.id, true)}
-                disabled={isProcessing === `${player.id}_${drillKey}`}
-                className="h-9 w-9 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg active-scale"
-              >
-                {isProcessing === `${player.id}_${drillKey}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              </Button>
+               <Button onClick={() => handleRemoveFromSession(player.id)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></Button>
+               <Button onClick={() => handleMasteryToggle(player.id, false)} disabled={!!isProcessing} variant="outline" size="icon" className="h-9 w-9 text-destructive"><X className="w-4 h-4" /></Button>
+               <Button onClick={() => handleMasteryToggle(player.id, true)} disabled={!!isProcessing} className="h-9 w-9 bg-emerald-500 text-white"><Check className="w-4 h-4" /></Button>
             </div>
           </div>
         ))}
-        {squad.length === 0 && (
-          <div className={cn("flex flex-col items-center justify-center py-16 rounded-3xl border-2 border-dashed opacity-20", emptyColor)}>
-             <UserPlus className="w-8 h-8 mb-2" />
-             <span className="text-[8px] font-black uppercase tracking-widest text-center px-4">Add athlete from selector</span>
-          </div>
-        )}
+        {squad.length === 0 && <div className={cn("flex flex-col items-center justify-center py-16 rounded-3xl border-2 border-dashed opacity-20", emptyColor)}><UserPlus className="w-8 h-8 mb-2" /><span className="text-[8px] font-black uppercase">Empty Pool</span></div>}
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-8 pb-20">
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-               <Badge className="px-4 py-1 rounded-full font-black uppercase text-[10px] tracking-widest bg-primary text-white shadow-lg">
-                 Manual Session Mode
-               </Badge>
-               <Button variant="ghost" onClick={handleResetSession} className="h-8 text-[9px] font-black uppercase text-primary hover:bg-primary/5">
-                 <RefreshCcw className="w-3 h-3 mr-1" /> Clear Session
-               </Button>
-            </div>
+          <div className="flex-1">
+            <Badge className="bg-primary text-white text-[10px] uppercase px-4 py-1 mb-2">Practice Roster</Badge>
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <UsersRound className="w-10 h-10 text-accent" /> Practice Rotation
+              <UsersRound className="w-10 h-10 text-accent" /> Rotation Hub
             </h2>
           </div>
-          <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
-            <div className="space-y-1">
-              <label className="text-[9px] font-black uppercase text-muted-foreground ml-2">Discipline</label>
-              <Select value={activeSport} onValueChange={(val) => { setActiveSport(val); if(SPORTS_DATA[val]) setActiveDrill(SPORTS_DATA[val].skills[0]); setSessionPlayerIds([]); }}>
-                <SelectTrigger className="h-14 md:w-[200px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[9px] font-black uppercase text-muted-foreground ml-2">Technical Drill</label>
-              <Select value={activeDrill} onValueChange={setActiveDrill}>
-                <SelectTrigger className="h-14 md:w-[250px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {SPORTS_DATA[activeSport]?.skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-col md:flex-row gap-4">
+            <Select value={activeSport} onValueChange={setActiveSport}>
+              <SelectTrigger className="h-14 md:w-[180px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white"><SelectValue /></SelectTrigger>
+              <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={activeDrill} onValueChange={setActiveDrill}>
+              <SelectTrigger className="h-14 md:w-[220px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white"><SelectValue /></SelectTrigger>
+              <SelectContent>{SPORTS_DATA[activeSport]?.skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden min-h-[750px] flex flex-col">
-            <CardHeader className="bg-primary/5 border-b p-8 flex flex-col md:flex-row justify-between items-center gap-4">
-              <div>
-                <CardTitle className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-                  <ShieldCheck className="w-7 h-7 text-accent" /> Ground Roster
-                </CardTitle>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Manual entry registry &bull; V3.9.9</p>
-              </div>
-              
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <div className="relative flex-1 md:w-80">
-                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
-                   <Select onValueChange={handleAddToSession}>
-                      <SelectTrigger className="h-14 pl-9 rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm">
-                        <SelectValue placeholder="PICK ATHLETE TO ADD..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <ScrollArea className="h-[300px]">
-                          {playersInSport.filter((p: any) => !sessionPlayerIds.includes(p.id)).map((p: any) => (
-                            <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
-                          ))}
-                        </ScrollArea>
-                      </SelectContent>
-                   </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 flex-1 bg-muted/10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <SquadList squad={femaleSquad} title="Female Squad Rotation" emptyColor="border-pink-300" />
-                <SquadList squad={maleSquad} title="Male Squad Rotation" emptyColor="border-blue-300" />
-              </div>
-            </CardContent>
-            <div className="p-8 bg-white border-t flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-3 h-3 rounded-full bg-accent animate-pulse" />
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Add players manually to start the rotation.</p>
-              </div>
-              <Badge className="bg-primary text-white font-black text-[9px] px-6 py-2 rounded-full shadow-lg">
-                Active Training: {currentSessionPlayers.length} athletes
-              </Badge>
+        <Card className="lg:col-span-8 border-2 rounded-[2.5rem] bg-white shadow-xl min-h-[600px] flex flex-col">
+          <CardHeader className="bg-muted/30 border-b flex flex-row justify-between items-center p-8">
+            <CardTitle className="text-xl font-black text-primary uppercase">Active Training Pool</CardTitle>
+            <Select onValueChange={handleAddToSession}>
+              <SelectTrigger className="h-12 w-[250px] rounded-xl border-2 font-bold"><SelectValue placeholder="Add Athlete..." /></SelectTrigger>
+              <SelectContent><ScrollArea className="h-[200px]">{playersInSport.filter(p => !sessionPlayerIds.includes(p.id)).map(p => (<SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>))}</ScrollArea></SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="p-8 flex-1 bg-muted/5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <SquadList squad={femaleSquad} title="Female Squad" emptyColor="border-pink-200" />
+              <SquadList squad={maleSquad} title="Male Squad" emptyColor="border-blue-200" />
             </div>
-          </Card>
-        </div>
+          </CardContent>
+          <div className="p-6 bg-white border-t flex justify-between items-center">
+            <Button variant="ghost" onClick={handleResetSession} className="text-[10px] font-black uppercase"><RefreshCcw className="w-3 h-3 mr-1" /> Clear Session</Button>
+            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">Synchronized v3.9.9</Badge>
+          </div>
+        </Card>
 
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-2 rounded-[2.5rem] bg-primary text-white shadow-2xl relative overflow-hidden p-10">
-            <div className="relative z-10 space-y-6">
-               <div className="flex items-center gap-4">
-                 <DrillMedal className="w-10 h-10 text-accent animate-pulse" />
-                 <h3 className="text-2xl font-black uppercase tracking-tight leading-none">Rotation Intel</h3>
-               </div>
-               <div className="space-y-4 pt-4">
-                 <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Session Participation</p>
-                   <p className="text-3xl font-black">{sessionPlayerIds.length} Athletes</p>
-                 </div>
-                 <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Technical Success</p>
-                   <p className="text-3xl font-black">{masteredThisDrill.length}</p>
-                 </div>
-               </div>
-               <p className="text-xs font-medium text-white/60 leading-relaxed italic border-l-2 border-accent/40 pl-4">
-                 &quot;Instructors should add students based on physical attendance. Mastery results are synced to the Performance Dossier.&quot;
-               </p>
-            </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[80px]" />
-          </Card>
-
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden flex flex-col h-full max-h-[500px]">
-            <CardHeader className="bg-muted/30 border-b p-6">
-               <CardTitle className="text-[11px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                 <CircleCheck className="w-4 h-4 text-emerald-500" /> Mastery Archive
-               </CardTitle>
-            </CardHeader>
-            <ScrollArea className="flex-1">
-              <CardContent className="p-6 space-y-3">
-                {masteredThisDrill.length === 0 ? (
-                  <div className="py-20 text-center opacity-20">
-                     <DrillMedal className="w-10 h-10 mx-auto mb-2" />
-                     <p className="text-[9px] font-black uppercase tracking-widest">No logs this session</p>
+        <Card className="lg:col-span-4 border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden flex flex-col">
+          <CardHeader className="bg-primary p-6 text-white"><CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><CircleCheck className="w-5 h-5 text-accent" /> Mastery Logs</CardTitle></CardHeader>
+          <ScrollArea className="flex-1">
+            <CardContent className="p-6 space-y-3">
+              {masteredThisDrill.map(p => (
+                <div key={p.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="min-w-0">
+                    <p className="font-black text-[10px] text-emerald-800 uppercase truncate">{p.name}</p>
+                    <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Logged</span>
                   </div>
-                ) : (
-                  masteredThisDrill.map((p: any) => (
-                    <div key={p.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100 group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white border overflow-hidden shadow-sm relative">
-                          <Image 
-                            src={p.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((p.name || '').trim())}`} 
-                            alt="Profile"
-                            width={32}
-                            height={32}
-                            unoptimized
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-black text-emerald-800 uppercase truncate block max-w-[120px]">{p.name}</span>
-                          <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Std {p.std}</span>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => handleRestore(p.id)} 
-                        className="h-8 w-8 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center"
-                        title="Restore to session"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </ScrollArea>
-          </Card>
-        </div>
+                  <Button variant="ghost" size="icon" onClick={() => handleRestore(p.id)} className="h-8 w-8 text-emerald-600"><RotateCcw className="w-3.5 h-3.5" /></Button>
+                </div>
+              ))}
+              {masteredThisDrill.length === 0 && <div className="py-20 text-center opacity-10"><ShieldCheck className="w-12 h-12 mx-auto mb-2" /><p className="text-[9px] font-black uppercase">No logs archived</p></div>}
+            </CardContent>
+          </ScrollArea>
+        </Card>
       </div>
     </div>
   );
 }
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

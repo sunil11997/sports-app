@@ -35,8 +35,8 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    // Standardized on gemini-2.0-flash for institutional stability
-    const selectedModel = 'gemini-2.0-flash';
+    // Reverted to gemini-1.5-flash for stable baseline
+    const selectedModel = 'gemini-1.5-flash';
     let attempts = 0;
     const maxAttempts = 3;
     
@@ -45,7 +45,6 @@ const coachChatFlow = ai.defineFlow(
         const {text} = await ai.generate({
           model: googleAI.model(selectedModel),
           config: {
-            // Institutional timeout protection
             maxOutputTokens: 1024,
             temperature: 0.7,
           },
@@ -71,7 +70,6 @@ const coachChatFlow = ai.defineFlow(
             : "The AI coach is currently processing high demand. Please try again in a few moments.";
         }
         
-        // Cooldown before retry to prevent quota exhaustion
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }

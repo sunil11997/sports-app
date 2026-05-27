@@ -22,15 +22,8 @@ const PlayerRecommendationInputSchema = z.object({
   medical: z.string().optional().describe('Any medical conditions or emergency notes.'),
   language: z.string().describe('The language for the output (English or Marathi).'),
   engine: z.enum(['Genkit', 'Gemini']).optional().describe('The selected AI engine.'),
-  fitnessShuttleRun: z.string().optional().describe('10x6 Shuttle Run result in seconds (Agility).'),
-  fitnessRun50m: z.string().optional().describe('50 Meter Run result in seconds (Speed).'),
-  fitnessRun600m: z.string().optional().describe('600 Meter Run result (Endurance).'),
-  fitnessSitAndReach: z.string().optional().describe('Flexibility / Sit and Reach in CM.'),
-  fitnessBoardJump: z.string().optional().describe('Power / Board Jump in CM.'),
-  fitnessSitUps: z.string().optional().describe('Core Strength / Sit Ups count.'),
   fitnessScore: z.string().optional().describe('Overall fitness score.'),
   fitnessStatus: z.string().optional().describe('School Fitness Level (A/B/C/D).'),
-  pastHealthIncidents: z.string().optional().describe('Summarized list of past health incidents for the player.'),
 });
 export type PlayerRecommendationInput = z.infer<typeof PlayerRecommendationInputSchema>;
 
@@ -48,7 +41,6 @@ const playerRecommendationPrompt = ai.definePrompt({
   input: {schema: PlayerRecommendationInputSchema},
   output: {schema: PlayerRecommendationOutputSchema},
   config: {
-    // Increased timeout config for Gemini 2.0 Flash complex reasoning
     maxOutputTokens: 2048,
     temperature: 0.5,
   },
@@ -65,7 +57,7 @@ const playerRecommendationPrompt = ai.definePrompt({
   - Overall Score: {{{fitnessScore}}}%
   - Level: {{{fitnessStatus}}}
 
-  Provide specific coaching recommendations. Focus on actionable advice for training, health, nutrition, and performance.`,
+  Provide specific coaching recommendations focusing on actionable advice for training, health, nutrition, and performance.`,
 });
 
 const playerRecommendationFlow = ai.defineFlow(
@@ -79,7 +71,7 @@ const playerRecommendationFlow = ai.defineFlow(
       throw new Error("AI Configuration Error: Missing API Key.");
     }
 
-    const selectedModel = 'gemini-2.0-flash';
+    const selectedModel = 'gemini-1.5-flash';
     let attempts = 0;
     const maxAttempts = 2; 
 

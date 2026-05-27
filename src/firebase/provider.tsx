@@ -164,7 +164,7 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened for v3.9.9: Assigns validation flag synchronously during factory execution.
+ * Fixed v3.9.9: Assigns validation flag synchronously during factory execution.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
