@@ -167,10 +167,8 @@ export const useUser = (): UserHookResult => {
  * Hardened for Next.js 15 and ESLint static analysis.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  const memoizedValue = useMemo(() => {
-    return factory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoizedValue = useMemo(factory, deps);
   
   useEffect(() => {
     if (typeof memoizedValue === 'object' && memoizedValue !== null) {
