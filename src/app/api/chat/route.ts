@@ -19,6 +19,8 @@ export async function POST(req: Request) {
     const response = result.response.text();
 
     return Response.json({
+      success: true,
+      analytics: response,
       reply: response,
     });
 
