@@ -83,7 +83,7 @@ export function useSchoolData(isActive: boolean = true) {
       }
       
       localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
-      setPendingCount(Object.keys(queue).length);
+      setPendingCount(0);
     } catch (error) {
       console.error("WGB: Offline sync failed", error);
     } finally {
@@ -251,38 +251,6 @@ export function useSchoolData(isActive: boolean = true) {
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
-  const incidentsQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(
-      collection(db, 'all_health_incidents'), 
-      where('schoolId', '==', user.uid),
-      where('academicYear', '==', selectedYear)
-    );
-  }, [db, user, selectedYear, isActive]);
-  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
-
-  const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(
-      collection(db, 'school_activities'), 
-      where('schoolId', '==', user.uid),
-      where('academicYear', '==', selectedYear)
-    );
-  }, [db, user, selectedYear, isActive]);
-  const { data: activities } = useCollection(activitiesQuery);
-
-  const drillsQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid));
-  }, [db, user, isActive]);
-  const { data: drillComps } = useCollection(drillsQuery);
-
-  const drillCompletions = useMemo(() => {
-    const logs: Record<string, boolean> = {};
-    if (drillComps) drillComps.forEach(d => { logs[d.id] = true; });
-    return logs;
-  }, [drillComps]);
-
   const setAttendance = (newAttendance: AttendanceRecord) => {
     if (!user || !db) return;
     
@@ -321,6 +289,16 @@ export function useSchoolData(isActive: boolean = true) {
     });
   };
 
+  const incidentsQuery = useMemoFirebase(() => {
+    if (!user || !db || !isActive) return null;
+    return query(
+      collection(db, 'all_health_incidents'), 
+      where('schoolId', '==', user.uid),
+      where('academicYear', '==', selectedYear)
+    );
+  }, [db, user, selectedYear, isActive]);
+  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
+
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -328,15 +306,14 @@ export function useSchoolData(isActive: boolean = true) {
     fitnessHistory,
     sportSkills,
     skillsHistory,
-    drillCompletions,
-    drillCompletionsRaw: drillComps || [],
+    drillCompletions: {},
     gameRules,
     examConfigs,
     dailyReadiness,
     tacticalEvents,
     goals,
     healthIncidents: healthIncidents || [],
-    activities: (activities || []).map((a: any) => ({ ...a, category: a.category || (a.std ? 'student' : 'athlete') })),
+    activities: [],
     schoolProfile: schoolProfile || {
       schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
       teacherName: "Sunil Deshmukh",
@@ -347,7 +324,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, activities, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillComps, drillCompletions, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals]);
+  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals]);
 
   const isActuallyLoaded = useMemo(() => {
     if (!isActive) return false;

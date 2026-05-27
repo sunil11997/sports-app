@@ -60,6 +60,7 @@ const SchoolRegistration = dynamic(() => import('@/components/features/SchoolReg
 const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(m => m.NotificationCenter));
 const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier));
 const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification));
+const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice));
 
 const translations = {
   English: {
@@ -138,7 +139,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.9.6</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V3.9.8</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -281,11 +282,12 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" || subTab === "leaderboard" ? (
+              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" || subTab === "leaderboard" || subTab === "ai" ? (
                 <div className="relative group/scroll">
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
                     {[
                       { id: "leaderboard", label: "Leaderboard", icon: Medal },
+                      { id: "ai", label: "AI Hub", icon: BrainCircuit },
                       { id: "attendance", label: "Attendance", icon: CalendarDays },
                       { id: "performance", label: "Performance", icon: BarChart },
                       { id: "loads", label: "Training Load", icon: Gauge },
@@ -313,6 +315,7 @@ export default function WaghambaApp() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
                       { id: "leaderboard", label: "Top 5 Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
+                      { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
                       { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
                       { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart, color: "bg-indigo-500" },
                       { id: "loads", label: "Training Load (RPE)", desc: "Periodization metrics", icon: Gauge, color: "bg-orange-600" },
@@ -336,6 +339,7 @@ export default function WaghambaApp() {
               )}
               
               {subTab === "leaderboard" && <Gamification store={schoolData} />}
+              {subTab === "ai" && <AIAdvice store={schoolData} />}
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} />}
               {subTab === "loads" && <TrainingLoad store={schoolData} />}
