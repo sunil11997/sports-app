@@ -25,7 +25,7 @@ export type NewsOutput = z.infer<typeof NewsOutputSchema>;
 
 const newsPrompt = ai.definePrompt({
   name: 'newsPrompt',
-  model: googleAI.model('gemini-2.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'),
   input: {
     schema: z.object({
       date: z.string(),
@@ -73,7 +73,6 @@ export async function getSportsNews(date: string, language: string = 'English'):
       const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
       if (isQuota && attempts < maxAttempts) {
-        // Optimized wait: 15s is enough to clear small windows without timing out the action
         console.warn(`WGB News Pulse: Quota hit. Waiting 15s for reset (Attempt ${attempts})...`);
         await new Promise(resolve => setTimeout(resolve, 15000));
         continue;

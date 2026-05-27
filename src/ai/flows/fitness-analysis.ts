@@ -29,7 +29,7 @@ export type FitnessAnalysisOutput = z.infer<typeof FitnessAnalysisOutputSchema>;
 
 export async function analyzeFitness(input: FitnessAnalysisInput): Promise<FitnessAnalysisOutput> {
   const {output} = await ai.generate({
-    model: googleAI.model('gemini-2.5-flash'),
+    model: googleAI.model('gemini-2.0-flash'),
     system: `You are an expert AI Sports Scientist and Fitness Coach. Your goal is to analyze fitness test results for school-age students (ages 6-18). 
     You provide encouraging, data-driven feedback, correct form errors based on descriptions, and suggest specific drills to improve performance. 
     Use simple, clear language suitable for students and teachers.
@@ -53,7 +53,7 @@ const InstructionInputSchema = z.object({
 
 export async function getTestInstructions(input: z.infer<typeof InstructionInputSchema>): Promise<string> {
   const {text} = await ai.generate({
-    model: googleAI.model('gemini-2.5-flash'),
+    model: googleAI.model('gemini-2.0-flash'),
     system: `You are an expert AI Sports Scientist. Provide clear instructions for fitness tests.
     - For Beep Test: Focus on pacing and 'turn' technique. Remind that test ends after failing twice.
     - For Sit and Reach: Emphasize locked knees and slow reach (no jerking). Hold for 2 seconds.

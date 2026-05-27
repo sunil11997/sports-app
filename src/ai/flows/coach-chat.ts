@@ -39,7 +39,8 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    let selectedModel = 'gemini-2.5-flash';
+    // Default to gemini-2.0-flash for high performance
+    let selectedModel = 'gemini-2.0-flash';
     if (input.engine === 'Gemini Pro') {
       selectedModel = 'gemini-3.1-pro-preview';
     }
@@ -80,8 +81,8 @@ const coachChatFlow = ai.defineFlow(
         const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
 
         if (isQuota || isUnavailable) {
-          console.warn("WGB AI Chat: Demand spike or quota hit, falling back to Flash model...");
-          selectedModel = 'gemini-2.5-flash';
+          console.warn("WGB AI Chat: Demand spike or quota hit, falling back to standard Flash model...");
+          selectedModel = 'gemini-2.0-flash';
         }
 
         console.error(`Coach Chat Attempt ${attempts} failed:`, error.message || error);

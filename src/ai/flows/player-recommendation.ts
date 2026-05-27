@@ -101,7 +101,8 @@ const playerRecommendationFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
-    let selectedModel = 'gemini-2.5-flash';
+    // Standard engine uses gemini-2.0-flash
+    let selectedModel = 'gemini-2.0-flash';
     if (input.engine === 'Gemini') {
       selectedModel = 'gemini-3.1-pro-preview';
     }
@@ -126,7 +127,7 @@ const playerRecommendationFlow = ai.defineFlow(
         if (isQuota && attempts < maxAttempts) {
           console.warn(`WGB Rec Engine: Quota limit reached. Waiting 15s (Attempt ${attempts})...`);
           await new Promise(resolve => setTimeout(resolve, 15000));
-          selectedModel = 'gemini-2.5-flash'; // Fallback to Flash for quota issues
+          selectedModel = 'gemini-2.0-flash'; // Fallback to Flash for quota issues
           continue;
         }
 

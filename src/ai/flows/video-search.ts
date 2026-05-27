@@ -27,7 +27,7 @@ export type VideoSearchOutput = z.infer<typeof VideoSearchOutputSchema>;
 
 const videoSearchPrompt = ai.definePrompt({
   name: 'videoSearchPrompt',
-  model: googleAI.model('gemini-2.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'),
   input: {schema: VideoSearchInputSchema},
   output: {schema: VideoSearchOutputSchema},
   prompt: `You are Coach Sunil Deshmukh's AI Video Assistant. Your goal is to provide a high-quality instructional YouTube video URL for a specific technical sports drill.

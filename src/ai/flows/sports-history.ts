@@ -22,7 +22,7 @@ export type HistoryOutput = z.infer<typeof HistoryOutputSchema>;
 
 const historyPrompt = ai.definePrompt({
   name: 'historyPrompt',
-  model: googleAI.model('gemini-2.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'),
   input: {
     schema: z.object({
       date: z.string(),
