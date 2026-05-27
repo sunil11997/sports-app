@@ -1,8 +1,8 @@
-# शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub v3.9.6
+# शासकीय माध्यमिक आश्रम शाळा वाघंबा - Sports Hub v3.9.9
 
 The definitive physical education and sports management platform for the Waghamba Institutional Registry.
 
-## Key Features in v3.9.6
+## Key Features in v3.9.9
 - **Manual Practice Rotation**: Instructor-led session builder for high-fidelity technical drills.
 - **PHV Maturity Profiling**: Accurate biological age estimation using actual sitting height measurements.
 - **Target & Goal Setting**: Monthly registry for personal bests and athlete self-improvement goals.
