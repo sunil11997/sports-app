@@ -138,7 +138,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .map((id) => playersInSport.find((p: any) => p?.id === id))
       .filter((p): p is any => {
         if (!p) return false;
-        // Corrected template literal syntax to prevent build worker crash
+        // Standard template literal syntax to prevent build worker crash
         const key = `${p.id}_${drillKey}`;
         const isMastered = store.data.drillCompletions[key];
         return !isMastered;

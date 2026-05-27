@@ -39,14 +39,11 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
     }
 
-    // Default to gemini-2.0-flash for high performance
-    let selectedModel = 'gemini-2.0-flash';
-    if (input.engine === 'Gemini Pro') {
-      selectedModel = 'gemini-3.1-pro-preview';
-    }
+    // Default to gemini-2.0-flash as per institutional requirements
+    const selectedModel = 'gemini-2.0-flash';
 
     let attempts = 0;
-    const maxAttempts = 5;
+    const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       try {
@@ -59,8 +56,7 @@ const coachChatFlow = ai.defineFlow(
           INSTITUTIONAL CONTEXT:
           ${input.teacherContext || 'Acting Head Coach at Waghamba'}
           
-          AI ENGINE CONTEXT: You are responding via the ${input.engine || 'Genkit Standard'} engine. 
-          If using Gemini Pro, provide significantly deeper tactical and pedagogical analysis.
+          AI ENGINE CONTEXT: You are responding via the ${input.engine || 'Genkit Standard'} engine powered by Gemini 2.0 Flash.
           
           IMPORTANT: You MUST respond entirely in ${input.language}.
           
@@ -76,21 +72,14 @@ const coachChatFlow = ai.defineFlow(
         return text;
       } catch (error: any) {
         attempts++;
+        console.error(`WGB AI Chat Attempt ${attempts} failed:`, error.message || error);
         
-        const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
-        const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
-
-        if (isQuota || isUnavailable) {
-          console.warn("WGB AI Chat: Demand spike or quota hit, falling back to standard Flash model...");
-          selectedModel = 'gemini-2.0-flash';
-        }
-
-        console.error(`Coach Chat Attempt ${attempts} failed:`, error.message || error);
         if (attempts >= maxAttempts) throw error;
-        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(1.5, attempts)));
+        // Exponential backoff for quota/network recovery
+        await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempts)));
       }
     }
-    return "The AI coach is currently busy due to high demand. Please try asking again in a few moments.";
+    return "The AI coach is currently processing another request. Please try again in a few moments.";
   }
 );
 

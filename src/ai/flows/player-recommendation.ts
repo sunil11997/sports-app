@@ -53,7 +53,7 @@ const playerRecommendationPrompt = ai.definePrompt({
   output: {schema: PlayerRecommendationOutputSchema},
   prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. Your task is to analyze a player's aggregated data and provide your professional recommendations for their athletic development and well-being.
 
-AI ENGINE CONTEXT: You are performing this analysis via the {{engine}} engine.
+AI ENGINE CONTEXT: You are performing this analysis via Gemini 2.0 Flash.
 
 IMPORTANT: You MUST provide all sections of your response in {{{language}}}.
 
@@ -101,11 +101,8 @@ const playerRecommendationFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.");
     }
 
-    // Standard engine uses gemini-2.0-flash
-    let selectedModel = 'gemini-2.0-flash';
-    if (input.engine === 'Gemini') {
-      selectedModel = 'gemini-3.1-pro-preview';
-    }
+    // Standardized engine uses gemini-2.0-flash
+    const selectedModel = 'gemini-2.0-flash';
 
     let attempts = 0;
     const maxAttempts = 3; 
@@ -121,23 +118,12 @@ const playerRecommendationFlow = ai.defineFlow(
       } catch (error: any) {
         lastError = error;
         attempts++;
-        const isQuota = error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('429');
-        const isUnavailable = error.message?.includes('UNAVAILABLE') || error.message?.includes('503');
-
-        if (isQuota && attempts < maxAttempts) {
-          console.warn(`WGB Rec Engine: Quota limit reached. Waiting 15s (Attempt ${attempts})...`);
-          await new Promise(resolve => setTimeout(resolve, 15000));
-          selectedModel = 'gemini-2.0-flash'; // Fallback to Flash for quota issues
-          continue;
-        }
-
-        if (isUnavailable && attempts < maxAttempts) {
-          const delay = 3000 * Math.pow(1.5, attempts);
-          console.warn(`WGB Rec Engine: Service busy. Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
-        }
-
+        
+        console.warn(`WGB Rec Engine: Sync Attempt ${attempts} failed.`, error.message);
+        
+        // Wait and retry
+        await new Promise(resolve => setTimeout(resolve, 3000 * Math.pow(1.5, attempts)));
+        
         if (attempts >= maxAttempts) throw error;
       }
     }
