@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +16,9 @@ import {
   X,
   RefreshCcw,
   RotateCcw,
-  Search,
   UserPlus
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -117,9 +116,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       .map((id) => playersInSport.find((p: any) => p?.id === id))
       .filter((p): p is any => {
         if (!p) return false;
-        // Fix for build error: standard template literal interpolation
+        const completions = store.data.drillCompletions || {};
         const lookupKey = `${p.id}_${drillKey}`;
-        const isMastered = !!store.data.drillCompletions[lookupKey];
+        const isMastered = !!completions[lookupKey];
         return !isMastered;
       });
   }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
@@ -130,8 +129,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const masteredThisDrill = useMemo(() => {
     return playersInSport
       .filter((p: any) => {
+        const completions = store.data.drillCompletions || {};
         const lookupKey = `${p.id}_${drillKey}`;
-        return !!store.data.drillCompletions[lookupKey];
+        return !!completions[lookupKey];
       })
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
@@ -261,5 +261,3 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     </div>
   );
 }
-
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

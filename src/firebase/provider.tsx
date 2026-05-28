@@ -164,11 +164,12 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Fixed v3.9.9: Assigns validation flag synchronously during factory execution.
+ * Fixed v3.9.9: Assigns validation flag synchronously during factory execution 
+ * to prevent runtime exceptions on the first render cycle.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => {
+  const memoizedVal = useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
@@ -180,4 +181,6 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
     }
     return val;
   }, deps);
+
+  return memoizedVal;
 }
