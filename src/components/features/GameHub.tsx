@@ -130,7 +130,6 @@ export function GameHub({ store }: { store: any }) {
           </TabsContent>
 
           <TabsContent value="drills" className="mt-0">
-            {/* Fix: defaultView prop removed to satisfy SportsDrillsProps interface */}
             <SportsDrills store={store} preselectedSport={selectedGame} />
           </TabsContent>
 

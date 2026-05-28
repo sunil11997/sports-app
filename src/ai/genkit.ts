@@ -3,7 +3,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Genkit instance configured for the Waghamba Sports Hub.
- * Reverted to Gemini 1.5 Flash for stable institutional baseline.
+ * Strictly synchronized to Gemini 1.5 Flash for stable institutional performance.
  */
 export const ai = genkit({
   plugins: [

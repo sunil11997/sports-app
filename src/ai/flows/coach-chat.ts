@@ -29,13 +29,15 @@ const coachChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (input) => {
-    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
+    // Robust check for various possible environment variable names
+    const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    
+    if (!apiKey) {
       return input.language === 'Marathi' 
         ? "AI कॉन्फिगरेशन त्रुटी: कृपया तुमची API Key जोडा." 
-        : "AI Configuration Error: Please add your GEMINI_API_KEY to the .env file.";
+        : "AI Configuration Error: Please add your GOOGLE_GENAI_API_KEY to the .env file.";
     }
 
-    // Reverted to gemini-1.5-flash for stable baseline
     const selectedModel = 'gemini-1.5-flash';
     let attempts = 0;
     const maxAttempts = 3;
@@ -45,7 +47,7 @@ const coachChatFlow = ai.defineFlow(
         const {text} = await ai.generate({
           model: googleAI.model(selectedModel),
           config: {
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
             temperature: 0.7,
           },
           system: `You are Coach Sunil Deshmukh, the head physical education teacher and sports coach at Waghamba Ashram Shala. 
@@ -70,10 +72,11 @@ const coachChatFlow = ai.defineFlow(
             : "The AI coach is currently processing high demand. Please try again in a few moments.";
         }
         
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
       }
     }
-    return "AI system synchronization error. Please refresh.";
+    return "AI system synchronization error. Please refresh the registry.";
   }
 );
 
