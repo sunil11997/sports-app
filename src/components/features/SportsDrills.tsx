@@ -235,7 +235,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             </div>
           </CardContent>
           <div className="p-6 bg-white border-t flex justify-between items-center">
-            <Button variant="ghost" onClick={handleResetSession} className="text-[10px] font-black uppercase"><RefreshCcw className="w-3 h-3 mr-1" /> Clear Session</Button>
+            <button onClick={handleResetSession} className="text-[10px] font-black uppercase flex items-center gap-1 hover:text-primary transition-colors"><RefreshCcw className="w-3 h-3" /> Clear Session</button>
             <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">Synchronized v3.9.9</Badge>
           </div>
         </Card>
