@@ -167,16 +167,18 @@ export const useUser = (): UserHookResult => {
  * Hardened for synchronous validation flag assignment to prevent Next.js 15 render cycle exceptions.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  const memoizedVal = useMemo(factory, deps); // eslint-disable-line react-hooks/exhaustive-deps
-  
-  if (memoizedVal && typeof memoizedVal === 'object') {
-    try {
-      // Immediate assignment ensures validation flag is present on initial render
-      (memoizedVal as any).__memo = true;
-    } catch (e) {
-      // Silently fail if object is non-extensible
+  // Execute factory and assign validation flag synchronously within useMemo
+  const memoizedVal = useMemo(() => {
+    const val = factory();
+    if (val && typeof val === 'object') {
+      try {
+        (val as any).__memo = true;
+      } catch (e) {
+        // Handle non-extensible objects gracefully
+      }
     }
-  }
+    return val;
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 
   return memoizedVal;
 }

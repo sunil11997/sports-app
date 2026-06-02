@@ -103,6 +103,14 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
+  // Automatically switch to athlete category if any sports are selected
+  const watchedSports = form.watch('sports');
+  useEffect(() => {
+    if (watchedSports && watchedSports.length > 0) {
+      form.setValue('category', 'athlete');
+    }
+  }, [watchedSports, form]);
+
   useEffect(() => {
     if (videoRef.current && stream && activeCam) {
       videoRef.current.srcObject = stream;
@@ -181,14 +189,21 @@ export function Registration({ store, section, language = 'English' }: { store: 
       bmi = (w / (h * h)).toFixed(1);
     }
 
+    // Double check athlete classification for specialized sports
+    let finalCategory = values.category;
+    if (values.sports && values.sports.length > 0) {
+      finalCategory = 'athlete';
+    }
+
     store.addPlayer({
       ...values,
+      category: finalCategory,
       id: Math.random().toString(36).substr(2, 9),
       age: isNaN(age) ? 0 : age,
       bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi,
     });
 
-    toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
+    toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry as ${finalCategory.toUpperCase()}.` });
     form.reset({
       ...form.getValues(),
       name: "",
@@ -220,7 +235,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
               type="button"
               variant={form.watch('category') === 'student' ? 'default' : 'ghost'}
               onClick={() => form.setValue('category', 'student')}
-              className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px] tracking-widest", form.watch('category') === 'student' ? 'bg-primary text-white' : 'text-muted-foreground')}
+              className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px] tracking-widest", form.watch('category') === 'student' ? "bg-primary text-white" : "text-muted-foreground")}
             >
               <UserCircle2 className="w-4 h-4 mr-2" /> General
             </Button>
@@ -228,7 +243,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
               type="button"
               variant={form.watch('category') === 'athlete' ? 'default' : 'ghost'}
               onClick={() => form.setValue('category', 'athlete')}
-              className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px] tracking-widest", form.watch('category') === 'athlete' ? 'bg-primary text-white' : 'text-muted-foreground')}
+              className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px] tracking-widest", form.watch('category') === 'athlete' ? "bg-primary text-white" : "text-muted-foreground")}
             >
               <Medal className="w-4 h-4 mr-2" /> Athlete
             </Button>
@@ -365,10 +380,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <FormField control={form.control} name="height" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">{isMarathi ? 'ताठ उंची (Standing Ht)' : 'Height (cm)'}</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">{isMarathi ? "ताठ उंची (Standing Ht)" : "Height (cm)"}</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="sittingHeight" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> {isMarathi ? 'बसून उंची (Sitting Ht)' : 'Sitting Ht (cm)'}</FormLabel><FormControl><Input type="number" placeholder="Optional" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> {isMarathi ? "बसून उंची (Sitting Ht)" : "Sitting Ht (cm)"}</FormLabel><FormControl><Input type="number" placeholder="Optional" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="weight" render={({ field }) => (
                       <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Weight (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
@@ -398,30 +413,28 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   )} />
                 </div>
 
-                {form.watch('category') === 'athlete' && (
-                  <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-                    <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
-                      <Medal className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Athletic Participation</h3>
-                    </div>
-                    <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-dashed border-accent/20">
-                      <FormLabel className="font-black text-accent uppercase text-[10px] tracking-widest mb-6 block">Select Active Institutional Games</FormLabel>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
-                        {SPORTS_LIST.map(sport => (
-                          <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 group">
-                              <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
-                                const curr = field.value || [];
-                                return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
-                              }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent" /></FormControl>
-                              <FormLabel className="text-xs font-black uppercase text-foreground/70 cursor-pointer group-hover:text-accent transition-colors">{sport}</FormLabel>
-                            </FormItem>
-                          )} />
-                        ))}
-                      </div>
+                <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
+                    <Medal className="w-5 h-5" />
+                    <h3 className="font-black uppercase text-sm tracking-[0.2em]">Athletic Participation</h3>
+                  </div>
+                  <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-dashed border-accent/20">
+                    <FormLabel className="font-black text-accent uppercase text-[10px] tracking-widest mb-6 block">Select Active Institutional Games</FormLabel>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
+                      {SPORTS_LIST.map(sport => (
+                        <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 group">
+                            <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
+                              const curr = field.value || [];
+                              return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
+                            }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent" /></FormControl>
+                            <FormLabel className="text-xs font-black uppercase text-foreground/70 cursor-pointer group-hover:text-accent transition-colors">{sport}</FormLabel>
+                          </FormItem>
+                        )} />
+                      ))}
                     </div>
                   </div>
-                )}
+                </div>
                 
                 <div className="pt-8 border-t border-dashed flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-4 text-muted-foreground">

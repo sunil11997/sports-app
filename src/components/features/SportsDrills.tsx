@@ -16,7 +16,9 @@ import {
   X,
   RefreshCcw,
   RotateCcw,
-  UserPlus
+  UserPlus,
+  Flame,
+  Info
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -79,6 +81,12 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
       "Sprint start drill", "Acceleration drill", "Shuttle run drill", "Relay baton exchange drill",
       "Long jump take-off drill", "Sand pit landing drill", "High jump approach drill", "Scissor jump drill"
     ]
+  },
+  'Long Jump': {
+    skills: ["Approach speed drill", "Take-off board drill", "Flight posture", "Sand landing technique"]
+  },
+  'High Jump': {
+    skills: ["Fosbury approach", "Centrifugal force drill", "Bar clearance arch", "Landing safety"]
   }
 };
 
@@ -92,7 +100,6 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
   const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi']?.skills[0] || "Standard Drill");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  const [sessionPlayerIds, setSessionPlayerIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (preselectedSport && SPORTS_DATA[preselectedSport]) {
@@ -101,69 +108,49 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     }
   }, [preselectedSport]);
 
+  const drillKey = `${activeSport}_${activeDrill}`;
+
+  // Filter players strictly by the selected game
   const playersInSport = useMemo(() => 
     (store.data.players || []).filter((p: any) => 
-      p.category === 'athlete' && (p.sports?.includes(activeSport) || activeSport === 'Kabaddi')
+      p.category === 'athlete' && p.sports?.includes(activeSport)
     ),
   [store.data.players, activeSport]);
 
-  const drillKey = `${activeSport}_${activeDrill}`;
+  // Grouped rosters for the active pool (not yet mastered)
+  const femaleSquad = useMemo(() => playersInSport.filter((p: any) => {
+    const isMastered = !!store.data.drillCompletions?.[`${p.id}_${drillKey}`];
+    return p.gender === 'Female' && !isMastered;
+  }), [playersInSport, store.data.drillCompletions, drillKey]);
 
-  const currentSessionPlayers = useMemo(() => {
-    if (!sessionPlayerIds || !playersInSport) return [];
-    
-    return sessionPlayerIds
-      .map((id) => playersInSport.find((p: any) => p?.id === id))
-      .filter((p): p is any => {
-        if (!p) return false;
-        const completions = store.data.drillCompletions || {};
-        const lookupKey = `${p.id}_${drillKey}`;
-        const isMastered = !!completions[lookupKey];
-        return !isMastered;
-      });
-  }, [sessionPlayerIds, playersInSport, store.data.drillCompletions, drillKey]);
-
-  const femaleSquad = currentSessionPlayers.filter(p => p && p.gender === 'Female');
-  const maleSquad = currentSessionPlayers.filter(p => p && p.gender === 'Male');
+  const maleSquad = useMemo(() => playersInSport.filter((p: any) => {
+    const isMastered = !!store.data.drillCompletions?.[`${p.id}_${drillKey}`];
+    return p.gender === 'Male' && !isMastered;
+  }), [playersInSport, store.data.drillCompletions, drillKey]);
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
-      .filter((p: any) => {
-        const completions = store.data.drillCompletions || {};
-        const lookupKey = `${p.id}_${drillKey}`;
-        return !!completions[lookupKey];
-      })
+      .filter((p: any) => !!store.data.drillCompletions?.[`${p.id}_${drillKey}`])
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
 
   const handleMasteryToggle = async (playerId: string, mastered: boolean) => {
     const opId = `${playerId}_${drillKey}`;
     setIsProcessing(opId);
-    const playerName = store.data.players.find((p: any) => p.id === playerId)?.name;
+    const player = store.data.players.find((p: any) => p.id === playerId);
 
     if (mastered) {
       store.setDrillCompletion(drillKey, playerId, true);
-      toast({ title: "Mastery Logged", description: `${playerName} archived.`, className: "bg-emerald-500 text-white" });
+      toast({ title: "Mastery Logged", description: `${player?.name} archived to registry.`, className: "bg-emerald-500 text-white" });
     } else {
-      toast({ title: "Practice Required", description: `${playerName} remains in pool.`, variant: "destructive" });
+      toast({ title: "Keep Practicing", description: `${player?.name} needs more volume.`, variant: "destructive" });
     }
     setIsProcessing(null);
-  };
-
-  const handleRemoveFromSession = (playerId: string) => {
-    setSessionPlayerIds(prev => prev.filter(id => id !== playerId));
-  };
-
-  const handleAddToSession = (playerId: string) => {
-    if (sessionPlayerIds.includes(playerId)) return;
-    setSessionPlayerIds(prev => [...prev, playerId]);
   };
 
   const handleRestore = (playerId: string) => {
     store.setDrillCompletion(drillKey, playerId, false);
   };
-
-  const handleResetSession = () => setSessionPlayerIds([]);
 
   const SquadList = ({ squad, title, emptyColor }: { squad: any[], title: string, emptyColor: string }) => (
     <div className="space-y-4">
@@ -184,35 +171,39 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-               <Button onClick={() => handleRemoveFromSession(player.id)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></Button>
-               <Button onClick={() => handleMasteryToggle(player.id, false)} disabled={!!isProcessing} variant="outline" size="icon" className="h-9 w-9 text-destructive"><X className="w-4 h-4" /></Button>
-               <Button onClick={() => handleMasteryToggle(player.id, true)} disabled={!!isProcessing} className="h-9 w-9 bg-emerald-500 text-white"><Check className="w-4 h-4" /></Button>
+            <div className="flex items-center gap-2">
+               <Button onClick={() => handleMasteryToggle(player.id, false)} disabled={!!isProcessing} variant="outline" size="icon" className="h-9 w-9 text-destructive border-2"><X className="w-4 h-4" /></Button>
+               <Button onClick={() => handleMasteryToggle(player.id, true)} disabled={!!isProcessing} className="h-9 w-9 bg-emerald-500 text-white shadow-md active-scale"><Check className="w-4 h-4" /></Button>
             </div>
           </div>
         ))}
-        {squad.length === 0 && <div className={cn("flex flex-col items-center justify-center py-16 rounded-3xl border-2 border-dashed opacity-20", emptyColor)}><UserPlus className="w-8 h-8 mb-2" /><span className="text-[8px] font-black uppercase">Empty Pool</span></div>}
+        {squad.length === 0 && (
+          <div className={cn("flex flex-col items-center justify-center py-16 rounded-3xl border-2 border-dashed opacity-20", emptyColor)}>
+            <Flame className="w-8 h-8 mb-2" />
+            <span className="text-[8px] font-black uppercase">No Active Athletes</span>
+          </div>
+        )}
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-20 animate-in fade-in duration-700">
       <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="flex-1">
             <Badge className="bg-primary text-white text-[10px] uppercase px-4 py-1 mb-2">Practice Roster</Badge>
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight flex items-center gap-3">
-              <UsersRound className="w-10 h-10 text-accent" /> Rotation Hub
+              <UsersRound className="w-10 h-10 text-accent" /> {activeSport} Rotation
             </h2>
           </div>
           <div className="flex flex-col md:flex-row gap-4">
             <Select value={activeSport} onValueChange={setActiveSport}>
-              <SelectTrigger className="h-14 md:w-[180px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-14 md:w-[180px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={activeDrill} onValueChange={setActiveDrill}>
-              <SelectTrigger className="h-14 md:w-[220px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-14 md:w-[220px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
               <SelectContent>{SPORTS_DATA[activeSport]?.skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
           </div>
@@ -222,38 +213,54 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <Card className="lg:col-span-8 border-2 rounded-[2.5rem] bg-white shadow-xl min-h-[600px] flex flex-col">
           <CardHeader className="bg-muted/30 border-b flex flex-row justify-between items-center p-8">
-            <CardTitle className="text-xl font-black text-primary uppercase">Active Training Pool</CardTitle>
-            <Select onValueChange={handleAddToSession}>
-              <SelectTrigger className="h-12 w-[250px] rounded-xl border-2 font-bold"><SelectValue placeholder="Add Athlete..." /></SelectTrigger>
-              <SelectContent><ScrollArea className="h-[200px]">{playersInSport.filter(p => !sessionPlayerIds.includes(p.id)).map(p => (<SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>))}</ScrollArea></SelectContent>
-            </Select>
+            <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-3">
+               <ShieldCheck className="w-6 h-6 text-emerald-600" /> Ground Session Pool
+            </CardTitle>
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-primary/10 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] font-black uppercase text-primary">Live Sync</span>
+            </div>
           </CardHeader>
           <CardContent className="p-8 flex-1 bg-muted/5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <SquadList squad={femaleSquad} title="Female Squad" emptyColor="border-pink-200" />
-              <SquadList squad={maleSquad} title="Male Squad" emptyColor="border-blue-200" />
+              <SquadList squad={femaleSquad} title="Female Squad (स्त्री)" emptyColor="border-rose-200" />
+              <SquadList squad={maleSquad} title="Male Squad (पुरुष)" emptyColor="border-blue-200" />
             </div>
           </CardContent>
           <div className="p-6 bg-white border-t flex justify-between items-center">
-            <button onClick={handleResetSession} className="text-[10px] font-black uppercase flex items-center gap-1 hover:text-primary transition-colors"><RefreshCcw className="w-3 h-3" /> Clear Session</button>
-            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">Synchronized v3.9.9</Badge>
+            <div className="flex items-center gap-2 text-muted-foreground">
+               <Info className="w-3.5 h-3.5" />
+               <p className="text-[10px] font-bold uppercase tracking-widest">Mastered athletes are automatically moved to the Archive.</p>
+            </div>
+            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">v3.9.9 Registry</Badge>
           </div>
         </Card>
 
         <Card className="lg:col-span-4 border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden flex flex-col">
-          <CardHeader className="bg-primary p-6 text-white"><CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><CircleCheck className="w-5 h-5 text-accent" /> Mastery Logs</CardTitle></CardHeader>
+          <CardHeader className="bg-primary p-6 text-white">
+            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+              <CircleCheck className="w-5 h-5 text-accent" /> Mastery Archive
+            </CardTitle>
+          </CardHeader>
           <ScrollArea className="flex-1">
             <CardContent className="p-6 space-y-3">
               {masteredThisDrill.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                <div key={p.id} className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100 group animate-in slide-in-from-right-4 duration-300">
                   <div className="min-w-0">
                     <p className="font-black text-[10px] text-emerald-800 uppercase truncate">{p.name}</p>
-                    <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Logged</span>
+                    <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Logged Today</span>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleRestore(p.id)} className="h-8 w-8 text-emerald-600"><RotateCcw className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleRestore(p.id)} className="h-8 w-8 text-emerald-600 hover:bg-emerald-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
               ))}
-              {masteredThisDrill.length === 0 && <div className="py-20 text-center opacity-10"><ShieldCheck className="w-12 h-12 mx-auto mb-2" /><p className="text-[9px] font-black uppercase">No logs archived</p></div>}
+              {masteredThisDrill.length === 0 && (
+                <div className="py-24 text-center opacity-10 space-y-4">
+                  <ShieldCheck className="w-16 h-16 mx-auto mb-2" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No logs archived for this session</p>
+                </div>
+              )}
             </CardContent>
           </ScrollArea>
         </Card>

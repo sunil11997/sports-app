@@ -40,6 +40,11 @@ const GAMES = [
   { id: 'Handball', label: 'Handball', icon: Target, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { id: 'Kho Kho', label: 'Kho Kho', icon: Zap, color: 'text-purple-600', bg: 'bg-purple-50' },
   { id: 'Athletics', label: 'Athletics', icon: Medal, color: 'text-rose-600', bg: 'bg-rose-50' },
+  { id: 'Running', label: 'Running', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { id: 'Javelin Throw', label: 'Javelin Throw', icon: Target, color: 'text-orange-600', bg: 'bg-orange-50' },
+  { id: 'Disc Throw', label: 'Disc Throw', icon: Trophy, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { id: 'Long Jump', label: 'Long Jump', icon: Star, color: 'text-rose-600', bg: 'bg-rose-50' },
+  { id: 'High Jump', label: 'High Jump', icon: Medal, color: 'text-amber-600', bg: 'bg-amber-50' },
 ];
 
 export function GameHub({ store }: { store: any }) {
