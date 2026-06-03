@@ -11,21 +11,14 @@ import {
   Trophy, 
   ChartLine, 
   Target, 
-  CircleCheck, 
   Ruler, 
-  Scale, 
   Activity, 
-  Baby,
-  BrainCircuit,
-  CheckCircle2,
-  XCircle,
-  Info,
-  Medal,
-  Zap,
-  InfoIcon,
-  ChevronDown,
-  Timer,
-  MoveUpRight
+  BrainCircuit, 
+  Medal, 
+  Zap, 
+  InfoIcon, 
+  Timer, 
+  MoveUpRight 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
