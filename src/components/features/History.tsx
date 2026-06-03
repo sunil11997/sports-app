@@ -36,14 +36,10 @@ import {
   Area,
   Line,
   Legend,
-  BarChart as RechartsBarChart,
-  Bar,
-  Cell
 } from 'recharts';
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-const CHART_COLORS = ['#0048A0', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function PerformanceDossier({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
