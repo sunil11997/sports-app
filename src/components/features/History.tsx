@@ -21,7 +21,9 @@ import {
   XCircle,
   Info,
   Medal,
-  Zap
+  Zap,
+  InfoIcon,
+  ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -84,12 +86,26 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
     }
 
+    const offsetNum = parseFloat(offset.toFixed(2));
+    
+    let coachingAdvice = "";
+    if (offsetNum < -1.0) {
+      coachingAdvice = "Pre-Growth Spurt: Focus on skill coordination and foundational techniques. This is the optimal time for rapid motor learning.";
+    } else if (offsetNum >= -1.0 && offsetNum <= 1.0) {
+      coachingAdvice = "Circa-PHV (Active Spurt): High injury risk phase due to limb elongation. Focus on core stability, posture, and flexibility. Avoid high-impact heavy loading.";
+    } else {
+      coachingAdvice = "Post-Growth Spurt: Peak power and speed development phase. This is the window for strength training and explosive speed drills.";
+    }
+
     return {
       offset: offset.toFixed(2),
-      status: offset < 0 ? 'Pre-growth spurt' : 'Post-growth spurt',
+      offsetNum,
+      status: offsetNum < 0 ? 'Pre-growth spurt' : 'Post-growth spurt',
       sittingHeight: sH,
       legLength: legL.toFixed(1),
-      isEstimated: !currentPlayer.sittingHeight
+      isEstimated: !currentPlayer.sittingHeight,
+      coachingAdvice,
+      biologicalAge: (age + offsetNum).toFixed(1)
     };
   }, [currentPlayer]);
 
@@ -196,36 +212,65 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-primary/5 border-b p-6">
                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                   <Activity className="w-4 h-4 text-accent" /> Growth Spurt Analytics
+                   <Activity className="w-4 h-4 text-accent" /> Growth Spurt (PHV) Details
                  </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-8 space-y-8">
                 {phvData && (
-                  <div className={cn(
-                    "p-6 rounded-[2rem] border-2 shadow-inner text-center space-y-2",
-                    parseFloat(phvData.offset) < 0 ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
-                  )}>
-                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">PHV Maturity Offset</p>
-                    <p className={cn(
-                      "text-4xl font-black tracking-tighter",
-                      parseFloat(phvData.offset) < 0 ? "text-emerald-700" : "text-orange-700"
+                  <>
+                    <div className={cn(
+                      "p-8 rounded-[2.5rem] border-2 shadow-inner text-center space-y-3 relative overflow-hidden",
+                      phvData.offsetNum < 0 ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
                     )}>
-                      {phvData.offset} <span className="text-sm">Yrs</span>
-                    </p>
-                    <Badge className={cn(
-                      "font-black uppercase text-[8px] px-3",
-                      parseFloat(phvData.offset) < 0 ? "bg-emerald-600" : "bg-orange-600"
-                    )}>
-                      {phvData.status}
-                    </Badge>
-                  </div>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Maturity Offset</p>
+                      <p className={cn(
+                        "text-5xl font-black tracking-tighter",
+                        phvData.offsetNum < 0 ? "text-emerald-700" : "text-orange-700"
+                      )}>
+                        {phvData.offset} <span className="text-sm">Yrs</span>
+                      </p>
+                      <Badge className={cn(
+                        "font-black uppercase text-[10px] px-6 py-1 rounded-full shadow-md",
+                        phvData.offsetNum < 0 ? "bg-emerald-600 text-white" : "bg-orange-600 text-white"
+                      )}>
+                        {phvData.status}
+                      </Badge>
+                      <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <TrendingUp className="w-12 h-12" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="bg-muted/30 p-4 rounded-2xl text-center border-2 border-dashed">
+                          <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Biological Age</p>
+                          <p className="text-xl font-black text-primary">{phvData.biologicalAge}</p>
+                       </div>
+                       <div className="bg-muted/30 p-4 rounded-2xl text-center border-2 border-dashed">
+                          <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Leg Length</p>
+                          <p className="text-xl font-black text-primary">{phvData.legLength}cm</p>
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
+                         <BrainCircuit className="w-4 h-4 text-accent" /> Institutional Focus
+                       </h4>
+                       <div className="bg-primary/5 p-6 rounded-2xl border-2 border-primary/10 relative group">
+                          <p className="text-xs font-bold text-foreground/70 leading-relaxed italic pr-8">
+                            &quot;{phvData.coachingAdvice}&quot;
+                          </p>
+                          <InfoIcon className="w-4 h-4 text-primary absolute top-4 right-4 opacity-20 group-hover:opacity-100 transition-opacity" />
+                       </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-4 bg-muted/20 rounded-xl">
+                      <Scale className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <p className="text-[9px] font-medium text-muted-foreground leading-tight italic">
+                        Mirwald Assessment: Using {phvData.isEstimated ? 'Estimated' : 'Measured'} Sitting Height. Trunk growth indicates proximity to PHV.
+                      </p>
+                    </div>
+                  </>
                 )}
-                <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl">
-                   <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                   <p className="text-[9px] font-medium text-muted-foreground leading-tight italic">
-                     Archived month-wise to track biological development.
-                   </p>
-                </div>
               </CardContent>
             </Card>
           </div>
