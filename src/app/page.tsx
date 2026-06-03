@@ -31,7 +31,8 @@ import {
   Gauge,
   ShieldAlert,
   Medal,
-  BrainCircuit
+  BrainCircuit,
+  Cake
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -119,6 +120,13 @@ export default function WaghambaApp() {
     { id: "students", label: t.students, icon: UsersRound },
     { id: "profile", label: t.profile, icon: UserCircle },
   ], [t]);
+
+  // Birthday logic
+  const birthdaysToday = useMemo(() => {
+    if (!isMounted || !schoolData.data.players) return [];
+    const today = format(new Date(), 'MM-dd');
+    return schoolData.data.players.filter((p: any) => p.dob && p.dob.endsWith(today));
+  }, [isMounted, schoolData.data.players]);
 
   if (!isMounted) return null;
 
@@ -239,6 +247,23 @@ export default function WaghambaApp() {
                       </div>
 
                       <div className="lg:col-span-5 grid grid-cols-1 gap-4">
+                         {selectedSection === 'general' && birthdaysToday.length > 0 && (
+                           <div className="bg-accent rounded-[2.5rem] p-8 border border-white/10 shadow-xl animate-in zoom-in-95 duration-700">
+                             <div className="flex justify-between items-start mb-6">
+                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today&apos;s Birthdays</span>
+                             </div>
+                             <div className="space-y-3">
+                               {birthdaysToday.map((p: any) => (
+                                 <div key={p.id} className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0">
+                                   <p className="text-sm font-black uppercase text-white">{p.name}</p>
+                                   <Badge className="bg-white text-accent font-black text-[9px]">Std {p.std}</Badge>
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                            <div className="flex justify-between items-start mb-6">
                               <div className="w-12 h-12 bg-emerald-50/20 rounded-2xl flex items-center justify-center"><Activity className="text-emerald-400 w-6 h-6" /></div>

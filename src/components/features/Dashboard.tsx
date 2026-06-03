@@ -339,7 +339,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                              {activeCam === 'profile' ? (
                                <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                              ) : editingPlayer.photoUrl ? (
-                               <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                               <div className="relative w-full h-full">
+                                 <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                               </div>
                              ) : (
                                <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12" /></div>
                              )}
@@ -361,7 +363,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                              {activeCam === 'aadhar' ? (
                                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                              ) : editingPlayer.aadharPhotoUrl ? (
-                               <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                               <div className="relative w-full h-full">
+                                 <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                               </div>
                              ) : (
                                <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
                              )}
@@ -439,7 +443,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                            <Zap className="w-6 h-6 text-accent animate-pulse" />
                         </div>
                         <div>
-                           <h4 className="text-xl font-black text-primary uppercase">Monthly Technical Scores</h4>
+                           <h4 className="font-black uppercase text-primary">Monthly Technical Scores</h4>
                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Archiving: {format(new Date(), 'MMMM yyyy')}</p>
                         </div>
                       </div>

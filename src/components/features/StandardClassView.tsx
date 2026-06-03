@@ -204,14 +204,23 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
         <DialogContent className="sm:max-w-[950px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
-          <DialogHeader className="bg-primary p-8 text-white shrink-0">
-             <DialogTitle className="text-2xl font-black uppercase text-center">Institutional Identity Edit</DialogTitle>
+          <DialogHeader className="bg-primary p-8 text-white shrink-0 relative">
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-14 h-14 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
+                <Edit className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Institutional Profile Edit</DialogTitle>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1">{editingPlayer?.name}</p>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
           
           <Tabs defaultValue="profile" className="flex-1 overflow-hidden flex flex-col">
             <TabsList className="bg-muted/50 p-2 h-auto gap-4 rounded-none border-b shrink-0 px-10">
-              <TabsTrigger value="profile" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest">Full Profile</TabsTrigger>
-              <TabsTrigger value="performance" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest">Performance</TabsTrigger>
+              <TabsTrigger value="profile" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Full Registry Info</TabsTrigger>
+              <TabsTrigger value="performance" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white">Monthly Registry</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-y-auto scrollbar-hide">
@@ -220,30 +229,83 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                 <TabsContent value="profile" className="p-8 m-0 space-y-12">
                    <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
                       <div className="md:col-span-4 space-y-8">
-                         <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30">
+                        <div className="space-y-4">
+                          <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2 ml-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
+                          <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-xl">
                             {activeCam === 'profile' ? (
                                <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                             ) : editingPlayer.photoUrl ? (
-                               <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                               <div className="relative w-full h-full">
+                                 <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                               </div>
                             ) : (
                                <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12" /></div>
                             )}
-                         </div>
-                         <Button onClick={() => startCamera('profile')} className="w-full bg-primary/5 text-primary border-2 h-12 rounded-xl font-black uppercase text-[10px]">Capture Identity</Button>
+                            {activeCam === 'profile' && (
+                               <div className="absolute bottom-4 inset-x-4 flex flex-col gap-2 z-20">
+                                 <Button onClick={takePhoto} className="w-full bg-accent text-white h-12 rounded-xl font-black uppercase">Capture</Button>
+                                 <Button onClick={stopCamera} variant="destructive" className="w-full h-10 rounded-xl">Cancel</Button>
+                               </div>
+                             )}
+                          </div>
+                          {!activeCam && (
+                            <Button onClick={() => startCamera('profile')} variant="outline" className="w-full h-12 rounded-xl border-2 font-black uppercase text-[10px]"><Camera className="w-4 h-4 mr-2" /> Recapture</Button>
+                          )}
+                        </div>
+
+                        <div className="space-y-4">
+                          <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2 ml-2"><Scan className="w-4 h-4" /> Aadhar Scan</Label>
+                          <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
+                             {activeCam === 'aadhar' ? (
+                               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                             ) : editingPlayer.aadharPhotoUrl ? (
+                               <div className="relative w-full h-full">
+                                 <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                               </div>
+                             ) : (
+                               <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
+                             )}
+                          </div>
+                          <Button variant="ghost" onClick={() => startCamera('aadhar', 'environment')} className="w-full h-10 font-black uppercase text-[9px] hover:bg-primary/5">Update Doc</Button>
+                        </div>
                       </div>
 
-                      <div className="md:col-span-8 space-y-8">
-                         <div className="grid grid-cols-1 gap-6">
-                            <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                            <div className="grid grid-cols-2 gap-6">
-                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">GR No</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Roll No</Label><Input value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                      <div className="md:col-span-8 space-y-10">
+                         <div className="space-y-6">
+                            <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                              <Hash className="w-5 h-5" />
+                              <h4 className="font-black uppercase text-sm tracking-widest">Institutional Identity</h4>
                             </div>
-                            <div className="grid grid-cols-2 gap-6">
-                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                               <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Std</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+                                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Roll No</Label><Input value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-black text-center" /></div>
+                               </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Aadhar (12 Digits)</Label><Input value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-mono" maxLength={12} /></div>
                                <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Mobile Number</Label><Input value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-mono" /></div>
                             </div>
-                            <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl" /></div>
+                            <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Physical Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl" /></div>
+                         </div>
+
+                         <div className="space-y-6">
+                            <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                               <Ruler className="w-5 h-5" />
+                               <h4 className="font-black uppercase text-sm tracking-widest">Physical & Medical</h4>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Standing (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Sitting (cm)</Label><Input type="number" value={editingPlayer.sittingHeight} onChange={e => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                            </div>
+                            <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Medical Alerts</Label><Textarea value={editingPlayer.medical} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[80px] border-2 rounded-xl" /></div>
                          </div>
 
                          <div className="space-y-4 p-8 bg-accent/5 rounded-[2rem] border-2 border-dashed border-accent/20">
@@ -270,21 +332,47 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                    </div>
                 </TabsContent>
 
-                <TabsContent value="performance" className="p-8 m-0 space-y-8">
-                   <div className="bg-primary/5 p-6 rounded-2xl border-2 border-primary/10 flex items-center gap-4">
-                      <Zap className="w-8 h-8 text-accent animate-pulse" />
-                      <div><h4 className="font-black uppercase text-primary">Monthly Performance Log</h4><p className="text-[9px] font-bold text-muted-foreground uppercase">{format(new Date(), 'MMMM yyyy')}</p></div>
+                <TabsContent value="performance" className="p-10 m-0 space-y-10">
+                   <div className="bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/10 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-inner">
+                           <Zap className="w-8 h-8 text-accent animate-pulse" />
+                        </div>
+                        <div>
+                           <h4 className="font-black uppercase text-primary text-xl">Monthly Performance Log</h4>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Archiving: {format(new Date(), 'MMMM yyyy')}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-1.5 rounded-full bg-white">v3.9.9 Engine</Badge>
                    </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       <div className="space-y-6">
-                         <div className="space-y-2"><Label className="text-[9px] font-black uppercase opacity-60">100m Sprint (s)</Label><Input value={monthlyPerformance.running100m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running100m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" /></div>
-                         <div className="space-y-2"><Label className="text-[9px] font-black uppercase opacity-60">Shot Put (m)</Label><Input value={monthlyPerformance.shotPut} onChange={e => setMonthlyPerformance({...monthlyPerformance, shotPut: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                         <div className="space-y-2"><Label className="text-[9px] font-black uppercase opacity-60">Long Jump (m)</Label><Input value={monthlyPerformance.longJump} onChange={e => setMonthlyPerformance({...monthlyPerformance, longJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                         <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                            <Activity className="w-5 h-5 text-accent" />
+                            <h5 className="font-black uppercase text-sm tracking-widest">Track (Runs)</h5>
+                         </div>
+                         <div className="space-y-6">
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">100m Sprint (s)</Label><Input value={monthlyPerformance.running100m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running100m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">200m Sprint (s)</Label><Input value={monthlyPerformance.running200m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running200m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">400m Sprint (s)</Label><Input value={monthlyPerformance.running400m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running400m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
+                         </div>
                       </div>
                       <div className="space-y-6">
-                         <div className="space-y-2"><Label className="text-[9px] font-black uppercase opacity-60">Disc Throw (m)</Label><Input value={monthlyPerformance.discThrow} onChange={e => setMonthlyPerformance({...monthlyPerformance, discThrow: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                         <div className="space-y-2"><Label className="text-[9px] font-black uppercase opacity-60">Javelin (m)</Label><Input value={monthlyPerformance.javelin} onChange={e => setMonthlyPerformance({...monthlyPerformance, javelin: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                         <div className="space-y-2"><Label className="text-[9px] font-black uppercase opacity-60">High Jump (m)</Label><Input value={monthlyPerformance.highJump} onChange={e => setMonthlyPerformance({...monthlyPerformance, highJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                         <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                            <Target className="w-5 h-5 text-accent" />
+                            <h5 className="font-black uppercase text-sm tracking-widest">Throws & Jumps</h5>
+                         </div>
+                         <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Shot Put (m)</Label><Input value={monthlyPerformance.shotPut} onChange={e => setMonthlyPerformance({...monthlyPerformance, shotPut: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Javelin (m)</Label><Input value={monthlyPerformance.javelin} onChange={e => setMonthlyPerformance({...monthlyPerformance, javelin: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Disc Throw (m)</Label><Input value={monthlyPerformance.discThrow} onChange={e => setMonthlyPerformance({...monthlyPerformance, discThrow: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Long Jump (m)</Label><Input value={monthlyPerformance.longJump} onChange={e => setMonthlyPerformance({...monthlyPerformance, longJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                            </div>
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">High Jump (m)</Label><Input value={monthlyPerformance.highJump} onChange={e => setMonthlyPerformance({...monthlyPerformance, highJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                         </div>
                       </div>
                    </div>
                 </TabsContent>
@@ -293,9 +381,9 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
             </div>
 
             <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
-              <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-10 h-14 font-black uppercase text-[10px]">Discard</Button>
+              <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-10 h-14 font-black uppercase text-[10px] tracking-widest">Discard</Button>
               <Button onClick={handleUpdatePlayer} className="bg-primary px-20 rounded-full font-black uppercase text-[10px] shadow-2xl text-white h-14 active-scale">
-                Save & Synchronize
+                Save & Archive snapshot
               </Button>
             </DialogFooter>
           </Tabs>
