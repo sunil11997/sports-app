@@ -8,7 +8,6 @@ import {
   BarChart, 
   Printer, 
   TrendingUp, 
-  Trophy, 
   ChartLine, 
   Target, 
   Ruler, 
