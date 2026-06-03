@@ -163,10 +163,10 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Optimized to assign validation flags synchronously to satisfy Next.js 15 render cycles.
+ * Hardened v4.0.0: Synchronous validation flag assignment for Next.js 15 build worker.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  const val = useMemo(() => {
+  return useMemo(() => {
     const result = factory();
     if (result && typeof result === 'object') {
       try {
@@ -183,6 +183,4 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
-  
-  return val;
 }

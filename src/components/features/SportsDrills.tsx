@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   CircleCheck, 
@@ -110,7 +110,6 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   const drillKey = `${activeSport}_${activeDrill}`;
 
-  // Filter players strictly by the selected game and gender
   const playersInSport = useMemo(() => 
     (store.data.players || []).filter((p: any) => 
       p.category === 'athlete' && p.sports?.includes(activeSport)
@@ -236,7 +235,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                <Info className="w-3.5 h-3.5" />
                <p className="text-[10px] font-bold uppercase tracking-widest">Mastered athletes are automatically moved to the Archive.</p>
             </div>
-            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">v3.9.9 Registry</Badge>
+            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">v4.0.0 Registry</Badge>
           </div>
         </Card>
 
@@ -248,7 +247,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
           </CardHeader>
           <ScrollArea className="flex-1">
             <CardContent className="p-6 space-y-3">
-              {masteredThisDrill.map(p => (
+              {masteredThisDrill.map((p: any) => (
                 <div key={p.id} className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100 group animate-in slide-in-from-right-4 duration-300">
                   <div className="min-w-0">
                     <p className="font-black text-[10px] text-emerald-800 uppercase truncate">{p.name}</p>
@@ -266,6 +265,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 </div>
               )}
             </CardContent>
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
         </Card>
       </div>
