@@ -163,9 +163,10 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.0.0: Synchronous validation flag assignment for Next.js 15 build worker.
+ * Hardened v4.0.0: Suppressed dependency warnings for stable production build.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     const result = factory();
     if (result && typeof result === 'object') {
@@ -181,6 +182,6 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       }
     }
     return result;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
