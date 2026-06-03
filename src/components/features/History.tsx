@@ -279,7 +279,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               </CardHeader>
               <CardContent className="p-10">
                 {chartData.length < 1 ? (
-                   <div className="h-[350px] flex flex-col items-center justify-center opacity-20 border-4 border-dashed rounded-[2rem]">
+                   <div className="h-[400px] flex flex-col items-center justify-center opacity-20 border-4 border-dashed rounded-[2rem]">
                       <TrendingUp className="w-16 h-16 mb-4" />
                       <p className="font-black uppercase text-sm tracking-widest">Awaiting First Archive Entry</p>
                    </div>
@@ -370,6 +370,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                       <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground/40">No historical records found</p>
                     )}
                   </div>
+                  <ScrollBar orientation="vertical" />
                 </ScrollArea>
               </CardContent>
             </Card>
