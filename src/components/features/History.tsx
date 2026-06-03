@@ -23,7 +23,9 @@ import {
   Medal,
   Zap,
   InfoIcon,
-  ChevronDown
+  ChevronDown,
+  Timer,
+  MoveUpRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +43,7 @@ import {
 } from 'recharts';
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export function PerformanceDossier({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -83,7 +85,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     if (currentPlayer.gender === 'Male') {
       offset = -9.236 + (0.0002708 * (legL * sH)) + (-0.001663 * (age * legL)) + (0.007216 * (age * sH)) + (0.02292 * ((w / h) * 100));
     } else {
-      offset = -9.376 + (0.0001881 * (legL * sH)) + (0.0022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
+      offset = -9.376 + (0.0001881 * (legL * sH)) + (0.022 * (age * legL)) + (0.005841 * (age * sH)) + (-0.002658 * (age * w)) + (0.03322 * ((w / h) * 100));
     }
 
     const offsetNum = parseFloat(offset.toFixed(2));
@@ -139,14 +141,14 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <BarChart className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Analytics</h2>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
             <SelectTrigger className="h-14 text-md font-bold bg-white rounded-2xl border-2 shadow-sm">
-              <SelectValue placeholder="Identify Athlete..." />
+              <SelectValue placeholder="Identify Student..." />
             </SelectTrigger>
             <SelectContent>
               {availablePlayers.map((p: any) => (
@@ -166,7 +168,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           <p className="font-black uppercase text-lg tracking-widest text-primary">Identify an entry to access institutional metrics</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardContent className="p-8 space-y-8 text-center">
@@ -242,8 +244,8 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
 
                     <div className="grid grid-cols-2 gap-4">
                        <div className="bg-muted/30 p-4 rounded-2xl text-center border-2 border-dashed">
-                          <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Biological Age</p>
-                          <p className="text-xl font-black text-primary">{phvData.biologicalAge}</p>
+                          <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Sitting Height</p>
+                          <p className="text-xl font-black text-primary">{phvData.sittingHeight}cm</p>
                        </div>
                        <div className="bg-muted/30 p-4 rounded-2xl text-center border-2 border-dashed">
                           <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Leg Length</p>
@@ -262,13 +264,6 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                           <InfoIcon className="w-4 h-4 text-primary absolute top-4 right-4 opacity-20 group-hover:opacity-100 transition-opacity" />
                        </div>
                     </div>
-
-                    <div className="flex items-center gap-2 p-4 bg-muted/20 rounded-xl">
-                      <Scale className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <p className="text-[9px] font-medium text-muted-foreground leading-tight italic">
-                        Mirwald Assessment: Using {phvData.isEstimated ? 'Estimated' : 'Measured'} Sitting Height. Trunk growth indicates proximity to PHV.
-                      </p>
-                    </div>
                   </>
                 )}
               </CardContent>
@@ -279,7 +274,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
               <CardHeader className="bg-slate-50 border-b p-8">
                 <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-3">
-                  <ChartLine className="w-5 h-5 text-accent" /> Monthly Performance History
+                  <ChartLine className="w-5 h-5 text-accent" /> Physical Progress Trends
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-10">
@@ -307,59 +302,77 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
-                  <CardHeader className="bg-primary p-8 text-white">
-                    <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
-                      <Zap className="w-5 h-5 text-accent" /> Score Registry Log
+            {currentFitness && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="border-2 rounded-[3.5rem] bg-white shadow-xl overflow-hidden">
+                  <CardHeader className="bg-accent/5 border-b p-6">
+                    <CardTitle className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                      <Timer className="w-4 h-4 text-accent" /> Monthly Track Log (Sprints)
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-8">
-                    <ScrollArea className="h-[300px]">
-                      <div className="space-y-4">
-                        {playerFitnessHistory.slice().reverse().map((f: any, idx: number) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border">
-                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-primary uppercase">{format(new Date(f.updatedAt || f.date || new Date()), 'MMMM yyyy')}</span>
-                                <span className="text-[8px] font-bold text-muted-foreground uppercase">{f.status} Rank</span>
-                             </div>
-                             <div className="text-right">
-                                <span className="text-xl font-black text-primary">{f.score}%</span>
-                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
+                  <CardContent className="p-8 space-y-4">
+                     {[
+                       { label: '100m Sprint', val: currentFitness.running100m, unit: 's' },
+                       { label: '200m Sprint', val: currentFitness.running200m, unit: 's' },
+                       { label: '400m Sprint', val: currentFitness.running400m, unit: 's' }
+                     ].map((item, i) => (
+                       <div key={i} className="flex justify-between items-center p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-accent/10">
+                          <span className="text-[10px] font-black uppercase text-muted-foreground">{item.label}</span>
+                          <span className="text-lg font-black text-primary">{item.val || '--.--'}<span className="text-[10px] ml-1 opacity-40">{item.unit}</span></span>
+                       </div>
+                     ))}
                   </CardContent>
-               </Card>
+                </Card>
 
-               <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
-                  <CardHeader className="bg-emerald-50 border-b p-8">
-                    <CardTitle className="text-xs font-black uppercase text-emerald-700 tracking-widest flex items-center gap-3">
-                      <CircleCheck className="w-5 h-5" /> Attendance Consistency
+                <Card className="border-2 rounded-[3.5rem] bg-white shadow-xl overflow-hidden">
+                  <CardHeader className="bg-emerald-50 border-b p-6">
+                    <CardTitle className="text-[10px] font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2">
+                      <MoveUpRight className="w-4 h-4 text-emerald-600" /> Monthly Field Log (Throws)
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-10 flex flex-col items-center justify-center text-center space-y-6">
-                     <div className="relative w-40 h-40">
-                        <svg className="w-full h-full transform -rotate-90">
-                           <circle cx="80" cy="80" r="70" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
-                           <circle 
-                              cx="80" cy="80" r="70" 
-                              stroke="#10b981" 
-                              strokeWidth="12" 
-                              fill="transparent" 
-                              strokeDasharray="440" 
-                              strokeDashoffset={440 - (440 * (chartData.length > 0 ? 0.94 : 0))} 
-                              strokeLinecap="round"
-                           />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                           <span className="text-4xl font-black text-primary">94%</span>
-                        </div>
-                     </div>
+                  <CardContent className="p-8 space-y-4">
+                     {[
+                       { label: 'Shot Put', val: currentFitness.shotPut, unit: 'm' },
+                       { label: 'Javelin Throw', val: currentFitness.javelin, unit: 'm' },
+                       { label: 'Disc Throw', val: currentFitness.discThrow, unit: 'm' }
+                     ].map((item, i) => (
+                       <div key={i} className="flex justify-between items-center p-4 bg-emerald-50/30 rounded-2xl border border-transparent hover:border-emerald-200/50">
+                          <span className="text-[10px] font-black uppercase text-muted-foreground">{item.label}</span>
+                          <span className="text-lg font-black text-emerald-700">{item.val || '--.--'}<span className="text-[10px] ml-1 opacity-40">{item.unit}</span></span>
+                       </div>
+                     ))}
                   </CardContent>
-               </Card>
-            </div>
+                </Card>
+              </div>
+            )}
+
+            <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
+              <CardHeader className="bg-primary p-8 text-white">
+                <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
+                  <Zap className="w-5 h-5 text-accent" /> Score Registry Archive
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-4">
+                    {playerFitnessHistory.slice().reverse().map((f: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border hover:bg-white transition-colors">
+                         <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-primary uppercase">{format(new Date(f.updatedAt || f.date || new Date()), 'MMMM yyyy')}</span>
+                            <span className="text-[8px] font-bold text-muted-foreground uppercase">{f.status} Rank</span>
+                         </div>
+                         <div className="text-right">
+                            <span className="text-xl font-black text-primary">{f.score}%</span>
+                         </div>
+                      </div>
+                    ))}
+                    {playerFitnessHistory.length === 0 && (
+                      <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground/40">No historical records found</p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
