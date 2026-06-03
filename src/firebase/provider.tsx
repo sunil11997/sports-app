@@ -166,20 +166,23 @@ export const useUser = (): UserHookResult => {
  * Hardened to assign validation flags synchronously to satisfy Next.js 15 render cycles.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  return useMemo(() => {
-    const val = factory();
-    if (val && typeof val === 'object') {
-      try {
-        Object.defineProperty(val, '__memo', {
-          value: true,
-          configurable: true,
-          enumerable: false,
-          writable: true
-        });
-      } catch (e) {
-        // Safe fail for non-extensible objects
-      }
+  const val = useMemo(() => {
+    return factory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  if (val && typeof val === 'object') {
+    try {
+      Object.defineProperty(val, '__memo', {
+        value: true,
+        configurable: true,
+        enumerable: false,
+        writable: true
+      });
+    } catch (e) {
+      // Safe fail for non-extensible objects
     }
-    return val;
-  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+  }
+  
+  return val;
 }
