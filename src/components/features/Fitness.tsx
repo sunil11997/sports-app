@@ -17,7 +17,8 @@ import {
   Sparkles,
   Trophy,
   Zap,
-  Flame
+  Flame,
+  Target
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -106,11 +107,29 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     }));
   };
 
+  const calculateRecommendations = (metrics: any) => {
+    const recs: string[] = [];
+    const speed = parseFloat(metrics.speedScore || '0');
+    const endurance = parseFloat(metrics.enduranceScore || '0');
+    const strength = parseFloat(metrics.strengthScore || '0');
+    const agility = parseFloat(metrics.agilityScore || '0');
+    const flex = parseFloat(metrics.flexScore || '0');
+
+    if (speed >= 80) recs.push("100m/200m Sprints", "Kabaddi (Raider)");
+    if (agility >= 80) recs.push("Volleyball", "Kho Kho");
+    if (endurance >= 80) recs.push("400m/800m Running", "Kho Kho");
+    if (strength >= 80) recs.push("Shot Put", "Javelin Throw", "Disc Throw");
+    if (flex >= 80) recs.push("High Jump", "Yoga");
+
+    return recs.length > 0 ? recs : ["General Physical Education"];
+  };
+
   const handleSave = async (player: any) => {
     const id = player.id;
     const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
     setIsSaving(id);
     
+    // Core Score Calculations
     const speedVal = 100 - (parseFloat(current.run50m) * 5); 
     const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4);
     const flexVal = (parseFloat(current.sitAndReach) || 0) * 3;
@@ -121,21 +140,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     
     const strengthScore = (parseFloat(current.sitUps) || 0) * 2;
     
-    if (current.sprint30m && current.proAgility) {
-      const s30 = parseFloat(current.sprint30m);
-      const proA = parseFloat(current.proAgility);
-      const deficit = (proA - s30).toFixed(2);
-      current.codDeficit = deficit;
-      
-      if (parseFloat(deficit) > 0.25) {
-        current.agilityDiagnostic = 'Needs Biomechanical Deceleration & Footwork Training';
-      } else if (s30 > 4.8) {
-        current.agilityDiagnostic = 'Needs Linear Acceleration & Maximum Strength Training';
-      } else {
-        current.agilityDiagnostic = 'Elite Change-of-Direction Mechanics Detected';
-      }
-    }
-
     current.speedScore = Math.min(100, Math.max(0, speedVal)).toFixed(0);
     current.enduranceScore = Math.min(100, Math.max(0, enduranceScore)).toFixed(0);
     current.strengthScore = Math.min(100, Math.max(0, strengthScore)).toFixed(0);
@@ -152,12 +156,13 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     
     current.score = Math.round(avgScore).toString();
     current.status = avgScore >= 85 ? 'Elite' : avgScore >= 70 ? 'Optimal' : avgScore >= 50 ? 'Developing' : 'Priority';
+    current.recommendedSports = calculateRecommendations(current);
 
     store.setFitness(id, current);
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 1000);
     setIsSaving(null);
-    toast({ title: "Metrics Archived", description: `${player.name}&apos;s institutional profile updated.` });
+    toast({ title: "Metrics Archived", description: `${player.name}'s institutional profile updated.` });
   };
 
   const handleAiAnalysis = async (player: any) => {
@@ -240,20 +245,19 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                 <th>NAME</th>
                 <th>STD</th>
                 <th>10x6 SHUTTLE</th>
-                <th>30m SPRINT</th>
-                <th>PRO-AGILITY</th>
                 <th>SIT & REACH</th>
                 <th>SPEED (50m)</th>
                 <th>STAMINA (600m)</th>
                 <th>CORE (Situps)</th>
                 <th>SCORE %</th>
-                <th>STATUS</th>
+                <th>RECS</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness?.[p.id] || {};
-                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sprint30m || '-'}s</td><td>${fit.proAgility || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${fit.status || 'Pending'}</td></tr>`;
+                const recs = fit.recommendedSports ? fit.recommendedSports.join(', ') : 'Pending';
+                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${p.name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td><td>${recs}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -298,7 +302,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 font-black uppercase text-[9px] px-4 h-10 hidden lg:flex items-center gap-2 rounded-xl">
-            <Zap className="w-3.5 h-3.5" /> Registry Live Sync
+            <Zap className="w-3.5 h-3.5" /> Monthly Registry Archive
           </Badge>
           <Button onClick={handlePrint} size="sm" className="font-black h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl active-scale transition-all">
             <Printer className="w-4 h-4 mr-2" /> Export Performance Sheet
@@ -313,13 +317,12 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               <TableRow className="h-16">
                 <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[200px] sticky left-0 bg-slate-50/95 backdrop-blur z-30">Athlete Profile</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-cyan-600">10x6 Shuttle</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-600">30m Sprint</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-orange-700">Pro-Agility</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-purple-600">Sit & Reach</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[90px] text-accent">Speed (50m)</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-primary">Stamina (600m)</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-emerald-600">Core (Situps)</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] bg-primary/5">Institutional Score</TableHead>
+                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[150px]">Best Sport Fit</TableHead>
                 <TableHead className="px-6 font-black text-[10px] uppercase text-right w-[120px] sticky right-0 bg-slate-50/95 backdrop-blur z-30">Archive</TableHead>
               </TableRow>
             </TableHeader>
@@ -332,68 +335,56 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   const isPulse = lastSavedId === player.id;
                   
                   return (
-                    <React.Fragment key={player.id}>
-                      <TableRow className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-16 group", isPulse && "animate-success-pulse")}>
-                        <TableCell className="border-r p-4 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
-                          <div className="flex flex-col">
-                            <span className="text-primary uppercase text-sm truncate w-[140px]">{player.name}</span>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} &bull; Age {player.age}</span>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-orange-50/50 focus:bg-white rounded-none" value={current.sprint30m || ''} onChange={(e) => handleChange(player.id, 'sprint30m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-orange-50/50 focus:bg-white rounded-none" value={current.proAgility || ''} onChange={(e) => handleChange(player.id, 'proAgility', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input placeholder="m:s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" placeholder="reps" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-
-                        <TableCell className="border-r p-2 text-center bg-primary/5">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-lg font-black text-primary">{current.score || '0'}%</span>
-                            <Badge className={cn(
-                              "text-[8px] font-black uppercase px-2 py-0 rounded-md shadow-sm",
-                              current.status === 'Elite' ? 'bg-emerald-500 text-white' : 
-                              current.status === 'Optimal' ? 'bg-primary text-white' : 
-                              current.status === 'Developing' ? 'bg-accent text-white' : 
-                              'bg-destructive text-white'
-                            )}>
-                              {current.status || 'PENDING'}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell className="p-0 text-right sticky right-0 bg-white z-10 group-hover:bg-transparent px-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="icon" className="h-12 w-12 text-primary hover:bg-primary hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
-                              {isSaving === player.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-12 w-12 text-accent hover:bg-accent hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleAiAnalysis(player)}>
-                              <BrainCircuit className="w-5 h-5" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                    <TableRow key={player.id} className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-16 group", isPulse && "animate-success-pulse")}>
+                      <TableCell className="border-r p-4 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
+                        <div className="flex flex-col">
+                          <span className="text-primary uppercase text-sm truncate w-[140px]">{player.name}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} &bull; Age {player.age}</span>
+                        </div>
+                      </TableCell>
                       
-                      {current.agilityDiagnostic && (
-                        <TableRow className="bg-orange-50/30 border-b">
-                          <TableCell colSpan={15} className="px-6 py-3">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                               <div className="flex items-center gap-4">
-                                 <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center border border-orange-200">
-                                   <Zap className="w-5 h-5 text-orange-600" />
-                                 </div>
-                                 <div className="space-y-0.5">
-                                   <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest">Agility Diagnostics: COD Deficit {current.codDeficit}s</p>
-                                   <p className="text-xs font-bold text-foreground/80 italic">&quot;{current.agilityDiagnostic}&quot;</p>
-                                 </div>
-                               </div>
-                               <Badge variant="outline" className="border-orange-200 text-orange-700 font-black uppercase text-[8px] px-3 bg-white">Biomechanically Verified</Badge>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
+                      <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.shuttleRun || ''} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                      <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitAndReach || ''} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                      <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run50m || ''} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                      <TableCell className="border-r p-0"><Input placeholder="m:s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.run600m || ''} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                      <TableCell className="border-r p-0"><Input type="number" placeholder="reps" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none" value={current.sitUps || ''} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+
+                      <TableCell className="border-r p-2 text-center bg-primary/5">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-lg font-black text-primary">{current.score || '0'}%</span>
+                          <Badge className={cn(
+                            "text-[8px] font-black uppercase px-2 py-0 rounded-md shadow-sm",
+                            current.status === 'Elite' ? 'bg-emerald-500 text-white' : 
+                            current.status === 'Optimal' ? 'bg-primary text-white' : 
+                            current.status === 'Developing' ? 'bg-accent text-white' : 
+                            'bg-destructive text-white'
+                          )}>
+                            {current.status || 'PENDING'}
+                          </Badge>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="border-r p-2 text-center">
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {current.recommendedSports?.slice(0, 2).map((s: string) => (
+                            <Badge key={s} variant="outline" className="text-[7px] font-black uppercase border-accent/20 text-accent px-1.5 py-0">
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="p-0 text-right sticky right-0 bg-white z-10 group-hover:bg-transparent px-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="h-12 w-12 text-primary hover:bg-primary hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleSave(player)} disabled={isSaving === player.id}>
+                            {isSaving === player.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-12 w-12 text-accent hover:bg-accent hover:text-white rounded-2xl shadow-sm transition-all" onClick={() => handleAiAnalysis(player)}>
+                            <BrainCircuit className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
@@ -432,7 +423,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
               <>
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 ml-2">
-                    <Info className="w-4 h-4 text-accent" /> Institutional Protocol
+                    <Target className="w-4 h-4 text-accent" /> Institutional Protocol
                   </h4>
                   <div className="bg-primary/5 p-8 rounded-[2rem] border-2 border-dashed border-primary/10 text-sm font-medium leading-relaxed italic text-primary/80 shadow-inner">
                     &quot;{activeInstruction}&quot;
@@ -466,27 +457,6 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                       </div>
                       <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className="border-2 rounded-[2rem] p-8 bg-accent/5 border-accent/10 hover:shadow-xl transition-all">
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className="p-3 bg-accent text-white rounded-xl shadow-lg"><DumbbellIcon className="w-6 h-6" /></div>
-                          <h5 className="text-[11px] font-black uppercase text-primary tracking-[0.2em]">Drills</h5>
-                        </div>
-                        <p className="text-xs font-bold text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {selectedAnalysis.recommendations}
-                        </p>
-                      </Card>
-                      <Card className="border-2 rounded-[2rem] p-8 bg-emerald-50 border-emerald-100 hover:shadow-xl transition-all">
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className="p-3 bg-emerald-500 text-white rounded-xl shadow-lg"><Trophy className="w-6 h-6" /></div>
-                          <h5 className="text-[11px] font-black uppercase text-primary tracking-[0.2em]">Benefits</h5>
-                        </div>
-                        <p className="text-xs font-bold text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {selectedAnalysis.sportsBenefit}
-                        </p>
-                      </Card>
-                    </div>
                   </div>
                 )}
               </>
@@ -506,25 +476,3 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
     </div>
   );
 }
-
-const DumbbellIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="m6.5 6.5 11 11" />
-    <path d="m11.8 5.8 5.2 5.2" />
-    <path d="m5.8 11.8 5.2 5.2" />
-    <path d="M7 21a2 2 0 1 0-4-4 2 2 0 0 0 4 4Z" />
-    <path d="M21 7a2 2 0 1 0-4-4 2 2 0 0 0 4 4Z" />
-    <path d="m18.8 2.8 2.4 2.4" />
-    <path d="m2.8 18.8 2.4 2.4" />
-  </svg>
-);

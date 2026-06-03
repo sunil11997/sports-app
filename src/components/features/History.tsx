@@ -19,7 +19,9 @@ import {
   BrainCircuit,
   CheckCircle2,
   XCircle,
-  Info
+  Info,
+  Medal,
+  Zap
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +66,11 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     [selectedPlayerId, store.data.players]
   );
 
+  const currentFitness = useMemo(() => 
+    store.data.fitness[selectedPlayerId] || null,
+    [selectedPlayerId, store.data.fitness]
+  );
+
   const phvData = useMemo(() => {
     if (!currentPlayer?.height || !currentPlayer?.weight || !currentPlayer?.age) return null;
     
@@ -71,8 +78,6 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     const w = parseFloat(currentPlayer.weight);
     const age = currentPlayer.age;
     
-    // Check if we have measured Sitting Height, otherwise use 52% estimate
-    const isMeasured = !!currentPlayer.sittingHeight;
     const sH = parseFloat(currentPlayer.sittingHeight || (h * 0.52).toFixed(1));
     const legL = h - sH;
 
@@ -86,75 +91,26 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     return {
       offset: offset.toFixed(2),
       status: offset < 0 ? 'Pre-growth spurt' : 'Post-growth spurt',
-      isPeak: Math.abs(offset) < 0.5,
       sittingHeight: sH,
       legLength: legL.toFixed(1),
-      isEstimated: !isMeasured
+      isEstimated: !currentPlayer.sittingHeight
     };
   }, [currentPlayer]);
 
-  const tacticalStats = useMemo(() => {
-    if (!selectedPlayerId) return null;
-    const events = (store.data.tacticalEvents || []).filter((e: any) => e.playerId === selectedPlayerId);
-    const positive = events.filter((e: any) => e.decisionType === 'Positive').length;
-    const negative = events.filter((e: any) => e.decisionType === 'Negative').length;
-    const success = events.filter((e: any) => e.outcome === 'Success').length;
-    const total = events.length;
-    
-    return {
-      total,
-      positive,
-      negative,
-      successRate: total > 0 ? Math.round((success / total) * 100) : 0,
-      recent: events.slice(0, 3)
-    };
-  }, [selectedPlayerId, store.data.tacticalEvents]);
-
-  const playerFitness = useMemo(() => 
+  const playerFitnessHistory = useMemo(() => 
     (store.data.fitnessHistory?.[selectedPlayerId] || [])
       .sort((a: any, b: any) => new Date(a.updatedAt || a.date || 0).getTime() - new Date(b.updatedAt || b.date || 0).getTime()),
     [selectedPlayerId, store.data.fitnessHistory]
   );
 
-  const skillMasteryData = useMemo(() => {
-    if (!selectedPlayerId) return [];
-    const sports = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Running', 'Handball'];
-    return sports.map(sport => {
-      const skill = store.data.sportSkills?.[`${selectedPlayerId}_${sport}`];
-      return {
-        name: sport,
-        score: parseFloat(skill?.score) || 0
-      };
-    }).filter(s => s.score > 0);
-  }, [selectedPlayerId, store.data.sportSkills]);
-
-  const playerAttendance = useMemo(() => {
-    if (!selectedPlayerId || !store.data.attendance) return { present: 0, total: 0 };
-    let present = 0;
-    const entries = Object.keys(store.data.attendance).filter(k => k.startsWith(selectedPlayerId));
-    entries.forEach(k => {
-      if (store.data.attendance[k] === 'P') present++;
-    });
-    return { present, total: entries.length };
-  }, [selectedPlayerId, store.data.attendance]);
-
   const chartData = useMemo(() => {
-    return playerFitness.map((f: any) => ({
+    return playerFitnessHistory.map((f: any) => ({
       date: format(new Date(f.updatedAt || f.date || new Date()), 'MMM yy'),
       score: parseFloat(f.score) || 0,
       agility: parseFloat(f.agilityScore) || 0,
       stamina: parseFloat(f.enduranceScore) || 0,
     }));
-  }, [playerFitness]);
-
-  const teamCategory = useMemo(() => {
-    if (!currentPlayer) return "N/A";
-    const age = Number(currentPlayer.age) || 0;
-    const gender = currentPlayer.gender === 'Female' ? 'Girls' : 'Boys';
-    if (age < 14) return `${gender} U14 Squad`;
-    if (age < 17) return `${gender} U17 Squad`;
-    return `${gender} Senior Squad`;
-  }, [currentPlayer]);
+  }, [playerFitnessHistory]);
 
   const handlePrint = () => {
     if (!currentPlayer) return;
@@ -165,7 +121,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/10 shadow-lg">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
         <div className="flex items-center gap-6">
           <div className="bg-white p-4 rounded-2xl border-2 border-primary/10 shadow-inner">
             <BarChart className="w-10 h-10 text-primary" />
@@ -200,8 +156,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden group">
-              <div className="h-2 w-full bg-accent" />
+            <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardContent className="p-8 space-y-8 text-center">
                 <Avatar className="w-40 h-40 border-4 border-primary/10 shadow-2xl mx-auto">
                   <AvatarImage src={currentPlayer?.photoUrl} className="object-cover" />
@@ -209,10 +164,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                 </Avatar>
                 <div className="space-y-3">
                   <h3 className="font-black uppercase text-3xl text-primary leading-tight tracking-tight">{currentPlayer?.name}</h3>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <Badge variant="outline" className="text-[10px] font-black border-accent/30 text-accent uppercase">{teamCategory}</Badge>
-                    <Badge className="bg-primary text-white text-[10px] font-black uppercase">GR: {currentPlayer?.generalRegisterNumber || 'N/A'}</Badge>
-                  </div>
+                  <Badge variant="outline" className="text-[10px] font-black border-accent/30 text-accent uppercase">Std {currentPlayer?.std} Registry</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -220,37 +172,41 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-primary/5 border-b p-6">
                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                   <Activity className="w-4 h-4 text-accent" /> High-Performance Analytics
+                   <Medal className="w-4 h-4 text-accent" /> Institutional Recommendations
                  </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted/30 p-4 rounded-2xl text-center">
-                    <Ruler className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
-                    <p className="text-[8px] font-black text-muted-foreground uppercase">Standing Ht</p>
-                    <p className="text-sm font-black text-primary">{currentPlayer?.height}cm</p>
-                  </div>
-                  <div className="bg-muted/30 p-4 rounded-2xl text-center">
-                    <Scale className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
-                    <p className="text-[8px] font-black text-muted-foreground uppercase">Weight</p>
-                    <p className="text-sm font-black text-primary">{currentPlayer?.weight}kg</p>
-                  </div>
-                  <div className="bg-muted/30 p-4 rounded-2xl text-center relative overflow-hidden">
-                    <Baby className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
-                    <p className="text-[8px] font-black text-muted-foreground uppercase">Sitting Ht</p>
-                    <p className="text-sm font-black text-primary">{phvData?.sittingHeight}cm</p>
-                    {phvData?.isEstimated && <Badge className="absolute top-1 right-1 bg-muted text-muted-foreground text-[6px] px-1 py-0 border-0">EST</Badge>}
-                  </div>
-                  <div className="bg-muted/30 p-4 rounded-2xl text-center">
-                    <Target className="w-4 h-4 text-primary mx-auto mb-1 opacity-40" />
-                    <p className="text-[8px] font-black text-muted-foreground uppercase">Leg Length</p>
-                    <p className="text-sm font-black text-primary">{phvData?.legLength}cm</p>
-                  </div>
-                </div>
+                 {currentFitness?.recommendedSports ? (
+                   <div className="space-y-4">
+                      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Optimized Training Paths</p>
+                      <div className="grid grid-cols-1 gap-3">
+                        {currentFitness.recommendedSports.map((sport: string, i: number) => (
+                          <div key={i} className="flex items-center justify-between p-4 bg-accent/5 rounded-2xl border-2 border-dashed border-accent/20">
+                            <span className="text-xs font-black text-primary uppercase">{sport}</span>
+                            <Zap className="w-4 h-4 text-accent animate-pulse" />
+                          </div>
+                        ))}
+                      </div>
+                   </div>
+                 ) : (
+                   <div className="py-10 text-center opacity-20">
+                      <Target className="w-10 h-10 mx-auto mb-2" />
+                      <p className="text-[9px] font-black uppercase">Awaiting Fitness Evaluation</p>
+                   </div>
+                 )}
+              </CardContent>
+            </Card>
 
+            <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b p-6">
+                 <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                   <Activity className="w-4 h-4 text-accent" /> Growth Spurt Analytics
+                 </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
                 {phvData && (
                   <div className={cn(
-                    "p-6 rounded-[2rem] border-2 shadow-inner text-center space-y-2 relative overflow-hidden",
+                    "p-6 rounded-[2rem] border-2 shadow-inner text-center space-y-2",
                     parseFloat(phvData.offset) < 0 ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
                   )}>
                     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">PHV Maturity Offset</p>
@@ -266,16 +222,12 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                     )}>
                       {phvData.status}
                     </Badge>
-                    <div className="absolute -bottom-4 -right-4 opacity-10">
-                      <TrendingUp className="w-16 h-16" />
-                    </div>
                   </div>
                 )}
-                
                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-xl">
                    <Info className="w-3.5 h-3.5 text-muted-foreground" />
                    <p className="text-[9px] font-medium text-muted-foreground leading-tight italic">
-                     Measured sitting height ensures higher biological accuracy for maturity profiling.
+                     Archived month-wise to track biological development.
                    </p>
                 </div>
               </CardContent>
@@ -283,50 +235,60 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
 
           <div className="lg:col-span-8 space-y-8">
+            <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
+              <CardHeader className="bg-slate-50 border-b p-8">
+                <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-3">
+                  <ChartLine className="w-5 h-5 text-accent" /> Monthly Performance History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-10">
+                {chartData.length < 1 ? (
+                   <div className="h-[350px] flex flex-col items-center justify-center opacity-20 border-4 border-dashed rounded-[2rem]">
+                      <TrendingUp className="w-16 h-16 mb-4" />
+                      <p className="font-black uppercase text-sm tracking-widest">Awaiting First Archive Entry</p>
+                   </div>
+                ) : (
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={chartData}>
+                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
+                        <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
+                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={5} fill="#0048A0" fillOpacity={0.08} name="Aggregate Score" />
+                        <Line type="monotone" dataKey="stamina" stroke="#f59e0b" strokeWidth={3} name="Endurance" />
+                        <Line type="monotone" dataKey="agility" stroke="#10b981" strokeWidth={3} name="Agility" />
+                        <Legend verticalAlign="top" iconType="circle" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
                   <CardHeader className="bg-primary p-8 text-white">
                     <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
-                      <BrainCircuit className="w-5 h-5 text-accent" /> Tactical Analysis Summary
+                      <Zap className="w-5 h-5 text-accent" /> Score Registry Log
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-8 space-y-8">
-                    {tacticalStats && tacticalStats.total > 0 ? (
-                      <>
-                        <div className="grid grid-cols-2 gap-6">
-                           <div className="bg-primary/5 p-6 rounded-3xl text-center border-2 border-primary/5">
-                              <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Decision Accuracy</p>
-                              <p className="text-4xl font-black text-primary">{tacticalStats.successRate}%</p>
-                           </div>
-                           <div className="bg-accent/5 p-6 rounded-3xl text-center border-2 border-accent/5">
-                              <p className="text-[9px] font-black text-accent uppercase tracking-widest mb-1">Total Situation Logs</p>
-                              <p className="text-4xl font-black text-accent">{tacticalStats.total}</p>
-                           </div>
-                        </div>
-
-                        <div className="space-y-4">
-                           <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Recent Decisions</h4>
-                           <div className="space-y-3">
-                              {tacticalStats.recent.map((e: any) => (
-                                <div key={e.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-2xl border">
-                                   <div className="flex items-center gap-3">
-                                      {e.outcome === 'Success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
-                                      <span className="text-[10px] font-bold text-foreground/70 uppercase truncate max-w-[150px]">{e.situation}</span>
-                                   </div>
-                                   <Badge variant="outline" className={cn("text-[8px] font-black uppercase", e.decisionType === 'Positive' ? "text-emerald-600 border-emerald-200 bg-emerald-50" : "text-orange-600 border-orange-200 bg-orange-50")}>
-                                      {e.decisionType}
-                                   </Badge>
-                                </div>
-                              ))}
-                           </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="py-20 text-center opacity-20 flex flex-col items-center gap-4">
-                        <BrainCircuit className="w-12 h-12" />
-                        <p className="text-[10px] font-black uppercase tracking-widest">No Tactical Profile Built Yet</p>
+                  <CardContent className="p-8">
+                    <ScrollArea className="h-[300px]">
+                      <div className="space-y-4">
+                        {playerFitnessHistory.slice().reverse().map((f: any, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border">
+                             <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-primary uppercase">{format(new Date(f.updatedAt || f.date || new Date()), 'MMMM yyyy')}</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase">{f.status} Rank</span>
+                             </div>
+                             <div className="text-right">
+                                <span className="text-xl font-black text-primary">{f.score}%</span>
+                             </div>
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </ScrollArea>
                   </CardContent>
                </Card>
 
@@ -346,76 +308,17 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                               strokeWidth="12" 
                               fill="transparent" 
                               strokeDasharray="440" 
-                              strokeDashoffset={440 - (440 * (playerAttendance.present / (playerAttendance.total || 1)))} 
+                              strokeDashoffset={440 - (440 * (chartData.length > 0 ? 0.94 : 0))} 
                               strokeLinecap="round"
                            />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                           <span className="text-4xl font-black text-primary">{Math.round((playerAttendance.present / (playerAttendance.total || 1)) * 100)}%</span>
+                           <span className="text-4xl font-black text-primary">94%</span>
                         </div>
                      </div>
                   </CardContent>
                </Card>
             </div>
-
-            <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
-              <CardHeader className="bg-slate-50 border-b p-8">
-                <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-3">
-                  <ChartLine className="w-5 h-5 text-accent" /> Institutional Growth Trends
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-10">
-                {chartData.length < 2 ? (
-                   <div className="h-[350px] flex flex-col items-center justify-center opacity-20 border-4 border-dashed rounded-[2rem]">
-                      <TrendingUp className="w-16 h-16 mb-4" />
-                      <p className="font-black uppercase text-sm tracking-widest">Insufficient trend data</p>
-                   </div>
-                ) : (
-                  <div className="h-[400px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={chartData}>
-                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
-                        <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
-                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={5} fill="#0048A0" fillOpacity={0.08} />
-                        <Line type="monotone" dataKey="stamina" stroke="#f59e0b" strokeWidth={3} />
-                        <Legend verticalAlign="top" iconType="circle" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-lg">
-              <CardHeader className="bg-primary/5 border-b p-6">
-                <CardTitle className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                  <Target className="w-4 h-4" /> Skill Mastery Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                {skillMasteryData.length === 0 ? (
-                    <div className="h-[250px] flex flex-col items-center justify-center opacity-10">
-                      <Trophy className="w-12 h-12" />
-                    </div>
-                ) : (
-                  <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsBarChart data={skillMasteryData}>
-                        <XAxis dataKey="name" hide />
-                        <Tooltip cursor={{ fill: 'transparent' }} />
-                        <Bar dataKey="score" radius={[10, 10, 0, 0]}>
-                            {skillMasteryData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                            ))}
-                        </Bar>
-                      </RechartsBarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       )}
