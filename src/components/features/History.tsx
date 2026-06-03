@@ -118,11 +118,6 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     }));
   }, [playerFitnessHistory]);
 
-  const handlePrint = () => {
-    if (!currentPlayer) return;
-    window.print();
-  };
-
   if (!store.isLoaded) return <DashboardHomeSkeleton />;
 
   return (
@@ -134,7 +129,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.0.0</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
@@ -148,7 +143,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               ))}
             </SelectContent>
           </Select>
-          <Button disabled={!selectedPlayerId} onClick={handlePrint} className="bg-primary text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-xl">
+          <Button disabled={!selectedPlayerId} onClick={() => window.print()} className="bg-primary text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-xl">
             <Printer className="w-4 h-4 mr-2" /> Export Performance Dossier
           </Button>
         </div>
@@ -206,7 +201,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-primary/5 border-b p-6">
                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                   <Activity className="w-4 h-4 text-accent" /> Growth Spurt (PHV) Details
+                   <Activity className="w-4 h-4 text-accent" /> PHV Maturity (Growth Spurt)
                  </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
@@ -229,9 +224,6 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                       )}>
                         {phvData.status}
                       </Badge>
-                      <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <TrendingUp className="w-12 h-12" />
-                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -249,11 +241,10 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                        <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
                          <BrainCircuit className="w-4 h-4 text-accent" /> Institutional Focus
                        </h4>
-                       <div className="bg-primary/5 p-6 rounded-2xl border-2 border-primary/10 relative group">
-                          <p className="text-xs font-bold text-foreground/70 leading-relaxed italic pr-8">
+                       <div className="bg-primary/5 p-6 rounded-2xl border-2 border-primary/10">
+                          <p className="text-xs font-bold text-foreground/70 leading-relaxed italic">
                             &quot;{phvData.coachingAdvice}&quot;
                           </p>
-                          <InfoIcon className="w-4 h-4 text-primary absolute top-4 right-4 opacity-20 group-hover:opacity-100 transition-opacity" />
                        </div>
                     </div>
                   </>
@@ -294,50 +285,6 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               </CardContent>
             </Card>
 
-            {currentFitness && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Card className="border-2 rounded-[3.5rem] bg-white shadow-xl overflow-hidden">
-                  <CardHeader className="bg-accent/5 border-b p-6">
-                    <CardTitle className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                      <Timer className="w-4 h-4 text-accent" /> Monthly Track Log (Sprints)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 space-y-4">
-                     {[
-                       { label: '100m Sprint', val: currentFitness.running100m, unit: 's' },
-                       { label: '200m Sprint', val: currentFitness.running200m, unit: 's' },
-                       { label: '400m Sprint', val: currentFitness.running400m, unit: 's' }
-                     ].map((item, i) => (
-                       <div key={i} className="flex justify-between items-center p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-accent/10">
-                          <span className="text-[10px] font-black uppercase text-muted-foreground">{item.label}</span>
-                          <span className="text-lg font-black text-primary">{item.val || '--.--'}<span className="text-[10px] ml-1 opacity-40">{item.unit}</span></span>
-                       </div>
-                     ))}
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 rounded-[3.5rem] bg-white shadow-xl overflow-hidden">
-                  <CardHeader className="bg-emerald-50 border-b p-6">
-                    <CardTitle className="text-[10px] font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2">
-                      <MoveUpRight className="w-4 h-4 text-emerald-600" /> Monthly Field Log (Throws)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 space-y-4">
-                     {[
-                       { label: 'Shot Put', val: currentFitness.shotPut, unit: 'm' },
-                       { label: 'Javelin Throw', val: currentFitness.javelin, unit: 'm' },
-                       { label: 'Disc Throw', val: currentFitness.discThrow, unit: 'm' }
-                     ].map((item, i) => (
-                       <div key={i} className="flex justify-between items-center p-4 bg-emerald-50/30 rounded-2xl border border-transparent hover:border-emerald-200/50">
-                          <span className="text-[10px] font-black uppercase text-muted-foreground">{item.label}</span>
-                          <span className="text-lg font-black text-emerald-700">{item.val || '--.--'}<span className="text-[10px] ml-1 opacity-40">{item.unit}</span></span>
-                       </div>
-                     ))}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
             <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
               <CardHeader className="bg-primary p-8 text-white">
                 <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
@@ -348,7 +295,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-4">
                     {playerFitnessHistory.slice().reverse().map((f: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border hover:bg-white transition-colors">
+                      <div key={idx} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border">
                          <div className="flex flex-col">
                             <span className="text-[10px] font-black text-primary uppercase">{format(new Date(f.updatedAt || f.date || new Date()), 'MMMM yyyy')}</span>
                             <span className="text-[8px] font-bold text-muted-foreground uppercase">{f.status} Rank</span>

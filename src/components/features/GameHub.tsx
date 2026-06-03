@@ -83,31 +83,33 @@ export function GameHub({ store }: { store: any }) {
         </div>
 
         <Tabs defaultValue="readiness" className="space-y-8">
-          <div className="flex items-center justify-center">
-            <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner overflow-x-auto scrollbar-hide max-w-full gap-1">
-              <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <HeartPulse className="w-3.5 h-3.5" /> Readiness
-              </TabsTrigger>
-              <TabsTrigger value="goals" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Target className="w-3.5 h-3.5" /> Targets
-              </TabsTrigger>
-              <TabsTrigger value="playbook" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Layout className="w-3.5 h-3.5" /> Playbook
-              </TabsTrigger>
-              <TabsTrigger value="tactics" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <BrainCircuit className="w-3.5 h-3.5" /> Decisions
-              </TabsTrigger>
-              <TabsTrigger value="injury" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <ShieldAlert className="w-3.5 h-3.5" /> Injury Hub
-              </TabsTrigger>
-              <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
-              <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
-              <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
-              <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
-              <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-slate-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Activity className="w-3 h-3" /> Auto Reports
-              </TabsTrigger>
-            </TabsList>
+          <div className="w-full flex items-center justify-center">
+            <div className="w-full max-w-full overflow-x-auto scrollbar-hide px-4">
+              <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner flex shrink-0 gap-1 w-fit mx-auto">
+                <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                  <HeartPulse className="w-3.5 h-3.5" /> Readiness
+                </TabsTrigger>
+                <TabsTrigger value="goals" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5" /> Targets
+                </TabsTrigger>
+                <TabsTrigger value="playbook" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                  <Layout className="w-3.5 h-3.5" /> Playbook
+                </TabsTrigger>
+                <TabsTrigger value="tactics" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                  <BrainCircuit className="w-3.5 h-3.5" /> Decisions
+                </TabsTrigger>
+                <TabsTrigger value="injury" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                  <ShieldAlert className="w-3.5 h-3.5" /> Injury Hub
+                </TabsTrigger>
+                <TabsTrigger value="skills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
+                <TabsTrigger value="drills" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Drills</TabsTrigger>
+                <TabsTrigger value="teams" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
+                <TabsTrigger value="tournament" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
+                <TabsTrigger value="reports" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-slate-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                  <Activity className="w-3 h-3" /> Auto Reports
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           <TabsContent value="readiness" className="mt-0">
