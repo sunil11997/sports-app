@@ -81,12 +81,6 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
       "Sprint start drill", "Acceleration drill", "Shuttle run drill", "Relay baton exchange drill",
       "Long jump take-off drill", "Sand pit landing drill", "High jump approach drill", "Scissor jump drill"
     ]
-  },
-  'Long Jump': {
-    skills: ["Approach speed drill", "Take-off board drill", "Flight posture", "Sand landing technique"]
-  },
-  'High Jump': {
-    skills: ["Fosbury approach", "Centrifugal force drill", "Bar clearance arch", "Landing safety"]
   }
 };
 
