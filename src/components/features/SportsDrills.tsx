@@ -119,18 +119,23 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   // Grouped rosters for the active pool (not yet mastered)
   const femaleSquad = useMemo(() => playersInSport.filter((p: any) => {
-    const isMastered = !!store.data.drillCompletions?.[`${p.id}_${drillKey}`];
+    const lookupKey = `${p.id}_${drillKey}`;
+    const isMastered = !!store.data.drillCompletions?.[lookupKey];
     return p.gender === 'Female' && !isMastered;
   }), [playersInSport, store.data.drillCompletions, drillKey]);
 
   const maleSquad = useMemo(() => playersInSport.filter((p: any) => {
-    const isMastered = !!store.data.drillCompletions?.[`${p.id}_${drillKey}`];
+    const lookupKey = `${p.id}_${drillKey}`;
+    const isMastered = !!store.data.drillCompletions?.[lookupKey];
     return p.gender === 'Male' && !isMastered;
   }), [playersInSport, store.data.drillCompletions, drillKey]);
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
-      .filter((p: any) => !!store.data.drillCompletions?.[`${p.id}_${drillKey}`])
+      .filter((p: any) => {
+        const lookupKey = `${p.id}_${drillKey}`;
+        return !!store.data.drillCompletions?.[lookupKey];
+      })
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
 

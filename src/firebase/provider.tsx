@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -165,17 +164,16 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened for synchronous validation flag assignment to prevent Next.js 15 render cycle exceptions.
+ * Refactored for synchronous validation to satisfy Next.js 15 render cycles.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  // Execute factory and assign validation flag synchronously within useMemo
   const memoizedVal = useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
         (val as any).__memo = true;
       } catch (e) {
-        // Handle non-extensible objects gracefully
+        // Safe fail for non-extensible objects
       }
     }
     return val;

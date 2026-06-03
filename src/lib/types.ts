@@ -56,9 +56,20 @@ export interface FitnessAssessment {
   strengthScore?: string; // Specific Strength Rating (0-100)
   enduranceScore?: string; // Specific Endurance Rating (0-100)
   speedScore?: string;    // Specific Speed Rating (0-100)
+  // New Monthly Performance Fields
+  shotPut?: string;
+  javelin?: string;
+  discThrow?: string;
+  running100m?: string;
+  running200m?: string;
+  running400m?: string;
+  longJump?: string;
+  highJump?: string;
+  
   score: string;
   status: string;
   date?: string;
+  month?: string; // yyyy-MM
   updatedAt?: string;
   playerId?: string;
   term?: 'First' | 'Second';

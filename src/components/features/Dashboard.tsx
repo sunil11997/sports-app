@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -29,7 +28,10 @@ import {
   GraduationCap,
   Medal,
   Info,
-  Baby
+  Baby,
+  Activity,
+  Zap,
+  Target
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -37,6 +39,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -59,6 +62,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedSport, setSelectedSport] = useState(initialSport);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [monthlyPerformance, setMonthlyPerformance] = useState<any>({});
   const [convertingPlayer, setConvertingPlayer] = useState<Player | null>(null);
   const [selectedSportsForConversion, setSelectedSportsForConversion] = useState<string[]>([]);
   
@@ -76,6 +80,25 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       videoRef.current.srcObject = stream;
     }
   }, [stream, activeCam]);
+
+  useEffect(() => {
+    if (editingPlayer) {
+      // Load current month's performance data if it exists
+      const currentMonth = format(new Date(), 'yyyy-MM');
+      const existing = store.data.fitness[editingPlayer.id] || {};
+      setMonthlyPerformance({
+        month: currentMonth,
+        running100m: existing.running100m || '',
+        running200m: existing.running200m || '',
+        running400m: existing.running400m || '',
+        shotPut: existing.shotPut || '',
+        javelin: existing.javelin || '',
+        discThrow: existing.discThrow || '',
+        longJump: existing.longJump || '',
+        highJump: existing.highJump || ''
+      });
+    }
+  }, [editingPlayer, store.data.fitness]);
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
     if (stream) {
@@ -208,9 +231,24 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     if (editingPlayer) {
       // Auto-promote to athlete if sports are assigned
       const updatedCategory = (editingPlayer.sports && editingPlayer.sports.length > 0) ? 'athlete' : editingPlayer.category;
+      
+      // Save Player Info
       store.updatePlayer({ ...editingPlayer, category: updatedCategory });
+      
+      // Save Monthly Performance
+      if (Object.values(monthlyPerformance).some(v => v !== '')) {
+         store.setFitness(editingPlayer.id, {
+           ...store.data.fitness[editingPlayer.id],
+           ...monthlyPerformance,
+           month: monthlyPerformance.month,
+           updatedAt: new Date().toISOString(),
+           score: store.data.fitness[editingPlayer.id]?.score || "0",
+           status: store.data.fitness[editingPlayer.id]?.status || "Developing"
+         });
+      }
+
       setEditingPlayer(null);
-      toast({ title: "Record Updated" });
+      toast({ title: "Record Updated", description: "Institutional registry successfully synchronized." });
     }
   };
 
@@ -231,8 +269,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   };
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
-
-  const athletesOnlyInSportsView = !isGeneral && store.data.players.length > filteredPlayers.length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -265,13 +301,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           </div>
         </div>
       </div>
-
-      {athletesOnlyInSportsView && (
-        <div className="bg-primary/5 p-4 rounded-2xl border-2 border-dashed border-primary/10 flex items-center gap-3">
-          <Info className="w-4 h-4 text-primary opacity-40" />
-          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Showing Specialized Athletes only. Total Students: {store.data.players.length}</p>
-        </div>
-      )}
 
       <div className="google-card overflow-hidden overflow-x-auto">
         <Table className="min-w-max border-collapse">
@@ -356,153 +385,192 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[850px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
-          <DialogHeader className="bg-primary/5 p-8 border-b shrink-0">
-            <DialogTitle className="text-2xl font-black uppercase text-primary text-center">Restore Profile Details</DialogTitle>
+        <DialogContent className="sm:max-w-[900px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
+          <DialogHeader className="bg-primary p-10 text-white shrink-0 relative">
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
+                <Edit className="w-8 h-8 text-white" />
+              </div>
+              <div className="space-y-1 text-left">
+                <DialogTitle className="text-3xl font-black uppercase tracking-tight">Institutional Profile Registry</DialogTitle>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">Restoring identity for: {editingPlayer?.name}</p>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto">
-            {editingPlayer && (
-              <div className="p-8 space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                   <div className="space-y-8">
-                      <div className="space-y-3">
-                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
-                        <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/10 bg-muted/30 group">
-                           {activeCam === 'profile' ? (
-                             <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
-                           ) : editingPlayer.photoUrl ? (
-                             <div className="relative w-full h-full">
+          <Tabs defaultValue="profile" className="flex-1 overflow-hidden flex flex-col">
+            <TabsList className="bg-muted/50 p-2 h-auto gap-4 rounded-none border-b shrink-0 px-10">
+              <TabsTrigger value="profile" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Student Info</TabsTrigger>
+              <TabsTrigger value="performance" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white">Monthly Registry</TabsTrigger>
+            </TabsList>
+
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {editingPlayer && (
+                <>
+                <TabsContent value="profile" className="p-10 m-0 space-y-12">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+                     <div className="md:col-span-4 space-y-8">
+                        <div className="space-y-4">
+                          <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2 ml-2"><ImageIcon className="w-4 h-4" /> Identity Photo</Label>
+                          <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-xl">
+                             {activeCam === 'profile' ? (
+                               <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                             ) : editingPlayer.photoUrl ? (
                                <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
-                             </div>
-                           ) : (
-                             <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12 mb-2" /></div>
-                           )}
-                           {activeCam === 'profile' && (
-                             <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-4 z-20">
-                               <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Flip Camera</Button>
-                               <div className="flex gap-2">
-                                 <Button onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs rounded-xl">CAPTURE</Button>
-                                 <Button variant="destructive" onClick={stopCamera} className="w-12 h-12 p-0 rounded-xl"><CircleX className="w-6 h-6" /></Button>
+                             ) : (
+                               <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Camera className="w-12 h-12" /></div>
+                             )}
+                             {activeCam === 'profile' && (
+                               <div className="absolute bottom-4 inset-x-4 flex flex-col gap-2 z-20">
+                                 <Button onClick={takePhoto} className="w-full bg-accent text-white h-12 rounded-xl font-black uppercase">Capture</Button>
+                                 <Button onClick={stopCamera} variant="destructive" className="w-full h-10 rounded-xl">Cancel</Button>
                                </div>
-                             </div>
-                           )}
-                        </div>
-                        {!activeCam && (
-                          <div className="flex gap-2">
-                            <Button onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-xl h-11 font-black text-[10px] uppercase">Recapture</Button>
-                            <Button variant="outline" onClick={() => profileUploadRef.current?.click()} className="w-11 h-11 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
-                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                             )}
                           </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label className="font-black text-primary uppercase text-[10px] flex items-center gap-2"><Scan className="w-4 h-4" /> Aadhar Identity Scan</Label>
-                        <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
-                          {activeCam === 'aadhar' ? (
-                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                          ) : editingPlayer.aadharPhotoUrl ? (
-                            <div className="relative w-full h-full">
-                              <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
+                          {!activeCam && (
+                            <Button onClick={() => startCamera('profile')} variant="outline" className="w-full h-12 rounded-xl border-2 font-black uppercase text-[10px]"><Camera className="w-4 h-4 mr-2" /> Recapture Photo</Button>
                           )}
-                          {activeCam === 'aadhar' && (
-                            <div className="absolute bottom-4 left-0 right-0 flex flex-col gap-2 px-6">
-                              <Button onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-8 rounded-lg font-black text-[8px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Switch Camera</Button>
-                              <div className="flex gap-2">
-                                <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-[10px] h-10 rounded-xl">SCAN DOC</Button>
-                                <Button variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl"><CircleX className="w-5 h-5" /></Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2 ml-2"><Scan className="w-4 h-4" /> Aadhar Scan</Label>
+                          <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
+                             {activeCam === 'aadhar' ? (
+                               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                             ) : editingPlayer.aadharPhotoUrl ? (
+                               <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                             ) : (
+                               <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
+                             )}
+                          </div>
+                          <Button variant="ghost" onClick={() => startCamera('aadhar', 'environment')} className="w-full h-10 font-black uppercase text-[9px] hover:bg-primary/5">Update Document</Button>
+                        </div>
+                     </div>
+
+                     <div className="md:col-span-8 space-y-10">
+                        <div className="space-y-6">
+                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                              <Hash className="w-5 h-5 text-accent" />
+                              <h4 className="font-black uppercase text-sm tracking-widest">Registry Data</h4>
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Std</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+                                 <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Roll (Sr)</Label><Input value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-black text-center" /></div>
                               </div>
-                            </div>
-                          )}
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl" /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Blood Group</Label><Select value={editingPlayer.bloodGroup} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                           </div>
                         </div>
-                        {!activeCam && (
-                          <div className="flex gap-2">
-                            <Button onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-xl h-11 font-black text-[10px] uppercase">Live Scan</Button>
-                            <Button variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-11 h-11 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
-                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
-                          </div>
-                        )}
+
+                        <div className="space-y-6">
+                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                              <Ruler className="w-5 h-5 text-accent" />
+                              <h4 className="font-black uppercase text-sm tracking-widest">Physical Profile</h4>
+                           </div>
+                           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standing (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting (cm)</Label><Input type="number" value={editingPlayer.sittingHeight} onChange={e => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                           </div>
+                        </div>
+
+                        <div className="space-y-4 p-8 bg-accent/5 rounded-[2rem] border-2 border-dashed border-accent/20">
+                           <Label className="font-black text-accent uppercase text-[10px] tracking-[0.2em] mb-4 block">Athletic Participation (Selected Games)</Label>
+                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-6">
+                              {SPORTS_LIST.map(sport => (
+                                <div key={sport} className="flex items-center gap-3">
+                                  <Checkbox 
+                                    id={`edit-sport-${sport}`}
+                                    checked={editingPlayer.sports?.includes(sport)} 
+                                    onCheckedChange={(checked) => {
+                                      const curr = editingPlayer.sports || [];
+                                      const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                                      setEditingPlayer({...editingPlayer, sports: next});
+                                    }} 
+                                    className="w-5 h-5 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                                  />
+                                  <label htmlFor={`edit-sport-${sport}`} className="text-[11px] font-black uppercase text-foreground/80 cursor-pointer">{sport}</label>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="performance" className="p-10 m-0 space-y-10">
+                   <div className="bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/10 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-inner">
+                           <Zap className="w-6 h-6 text-accent animate-pulse" />
+                        </div>
+                        <div>
+                           <h4 className="text-xl font-black text-primary uppercase">Monthly Technical Scores</h4>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Archiving: {format(new Date(), 'MMMM yyyy')}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-1.5 rounded-full bg-white">Performance Hub</Badge>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="space-y-6">
+                         <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                           <Activity className="w-5 h-5 text-accent" />
+                           <h5 className="font-black uppercase text-sm tracking-widest">Track & Field (Runs)</h5>
+                         </div>
+                         <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">100m Sprint (sec)</Label><Input value={monthlyPerformance.running100m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running100m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">200m Sprint (sec)</Label><Input value={monthlyPerformance.running200m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running200m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">400m Sprint (sec)</Label><Input value={monthlyPerformance.running400m} onChange={e => setMonthlyPerformance({...monthlyPerformance, running400m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
+                         </div>
+                      </div>
+
+                      <div className="space-y-6">
+                         <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                           <Target className="w-5 h-5 text-accent" />
+                           <h5 className="font-black uppercase text-sm tracking-widest">Field & Technical Events</h5>
+                         </div>
+                         <div className="grid grid-cols-1 gap-6">
+                            <div className="grid grid-cols-2 gap-4">
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Shot Put (m)</Label><Input value={monthlyPerformance.shotPut} onChange={e => setMonthlyPerformance({...monthlyPerformance, shotPut: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Javelin (m)</Label><Input value={monthlyPerformance.javelin} onChange={e => setMonthlyPerformance({...monthlyPerformance, javelin: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Disc Throw (m)</Label><Input value={monthlyPerformance.discThrow} onChange={e => setMonthlyPerformance({...monthlyPerformance, discThrow: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Long Jump (m)</Label><Input value={monthlyPerformance.longJump} onChange={e => setMonthlyPerformance({...monthlyPerformance, longJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                            </div>
+                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">High Jump (m)</Label><Input value={monthlyPerformance.highJump} onChange={e => setMonthlyPerformance({...monthlyPerformance, highJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                         </div>
                       </div>
                    </div>
 
-                   <div className="space-y-8">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-primary border-b pb-2">
-                          <Hash className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-[11px] tracking-widest">Institutional Info</h3>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4">
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-10 font-bold border-2" /></div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Standard</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
-                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Roll No (Serial)</Label><Input type="number" value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-10 font-black border-2" /></div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-10 font-bold border-2" /></div>
-                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-10 font-bold border-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
-                          </div>
-                          <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-10 font-bold border-2" /></div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-primary border-b pb-2">
-                          <Ruler className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-[11px] tracking-widest">Physical Data</h3>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Height (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-10 font-bold border-2" /></div>
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60 flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ''} onChange={e => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-10 font-bold border-2" /></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-10 font-bold border-2" /></div>
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Aadhar No</Label><Input value={editingPlayer.aadharNumber || ''} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-10 font-black border-2" maxLength={12} /></div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-primary border-b pb-2">
-                          <HeartPulse className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-[11px] tracking-widest">Health & Medical</h3>
-                        </div>
-                        <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Medical Conditions</Label><Textarea value={editingPlayer.medical || ''} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[60px] border-2" /></div>
-                      </div>
-
-                      <div className="space-y-4 p-5 bg-accent/5 rounded-3xl border-2 border-dashed border-accent/20">
-                        <Label className="font-black text-accent uppercase text-[9px] tracking-widest">Athletic Participation (Selected Games)</Label>
-                        <div className="grid grid-cols-2 gap-y-2">
-                          {SPORTS_LIST.map(sport => (
-                            <div key={sport} className="flex items-center gap-2">
-                              <Checkbox 
-                                checked={editingPlayer.sports?.includes(sport)} 
-                                onCheckedChange={(checked) => {
-                                  const curr = editingPlayer.sports || [];
-                                  const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
-                                  setEditingPlayer({...editingPlayer, sports: next});
-                                }} 
-                                className="w-4 h-4 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                              />
-                              <span className="text-[10px] font-black uppercase text-foreground/70">{sport}</span>
-                            </div>
-                          ))}
-                        </div>
+                   <div className="p-8 bg-muted/20 rounded-[2rem] border-2 border-dashed border-muted text-center space-y-4">
+                      <div className="flex items-center justify-center gap-3 text-primary/40">
+                         <ShieldCheck className="w-5 h-5" />
+                         <p className="text-[10px] font-black uppercase tracking-widest">Monthly records will accumulate in the Performance Dossier History.</p>
                       </div>
                    </div>
-                </div>
-              </div>
-            )}
-          </div>
+                </TabsContent>
+                </>
+              )}
+            </div>
 
-          <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
-            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-8 font-black uppercase text-[10px] h-14">Discard</Button>
-            <Button onClick={handleUpdatePlayer} className="bg-primary px-16 rounded-full font-black uppercase text-[10px] shadow-xl text-white h-14">
-              Update Profile
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
+              <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-10 h-14 font-black uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button onClick={handleUpdatePlayer} className="bg-primary px-20 rounded-full font-black uppercase text-[10px] shadow-2xl text-white h-14 tracking-[0.2em] active-scale">
+                Save & Synchronize Registry
+              </Button>
+            </DialogFooter>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
