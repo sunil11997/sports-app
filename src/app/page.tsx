@@ -40,7 +40,6 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-// Dynamic imports for high-performance chunk loading
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { 
   loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" /> 
 });
@@ -121,7 +120,6 @@ export default function WaghambaApp() {
     { id: "profile", label: t.profile, icon: UserCircle },
   ], [t]);
 
-  // Birthday logic
   const birthdaysToday = useMemo(() => {
     if (!isMounted || !schoolData.data.players) return [];
     const today = format(new Date(), 'MM-dd');

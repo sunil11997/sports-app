@@ -258,16 +258,16 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <ShieldAlert className="w-3 h-3 text-primary" /> Data & Safety
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
-            <SettingsItem icon={FileJson} color="bg-indigo-500" label="Institutional Backup" sublabel="Export full Registry to JSON" onClick={handleManualExport} />
-            <SettingsItem icon={Database} color="bg-emerald-500" label="Cloud Registry Health" value={isOnline ? "Healthy" : "Offline"} sublabel="Real-time synchronization status" />
+            <SettingsItem icon={FileJson} color="bg-indigo-50" label="Institutional Backup" sublabel="Export full Registry to JSON" onClick={handleManualExport} />
+            <SettingsItem icon={Database} color="bg-emerald-50" label="Cloud Registry Health" value={isOnline ? "Healthy" : "Offline"} sublabel="Real-time synchronization status" />
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Interface Settings</label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
-            <SettingsItem icon={Smartphone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
-            <SettingsItem icon={Languages} color="bg-purple-500" label="System Language" sublabel="Select primary display language" accessory={<div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10"><Button variant={language === 'Marathi' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('Marathi'); }} className="h-7 rounded-full font-black text-[9px] px-3">मराठी</Button><Button variant={language === 'English' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('English'); }} className="h-7 rounded-full font-black text-[9px] px-3">EN</Button></div>} />
+            <SettingsItem icon={Smartphone} color="bg-orange-50" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
+            <SettingsItem icon={Languages} color="bg-purple-50" label="System Language" sublabel="Select primary display language" accessory={<div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10"><Button variant={language === 'Marathi' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('Marathi'); }} className="h-7 rounded-full font-black text-[9px] px-3">मराठी</Button><Button variant={language === 'English' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('English'); }} className="h-7 rounded-full font-black text-[9px] px-3">EN</Button></div>} />
           </div>
         </div>
       </div>
