@@ -31,7 +31,9 @@ import {
   Baby,
   Activity,
   Zap,
-  Target
+  Target,
+  Phone,
+  MapPin
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -83,7 +85,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
   useEffect(() => {
     if (editingPlayer) {
-      // Load current month's performance data if it exists
       const currentMonth = format(new Date(), 'yyyy-MM');
       const existing = store.data.fitness[editingPlayer.id] || {};
       setMonthlyPerformance({
@@ -101,9 +102,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   }, [editingPlayer, store.data.fitness]);
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
+    if (stream) stream.getTracks().forEach(track => track.stop());
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
@@ -112,7 +111,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       setActiveCam(type);
       setFacingMode(mode);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Error', description: 'Enable camera permissions.' });
+      toast({ variant: 'destructive', title: 'Camera Error' });
     }
   };
 
@@ -123,9 +122,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   };
 
   const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
+    if (stream) stream.getTracks().forEach(track => track.stop());
     setStream(null);
     setActiveCam(null);
   };
@@ -144,39 +141,14 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         }
         ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') {
-          setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        } else {
-          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-        }
+        if (activeCam === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
         stopCamera();
       }
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
-    const file = e.target.files?.[0];
-    if (file && editingPlayer) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'profile') {
-          setEditingPlayer({ ...editingPlayer, photoUrl: reader.result as string });
-        } else {
-          setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: reader.result as string });
-        }
-        toast({ title: "Photo Updated" });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const isGeneral = section === 'general';
-
-  const getAgeRank = useCallback((age: number) => {
-    if (age < 14) return 1;
-    if (age < 17) return 2;
-    return 3;
-  }, []);
 
   const checkStreak = useCallback((playerId: string) => {
     const attendance = store.data.attendance || {};
@@ -208,63 +180,40 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         const grMatch = (p.generalRegisterNumber || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchesSearch = nameMatch || aadharMatch || grMatch;
         const matchesSport = selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport));
-        
         return matchesSection && matchesSearch && matchesSport;
       })
       .sort((a: any, b: any) => {
-        if (isGeneral) {
-          const stdA = parseInt(a.std) || 0;
-          const stdB = parseInt(b.std) || 0;
-          if (stdA !== stdB) return stdA - stdB;
-          return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
-        } else {
-          const ageRankA = getAgeRank(parseInt(a.age) || 0);
-          const ageRankB = getAgeRank(parseInt(b.age) || 0);
-          if (ageRankA !== ageRankB) return ageRankA - ageRankB;
-          if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
-          return (a.name || "").localeCompare(b.name || "");
-        }
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, isGeneral, searchTerm, selectedSport, getAgeRank]);
+  }, [store.data.players, isGeneral, searchTerm, selectedSport]);
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      // Auto-promote to athlete if sports are assigned
       const updatedCategory = (editingPlayer.sports && editingPlayer.sports.length > 0) ? 'athlete' : editingPlayer.category;
-      
-      // Save Player Info
       store.updatePlayer({ ...editingPlayer, category: updatedCategory });
       
-      // Save Monthly Performance
       if (Object.values(monthlyPerformance).some(v => v !== '')) {
          store.setFitness(editingPlayer.id, {
            ...store.data.fitness[editingPlayer.id],
            ...monthlyPerformance,
-           month: monthlyPerformance.month,
            updatedAt: new Date().toISOString(),
            score: store.data.fitness[editingPlayer.id]?.score || "0",
            status: store.data.fitness[editingPlayer.id]?.status || "Developing"
          });
       }
-
       setEditingPlayer(null);
-      toast({ title: "Record Updated", description: "Institutional registry successfully synchronized." });
+      toast({ title: "Registry Updated", description: "Identity and performance records archived." });
     }
   };
 
   const handleConvertAction = () => {
     if (convertingPlayer) {
-      store.updatePlayer({
-        ...convertingPlayer,
-        category: 'athlete',
-        sports: selectedSportsForConversion
-      });
-      toast({ 
-        title: "Promotion Success", 
-        description: `${convertingPlayer.name} has been promoted to the Athlete Roster.` 
-      });
+      store.updatePlayer({ ...convertingPlayer, category: 'athlete', sports: selectedSportsForConversion });
+      toast({ title: "Athlete Promoted" });
       setConvertingPlayer(null);
-      setSelectedSportsForConversion([]);
     }
   };
 
@@ -272,45 +221,39 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center border">
             {isGeneral ? <GraduationCap className="w-5 h-5 text-primary" /> : <Medal className="w-5 h-5 text-primary" />}
           </div>
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isGeneral ? 'Student Registry' : 'Athlete Roster'}</h2>
         </div>
-        
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           {!isGeneral && (
-            <div className="relative">
-              <Select value={selectedSport} onValueChange={setSelectedSport}>
-                <SelectTrigger className="w-full md:w-[180px] h-11 rounded-full bg-muted/30 border-none shadow-inner font-black uppercase text-[10px]">
-                  <Filter className="w-3.5 h-3.5 mr-2 opacity-40" />
-                  <SelectValue placeholder="Sport Wise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">ALL GAMES</SelectItem>
-                  {SPORTS_LIST.map(s => <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={selectedSport} onValueChange={setSelectedSport}>
+              <SelectTrigger className="w-full md:w-[180px] h-11 rounded-full bg-muted/30 border-none font-black uppercase text-[10px]"><SelectValue placeholder="Sport" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ALL GAMES</SelectItem>
+                {SPORTS_LIST.map(s => <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>)}
+              </SelectContent>
+            </Select>
           )}
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search name..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <Input placeholder="Search name/GR/Aadhar..." className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </div>
       </div>
 
-      <div className="google-card overflow-hidden overflow-x-auto">
+      <div className="google-card overflow-hidden overflow-x-auto border">
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground w-[80px]">Sr No</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground">Student Profile</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Standard' : 'Performance Badges'}</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-muted-foreground text-center">{isGeneral ? 'Aadhar' : 'Participating Sports'}</TableHead>
-              <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</TableHead>
+              <TableHead className="h-12 px-6 text-[10px] font-black uppercase w-[80px]">Sr No</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase">Student Profile</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">Standard</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">Identity</TableHead>
+              <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -330,50 +273,29 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                           <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name || "UNNAMED STUDENT"}</p>
+                          <p className="font-black text-sm uppercase text-primary leading-none">{p.name || "UNNAMED"}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} &bull; GR: {p.generalRegisterNumber || 'N/A'}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 text-center">
-                      {isGeneral ? (
-                        <Badge variant="outline" className="rounded-full px-3 py-0.5 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
-                      ) : (
-                        <div className="flex justify-center gap-2">
-                           {isStreak && (
-                             <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100 shadow-sm" title="Consistency King (15+ Days)">
-                               <Flame className="w-4 h-4 text-emerald-600" />
-                             </div>
-                           )}
-                           {isFighter && (
-                             <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100 shadow-sm" title="Recovery Champion">
-                               <ShieldCheck className="w-4 h-4 text-blue-600" />
-                             </div>
-                           )}
-                           {!isStreak && !isFighter && <Badge variant="outline" className="text-[8px] font-black opacity-30">No Badges</Badge>}
-                        </div>
-                      )}
+                      <Badge variant="outline" className="rounded-full px-3 py-0.5 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
                     </TableCell>
                     <TableCell className="px-4 text-center">
-                      {isGeneral ? (
-                        <span className="font-mono font-black text-xs text-primary/70">{p.aadharNumber || 'Pending'}</span>
-                      ) : (
-                        <div className="flex flex-wrap justify-center gap-1">
-                          {(p.sports || []).map((s: string) => (
-                            <Badge key={s} variant="outline" className="text-[8px] font-black border-accent/30 text-accent uppercase px-1.5">{s}</Badge>
-                          ))}
-                        </div>
-                      )}
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono font-black text-[10px] text-primary/70">{p.aadharNumber || 'Aadhar Pend.'}</span>
+                        {p.mobileNumber && <span className="text-[8px] font-bold text-muted-foreground mt-0.5">{p.mobileNumber}</span>}
+                      </div>
                     </TableCell>
                     <TableCell className="px-6 text-right">
                       <div className="flex justify-end gap-2">
                         {isGeneral && p.category === 'student' && (
-                          <Button variant="ghost" size="icon" title="Convert to Athlete" className="rounded-full hover:bg-emerald-50 text-emerald-600" onClick={() => { setConvertingPlayer(p); setSelectedSportsForConversion([]); }}>
+                          <Button variant="ghost" size="icon" className="rounded-full text-emerald-600 hover:bg-emerald-50" onClick={() => setConvertingPlayer(p)}>
                             <Trophy className="w-4 h-4" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/5 text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-destructive/5 text-destructive" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-primary/5" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" className="rounded-full text-destructive hover:bg-destructive/5" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -385,15 +307,15 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[900px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
-          <DialogHeader className="bg-primary p-10 text-white shrink-0 relative">
+        <DialogContent className="sm:max-w-[950px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
+          <DialogHeader className="bg-primary p-8 text-white shrink-0 relative">
             <div className="flex items-center gap-6 relative z-10">
-              <div className="w-16 h-16 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
-                <Edit className="w-8 h-8 text-white" />
+              <div className="w-14 h-14 bg-white/20 rounded-[1.2rem] flex items-center justify-center backdrop-blur-md border border-white/30">
+                <Edit className="w-6 h-6 text-white" />
               </div>
-              <div className="space-y-1 text-left">
-                <DialogTitle className="text-3xl font-black uppercase tracking-tight">Institutional Profile Registry</DialogTitle>
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">Restoring identity for: {editingPlayer?.name}</p>
+              <div className="text-left">
+                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Profile & Performance Editor</DialogTitle>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1">{editingPlayer?.name}</p>
               </div>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
@@ -401,14 +323,14 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           
           <Tabs defaultValue="profile" className="flex-1 overflow-hidden flex flex-col">
             <TabsList className="bg-muted/50 p-2 h-auto gap-4 rounded-none border-b shrink-0 px-10">
-              <TabsTrigger value="profile" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Student Info</TabsTrigger>
+              <TabsTrigger value="profile" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Full Registry Info</TabsTrigger>
               <TabsTrigger value="performance" className="rounded-xl py-3 px-8 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white">Monthly Registry</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-y-auto scrollbar-hide">
               {editingPlayer && (
                 <>
-                <TabsContent value="profile" className="p-10 m-0 space-y-12">
+                <TabsContent value="profile" className="p-8 m-0 space-y-12">
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
                      <div className="md:col-span-4 space-y-8">
                         <div className="space-y-4">
@@ -429,7 +351,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                              )}
                           </div>
                           {!activeCam && (
-                            <Button onClick={() => startCamera('profile')} variant="outline" className="w-full h-12 rounded-xl border-2 font-black uppercase text-[10px]"><Camera className="w-4 h-4 mr-2" /> Recapture Photo</Button>
+                            <Button onClick={() => startCamera('profile')} variant="outline" className="w-full h-12 rounded-xl border-2 font-black uppercase text-[10px]"><Camera className="w-4 h-4 mr-2" /> Recapture</Button>
                           )}
                         </div>
 
@@ -444,61 +366,64 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                                <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
                              )}
                           </div>
-                          <Button variant="ghost" onClick={() => startCamera('aadhar', 'environment')} className="w-full h-10 font-black uppercase text-[9px] hover:bg-primary/5">Update Document</Button>
+                          <Button variant="ghost" onClick={() => startCamera('aadhar', 'environment')} className="w-full h-10 font-black uppercase text-[9px] hover:bg-primary/5">Update Doc</Button>
                         </div>
                      </div>
 
                      <div className="md:col-span-8 space-y-10">
                         <div className="space-y-6">
                            <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                              <Hash className="w-5 h-5 text-accent" />
-                              <h4 className="font-black uppercase text-sm tracking-widest">Registry Data</h4>
+                              <Hash className="w-5 h-5" />
+                              <h4 className="font-black uppercase text-sm tracking-widest">Institutional Identity</h4>
                            </div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Full Name</Label><Input value={editingPlayer.name} onChange={e => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                               <div className="grid grid-cols-2 gap-4">
-                                 <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Std</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
-                                 <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Roll (Sr)</Label><Input value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-black text-center" /></div>
+                                 <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Std</Label><Select value={editingPlayer.std} onValueChange={v => setEditingPlayer({...editingPlayer, std: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>)}</SelectContent></Select></div>
+                                 <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Roll No</Label><Input value={editingPlayer.serialNumber} onChange={e => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-black text-center" /></div>
                               </div>
                            </div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">GR Number</Label><Input value={editingPlayer.generalRegisterNumber} onChange={e => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Gender</Label><Select value={editingPlayer.gender} onValueChange={(v: any) => setEditingPlayer({...editingPlayer, gender: v})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
                            </div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Birth Date</Label><Input type="date" value={editingPlayer.dob} onChange={e => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl" /></div>
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 ml-1">Blood Group</Label><Select value={editingPlayer.bloodGroup} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Aadhar (12 Digits)</Label><Input value={editingPlayer.aadharNumber} onChange={e => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-mono" maxLength={12} /></div>
+                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Mobile Number</Label><Input value={editingPlayer.mobileNumber} onChange={e => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-mono" /></div>
                            </div>
+                           <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Physical Address</Label><Input value={editingPlayer.address} onChange={e => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-medium" /></div>
                         </div>
 
                         <div className="space-y-6">
                            <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                              <Ruler className="w-5 h-5 text-accent" />
-                              <h4 className="font-black uppercase text-sm tracking-widest">Physical Profile</h4>
+                              <Ruler className="w-5 h-5" />
+                              <h4 className="font-black uppercase text-sm tracking-widest">Physical & Medical</h4>
                            </div>
-                           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Standing (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60 flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting (cm)</Label><Input type="number" value={editingPlayer.sittingHeight} onChange={e => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                              <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Standing (cm)</Label><Input type="number" value={editingPlayer.height} onChange={e => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                              <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Sitting (cm)</Label><Input type="number" value={editingPlayer.sittingHeight} onChange={e => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                              <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={e => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
+                              <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                            </div>
+                           <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Medical Alerts</Label><Textarea value={editingPlayer.medical} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[80px] border-2 rounded-xl" /></div>
                         </div>
 
-                        <div className="space-y-4 p-8 bg-accent/5 rounded-[2rem] border-2 border-dashed border-accent/20">
-                           <Label className="font-black text-accent uppercase text-[10px] tracking-[0.2em] mb-4 block">Athletic Participation (Selected Games)</Label>
-                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-6">
+                        <div className="space-y-4 p-6 bg-accent/5 rounded-[2rem] border-2 border-dashed border-accent/20">
+                           <Label className="font-black text-accent uppercase text-[10px] tracking-[0.2em] block mb-4">Athletic Participation</Label>
+                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                               {SPORTS_LIST.map(sport => (
-                                <div key={sport} className="flex items-center gap-3">
+                                <div key={sport} className="flex items-center gap-2">
                                   <Checkbox 
-                                    id={`edit-sport-${sport}`}
+                                    id={`dash-edit-sport-${sport}`}
                                     checked={editingPlayer.sports?.includes(sport)} 
                                     onCheckedChange={(checked) => {
                                       const curr = editingPlayer.sports || [];
                                       const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
                                       setEditingPlayer({...editingPlayer, sports: next});
                                     }} 
-                                    className="w-5 h-5 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                                    className="w-4 h-4 border-accent/30"
                                   />
-                                  <label htmlFor={`edit-sport-${sport}`} className="text-[11px] font-black uppercase text-foreground/80 cursor-pointer">{sport}</label>
+                                  <label htmlFor={`dash-edit-sport-${sport}`} className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</label>
                                 </div>
                               ))}
                            </div>
@@ -556,7 +481,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                    <div className="p-8 bg-muted/20 rounded-[2rem] border-2 border-dashed border-muted text-center space-y-4">
                       <div className="flex items-center justify-center gap-3 text-primary/40">
                          <ShieldCheck className="w-5 h-5" />
-                         <p className="text-[10px] font-black uppercase tracking-widest">Monthly records will accumulate in the Performance Dossier History.</p>
+                         <p className="text-[10px] font-black uppercase tracking-widest">Monthly records are archived in the Student Performance Dossier.</p>
                       </div>
                    </div>
                 </TabsContent>
@@ -566,55 +491,13 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
             <DialogFooter className="bg-muted/10 p-8 flex gap-4 shrink-0 border-t">
               <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-full px-10 h-14 font-black uppercase text-[10px] tracking-widest">Discard</Button>
-              <Button onClick={handleUpdatePlayer} className="bg-primary px-20 rounded-full font-black uppercase text-[10px] shadow-2xl text-white h-14 tracking-[0.2em] active-scale">
-                Save & Synchronize Registry
+              <Button onClick={handleUpdatePlayer} className="bg-primary px-20 rounded-full font-black uppercase text-[10px] shadow-2xl text-white h-14 active-scale">
+                Save & Archive Profile
               </Button>
             </DialogFooter>
           </Tabs>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={!!convertingPlayer} onOpenChange={() => setConvertingPlayer(null)}>
-        <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-emerald-600 p-8 text-white text-center">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
-              <UserPlus className="w-8 h-8 text-white" />
-            </div>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Athlete Promotion</DialogTitle>
-            <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em] mt-1">Assign sports to: {convertingPlayer?.name}</p>
-          </DialogHeader>
-
-          <div className="p-8 space-y-6">
-            <div className="space-y-4">
-              <Label className="font-black text-primary uppercase text-[10px] tracking-widest ml-1">Select Specialized Sports</Label>
-              <div className="grid grid-cols-2 gap-4">
-                {SPORTS_LIST.map(sport => (
-                  <div key={sport} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-xl border-2 border-transparent hover:border-emerald-200 transition-all">
-                    <Checkbox 
-                      id={`convert-${sport}`}
-                      checked={selectedSportsForConversion.includes(sport)} 
-                      onCheckedChange={(checked) => {
-                        if (checked) setSelectedSportsForConversion([...selectedSportsForConversion, sport]);
-                        else setSelectedSportsForConversion(selectedSportsForConversion.filter(s => s !== sport));
-                      }}
-                      className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                    />
-                    <label htmlFor={`convert-${sport}`} className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="p-8 bg-slate-50 border-t gap-3 flex-col sm:flex-row">
-            <Button variant="ghost" onClick={() => setConvertingPlayer(null)} className="flex-1 font-black uppercase text-[10px] h-12 rounded-xl">Cancel</Button>
-            <Button onClick={handleConvertAction} disabled={selectedSportsForConversion.length === 0} className="flex-1 bg-emerald-600 text-white h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active-scale">
-              Promote to Athlete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <canvas ref={canvasRef} hidden />
     </div>
   );

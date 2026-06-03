@@ -70,7 +70,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       try {
         await getRedirectResult(auth);
       } catch (error: any) {
-        console.warn("WGB Auth Redirect Handshake Error:", error.code);
+        console.warn("WGB Auth Handshake Warning:", error.code);
       }
 
       const unsubscribe = onAuthStateChanged(
@@ -82,7 +82,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         },
         (error) => {
           if (isMounted) {
-            console.error("WGB Auth: State listener error", error);
             setUserAuthState({ user: null, isUserLoading: false, userError: error });
           }
         }
@@ -164,10 +163,10 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Refactored for synchronous validation to satisfy Next.js 15 render cycles.
+ * Hardened to assign validation flags synchronously to satisfy Next.js 15 render cycles.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  const memoizedVal = useMemo(() => {
+  return useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
@@ -177,7 +176,5 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       }
     }
     return val;
-  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return memoizedVal;
+  }, [deps]); // eslint-disable-line react-hooks/exhaustive-deps
 }
