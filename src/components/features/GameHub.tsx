@@ -85,7 +85,7 @@ export function GameHub({ store }: { store: any }) {
 
         <Tabs defaultValue="readiness" className="space-y-8">
           <div className="w-full overflow-x-auto scrollbar-hide pb-2">
-            <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-1 w-max mx-auto min-w-full md:min-w-0">
+            <TabsList className="bg-muted/50 p-1.5 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-1 w-max min-w-full">
               <TabsTrigger value="readiness" className="rounded-full px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
