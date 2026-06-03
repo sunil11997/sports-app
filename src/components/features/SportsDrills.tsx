@@ -110,23 +110,22 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
   const drillKey = `${activeSport}_${activeDrill}`;
 
-  // Filter players strictly by the selected game
+  // Filter players strictly by the selected game and gender
   const playersInSport = useMemo(() => 
     (store.data.players || []).filter((p: any) => 
       p.category === 'athlete' && p.sports?.includes(activeSport)
     ),
   [store.data.players, activeSport]);
 
-  // Grouped rosters for the active pool (not yet mastered)
   const femaleSquad = useMemo(() => playersInSport.filter((p: any) => {
     const lookupKey = `${p.id}_${drillKey}`;
-    const isMastered = !!store.data.drillCompletions?.[lookupKey];
+    const isMastered = !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
     return p.gender === 'Female' && !isMastered;
   }), [playersInSport, store.data.drillCompletions, drillKey]);
 
   const maleSquad = useMemo(() => playersInSport.filter((p: any) => {
     const lookupKey = `${p.id}_${drillKey}`;
-    const isMastered = !!store.data.drillCompletions?.[lookupKey];
+    const isMastered = !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
     return p.gender === 'Male' && !isMastered;
   }), [playersInSport, store.data.drillCompletions, drillKey]);
 
@@ -134,7 +133,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     return playersInSport
       .filter((p: any) => {
         const lookupKey = `${p.id}_${drillKey}`;
-        return !!store.data.drillCompletions?.[lookupKey];
+        return !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
       })
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);

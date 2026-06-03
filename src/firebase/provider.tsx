@@ -176,5 +176,5 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       }
     }
     return val;
-  }, [deps]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [...deps]); // eslint-disable-line react-hooks/exhaustive-deps
 }

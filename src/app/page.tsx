@@ -160,7 +160,10 @@ export default function WaghambaApp() {
 
   if (stage === 'hub' && selectedSection) {
     const teacher = schoolData.data.schoolProfile;
-    const athleteCount = schoolData.data.players.length;
+    const totalAthletes = schoolData.data.players.filter((p: any) => p.category === 'athlete').length;
+    const totalStudents = schoolData.data.players.length;
+    const activeDisplayCount = selectedSection === 'sports' ? totalAthletes : totalStudents;
+    const countLabel = selectedSection === 'sports' ? "Total Athletes" : "Registered Students";
     
     return (
       <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -224,8 +227,8 @@ export default function WaghambaApp() {
                               <p className="text-sm font-bold text-white/60">16:30 • Main Ground</p>
                            </div>
                            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5 text-accent" /> Students Count</p>
-                              <p className="text-4xl font-black uppercase tracking-tighter">{athleteCount}</p>
+                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5 text-accent" /> {countLabel}</p>
+                              <p className="text-4xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
                               <p className="text-sm font-bold text-white/60">Active Registry</p>
                            </div>
                         </div>
