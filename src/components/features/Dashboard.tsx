@@ -206,7 +206,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      store.updatePlayer(editingPlayer);
+      // Auto-promote to athlete if sports are assigned
+      const updatedCategory = (editingPlayer.sports && editingPlayer.sports.length > 0) ? 'athlete' : editingPlayer.category;
+      store.updatePlayer({ ...editingPlayer, category: updatedCategory });
       setEditingPlayer(null);
       toast({ title: "Record Updated" });
     }
@@ -470,27 +472,25 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                         <div className="space-y-1"><Label className="text-[9px] font-black uppercase opacity-60">Medical Conditions</Label><Textarea value={editingPlayer.medical || ''} onChange={e => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[60px] border-2" /></div>
                       </div>
 
-                      {editingPlayer.category === 'athlete' && (
-                        <div className="space-y-4 p-5 bg-accent/5 rounded-3xl border-2 border-dashed border-accent/20">
-                          <Label className="font-black text-accent uppercase text-[9px] tracking-widest">Selected Games</Label>
-                          <div className="grid grid-cols-2 gap-y-2">
-                            {SPORTS_LIST.map(sport => (
-                              <div key={sport} className="flex items-center gap-2">
-                                <Checkbox 
-                                  checked={editingPlayer.sports?.includes(sport)} 
-                                  onCheckedChange={(checked) => {
-                                    const curr = editingPlayer.sports || [];
-                                    const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
-                                    setEditingPlayer({...editingPlayer, sports: next});
-                                  }} 
-                                  className="w-4 h-4 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                                />
-                                <span className="text-[10px] font-black uppercase text-foreground/70">{sport}</span>
-                              </div>
-                            ))}
-                          </div>
+                      <div className="space-y-4 p-5 bg-accent/5 rounded-3xl border-2 border-dashed border-accent/20">
+                        <Label className="font-black text-accent uppercase text-[9px] tracking-widest">Athletic Participation (Selected Games)</Label>
+                        <div className="grid grid-cols-2 gap-y-2">
+                          {SPORTS_LIST.map(sport => (
+                            <div key={sport} className="flex items-center gap-2">
+                              <Checkbox 
+                                checked={editingPlayer.sports?.includes(sport)} 
+                                onCheckedChange={(checked) => {
+                                  const curr = editingPlayer.sports || [];
+                                  const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                                  setEditingPlayer({...editingPlayer, sports: next});
+                                }} 
+                                className="w-4 h-4 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                              />
+                              <span className="text-[10px] font-black uppercase text-foreground/70">{sport}</span>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
                    </div>
                 </div>
               </div>
