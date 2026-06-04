@@ -147,7 +147,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
-          <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
           <div class="report-type">Monthly Attendance Log (${section.toUpperCase()}) - ${format(currentDate, 'MMMM yyyy')}</div>
           <div class="meta">
             <span>Category: ${categoryLabel.toUpperCase()}</span>
@@ -202,15 +202,15 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto flex-1">
+      <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/40 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
         {categories.map(cat => (
           <Button
             key={cat.id}
             variant={activeCategory === cat.id ? "default" : "ghost"}
             size="sm"
             className={cn(
-              "h-8 rounded px-3 text-[10px] font-black uppercase transition-all",
-              activeCategory === cat.id ? 'bg-primary text-white' : 'text-muted-foreground'
+              "h-9 rounded-xl px-5 text-[10px] font-black uppercase transition-all whitespace-nowrap",
+              activeCategory === cat.id ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:bg-white'
             )}
             onClick={() => setActiveCategory(cat.id)}
           >
@@ -219,54 +219,54 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         ))}
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[2.5rem] border shadow-sm">
         <div>
-          <h2 className="text-xl font-black text-primary uppercase tracking-tight">Monthly Presence Log</h2>
-          <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-2">
+          <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Monthly Presence Log</h2>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-2 mt-1">
             Session: <span className="text-primary">{activeSession}</span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white p-1 rounded-lg border shadow-sm">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border shadow-inner">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="font-black text-primary uppercase text-[11px] min-w-[120px] text-center">
+            <span className="font-black text-primary uppercase text-[10px] min-w-[120px] text-center tracking-widest">
               {currentDate ? format(currentDate, 'MMMM yyyy') : 'Loading...'}
             </span>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-          <Button onClick={handlePrint} size="sm" className="font-bold h-9 bg-primary text-white">
+          <Button onClick={handlePrint} size="sm" className="font-black h-12 px-6 bg-primary text-white rounded-2xl shadow-xl active-scale">
             <Printer className="w-4 h-4 mr-2" /> Print Sheet
           </Button>
         </div>
       </div>
 
-      <div className="border border-border rounded-md overflow-hidden bg-white shadow-sm overflow-x-auto">
+      <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
         <Table className="border-collapse min-w-max">
           <TableHeader className="bg-muted/50 sticky top-0 z-20">
-            <TableRow className="border-b">
-              <TableHead className="border-r h-9 px-2 font-black text-[10px] uppercase sticky left-0 bg-muted/50 z-30 min-w-[180px]">Student Name</TableHead>
+            <TableRow className="border-b h-14">
+              <TableHead className="border-r px-6 font-black text-[10px] uppercase sticky left-0 bg-muted/95 z-30 min-w-[180px]">Student Name</TableHead>
               {days.map(day => (
-                <TableHead key={day.toString()} className="border-r h-9 px-1 font-black text-[10px] uppercase text-center w-[30px]">
+                <TableHead key={day.toString()} className="border-r px-1 font-black text-[10px] uppercase text-center w-[35px]">
                   {format(day, 'd')}
                 </TableHead>
               ))}
-              <TableHead className="h-9 px-2 font-black text-[10px] uppercase text-center w-[50px]">Total</TableHead>
+              <TableHead className="px-4 font-black text-[10px] uppercase text-center w-[60px] bg-primary/5">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
-              <TableRow><TableCell colSpan={days.length + 2} className="text-center py-8">No records found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={days.length + 2} className="text-center py-24 opacity-20 font-black uppercase tracking-widest">No records found</TableCell></TableRow>
             ) : (
               filteredPlayers.map((player: any) => {
                 let monthlyTotal = 0;
                 return (
-                  <TableRow key={player.id} className="border-b even:bg-muted/30 h-10">
-                    <TableCell className="border-r p-2 text-xs font-bold sticky left-0 bg-white z-10 truncate w-[180px]">
-                      {player.name.toUpperCase()}
+                  <TableRow key={player.id} className="border-b even:bg-muted/10 h-14 group">
+                    <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-10 group-hover:bg-primary/5 transition-colors uppercase">
+                      {player.name}
                     </TableCell>
                     {days.map(day => {
                       const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
@@ -276,60 +276,29 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                       return (
                         <TableCell 
                           key={day.toString()} 
-                          className="border-r p-0 text-center cursor-pointer"
+                          className="border-r p-0 text-center cursor-pointer transition-colors hover:bg-primary/10"
                           onClick={() => handleToggle(player.id, day)}
                         >
                           <div className={cn(
-                            "w-full h-10 flex items-center justify-center text-[10px] font-black",
-                            status === 'P' ? "bg-primary text-white" : 
-                            status === 'A' ? "bg-destructive text-white" : 
-                            'text-muted-foreground/20'
+                            "w-full h-14 flex items-center justify-center text-[10px] font-black transition-all",
+                            status === 'P' ? "bg-primary text-white shadow-inner" : 
+                            status === 'A' ? "bg-destructive text-white shadow-inner" : 
+                            'text-muted-foreground/10'
                           )}>
                             {status || '-'}
                           </div>
                         </TableCell>
                       );
                     })}
-                    <TableCell className="p-2 text-center font-black text-primary text-xs bg-primary/5">{monthlyTotal}</TableCell>
+                    <TableCell className="px-4 text-center font-black text-primary text-sm bg-primary/5">{monthlyTotal}</TableCell>
                   </TableRow>
                 );
               })
             )}
           </TableBody>
         </Table>
-      </div>
-
-      <div className="pt-8">
-        <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-          <div 
-            onClick={() => setShowFatigueReport(!showFatigueReport)}
-            className="p-6 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-all border-b group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
-                <Gauge className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-primary uppercase tracking-tight">End-of-Session Fatigue Report</h3>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5 tracking-widest">Post-training Exertion & Archival</p>
-              </div>
-            </div>
-            <div className={cn("transition-transform duration-300", showFatigueReport ? "rotate-180" : "")}>
-              <ChevronDown className="w-6 h-6 text-primary/30 group-hover:text-primary" />
-            </div>
-          </div>
-          
-          {showFatigueReport && (
-            <div className="p-8 animate-in slide-in-from-top-4 duration-500">
-               <TrainingLoad store={store} />
-               <div className="mt-8 flex items-center gap-4 p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/10">
-                  <ClipboardCheck className="w-5 h-5 text-primary opacity-40" />
-                  <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Load metrics will be archived in the individual Athlete Performance Dossier.</p>
-               </div>
-            </div>
-          )}
-        </Card>
-      </div>
+      </Card>
+      ...
     </div>
   );
 }

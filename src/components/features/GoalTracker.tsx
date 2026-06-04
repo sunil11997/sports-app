@@ -109,7 +109,7 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
             body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; font-size: 12px; }
             .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
             h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
-            .report-title { font-weight: 800; text-transform: uppercase; text-align: center; margin-top: 10px; text-decoration: underline; }
+            .report-type { font-weight: 800; text-transform: uppercase; text-align: center; margin-top: 10px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #333; padding: 10px; text-align: center; }
             th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 10px; }
@@ -127,8 +127,8 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-            <div class="report-title">ATHLETE SELF-IMPROVEMENT & TARGET REGISTRY</div>
+            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <div class="report-type">ATHLETE SELF-IMPROVEMENT & TARGET REGISTRY</div>
           </div>
           <table>
             <thead>

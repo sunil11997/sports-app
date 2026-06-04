@@ -119,18 +119,18 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
               body { padding-top: 0 !important; }
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
-            .header { text-align: center; border-bottom: 3px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
             .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 15px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
             th, td { border: 1px solid #000; padding: 6px; text-align: center; }
             th { background-color: #f5f5f5; font-weight: 900; text-transform: uppercase; font-size: 8px; }
             .name-cell { text-align: left; font-weight: 900; min-width: 180px; }
             
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
-            .btn-print { background: #F59E0B; color: white; }
+            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
         <body style="padding-top: 80px;">

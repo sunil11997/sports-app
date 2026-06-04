@@ -181,7 +181,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
             <div class="report-type">OFFICIAL STUDENT REGISTRY: STANDARD ${std}</div>
           </div>
           <table>
@@ -234,7 +234,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
         </div>
         <div className="flex items-center gap-3">
            <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-6 h-10 rounded-full bg-white hidden lg:flex items-center gap-2">
-             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.1 Engine
+             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.2 Engine
            </Badge>
            <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg">
              <Printer className="w-4 h-4 mr-2" /> Print Summary
@@ -416,7 +416,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Archiving: {format(new Date(), 'MMMM yyyy')}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-1.5 rounded-full bg-white">v4.3.1 Engine</Badge>
+                      <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-1.5 rounded-full bg-white">v4.3.2 Engine</Badge>
                    </div>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       <div className="space-y-6">

@@ -151,7 +151,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
             <div style="font-weight: 800; text-transform: uppercase; margin-top: 5px; text-decoration: underline;">Athletic Performance Dossier & Biological Audit</div>
           </div>
           <div class="meta">
@@ -194,7 +194,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               `).join('')}
             </tbody>
           </table>
-          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.1</p>
+          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.2</p>
         </body>
       </html>
     `;
@@ -214,7 +214,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.1</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.2</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
