@@ -162,7 +162,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                    <h3 className="text-2xl font-black uppercase tracking-tight leading-none">Coaching Insight</h3>
                  </div>
                  <p className="text-sm font-bold opacity-70 leading-relaxed italic">
-                   "रणनीतीचा अभ्यास केल्यामुळे खेळाडूंमधील ताळमेळ सुधारतो. विशेषतः साखळी पकड आणि कोपरं सांभाळताना हे तंत्र अत्यंत प्रभावी ठरते."
+                   &quot;रणनीतीचा अभ्यास केल्यामुळे खेळाडूंमधील ताळमेळ सुधारतो. विशेषतः साखळी पकड आणि कोपरं सांभाळताना हे तंत्र अत्यंत प्रभावी ठरते.&quot;
                  </p>
                  <div className="space-y-4 pt-4">
                     {['Team Defense Chain', 'Raid Exit Strategy', 'Counter-Attack Flow'].map((item, i) => (
