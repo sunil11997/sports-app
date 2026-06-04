@@ -26,6 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import type { TacticalEvent } from '@/lib/types';
 
 const TACTICAL_SITUATIONS: Record<string, string[]> = {
   'Kabaddi': [
@@ -81,13 +82,13 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
 
   const relevantEvents = useMemo(() => {
     return (store.data.tacticalEvents || [])
-      .filter((e: any) => e.sport === selectedSport)
+      .filter((e: TacticalEvent) => e.sport === selectedSport)
       .slice(0, 10);
   }, [store.data.tacticalEvents, selectedSport]);
 
   const successRate = useMemo(() => {
     if (relevantEvents.length === 0) return 0;
-    const successes = relevantEvents.filter((e: any) => e.outcome === 'Success').length;
+    const successes = relevantEvents.filter((e: TacticalEvent) => e.outcome === 'Success').length;
     return Math.round((successes / relevantEvents.length) * 100);
   }, [relevantEvents]);
 
@@ -260,7 +261,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {relevantEvents.map((event: any) => (
+                  {relevantEvents.map((event: TacticalEvent) => (
                     <div key={event.id} className="p-6 rounded-[2rem] border-2 border-primary/5 hover:border-primary/20 transition-all group relative overflow-hidden bg-white">
                        <div className="flex items-start justify-between relative z-10">
                           <div className="flex items-start gap-5">

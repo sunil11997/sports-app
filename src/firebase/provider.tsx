@@ -163,16 +163,15 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.2: Silence build warnings for generic dependency array literals.
+ * Hardened v4.3.2: Synchronously assigns validation flags to prevent hydration runtime errors during Registry sync.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   /* eslint-disable react-hooks/exhaustive-deps */
-  const result = useMemo(() => factory(), deps);
-  
-  useEffect(() => {
-    if (result && typeof result === 'object') {
+  const result = useMemo(() => {
+    const val = factory();
+    if (val && typeof val === 'object') {
       try {
-        Object.defineProperty(result, '__memo', {
+        Object.defineProperty(val, '__memo', {
           value: true,
           configurable: true,
           enumerable: false,
@@ -180,7 +179,8 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
         });
       } catch (e) {}
     }
-  }, [result]);
+    return val;
+  }, deps);
 
   return result;
 }

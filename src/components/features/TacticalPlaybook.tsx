@@ -33,7 +33,7 @@ import { format } from 'date-fns';
 const STANDARD_STRATEGIES: Record<string, any[]> = {
   'Kabaddi': [
     { title: '५-१-१ डिफेन्स सेटअप', type: 'Defense', intensity: 'High', desc: 'डिफेंडरची साखळी आणि कोपरं सांभाळण्याची रणनीती. जेव्हा बोनस ऑन असतो तेव्हा ही वापरतात.', img: 'https://picsum.photos/seed/kdef1/600/400' },
-    { title: '३-२-२ कव्हर पॅटर्न', type: 'Defense', intensity: 'Extreme', desc: 'मधल्या डिफेंडर्सनी रेडरला घेरण्याची रणनीती. अत्यंत वेगवान हालचाल आवश्यक.', img: 'https://picsum.photos/seed/kdef2/600/400' },
+    { title: '३-२-२ कव्वर पॅटर्न', type: 'Defense', intensity: 'Extreme', desc: 'मधल्या डिफेंडर्सनी रेडरला घेरण्याची रणनीती. अत्यंत वेगवान हालचाल आवश्यक.', img: 'https://picsum.photos/seed/kdef2/600/400' },
     { title: 'बोनस एस्केप अटॅक', type: 'Offense', intensity: 'Moderate', desc: 'रेडरने बोनस घेताना कोपऱ्यातून पळून जाण्याचे तंत्र.', img: 'https://picsum.photos/seed/koff1/600/400' }
   ],
   'Volleyball': [
