@@ -84,11 +84,11 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     
     let coachingAdvice = "";
     if (offsetNum < -1.0) {
-      coachingAdvice = "Pre-Growth Spurt: Focus on skill coordination and foundational techniques. This is the optimal time for rapid motor learning.";
+      coachingAdvice = "Pre-Growth Spurt: Focus on skill coordination and foundational motor learning.";
     } else if (offsetNum >= -1.0 && offsetNum <= 1.0) {
-      coachingAdvice = "Circa-PHV (Active Spurt): High injury risk phase due to limb elongation. Focus on core stability, posture, and flexibility. Avoid high-impact heavy loading.";
+      coachingAdvice = "Circa-PHV (Active Spurt): High injury risk. Focus on core stability and flexibility.";
     } else {
-      coachingAdvice = "Post-Growth Spurt: Peak power and speed development phase. This is the window for strength training and explosive speed drills.";
+      coachingAdvice = "Post-Growth Spurt: Peak window for power and speed development.";
     }
 
     return {
@@ -97,7 +97,6 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       status: offsetNum < 0 ? 'Pre-growth spurt' : 'Post-growth spurt',
       sittingHeight: sH,
       legLength: legL.toFixed(1),
-      isEstimated: !currentPlayer.sittingHeight,
       coachingAdvice,
       biologicalAge: (age + offsetNum).toFixed(1)
     };
@@ -129,7 +128,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.1.1</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.1.2</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
@@ -144,7 +143,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             </SelectContent>
           </Select>
           <Button disabled={!selectedPlayerId} onClick={() => window.print()} className="bg-primary text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-xl">
-            <Printer className="w-4 h-4 mr-2" /> Export Performance Dossier
+            <Printer className="w-4 h-4 mr-2" /> Export Dossier
           </Button>
         </div>
       </div>
@@ -152,7 +151,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
       {!selectedPlayerId ? (
         <div className="p-24 text-center text-muted-foreground border-4 border-dashed rounded-[3.5rem] opacity-30 bg-white/50 backdrop-blur-sm">
           <TrendingUp className="w-20 h-20 mx-auto mb-6 text-primary" />
-          <p className="font-black uppercase text-lg tracking-widest text-primary">Identify an entry to access institutional metrics</p>
+          <p className="font-black uppercase text-lg tracking-widest text-primary">Identify an entry to access metrics</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
@@ -173,78 +172,30 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
               <CardHeader className="bg-primary/5 border-b p-6">
                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                   <Medal className="w-4 h-4 text-accent" /> Institutional Recommendations
-                 </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                 {currentFitness?.recommendedSports ? (
-                   <div className="space-y-4">
-                      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Optimized Training Paths</p>
-                      <div className="grid grid-cols-1 gap-3">
-                        {currentFitness.recommendedSports.map((sport: string, i: number) => (
-                          <div key={i} className="flex items-center justify-between p-4 bg-accent/5 rounded-2xl border-2 border-dashed border-accent/20">
-                            <span className="text-xs font-black text-primary uppercase">{sport}</span>
-                            <Zap className="w-4 h-4 text-accent animate-pulse" />
-                          </div>
-                        ))}
-                      </div>
-                   </div>
-                 ) : (
-                   <div className="py-10 text-center opacity-20">
-                      <Target className="w-10 h-10 mx-auto mb-2" />
-                      <p className="text-[9px] font-black uppercase">Awaiting Fitness Evaluation</p>
-                   </div>
-                 )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b p-6">
-                 <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                   <Activity className="w-4 h-4 text-accent" /> PHV Maturity (Growth Spurt)
+                   <Activity className="w-4 h-4 text-accent" /> PHV Maturity
                  </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
                 {phvData && (
                   <>
                     <div className={cn(
-                      "p-8 rounded-[2.5rem] border-2 shadow-inner text-center space-y-3 relative overflow-hidden",
+                      "p-8 rounded-[2.5rem] border-2 shadow-inner text-center space-y-3",
                       phvData.offsetNum < 0 ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
                     )}>
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Maturity Offset</p>
-                      <p className={cn(
-                        "text-5xl font-black tracking-tighter",
-                        phvData.offsetNum < 0 ? "text-emerald-700" : "text-orange-700"
-                      )}>
+                      <p className={cn("text-5xl font-black tracking-tighter", phvData.offsetNum < 0 ? "text-emerald-700" : "text-orange-700")}>
                         {phvData.offset} <span className="text-sm">Yrs</span>
                       </p>
-                      <Badge className={cn(
-                        "font-black uppercase text-[10px] px-6 py-1 rounded-full shadow-md",
-                        phvData.offsetNum < 0 ? "bg-emerald-600 text-white" : "bg-orange-600 text-white"
-                      )}>
+                      <Badge className={cn("font-black uppercase text-[10px] px-6 py-1 rounded-full", phvData.offsetNum < 0 ? "bg-emerald-600 text-white" : "bg-orange-600 text-white")}>
                         {phvData.status}
                       </Badge>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="bg-muted/30 p-4 rounded-2xl text-center border-2 border-dashed">
-                          <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Sitting Height</p>
-                          <p className="text-xl font-black text-primary">{phvData.sittingHeight}cm</p>
-                       </div>
-                       <div className="bg-muted/30 p-4 rounded-2xl text-center border-2 border-dashed">
-                          <p className="text-[8px] font-black text-muted-foreground uppercase mb-1">Leg Length</p>
-                          <p className="text-xl font-black text-primary">{phvData.legLength}cm</p>
-                       </div>
-                    </div>
-
                     <div className="space-y-4">
-                       <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 ml-1">
-                         <BrainCircuit className="w-4 h-4 text-accent" /> Institutional Focus
+                       <h4 className="text-[10px] font-black text-primary uppercase flex items-center gap-2">
+                         <BrainCircuit className="w-4 h-4 text-accent" /> Focus Advice
                        </h4>
                        <div className="bg-primary/5 p-6 rounded-2xl border-2 border-primary/10">
-                          <p className="text-xs font-bold text-foreground/70 leading-relaxed italic">
-                            &quot;{phvData.coachingAdvice}&quot;
-                          </p>
+                          <p className="text-xs font-bold text-foreground/70 leading-relaxed italic">&quot;{phvData.coachingAdvice}&quot;</p>
                        </div>
                     </div>
                   </>
@@ -257,14 +208,14 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
               <CardHeader className="bg-slate-50 border-b p-8">
                 <CardTitle className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-3">
-                  <ChartLine className="w-5 h-5 text-accent" /> Physical Progress Trends
+                  <ChartLine className="w-5 h-5 text-accent" /> Progress Trends
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-10">
                 {chartData.length < 1 ? (
                    <div className="h-[400px] flex flex-col items-center justify-center opacity-20 border-4 border-dashed rounded-[2rem]">
                       <TrendingUp className="w-16 h-16 mb-4" />
-                      <p className="font-black uppercase text-sm tracking-widest">Awaiting First Archive Entry</p>
+                      <p className="font-black uppercase text-sm tracking-widest">Awaiting Archive Entry</p>
                    </div>
                 ) : (
                   <div className="h-[400px] w-full">
@@ -288,7 +239,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
               <CardHeader className="bg-primary p-8 text-white">
                 <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
-                  <Zap className="w-5 h-5 text-accent" /> Score Registry Archive
+                  <Zap className="w-5 h-5 text-accent" /> Registry Archive
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8">
@@ -306,7 +257,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                       </div>
                     ))}
                     {playerFitnessHistory.length === 0 && (
-                      <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground/40">No historical records found</p>
+                      <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground/40">No records found</p>
                     )}
                   </div>
                   <ScrollBar orientation="vertical" />

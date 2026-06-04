@@ -221,7 +221,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                        {squad.length === 0 && (
                          <div className="col-span-full py-10 text-center opacity-20 border-2 border-dashed rounded-3xl">
                             <Flame className="w-6 h-6 mx-auto mb-2" />
-                            <p className="text-[8px] font-black uppercase">No {cat} athletes pending in this drill</p>
+                            <p className="text-[8px] font-black uppercase">No {cat} athletes pending</p>
                          </div>
                        )}
                     </div>
@@ -229,13 +229,6 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                ))}
             </div>
           </CardContent>
-          <div className="p-6 bg-white border-t flex justify-between items-center">
-            <div className="flex items-center gap-2 text-muted-foreground">
-               <Info className="w-3.5 h-3.5" />
-               <p className="text-[10px] font-bold uppercase tracking-widest">Grouping: Under-wise Registry (U14/U17/Senior)</p>
-            </div>
-            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">v4.1.1 Registry</Badge>
-          </div>
         </Card>
 
         <Card className="lg:col-span-4 border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden flex flex-col">
@@ -258,9 +251,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 </div>
               ))}
               {masteredThisDrill.length === 0 && (
-                <div className="py-24 text-center opacity-10 space-y-4">
+                <div className="py-24 text-center opacity-10">
                   <ShieldCheck className="w-16 h-16 mx-auto mb-2" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No logs archived for this session</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No logs archived</p>
                 </div>
               )}
             </CardContent>

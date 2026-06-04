@@ -473,6 +473,56 @@ export function useSchoolData(isActive: boolean = true) {
       a.href = url; a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`;
       a.click(); URL.revokeObjectURL(url);
     },
+    importBackupData: async (backup: any) => {
+      if (!user || !db || !backup.data) return;
+      const { data } = backup;
+      
+      // Restore School Profile
+      if (data.schoolProfile) {
+        const profileRef = doc(db, 'schools', user.uid);
+        setDocumentNonBlocking(profileRef, { ...data.schoolProfile, id: user.uid, ownerId: user.uid }, { merge: true });
+      }
+
+      // Restore Players
+      if (Array.isArray(data.players)) {
+        data.players.forEach((p: any) => {
+          const playerRef = doc(db, 'players', p.id);
+          setDocumentNonBlocking(playerRef, { ...p, ownerId: user.uid, schoolId: user.uid }, { merge: true });
+        });
+      }
+
+      // Restore Goals
+      if (Array.isArray(data.goals)) {
+        data.goals.forEach((g: any) => {
+          const goalRef = doc(db, 'goal_registry', g.id);
+          setDocumentNonBlocking(goalRef, { ...g, schoolId: user.uid }, { merge: true });
+        });
+      }
+
+      // Restore Tactical Events
+      if (Array.isArray(data.tacticalEvents)) {
+        data.tacticalEvents.forEach((te: any) => {
+          const teRef = doc(db, 'tactical_registry', te.id);
+          setDocumentNonBlocking(teRef, { ...te, schoolId: user.uid }, { merge: true });
+        });
+      }
+
+      // Restore Health Incidents
+      if (Array.isArray(data.healthIncidents)) {
+        data.healthIncidents.forEach((hi: any) => {
+          const hiRef = doc(db, 'all_health_incidents', hi.id);
+          setDocumentNonBlocking(hiRef, { ...hi, schoolId: user.uid }, { merge: true });
+        });
+      }
+
+      // Restore Exam Configs
+      if (data.examConfigs) {
+        Object.entries(data.examConfigs).forEach(([id, labels]: [string, any]) => {
+          const configRef = doc(db, 'exam_configs', id);
+          setDocumentNonBlocking(configRef, { labels, schoolId: user.uid }, { merge: true });
+        });
+      }
+    },
     syncOfflineAttendance
   };
 }
