@@ -36,6 +36,7 @@ export interface SchoolProfile {
   district: string;
   importantInfo?: string;
   updatedAt: string;
+  passcode?: string; // Secure PIN for app entry
 }
 
 export interface AttendanceRecord {

@@ -356,6 +356,11 @@ export function useSchoolData(isActive: boolean = true) {
       const profileRef = doc(db, 'schools', user.uid);
       setDocumentNonBlocking(profileRef, { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
     },
+    updatePasscode: (passcode: string) => {
+      if (!user || !db) return;
+      const profileRef = doc(db, 'schools', user.uid);
+      updateDocumentNonBlocking(profileRef, { passcode });
+    },
     addPlayer: (playerData: any) => {
       if (!user || !db) return;
       const playerRef = doc(db, 'players', playerData.id);

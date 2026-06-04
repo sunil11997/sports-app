@@ -39,6 +39,7 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { PasscodeLock } from '@/components/features/PasscodeLock';
 
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { 
   loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" /> 
@@ -92,8 +93,9 @@ export default function WaghambaApp() {
   const [language, setLanguage] = useState<'English' | 'Marathi'>('English');
   const [subTab, setSubTab] = useState<string>("overview");
   const [headerDate, setHeaderDate] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
   
-  const schoolData = useSchoolData(stage === 'hub' && isMounted);
+  const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' && isMounted);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
@@ -145,7 +147,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.0.0</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.1.0</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -162,6 +164,11 @@ export default function WaghambaApp() {
         `}</style>
       </div>
     );
+  }
+
+  // Passcode Gate Integration
+  if (stage !== 'landing' && schoolData.data.schoolProfile?.passcode && !isUnlocked) {
+    return <PasscodeLock correctPasscode={schoolData.data.schoolProfile.passcode} onSuccess={() => setIsUnlocked(true)} teacherEmail={user?.email} />;
   }
 
   if (stage === 'hub' && selectedSection) {

@@ -26,7 +26,9 @@ import {
   Download,
   School,
   UserCheck,
-  ChevronLeft
+  ChevronLeft,
+  Lock,
+  Smartphone as Phone
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -37,6 +39,7 @@ import { usePWA } from '@/components/providers/pwa-provider';
 import { initiateSignOut, syncViaEmail } from '@/firebase/non-blocking-login';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SchoolRegistration } from './SchoolRegistration';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
   const auth = useAuth();
@@ -52,6 +55,10 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
   
+  // Passcode Settings
+  const [isPasscodeDialogOpen, setIsPasscodeDialogOpen] = useState(false);
+  const [newPasscode, setNewPasscode] = useState("");
+  
   const LOGO_INAPP = "/icon-512.png";
 
   const handleManualExport = () => {
@@ -59,6 +66,21 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     toast({
       title: language === 'Marathi' ? "डेटा एक्सपोर्ट झाला" : "Consolidated Registry Exported",
       description: language === 'Marathi' ? "तुमच्या शाळेचा संपूर्ण डेटा JSON फाईलमध्ये जतन केला आहे." : "A complete institutional JSON backup has been generated."
+    });
+  };
+
+  const handleSetPasscode = () => {
+    if (newPasscode.length !== 4 || !/^\d+$/.test(newPasscode)) {
+      toast({ title: "Invalid PIN", description: "Passcode must be exactly 4 digits.", variant: "destructive" });
+      return;
+    }
+    schoolData.updatePasscode(newPasscode);
+    setIsPasscodeDialogOpen(false);
+    setNewPasscode("");
+    toast({ 
+      title: "Security Updated", 
+      description: "App passcode has been set successfully.",
+      className: "bg-primary text-white"
     });
   };
 
@@ -155,7 +177,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.0.0</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.1.0</p>
       </div>
 
       <div className="space-y-6">
@@ -187,6 +209,14 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               label="Teacher & School Profile" 
               sublabel="Configure Instructor Details"
               onClick={() => setShowRegistration(true)}
+            />
+            <SettingsItem 
+              icon={Lock} 
+              color="bg-accent" 
+              label="App Passcode (PIN)" 
+              sublabel={schoolData.data.schoolProfile?.passcode ? "PIN Protection Active" : "No PIN Set"}
+              value={schoolData.data.schoolProfile?.passcode ? "****" : "OFF"}
+              onClick={() => setIsPasscodeDialogOpen(true)}
             />
           </div>
         </div>
@@ -266,11 +296,45 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Interface Settings</label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
-            <SettingsItem icon={Smartphone} color="bg-orange-50" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
+            <SettingsItem icon={Phone} color="bg-orange-50" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
             <SettingsItem icon={Languages} color="bg-purple-50" label="System Language" sublabel="Select primary display language" accessory={<div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10"><Button variant={language === 'Marathi' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('Marathi'); }} className="h-7 rounded-full font-black text-[9px] px-3">मराठी</Button><Button variant={language === 'English' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('English'); }} className="h-7 rounded-full font-black text-[9px] px-3">EN</Button></div>} />
           </div>
         </div>
       </div>
+
+      <Dialog open={isPasscodeDialogOpen} onOpenChange={setIsPasscodeDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl">
+          <DialogHeader className="bg-primary p-8 text-white relative">
+             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 backdrop-blur-md">
+                <Lock className="w-6 h-6 text-white" />
+             </div>
+             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Registry Passcode</DialogTitle>
+             <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Institutional PIN Protection</p>
+          </DialogHeader>
+          <div className="p-8 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-primary tracking-widest ml-1">New 4-Digit PIN</label>
+              <Input 
+                type="password" 
+                maxLength={4} 
+                placeholder="0000" 
+                value={newPasscode} 
+                onChange={(e) => setNewPasscode(e.target.value.replace(/\D/g, ''))}
+                className="h-16 text-center text-3xl tracking-[0.5em] font-black border-2 rounded-2xl bg-muted/20"
+              />
+            </div>
+            <p className="text-[10px] font-medium text-muted-foreground leading-relaxed italic">
+              "Setting a passcode will require it every time the app is opened to protect student privacy."
+            </p>
+          </div>
+          <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
+             <Button onClick={handleSetPasscode} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-lg">Save PIN</Button>
+             {schoolData.data.schoolProfile?.passcode && (
+               <Button onClick={() => { schoolData.updatePasscode(""); setIsPasscodeDialogOpen(false); }} variant="ghost" className="w-full text-destructive font-black uppercase text-[10px]">Disable Passcode</Button>
+             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
