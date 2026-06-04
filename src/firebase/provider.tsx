@@ -166,7 +166,7 @@ export const useUser = (): UserHookResult => {
  * Hardened v4.3.2: Silence build warnings for generic dependency array literals.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   const result = useMemo(() => factory(), deps);
   
   useEffect(() => {
