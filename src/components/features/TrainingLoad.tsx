@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -112,7 +111,7 @@ export function TrainingLoad({ store }: { store: any }) {
                   <Input 
                     type="number" 
                     value={duration} 
-                    onChange={(e) => setDuration(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDuration(e.target.value)}
                     className="h-14 pl-12 rounded-2xl border-2 font-black text-lg focus:border-primary"
                   />
                 </div>
@@ -120,7 +119,7 @@ export function TrainingLoad({ store }: { store: any }) {
 
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">3. Training Date</label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-14 rounded-2xl border-2 font-bold" />
+                <Input type="date" value={date} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)} className="h-14 rounded-2xl border-2 font-bold" />
               </div>
             </div>
           </Card>

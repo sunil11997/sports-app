@@ -107,7 +107,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
-  // Registry Auto-Fill Logic
   const suggestedStudents = useMemo(() => {
     if (!registrySearch || registrySearch.length < 2) return [];
     return store.data.players.filter((p: any) => 
@@ -121,7 +120,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     form.reset({
       ...student,
       category: section === 'sports' ? 'athlete' : student.category,
-      id: undefined // Ensure we don't accidentally overwrite the ID if it's meant to be a new entry
+      id: undefined 
     });
     setRegistrySearch("");
     toast({
@@ -131,7 +130,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
     });
   };
 
-  // Automatically switch to athlete category if any sports are selected
   const watchedSports = form.watch('sports');
   useEffect(() => {
     if (watchedSports && watchedSports.length > 0) {
@@ -256,7 +254,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 <div className="relative group">
                   <Input 
                     value={registrySearch}
-                    onChange={(e) => setRegistrySearch(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegistrySearch(e.target.value)}
                     placeholder="Type name, Aadhar, or GR No..." 
                     className="h-14 rounded-2xl border-2 border-accent/20 font-bold bg-white focus:border-accent shadow-inner pl-12"
                   />
@@ -268,6 +266,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     {suggestedStudents.map((s: any) => (
                       <button 
                         key={s.id}
+                        type="button"
                         onClick={() => handleAutoFill(s)}
                         className="w-full text-left p-4 hover:bg-accent/5 rounded-xl flex items-center justify-between group transition-colors"
                       >
@@ -356,7 +355,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="w-14 h-14 p-0 rounded-2xl border-2">
                           <Upload className="w-6 h-6" />
                         </Button>
-                        <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                        <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e, 'profile')} />
                       </div>
                     )}
                   </div>
@@ -393,7 +392,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <Button type="button" variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-12 h-12 p-0 rounded-2xl border-2">
                           <Upload className="w-6 h-6" />
                         </Button>
-                        <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                        <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e, 'aadhar')} />
                       </div>
                     )}
                   </div>

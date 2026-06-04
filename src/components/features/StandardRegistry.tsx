@@ -254,15 +254,15 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                   <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[220px]">
                     {p.name.toUpperCase()}
                   </TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
-                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.nirikshan || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'nirikshan', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.tondikam || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'tondikam', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.pratyashike || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'pratyashike', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.upkram || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'upkram', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.prakalp || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'prakalp', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
+                  <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
                   <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary">{total}</TableCell>
                   <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
                     <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
@@ -277,7 +277,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
       </div>
 
       <Dialog open={isLabelDialogOpen} onOpenChange={setIsLabelDialogOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
+        <DialogContent className="sm:max-w-[450px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl">
           <DialogHeader className="bg-primary p-8 text-white relative">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10">
               <Settings2 className="w-6 h-6 text-accent" /> Customize Column Labels
@@ -297,7 +297,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
                   <Input 
                     value={editingLabels[field as keyof typeof DEFAULT_LABELS]} 
-                    onChange={(e) => setEditingLabels({...editingLabels, [field]: e.target.value.toUpperCase()})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field]: e.target.value.toUpperCase()})}
                     className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner"
                     maxLength={10}
                   />

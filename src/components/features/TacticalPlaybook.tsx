@@ -224,11 +224,21 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
               <div className="p-8 space-y-6 bg-white">
                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Strategy Title</label>
-                    <Input value={planTitle} onChange={(e) => setPlanTitle(e.target.value)} placeholder="e.g. U17 Final Defense Setup" className="h-14 rounded-2xl border-2 font-bold px-6 shadow-inner" />
+                    <Input 
+                      value={planTitle} 
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPlanTitle(e.target.value)} 
+                      placeholder="e.g. U17 Final Defense Setup" 
+                      className="h-14 rounded-2xl border-2 font-bold px-6 shadow-inner" 
+                    />
                  </div>
                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Tactical Breakdown</label>
-                    <Textarea value={planDesc} onChange={(e) => setPlanDesc(e.target.value)} placeholder="Describe the core technical moves..." className="min-h-[150px] rounded-2xl border-2 font-medium p-6 shadow-inner" />
+                    <Textarea 
+                      value={planDesc} 
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPlanDesc(e.target.value)} 
+                      placeholder="Describe the core technical moves..." 
+                      className="min-h-[150px] rounded-2xl border-2 font-medium p-6 shadow-inner" 
+                    />
                  </div>
                  <div className="flex gap-4 pt-4">
                     <Button onClick={() => setIsBuilderOpen(false)} variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest">Discard</Button>

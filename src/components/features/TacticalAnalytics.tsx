@@ -223,7 +223,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
             <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">कोचची टिप्पणी (Remarks)</label>
             <Input 
               value={description} 
-              onChange={e => setDescription(e.target.value)} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)} 
               placeholder="e.g. Advanced tackle under pressure..." 
               className="h-12 border-2 rounded-xl"
             />

@@ -200,17 +200,17 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div className="space-y-2">
                 <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">सध्याचा सर्वोत्तम (PB)</label>
-                <Input value={currentPB} onChange={e => setCurrentPB(e.target.value)} placeholder="उदा. १३.२ सेकंद" className="h-12 border-2 rounded-xl font-black text-primary" />
+                <Input value={currentPB} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentPB(e.target.value)} placeholder="उदा. १३.२ सेकंद" className="h-12 border-2 rounded-xl font-black text-primary" />
              </div>
              <div className="space-y-2">
                 <label className="text-[10px] font-black text-accent uppercase tracking-widest ml-2">पुढील ध्येय (Target)</label>
-                <Input value={target} onChange={e => setTarget(e.target.value)} placeholder="उदा. १२.८ सेकंद" className="h-12 border-2 rounded-xl font-black text-accent" />
+                <Input value={target} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTarget(e.target.value)} placeholder="उदा. १२.८ सेकंद" className="h-12 border-2 rounded-xl font-black text-accent" />
              </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">महिना निवडा</label>
-            <Input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="h-12 border-2 rounded-xl font-bold" />
+            <Input type="month" value={selectedMonth} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMonth(e.target.value)} className="h-12 border-2 rounded-xl font-bold" />
           </div>
 
           <Button 
@@ -282,9 +282,6 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
                           <Button variant="ghost" size="icon" onClick={() => store.deleteGoal(goal.id)} className="h-10 w-10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity absolute top-0 right-0">
                              <Trash2 className="w-5 h-5" />
                           </Button>
-                       </div>
-                       <div className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                          <Zap className="w-32 h-32" />
                        </div>
                     </div>
                   ))}

@@ -110,7 +110,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
             .meta { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid #eee; padding: 10px 0; margin-bottom: 20px; }
             h3 { color: #111; border-left: 5px solid #1e3a8a; padding-left: 10px; margin-top: 25px; text-transform: uppercase; font-size: 14px; }
             .box { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; border-radius: 8px; white-space: pre-wrap; min-height: 100px; margin-top: 5px; }
-            .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+            .stat-grid { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
             .stat-item { border: 1px solid #eee; padding: 10px; border-radius: 5px; text-align: center; }
             .footer { margin-top: 50px; display: flex; justify-content: space-between; font-weight: 900; }
             .sign { border-top: 1px solid #333; width: 220px; text-align: center; padding-top: 5px; }
@@ -137,7 +137,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
           </div>
 
           <h3>1. Institutional Attendance Overview</h3>
-          <div class="stat-grid">
+          <div class="stat-grid" style="display: grid;">
             <div class="stat-item"><strong>Morning Session:</strong> ${attendanceSummary.morning} Present</div>
             <div class="stat-item"><strong>Evening Session:</strong> ${attendanceSummary.evening} Present</div>
           </div>
@@ -183,7 +183,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
           <div className="flex flex-col w-full md:w-80 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-primary uppercase ml-2 tracking-widest">Select Date</label>
-              <Input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="rounded-2xl border-2 h-14 font-black shadow-sm" />
+              <Input type="date" value={reportDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReportDate(e.target.value)} className="rounded-2xl border-2 h-14 font-black shadow-sm" />
             </div>
             <Button onClick={handlePrint} className="bg-primary text-white h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active-scale">
               <Printer className="w-5 h-5 mr-2" /> Print Daily Brief
@@ -292,7 +292,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
                  <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Head Instructor Remark</label>
                  <Textarea 
                   value={manualNotes} 
-                  onChange={(e) => setManualSummary(e.target.value)} 
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setManualSummary(e.target.value)} 
                   placeholder="Record summary observations..." 
                   className="min-h-[150px] rounded-2xl border-2 p-6 font-medium text-sm" 
                  />

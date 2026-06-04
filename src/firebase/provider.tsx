@@ -167,8 +167,9 @@ export const useUser = (): UserHookResult => {
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => {
-    const result = factory();
+  const result = useMemo(() => factory(), deps);
+  
+  useEffect(() => {
     if (result && typeof result === 'object') {
       try {
         Object.defineProperty(result, '__memo', {
@@ -177,10 +178,9 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
           enumerable: false,
           writable: true
         });
-      } catch (e) {
-        // Safe fail for non-extensible objects
-      }
+      } catch (e) {}
     }
-    return result;
-  }, deps);
+  }, [result]);
+
+  return result;
 }

@@ -190,7 +190,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.1.2</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.3.2</p>
       </div>
 
       <div className="space-y-6">
@@ -271,13 +271,24 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-primary uppercase ml-1">Institutional Email</label>
-                  <Input placeholder="teacher@waghamba.com" className="h-14 rounded-2xl border-2 font-bold" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+                  <Input 
+                    placeholder="teacher@waghamba.com" 
+                    className="h-14 rounded-2xl border-2 font-bold" 
+                    value={emailInput} 
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailInput(e.target.value)} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-primary uppercase ml-1">Passcode</label>
                   <div className="relative">
-                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-14 rounded-2xl border-2 font-bold" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
-                    <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/40">{showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button>
+                    <Input 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="••••••••" 
+                      className="h-14 rounded-2xl border-2 font-bold" 
+                      value={passwordInput} 
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPasswordInput(e.target.value)} 
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/40">{showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button>
                   </div>
                 </div>
                 <Button onClick={handleAuthAction} disabled={isSyncing} className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg">
@@ -292,7 +303,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Interface Settings</label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             <SettingsItem icon={Phone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
-            <SettingsItem icon={Languages} color="bg-purple-500" label="System Language" sublabel="Select primary display language" accessory={<div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10"><Button variant={language === 'Marathi' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('Marathi'); }} className="h-7 rounded-full font-black text-[9px] px-3">मराठी</Button><Button variant={language === 'English' ? "default" : "ghost"} size="sm" onClick={(e) => { e.stopPropagation(); setLanguage('English'); }} className="h-7 rounded-full font-black text-[9px] px-3">EN</Button></div>} />
+            <SettingsItem icon={Languages} color="bg-purple-500" label="System Language" sublabel="Select primary display language" accessory={
+              <div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10">
+                <Button variant={language === 'Marathi' ? "default" : "ghost"} size="sm" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setLanguage('Marathi'); }} className="h-7 rounded-full font-black text-[9px] px-3">मराठी</Button>
+                <Button variant={language === 'English' ? "default" : "ghost"} size="sm" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setLanguage('English'); }} className="h-7 rounded-full font-black text-[9px] px-3">EN</Button>
+              </div>
+            } />
           </div>
         </div>
       </div>
@@ -307,7 +323,14 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <div className="p-8 space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-primary tracking-widest ml-1">New 4-Digit PIN</label>
-              <Input type="password" maxLength={4} placeholder="0000" value={newPasscode} onChange={(e) => setNewPasscode(e.target.value.replace(/\D/g, ''))} className="h-16 text-center text-3xl tracking-[0.5em] font-black border-2 rounded-2xl bg-muted/20" />
+              <Input 
+                type="password" 
+                maxLength={4} 
+                placeholder="0000" 
+                value={newPasscode} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPasscode(e.target.value.replace(/\D/g, ''))} 
+                className="h-16 text-center text-3xl tracking-[0.5em] font-black border-2 rounded-2xl bg-muted/20" 
+              />
             </div>
           </div>
           <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
