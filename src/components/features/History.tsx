@@ -128,7 +128,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.1.2</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.2.1</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">

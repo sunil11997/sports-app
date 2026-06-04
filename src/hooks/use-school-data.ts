@@ -456,6 +456,10 @@ export function useSchoolData(isActive: boolean = true) {
       const globalIncRef = doc(db, 'all_health_incidents', incident.id);
       setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
     },
+    deleteHealthIncident: (id: string) => {
+      if (!db) return;
+      deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id));
+    },
     addActivity: (activityData: any) => {
       if (!user || !db) return;
       const activityRef = doc(db, 'school_activities', activityData.id);
