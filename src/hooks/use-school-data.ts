@@ -344,6 +344,11 @@ export function useSchoolData(isActive: boolean = true) {
     return !!db && !playersLoading && !schoolsLoading;
   }, [isActive, db, playersLoading, schoolsLoading]);
 
+  const deleteHealthIncident = useCallback((id: string) => {
+    if (!db) return;
+    deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id));
+  }, [db]);
+
   return {
     data: aggregatedData,
     isLoaded: isActuallyLoaded,
@@ -456,10 +461,7 @@ export function useSchoolData(isActive: boolean = true) {
       const globalIncRef = doc(db, 'all_health_incidents', incident.id);
       setDocumentNonBlocking(globalIncRef, { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
     },
-    deleteHealthIncident: (id: string) => {
-      if (!db) return;
-      deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id));
-    },
+    deleteHealthIncident,
     addActivity: (activityData: any) => {
       if (!user || !db) return;
       const activityRef = doc(db, 'school_activities', activityData.id);
@@ -481,13 +483,11 @@ export function useSchoolData(isActive: boolean = true) {
       if (!user || !db || !backup.data) return;
       const { data } = backup;
       
-      // Restore School Profile
       if (data.schoolProfile) {
         const profileRef = doc(db, 'schools', user.uid);
         setDocumentNonBlocking(profileRef, { ...data.schoolProfile, id: user.uid, ownerId: user.uid }, { merge: true });
       }
 
-      // Restore Players
       if (Array.isArray(data.players)) {
         data.players.forEach((p: any) => {
           const playerRef = doc(db, 'players', p.id);
@@ -495,7 +495,6 @@ export function useSchoolData(isActive: boolean = true) {
         });
       }
 
-      // Restore Goals
       if (Array.isArray(data.goals)) {
         data.goals.forEach((g: any) => {
           const goalRef = doc(db, 'goal_registry', g.id);
@@ -503,7 +502,6 @@ export function useSchoolData(isActive: boolean = true) {
         });
       }
 
-      // Restore Tactical Events
       if (Array.isArray(data.tacticalEvents)) {
         data.tacticalEvents.forEach((te: any) => {
           const teRef = doc(db, 'tactical_registry', te.id);
@@ -511,7 +509,6 @@ export function useSchoolData(isActive: boolean = true) {
         });
       }
 
-      // Restore Health Incidents
       if (Array.isArray(data.healthIncidents)) {
         data.healthIncidents.forEach((hi: any) => {
           const hiRef = doc(db, 'all_health_incidents', hi.id);
@@ -519,7 +516,6 @@ export function useSchoolData(isActive: boolean = true) {
         });
       }
 
-      // Restore Exam Configs
       if (data.examConfigs) {
         Object.entries(data.examConfigs).forEach(([id, labels]: [string, any]) => {
           const configRef = doc(db, 'exam_configs', id);

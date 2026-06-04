@@ -41,6 +41,8 @@ const BODY_REGIONS = [
   { id: 'shoulders', label: 'Shoulders (खांदे)', x: '50%', y: '18%' },
   { id: 'chest', label: 'Chest (छाती)', x: '50%', y: '28%' },
   { id: 'back', label: 'Back (पाठ)', x: '50%', y: '35%' },
+  { id: 'hands_left', label: 'Left Hand/Finger (डावा हात/बोटे)', x: '12%', y: '45%' },
+  { id: 'hands_right', label: 'Right Hand/Finger (उजवा हात/बोटे)', x: '88%', y: '45%' },
   { id: 'hamstrings', label: 'Hamstrings (मांडी)', x: '50%', y: '60%' },
   { id: 'knees', label: 'Knees (गुडघे)', x: '50%', y: '75%' },
   { id: 'ankles', label: 'Ankles (घोटा)', x: '50%', y: '90%' }
@@ -56,7 +58,7 @@ class InjuryRecoverySystem {
     if (injuryType === 'Sprain' || injuryType === 'Strain') {
       days = isCritical ? 21 : 7;
       protocol = "Apply R.I.C.E (Rest, Ice, Compression, Elevation) for 48 hours. Avoid weight bearing.";
-      medicine = "Apply Volini/Diclofenac Gel. Use Crepe Bandage for stability. Paracetamol (if prescribed by doctor) for pain.";
+      medicine = "Apply Volini/Diclofenac Gel. Use Crepe Bandage for stability. Paracetamol (if prescribed) for pain.";
     } else if (injuryType === 'Abrasion') {
       days = 3;
       protocol = "Clean wound with antiseptic solution. Keep it dry and sterile.";
@@ -73,6 +75,10 @@ class InjuryRecoverySystem {
       days = 14;
       protocol = "Concussion Protocol: Monitor for vomiting, dizziness, or blurred vision for 24h.";
       medicine = "Complete mental and physical rest. Zero screen time. Medical observation required.";
+    } else {
+      days = 5;
+      protocol = "Standard rest and monitoring.";
+      medicine = "Apply antiseptic if needed. Consult school doctor.";
     }
 
     const returnDate = addDays(new Date(), days);
@@ -140,9 +146,9 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
       playerName: player?.name || "Unknown",
       date,
       description: fullLog,
-      severity: severity.includes('Severe') ? 'Critical' : 'Minor',
+      severity: (severity.includes('Severe') || severity.includes('Critical')) ? 'Critical' : 'Minor',
       category: player?.category || 'student'
-    };
+    } as const;
 
     store.addHealthIncident(incident);
     setDescription("");
@@ -181,7 +187,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
         </head>
         <body>
           <h1>WAGHAMBA HEALTH REGISTRY & MEDICAL AUDIT</h1>
-          <div class="meta">Registry v4.2.0 • Official Instructor: Sunil Deshmukh</div>
+          <div class="meta">Registry v4.2.2 • Official Instructor: Sunil Deshmukh</div>
           ${incidentsToPrint.slice().reverse().map((inc: any) => `
             <div class="incident ${inc.severity === 'Critical' ? 'critical' : ''}">
               <div class="name">${inc.playerName}</div>
@@ -214,7 +220,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.3em] mt-2">Visual Mapping & Recovery IQ</p>
                </div>
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </CardHeader>
 
           <CardContent className="p-8">
@@ -265,7 +271,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                           <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl border shadow-xl flex items-center justify-between">
                              <div>
                                 <p className="text-[8px] font-black uppercase text-muted-foreground mb-1">Selected Location</p>
-                                <p className="font-black text-xs uppercase text-primary leading-none">{selectedBodyPart || 'Tap Body Map'}</p>
+                                <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[150px]">{selectedBodyPart || 'Tap Body Map'}</p>
                              </div>
                              <Activity className={cn("w-5 h-5 transition-colors", selectedBodyPart ? "text-accent animate-pulse" : "text-muted-foreground/30")} />
                           </div>
@@ -287,9 +293,9 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                     <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">४. तीव्रता (Severity)</label>
                     <div className="grid grid-cols-2 gap-3">
                        {['Minor (कमी)', 'Severe (गंभीर)'].map((level) => (
-                         <Button
+                         <button
                            key={level}
-                           variant="outline"
+                           type="button"
                            onClick={() => setSeverity(level)}
                            className={cn(
                              "h-12 rounded-xl font-black text-[9px] uppercase border-2 transition-all",
@@ -299,7 +305,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                            )}
                          >
                            {level}
-                         </Button>
+                         </button>
                        ))}
                     </div>
                   </div>
@@ -339,11 +345,11 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                   <Button 
                     className={cn(
                       "w-full rounded-3xl font-black h-20 text-xs uppercase tracking-[0.2em] shadow-2xl active-scale transition-all",
-                      severity.includes('Severe') ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-primary hover:bg-primary/90 text-white"
+                      (severity.includes('Severe') || severity.includes('Critical')) ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-primary hover:bg-primary/90 text-white"
                     )} 
                     onClick={handleSave}
                   >
-                    {severity.includes('Severe') ? <AlertTriangle className="w-6 h-6 mr-3 animate-pulse" /> : <ShieldAlert className="w-6 h-6 mr-3" />}
+                    {(severity.includes('Severe') || severity.includes('Critical')) ? <AlertTriangle className="w-6 h-6 mr-3 animate-pulse" /> : <ShieldAlert className="w-6 h-6 mr-3" />}
                     Archive Medical Log
                   </Button>
                </div>
