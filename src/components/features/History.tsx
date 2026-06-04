@@ -117,6 +117,92 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     }));
   }, [playerFitnessHistory]);
 
+  const handlePrintDossier = () => {
+    if (!currentPlayer) return;
+    const printContent = `
+      <html>
+        <head>
+          <title>Performance Dossier - ${currentPlayer.name}</title>
+          <style>
+            @media print { @page { size: A4; margin: 1.5cm; } .no-print { display: none !important; } }
+            body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
+            .meta { font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #eee; padding: 10px 0; margin-bottom: 20px; display: flex; justify-content: space-between; }
+            .section-title { font-size: 14px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; border-left: 5px solid #f59e0b; padding-left: 10px; margin: 25px 0 10px 0; }
+            .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+            .stat-box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
+            .stat-val { font-size: 18px; font-weight: 900; color: #1e3a8a; }
+            .stat-label { font-size: 9px; text-transform: uppercase; color: #666; font-weight: 800; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #eee; padding: 8px; text-align: center; font-size: 11px; }
+            th { background: #f8f8f8; font-weight: 900; }
+            .advice-box { background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px dashed #1e3a8a; font-style: italic; }
+            
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
+          </style>
+        </head>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+          <div class="header">
+            <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <div style="font-weight: 800; text-transform: uppercase; margin-top: 5px; text-decoration: underline;">Athletic Performance Dossier & Biological Audit</div>
+          </div>
+          <div class="meta">
+            <span>ATHLETE: ${currentPlayer.name.toUpperCase()}</span>
+            <span>STD: ${currentPlayer.std}</span>
+            <span>IDENTITY: ${currentPlayer.generalRegisterNumber || currentPlayer.aadharNumber || 'N/A'}</span>
+          </div>
+
+          <div class="section-title">1. Physical & Biological Maturity (PHV)</div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-val">${currentPlayer.height} cm</div><div class="stat-label">Height</div></div>
+            <div class="stat-box"><div class="stat-val">${currentPlayer.weight} kg</div><div class="stat-label">Weight</div></div>
+            <div class="stat-box"><div class="stat-val">${phvData?.offset} Yrs</div><div class="stat-label">PHV Offset</div></div>
+          </div>
+          <p style="margin-top:15px;"><strong>Biological Status:</strong> ${phvData?.status}</p>
+          <div class="advice-box">"Coaching Advice: ${phvData?.coachingAdvice}"</div>
+
+          <div class="section-title">2. Latest Performance Metrics (%)</div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-val">${currentFitness?.score || 0}%</div><div class="stat-label">Aggregate Fitness</div></div>
+            <div class="stat-box"><div class="stat-val">${currentFitness?.speedScore || 0}%</div><div class="stat-label">Speed Rating</div></div>
+            <div class="stat-box"><div class="stat-val">${currentFitness?.enduranceScore || 0}%</div><div class="stat-label">Stamina Rating</div></div>
+          </div>
+
+          <div class="section-title">3. Historical Progress Log</div>
+          <table>
+            <thead>
+              <tr><th>DATE</th><th>SCORE</th><th>SPEED</th><th>STAMINA</th><th>AGILITY</th><th>STATUS</th></tr>
+            </thead>
+            <tbody>
+              ${playerFitnessHistory.slice().reverse().map((f: any) => `
+                <tr>
+                  <td>${format(new Date(f.updatedAt || f.date || new Date()), 'dd MMM yyyy')}</td>
+                  <td>${f.score}%</td>
+                  <td>${f.speedScore || '-'}%</td>
+                  <td>${f.enduranceScore || '-'}%</td>
+                  <td>${f.agilityScore || '-'}%</td>
+                  <td>${f.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.1</p>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+  };
+
   if (!store.isLoaded) return <DashboardHomeSkeleton />;
 
   return (
@@ -128,7 +214,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.2.1</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.1</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
@@ -142,7 +228,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               ))}
             </SelectContent>
           </Select>
-          <Button disabled={!selectedPlayerId} onClick={() => window.print()} className="bg-primary text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-xl">
+          <Button disabled={!selectedPlayerId} onClick={handlePrintDossier} className="bg-primary text-white rounded-2xl h-14 font-black uppercase text-xs tracking-widest shadow-xl active-scale">
             <Printer className="w-4 h-4 mr-2" /> Export Dossier
           </Button>
         </div>

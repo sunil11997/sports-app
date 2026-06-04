@@ -147,7 +147,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
-          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+          <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
           <div class="report-type">Monthly Attendance Log (${section.toUpperCase()}) - ${format(currentDate, 'MMMM yyyy')}</div>
           <div class="meta">
             <span>Category: ${categoryLabel.toUpperCase()}</span>
@@ -202,48 +202,21 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto flex-1">
-          {categories.map(cat => (
-            <Button
-              key={cat.id}
-              variant={activeCategory === cat.id ? "default" : "ghost"}
-              size="sm"
-              className={cn(
-                "h-8 rounded px-3 text-[10px] font-black uppercase transition-all",
-                activeCategory === cat.id ? 'bg-primary text-white' : 'text-muted-foreground'
-              )}
-              onClick={() => setActiveCategory(cat.id)}
-            >
-              {cat.label}
-            </Button>
-          ))}
-        </div>
-        
-        <div className="bg-muted/50 p-1 rounded-lg border flex items-center gap-1 min-w-fit">
-           <Button 
-             variant={activeSession === 'Morning' ? "default" : "ghost"}
-             size="sm"
-             onClick={() => setActiveSession('Morning')}
-             className={cn(
-               "h-8 rounded px-4 text-[10px] font-black uppercase flex items-center gap-2",
-               activeSession === 'Morning' ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
-             )}
-           >
-             <Sun className="w-3.5 h-3.5" /> Morning
-           </Button>
-           <Button 
-             variant={activeSession === 'Evening' ? "default" : "ghost"}
-             size="sm"
-             onClick={() => setActiveSession('Evening')}
-             className={cn(
-               "h-8 rounded px-4 text-[10px] font-black uppercase flex items-center gap-2",
-               activeSession === 'Evening' ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
-             )}
-           >
-             <Moon className="w-3.5 h-3.5" /> Evening
-           </Button>
-        </div>
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-lg border overflow-x-auto flex-1">
+        {categories.map(cat => (
+          <Button
+            key={cat.id}
+            variant={activeCategory === cat.id ? "default" : "ghost"}
+            size="sm"
+            className={cn(
+              "h-8 rounded px-3 text-[10px] font-black uppercase transition-all",
+              activeCategory === cat.id ? 'bg-primary text-white' : 'text-muted-foreground'
+            )}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {cat.label}
+          </Button>
+        ))}
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">

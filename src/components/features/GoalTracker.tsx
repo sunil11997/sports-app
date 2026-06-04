@@ -17,7 +17,8 @@ import {
   Zap,
   ArrowRight,
   Flame,
-  Star
+  Star,
+  Printer
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -94,6 +95,71 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
       .sort((a: any, b: any) => b.month.localeCompare(a.month));
   }, [store.data.goals, selectedPlayerId, activeSport]);
 
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Institutional Goal Registry - Waghamba Hub</title>
+          <style>
+            @media print { 
+              @page { size: A4; margin: 1cm; } 
+              .no-print { display: none !important; }
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; font-size: 12px; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
+            .report-title { font-weight: 800; text-transform: uppercase; text-align: center; margin-top: 10px; text-decoration: underline; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #333; padding: 10px; text-align: center; }
+            th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 10px; }
+            .name-cell { text-align: left; font-weight: 800; }
+            
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
+          </style>
+        </head>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+          <div class="header">
+            <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <div class="report-title">ATHLETE SELF-IMPROVEMENT & TARGET REGISTRY</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>STUDENT ATHLETE</th>
+                <th>SPORT / EVENT</th>
+                <th>MONTH</th>
+                <th>PREVIOUS BEST</th>
+                <th>TARGET GOAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${goalsList.map((g: any) => `
+                <tr>
+                  <td class="name-cell">${g.playerName.toUpperCase()}</td>
+                  <td>${g.metric}</td>
+                  <td>${format(new Date(g.month + "-01"), 'MMM yyyy')}</td>
+                  <td>${g.currentPB}</td>
+                  <td><strong>${g.target}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-700 pb-20">
       <div className="lg:col-span-5 space-y-8">
@@ -166,7 +232,12 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
               </div>
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">प्रगती आणि ध्येय इतिहास</h3>
            </div>
-           <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-4 py-1.5 rounded-full bg-white shadow-sm">Monthly Registry</Badge>
+           <div className="flex items-center gap-2">
+             <Button variant="outline" size="sm" onClick={handlePrint} disabled={goalsList.length === 0} className="font-black text-[10px] uppercase border-2 h-10 rounded-xl px-4">
+                <Printer className="w-3.5 h-3.5 mr-2" /> Export targets
+             </Button>
+             <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-4 py-1.5 rounded-full bg-white shadow-sm">Monthly Registry</Badge>
+           </div>
         </div>
 
         <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[600px]">
@@ -226,9 +297,6 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
                  <TrendingUp className="w-5 h-5 text-emerald-500" />
                  <p className="text-[10px] font-black text-primary/60 uppercase tracking-[0.2em]">Goal-setting triggers a 2x increase in student training engagement.</p>
               </div>
-              <p className="text-[9px] font-medium text-foreground/40 italic leading-relaxed px-10">
-                &quot;When an athlete sees their target on screen, they are statistically more likely to push past their physical limits.&quot;
-              </p>
            </div>
         </Card>
       </div>

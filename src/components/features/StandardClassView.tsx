@@ -150,6 +150,74 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
     }
   };
 
+  const handlePrint = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Standard ${std} Registry - Waghamba Hub</title>
+          <style>
+            @media print { 
+              @page { size: A4; margin: 1cm; } 
+              .no-print { display: none !important; }
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; font-size: 12px; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
+            .report-type { font-weight: 800; text-transform: uppercase; text-align: center; margin-top: 10px; text-decoration: underline; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+            th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 10px; }
+            
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
+          </style>
+        </head>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+          <div class="header">
+            <h1>शासकीय माध्यमिक आश्रमशाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <div class="report-type">OFFICIAL STUDENT REGISTRY: STANDARD ${std}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>SNR</th>
+                <th>STUDENT NAME</th>
+                <th>GENDER</th>
+                <th>HEIGHT (CM)</th>
+                <th>WEIGHT (KG)</th>
+                <th>GR NUMBER</th>
+                <th>AADHAR</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map((s: any, i: number) => `
+                <tr>
+                  <td>${s.serialNumber || i + 1}</td>
+                  <td><strong>${s.name.toUpperCase()}</strong></td>
+                  <td>${s.gender}</td>
+                  <td>${s.height || '-'}</td>
+                  <td>${s.weight || '-'}</td>
+                  <td>${s.generalRegisterNumber || '-'}</td>
+                  <td>${s.aadharNumber || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -166,9 +234,9 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
         </div>
         <div className="flex items-center gap-3">
            <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-6 h-10 rounded-full bg-white hidden lg:flex items-center gap-2">
-             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.0 Engine
+             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.1 Engine
            </Badge>
-           <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg">
+           <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg">
              <Printer className="w-4 h-4 mr-2" /> Print Summary
            </Button>
         </div>
@@ -348,7 +416,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Archiving: {format(new Date(), 'MMMM yyyy')}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-1.5 rounded-full bg-white">v4.3.0 Engine</Badge>
+                      <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-1.5 rounded-full bg-white">v4.3.1 Engine</Badge>
                    </div>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       <div className="space-y-6">
