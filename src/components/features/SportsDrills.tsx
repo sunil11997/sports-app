@@ -234,7 +234,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                <Info className="w-3.5 h-3.5" />
                <p className="text-[10px] font-bold uppercase tracking-widest">Grouping: Under-wise Registry (U14/U17/Senior)</p>
             </div>
-            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">v4.1.0 Registry</Badge>
+            <Badge className="bg-primary text-white font-black text-[9px] px-4 py-1.5 rounded-full">v4.1.1 Registry</Badge>
           </div>
         </Card>
 

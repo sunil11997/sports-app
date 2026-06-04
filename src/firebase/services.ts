@@ -45,15 +45,16 @@ export function getSdks(firebaseApp: FirebaseApp) {
     if (!initializedFirestoreApps.has(appKey)) {
       try {
         // Standardized initialization for high-resilience environments.
-        // experimentalForceLongPolling removed to prevent 10s backend timeouts.
+        // experimentalAutoDetectLongPolling enabled to resolve 'Could not reach backend' errors in proxied environments.
         firestore = initializeFirestore(firebaseApp, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager(),
             cacheSizeBytes: 100 * 1024 * 1024 
-          })
+          }),
+          experimentalAutoDetectLongPolling: true
         });
         initializedFirestoreApps.add(appKey);
-        console.log("WGB: Firestore Registry initialized with 100MB persistent cache.");
+        console.log("WGB: Firestore Registry initialized with 100MB persistent cache and Auto-Long-Polling.");
       } catch (e: any) {
         firestore = getFirestore(firebaseApp);
         if (e.code === 'failed-precondition') {

@@ -177,7 +177,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.1.0</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.1.1</p>
       </div>
 
       <div className="space-y-6">
@@ -323,7 +323,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                 className="h-16 text-center text-3xl tracking-[0.5em] font-black border-2 rounded-2xl bg-muted/20"
               />
             </div>
-            <p className="text-[10px] font-medium text-muted-foreground leading-relaxed italic">
+            <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
               "Setting a passcode will require it every time the app is opened to protect student privacy."
             </p>
           </div>
