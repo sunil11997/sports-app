@@ -129,8 +129,9 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               body { padding-top: 0 !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
-            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 10px; }
-            .meta { font-weight: bold; margin-bottom: 20px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 5px; text-align: center; }
+            .report-type { font-weight: 800; text-transform: uppercase; text-align: center; margin-bottom: 15px; text-decoration: underline; }
+            .meta { font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             .name-cell { text-align: left; font-weight: bold; width: 120px; }
@@ -146,8 +147,12 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
-          <h1>Attendance (${section.toUpperCase()}): ${format(currentDate, 'MMMM yyyy')}</h1>
-          <div class="meta">Category: ${categoryLabel.toUpperCase()} | Session: ${sessionLabel.toUpperCase()}</div>
+          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+          <div class="report-type">Monthly Attendance Log (${section.toUpperCase()}) - ${format(currentDate, 'MMMM yyyy')}</div>
+          <div class="meta">
+            <span>Category: ${categoryLabel.toUpperCase()}</span>
+            <span>Session: ${sessionLabel.toUpperCase()}</span>
+          </div>
           <table>
             <thead>
               <tr>

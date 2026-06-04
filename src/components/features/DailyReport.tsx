@@ -128,7 +128,7 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
           </div>
 
           <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
             <div class="report-title">Daily Institutional Activity Briefing (${section.toUpperCase()})</div>
           </div>
           <div class="meta">

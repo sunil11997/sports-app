@@ -150,7 +150,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       parseFloat(current.speedScore || '0') + 
       parseFloat(current.enduranceScore || '0') + 
       parseFloat(current.strengthScore || '0') +
-      parseFloat(current.agilityScore || '0') +
+      parseFloat(current.agilityScore || '0') + 
       parseFloat(current.flexScore || '0')
     ) / 5;
     
@@ -220,6 +220,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             }
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
             h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px double #333; padding-bottom: 10px; text-align: center; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 20px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #111; padding: 6px; text-align: center; }
             th { background: #f1f5f9; font-weight: 900; }
@@ -236,7 +237,8 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
             <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
-          <h1>ASHRAM SHALA WAGHAMBA - PHYSICAL EXCELLENCE REGISTRY</h1>
+          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+          <div class="report-type">PHYSICAL EXCELLENCE REGISTRY & PERFORMANCE SNAPSHOT</div>
           <div class="meta"><span>CATEGORY: ${categoryLabel.toUpperCase()}</span><span>DATE: ${format(new Date(), 'PP')}</span></div>
           <table>
             <thead>

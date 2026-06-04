@@ -175,7 +175,8 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
           <title>Institutional Injury Registry - Waghamba Hub</title>
           <style>
             body { font-family: Inter, sans-serif; padding: 40px; color: #111; line-height: 1.5; }
-            h1 { color: #1e3a8a; border-bottom: 4px solid #f59e0b; text-transform: uppercase; margin-bottom: 5px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px solid #f59e0b; text-align: center; margin-bottom: 5px; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 30px; text-decoration: underline; }
             .meta { font-weight: 800; text-transform: uppercase; font-size: 11px; margin-bottom: 30px; opacity: 0.7; }
             .incident { margin-bottom: 40px; border-bottom: 1px dashed #ccc; padding-bottom: 25px; }
             .critical { border-left: 6px solid #ef4444; padding-left: 20px; background: #fff5f5; }
@@ -183,11 +184,20 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
             .date { color: #666; font-size: 10px; font-weight: 900; }
             .desc { margin-top: 15px; white-space: pre-wrap; font-size: 13px; font-weight: 500; }
             .footer { margin-top: 50px; font-size: 10px; opacity: 0.5; text-align: center; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body>
-          <h1>WAGHAMBA HEALTH REGISTRY & MEDICAL AUDIT</h1>
-          <div class="meta">Registry v4.2.2 • Official Instructor: Sunil Deshmukh</div>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+          <div class="report-type">HEALTH REGISTRY & MEDICAL AUDIT LOG</div>
+          <div class="meta">Registry v4.3.0 • Official Instructor: Sunil Deshmukh</div>
           ${incidentsToPrint.slice().reverse().map((inc: any) => `
             <div class="incident ${inc.severity === 'Critical' ? 'critical' : ''}">
               <div class="name">${inc.playerName}</div>

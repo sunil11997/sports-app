@@ -64,10 +64,11 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.3; font-size: 12px; }
             .header { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 10px; margin-bottom: 25px; }
-            .school-name { font-size: 24px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 10px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
             th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
+            th { background-color: #f2f2f2; font-weight: 900; text-transform: uppercase; font-size: 10px; }
             
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
@@ -81,9 +82,9 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div style="font-weight: 800; text-decoration: underline; margin-top: 10px;">TOURNAMENT ENTRY FORM: ${selectedSport.toUpperCase()}</div>
-            <div style="font-size: 14px; font-weight: 700;">Category: ${category.toUpperCase()}</div>
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
+            <div class="report-type">TOURNAMENT ENTRY FORM: ${selectedSport.toUpperCase()}</div>
+            <div style="font-size: 14px; font-weight: 700; text-align:center; margin-top: 5px;">Category: ${category.toUpperCase()}</div>
           </div>
 
           <table>

@@ -33,18 +33,21 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
     const printContent = `
       <html>
         <head>
-          <title>Aashram School Waghamba - Team Lists</title>
+          <title>Waghamba Hub - Team Lists</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 40px; }
-            h1 { color: #235C36; border-bottom: 2px solid #8AF075; padding-bottom: 10px; }
-            h2 { margin-top: 30px; color: #1b4b3a; }
+            body { font-family: Inter, sans-serif; padding: 40px; color: #111; line-height: 1.5; }
+            h1 { color: #1e3a8a; border-bottom: 2px solid #333; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 30px; text-decoration: underline; }
+            h2 { margin-top: 30px; color: #1e3a8a; border-left: 5px solid #f59e0b; padding-left: 10px; text-transform: uppercase; font-size: 16px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #235C36; color: white; }
+            th { background-color: #f8f8f8; font-weight: 900; }
+            .footer { margin-top: 50px; font-size: 10px; opacity: 0.5; text-align: center; }
           </style>
         </head>
         <body>
-          <h1>AASHRAM SCHOOL WAGHAMBA - ${preselectedSport?.toUpperCase() || 'GENERAL'} ROSTERS</h1>
+          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+          <div class="report-type">${preselectedSport?.toUpperCase() || 'GENERAL'} SQUAD ROSTERS</div>
           ${categories.map(cat => groups[cat].length > 0 ? `
             <h2>${cat} (${groups[cat].length} Players)</h2>
             <table>
@@ -54,7 +57,7 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
               <tbody>
                 ${groups[cat].map(p => `
                   <tr>
-                    <td>${p.name}</td>
+                    <td><strong>${p.name.toUpperCase()}</strong></td>
                     <td>${p.std}</td>
                     <td>${p.age}</td>
                     <td>${(p.sports || []).join(', ')}</td>
@@ -63,6 +66,7 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
               </tbody>
             </table>
           ` : '').join('')}
+          <div class="footer">Confidential Institutional Document • WGB Hub v4.3.0</div>
         </body>
       </html>
     `;

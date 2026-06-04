@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -80,7 +79,6 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
   const handleOpenEvaluation = (player: any, sport: string) => {
     const key = `${player.id}_${sport}`;
     const existingData = store.data.sportSkills[key] || {};
-    // Ensure scores stored as 0-100 are displayed as 0-10
     const rawSkills = existingData.detailedSkills || {};
     const normalized: Record<string, string> = {};
     Object.keys(rawSkills).forEach(k => {
@@ -101,7 +99,6 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
 
     skills.forEach(s => {
       const val = parseFloat(localDetailedSkills[s]) || 0;
-      // Internally save as 0-100 for compatibility with other components
       const normalized = Math.min(10, Math.max(0, val)) * 10;
       skillsToSave[s] = normalized.toString();
       totalScore += normalized;
@@ -136,6 +133,7 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
             body { font-family: Inter, sans-serif; padding: 20px; font-size: 11px; color: #111; }
             .header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 15px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #333; padding: 8px; text-align: center; }
             th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 9px; }
@@ -153,8 +151,8 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div style="font-weight: 800; text-transform: uppercase;">Technical Mastery Registry: ${sportName.toUpperCase()}</div>
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
+            <div class="report-type">Technical Mastery Registry: ${sportName.toUpperCase()}</div>
           </div>
           <table>
             <thead>

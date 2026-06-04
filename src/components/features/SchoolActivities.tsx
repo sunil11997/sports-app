@@ -45,11 +45,12 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
               body { padding-top: 0 !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.6; color: #333; }
-            .header { text-align: center; border-bottom: 3px solid #235C36; padding-bottom: 10px; margin-bottom: 30px; }
-            h1 { color: #235C36; text-transform: uppercase; margin: 0; }
+            .header { text-align: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
+            h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
+            .report-type { font-weight: 800; text-transform: uppercase; text-align: center; margin-top: 10px; text-decoration: underline; }
             .box { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee; margin-top: 20px; }
             
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
             .btn-print { background: #f59e0b; color: white; }
@@ -61,8 +62,8 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा</h1>
-            <div style="font-weight: 800; text-transform: uppercase; margin-top: 10px;">ACTIVITY RECORD: ${activity.type}</div>
+            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
+            <div class="report-type">OFFICIAL ACTIVITY RECORD: ${activity.type}</div>
           </div>
           <div style="display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
             <span>Standard: Std ${activity.std}</span>

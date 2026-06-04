@@ -143,7 +143,9 @@ export function AIAdvice({ store }: { store: any }) {
               body { padding-top: 0 !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; color: #333; line-height: 1.6; }
-            h1 { color: #1e3a8a; border-bottom: 4px solid #f59e0b; margin-bottom: 20px; text-transform: uppercase; }
+            .inst-header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
+            .school-name { font-size: 18px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
+            h1 { color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-size: 20px; border-bottom: 4px solid #f59e0b; padding-bottom: 5px; }
             h2 { color: #1e3a8a; margin-top: 30px; border-left: 5px solid #f59e0b; padding-left: 15px; text-transform: uppercase; font-size: 14px; }
             section { margin-bottom: 30px; }
             
@@ -157,6 +159,9 @@ export function AIAdvice({ store }: { store: any }) {
           <div class="no-print print-controls">
             <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+          <div class="inst-header">
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
           </div>
           <h1>Performance Strategy: ${player?.name}</h1>
           <section><h2>Executive Summary</h2><p>${advice.summary}</p></section>

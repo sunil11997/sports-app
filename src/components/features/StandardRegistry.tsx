@@ -121,6 +121,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
             .header { text-align: center; border-bottom: 3px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 15px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
             th, td { border: 1px solid #000; padding: 6px; text-align: center; }
             th { background-color: #f5f5f5; font-weight: 900; text-transform: uppercase; font-size: 8px; }
@@ -138,8 +139,8 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
             <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
           </div>
           <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा</div>
-            <div style="font-weight: 800; margin-top: 5px;">Exam & Health Registry - Std: ${std} | Term: ${termLabel}</div>
+            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
+            <div class="report-type">Exam & Health Registry - Std: ${std} | Term: ${termLabel}</div>
           </div>
           <table>
             <thead>
@@ -276,7 +277,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
       </div>
 
       <Dialog open={isLabelDialogOpen} onOpenChange={setIsLabelDialogOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
+        <DialogContent className="sm:max-w-[450px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
           <DialogHeader className="bg-primary p-8 text-white relative">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10">
               <Settings2 className="w-6 h-6 text-accent" /> Customize Column Labels
