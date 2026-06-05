@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -21,7 +20,8 @@ import {
   GraduationCap,
   Languages,
   Printer,
-  ChevronRight
+  ChevronRight,
+  UserCheck
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -51,7 +51,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   const [selectedSport, setSelectedSport] = useState(initialSport);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(false);
-  const [monthlyPerformance, setMonthlyPerformance] = useState<any>({});
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -73,12 +72,15 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const nameMatch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const marathiMatch = (p.nameMarathi || "").includes(searchTerm);
         const aadharMatch = (p.aadharNumber || "").includes(searchTerm);
         const grMatch = (p.generalRegisterNumber || "").toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSection && (nameMatch || aadharMatch || grMatch) && (selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport)));
+        return matchesSection && (nameMatch || aadharMatch || grMatch || marathiMatch) && (selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport)));
       })
       .sort((a: any, b: any) => {
+        // Priority 1: Boys first (Male prioritized)
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
+        // Priority 2: Roll Number (Serial Number)
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, searchTerm, selectedSport]);
@@ -127,7 +129,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
               ${filteredPlayers.map((p: any) => `
                 <tr>
                   <td class="center">${p.serialNumber || '-'}</td>
-                  <td><strong>${p.name.toUpperCase()}</strong></td>
+                  <td><strong>${(p.nameMarathi || p.name).toUpperCase()}</strong></td>
                   <td class="center">${p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>
                   <td class="center">इ. ${p.std} वी</td>
                   <td class="center">${p.generalRegisterNumber || '-'}</td>
@@ -140,21 +142,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       </html>
     `;
     const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
-  };
-
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
-      setStream(newStream);
-      setActiveCam(type);
-      setFacingMode(mode);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Error' });
+    if (win) {
+      win.document.write(printContent);
+      win.document.close();
     }
   };
 
@@ -162,27 +152,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     if (stream) stream.getTracks().forEach(track => track.stop());
     setStream(null);
     setActiveCam(null);
-  };
-
-  const takePhoto = () => {
-    if (videoRef.current && canvasRef.current && activeCam && editingPlayer) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        if (facingMode === 'user') {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-        }
-        ctx.drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-        stopCamera();
-      }
-    }
   };
 
   const handleUpdatePlayer = () => {
@@ -240,13 +209,15 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-black text-sm uppercase text-primary leading-none">{p.name || "UNNAMED"}</p>
+                      <p className="font-black text-sm uppercase text-primary leading-none">
+                        {isMarathiView ? (p.nameMarathi || p.name) : p.name}
+                      </p>
                       <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{isMarathiView ? (p.gender === 'Male' ? 'मुलगा' : 'मुलगी') : p.gender}</p>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="px-4 text-center">
-                   <span className="font-black text-xs text-primary/80 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">{p.generalRegisterNumber || '---'}</span>
+                   <span className="font-black text-[10px] text-primary/80 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">{p.generalRegisterNumber || '---'}</span>
                 </TableCell>
                 <TableCell className="px-4 text-center">
                   <Badge variant="outline" className="rounded-full px-3 py-1 border-primary/20 text-[10px] font-black text-primary bg-primary/5">{isMarathiView ? `इ. ${p.std} वी` : `Std ${p.std}`}</Badge>
@@ -272,12 +243,20 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
             {editingPlayer && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-primary">Student Name</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary">Student Name (English)</Label>
                     <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                 </div>
+                 <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-primary">Student Name (Marathi / मराठी)</Label>
+                    <Input value={editingPlayer.nameMarathi || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                  </div>
                  <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase text-primary">GR Number</Label>
                     <Input value={editingPlayer.generalRegisterNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                 </div>
+                 <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>
+                    <Input value={editingPlayer.serialNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                  </div>
               </div>
             )}
@@ -292,4 +271,3 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     </div>
   );
 }
-

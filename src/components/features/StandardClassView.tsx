@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -75,12 +74,13 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
             th { background: #f1f1f1; font-weight: 900; }
             .center { text-align: center; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; background: #f59e0b; color: white; }
           </style>
         </head>
         <body style="padding-top: 60px;">
           <div class="no-print print-controls">
             <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; मागे जा</button>
-            <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:900; cursor:pointer;">प्रिंट करा</button>
+            <button onclick="window.print()" class="btn">प्रिंट करा</button>
           </div>
           <div class="header">
             <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
@@ -101,7 +101,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
               ${students.map((s: any) => `
                 <tr>
                   <td class="center">${s.serialNumber || '-'}</td>
-                  <td><strong>${s.name.toUpperCase()}</strong></td>
+                  <td><strong>${(s.nameMarathi || s.name).toUpperCase()}</strong></td>
                   <td class="center">${s.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>
                   <td class="center">${s.generalRegisterNumber || '-'}</td>
                   <td class="center">${s.aadharNumber || '-'}</td>
@@ -114,8 +114,16 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
       </html>
     `;
     const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
+    if (win) {
+      win.document.write(printContent);
+      win.document.close();
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    setStream(null);
+    setActiveCam(null);
   };
 
   const handleUpdatePlayer = () => {
@@ -124,12 +132,6 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
       setEditingPlayer(null);
       toast({ title: "Profile Updated" });
     }
-  };
-
-  const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    setStream(null);
-    setActiveCam(null);
   };
 
   return (
@@ -180,7 +182,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                         <AvatarImage src={student.photoUrl} className="object-cover" />
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
                       </Avatar>
-                      {student.name}
+                      {isMarathiView ? (student.nameMarathi || student.name) : student.name}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
@@ -214,12 +216,20 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
             {editingPlayer && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary">Name</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary">Name (English)</Label>
                   <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary">Name (Marathi / मराठी)</Label>
+                  <Input value={editingPlayer.nameMarathi || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
+                </div>
+                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>
-                  <Input value={editingPlayer.serialNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 font-black rounded-xl" />
+                  <Input value={editingPlayer.serialNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary">GR Number</Label>
+                  <Input value={editingPlayer.generalRegisterNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 font-black rounded-xl" />
                 </div>
               </div>
             )}
@@ -232,4 +242,3 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
     </div>
   );
 }
-

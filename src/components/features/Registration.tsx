@@ -30,7 +30,8 @@ import {
   RefreshCcw,
   Baby,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  Languages
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,7 @@ const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
+  nameMarathi: z.string().optional().default(""),
   std: z.string().min(1, "Standard is required"),
   category: z.enum(["athlete", "student"]),
   gender: z.enum(["Male", "Female"]).optional().default("Male"),
@@ -85,6 +87,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "", 
+      nameMarathi: "",
       std: "1", 
       category: section === 'sports' ? 'athlete' : 'student',
       gender: "Male", 
@@ -120,7 +123,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
     form.reset({
       ...student,
       category: section === 'sports' ? 'athlete' : student.category,
-      id: undefined 
     });
     setRegistrySearch("");
     toast({
@@ -232,6 +234,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     form.reset({
       ...form.getValues(),
       name: "",
+      nameMarathi: "",
       serialNumber: "",
       generalRegisterNumber: "",
       aadharNumber: "",
@@ -407,34 +410,55 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name *</FormLabel>
-                          <FormControl><Input placeholder="Required Field" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" {...field} /></FormControl>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
+                          <FormControl><Input placeholder="John Doe" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
-                      <FormField control={form.control} name="std" render={({ field }) => (
+                      <FormField control={form.control} name="nameMarathi" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard (Std) *</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger className="h-14 font-black border-2 bg-white rounded-2xl text-lg shadow-sm"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
-                          </Select>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                            <span>विद्यार्थ्याचे नाव (मराठी) *</span>
+                            <Badge variant="outline" className="text-[8px] border-accent/30 text-accent uppercase flex items-center gap-1">
+                              <Languages className="w-2.5 h-2.5" /> Devanagari
+                            </Badge>
+                          </FormLabel>
+                          <FormControl><Input placeholder="उदा. जनार्दन सुदाम भदाणे" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-accent shadow-sm text-lg" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField control={form.control} name="std" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard (Std) *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl text-md shadow-sm"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
                       <FormField control={form.control} name="gender" render={({ field }) => (
-                        <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></FormItem>
+                        <FormItem>
+                          <FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
+                          </Select>
+                        </FormItem>
                       )} />
                       <FormField control={form.control} name="serialNumber" render={({ field }) => (
-                        <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Roll No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Roll No / Sr No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
                         <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">GR Number</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
                       )} />
-                      <FormField control={form.control} name="dob" render={({ field }) => (
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <FormField control={form.control} name="dob" render={({ field }) => (
                         <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Birth Date</FormLabel><FormControl><Input type="date" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
                       )} />
                     </div>
@@ -456,7 +480,13 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Weight (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="bloodGroup" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Blood Group</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></FormItem>
+                        <FormItem>
+                          <FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Blood Group</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </FormItem>
                       )} />
                     </div>
                     

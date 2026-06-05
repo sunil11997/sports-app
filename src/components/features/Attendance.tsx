@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
@@ -155,7 +154,8 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name.toUpperCase()}</td><td>${p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>${row}<td>${total}</td></tr>`;
+                const displayName = p.nameMarathi || p.name;
+                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${displayName.toUpperCase()}</td><td>${p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -163,8 +163,10 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
       </html>
     `;
     const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
+    if (win) {
+      win.document.write(printContent);
+      win.document.close();
+    }
   };
 
   if (!isMounted || !store.isLoaded) {
@@ -246,7 +248,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               return (
                 <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
                   <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-10 uppercase">
-                    {player.name}
+                    {isMarathiView ? (player.nameMarathi || player.name) : player.name}
                   </TableCell>
                   {days.map(day => {
                     const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
@@ -279,4 +281,3 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
     </div>
   );
 }
-

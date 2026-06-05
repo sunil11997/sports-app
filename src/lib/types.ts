@@ -1,9 +1,10 @@
 export interface Player {
   id: string;
   name: string;
+  nameMarathi?: string; // Devanagari Name for official registers
   gender: 'Male' | 'Female';
   std: string;
-  serialNumber?: string; // Class Serial Number
+  serialNumber?: string; // Class Serial Number / Roll No
   dob: string;
   age: number;
   height: string; // Standing Height (cm)
