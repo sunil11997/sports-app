@@ -11,13 +11,14 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export function DailyReport({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function DailyReport({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const [isMounted, setIsMounted] = useState(false);
   const [reportDate, setReportDate] = useState("");
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
 
   const targetCategory = useMemo(() => section === 'general' ? 'student' : 'athlete', [section]);
+  const isMarathi = language === 'Marathi';
 
   useEffect(() => {
     setIsMounted(true);
@@ -93,6 +94,14 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
 
   const handlePrint = () => {
     if (!reportDate) return;
+    const isM = isMarathi;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? `दैनिक संस्थात्मक क्रियाकलाप ब्रीफिंग (${section === 'sports' ? 'क्रीडा' : 'सामान्य'})` 
+      : `Daily Institutional Activity Briefing (${section.toUpperCase()})`;
+
     const printContent = `
       <html>
         <head>
@@ -123,38 +132,42 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+            <button onclick="window.close()" class="btn btn-back">← ${isM ? 'मागे जा' : 'GO BACK'}</button>
+            <button onclick="window.print()" class="btn btn-print">${isM ? 'प्रिंट करा' : 'CONFIRM PRINT'}</button>
           </div>
 
           <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
-            <div class="report-title">Daily Institutional Activity Briefing (${section.toUpperCase()})</div>
+            <div class="school-name">${schoolName}</div>
+            <div class="report-title">${reportTitle}</div>
           </div>
           <div class="meta">
-            <span>DATE: ${reportDate ? format(new Date(reportDate), 'PPPP') : '---'}</span>
-            <span>WEATHER: ${weather.toUpperCase()}</span>
+            <span>${isM ? 'तारीख' : 'DATE'}: ${reportDate ? format(new Date(reportDate), 'PPPP') : '---'}</span>
+            <span>${isM ? 'हवामान' : 'WEATHER'}: ${weather.toUpperCase()}</span>
           </div>
 
-          <h3>1. Institutional Attendance Overview</h3>
+          <h3>1. ${isM ? 'संस्थात्मक उपस्थिती आढावा' : 'Institutional Attendance Overview'}</h3>
           <div class="stat-grid" style="display: grid;">
-            <div class="stat-item"><strong>Morning Session:</strong> ${attendanceSummary.morning} Present</div>
-            <div class="stat-item"><strong>Evening Session:</strong> ${attendanceSummary.evening} Present</div>
+            <div class="stat-item"><strong>${isM ? 'सकाळ सत्र' : 'Morning Session'}:</strong> ${attendanceSummary.morning} ${isM ? 'उपस्थित' : 'Present'}</div>
+            <div class="stat-item"><strong>${isM ? 'संध्याकाळ सत्र' : 'Evening Session'}:</strong> ${attendanceSummary.evening} ${isM ? 'उपस्थित' : 'Present'}</div>
           </div>
 
-          <h3>2. Consolidated Activity Summary</h3>
+          <h3>2. ${isM ? 'एकत्रित उपक्रम सारांश' : 'Consolidated Activity Summary'}</h3>
           <div class="box">${autoSummary}</div>
 
-          <h3>3. Health & Medical Log</h3>
+          <h3>3. ${isM ? 'आरोग्य आणि वैद्यकीय लॉग' : 'Health & Medical Log'}</h3>
           <div class="box">
             ${healthToday.length === 0 
-              ? 'No medical incidents reported today.' 
-              : healthToday.map((h: any) => `ALERT: [${h.playerName}] ${h.description}`).join('\n')
+              ? (isM ? 'आज कोणतीही वैद्यकीय घटना नोंदवली गेली नाही.' : 'No medical incidents reported today.')
+              : healthToday.map((h: any) => {
+                  const p = store.data.players.find((player: any) => player.id === h.playerId);
+                  const pName = isM ? (p?.nameMarathi || h.playerName) : h.playerName;
+                  return `ALERT: [${pName}] ${h.description}`;
+                }).join('\n')
             }
           </div>
 
-          <h3>4. Head Instructor Observations</h3>
-          <div class="box">${manualNotes || 'Standard operations conducted.'}</div>
+          <h3>4. ${isM ? 'मुख्य शिक्षकांचे निरीक्षण' : 'Head Instructor Observations'}</h3>
+          <div class="box">${manualNotes || (isM ? 'नियमित कामकाज चालले.' : 'Standard operations conducted.')}</div>
 
           <div class="footer">
             <div class="sign">Teacher Sunil Deshmukh</div>
@@ -228,17 +241,21 @@ export function DailyReport({ store, section }: { store: any, section: 'sports' 
                 <p className="text-sm font-bold text-muted-foreground italic text-center opacity-40">No medical alerts recorded for this period.</p>
               ) : (
                 <div className="space-y-4">
-                  {healthToday.map((h: any, i: number) => (
-                    <div key={i} className="flex gap-4 p-4 bg-destructive/[0.03] border border-destructive/10 rounded-2xl">
-                      <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center shrink-0">
-                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                  {healthToday.map((h: any, i: number) => {
+                    const p = store.data.players.find((player: any) => player.id === h.playerId);
+                    const pName = isMarathi ? (p?.nameMarathi || h.playerName) : h.playerName;
+                    return (
+                      <div key={i} className="flex gap-4 p-4 bg-destructive/[0.03] border border-destructive/10 rounded-2xl">
+                        <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-5 h-5 text-destructive" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-black uppercase text-xs text-destructive">{pName}</p>
+                          <p className="text-xs font-medium text-foreground/70">{h.description}</p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-black uppercase text-xs text-destructive">{h.playerName}</p>
-                        <p className="text-xs font-medium text-foreground/70">{h.description}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

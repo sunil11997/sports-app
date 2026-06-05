@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-export function PromotionHub({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function PromotionHub({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const [isPromoting, setIsPromoting] = useState<string | null>(null);
 

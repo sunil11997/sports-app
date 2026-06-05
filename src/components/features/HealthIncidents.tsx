@@ -92,7 +92,7 @@ class InjuryRecoverySystem {
   }
 }
 
-export function HealthIncidents({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function HealthIncidents({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [date, setDate] = useState("");
@@ -108,6 +108,7 @@ export function HealthIncidents({ store, section }: { store: any, section: 'spor
   }, []);
 
   const isGeneral = section === 'general';
+  const isMarathi = language === 'Marathi';
   
   const filteredPlayers = useMemo(() => 
     (store.data.players || [])
@@ -165,6 +166,14 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
   };
 
   const handlePrint = () => {
+    const isM = isMarathi;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? 'आरोग्य नोंदणी आणि वैद्यकीय ऑडिट लॉग' 
+      : 'HEALTH REGISTRY & MEDICAL AUDIT LOG';
+
     const incidentsToPrint = store.data.healthIncidents.filter((inc: any) => 
       filteredPlayers.some((p: any) => p.id === inc.playerId)
     );
@@ -192,19 +201,23 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; ${isM ? 'मागे जा' : 'GO BACK'}</button>
+            <button onclick="window.print()" class="btn btn-print">${isM ? 'प्रिंट करा' : 'CONFIRM PRINT'}</button>
           </div>
-          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-          <div class="report-type">HEALTH REGISTRY & MEDICAL AUDIT LOG</div>
+          <h1>${schoolName}</h1>
+          <div class="report-type">${reportTitle}</div>
           <div class="meta">Registry v4.3.0 • Official Instructor: Sunil Deshmukh</div>
-          ${incidentsToPrint.slice().reverse().map((inc: any) => `
-            <div class="incident ${inc.severity === 'Critical' ? 'critical' : ''}">
-              <div class="name">${inc.playerName}</div>
-              <div class="date">Archived on: ${inc.date}</div>
-              <div class="desc">${inc.description}</div>
-            </div>
-          `).join('')}
+          ${incidentsToPrint.slice().reverse().map((inc: any) => {
+            const p = store.data.players.find((p: any) => p.id === inc.playerId);
+            const displayName = isM ? (p?.nameMarathi || inc.playerName) : inc.playerName;
+            return `
+              <div class="incident ${inc.severity === 'Critical' ? 'critical' : ''}">
+                <div class="name">${displayName}</div>
+                <div class="date">${isM ? 'नोंद तारीख' : 'Archived on'}: ${inc.date}</div>
+                <div class="desc">${inc.description}</div>
+              </div>
+            `;
+          }).join('')}
           <div class="footer">Confidential Institutional Document • Ashram Shala Waghamba</div>
         </body>
       </html>
@@ -243,7 +256,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                     </div>
                     <Select onValueChange={setSelectedPlayer} value={selectedPlayer}>
                       <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-white shadow-sm"><SelectValue placeholder="Identify student..." /></SelectTrigger>
-                      <SelectContent>{filteredPlayers.map((p: any) => (<SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>))}</SelectContent>
+                      <SelectContent>{filteredPlayers.map((p: any) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || p.name) : p.name} (Std {p.std})</SelectItem>))}</SelectContent>
                     </Select>
                   </div>
 
@@ -399,44 +412,48 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                 <p className="font-black uppercase tracking-widest text-sm">No Health Logs Archived</p>
               </Card>
             ) : (
-              [...store.data.healthIncidents].slice().reverse().map((inc: any) => (
-                <Card key={inc.id} className={cn("border-2 rounded-[2.5rem] shadow-sm bg-white overflow-hidden group transition-all hover:border-primary/30", inc.severity === 'Critical' ? "border-destructive/20" : "border-primary/5")}>
-                  <div className="p-8">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex items-center gap-6">
-                        <div className={cn(
-                          "w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-inner transition-transform group-hover:scale-110", 
-                          inc.severity === 'Critical' ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
-                        )}>
-                          {inc.playerName[0]}
-                        </div>
-                        <div>
-                          <h4 className="font-black text-primary uppercase text-lg leading-tight group-hover:text-accent transition-colors">{inc.playerName}</h4>
-                          <div className="flex items-center gap-3 mt-1.5">
-                            <Badge className="font-black text-[8px] uppercase px-3 bg-muted text-muted-foreground border-0">{inc.date}</Badge>
-                            {inc.severity === 'Critical' && <Badge className="bg-destructive text-white text-[8px] font-black uppercase px-3 shadow-sm animate-pulse border-0">CRITICAL</Badge>}
+              [...store.data.healthIncidents].slice().reverse().map((inc: any) => {
+                const player = store.data.players.find((p: any) => p.id === inc.playerId);
+                const displayName = isMarathi ? (player?.nameMarathi || inc.playerName) : inc.playerName;
+                return (
+                  <Card key={inc.id} className={cn("border-2 rounded-[2.5rem] shadow-sm bg-white overflow-hidden group transition-all hover:border-primary/30", inc.severity === 'Critical' ? "border-destructive/20" : "border-primary/5")}>
+                    <div className="p-8">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-6">
+                          <div className={cn(
+                            "w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-inner transition-transform group-hover:scale-110", 
+                            inc.severity === 'Critical' ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                          )}>
+                            {displayName[0]}
+                          </div>
+                          <div>
+                            <h4 className="font-black text-primary uppercase text-lg leading-tight group-hover:text-accent transition-colors">{displayName}</h4>
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <Badge className="font-black text-[8px] uppercase px-3 bg-muted text-muted-foreground border-0">{inc.date}</Badge>
+                              {inc.severity === 'Critical' && <Badge className="bg-destructive text-white text-[8px] font-black uppercase px-3 shadow-sm animate-pulse border-0">CRITICAL</Badge>}
+                            </div>
                           </div>
                         </div>
+                        <Badge variant="outline" className="border-primary/10 text-primary/40 font-black text-[8px] uppercase">Registry Entry</Badge>
                       </div>
-                      <Badge variant="outline" className="border-primary/10 text-primary/40 font-black text-[8px] uppercase">Registry Entry</Badge>
+                      <div className="bg-muted/10 p-6 rounded-3xl border-2 border-transparent group-hover:border-primary/5 transition-all">
+                         <p className="text-xs font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap italic">
+                           &quot;{inc.description}&quot;
+                         </p>
+                      </div>
+                      <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Protocol Synchronized</span>
+                         </div>
+                         <Button variant="ghost" size="icon" onClick={() => store.deleteHealthIncident(inc.id)} className="h-9 w-9 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10">
+                            <AlertCircle className="w-4 h-4" />
+                         </Button>
+                      </div>
                     </div>
-                    <div className="bg-muted/10 p-6 rounded-3xl border-2 border-transparent group-hover:border-primary/5 transition-all">
-                       <p className="text-xs font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap italic">
-                         &quot;{inc.description}&quot;
-                       </p>
-                    </div>
-                    <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                          <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Protocol Synchronized</span>
-                       </div>
-                       <Button variant="ghost" size="icon" onClick={() => store.deleteHealthIncident(inc.id)} className="h-9 w-9 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10">
-                          <AlertCircle className="w-4 h-4" />
-                       </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
+                  </Card>
+                );
+              })
             )}
           </div>
           <ScrollBar orientation="vertical" />

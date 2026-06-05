@@ -37,25 +37,19 @@ import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-export function PerformanceDossier({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function PerformanceDossier({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const isGeneral = section === 'general';
+  const isMarathi = language === 'Marathi';
 
   const availablePlayers = useMemo(() => {
     return (store.data.players || [])
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
-        // Academic Standard
         const stdA = Number(a.std) || 0;
         const stdB = Number(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-
-        // Boys First (Male prioritised)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Male' ? -1 : 1;
-        }
-
-        // Roll Number
+        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral]);
@@ -126,15 +120,25 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
 
   const handlePrintDossier = () => {
     if (!currentPlayer) return;
+    const isM = isMarathi;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? 'खेळाडू कामगिरी डोसियर आणि बायोलॉजिकल ऑडिट' 
+      : 'Athletic Performance Dossier & Biological Audit';
+    const displayName = isM ? (currentPlayer.nameMarathi || currentPlayer.name) : currentPlayer.name;
+
     const printContent = `
       <html>
         <head>
           <title>Performance Dossier - ${currentPlayer.name}</title>
           <style>
-            @media print { @page { size: A4; margin: 1.5cm; } .no-print { display: none !important; } }
+            @media print { @page { size: A4; margin: 1cm; } .no-print { display: none !important; } }
             body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; }
             .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
             h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
+            .report-title { font-weight: 800; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
             .meta { font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #eee; padding: 10px 0; margin-bottom: 20px; display: flex; justify-content: space-between; }
             .section-title { font-size: 14px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; border-left: 5px solid #f59e0b; padding-left: 10px; margin: 25px 0 10px 0; }
             .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
@@ -154,17 +158,17 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; ${isM ? 'मागे जा' : 'GO BACK'}</button>
+            <button onclick="window.print()" class="btn btn-print">${isM ? 'प्रिंट करा' : 'CONFIRM PRINT'}</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-            <div style="font-weight: 800; text-transform: uppercase; margin-top: 5px; text-decoration: underline;">Athletic Performance Dossier & Biological Audit</div>
+            <h1>${schoolName}</h1>
+            <div class="report-title">${reportTitle}</div>
           </div>
           <div class="meta">
-            <span>ATHLETE: ${currentPlayer.name.toUpperCase()}</span>
-            <span>STD: ${currentPlayer.std}</span>
-            <span>IDENTITY: ${currentPlayer.generalRegisterNumber || currentPlayer.aadharNumber || 'N/A'}</span>
+            <span>${isM ? 'नाव' : 'ATHLETE'}: ${displayName.toUpperCase()}</span>
+            <span>${isM ? 'इयत्ता' : 'STD'}: ${currentPlayer.std}</span>
+            <span>${isM ? 'नोंदणी क्र.' : 'IDENTITY'}: ${currentPlayer.generalRegisterNumber || currentPlayer.aadharNumber || 'N/A'}</span>
           </div>
 
           <div class="section-title">1. Physical & Biological Maturity (PHV)</div>
@@ -231,7 +235,9 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
             </SelectTrigger>
             <SelectContent>
               {availablePlayers.map((p: any) => (
-                <SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>
+                <SelectItem key={p.id} value={p.id}>
+                  {isMarathi ? (p.nameMarathi || p.name) : p.name} (Std {p.std})
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -256,7 +262,9 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
                   <AvatarFallback className="bg-primary/5 text-primary font-black text-5xl uppercase">{currentPlayer?.name?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-3">
-                  <h3 className="font-black uppercase text-3xl text-primary leading-tight tracking-tight">{currentPlayer?.name}</h3>
+                  <h3 className="font-black uppercase text-3xl text-primary leading-tight tracking-tight">
+                    {isMarathi ? (currentPlayer?.nameMarathi || currentPlayer?.name) : currentPlayer?.name}
+                  </h3>
                   <Badge variant="outline" className="text-[10px] font-black border-accent/30 text-accent uppercase">Std {currentPlayer?.std} Registry</Badge>
                 </div>
               </CardContent>
