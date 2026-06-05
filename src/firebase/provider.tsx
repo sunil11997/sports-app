@@ -181,7 +181,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       } catch (e) {}
     }
     return val;
-  }, deps);
+  }, [factory, ...deps]);
 
   return result;
 }
