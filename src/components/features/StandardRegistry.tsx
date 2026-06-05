@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -32,8 +31,10 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const [editingLabels, setEditingLabels] = useState(DEFAULT_LABELS);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     setIsMarathiView(language === 'Marathi');
   }, [language]);
 
@@ -211,7 +212,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
     }
   };
 
-  if (!store.isLoaded) return <TableSkeleton rows={10} cols={13} />;
+  if (!isMounted || !store.isLoaded) return <TableSkeleton rows={10} cols={13} />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
