@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -17,28 +18,24 @@ import {
   Fingerprint, 
   Hash, 
   Ruler, 
-  Zap as ZapIcon,
-  Activity
+  Activity,
+  Trash2,
+  Languages
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Player } from '@/lib/types';
-
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function StandardClassView({ store, std }: { store: any, std: string }) {
   const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [monthlyPerformance, setMonthlyPerformance] = useState<any>({});
+  const [isMarathiView, setIsMarathiView] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,139 +49,63 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
     }
   }, [stream, activeCam]);
 
-  useEffect(() => {
-    if (editingPlayer) {
-      const currentMonth = format(new Date(), 'yyyy-MM');
-      const existing = store.data.fitness[editingPlayer.id] || {};
-      setMonthlyPerformance({
-        month: currentMonth,
-        running100m: existing.running100m || '',
-        running200m: existing.running200m || '',
-        running400m: existing.running400m || '',
-        shotPut: existing.shotPut || '',
-        javelin: existing.javelin || '',
-        discThrow: existing.discThrow || '',
-        longJump: existing.longJump || '',
-        highJump: existing.highJump || ''
-      });
-    }
-  }, [editingPlayer, store.data.fitness]);
-
   const students = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
-        // Boys first (Male prioritized)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Male' ? -1 : 1;
-        }
-        // Then by Roll Number
-        const rollA = parseInt(a.serialNumber) || 0;
-        const rollB = parseInt(b.serialNumber) || 0;
-        return rollA - rollB;
+        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std]);
 
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
-      setStream(newStream);
-      setActiveCam(type);
-      setFacingMode(mode);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Error' });
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    setStream(null);
-    setActiveCam(null);
-  };
-
-  const takePhoto = () => {
-    if (videoRef.current && canvasRef.current && activeCam && editingPlayer) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        if (facingMode === 'user') {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-        }
-        ctx.drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-        stopCamera();
-      }
-    }
-  };
-
-  const handleUpdatePlayer = () => {
-    if (editingPlayer) {
-      store.updatePlayer(editingPlayer);
-      if (Object.values(monthlyPerformance).some(v => v !== '')) {
-         store.setFitness(editingPlayer.id, {
-           ...store.data.fitness[editingPlayer.id],
-           ...monthlyPerformance,
-           updatedAt: new Date().toISOString()
-         });
-      }
-      setEditingPlayer(null);
-      toast({ title: "Profile Updated" });
-    }
-  };
-
-  const handlePrint = () => {
+  const handlePrintMarathi = () => {
     const printContent = `
       <html>
         <head>
-          <title>Std ${std} Registry - Waghamba Hub</title>
+          <title>Std ${std} Registry (Marathi)</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
             @media print { @page { size: A4; margin: 1cm; } .no-print { display: none !important; } }
-            body { font-family: Inter, sans-serif; padding: 20px; line-height: 1.5; color: #111; font-size: 11px; }
+            body { font-family: 'Poppins', sans-serif; padding: 20px; line-height: 1.5; color: #111; font-size: 11px; }
             .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 25px; }
-            h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 20px; }
-            .report-title { font-weight: 800; text-transform: uppercase; text-align: center; margin-top: 5px; text-decoration: underline; }
+            h1 { color: #1e3a8a; text-transform: uppercase; margin: 0; font-size: 18px; }
+            .report-title { font-weight: 900; text-align: center; margin-top: 5px; text-decoration: underline; color: #333; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #111; padding: 8px; text-align: left; }
-            th { background: #f1f1f1; font-weight: 900; text-transform: uppercase; font-size: 9px; }
-            .roll-cell { text-align: center; font-weight: 900; }
+            th, td { border: 1px solid #111; padding: 10px; text-align: left; }
+            th { background: #f1f1f1; font-weight: 900; }
+            .center { text-align: center; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
           </style>
         </head>
-        <body style="padding-top: 80px;">
+        <body style="padding-top: 60px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; मागे जा</button>
+            <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:900; cursor:pointer;">प्रिंट करा</button>
+          </div>
           <div class="header">
             <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-            <div class="report-title">Class Registry: Standard ${std}</div>
+            <div class="report-title">वर्ग रजिस्टर: इयत्ता ${std} वी (मराठी नोंद)</div>
           </div>
           <table>
             <thead>
               <tr>
-                <th>ROLL</th>
-                <th>STUDENT NAME</th>
-                <th>GENDER</th>
-                <th>GR NO</th>
-                <th>HEIGHT</th>
-                <th>WEIGHT</th>
-                <th>AADHAR</th>
+                <th class="center">अनु. क्र.</th>
+                <th>विद्यार्थ्याचे नाव</th>
+                <th class="center">लिंग</th>
+                <th class="center">जी.आर. नंबर</th>
+                <th class="center">आधार नंबर</th>
+                <th class="center">उंची/वजन</th>
               </tr>
             </thead>
             <tbody>
               ${students.map((s: any) => `
                 <tr>
-                  <td class="roll-cell">${s.serialNumber || '-'}</td>
+                  <td class="center">${s.serialNumber || '-'}</td>
                   <td><strong>${s.name.toUpperCase()}</strong></td>
-                  <td>${s.gender}</td>
-                  <td>${s.generalRegisterNumber || '-'}</td>
-                  <td>${s.height || '-'} cm</td>
-                  <td>${s.weight || '-'} kg</td>
-                  <td>${s.aadharNumber || '-'}</td>
+                  <td class="center">${s.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>
+                  <td class="center">${s.generalRegisterNumber || '-'}</td>
+                  <td class="center">${s.aadharNumber || '-'}</td>
+                  <td class="center">${s.height || '-'} cm / ${s.weight || '-'} kg</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -195,29 +116,40 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
-    win?.print();
+  };
+
+  const handleUpdatePlayer = () => {
+    if (editingPlayer) {
+      store.updatePlayer(editingPlayer);
+      setEditingPlayer(null);
+      toast({ title: "Profile Updated" });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    setStream(null);
+    setActiveCam(null);
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shadow-inner">
-            <Users className="w-8 h-8 text-primary" />
+          <div className="flex bg-muted/40 p-1 rounded-xl border">
+            <Button variant={!isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(false)} className="h-9 px-4 text-[10px] font-black uppercase rounded-lg">English</Button>
+            <Button variant={isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(true)} className="h-9 px-4 text-[10px] font-black uppercase rounded-lg">मराठी</Button>
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Standard {std} Overview</h2>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">{isMarathiView ? `इयत्ता ${std} वी - रजिस्टर` : `Standard ${std} Registry`}</h2>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-              {students.length} Enrolled Students (Boys First)
+              {students.length} {isMarathiView ? 'विद्यार्थी (मुलगे आधी)' : 'Enrolled Students (Boys First)'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-           <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-6 h-10 rounded-full bg-white hidden lg:flex items-center gap-2">
-             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.4 Registry
-           </Badge>
-           <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg">
-             <Printer className="w-4 h-4 mr-2" /> Print Class Roster
+           <Button onClick={handlePrintMarathi} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg active-scale">
+             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'मराठी प्रिंट' : 'Marathi Print'}
            </Button>
         </div>
       </div>
@@ -227,12 +159,11 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           <Table>
             <TableHeader className="bg-muted/10">
               <TableRow>
-                <TableHead className="font-black text-[10px] uppercase pl-8 w-[100px]">Roll (Sr)</TableHead>
-                <TableHead className="font-black text-[10px] uppercase">Student Name</TableHead>
-                <TableHead className="text-center font-black text-[10px] uppercase">GR Number</TableHead>
-                <TableHead className="text-center font-black text-[10px] uppercase">Ht/Wt</TableHead>
-                <TableHead className="text-center font-black text-[10px] uppercase">Aadhar ID</TableHead>
-                <TableHead className="text-right font-black text-[10px] uppercase pr-8">Edit</TableHead>
+                <TableHead className="font-black text-[10px] uppercase pl-8 w-[100px]">{isMarathiView ? 'अनु. क्र.' : 'Roll (Sr)'}</TableHead>
+                <TableHead className="font-black text-[10px] uppercase">{isMarathiView ? 'विद्यार्थी नाव' : 'Student Name'}</TableHead>
+                <TableHead className="text-center font-black text-[10px] uppercase">{isMarathiView ? 'जी.आर. नंबर' : 'GR Number'}</TableHead>
+                <TableHead className="text-center font-black text-[10px] uppercase">{isMarathiView ? 'लिंग' : 'Gender'}</TableHead>
+                <TableHead className="text-right font-black text-[10px] uppercase pr-8">{isMarathiView ? 'बदला' : 'Edit'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -243,17 +174,24 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                       {student.serialNumber || '0'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-bold text-xs uppercase text-primary">{student.name}</TableCell>
+                  <TableCell className="font-bold text-xs uppercase text-primary">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-8 h-8 border shadow-sm">
+                        <AvatarImage src={student.photoUrl} className="object-cover" />
+                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
+                      </Avatar>
+                      {student.name}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-center">
                     <span className="font-black text-[10px] text-primary/70 bg-muted/50 px-3 py-1 rounded-md border">
                       {student.generalRegisterNumber || '---'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center text-[10px] font-bold">
-                    {student.height}cm / {student.weight}kg
-                  </TableCell>
-                  <TableCell className="text-center text-[10px] font-mono font-black text-muted-foreground">
-                    {student.aadharNumber || 'Pending'}
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/10 text-primary">
+                      {isMarathiView ? (student.gender === 'Male' ? 'मुलगा' : 'मुलगी') : student.gender}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right pr-8">
                     <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(student)}>
@@ -268,41 +206,30 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
       </Card>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[950px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
-          <DialogHeader className="bg-primary p-8 text-white shrink-0">
-             <div className="flex items-center gap-4">
-                <Edit className="w-6 h-6" />
-                <DialogTitle className="text-2xl font-black uppercase">Edit Std {std} Profile</DialogTitle>
-             </div>
+        <DialogContent className="sm:max-w-[700px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl">
+          <DialogHeader className="bg-primary p-8 text-white">
+             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Edit Profile</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="p-8 space-y-6">
             {editingPlayer && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase">Student Name</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary">Name</Label>
                   <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
                 </div>
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase">Roll Number</Label>
-                  <Input value={editingPlayer.serialNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase">GR Number</Label>
-                  <Input value={editingPlayer.generalRegisterNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase">Aadhar Number</Label>
-                  <Input value={editingPlayer.aadharNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl font-mono" />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>
+                  <Input value={editingPlayer.serialNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 font-black rounded-xl" />
                 </div>
               </div>
             )}
           </div>
           <DialogFooter className="p-8 border-t bg-muted/10">
-             <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="rounded-xl h-12 font-black uppercase px-8">Discard</Button>
-             <Button onClick={handleUpdatePlayer} className="bg-primary text-white rounded-xl h-12 font-black uppercase px-12 shadow-lg">Save Profile</Button>
+             <Button onClick={handleUpdatePlayer} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg">Save Registry Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+

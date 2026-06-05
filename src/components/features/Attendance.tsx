@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
@@ -27,14 +28,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Printer,
-  Sun,
-  Moon,
-  WifiOff,
-  Gauge,
-  ClipboardCheck,
-  ChevronDown
+  WifiOff
 } from "lucide-react";
-import { TrainingLoad } from './TrainingLoad';
 
 const SPORTS_CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -59,7 +54,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
-  const [showFatigueReport, setShowFatigueReport] = useState(false);
   const { isOnline } = usePWA();
 
   useEffect(() => {
@@ -97,17 +91,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
-        // Primary: Academic Standard
-        const stdA = parseInt(a.std) || 0;
-        const stdB = parseInt(b.std) || 0;
-        if (stdA !== stdB) return stdA - stdB;
-
-        // Secondary: Boys first (Male prioritized)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Male' ? -1 : 1;
-        }
-
-        // Tertiary: Roll Number (Serial Number)
+        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory, getPlayerCategory]);
@@ -122,51 +106,45 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
   const handlePrint = () => {
     if (!currentDate) return;
     const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
-    const sessionLabel = activeSession === 'Morning' ? 'Morning' : 'Evening';
+    const sessionLabel = activeSession === 'Morning' ? 'सकाळ' : 'संध्याकाळ';
     const printContent = `
       <html>
         <head>
-          <title>Attendance Report - ${format(currentDate, 'MMMM yyyy')}</title>
+          <title>Attendance Report</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
             @media print { 
               @page { size: A4 landscape; margin: 1cm; } 
               .no-print { display: none !important; } 
               body { padding-top: 0 !important; }
             }
-            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
+            body { font-family: 'Poppins', sans-serif; padding: 20px; font-size: 10px; color: #111; }
             h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #333; margin-bottom: 5px; text-align: center; }
             .report-type { font-weight: 800; text-transform: uppercase; text-align: center; margin-bottom: 15px; text-decoration: underline; }
             .meta { font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             .name-cell { text-align: left; font-weight: bold; width: 120px; }
-            
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
-            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
-            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body style="padding-top: 80px;">
-          <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+        <body style="padding-top: 60px;">
+          <div class="no-print" style="position:fixed; top:0; left:0; right:0; background:#1e3a8a; padding:10px; text-align:center;">
+             <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:900; cursor:pointer;">प्रिंट करा</button>
           </div>
           <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-          <div class="report-type">Monthly Attendance Log (${section.toUpperCase()}) - ${format(currentDate, 'MMMM yyyy')}</div>
+          <div class="report-type">मासिक उपस्थिती अहवाल - ${format(currentDate, 'MMMM yyyy')}</div>
           <div class="meta">
-            <span>Category: ${categoryLabel.toUpperCase()}</span>
-            <span>Session: ${sessionLabel.toUpperCase()}</span>
+            <span>सत्र: ${sessionLabel}</span>
+            <span>तारीख: ${format(new Date(), 'dd/MM/yyyy')}</span>
           </div>
           <table>
             <thead>
               <tr>
-                <th>SNR</th>
-                <th>STUDENT</th>
-                <th>STD</th>
-                <th>GEN</th>
+                <th>अनु. क्र.</th>
+                <th>विद्यार्थ्याचे नाव</th>
+                <th>लिंग</th>
                 ${days.map(d => `<th>${format(d, 'd')}</th>`).join('')}
-                <th>TOT</th>
+                <th>एकूण</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +155,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name}</td><td>${p.std}</td><td>${p.gender[0]}</td>${row}<td>${total}</td></tr>`;
+                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${p.name.toUpperCase()}</td><td>${p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -201,7 +179,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             <WifiOff className="w-5 h-5 text-amber-600" />
             <div>
               <p className="text-sm font-black text-amber-900 uppercase">Offline Mode Active</p>
-              <p className="text-[10px] font-bold text-amber-700 uppercase mt-1">Attendance will sync when internet returns</p>
             </div>
           </div>
         </div>
@@ -226,10 +203,11 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[2.5rem] border shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Monthly Presence Log</h2>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-2 mt-1">
-            Session: <span className="text-primary">{activeSession}</span>
-          </p>
+          <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Presence Log</h2>
+          <div className="flex bg-muted/40 p-1 rounded-xl border mt-2">
+            <Button variant={activeSession === 'Morning' ? "default" : "ghost"} onClick={() => setActiveSession('Morning')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Morning</Button>
+            <Button variant={activeSession === 'Evening' ? "default" : "ghost"} onClick={() => setActiveSession('Evening')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Evening</Button>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border shadow-inner">
@@ -253,7 +231,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         <Table className="border-collapse min-w-max">
           <TableHeader className="bg-muted/50 sticky top-0 z-20">
             <TableRow className="border-b h-14">
-              <TableHead className="border-r px-6 font-black text-[10px] uppercase sticky left-0 bg-muted/95 z-30 min-w-[180px]">Student Name</TableHead>
+              <TableHead className="border-r px-6 font-black text-[10px] uppercase w-[180px] sticky left-0 bg-muted/95 z-30">Student Name</TableHead>
               {days.map(day => (
                 <TableHead key={day.toString()} className="border-r px-1 font-black text-[10px] uppercase text-center w-[35px]">
                   {format(day, 'd')}
@@ -263,46 +241,42 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPlayers.length === 0 ? (
-              <TableRow><TableCell colSpan={days.length + 2} className="text-center py-24 opacity-20 font-black uppercase tracking-widest">No records found</TableCell></TableRow>
-            ) : (
-              filteredPlayers.map((player: any) => {
-                let monthlyTotal = 0;
-                return (
-                  <TableRow key={player.id} className="border-b even:bg-muted/10 h-14 group">
-                    <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-10 group-hover:bg-primary/5 transition-colors uppercase">
-                      {player.name}
-                    </TableCell>
-                    {days.map(day => {
-                      const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
-                      const status = store.data.attendance[key];
-                      if (status === 'P') monthlyTotal++;
-                      
-                      return (
-                        <TableCell 
-                          key={day.toString()} 
-                          className="border-r p-0 text-center cursor-pointer transition-colors hover:bg-primary/10"
-                          onClick={() => handleToggle(player.id, day)}
-                        >
-                          <div className={cn(
-                            "w-full h-14 flex items-center justify-center text-[10px] font-black transition-all",
-                            status === 'P' ? "bg-primary text-white shadow-inner" : 
-                            status === 'A' ? "bg-destructive text-white shadow-inner" : 
-                            'text-muted-foreground/10'
-                          )}>
-                            {status || '-'}
-                          </div>
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell className="px-4 text-center font-black text-primary text-sm bg-primary/5">{monthlyTotal}</TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+            {filteredPlayers.map((player: any) => {
+              let monthlyTotal = 0;
+              return (
+                <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
+                  <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-10 uppercase">
+                    {player.name}
+                  </TableCell>
+                  {days.map(day => {
+                    const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
+                    const status = store.data.attendance[key];
+                    if (status === 'P') monthlyTotal++;
+                    return (
+                      <TableCell 
+                        key={day.toString()} 
+                        className="border-r p-0 text-center cursor-pointer transition-colors"
+                        onClick={() => handleToggle(player.id, day)}
+                      >
+                        <div className={cn(
+                          "w-full h-14 flex items-center justify-center text-[10px] font-black",
+                          status === 'P' ? "bg-primary text-white shadow-inner" : 
+                          status === 'A' ? "bg-destructive text-white shadow-inner" : 
+                          'text-muted-foreground/10'
+                        )}>
+                          {status || '-'}
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell className="px-4 text-center font-black text-primary text-sm bg-primary/5">{monthlyTotal}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
     </div>
   );
 }
+
