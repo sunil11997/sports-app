@@ -49,7 +49,7 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
   }, [stream, activeCam]);
 
   const students = useMemo(() => {
-    return store.data.players
+    return [...store.data.players]
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
@@ -225,11 +225,11 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>
-                  <Input value={editingPlayer.serialNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
+                  <Input value={editingPlayer.serialNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary">GR Number</Label>
-                  <Input value={editingPlayer.generalRegisterNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 font-black rounded-xl" />
+                  <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
                 </div>
               </div>
             )}

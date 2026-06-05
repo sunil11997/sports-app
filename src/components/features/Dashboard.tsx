@@ -27,15 +27,11 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import { format } from 'date-fns';
-
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 interface DashboardProps {
   store: any;
@@ -68,7 +64,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
 
   const filteredPlayers = useMemo(() => {
     const baseList = store.data.players || [];
-    return baseList
+    return [...baseList]
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const nameMatch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -180,7 +176,12 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           </Button>
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder={isMarathiView ? "नाव / आधार शोधा..." : "Search name/GR/Aadhar..."} className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" value={searchTerm} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} />
+            <Input 
+              placeholder={isMarathiView ? "नाव / आधार शोधा..." : "Search name/GR/Aadhar..."} 
+              className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" 
+              value={searchTerm} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} 
+            />
           </div>
         </div>
       </div>
@@ -252,7 +253,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                  </div>
                  <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase text-primary">GR Number</Label>
-                    <Input value={editingPlayer.generalRegisterNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                    <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                  </div>
                  <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>
