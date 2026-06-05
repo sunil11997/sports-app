@@ -233,15 +233,10 @@ export default function WaghambaApp() {
                           </h2>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><Timer className="w-3.5 h-3.5 text-accent" /> Today&apos;s Practice</p>
-                              <p className="text-2xl font-black uppercase tracking-tight">Kabaddi Drills</p>
-                              <p className="text-sm font-bold text-white/60">16:30 • Main Ground</p>
-                           </div>
-                           <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+                        <div className="grid grid-cols-1 gap-6">
+                           <div className="bg-white/5 rounded-3xl p-8 border border-white/10 backdrop-blur-sm max-w-sm">
                               <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5 text-accent" /> {countLabel}</p>
-                              <p className="text-4xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
+                              <p className="text-5xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
                               <p className="text-sm font-bold text-white/60">Active Registry</p>
                            </div>
                         </div>
@@ -276,16 +271,6 @@ export default function WaghambaApp() {
                            </div>
                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Attendance consistency</p>
                            <p className="text-3xl font-black">94% <span className="text-sm font-bold text-emerald-400 ml-2">↑ 2%</span></p>
-                         </div>
-
-                         <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
-                           <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-orange-50/20 rounded-2xl flex items-center justify-center"><Trophy className="text-orange-400 w-6 h-6" /></div>
-                              <Badge variant="outline" className="text-white/40 border-white/10 text-[9px] uppercase">Coming Soon</Badge>
-                           </div>
-                           <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Upcoming Tournament</p>
-                           <p className="text-2xl font-black uppercase tracking-tight">District Kabaddi</p>
-                           <p className="text-xs font-bold text-white/40 mt-1 flex items-center gap-2"><CalendarDays className="w-3 h-3" /> 15th Oct 2024</p>
                          </div>
 
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
