@@ -14,26 +14,16 @@ import {
   CircleX, 
   RefreshCcw,
   ImageIcon,
-  Filter,
   Scan,
   Fingerprint,
-  Upload,
   Hash,
   Ruler,
-  HeartPulse,
-  UserPlus,
   Trophy,
-  Flame,
-  ShieldCheck,
   GraduationCap,
   Medal,
-  Info,
-  Baby,
-  Activity,
+  ShieldCheck,
   Zap,
-  Target,
-  Phone,
-  MapPin
+  Activity
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -43,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Player } from '@/lib/types';
+import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
@@ -65,13 +55,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   const [selectedSport, setSelectedSport] = useState(initialSport);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [monthlyPerformance, setMonthlyPerformance] = useState<any>({});
-  const [convertingPlayer, setConvertingPlayer] = useState<Player | null>(null);
-  const [selectedSportsForConversion, setSelectedSportsForConversion] = useState<string[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const profileUploadRef = useRef<HTMLInputElement>(null);
-  const aadharUploadRef = useRef<HTMLInputElement>(null);
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -115,12 +101,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     }
   };
 
-  const toggleCamera = () => {
-    if (!activeCam) return;
-    const nextMode = facingMode === 'user' ? 'environment' : 'user';
-    startCamera(activeCam, nextMode);
-  };
-
   const stopCamera = () => {
     if (stream) stream.getTracks().forEach(track => track.stop());
     setStream(null);
@@ -149,26 +129,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   };
 
   const isGeneral = section === 'general';
-
-  const checkStreak = useCallback((playerId: string) => {
-    const attendance = store.data.attendance || {};
-    const today = new Date();
-    let streak = 0;
-    for (let i = 0; i < 15; i++) {
-      const d = format(subDays(today, i), 'yyyy-MM-dd');
-      if (attendance[`${playerId}_${d}_Morning`] === 'P' || attendance[`${playerId}_${d}_Evening`] === 'P') streak++;
-      else break;
-    }
-    return streak >= 15;
-  }, [store.data.attendance]);
-
-  const checkRecoveryChampion = useCallback((playerId: string) => {
-    const health = store.data.healthIncidents || [];
-    const fitness = store.data.fitness || {};
-    const hadCritical = health.some((h: any) => h.playerId === playerId && h.severity === 'Critical');
-    const fit = fitness[playerId] || {};
-    return hadCritical && (fit.status === 'Elite' || fit.status === 'Optimal');
-  }, [store.data.healthIncidents, store.data.fitness]);
 
   const filteredPlayers = useMemo(() => {
     const baseList = store.data.players || [];
@@ -209,14 +169,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     }
   };
 
-  const handleConvertAction = () => {
-    if (convertingPlayer) {
-      store.updatePlayer({ ...convertingPlayer, category: 'athlete', sports: selectedSportsForConversion });
-      toast({ title: "Athlete Promoted" });
-      setConvertingPlayer(null);
-    }
-  };
-
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={8} />;
 
   return (
@@ -254,51 +206,54 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="h-12 px-6 text-[10px] font-black uppercase w-[80px]">Sr No</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase">Student Profile</TableHead>
+              <TableHead className="h-12 px-6 text-[10px] font-black uppercase w-[100px]">Roll (Sr)</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase">Athlete Profile</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">GR Number</TableHead>
               <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">Standard</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">Identity</TableHead>
+              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">Identity (Aadhar)</TableHead>
               <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-24 opacity-30 font-black uppercase tracking-widest">No records found</TableCell></TableRow>
             ) : (
               filteredPlayers.map((p: any) => {
-                const isStreak = checkStreak(p.id);
-                const isFighter = checkRecoveryChampion(p.id);
                 return (
                   <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
-                    <TableCell className="px-6 text-sm font-black text-primary/60">#{p.serialNumber || '0'}</TableCell>
+                    <TableCell className="px-6">
+                       <Badge className="bg-primary/10 text-primary font-black text-sm border-0 h-10 w-10 flex items-center justify-center rounded-xl shadow-inner">
+                         {p.serialNumber || '0'}
+                       </Badge>
+                    </TableCell>
                     <TableCell className="px-4">
                       <div className="flex items-center gap-4">
-                        <Avatar className="w-11 h-11 border-2 border-white shadow-sm">
+                        <Avatar className="w-12 h-12 border-2 border-white shadow-md">
                           <AvatarImage src={p.photoUrl} className="object-cover" />
                           <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-black text-sm uppercase text-primary leading-none">{p.name || "UNNAMED"}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender} &bull; GR: {p.generalRegisterNumber || 'N/A'}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{p.gender}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 text-center">
-                      <Badge variant="outline" className="rounded-full px-3 py-0.5 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
+                       <span className="font-black text-xs text-primary/80 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">
+                         {p.generalRegisterNumber || '---'}
+                       </span>
+                    </TableCell>
+                    <TableCell className="px-4 text-center">
+                      <Badge variant="outline" className="rounded-full px-3 py-1 border-primary/20 text-[10px] font-black text-primary bg-primary/5">Std {p.std}</Badge>
                     </TableCell>
                     <TableCell className="px-4 text-center">
                       <div className="flex flex-col items-center">
-                        <span className="font-mono font-black text-[10px] text-primary/70">{p.aadharNumber || 'Aadhar Pend.'}</span>
+                        <span className="font-mono font-black text-[10px] text-primary/60">{p.aadharNumber || 'Aadhar Pend.'}</span>
                         {p.mobileNumber && <span className="text-[8px] font-bold text-muted-foreground mt-0.5">{p.mobileNumber}</span>}
                       </div>
                     </TableCell>
                     <TableCell className="px-6 text-right">
                       <div className="flex justify-end gap-2">
-                        {isGeneral && p.category === 'student' && (
-                          <Button variant="ghost" size="icon" className="rounded-full text-emerald-600 hover:bg-emerald-50" onClick={() => setConvertingPlayer(p)}>
-                            <Trophy className="w-4 h-4" />
-                          </Button>
-                        )}
                         <Button variant="ghost" size="icon" className="rounded-full text-primary hover:bg-primary/5" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
                         <Button variant="ghost" size="icon" className="rounded-full text-destructive hover:bg-destructive/5" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
@@ -323,7 +278,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1">{editingPlayer?.name}</p>
               </div>
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
           
           <Tabs defaultValue="profile" className="flex-1 overflow-hidden flex flex-col">
@@ -357,25 +311,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                                </div>
                              )}
                           </div>
-                          {!activeCam && (
-                            <Button onClick={() => startCamera('profile')} variant="outline" className="w-full h-12 rounded-xl border-2 font-black uppercase text-[10px]"><Camera className="w-4 h-4 mr-2" /> Recapture</Button>
-                          )}
-                        </div>
-
-                        <div className="space-y-4">
-                          <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2 ml-2"><Scan className="w-4 h-4" /> Aadhar Scan</Label>
-                          <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
-                             {activeCam === 'aadhar' ? (
-                               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                             ) : editingPlayer.aadharPhotoUrl ? (
-                               <div className="relative w-full h-full">
-                                 <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
-                               </div>
-                             ) : (
-                               <div className="w-full h-full flex flex-col items-center justify-center opacity-20"><Fingerprint className="w-10 h-10" /></div>
-                             )}
-                          </div>
-                          <Button variant="ghost" onClick={() => startCamera('aadhar', 'environment')} className="w-full h-10 font-black uppercase text-[9px] hover:bg-primary/5">Update Doc</Button>
                         </div>
                      </div>
 
@@ -400,7 +335,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Aadhar (12 Digits)</Label><Input value={editingPlayer.aadharNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-mono" maxLength={12} /></div>
                               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Mobile Number</Label><Input value={editingPlayer.mobileNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-mono" /></div>
                            </div>
-                           <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Physical Address</Label><Input value={editingPlayer.address} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-medium" /></div>
                         </div>
 
                         <div className="space-y-6">
@@ -410,31 +344,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                            </div>
                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Standing (cm)</Label><Input type="number" value={editingPlayer.height} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                              <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Sitting (cm)</Label><Input type="number" value={editingPlayer.sittingHeight} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Weight (kg)</Label><Input type="number" value={editingPlayer.weight} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Blood Group</Label><Select value={editingPlayer.bloodGroup} onValueChange={v => setEditingPlayer({...editingPlayer, bloodGroup: v})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
-                           </div>
-                           <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase opacity-60">Medical Alerts</Label><Textarea value={editingPlayer.medical} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="min-h-[80px] border-2 rounded-xl" /></div>
-                        </div>
-
-                        <div className="space-y-4 p-6 bg-accent/5 rounded-[2rem] border-2 border-dashed border-accent/20">
-                           <Label className="font-black text-accent uppercase text-[10px] tracking-[0.2em] block mb-4">Athletic Participation</Label>
-                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                              {SPORTS_LIST.map(sport => (
-                                <div key={sport} className="flex items-center gap-2">
-                                  <Checkbox 
-                                    id={`dash-edit-sport-${sport}`}
-                                    checked={editingPlayer.sports?.includes(sport)} 
-                                    onCheckedChange={(checked) => {
-                                      const curr = editingPlayer.sports || [];
-                                      const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
-                                      setEditingPlayer({...editingPlayer, sports: next});
-                                    }} 
-                                    className="w-4 h-4 border-accent/30"
-                                  />
-                                  <label htmlFor={`dash-edit-sport-${sport}`} className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</label>
-                                </div>
-                              ))}
                            </div>
                         </div>
                      </div>
@@ -466,31 +377,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                             <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">200m Sprint (sec)</Label><Input value={monthlyPerformance.running200m} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, running200m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
                             <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">400m Sprint (sec)</Label><Input value={monthlyPerformance.running400m} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, running400m: e.target.value})} className="h-12 border-2 rounded-xl font-black text-primary" placeholder="00.00" /></div>
                          </div>
-                      </div>
-
-                      <div className="space-y-6">
-                         <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                           <Target className="w-5 h-5 text-accent" />
-                           <h5 className="font-black uppercase text-sm tracking-widest">Field & Technical Events</h5>
-                         </div>
-                         <div className="grid grid-cols-1 gap-6">
-                            <div className="grid grid-cols-2 gap-4">
-                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Shot Put (m)</Label><Input value={monthlyPerformance.shotPut} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, shotPut: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Javelin (m)</Label><Input value={monthlyPerformance.javelin} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, javelin: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Disc Throw (m)</Label><Input value={monthlyPerformance.discThrow} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, discThrow: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                               <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">Long Jump (m)</Label><Input value={monthlyPerformance.longJump} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, longJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                            </div>
-                            <div className="space-y-1.5"><Label className="text-[9px] font-black uppercase opacity-60">High Jump (m)</Label><Input value={monthlyPerformance.highJump} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyPerformance({...monthlyPerformance, highJump: e.target.value})} className="h-12 border-2 rounded-xl font-black" /></div>
-                         </div>
-                      </div>
-                   </div>
-
-                   <div className="p-8 bg-muted/20 rounded-[2rem] border-2 border-dashed border-muted text-center space-y-4">
-                      <div className="flex items-center justify-center gap-3 text-primary/40">
-                         <ShieldCheck className="w-5 h-5" />
-                         <p className="text-[10px] font-black uppercase tracking-widest">Monthly records are archived in the Student Performance Dossier.</p>
                       </div>
                    </div>
                 </TabsContent>

@@ -11,17 +11,12 @@ import {
   BrainCircuit, 
   Save, 
   History, 
-  Target, 
-  ShieldAlert, 
-  Trophy, 
-  Zap,
-  Trash2,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  TrendingUp,
-  Activity,
-  Gauge
+  Trash2, 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  Activity, 
+  Gauge 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -80,7 +75,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
     [store.data.players, selectedSport]
   );
 
-  const relevantEvents = useMemo(() => {
+  const relevantEvents = useMemo((): TacticalEvent[] => {
     return (store.data.tacticalEvents || [])
       .filter((e: TacticalEvent) => e.sport === selectedSport)
       .slice(0, 10);
@@ -153,7 +148,6 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                </div>
             </div>
           </div>
-          <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl" />
         </Card>
 
         <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white space-y-6">
@@ -179,47 +173,6 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Decision Type</label>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className={cn("flex-1 h-12 rounded-xl font-black text-[9px] uppercase border-2", decisionType === 'Positive' ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm" : "")}
-                    onClick={() => setDecisionType('Positive')}
-                  >
-                    POS
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className={cn("flex-1 h-12 rounded-xl font-black text-[9px] uppercase border-2", decisionType === 'Negative' ? "bg-orange-50 border-orange-500 text-orange-700 shadow-sm" : "")}
-                    onClick={() => setDecisionType('Negative')}
-                  >
-                    NEG
-                  </Button>
-                </div>
-             </div>
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Outcome</label>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className={cn("flex-1 h-12 rounded-xl font-black text-[9px] uppercase border-2", outcome === 'Success' ? "bg-primary text-white border-primary" : "")}
-                    onClick={() => setOutcome('Success')}
-                  >
-                    WIN
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className={cn("flex-1 h-12 rounded-xl font-black text-[9px] uppercase border-2", outcome === 'Failure' ? "bg-destructive text-white border-destructive" : "")}
-                    onClick={() => setOutcome('Failure')}
-                  >
-                    LOSS
-                  </Button>
-                </div>
-             </div>
-          </div>
-
           <div className="space-y-2">
             <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">कोचची टिप्पणी (Remarks)</label>
             <Input 
@@ -242,16 +195,6 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
       </div>
 
       <div className="lg:col-span-7 space-y-6">
-        <div className="flex items-center justify-between px-4">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <History className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Decision Registry Stream</h3>
-           </div>
-           <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-4 py-1.5 rounded-full bg-white shadow-sm">Real-Time Audit</Badge>
-        </div>
-
         <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[600px]">
            <ScrollArea className="flex-1 p-6">
               {relevantEvents.length === 0 ? (
@@ -273,17 +216,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                              </div>
                              <div className="space-y-1">
                                 <h4 className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors">{event.playerName}</h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                   <Badge className={cn(
-                                     "font-black uppercase text-[7px] px-2",
-                                     event.decisionType === 'Positive' ? "bg-emerald-500" : "bg-orange-500"
-                                   )}>{event.decisionType}</Badge>
-                                   <span className="text-[8px] font-black text-muted-foreground uppercase flex items-center gap-1">
-                                     <Clock className="w-2.5 h-2.5" /> {event.date}
-                                   </span>
-                                </div>
                                 <p className="text-[10px] font-bold text-primary uppercase mt-1 tracking-tight">{event.situation}</p>
-                                <p className="text-xs font-medium text-foreground/70 italic mt-2 border-l-2 border-muted pl-3">&quot;{event.description || 'Standard tactical log.'}&quot;</p>
                              </div>
                           </div>
                           <Button variant="ghost" size="icon" onClick={() => store.deleteTacticalEvent(event.id)} className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-destructive">
@@ -295,14 +228,10 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                 </div>
               )}
            </ScrollArea>
-
            <div className="p-8 bg-primary/5 border-t">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                 <div className="flex items-center gap-3">
-                    <Gauge className="w-5 h-5 text-accent animate-pulse" />
-                    <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V3.9.4</p>
-                 </div>
-                 <Badge variant="outline" className="bg-white border-primary/20 text-[8px] font-black uppercase">Institutional Engine Active</Badge>
+              <div className="flex items-center gap-3">
+                 <Gauge className="w-5 h-5 text-accent animate-pulse" />
+                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V3.9.4</p>
               </div>
            </div>
         </Card>

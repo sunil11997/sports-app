@@ -163,10 +163,11 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.2: Synchronously assigns validation flags to prevent hydration runtime errors during Registry sync.
+ * Hardened v4.3.3: Synchronously assigns validation flags within the memo factory 
+ * to ensure immediate availability during the render phase, preventing hydration crashes.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
-  /* eslint-disable react-hooks/exhaustive-deps */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const result = useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
