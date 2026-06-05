@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -31,10 +32,10 @@ import { cn } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export function StandardClassView({ store, std }: { store: any, std: string }) {
+export function StandardClassView({ store, std, language = 'English' }: { store: any, std: string, language?: string }) {
   const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [isMarathiView, setIsMarathiView] = useState(false);
+  const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,13 +44,17 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
+    setIsMarathiView(language === 'Marathi');
+  }, [language]);
+
+  useEffect(() => {
     if (videoRef.current && stream && activeCam) {
       videoRef.current.srcObject = stream;
     }
   }, [stream, activeCam]);
 
   const students = useMemo(() => {
-    return [...store.data.players]
+    return [...(store.data.players || [])]
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
@@ -57,11 +62,19 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
       });
   }, [store.data.players, std]);
 
-  const handlePrintMarathi = () => {
+  const handlePrint = () => {
+    const isM = isMarathiView;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? `वर्ग रजिस्टर: इयत्ता ${std} वी (मराठी नोंद)` 
+      : `Class Registry: Standard ${std} (English Record)`;
+
     const printContent = `
       <html>
         <head>
-          <title>Std ${std} Registry (Marathi)</title>
+          <title>Std ${std} Registry</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
             @media print { @page { size: A4; margin: 1cm; } .no-print { display: none !important; } }
@@ -79,35 +92,38 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
         </head>
         <body style="padding-top: 60px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; मागे जा</button>
-            <button onclick="window.print()" class="btn">प्रिंट करा</button>
+            <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; ${isM ? 'मागे जा' : 'Go Back'}</button>
+            <button onclick="window.print()" class="btn">${isM ? 'प्रिंट करा' : 'Print Sheet'}</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-            <div class="report-title">वर्ग रजिस्टर: इयत्ता ${std} वी (मराठी नोंद)</div>
+            <h1>${schoolName}</h1>
+            <div class="report-title">${reportTitle}</div>
           </div>
           <table>
             <thead>
               <tr>
-                <th class="center">अनु. क्र.</th>
-                <th>विद्यार्थ्याचे नाव</th>
-                <th class="center">लिंग</th>
-                <th class="center">जी.आर. नंबर</th>
-                <th class="center">आधार नंबर</th>
-                <th class="center">उंची/वजन</th>
+                <th class="center">${isM ? 'अनु. क्र.' : 'Sr No'}</th>
+                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'Student Name'}</th>
+                <th class="center">${isM ? 'लिंग' : 'Gender'}</th>
+                <th class="center">${isM ? 'जी.आर. नंबर' : 'GR Number'}</th>
+                <th class="center">${isM ? 'आधार नंबर' : 'Aadhar No'}</th>
+                <th class="center">${isM ? 'उंची/वजन' : 'Ht/Wt'}</th>
               </tr>
             </thead>
             <tbody>
-              ${students.map((s: any) => `
-                <tr>
-                  <td class="center">${s.serialNumber || '-'}</td>
-                  <td><strong>${(s.nameMarathi || s.name).toUpperCase()}</strong></td>
-                  <td class="center">${s.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>
-                  <td class="center">${s.generalRegisterNumber || '-'}</td>
-                  <td class="center">${s.aadharNumber || '-'}</td>
-                  <td class="center">${s.height || '-'} cm / ${s.weight || '-'} kg</td>
-                </tr>
-              `).join('')}
+              ${students.map((s: any) => {
+                const displayName = isM ? (s.nameMarathi || s.name) : s.name;
+                return `
+                  <tr>
+                    <td class="center">${s.serialNumber || '-'}</td>
+                    <td><strong>${displayName.toUpperCase()}</strong></td>
+                    <td class="center">${s.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>
+                    <td class="center">${s.generalRegisterNumber || '-'}</td>
+                    <td class="center">${s.aadharNumber || '-'}</td>
+                    <td class="center">${s.height || '-'} cm / ${s.weight || '-'} kg</td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </body>
@@ -150,8 +166,8 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-           <Button onClick={handlePrintMarathi} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg active-scale">
-             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'मराठी प्रिंट' : 'Marathi Print'}
+           <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg active-scale">
+             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'प्रिंट काढा' : 'Print Sheet'}
            </Button>
         </div>
       </div>
@@ -169,39 +185,42 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student: any) => (
-                <TableRow key={student.id} className="hover:bg-primary/5 h-16">
-                  <TableCell className="pl-8">
-                    <Badge variant="secondary" className="font-black text-xs h-9 w-9 flex items-center justify-center rounded-lg bg-primary/5 text-primary border-primary/10">
-                      {student.serialNumber || '0'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-bold text-xs uppercase text-primary">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 border shadow-sm">
-                        <AvatarImage src={student.photoUrl} className="object-cover" />
-                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
-                      </Avatar>
-                      {isMarathiView ? (student.nameMarathi || student.name) : student.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="font-black text-[10px] text-primary/70 bg-muted/50 px-3 py-1 rounded-md border">
-                      {student.generalRegisterNumber || '---'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/10 text-primary">
-                      {isMarathiView ? (student.gender === 'Male' ? 'मुलगा' : 'मुलगी') : student.gender}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right pr-8">
-                    <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(student)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {students.map((student: any) => {
+                const displayName = isMarathiView ? (student.nameMarathi || student.name) : student.name;
+                return (
+                  <TableRow key={student.id} className="hover:bg-primary/5 h-16">
+                    <TableCell className="pl-8">
+                      <Badge variant="secondary" className="font-black text-xs h-9 w-9 flex items-center justify-center rounded-lg bg-primary/5 text-primary border-primary/10">
+                        {student.serialNumber || '0'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-bold text-xs uppercase text-primary">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8 border shadow-sm">
+                          <AvatarImage src={student.photoUrl} className="object-cover" />
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
+                        </Avatar>
+                        {displayName}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-black text-[10px] text-primary/70 bg-muted/50 px-3 py-1 rounded-md border">
+                        {student.generalRegisterNumber || '---'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/10 text-primary">
+                        {isMarathiView ? (student.gender === 'Male' ? 'मुलगा' : 'मुलगी') : student.gender}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(student)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

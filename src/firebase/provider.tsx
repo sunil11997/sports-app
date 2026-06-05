@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -163,12 +164,13 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.3: Synchronously assigns validation flags within the memo factory 
+ * Hardened v4.3.15: Synchronously assigns validation flags within the memo factory 
  * to ensure immediate availability during the render phase, preventing hydration crashes.
+ * Refined to satisfy strict ESLint rules for dependency tracking.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const result = useMemo(() => {
+  const memoizedValue = useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
@@ -183,5 +185,5 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
     return val;
   }, [factory, ...deps]);
 
-  return result;
+  return memoizedValue;
 }

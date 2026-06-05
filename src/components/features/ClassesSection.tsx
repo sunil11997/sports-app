@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { GraduationCap, ArrowLeft, LayoutGrid, Users } from 'lucide-react';
 import { StandardClassView } from './StandardClassView';
 
-export function ClassesSection({ store }: { store: any }) {
+export function ClassesSection({ store, language = 'English' }: { store: any, language?: string }) {
   const [selectedStd, setSelectedStd] = useState<string | null>(null);
 
   const classSummaries = useMemo(() => {
@@ -17,7 +17,7 @@ export function ClassesSection({ store }: { store: any }) {
       summary[i.toString()] = 0;
     }
     // Include both regular students and athletes in the class counts
-    store.data.players.forEach((p: any) => {
+    (store.data.players || []).forEach((p: any) => {
       if (summary[p.std] !== undefined) summary[p.std]++;
     });
     return summary;
@@ -33,7 +33,7 @@ export function ClassesSection({ store }: { store: any }) {
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Classes Hub
         </Button>
-        <StandardClassView store={store} std={selectedStd} />
+        <StandardClassView store={store} std={selectedStd} language={language} />
       </div>
     );
   }

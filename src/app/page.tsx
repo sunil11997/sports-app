@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -52,8 +53,8 @@ const HealthIncidents = dynamic(() => import('@/components/features/HealthIncide
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness));
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport));
 const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub));
-const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub));
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection));
+const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub));
 const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(m => m.TrainingLoad));
 const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub));
 const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings));
@@ -147,7 +148,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.4</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.15</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -358,15 +359,15 @@ export default function WaghambaApp() {
               
               {subTab === "leaderboard" && <Gamification store={schoolData} />}
               {subTab === "ai" && <AIAdvice store={schoolData} />}
-              {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} />}
-              {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} />}
+              {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} language={language} />}
+              {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}
               {subTab === "loads" && <TrainingLoad store={schoolData} />}
-              {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} />}
-              {subTab === "exams" && <ExamsHub store={schoolData} />}
-              {subTab === "classes" && <ClassesSection store={schoolData} />}
-              {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} />}
-              {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection || 'general'} />}
-              {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection || 'general'} />}
+              {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} language={language} />}
+              {subTab === "exams" && <ExamsHub store={schoolData} language={language} />}
+              {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
+              {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} language={language} />}
+              {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection || 'general'} language={language} />}
+              {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection || 'general'} language={language} />}
             </TabsContent>
 
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">

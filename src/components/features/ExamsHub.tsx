@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -16,7 +17,7 @@ export function ExamsHub({ store, language = 'English' }: { store: any, language
       summary[i.toString()] = 0;
     }
     // Exam hub shows ALL students (including athletes)
-    store.data.players.forEach((p: any) => {
+    (store.data.players || []).forEach((p: any) => {
       if (summary[p.std] !== undefined) summary[p.std]++;
     });
     return summary;

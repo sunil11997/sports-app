@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
 
 const DEFAULT_LABELS = {
   nirikshan: 'OBS',
@@ -268,10 +270,11 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
             {playersInStd.map((p: any) => {
               const r = termRecords[p.id] || {};
               const total = calculateTotal(p.id);
+              const dName = isMarathiView ? (p.nameMarathi || p.name) : p.name;
               return (
                 <TableRow key={p.id} className="border-b h-14 group">
                   <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[220px]">
-                    {(isMarathiView ? (p.nameMarathi || p.name) : p.name).toUpperCase()}
+                    {dName.toUpperCase()}
                   </TableCell>
                   <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
                   <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>
