@@ -89,10 +89,17 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
+        // Academic Standard First
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
+
+        // Gender: Boys first (Male prioritized)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Male' ? -1 : 1;
+        }
+
+        // Roll Number Last
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory, getPlayerCategory]);
@@ -275,7 +282,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
-      <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/30 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
+      <div className="flex flex-wrap gap-2 p-2 bg-muted/30 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
         {categories.map(cat => (
           <button
             key={cat.id}
@@ -304,7 +311,7 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 font-black uppercase text-[9px] px-4 h-10 hidden lg:flex items-center gap-2 rounded-xl">
-            <Zap className="w-3.5 h-3.5" /> Monthly Registry Archive
+            <Zap className="w-3.5 h-3.5 text-accent" /> Monthly Registry Archive
           </Badge>
           <Button onClick={handlePrint} size="sm" className="font-black h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl active-scale transition-all">
             <Printer className="w-4 h-4 mr-2" /> Export Performance Sheet

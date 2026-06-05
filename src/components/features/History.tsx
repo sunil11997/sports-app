@@ -45,10 +45,17 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
     return (store.data.players || [])
       .filter((p: any) => isGeneral ? true : p.category === 'athlete')
       .sort((a: any, b: any) => {
+        // Academic Standard
         const stdA = Number(a.std) || 0;
         const stdB = Number(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
+
+        // Boys First (Male prioritised)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Male' ? -1 : 1;
+        }
+
+        // Roll Number
         return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral]);
@@ -194,7 +201,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
               `).join('')}
             </tbody>
           </table>
-          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.2</p>
+          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.4</p>
         </body>
       </html>
     `;
@@ -214,7 +221,7 @@ export function PerformanceDossier({ store, section }: { store: any, section: 's
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.2</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.4</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">

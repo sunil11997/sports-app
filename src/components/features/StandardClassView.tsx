@@ -74,6 +74,11 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
     return store.data.players
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
+        // Boys first (Male prioritized)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Male' ? -1 : 1;
+        }
+        // Then by Roll Number
         const rollA = parseInt(a.serialNumber) || 0;
         const rollB = parseInt(b.serialNumber) || 0;
         return rollA - rollB;
@@ -203,13 +208,13 @@ export function StandardClassView({ store, std }: { store: any, std: string }) {
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Standard {std} Overview</h2>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-              {students.length} Enrolled Students
+              {students.length} Enrolled Students (Boys First)
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
            <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-6 h-10 rounded-full bg-white hidden lg:flex items-center gap-2">
-             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.3 Registry
+             <Zap className="w-3.5 h-3.5 text-accent" /> v4.3.4 Registry
            </Badge>
            <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg">
              <Printer className="w-4 h-4 mr-2" /> Print Class Roster

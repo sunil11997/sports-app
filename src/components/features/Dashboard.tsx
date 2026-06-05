@@ -143,10 +143,19 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         return matchesSection && matchesSearch && matchesSport;
       })
       .sort((a: any, b: any) => {
+        // Boys first (Male prioritized)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Male' ? -1 : 1;
+        }
+        // Then by Roll Number (Serial Number)
+        const rollA = parseInt(a.serialNumber) || 0;
+        const rollB = parseInt(b.serialNumber) || 0;
+        if (rollA !== rollB) return rollA - rollB;
+
+        // Finally by Standard to keep the registry organized
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
-        if (stdA !== stdB) return stdA - stdB;
-        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+        return stdA - stdB;
       });
   }, [store.data.players, isGeneral, searchTerm, selectedSport]);
 

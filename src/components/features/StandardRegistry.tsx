@@ -34,7 +34,11 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
     return store.data.players
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
-        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
+        // Boys first (Male prioritized)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Male' ? -1 : 1;
+        }
+        // Then by Roll Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std]);

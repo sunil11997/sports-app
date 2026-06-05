@@ -147,7 +147,7 @@ export default function WaghambaApp() {
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.2</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.4</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -473,7 +473,7 @@ export default function WaghambaApp() {
             </h1>
           </div>
         </div>
-        <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
+        <div className="flex flex-col gap-4 max-sm mx-auto w-full">
           <Button onClick={isUserLoading ? undefined : () => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group">
             {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{translations[language].enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
           </Button>

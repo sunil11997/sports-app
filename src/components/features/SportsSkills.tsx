@@ -185,10 +185,17 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
     return store.data.players
       .filter((p: any) => p.category === targetCategory && (isGeneral || (p.sports && p.sports.includes(activeSport))))
       .sort((a: any, b: any) => {
+        // Academic Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-        if (a.gender !== b.gender) return a.gender === 'Female' ? -1 : 1;
+
+        // Gender: Boys first (Male prioritized)
+        if (a.gender !== b.gender) {
+          return a.gender === 'Male' ? -1 : 1;
+        }
+
+        // Roll Number
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, targetCategory, isGeneral, activeSport]);
@@ -308,7 +315,7 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
                         step="0.1"
                         value={localDetailedSkills[skill] || ''} 
                         placeholder="0-10"
-                        onChange={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           const val = e.target.value;
                           setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
                         }} 

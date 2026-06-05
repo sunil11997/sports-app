@@ -97,12 +97,17 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
         return matchesSection && matchesTab;
       })
       .sort((a: any, b: any) => {
+        // Primary: Academic Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
+
+        // Secondary: Boys first (Male prioritized)
         if (a.gender !== b.gender) {
-          return a.gender === 'Female' ? -1 : 1;
+          return a.gender === 'Male' ? -1 : 1;
         }
+
+        // Tertiary: Roll Number (Serial Number)
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, activeCategory, getPlayerCategory]);
@@ -298,7 +303,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
           </TableBody>
         </Table>
       </Card>
-      ...
     </div>
   );
 }
