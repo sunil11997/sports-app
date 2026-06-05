@@ -77,14 +77,13 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
 
   const relevantEvents = useMemo((): TacticalEvent[] => {
     return (store.data.tacticalEvents || [])
-      .filter((e: TacticalEvent) => e.sport === selectedSport)
+      .filter((e: any) => e.sport === selectedSport)
       .slice(0, 10);
   }, [store.data.tacticalEvents, selectedSport]);
 
   const successRate = useMemo(() => {
     if (relevantEvents.length === 0) return 0;
-    // Explicitly typed (event: TacticalEvent) to satisfy strict Next.js 15 production linter
-    const successes = relevantEvents.filter((event: TacticalEvent) => event.outcome === 'Success').length;
+    const successes = relevantEvents.filter((event: any) => event.outcome === 'Success').length;
     return Math.round((successes / relevantEvents.length) * 100);
   }, [relevantEvents]);
 
@@ -215,7 +214,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {relevantEvents.map((event: TacticalEvent) => (
+                  {relevantEvents.map((event: any) => (
                     <div key={event.id} className="p-6 rounded-[2rem] border-2 border-primary/5 hover:border-primary/20 transition-all group relative overflow-hidden bg-white">
                        <div className="flex items-start justify-between relative z-10">
                           <div className="flex items-start gap-5">
