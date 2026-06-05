@@ -103,7 +103,17 @@ export function Attendance({ store, section, language = 'English' }: { store: an
 
   const handlePrint = () => {
     if (!currentDate) return;
-    const sessionLabel = activeSession === 'Morning' ? 'सकाळ' : 'संध्याकाळ';
+    const isM = localMarathiView;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? `मासिक उपस्थिती अहवाल - ${format(currentDate, 'MMMM yyyy')}` 
+      : `Monthly Attendance Report - ${format(currentDate, 'MMMM yyyy')}`;
+    const sessionLabel = isM 
+      ? (activeSession === 'Morning' ? 'सकाळ' : 'संध्याकाळ')
+      : activeSession;
+    
     const printContent = `
       <html>
         <head>
@@ -126,22 +136,22 @@ export function Attendance({ store, section, language = 'English' }: { store: an
         </head>
         <body style="padding-top: 60px;">
           <div class="no-print" style="position:fixed; top:0; left:0; right:0; background:#1e3a8a; padding:10px; text-align:center;">
-             <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:900; cursor:pointer;">प्रिंट करा</button>
+             <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:900; cursor:pointer;">${isM ? 'प्रिंट करा' : 'Print Report'}</button>
           </div>
-          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-          <div class="report-type">मासिक उपस्थिती अहवाल - ${format(currentDate, 'MMMM yyyy')}</div>
+          <h1>${schoolName}</h1>
+          <div class="report-type">${reportTitle}</div>
           <div class="meta">
-            <span>सत्र: ${sessionLabel}</span>
-            <span>तारीख: ${format(new Date(), 'dd/MM/yyyy')}</span>
+            <span>${isM ? 'सत्र' : 'Session'}: ${sessionLabel}</span>
+            <span>${isM ? 'तारीख' : 'Date'}: ${format(new Date(), 'dd/MM/yyyy')}</span>
           </div>
           <table>
             <thead>
               <tr>
-                <th>अनु. क्र.</th>
-                <th>विद्यार्थ्याचे नाव</th>
-                <th>लिंग</th>
+                <th>${isM ? 'अनु. क्र.' : 'Sr No'}</th>
+                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'Student Name'}</th>
+                <th>${isM ? 'लिंग' : 'Gender'}</th>
                 ${days.map(d => `<th>${format(d, 'd')}</th>`).join('')}
-                <th>एकूण</th>
+                <th>${isM ? 'एकूण' : 'Total'}</th>
               </tr>
             </thead>
             <tbody>
@@ -152,8 +162,8 @@ export function Attendance({ store, section, language = 'English' }: { store: an
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                const displayName = p.nameMarathi || p.name;
-                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${displayName.toUpperCase()}</td><td>${p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>${row}<td>${total}</td></tr>`;
+                const displayName = isM ? (p.nameMarathi || p.name) : p.name;
+                return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${displayName.toUpperCase()}</td><td>${p.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>

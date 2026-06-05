@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 
 const DEFAULT_LABELS = {
@@ -29,16 +29,13 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const [editingLabels, setEditingLabels] = useState(DEFAULT_LABELS);
+  const [isMarathiView, setIsMarathiView] = useState(false);
 
   const playersInStd = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
-        // Boys first (Male prioritized)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Male' ? -1 : 1;
-        }
-        // Then by Roll Number
+        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std]);
@@ -109,8 +106,15 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
   };
 
   const handlePrintTerm = () => {
-    const termLabel = activeTerm === 'First' ? 'First Term' : 'Second Term';
+    const isM = isMarathiView;
+    const termLabel = activeTerm === 'First' ? (isM ? 'प्रथम सत्र' : 'First Term') : (isM ? 'द्वितीय सत्र' : 'Second Term');
     const labels = currentLabels;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? `परीक्षा आणि आरोग्य नोंदणी - इयत्ता ${std} वी | ${termLabel}` 
+      : `Exam & Health Registry - Std: ${std} | Term: ${termLabel}`;
 
     const printContent = `
       <html>
@@ -139,21 +143,21 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+            <button onclick="window.close()" class="btn btn-back">&larr; ${isM ? 'मागे जा' : 'Go Back'}</button>
+            <button onclick="window.print()" class="btn btn-print">${isM ? 'प्रिंट करा' : 'Print Report'}</button>
           </div>
           <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
-            <div class="report-type">Exam & Health Registry - Std: ${std} | Term: ${termLabel}</div>
+            <div class="school-name">${schoolName}</div>
+            <div class="report-type">${reportTitle}</div>
           </div>
           <table>
             <thead>
               <tr>
-                <th>SNR</th>
-                <th>STUDENT NAME</th>
-                <th>GEN</th>
-                <th>HT</th>
-                <th>WT</th>
+                <th>${isM ? 'अनु. क्र.' : 'SNR'}</th>
+                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'STUDENT NAME'}</th>
+                <th>${isM ? 'लिंग' : 'GEN'}</th>
+                <th>${isM ? 'उंची' : 'HT'}</th>
+                <th>${isM ? 'वजन' : 'WT'}</th>
                 <th>${labels.nirikshan}</th>
                 <th>${labels.tondikam}</th>
                 <th>${labels.pratyashike}</th>
@@ -161,18 +165,19 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
                 <th>${labels.prakalp}</th>
                 <th>${labels.chachani}</th>
                 <th>${labels.swadhyay}</th>
-                <th>TOT</th>
-                <th>GRD</th>
+                <th>${isM ? 'एकूण' : 'TOT'}</th>
+                <th>${isM ? 'श्रेणी' : 'GRD'}</th>
               </tr>
             </thead>
             <tbody>
               ${playersInStd.map((p: any, i: number) => {
                 const total = calculateTotal(p.id);
                 const r = termRecords[p.id] || {};
+                const dName = isM ? (p.nameMarathi || p.name) : p.name;
                 return `
                   <tr>
                     <td>${p.serialNumber || i+1}</td>
-                    <td class="name-cell">${p.name.toUpperCase()}</td>
+                    <td class="name-cell">${dName.toUpperCase()}</td>
                     <td>${p.gender[0]}</td>
                     <td>${r.height || '-'}</td>
                     <td>${r.weight || '-'}</td>
@@ -194,8 +199,10 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
       </html>
     `;
     const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
+    if (win) {
+      win.document.write(printContent);
+      win.document.close();
+    }
   };
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={13} />;
@@ -217,6 +224,10 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
               >
                 <Settings2 className="w-3 h-3" /> Customize Labels
               </button>
+              <div className="flex bg-muted/40 p-1 rounded-xl border ml-4">
+                <Button variant={!isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(false)} className="h-6 px-3 text-[8px] font-black uppercase rounded-lg">EN</Button>
+                <Button variant={isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(true)} className="h-6 px-3 text-[8px] font-black uppercase rounded-lg">मराठी</Button>
+              </div>
             </div>
           </div>
         </div>
@@ -256,7 +267,7 @@ export function StandardRegistry({ store, std }: { store: any, std: string }) {
               return (
                 <TableRow key={p.id} className="border-b h-14 group">
                   <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[220px]">
-                    {p.name.toUpperCase()}
+                    {(isMarathiView ? (p.nameMarathi || p.name) : p.name).toUpperCase()}
                   </TableCell>
                   <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'height', e.target.value)} /></TableCell>
                   <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'weight', e.target.value)} /></TableCell>

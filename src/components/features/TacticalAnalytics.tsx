@@ -183,6 +183,16 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
             />
           </div>
 
+          <div className="flex gap-4">
+             <Button 
+                onClick={() => setOutcome(outcome === 'Success' ? 'Failure' : 'Success')}
+                variant={outcome === 'Success' ? 'default' : 'destructive'}
+                className="flex-1 h-12 rounded-xl font-black uppercase text-[10px]"
+             >
+                {outcome === 'Success' ? 'Positive Result' : 'Negative Result'}
+             </Button>
+          </div>
+
           <Button 
             onClick={handleSaveEvent} 
             disabled={isSaving || !selectedPlayerId || !situation}

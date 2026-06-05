@@ -32,7 +32,6 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import { analyzeFitness, getTestInstructions, type FitnessAnalysisOutput } from '@/ai/flows/fitness-analysis';
 import { usePWA } from '@/components/providers/pwa-provider';
 
 const SPORTS_CATEGORIES = [
@@ -143,7 +142,15 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
   };
 
   const handlePrint = () => {
+    const isM = localMarathiView;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? 'शारीरिक गुणवत्ता नोंदणी आणि कामगिरी अहवाल' 
+      : 'Physical Excellence Registry & Performance Snapshot';
     const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
+
     const printContent = `
       <html>
         <head>
@@ -165,29 +172,29 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         </head>
         <body style="padding-top: 80px;">
           <div class="no-print" style="position:fixed; top:0; left:0; right:0; background:#1e3a8a; padding:10px; text-align:center;">
-             <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:900; cursor:pointer;">प्रिंट करा</button>
+             <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:900; cursor:pointer;">${isM ? 'प्रिंट करा' : 'Print Report'}</button>
           </div>
-          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-          <div class="report-type">PHYSICAL EXCELLENCE REGISTRY & PERFORMANCE SNAPSHOT</div>
+          <h1>${schoolName}</h1>
+          <div class="report-type">${reportTitle}</div>
           <div class="meta"><span>CATEGORY: ${categoryLabel.toUpperCase()}</span><span>DATE: ${format(new Date(), 'PP')}</span></div>
           <table>
             <thead>
               <tr>
-                <th>SNR</th>
-                <th>NAME</th>
-                <th>STD</th>
+                <th>${isM ? 'अनु. क्र.' : 'SNR'}</th>
+                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'NAME'}</th>
+                <th>${isM ? 'इयत्ता' : 'STD'}</th>
                 <th>10x6 SHUTTLE</th>
                 <th>SIT & REACH</th>
                 <th>SPEED (50m)</th>
                 <th>STAMINA (600m)</th>
                 <th>CORE (Situps)</th>
-                <th>SCORE %</th>
+                <th>${isM ? 'गुण' : 'SCORE'} %</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => {
                 const fit = store.data.fitness?.[p.id] || {};
-                const name = p.nameMarathi || p.name;
+                const name = isM ? (p.nameMarathi || p.name) : p.name;
                 return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td></tr>`;
               }).join('')}
             </tbody>

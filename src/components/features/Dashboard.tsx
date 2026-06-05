@@ -41,7 +41,7 @@ interface DashboardProps {
   t: any;
 }
 
-export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all" }: DashboardProps) {
+export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all", t }: DashboardProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedSport, setSelectedSport] = useState(initialSport);
@@ -74,18 +74,24 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         return matchesSection && (nameMatch || aadharMatch || grMatch || marathiMatch) && (selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport)));
       })
       .sort((a: any, b: any) => {
-        // Priority 1: Boys first (Male prioritized)
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
-        // Priority 2: Roll Number (Serial Number)
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, isGeneral, searchTerm, selectedSport]);
 
-  const handlePrintMarathi = () => {
+  const handlePrintRegistry = () => {
+    const isM = isMarathiView;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? 'विद्यार्थी व खेळाडू संपूर्ण नोंदणी (मराठी रजिस्टर)' 
+      : 'Full Student & Athlete Registry (English Register)';
+
     const printContent = `
       <html>
         <head>
-          <title>Institutional Registry (Marathi)</title>
+          <title>Institutional Registry</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
             @media print { @page { size: A4; margin: 1cm; } .no-print { display: none !important; } }
@@ -103,31 +109,31 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </head>
         <body style="padding-top: 60px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; मागे जा</button>
-            <button onclick="window.print()" class="btn">प्रिंट करा</button>
+            <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; ${isM ? 'मागे जा' : 'Go Back'}</button>
+            <button onclick="window.print()" class="btn">${isM ? 'प्रिंट करा' : 'Print Registry'}</button>
           </div>
           <div class="header">
-            <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-            <div class="report-title">विद्यार्थी व खेळाडू संपूर्ण नोंदणी (मराठी रजिस्टर)</div>
+            <h1>${schoolName}</h1>
+            <div class="report-title">${reportTitle}</div>
           </div>
           <table>
             <thead>
               <tr>
-                <th class="center">अनु. क्र.</th>
-                <th>विद्यार्थ्याचे नाव</th>
-                <th class="center">लिंग</th>
-                <th class="center">इयत्ता</th>
-                <th class="center">जी.आर. नंबर</th>
-                <th class="center">आधार नंबर</th>
+                <th class="center">${isM ? 'अनु. क्र.' : 'Sr No'}</th>
+                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'Student Name'}</th>
+                <th class="center">${isM ? 'लिंग' : 'Gender'}</th>
+                <th class="center">${isM ? 'इयत्ता' : 'Standard'}</th>
+                <th class="center">${isM ? 'जी.आर. नंबर' : 'GR Number'}</th>
+                <th class="center">${isM ? 'आधार नंबर' : 'Aadhar No'}</th>
               </tr>
             </thead>
             <tbody>
               ${filteredPlayers.map((p: any) => `
                 <tr>
                   <td class="center">${p.serialNumber || '-'}</td>
-                  <td><strong>${(p.nameMarathi || p.name).toUpperCase()}</strong></td>
-                  <td class="center">${p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}</td>
-                  <td class="center">इ. ${p.std} वी</td>
+                  <td><strong>${(isM ? (p.nameMarathi || p.name) : p.name).toUpperCase()}</strong></td>
+                  <td class="center">${p.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>
+                  <td class="center">${isM ? `इ. ${p.std} वी` : `Std ${p.std}`}</td>
                   <td class="center">${p.generalRegisterNumber || '-'}</td>
                   <td class="center">${p.aadharNumber || '-'}</td>
                 </tr>
@@ -171,8 +177,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           <h2 className="text-xl font-black text-primary uppercase tracking-tight">{isMarathiView ? 'विद्यार्थी नोंदणी' : (isGeneral ? 'Student Registry' : 'Athlete Roster')}</h2>
         </div>
         <div className="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
-          <Button onClick={handlePrintMarathi} variant="outline" className="h-11 rounded-full border-2 font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary/5">
-            <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'मराठी प्रिंट' : 'Marathi Print'}
+          <Button onClick={handlePrintRegistry} variant="outline" className="h-11 rounded-full border-2 font-black uppercase text-[10px] tracking-widest text-primary hover:bg-primary/5">
+            <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'प्रिंट काढा' : 'Print Sheet'}
           </Button>
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
