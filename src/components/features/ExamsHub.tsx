@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { GraduationCap, ArrowLeft, FileText, Users } from 'lucide-react';
 import { StandardRegistry } from './StandardRegistry';
 
-export function ExamsHub({ store }: { store: any }) {
+export function ExamsHub({ store, language = 'English' }: { store: any, language?: string }) {
   const [selectedStd, setSelectedStd] = useState<string | null>(null);
 
   const classSummaries = useMemo(() => {
@@ -32,7 +32,7 @@ export function ExamsHub({ store }: { store: any }) {
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Exams Hub
         </Button>
-        <StandardRegistry store={store} std={selectedStd} />
+        <StandardRegistry store={store} std={selectedStd} language={language} />
       </div>
     );
   }

@@ -23,16 +23,20 @@ const DEFAULT_LABELS = {
   swadhyay: 'SWAD'
 };
 
-export function StandardRegistry({ store, std }: { store: any, std: string }) {
+export function StandardRegistry({ store, std, language = 'English' }: { store: any, std: string, language?: string }) {
   const { toast } = useToast();
   const [activeTerm, setActiveTerm] = useState<'First' | 'Second'>('First');
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const [editingLabels, setEditingLabels] = useState(DEFAULT_LABELS);
-  const [isMarathiView, setIsMarathiView] = useState(false);
+  const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
+
+  useEffect(() => {
+    setIsMarathiView(language === 'Marathi');
+  }, [language]);
 
   const playersInStd = useMemo(() => {
-    return store.data.players
+    return (store.data.players || [])
       .filter((p: any) => p.std === std)
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;

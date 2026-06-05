@@ -113,7 +113,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
   const suggestedStudents = useMemo(() => {
     if (!registrySearch || registrySearch.length < 2) return [];
-    return store.data.players.filter((p: any) => 
+    return (store.data.players || []).filter((p: any) => 
       p.name.toLowerCase().includes(registrySearch.toLowerCase()) ||
       (p.nameMarathi && p.nameMarathi.includes(registrySearch)) ||
       p.aadharNumber?.includes(registrySearch) ||
