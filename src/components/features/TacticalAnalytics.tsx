@@ -83,6 +83,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
 
   const successRate = useMemo(() => {
     if (relevantEvents.length === 0) return 0;
+    // Explicitly typed (event: TacticalEvent) to satisfy strict Next.js 15 production linter
     const successes = relevantEvents.filter((event: TacticalEvent) => event.outcome === 'Success').length;
     return Math.round((successes / relevantEvents.length) * 100);
   }, [relevantEvents]);
@@ -243,7 +244,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
            <div className="p-8 bg-primary/5 border-t">
               <div className="flex items-center gap-3">
                  <Gauge className="w-5 h-5 text-accent animate-pulse" />
-                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V3.9.4</p>
+                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V4.3.11</p>
               </div>
            </div>
         </Card>
