@@ -53,19 +53,18 @@ const GENERAL_CATEGORIES = [
   }))
 ];
 
-export function Fitness({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function Fitness({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
   const [assessments, setAssessments] = useState<Record<string, any>>({});
   const [activeCategory, setActiveCategory] = useState("all");
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [localMarathiView, setLocalMarathiView] = useState(language === 'Marathi');
 
-  const [aiModalOpen, setAiModalOpen] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<FitnessAnalysisOutput | null>(null);
-  const [activeInstruction, setActiveInstruction] = useState<string>("");
-  const [analyzingPlayer, setAnalyzingPlayer] = useState<any>(null);
+  useEffect(() => {
+    setLocalMarathiView(language === 'Marathi');
+  }, [language]);
 
   const isGeneral = section === 'general';
   const categories = useMemo(() => isGeneral ? GENERAL_CATEGORIES : SPORTS_CATEGORIES, [isGeneral]);
@@ -223,15 +222,21 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[2.5rem] border shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center border border-accent/20">
-            <Flame className="w-8 h-8 text-accent animate-pulse" />
+        <div className="flex items-center gap-6">
+          <div className="flex bg-muted/40 p-1 rounded-xl border">
+            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">English</Button>
+            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">मराठी</Button>
           </div>
-          <div>
-            <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1.5 mt-0.5 tracking-widest">
-              <Calendar className="w-3.5 h-3.5" /> Performance Registry &bull; {format(new Date(), 'MMMM yyyy')}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center border border-accent/20">
+              <Flame className="w-8 h-8 text-accent animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
+              <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1.5 mt-0.5 tracking-widest">
+                <Calendar className="w-3.5 h-3.5" /> Performance Registry &bull; {format(new Date(), 'MMMM yyyy')}
+              </p>
+            </div>
           </div>
         </div>
         <Button onClick={handlePrint} size="sm" className="font-black h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl active-scale transition-all">
@@ -263,7 +268,9 @@ export function Fitness({ store, section }: { store: any, section: 'sports' | 'g
                   <TableRow key={player.id} className={cn("border-b even:bg-muted/10 hover:bg-primary/5 transition-all h-16 group", isPulse && "animate-success-pulse")}>
                     <TableCell className="border-r p-4 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
                       <div className="flex flex-col">
-                        <span className="text-primary uppercase text-sm truncate w-[140px]">{player.nameMarathi || player.name}</span>
+                        <span className="text-primary uppercase text-sm truncate w-[140px]">
+                          {localMarathiView ? (player.nameMarathi || player.name) : player.name}
+                        </span>
                         <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} &bull; Age {player.age}</span>
                       </div>
                     </TableCell>

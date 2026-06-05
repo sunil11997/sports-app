@@ -114,6 +114,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     if (!registrySearch || registrySearch.length < 2) return [];
     return store.data.players.filter((p: any) => 
       p.name.toLowerCase().includes(registrySearch.toLowerCase()) ||
+      (p.nameMarathi && p.nameMarathi.includes(registrySearch)) ||
       p.aadharNumber?.includes(registrySearch) ||
       p.generalRegisterNumber?.includes(registrySearch)
     ).slice(0, 5);

@@ -154,7 +154,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
           <div className="space-y-3">
             <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">१. खेळाडू निवडा</label>
             <Select value={selectedPlayerId} onValueChange={setSelectedPlayerId}>
-              <SelectTrigger className="h-14 rounded-2xl border-2 font-bold bg-white"><SelectValue placeholder="Pick athlete..." /></SelectTrigger>
+              <SelectTrigger className="h-14 rounded-2xl border-2 font-bold bg-white shadow-sm"><SelectValue placeholder="Pick athlete..." /></SelectTrigger>
               <SelectContent>
                 {players.map((p: any) => (<SelectItem key={p.id} value={p.id}>{p.name} (Std {p.std})</SelectItem>))}
               </SelectContent>
@@ -215,7 +215,9 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                                {event.outcome === 'Success' ? <CheckCircle2 className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
                              </div>
                              <div className="space-y-1">
-                                <h4 className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors">{event.playerName}</h4>
+                                <h4 className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors">
+                                  {event.playerName}
+                                </h4>
                                 <p className="text-[10px] font-bold text-primary uppercase mt-1 tracking-tight">{event.situation}</p>
                              </div>
                           </div>

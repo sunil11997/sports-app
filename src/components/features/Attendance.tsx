@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-
 import { Card } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/loading-skeletons";
 import { cn } from "@/lib/utils";
@@ -14,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
 import {
   format,
   startOfMonth,
@@ -22,7 +20,6 @@ import {
   eachDayOfInterval,
 } from "date-fns";
 import { usePWA } from "@/components/providers/pwa-provider";
-
 import {
   ChevronLeft,
   ChevronRight,
@@ -48,17 +45,19 @@ const GENERAL_CATEGORIES = [
   }))
 ];
 
-export function Attendance({ store, section }: { store: any, section: 'sports' | 'general' }) {
+export function Attendance({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const [isMounted, setIsMounted] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
+  const [localMarathiView, setLocalMarathiView] = useState(language === 'Marathi');
   const { isOnline } = usePWA();
 
   useEffect(() => {
     setIsMounted(true);
     setCurrentDate(new Date());
-  }, []);
+    setLocalMarathiView(language === 'Marathi');
+  }, [language]);
 
   const monthStart = useMemo(() => currentDate ? startOfMonth(currentDate) : null, [currentDate]);
   const monthEnd = useMemo(() => currentDate ? endOfMonth(currentDate) : null, [currentDate]);
@@ -104,7 +103,6 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
 
   const handlePrint = () => {
     if (!currentDate) return;
-    const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
     const sessionLabel = activeSession === 'Morning' ? 'सकाळ' : 'संध्याकाळ';
     const printContent = `
       <html>
@@ -204,11 +202,17 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[2.5rem] border shadow-sm">
-        <div>
-          <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Presence Log</h2>
-          <div className="flex bg-muted/40 p-1 rounded-xl border mt-2">
-            <Button variant={activeSession === 'Morning' ? "default" : "ghost"} onClick={() => setActiveSession('Morning')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Morning</Button>
-            <Button variant={activeSession === 'Evening' ? "default" : "ghost"} onClick={() => setActiveSession('Evening')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Evening</Button>
+        <div className="flex items-center gap-6">
+          <div className="flex bg-muted/40 p-1 rounded-xl border">
+            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">English</Button>
+            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">मराठी</Button>
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Presence Log</h2>
+            <div className="flex bg-muted/40 p-1 rounded-xl border mt-2">
+              <Button variant={activeSession === 'Morning' ? "default" : "ghost"} onClick={() => setActiveSession('Morning')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Morning</Button>
+              <Button variant={activeSession === 'Evening' ? "default" : "ghost"} onClick={() => setActiveSession('Evening')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Evening</Button>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -248,7 +252,7 @@ export function Attendance({ store, section }: { store: any, section: 'sports' |
               return (
                 <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
                   <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-10 uppercase">
-                    {isMarathiView ? (player.nameMarathi || player.name) : player.name}
+                    {localMarathiView ? (player.nameMarathi || player.name) : player.name}
                   </TableCell>
                   {days.map(day => {
                     const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
