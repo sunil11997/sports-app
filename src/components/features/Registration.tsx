@@ -117,17 +117,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
-  /**
-   * handleAutoTranslate - Automatically transliterates English name to Devanagari.
-   * Triggered automatically on field blur to provide seamless automation.
-   */
   const handleAutoTranslate = async () => {
     const englishName = form.getValues("name");
-    const currentMarathi = form.getValues("nameMarathi");
-    
-    // Safety check: Avoid calling AI if name is too short or if Marathi name is already manually set
-    if (!englishName || englishName.length < 2) return;
-    if (!isOnline) return;
+    if (!englishName || englishName.length < 2 || !isOnline) return;
 
     setIsTranslating(true);
     try {
@@ -136,7 +128,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
         form.setValue("nameMarathi", translated);
       }
     } catch (error) {
-      console.warn("WGB Auto-Translate: Handshake failure", error);
+      console.warn("WGB Auto-Translate Sync Error");
     } finally {
       setIsTranslating(false);
     }
@@ -263,7 +255,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
       bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi,
     });
 
-    toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry as ${finalCategory.toUpperCase()}.` });
+    toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     form.reset({
       ...form.getValues(),
       name: "",

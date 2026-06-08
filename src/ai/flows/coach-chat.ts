@@ -29,7 +29,6 @@ const coachChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (input) => {
-    // Robust check for various possible environment variable names
     const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     
     if (!apiKey) {
@@ -38,9 +37,9 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GOOGLE_GENAI_API_KEY to the .env file.";
     }
 
-    const selectedModel = 'gemini-1.5-flash';
+    const selectedModel = 'gemini-2.5-flash';
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 2;
     
     while (attempts < maxAttempts) {
       try {
@@ -64,19 +63,15 @@ const coachChatFlow = ai.defineFlow(
         return text;
       } catch (error: any) {
         attempts++;
-        console.warn(`WGB AI Chat Attempt ${attempts} failed:`, error.message || error);
-        
         if (attempts >= maxAttempts) {
           return input.language === 'Marathi'
             ? "AI सध्या व्यस्त आहे. कृपया थोड्या वेळाने प्रयत्न करा."
             : "The AI coach is currently processing high demand. Please try again in a few moments.";
         }
-        
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    return "AI system synchronization error. Please refresh the registry.";
+    return "AI system synchronization error.";
   }
 );
 
