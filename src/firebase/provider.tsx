@@ -163,7 +163,8 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.22: Included factory in dependencies and reinforced synchronous validation.
+ * Hardened v4.3.23: Removed factory from dependencies to prevent unstable query loops.
+ * Ensuring references are truly stable for Firestore hooks.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,7 +181,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       } catch (e) {}
     }
     return val;
-  }, [factory, ...deps]); 
+  }, deps); 
 
   return memoizedValue;
 }

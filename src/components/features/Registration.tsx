@@ -43,7 +43,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   std: z.string().min(1, "Standard is required"),
   category: z.enum(["athlete", "student"]),
-  gender: z.enum(["Male", "Female"]).optional().default("Male"),
+  gender: z.enum(["Male", "Female"]),
   serialNumber: z.string().optional().default(""),
   dob: z.string().optional().default(""),
   height: z.string().optional().default(""),
@@ -61,6 +61,8 @@ const formSchema = z.object({
   photoUrl: z.string().optional().default(""),
   aadharPhotoUrl: z.string().optional().default(""),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export function Registration({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
@@ -84,7 +86,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     lookup: isMarathi ? 'रजिस्ट्री मधून डेटा मिळवा' : 'Search Existing Student'
   };
 
-  const defaultValues: z.infer<typeof formSchema> = {
+  const defaultValues: FormValues = {
     name: "", 
     std: "1", 
     category: (section === 'sports' ? 'athlete' : 'student') as 'athlete' | 'student',
@@ -107,7 +109,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     aadharPhotoUrl: ""
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
@@ -208,7 +210,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     }
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: FormValues) => {
     const dobDate = values.dob ? new Date(values.dob) : null;
     const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : 0;
     

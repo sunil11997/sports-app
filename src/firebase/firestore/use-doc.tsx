@@ -19,12 +19,14 @@ export interface UseDocResult<T> {
   error: FirestoreError | Error | null;
 }
 
+/**
+ * useDoc - Real-time document listener hook
+ * Hardened v4.3.23: Added stability checks and mount guards to prevent recursive re-renders.
+ */
 export function useDoc<T = any>(
-  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
+  memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
 ): UseDocResult<T> {
-  type StateDataType = WithId<T> | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -36,12 +38,14 @@ export function useDoc<T = any>(
       return;
     }
 
+    let isMounted = true;
     setIsLoading(true);
     setError(null);
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
+        if (!isMounted) return;
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
@@ -50,8 +54,9 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
-        if (error.code === 'permission-denied') {
+      (err: FirestoreError) => {
+        if (!isMounted) return;
+        if (err.code === 'permission-denied') {
           const contextualError = new FirestorePermissionError({
             operation: 'get',
             path: memoizedDocRef.path,
@@ -59,15 +64,22 @@ export function useDoc<T = any>(
           setError(contextualError);
           errorEmitter.emit('permission-error', contextualError);
         } else {
-          console.warn(`WGB Firestore Warning (${error.code}):`, error.message);
-          setError(error);
+          console.warn(`WGB Firestore Warning (${err.code}):`, err.message);
+          setError(err);
         }
         setIsLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [memoizedDocRef]);
+
+  if(memoizedDocRef && !memoizedDocRef.__memo) {
+    throw new Error(memoizedDocRef + ' was not properly memoized using useMemoFirebase. This prevents infinite loops.');
+  }
 
   return { data, isLoading, error };
 }
