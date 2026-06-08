@@ -119,6 +119,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
   const handleAutoTranslate = async () => {
     const englishName = form.getValues("name");
+    // Only translate if Marathi name is still empty or user triggered an update
     if (!englishName || englishName.length < 2 || !isOnline) return;
 
     setIsTranslating(true);
@@ -457,7 +458,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                             <div className="flex items-center gap-2">
                                <Badge variant="outline" className="text-[8px] border-accent/30 text-accent uppercase flex items-center gap-1">
                                 {isTranslating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
-                                {isTranslating ? 'Auto-Translating...' : 'Auto-Sync Enabled'}
+                                {isTranslating ? 'Transliterating...' : 'Auto-Phonetic Active'}
                               </Badge>
                             </div>
                           </FormLabel>

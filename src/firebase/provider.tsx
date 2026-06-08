@@ -163,7 +163,7 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.19: Synchronously assigns validation flags within the memo factory 
+ * Hardened v4.3.20: Synchronously assigns validation flags within the memo factory 
  * and stabilized dependency tracking to prevent hydration loading loops.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
@@ -181,7 +181,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
       } catch (e) {}
     }
     return val;
-  }, deps); 
+  }, [factory, ...deps]); 
 
   return memoizedValue;
 }
