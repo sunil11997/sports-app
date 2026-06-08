@@ -84,30 +84,32 @@ export function Registration({ store, section, language = 'English' }: { store: 
     lookup: isMarathi ? 'रजिस्ट्री मधून डेटा मिळवा' : 'Search Existing Student'
   };
 
+  const defaultValues = {
+    name: "", 
+    std: "1", 
+    category: section === 'sports' ? 'athlete' : 'student',
+    gender: "Male" as const, 
+    serialNumber: "", 
+    dob: "", 
+    height: "", 
+    sittingHeight: "",
+    weight: "",
+    bloodGroup: "None", 
+    aadharNumber: "", 
+    mobileNumber: "", 
+    generalRegisterNumber: "", 
+    address: "",
+    sports: [], 
+    history: "No" as const, 
+    histDetail: "", 
+    medical: "", 
+    photoUrl: "", 
+    aadharPhotoUrl: ""
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "", 
-      std: "1", 
-      category: section === 'sports' ? 'athlete' : 'student',
-      gender: "Male", 
-      serialNumber: "", 
-      dob: "", 
-      height: "", 
-      sittingHeight: "",
-      weight: "",
-      bloodGroup: "None", 
-      aadharNumber: "", 
-      mobileNumber: "", 
-      generalRegisterNumber: "", 
-      address: "",
-      sports: [], 
-      history: "No", 
-      histDetail: "", 
-      medical: "", 
-      photoUrl: "", 
-      aadharPhotoUrl: ""
-    },
+    defaultValues,
   });
 
   const suggestedStudents = useMemo(() => {
@@ -231,16 +233,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
     });
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
-    form.reset({
-      ...form.getValues(),
-      name: "",
-      serialNumber: "",
-      generalRegisterNumber: "",
-      aadharNumber: "",
-      mobileNumber: "",
-      photoUrl: "",
-      aadharPhotoUrl: ""
-    });
+    
+    // Complete field removal after registration
+    form.reset(defaultValues);
   };
 
   return (
@@ -412,7 +407,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (Register Name) *</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="e.g. John Doe / जनार्दन भदाणे" 
+                              placeholder="e.g. Sunil Deshmukh" 
                               className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" 
                               {...field} 
                             />
@@ -426,7 +421,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <FormField control={form.control} name="std" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard (Std) *</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl text-md shadow-sm"><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
                           </Select>
@@ -436,7 +431,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <FormField control={form.control} name="gender" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
                           </Select>
@@ -475,7 +470,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <FormField control={form.control} name="bloodGroup" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Blood Group</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
                           </Select>

@@ -77,7 +77,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
 
   const relevantEvents = useMemo((): TacticalEvent[] => {
     return (store.data.tacticalEvents || [])
-      .filter((e: any) => e.sport === selectedSport)
+      .filter((e: TacticalEvent) => e.sport === selectedSport)
       .slice(0, 10);
   }, [store.data.tacticalEvents, selectedSport]);
 

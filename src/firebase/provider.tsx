@@ -163,7 +163,7 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.21: Stabilized dependency tracking and validation flags.
+ * Hardened v4.3.22: Included factory in dependencies and reinforced synchronous validation.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
