@@ -234,7 +234,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     
-    // Complete field removal after registration
+    // Perform clean slate reset after archiving
     form.reset(defaultValues);
   };
 

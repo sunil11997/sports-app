@@ -243,7 +243,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
            <div className="p-8 bg-primary/5 border-t">
               <div className="flex items-center gap-3">
                  <Gauge className="w-5 h-5 text-accent animate-pulse" />
-                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V4.3.21</p>
+                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V4.3.22</p>
               </div>
            </div>
         </Card>

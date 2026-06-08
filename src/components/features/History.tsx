@@ -205,7 +205,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
               `).join('')}
             </tbody>
           </table>
-          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.4</p>
+          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.22</p>
         </body>
       </html>
     `;
@@ -225,7 +225,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.4</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.22</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
