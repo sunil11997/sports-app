@@ -31,21 +31,16 @@ import {
   RefreshCcw,
   Baby,
   Search,
-  CheckCircle2,
-  Languages,
-  Sparkles,
-  Loader2
+  CheckCircle2
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { translateNameToMarathi } from '@/ai/flows/translate-name';
 import { usePWA } from '@/components/providers/pwa-provider';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
-  nameMarathi: z.string().optional().default(""),
   std: z.string().min(1, "Standard is required"),
   category: z.enum(["athlete", "student"]),
   gender: z.enum(["Male", "Female"]).optional().default("Male"),
@@ -79,7 +74,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
-  const [isTranslating, setIsTranslating] = useState(false);
 
   const isMarathi = language === 'Marathi';
 
@@ -94,7 +88,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "", 
-      nameMarathi: "",
       std: "1", 
       category: section === 'sports' ? 'athlete' : 'student',
       gender: "Male", 
@@ -117,29 +110,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
-  const handleAutoTranslate = async () => {
-    const englishName = form.getValues("name");
-    // Only translate if Marathi name is still empty or user triggered an update
-    if (!englishName || englishName.length < 2 || !isOnline) return;
-
-    setIsTranslating(true);
-    try {
-      const translated = await translateNameToMarathi({ name: englishName });
-      if (translated) {
-        form.setValue("nameMarathi", translated);
-      }
-    } catch (error) {
-      console.warn("WGB Auto-Translate Sync Error");
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
   const suggestedStudents = useMemo(() => {
     if (!registrySearch || registrySearch.length < 2) return [];
     return (store.data.players || []).filter((p: any) => 
       p.name.toLowerCase().includes(registrySearch.toLowerCase()) ||
-      (p.nameMarathi && p.nameMarathi.includes(registrySearch)) ||
       p.aadharNumber?.includes(registrySearch) ||
       p.generalRegisterNumber?.includes(registrySearch)
     ).slice(0, 5);
@@ -260,7 +234,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
     form.reset({
       ...form.getValues(),
       name: "",
-      nameMarathi: "",
       serialNumber: "",
       generalRegisterNumber: "",
       aadharNumber: "",
@@ -433,36 +406,17 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <Hash className="w-5 h-5" />
                       <h3 className="font-black uppercase text-sm tracking-[0.2em]">Institutional Identity</h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 gap-8">
                       <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (Register Name) *</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="John Doe" 
+                              placeholder="e.g. John Doe / जनार्दन भदाणे" 
                               className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" 
                               {...field} 
-                              onBlur={(e) => {
-                                field.onBlur();
-                                handleAutoTranslate();
-                              }}
                             />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="nameMarathi" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
-                            <span>विद्यार्थ्याचे नाव (मराठी) *</span>
-                            <div className="flex items-center gap-2">
-                               <Badge variant="outline" className="text-[8px] border-accent/30 text-accent uppercase flex items-center gap-1">
-                                {isTranslating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
-                                {isTranslating ? 'Transliterating...' : 'Auto-Phonetic Active'}
-                              </Badge>
-                            </div>
-                          </FormLabel>
-                          <FormControl><Input placeholder="उदा. जनार्दन सुदाम भदाणे" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-accent shadow-sm text-lg" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -510,10 +464,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <FormField control={form.control} name="height" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">{isMarathi ? "ताठ उंची (Standing Ht)" : "Height (cm)"}</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Height (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="sittingHeight" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> {isMarathi ? "बसून उंची (Sitting Ht)" : "Sitting Ht (cm)"}</FormLabel><FormControl><Input type="number" placeholder="Optional" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting Ht (cm)</FormLabel><FormControl><Input type="number" placeholder="Optional" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="weight" render={({ field }) => (
                         <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Weight (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
@@ -531,7 +485,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField control={form.control} name="aadharNumber" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-primary">Aadhar Number (12-Digit)</FormLabel><FormControl><Input placeholder="0000 0000 0000" className="h-14 font-mono font-black border-2 rounded-2xl text-center text-lg" {...field} maxLength={12} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black text-primary">Aadhar Number (12-Digit)</FormLabel><FormControl><Input placeholder="0000 0000 0000" className="h-14 font-mono font-black border-2 rounded-2xl text-center text-lg" {...field} maxLength={12} /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                         <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Contact No</FormLabel><FormControl><Input className="h-14 border-2 rounded-2xl font-mono px-6" {...field} /></FormControl></FormItem>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -68,8 +67,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
       : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
     const reportTitle = isM 
-      ? `वर्ग रजिस्टर: इयत्ता ${std} वी (मराठी नोंद)` 
-      : `Class Registry: Standard ${std} (English Record)`;
+      ? `वर्ग रजिस्टर: इयत्ता ${std} वी` 
+      : `Class Registry: Standard ${std}`;
 
     const printContent = `
       <html>
@@ -112,11 +111,10 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             </thead>
             <tbody>
               ${students.map((s: any) => {
-                const displayName = isM ? (s.nameMarathi || s.name) : s.name;
                 return `
                   <tr>
                     <td class="center">${s.serialNumber || '-'}</td>
-                    <td><strong>${displayName.toUpperCase()}</strong></td>
+                    <td><strong>${s.name.toUpperCase()}</strong></td>
                     <td class="center">${s.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>
                     <td class="center">${s.generalRegisterNumber || '-'}</td>
                     <td class="center">${s.aadharNumber || '-'}</td>
@@ -161,7 +159,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">{isMarathiView ? `इयत्ता ${std} वी - रजिस्टर` : `Standard ${std} Registry`}</h2>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-              {students.length} {isMarathiView ? 'विद्यार्थी (मुलगे आधी)' : 'Enrolled Students (Boys First)'}
+              {students.length} {isMarathiView ? 'विद्यार्थी' : 'Enrolled Students'}
             </p>
           </div>
         </div>
@@ -186,7 +184,6 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             </TableHeader>
             <TableBody>
               {students.map((student: any) => {
-                const displayName = isMarathiView ? (student.nameMarathi || student.name) : student.name;
                 return (
                   <TableRow key={student.id} className="hover:bg-primary/5 h-16">
                     <TableCell className="pl-8">
@@ -200,7 +197,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                           <AvatarImage src={student.photoUrl} className="object-cover" />
                           <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
                         </Avatar>
-                        {displayName}
+                        {student.name}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
@@ -235,12 +232,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             {editingPlayer && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary">Name (English)</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary">Full Name</Label>
                   <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary">Name (Marathi / मराठी)</Label>
-                  <Input value={editingPlayer.nameMarathi || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 font-bold rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>

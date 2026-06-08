@@ -214,7 +214,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {relevantEvents.map((event: any) => (
+                  {relevantEvents.map((event: TacticalEvent) => (
                     <div key={event.id} className="p-6 rounded-[2rem] border-2 border-primary/5 hover:border-primary/20 transition-all group relative overflow-hidden bg-white">
                        <div className="flex items-start justify-between relative z-10">
                           <div className="flex items-start gap-5">
@@ -243,7 +243,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
            <div className="p-8 bg-primary/5 border-t">
               <div className="flex items-center gap-3">
                  <Gauge className="w-5 h-5 text-accent animate-pulse" />
-                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V4.3.11</p>
+                 <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em]">Registry Synchronized • Tactical V4.3.21</p>
               </div>
            </div>
         </Card>

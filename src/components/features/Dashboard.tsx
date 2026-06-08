@@ -68,10 +68,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const nameMatch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase());
-        const marathiMatch = (p.nameMarathi || "").includes(searchTerm);
         const aadharMatch = (p.aadharNumber || "").includes(searchTerm);
         const grMatch = (p.generalRegisterNumber || "").toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSection && (nameMatch || aadharMatch || grMatch || marathiMatch) && (selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport)));
+        return matchesSection && (nameMatch || aadharMatch || grMatch) && (selectedSport === 'all' || (p.sports && p.sports.includes(selectedSport)));
       })
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
@@ -85,8 +84,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
       : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
     const reportTitle = isM 
-      ? 'विद्यार्थी व खेळाडू संपूर्ण नोंदणी (मराठी रजिस्टर)' 
-      : 'Full Student & Athlete Registry (English Register)';
+      ? 'विद्यार्थी व खेळाडू संपूर्ण नोंदणी' 
+      : 'Full Student & Athlete Registry';
 
     const printContent = `
       <html>
@@ -131,7 +130,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
               ${filteredPlayers.map((p: any) => `
                 <tr>
                   <td class="center">${p.serialNumber || '-'}</td>
-                  <td><strong>${(isM ? (p.nameMarathi || p.name) : p.name).toUpperCase()}</strong></td>
+                  <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td class="center">${p.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>
                   <td class="center">${isM ? `इ. ${p.std} वी` : `Std ${p.std}`}</td>
                   <td class="center">${p.generalRegisterNumber || '-'}</td>
@@ -217,7 +216,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                     </Avatar>
                     <div>
                       <p className="font-black text-sm uppercase text-primary leading-none">
-                        {isMarathiView ? (p.nameMarathi || p.name) : p.name}
+                        {p.name}
                       </p>
                       <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{isMarathiView ? (p.gender === 'Male' ? 'मुलगा' : 'मुलगी') : p.gender}</p>
                     </div>
@@ -250,12 +249,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
             {editingPlayer && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-primary">Student Name (English)</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary">Full Name</Label>
                     <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                 </div>
-                 <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-primary">Student Name (Marathi / मराठी)</Label>
-                    <Input value={editingPlayer.nameMarathi || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                  </div>
                  <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase text-primary">GR Number</Label>
