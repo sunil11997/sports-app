@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -33,10 +32,14 @@ import {
   Baby,
   Search,
   CheckCircle2,
-  Languages
+  Languages,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { translateNameToMarathi } from '@/ai/flows/translate-name';
+import { usePWA } from '@/components/providers/pwa-provider';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
@@ -66,6 +69,7 @@ const formSchema = z.object({
 
 export function Registration({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
+  const { isOnline } = usePWA();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const aadharUploadRef = useRef<HTMLInputElement>(null);
@@ -75,6 +79,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const isMarathi = language === 'Marathi';
 
@@ -111,6 +116,34 @@ export function Registration({ store, section, language = 'English' }: { store: 
       aadharPhotoUrl: ""
     },
   });
+
+  const handleAutoTranslate = async () => {
+    const englishName = form.getValues("name");
+    if (!englishName || englishName.length < 2) {
+      toast({ title: "Name Required", description: "Please enter an English name first.", variant: "destructive" });
+      return;
+    }
+
+    if (!isOnline) {
+      toast({ title: "Offline", description: "Internet required for AI Translation.", variant: "destructive" });
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const translated = await translateNameToMarathi({ name: englishName });
+      form.setValue("nameMarathi", translated);
+      toast({ 
+        title: "Translation Ready", 
+        description: `Transliterated ${englishName} to Devanagari.`,
+        className: "bg-emerald-600 text-white"
+      });
+    } catch (error) {
+      toast({ title: "Translation Error", description: "Could not auto-translate at this time.", variant: "destructive" });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const suggestedStudents = useMemo(() => {
     if (!registrySearch || registrySearch.length < 2) return [];
@@ -422,9 +455,21 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
                             <span>विद्यार्थ्याचे नाव (मराठी) *</span>
-                            <Badge variant="outline" className="text-[8px] border-accent/30 text-accent uppercase flex items-center gap-1">
-                              <Languages className="w-2.5 h-2.5" /> Devanagari
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                               <Button 
+                                 type="button" 
+                                 variant="ghost" 
+                                 onClick={handleAutoTranslate}
+                                 disabled={isTranslating || !isOnline}
+                                 className="h-6 px-2 rounded-md font-black uppercase text-[8px] bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20 flex items-center gap-1"
+                               >
+                                 {isTranslating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                                 Auto-Translate
+                               </Button>
+                               <Badge variant="outline" className="text-[8px] border-accent/30 text-accent uppercase flex items-center gap-1">
+                                <Languages className="w-2.5 h-2.5" /> Devanagari
+                              </Badge>
+                            </div>
                           </FormLabel>
                           <FormControl><Input placeholder="उदा. जनार्दन सुदाम भदाणे" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-accent shadow-sm text-lg" {...field} /></FormControl>
                           <FormMessage />
