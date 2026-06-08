@@ -84,11 +84,11 @@ export function Registration({ store, section, language = 'English' }: { store: 
     lookup: isMarathi ? 'रजिस्ट्री मधून डेटा मिळवा' : 'Search Existing Student'
   };
 
-  const defaultValues = {
+  const defaultValues: z.infer<typeof formSchema> = {
     name: "", 
     std: "1", 
-    category: section === 'sports' ? 'athlete' : 'student',
-    gender: "Male" as const, 
+    category: (section === 'sports' ? 'athlete' : 'student') as 'athlete' | 'student',
+    gender: "Male", 
     serialNumber: "", 
     dob: "", 
     height: "", 
@@ -100,7 +100,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
     generalRegisterNumber: "", 
     address: "",
     sports: [], 
-    history: "No" as const, 
+    history: "No", 
     histDetail: "", 
     medical: "", 
     photoUrl: "", 
@@ -234,7 +234,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     
-    // Perform clean slate reset after archiving
+    // Clean Slate Reset: Clearing all fields for the next institutional entry
     form.reset(defaultValues);
   };
 
@@ -404,7 +404,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     <div className="grid grid-cols-1 gap-8">
                       <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (Register Name) *</FormLabel>
+                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="e.g. Sunil Deshmukh" 
