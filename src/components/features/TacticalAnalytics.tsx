@@ -83,7 +83,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
 
   const successRate = useMemo(() => {
     if (relevantEvents.length === 0) return 0;
-    const successes = relevantEvents.filter((event: any) => event.outcome === 'Success').length;
+    const successes = relevantEvents.filter((event: TacticalEvent) => event.outcome === 'Success').length;
     return Math.round((successes / relevantEvents.length) * 100);
   }, [relevantEvents]);
 

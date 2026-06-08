@@ -117,29 +117,26 @@ export function Registration({ store, section, language = 'English' }: { store: 
     },
   });
 
+  /**
+   * handleAutoTranslate - Automatically transliterates English name to Devanagari.
+   * Triggered automatically on field blur to provide seamless automation.
+   */
   const handleAutoTranslate = async () => {
     const englishName = form.getValues("name");
-    if (!englishName || englishName.length < 2) {
-      toast({ title: "Name Required", description: "Please enter an English name first.", variant: "destructive" });
-      return;
-    }
-
-    if (!isOnline) {
-      toast({ title: "Offline", description: "Internet required for AI Translation.", variant: "destructive" });
-      return;
-    }
+    const currentMarathi = form.getValues("nameMarathi");
+    
+    // Safety check: Avoid calling AI if name is too short or if Marathi name is already manually set
+    if (!englishName || englishName.length < 2) return;
+    if (!isOnline) return;
 
     setIsTranslating(true);
     try {
       const translated = await translateNameToMarathi({ name: englishName });
-      form.setValue("nameMarathi", translated);
-      toast({ 
-        title: "Translation Ready", 
-        description: `Transliterated ${englishName} to Devanagari.`,
-        className: "bg-emerald-600 text-white"
-      });
+      if (translated) {
+        form.setValue("nameMarathi", translated);
+      }
     } catch (error) {
-      toast({ title: "Translation Error", description: "Could not auto-translate at this time.", variant: "destructive" });
+      console.warn("WGB Auto-Translate: Handshake failure", error);
     } finally {
       setIsTranslating(false);
     }
@@ -447,7 +444,17 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
-                          <FormControl><Input placeholder="John Doe" className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" {...field} /></FormControl>
+                          <FormControl>
+                            <Input 
+                              placeholder="John Doe" 
+                              className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" 
+                              {...field} 
+                              onBlur={(e) => {
+                                field.onBlur();
+                                handleAutoTranslate();
+                              }}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -456,18 +463,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
                             <span>विद्यार्थ्याचे नाव (मराठी) *</span>
                             <div className="flex items-center gap-2">
-                               <Button 
-                                 type="button" 
-                                 variant="ghost" 
-                                 onClick={handleAutoTranslate}
-                                 disabled={isTranslating || !isOnline}
-                                 className="h-6 px-2 rounded-md font-black uppercase text-[8px] bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20 flex items-center gap-1"
-                               >
-                                 {isTranslating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
-                                 Auto-Translate
-                               </Button>
                                <Badge variant="outline" className="text-[8px] border-accent/30 text-accent uppercase flex items-center gap-1">
-                                <Languages className="w-2.5 h-2.5" /> Devanagari
+                                {isTranslating ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                                {isTranslating ? 'Auto-Translating...' : 'Auto-Sync Enabled'}
                               </Badge>
                             </div>
                           </FormLabel>
