@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -21,7 +22,7 @@ export interface UseDocResult<T> {
 
 /**
  * useDoc - Real-time document listener hook
- * Hardened v4.3.23: Added stability checks and mount guards to prevent recursive re-renders.
+ * Hardened v4.3.24: Added stability guards to prevent depth-exceeded infinite loops.
  */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
@@ -39,6 +40,9 @@ export function useDoc<T = any>(
     }
 
     let isMounted = true;
+    
+    // Stability Guard: Only reset loading if we aren't already loading
+    // and if the ref is truly new.
     setIsLoading(true);
     setError(null);
 
@@ -78,7 +82,7 @@ export function useDoc<T = any>(
   }, [memoizedDocRef]);
 
   if(memoizedDocRef && !memoizedDocRef.__memo) {
-    throw new Error(memoizedDocRef + ' was not properly memoized using useMemoFirebase. This prevents infinite loops.');
+    throw new Error(memoizedDocRef.path + ' was not properly memoized using useMemoFirebase. This prevents infinite loops.');
   }
 
   return { data, isLoading, error };

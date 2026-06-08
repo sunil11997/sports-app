@@ -5,22 +5,5 @@
 *.key
 
 # Block Build Directories, Framework, and Deploy Cache
-.next/
-.vercel/
-node_modules/
-dist/
-build/
-
-# Block Firebase logs
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-*.log
-
-# Block IDE system files
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
+.n
 

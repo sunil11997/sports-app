@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -236,7 +237,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     
-    // Clean Slate Reset: Clearing all fields for the next institutional entry
+    // Clean Slate Reset: Purging all fields for the next institutional entry
     form.reset(defaultValues);
   };
 
@@ -424,7 +425,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard (Std) *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl text-md shadow-sm"><SelectValue /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl text-md shadow-sm"><SelectValue /></FormControl></SelectTrigger>
                             <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
                           </Select>
                           <FormMessage />
@@ -434,7 +435,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem>
                           <FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></FormControl></SelectTrigger>
                             <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
                           </Select>
                         </FormItem>
@@ -473,7 +474,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem>
                           <FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Blood Group</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></FormControl></SelectTrigger>
                             <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
                           </Select>
                         </FormItem>
@@ -539,6 +540,11 @@ export function Registration({ store, section, language = 'English' }: { store: 
           <canvas ref={canvasRef} className="hidden" />
         </CardContent>
       </Card>
+      <div className="fixed bottom-24 right-8 z-50">
+        <Badge variant="outline" className="bg-white border-2 border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-2 rounded-full shadow-2xl">
+          WGB HUB V4.3.24 STABLE
+        </Badge>
+      </div>
     </div>
   );
 }

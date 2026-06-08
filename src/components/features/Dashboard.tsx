@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -21,7 +22,12 @@ import {
   Languages,
   Printer,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  Calendar,
+  Contact,
+  Fingerprint,
+  MapPin,
+  HeartPulse
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -32,6 +38,7 @@ import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DashboardProps {
   store: any;
@@ -41,6 +48,8 @@ interface DashboardProps {
   t: any;
 }
 
+const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+
 export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all", t }: DashboardProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState(initialSearch);
@@ -48,17 +57,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(false);
   
-  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
-  const [stream, setStream] = useState<MediaStream | null>(null);
-
-  useEffect(() => {
-    if (videoRef.current && stream && activeCam) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream, activeCam]);
 
   const isGeneral = section === 'general';
 
@@ -149,17 +148,18 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     }
   };
 
-  const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    setStream(null);
-    setActiveCam(null);
-  };
-
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
       store.updatePlayer(editingPlayer);
       setEditingPlayer(null);
-      toast({ title: "Profile Updated" });
+      toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
+    }
+  };
+
+  const handleDeletePlayer = (playerId: string) => {
+    if (confirm("Are you sure you want to PERMANENTLY DELETE this student from the institutional registry?")) {
+      store.deletePlayer(playerId);
+      toast({ title: "Registry Purged", variant: "destructive" });
     }
   };
 
@@ -231,7 +231,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 <TableCell className="px-6 text-right">
                   <div className="flex justify-end gap-2">
                     <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => store.deletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => handleDeletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -240,32 +240,132 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </Table>
       </div>
 
-      <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[800px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
-          <DialogHeader className="bg-primary p-8 text-white shrink-0">
-             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Profile Editor</DialogTitle>
+      <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
+        <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">
+          <DialogHeader className="bg-primary p-8 text-white shrink-0 relative overflow-hidden">
+             <div className="relative z-10 flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                   <UserCheck className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                   <DialogTitle className="text-2xl font-black uppercase tracking-tight">Institutional Profile Editor</DialogTitle>
+                   <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Modifying Core Registry Entry</p>
+                </div>
+             </div>
+             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-10 space-y-8">
-            {editingPlayer && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-primary">Full Name</Label>
-                    <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                 </div>
-                 <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-primary">GR Number</Label>
-                    <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                 </div>
-                 <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-primary">Roll Number</Label>
-                    <Input value={editingPlayer.serialNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                 </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter className="bg-muted/10 p-8 border-t flex gap-4">
-            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="h-14 px-10 rounded-full font-black uppercase text-[10px]">Discard</Button>
-            <Button onClick={handleUpdatePlayer} className="bg-primary px-16 h-14 rounded-full font-black uppercase text-[10px] text-white shadow-lg active-scale">Save Profile</Button>
+
+          <ScrollArea className="flex-1">
+            <div className="p-10 space-y-10">
+              {editingPlayer && (
+                <>
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                      <Hash className="w-4 h-4" />
+                      <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name</Label>
+                        <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label>
+                        <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Roll / Serial Number</Label>
+                        <Input value={editingPlayer.serialNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Standard (Class)</Label>
+                         <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}>
+                           <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                           <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                         </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                      <Calendar className="w-4 h-4" />
+                      <h3 className="font-black uppercase text-xs tracking-widest">Demographics & Physical</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Gender</Label>
+                        <Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}>
+                          <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
+                        <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
+                          <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label>
+                        <Input type="date" value={editingPlayer.dob || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Height (cm)</Label>
+                        <Input type="number" value={editingPlayer.height || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Weight (kg)</Label>
+                        <Input type="number" value={editingPlayer.weight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label>
+                        <Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}>
+                          <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                      <Contact className="w-4 h-4" />
+                      <h3 className="font-black uppercase text-xs tracking-widest">Aadhar & Contact</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Aadhar Number (12 Digit)</Label>
+                        <Input maxLength={12} value={editingPlayer.aadharNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Mobile Number</Label>
+                        <Input value={editingPlayer.mobileNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                      <HeartPulse className="w-4 h-4" />
+                      <h3 className="font-black uppercase text-xs tracking-widest">Medical Registry</h3>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary ml-2">Medical Conditions & Alerts</Label>
+                      <Input value={editingPlayer.medical || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="bg-muted/10 p-8 border-t flex gap-4 shrink-0">
+            <Button variant="ghost" onClick={() => setEditingPlayer(null)} className="h-14 px-10 rounded-full font-black uppercase text-[10px]">Discard Changes</Button>
+            <Button onClick={handleUpdatePlayer} className="bg-primary flex-1 h-14 rounded-full font-black uppercase text-[10px] text-white shadow-lg active-scale">Save Profile Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

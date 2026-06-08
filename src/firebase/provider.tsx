@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -163,7 +164,7 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.23: Removed factory from dependencies to prevent unstable query loops.
+ * Hardened v4.3.24: Removed factory from dependencies to prevent unstable query loops.
  * Ensuring references are truly stable for Firestore hooks.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
