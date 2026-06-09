@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 export function useSchoolData(isActive: boolean = true) {
-  // 1. ALL useState Hooks defined at the absolute top for stability
+  // 1. ALL hook definitions at the top in stable order
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -29,8 +29,6 @@ export function useSchoolData(isActive: boolean = true) {
 
   const db = useFirestore();
   const { user } = useUser();
-  
-  // 2. Stable Sync Lock Ref to prevent infinite effect loops
   const syncLockRef = useRef(false);
 
   const syncOfflineAttendance = useCallback(async () => {
@@ -67,7 +65,6 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }, [db, user, selectedYear]);
 
-  // Remaining Firebase Hooks in stable order
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
@@ -178,27 +175,6 @@ export function useSchoolData(isActive: boolean = true) {
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
-  const setAttendance = (newAttendance: AttendanceRecord) => {
-    if (!user || !db) return;
-    setAttendanceData(prev => ({ ...prev, ...newAttendance }));
-    Object.entries(newAttendance).forEach(([key, status]) => {
-      const parts = key.split('_');
-      if (parts.length < 3) return;
-      const [playerId, date, session] = parts;
-      const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
-      if (typeof window !== 'undefined' && !navigator.onLine) {
-        const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}';
-        const queue = JSON.parse(queueStr);
-        queue[key] = status;
-        localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
-        setPendingCount(Object.keys(queue).length);
-      } else {
-        if (!status) deleteDocumentNonBlocking(attRef);
-        else setDocumentNonBlocking(attRef, { status, playerId, date, session, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
-      }
-    });
-  };
-
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -227,14 +203,9 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions]);
 
-  const isActuallyLoaded = useMemo(() => {
-    if (!isActive) return false;
-    return !!db && !playersLoading && !schoolsLoading;
-  }, [isActive, db, playersLoading, schoolsLoading]);
-
   return {
     data: aggregatedData,
-    isLoaded: isActuallyLoaded,
+    isLoaded: !!db && !playersLoading && !schoolsLoading,
     selectedYear,
     setSelectedYear,
     pendingSyncCount: pendingCount,
@@ -244,36 +215,51 @@ export function useSchoolData(isActive: boolean = true) {
     addPlayer: (playerData: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'players', playerData.id), { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     updatePlayer: (player: any) => { if (!db) return; updateDocumentNonBlocking(doc(db, 'players', player.id), player); },
     deletePlayer: (playerId: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'players', playerId)); },
-    setAttendance,
+    setAttendance: (newAttendance: AttendanceRecord) => {
+      if (!user || !db) return;
+      setAttendanceData(prev => ({ ...prev, ...newAttendance }));
+      Object.entries(newAttendance).forEach(([key, status]) => {
+        const parts = key.split('_');
+        if (parts.length < 3) return;
+        const [playerId, date, session] = parts;
+        const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
+        if (!navigator.onLine) {
+          const q = JSON.parse(localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || '{}');
+          q[key] = status;
+          localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(q));
+          setPendingCount(Object.keys(q).length);
+        } else {
+          if (!status) deleteDocumentNonBlocking(attRef);
+          else setDocumentNonBlocking(attRef, { status, playerId, date, session, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+        }
+      });
+    },
     setFitness: (playerId: string, assessment: FitnessAssessment) => { if (!user || !db) return; const dateId = assessment.month || new Date().toISOString().split('T')[0]; setDocumentNonBlocking(doc(db, 'fitness_registry', `${playerId}_${dateId}`), { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
-    setReadiness: (playerId: string, data: any) => { if (!user || !db) return; const dateId = new Date().toISOString().split('T')[0]; setDocumentNonBlocking(doc(db, 'readiness_registry', `${playerId}_${dateId}`), { ...data, playerId, schoolId: user.uid, date: dateId, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
-    addTacticalEvent: (eventData: Omit<TacticalEvent, 'id' | 'schoolId' | 'academicYear'>) => { if (!user || !db) return; const id = Math.random().toString(36).substr(2, 9); setDocumentNonBlocking(doc(db, 'tactical_registry', id), { ...eventData, id, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
+    setReadiness: (playerId: string, d: any) => { if (!user || !db) return; const dateId = new Date().toISOString().split('T')[0]; setDocumentNonBlocking(doc(db, 'readiness_registry', `${playerId}_${dateId}`), { ...d, playerId, schoolId: user.uid, date: dateId, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
+    addTacticalEvent: (e: any) => { if (!user || !db) return; const id = Math.random().toString(36).substr(2, 9); setDocumentNonBlocking(doc(db, 'tactical_registry', id), { ...e, id, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteTacticalEvent: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'tactical_registry', id)); },
-    setGoal: (goalData: Omit<GoalRecord, 'id' | 'schoolId' | 'academicYear'>) => { if (!user || !db) return; const id = `${goalData.playerId}_${goalData.month}_${goalData.metric.replace(/\s+/g, '_')}`; setDocumentNonBlocking(doc(db, 'goal_registry', id), { ...goalData, id, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
+    setGoal: (g: any) => { if (!user || !db) return; const id = `${g.playerId}_${g.month}_${g.metric.replace(/\s+/g, '_')}`; setDocumentNonBlocking(doc(db, 'goal_registry', id), { ...g, id, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteGoal: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'goal_registry', id)); },
     setExamLabels: (std: string, term: string, labels: ExamLabels) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'exam_configs', `${std}_${term}`), { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     setPerformanceLabels: (std: string, month: string, labels: PerformanceLabels) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'performance_configs', `${std}_${month}`), { labels, std, month, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
-    setSportSkill: (playerId: string, sport: string, skill: SportSkill) => { if (!user || !db) return; const timeId = new Date().getTime().toString(); setDocumentNonBlocking(doc(db, 'skills_registry', `${playerId}_${sport}_${timeId}`), { ...skill, playerId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
-    setDrillCompletion: (drillId: string, playerId: string, completed: boolean) => { if (!user || !db) return; const refId = `${playerId}_${drillId}`; if (completed) setDocumentNonBlocking(doc(db, 'drill_completions', refId), { id: refId, schoolId: user.uid, playerId, drillId, timestamp: new Date().toISOString() }, { merge: true }); else deleteDocumentNonBlocking(doc(db, 'drill_completions', refId)); },
-    setGameRule: (sportName: string, pdfData: string | null) => { if (!user || !db) return; if (!pdfData) deleteDocumentNonBlocking(doc(db, 'game_rules_registry', sportName)); else setDocumentNonBlocking(doc(db, 'game_rules_registry', sportName), { sportName, pdfData, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
-    addHealthIncident: (incident: HealthIncident) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'all_health_incidents', incident.id), { ...incident, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
+    setSportSkill: (pId: string, sport: string, skill: SportSkill) => { if (!user || !db) return; const timeId = new Date().getTime().toString(); setDocumentNonBlocking(doc(db, 'skills_registry', `${pId}_${sport}_${timeId}`), { ...skill, playerId: pId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
+    setDrillCompletion: (dId: string, pId: string, comp: boolean) => { if (!user || !db) return; const refId = `${pId}_${dId}`; if (comp) setDocumentNonBlocking(doc(db, 'drill_completions', refId), { id: refId, schoolId: user.uid, playerId: pId, drillId: dId, timestamp: new Date().toISOString() }, { merge: true }); else deleteDocumentNonBlocking(doc(db, 'drill_completions', refId)); },
+    setGameRule: (s: string, pdf: string | null) => { if (!user || !db) return; if (!pdf) deleteDocumentNonBlocking(doc(db, 'game_rules_registry', s)); else setDocumentNonBlocking(doc(db, 'game_rules_registry', s), { sportName: s, pdfData: pdf, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
+    addHealthIncident: (i: HealthIncident) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'all_health_incidents', i.id), { ...i, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteHealthIncident: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id)); },
-    addActivity: (activityData: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'school_activities', activityData.id), { ...activityData, schoolId: user.uid, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
+    addActivity: (a: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'school_activities', a.id), { ...a, schoolId: user.uid, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
     deleteActivity: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'school_activities', id)); },
     exportBackupData: () => {
-      const backup = { data: { players: allPlayers || [], attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, examConfigs, performanceConfigs, dailyReadiness, tacticalEvents, goals, healthIncidents: healthIncidents || [], schoolProfile }, timestamp: new Date().toISOString() };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const b = { data: { players: allPlayers || [], attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, examConfigs, performanceConfigs, dailyReadiness, tacticalEvents, goals, healthIncidents: healthIncidents || [], schoolProfile }, timestamp: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(b, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
     },
-    importBackupData: async (backup: any) => {
-      if (!user || !db || !backup.data) return;
-      const { data } = backup;
+    importBackupData: async (b: any) => {
+      if (!user || !db || !b.data) return;
+      const { data } = b;
       if (data.schoolProfile) setDocumentNonBlocking(doc(db, 'schools', user.uid), { ...data.schoolProfile, id: user.uid, ownerId: user.uid }, { merge: true });
       if (Array.isArray(data.players)) data.players.forEach((p: any) => setDocumentNonBlocking(doc(db, 'players', p.id), { ...p, ownerId: user.uid, schoolId: user.uid }, { merge: true }));
-      if (Array.isArray(data.goals)) data.goals.forEach((g: any) => setDocumentNonBlocking(doc(db, 'goal_registry', g.id), { ...g, schoolId: user.uid }, { merge: true }));
-      if (Array.isArray(data.tacticalEvents)) data.tacticalEvents.forEach((te: any) => setDocumentNonBlocking(doc(db, 'tactical_registry', te.id), { ...te, schoolId: user.uid }, { merge: true }));
-      if (Array.isArray(data.healthIncidents)) data.healthIncidents.forEach((hi: any) => setDocumentNonBlocking(doc(db, 'all_health_incidents', hi.id), { ...hi, schoolId: user.uid }, { merge: true }));
     },
     syncOfflineAttendance
   };

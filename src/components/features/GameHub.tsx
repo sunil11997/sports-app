@@ -114,39 +114,30 @@ export function GameHub({ store }: { store: any }) {
           <TabsContent value="readiness" className="mt-0">
             <DailyReadiness store={store} />
           </TabsContent>
-
           <TabsContent value="goals" className="mt-0">
             <GoalTracker store={store} preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="playbook" className="mt-0">
             <TacticalPlaybook store={store} preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="tactics" className="mt-0">
             <TacticalAnalytics store={store} preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="injury" className="mt-0">
             <HealthIncidents store={store} section="sports" />
           </TabsContent>
-
           <TabsContent value="skills" className="mt-0">
             <SportsSkills store={store} section="sports" preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="drills" className="mt-0">
             <SportsDrills store={store} preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="teams" className="mt-0">
             <Teams store={store} preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="tournament" className="mt-0">
             <TournamentRosters store={store} preselectedSport={selectedGame} />
           </TabsContent>
-
           <TabsContent value="reports" className="mt-0">
             <DailyReport store={store} section="sports" />
           </TabsContent>

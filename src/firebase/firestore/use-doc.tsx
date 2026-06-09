@@ -19,10 +19,6 @@ export interface UseDocResult<T> {
   error: FirestoreError | Error | null;
 }
 
-/**
- * useDoc - Hardened v4.3.24
- * Added path-based stability guard to eliminate infinite update loops.
- */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
 ): UseDocResult<T> {
@@ -30,7 +26,6 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // Guard to prevent recursive isLoading resets
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -43,7 +38,6 @@ export function useDoc<T = any>(
     }
 
     const currentPath = memoizedDocRef.path;
-    // Only reset loading/error state if the actual document reference path has changed
     if (lastPathRef.current !== currentPath) {
       setIsLoading(true);
       setError(null);

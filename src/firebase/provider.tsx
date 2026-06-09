@@ -108,7 +108,6 @@ export const useUser = () => {
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
-  // Hardened v4.3.24: Ensuring factory function is not a dependency to prevent render loops
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     const val = factory();
