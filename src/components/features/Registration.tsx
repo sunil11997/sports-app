@@ -63,15 +63,16 @@ type FormValues = z.infer<typeof formSchema>;
 export function Registration({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const aadharUploadRef = useRef<HTMLInputElement>(null);
-  const profileUploadRef = useRef<HTMLInputElement>(null);
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
+  const profileUploadRef = useRef<HTMLInputElement>(null);
 
   const defaultValues: FormValues = useMemo(() => ({
     name: "", 
@@ -116,10 +117,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       category: (section === 'sports' ? 'athlete' : student.category) as "athlete" | "student",
     });
     setRegistrySearch("");
-    toast({
-      title: "Data Fetched",
-      description: `Loaded registry details for ${student.name}.`,
-    });
+    toast({ title: "Data Fetched", description: `Loaded registry details for ${student.name}.` });
   };
 
   useEffect(() => {
@@ -150,8 +148,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
   const toggleCamera = () => {
     if (!activeCam) return;
-    const nextMode = facingMode === 'user' ? 'environment' : 'user';
-    startCamera(activeCam, nextMode);
+    startCamera(activeCam, facingMode === 'user' ? 'environment' : 'user');
   };
 
   const takePhoto = () => {
@@ -191,21 +188,18 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const onSubmit = (values: FormValues) => {
     const dobDate = values.dob ? new Date(values.dob) : null;
     const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : 0;
-    
     let bmiValue = "0.0";
     if (values.height && values.weight) {
       const h = parseFloat(values.height) / 100;
       const w = parseFloat(values.weight);
       bmiValue = (w / (h * h)).toFixed(1);
     }
-
     store.addPlayer({
       ...values,
       id: Math.random().toString(36).substr(2, 9),
       age: isNaN(age) ? 0 : age,
       bmi: isNaN(parseFloat(bmiValue)) ? "0.0" : bmiValue,
     });
-
     toast({ title: "Enrollment Success", description: `${values.name} archived to registry.` });
     form.reset(defaultValues);
   };
@@ -259,7 +253,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Institutional Registry Hub</p>
               </div>
             </div>
-            
             <div className="bg-white p-2 rounded-2xl border-2 border-primary/10 shadow-inner inline-flex">
               <Button type="button" variant={form.watch('category') === 'student' ? 'default' : 'ghost'} onClick={() => form.setValue('category', 'student')} className={cn("rounded-xl px-6 h-12 font-black uppercase text-[10px]", form.watch('category') === 'student' ? "bg-primary text-white" : "text-muted-foreground")}>
                 <UserCircle2 className="w-4 h-4 mr-2" /> General
@@ -303,9 +296,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         <Button type="button" onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
                           <Camera className="w-4 h-4 mr-2" /> Camera
                         </Button>
-                        <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="w-14 h-14 p-0 rounded-2xl border-2">
-                          <Upload className="w-6 h-6" />
-                        </Button>
+                        <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="w-14 h-14 p-0 rounded-2xl border-2"><Upload className="w-6 h-6" /></Button>
                         <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
                       </div>
                     )}
@@ -327,7 +318,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         </FormItem>
                       )} />
                     </div>
-                    
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <FormField control={form.control} name="std" render={({ field }) => (
                         <FormItem>
@@ -410,9 +400,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       <ShieldAlert className="w-6 h-6 opacity-30" />
                       <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Records are cryptographically secured.</p>
                     </div>
-                    <Button type="submit" className="w-full md:w-auto px-20 h-20 bg-primary text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] text-lg active-scale">
-                      Register Profile
-                    </Button>
+                    <Button type="submit" className="w-full md:w-auto px-20 h-20 bg-primary text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] text-lg active-scale">Register Profile</Button>
                   </div>
                 </div>
               </div>

@@ -30,6 +30,7 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
+  // Ref to track last path and prevent recursive isLoading resets
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export function useDoc<T = any>(
     }
 
     const currentPath = memoizedDocRef.path;
+    // Stability Guard: Only reset loading state if the actual document path changes
     if (lastPathRef.current !== currentPath) {
       setIsLoading(true);
       setError(null);
@@ -49,7 +51,6 @@ export function useDoc<T = any>(
     }
 
     let isMounted = true;
-
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
@@ -65,10 +66,7 @@ export function useDoc<T = any>(
       (err: FirestoreError) => {
         if (!isMounted) return;
         if (err.code === 'permission-denied') {
-          const contextualError = new FirestorePermissionError({
-            operation: 'get',
-            path: memoizedDocRef.path,
-          });
+          const contextualError = new FirestorePermissionError({ operation: 'get', path: currentPath });
           setError(contextualError);
           errorEmitter.emit('permission-error', contextualError);
         } else {

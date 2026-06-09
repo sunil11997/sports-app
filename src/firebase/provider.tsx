@@ -29,21 +29,6 @@ export interface FirebaseContextState {
   userError: Error | null;
 }
 
-export interface FirebaseServicesAndUser {
-  firebaseApp: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null;
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
-export interface UserHookResult { 
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
@@ -65,37 +50,17 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     }
 
     let isMounted = true;
-
     const initAuth = async () => {
-      try {
-        await getRedirectResult(auth);
-      } catch (error: any) {
-        console.warn("WGB Auth Handshake Warning:", error.code);
-      }
-
+      try { await getRedirectResult(auth); } catch (error: any) { console.warn("WGB Auth Handshake Warning:", error.code); }
       const unsubscribe = onAuthStateChanged(
         auth,
-        (firebaseUser) => {
-          if (isMounted) {
-            setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-          }
-        },
-        (error) => {
-          if (isMounted) {
-            setUserAuthState({ user: null, isUserLoading: false, userError: error });
-          }
-        }
+        (firebaseUser) => { if (isMounted) setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null }); },
+        (error) => { if (isMounted) setUserAuthState({ user: null, isUserLoading: false, userError: error }); }
       );
-
       return unsubscribe;
     };
-
     const unsubPromise = initAuth();
-
-    return () => {
-      isMounted = false;
-      unsubPromise.then(unsub => unsub?.());
-    };
+    return () => { isMounted = false; unsubPromise.then(unsub => unsub?.()); };
   }, [auth]);
 
   const areServicesAvailable = !!(firebaseApp && firestore && auth);
@@ -120,20 +85,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
-export const useFirebase = (): FirebaseServicesAndUser => {
+export const useFirebase = () => {
   const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
-  }
-  
-  return {
-    firebaseApp: context.firebaseApp,
-    firestore: context.firestore,
-    auth: context.auth,
-    user: context.user,
-    isUserLoading: context.isUserLoading,
-    userError: context.userError,
-  };
+  if (context === undefined) throw new Error('useFirebase must be used within a FirebaseProvider.');
+  return context;
 };
 
 export const useAuth = () => {
@@ -146,37 +101,22 @@ export const useFirestore = () => {
   return context?.firestore || null;
 };
 
-export const useFirebaseApp = () => {
-  const context = useContext(FirebaseContext);
-  return context?.firebaseApp || null;
-};
-
-export const useUser = (): UserHookResult => {
+export const useUser = () => {
   const context = useContext(FirebaseContext);
   if (!context) return { user: null, isUserLoading: true, userError: null };
-  return { 
-    user: context.user, 
-    isUserLoading: context.isUserLoading, 
-    userError: context.userError 
-  };
+  return { user: context.user, isUserLoading: context.isUserLoading, userError: context.userError };
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
+  // UseMemo used to create a stable reference for Firebase queries
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoizedValue = useMemo(() => {
+  return useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
-        Object.defineProperty(val, '__memo', {
-          value: true,
-          configurable: true,
-          enumerable: false,
-          writable: true
-        });
+        Object.defineProperty(val, '__memo', { value: true, configurable: true, enumerable: false, writable: true });
       } catch (e) {}
     }
     return val;
   }, deps); 
-
-  return memoizedValue;
 }
