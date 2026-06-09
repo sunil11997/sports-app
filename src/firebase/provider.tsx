@@ -51,7 +51,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     let isMounted = true;
     const initAuth = async () => {
-      try { await getRedirectResult(auth); } catch (error: any) { console.warn("WGB Auth Handshake Warning:", error.code); }
+      try { await getRedirectResult(auth); } catch (e) {}
       const unsubscribe = onAuthStateChanged(
         auth,
         (firebaseUser) => { if (isMounted) setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null }); },
@@ -108,7 +108,7 @@ export const useUser = () => {
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
-  // UseMemo used to create a stable reference for Firebase queries
+  // Hardened v4.3.24: Ensuring factory function is not a dependency to prevent render loops
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     const val = factory();

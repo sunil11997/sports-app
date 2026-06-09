@@ -146,7 +146,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
             <TrendingUp className="w-10 h-10 text-emerald-700" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Std {std} Athletic Registry</h2>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Std {std} Progress</h2>
             <div className="flex items-center gap-3 mt-1">
               <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Performance Hub</Badge>
               <button onClick={() => { setEditingLabels(currentLabels); setIsLabelDialogOpen(true); }} className="text-[9px] font-black text-accent uppercase flex items-center gap-1 hover:underline">
@@ -178,10 +178,8 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Wt (kg)</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric1}</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric2}</TableHead>
-                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric3}</TableHead>
-                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric4}</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[80px] bg-primary/5">SCORE</TableHead>
-                    <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Archive</TableHead>
+                    <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -195,8 +193,6 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
                         <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric1 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
                         <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric2 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric3 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric3', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric4 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric4', e.target.value)} /></TableCell>
                         <TableCell className="border-r text-center bg-primary/5 font-black text-primary">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
                         <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
                           <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
@@ -216,7 +212,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-4 space-y-6">
               <Card className="border-2 rounded-[3rem] bg-white p-8 shadow-xl">
-                 <h3 className="text-xl font-black text-primary uppercase flex items-center gap-3 mb-6"><Target className="w-6 h-6 text-accent" /> Select Student</h3>
+                 <h3 className="text-xl font-black text-primary uppercase flex items-center gap-3 mb-6"><Target className="w-6 h-6 text-accent" /> Student</h3>
                  <div className="space-y-2">
                     {playersInStd.map((p: any) => (
                       <button key={p.id} onClick={() => setSelectedPlayerId(p.id)} className={cn("w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between group", selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5 hover:border-primary/10")}>
@@ -231,8 +227,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
                 <CardHeader className="bg-primary/5 border-b p-8">
                   <div className="flex justify-between items-center">
-                     <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3"><BarChart className="w-5 h-5 text-accent" /> Performance Trends</CardTitle>
-                     <Badge variant="secondary" className="font-black">Monthly Aggregate</Badge>
+                     <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3"><BarChart className="w-5 h-5 text-accent" /> Trend</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="p-10">
@@ -246,31 +241,13 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                           <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
                           <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.08} name="Avg Score" />
                           <Line type="monotone" dataKey="m1" stroke="#f59e0b" strokeWidth={3} name={currentLabels.metric1} />
-                          <Line type="monotone" dataKey="m2" stroke="#10b981" strokeWidth={3} name={currentLabels.metric2} />
                           <Legend verticalAlign="top" iconType="circle" />
                         </ComposedChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest">No historical data recorded</p></div>
+                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest text-sm">No historical data</p></div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
-                <CardHeader className="bg-primary p-6 text-white"><CardTitle className="text-xs font-black uppercase tracking-widest">Historical Registry Log</CardTitle></CardHeader>
-                <CardContent className="p-0">
-                   <Table>
-                      <TableHeader><TableRow><TableHead className="font-black text-[10px] uppercase">Month</TableHead><TableHead className="font-black text-[10px] uppercase text-center">Score</TableHead><TableHead className="font-black text-[10px] uppercase text-right">Status</TableHead></TableRow></TableHeader>
-                      <TableBody>
-                         {historyData.slice().reverse().map((h: any, idx: number) => (
-                           <TableRow key={idx}>
-                              <TableCell className="font-black uppercase text-xs">{format(new Date(h.month + "-01"), 'MMMM yyyy')}</TableCell>
-                              <TableCell className="text-center font-black text-primary">{h.score}%</TableCell>
-                              <TableCell className="text-right"><Badge variant="outline" className="font-black uppercase text-[9px] border-primary/20">{h.status}</Badge></TableCell>
-                           </TableRow>
-                         ))}
-                      </TableBody>
-                   </Table>
                 </CardContent>
               </Card>
             </div>
@@ -282,7 +259,6 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
         <DialogContent className="sm:max-w-[450px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
           <DialogHeader className="bg-primary p-8 text-white relative">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10"><Settings2 className="w-6 h-6 text-accent" /> Customize Metrics</DialogTitle>
-            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] relative z-10">Standard {std} &bull; {selectedMonth}</p>
           </DialogHeader>
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 gap-4">

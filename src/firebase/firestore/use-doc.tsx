@@ -20,8 +20,8 @@ export interface UseDocResult<T> {
 }
 
 /**
- * useDoc - Real-time document listener hook
- * Hardened v4.3.24: Added path-based stability guards to prevent depth-exceeded infinite loops.
+ * useDoc - Hardened v4.3.24
+ * Added path-based stability guard to eliminate infinite update loops.
  */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
@@ -30,7 +30,7 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // Ref to track last path and prevent recursive isLoading resets
+  // Guard to prevent recursive isLoading resets
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function useDoc<T = any>(
     }
 
     const currentPath = memoizedDocRef.path;
-    // Stability Guard: Only reset loading state if the actual document path changes
+    // Only reset loading/error state if the actual document reference path has changed
     if (lastPathRef.current !== currentPath) {
       setIsLoading(true);
       setError(null);
@@ -70,7 +70,6 @@ export function useDoc<T = any>(
           setError(contextualError);
           errorEmitter.emit('permission-error', contextualError);
         } else {
-          console.warn(`WGB Firestore Warning (${err.code}):`, err.message);
           setError(err);
         }
         setIsLoading(false);

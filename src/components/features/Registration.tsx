@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -120,12 +120,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     toast({ title: "Data Fetched", description: `Loaded registry details for ${student.name}.` });
   };
 
-  useEffect(() => {
-    if (videoRef.current && stream && activeCam) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream, activeCam]);
-
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
     try {
@@ -185,7 +179,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     }
   };
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     const dobDate = values.dob ? new Date(values.dob) : null;
     const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : 0;
     let bmiValue = "0.0";
@@ -194,15 +188,23 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       const w = parseFloat(values.weight);
       bmiValue = (w / (h * h)).toFixed(1);
     }
-    store.addPlayer({
+    
+    await store.addPlayer({
       ...values,
       id: Math.random().toString(36).substr(2, 9),
       age: isNaN(age) ? 0 : age,
       bmi: isNaN(parseFloat(bmiValue)) ? "0.0" : bmiValue,
     });
+    
     toast({ title: "Enrollment Success", description: `${values.name} archived to registry.` });
     form.reset(defaultValues);
   };
+
+  useEffect(() => {
+    if (videoRef.current && stream && activeCam) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, activeCam]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -249,8 +251,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 <UserPlus className="w-10 h-10" />
               </div>
               <div>
-                <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Enrollment</CardTitle>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Institutional Registry Hub</p>
+                <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Enrollment Hub</CardTitle>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Institutional Registry v4.3.24</p>
               </div>
             </div>
             <div className="bg-white p-2 rounded-2xl border-2 border-primary/10 shadow-inner inline-flex">
@@ -410,12 +412,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           </Form>
         </CardContent>
       </Card>
-      
-      <div className="fixed bottom-24 right-8 z-50">
-        <Badge variant="outline" className="bg-white border-2 border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-2 rounded-full shadow-2xl">
-          WGB HUB V4.3.24 STABLE
-        </Badge>
-      </div>
     </div>
   );
 }

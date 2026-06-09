@@ -10,10 +10,7 @@ import { format } from 'date-fns';
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 export function useSchoolData(isActive: boolean = true) {
-  const db = useFirestore();
-  const { user } = useUser();
-  
-  // Rule of Hooks: Define all hooks at the top level
+  // 1. ALL Hooks defined at the top level in a stable order
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -30,6 +27,8 @@ export function useSchoolData(isActive: boolean = true) {
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
   const [drillCompletions, setDrillCompletionsData] = useState<Record<string, boolean>>({});
 
+  const db = useFirestore();
+  const { user } = useUser();
   const syncLockRef = useRef(false);
 
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
@@ -55,17 +54,11 @@ export function useSchoolData(isActive: boolean = true) {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
 
     const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY);
-    if (!queueStr) {
-      setPendingCount(0);
-      return;
-    }
+    if (!queueStr) return;
 
     const queue: AttendanceRecord = JSON.parse(queueStr);
     const keys = Object.keys(queue);
-    if (keys.length === 0) {
-      setPendingCount(0);
-      return;
-    }
+    if (keys.length === 0) return;
 
     syncLockRef.current = true;
     setIsSyncing(true);
@@ -84,7 +77,7 @@ export function useSchoolData(isActive: boolean = true) {
       localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
       setPendingCount(0);
     } catch (error) {
-      console.warn("WGB: Offline sync retry required", error);
+      console.warn("WGB: Offline sync retry required");
     } finally {
       setIsSyncing(false);
       syncLockRef.current = false;
