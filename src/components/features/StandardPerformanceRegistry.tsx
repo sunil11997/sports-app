@@ -1,0 +1,344 @@
+"use client";
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Save, 
+  Printer, 
+  History, 
+  Settings2, 
+  Loader2, 
+  TrendingUp, 
+  ArrowRight,
+  Target,
+  Medal,
+  Activity,
+  BarChart,
+  Calendar
+} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  ComposedChart,
+  Area,
+  Line,
+  Legend
+} from 'recharts';
+import type { PerformanceLabels } from '@/lib/types';
+
+const DEFAULT_PERFORMANCE_LABELS: PerformanceLabels = {
+  metric1: 'Running (100m)',
+  metric2: 'Javelin Throw',
+  metric3: 'Disc Throw',
+  metric4: 'Long Jump',
+  metric5: 'High Jump',
+  metric6: 'Shot Put',
+  metric7: 'Agility'
+};
+
+export function StandardPerformanceRegistry({ store, std }: { store: any, std: string }) {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("entry");
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [selectedPlayerForHistory, setSelectedPlayerId] = useState("");
+  const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
+  const [editingLabels, setEditingLabels] = useState(DEFAULT_PERFORMANCE_LABELS);
+
+  const playersInStd = useMemo(() => {
+    return (store.data.players || [])
+      .filter((p: any) => p.std === std)
+      .sort((a: any, b: any) => {
+        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
+        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+      });
+  }, [store.data.players, std]);
+
+  const currentLabels = useMemo(() => {
+    const configId = `${std}_${selectedMonth}`;
+    return store.data.performanceConfigs?.[configId] || DEFAULT_PERFORMANCE_LABELS;
+  }, [store.data.performanceConfigs, std, selectedMonth]);
+
+  const [localRecords, setLocalRecords] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const newRecords: Record<string, any> = {};
+    playersInStd.forEach((p: any) => {
+      const historyList = store.data.fitnessHistory[p.id] || [];
+      const history = historyList.find((h: any) => h.month === selectedMonth);
+      newRecords[p.id] = history || {
+        metric1: '', metric2: '', metric3: '', metric4: '',
+        metric5: '', metric6: '', metric7: '',
+        height: p.height || '', weight: p.weight || ''
+      };
+    });
+    setLocalRecords(newRecords);
+    if (playersInStd.length > 0 && !selectedPlayerForHistory) {
+      setSelectedPlayerId(playersInStd[0].id);
+    }
+  }, [selectedMonth, playersInStd, store.data.fitnessHistory]);
+
+  const handleValueChange = (pId: string, field: string, val: string) => {
+    setLocalRecords(prev => ({
+      ...prev,
+      [pId]: { ...prev[pId], [field]: val }
+    }));
+  };
+
+  const handleSave = async (player: any) => {
+    setIsSaving(player.id);
+    const data = localRecords[player.id];
+    
+    // Calculate aggregate (simple average of numeric metrics)
+    const metrics = ['metric1', 'metric2', 'metric3', 'metric4', 'metric5', 'metric6', 'metric7'];
+    let sum = 0;
+    let count = 0;
+    metrics.forEach(m => {
+      if (data[m] && !isNaN(parseFloat(data[m]))) {
+        sum += parseFloat(data[m]);
+        count++;
+      }
+    });
+
+    const score = count > 0 ? (sum / count).toFixed(1) : "0";
+
+    await store.setFitness(player.id, {
+      ...data,
+      month: selectedMonth,
+      score,
+      status: parseFloat(score) >= 80 ? 'Elite' : parseFloat(score) >= 60 ? 'Optimal' : 'Developing'
+    });
+
+    setIsSaving(null);
+    toast({ title: "Progress Archived", description: `Performance for ${player.name} updated.` });
+  };
+
+  const handleSaveLabels = () => {
+    store.setPerformanceLabels(std, selectedMonth, editingLabels);
+    setIsLabelDialogOpen(false);
+    toast({ title: "Custom Registry Set" });
+  };
+
+  const historyData = useMemo(() => {
+    if (!selectedPlayerForHistory) return [];
+    return (store.data.fitnessHistory[selectedPlayerForHistory] || [])
+      .filter((h: any) => h.month)
+      .sort((a: any, b: any) => a.month.localeCompare(b.month));
+  }, [selectedPlayerForHistory, store.data.fitnessHistory]);
+
+  const chartData = useMemo(() => {
+    return historyData.map((h: any) => ({
+      month: format(new Date(h.month + "-01"), 'MMM yy'),
+      score: parseFloat(h.score) || 0,
+      m1: parseFloat(h.metric1) || 0,
+      m2: parseFloat(h.metric2) || 0
+    }));
+  }, [historyData]);
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="bg-white p-8 rounded-[3rem] border-2 border-primary/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="flex items-center gap-6">
+          <div className="bg-emerald-100 p-4 rounded-[1.5rem] border-2 border-emerald-200">
+            <TrendingUp className="w-10 h-10 text-emerald-700" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Std {std} Athletic Registry</h2>
+            <div className="flex items-center gap-3 mt-1">
+              <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Performance Hub</Badge>
+              <button 
+                onClick={() => { setEditingLabels(currentLabels); setIsLabelDialogOpen(true); }}
+                className="text-[9px] font-black text-accent uppercase flex items-center gap-1 hover:underline"
+              >
+                <Settings2 className="w-3 h-3" /> Customize Metrics
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
+          <Input 
+            type="month" 
+            value={selectedMonth} 
+            onChange={(e) => setSelectedMonth(e.target.value)} 
+            className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" 
+          />
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner">
+          <TabsTrigger value="entry" className="rounded-full px-10 py-3 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Data Entry</TabsTrigger>
+          <TabsTrigger value="history" className="rounded-full px-10 py-3 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Progress History</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="entry" className="mt-0">
+          <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl">
+            <div className="overflow-x-auto scrollbar-hide">
+              <Table className="min-w-max border-collapse">
+                <TableHeader className="bg-muted/80 sticky top-0 z-20">
+                  <TableRow>
+                    <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[200px] sticky left-0 bg-muted/95 z-30">Student Profile</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Age</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Ht (cm)</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Wt (kg)</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric1}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric2}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric3}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric4}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[80px] bg-primary/5">SCORE</TableHead>
+                    <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Archive</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {playersInStd.map((p: any) => {
+                    const r = localRecords[p.id] || {};
+                    return (
+                      <TableRow key={p.id} className="border-b h-14 group">
+                        <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[200px]">
+                          {p.name.toUpperCase()}
+                        </TableCell>
+                        <TableCell className="border-r text-center font-bold text-xs">{p.age}</TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.height || ''} onChange={(e) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.weight || ''} onChange={(e) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric1 || ''} onChange={(e) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric2 || ''} onChange={(e) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric3 || ''} onChange={(e) => handleValueChange(p.id, 'metric3', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric4 || ''} onChange={(e) => handleValueChange(p.id, 'metric4', e.target.value)} /></TableCell>
+                        <TableCell className="border-r text-center bg-primary/5 font-black text-primary">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
+                        <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
+                          <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
+                            {isSaving === p.id ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-0 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-4 space-y-6">
+              <Card className="border-2 rounded-[3rem] bg-white p-8 shadow-xl">
+                 <h3 className="text-xl font-black text-primary uppercase flex items-center gap-3 mb-6"><Target className="w-6 h-6 text-accent" /> Select Student</h3>
+                 <div className="space-y-2">
+                    {playersInStd.map((p: any) => (
+                      <button 
+                        key={p.id} 
+                        onClick={() => setSelectedPlayerId(p.id)}
+                        className={cn(
+                          "w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between group",
+                          selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5 hover:border-primary/10"
+                        )}
+                      >
+                        {p.name}
+                        <ArrowRight className={cn("w-4 h-4 transition-transform", selectedPlayerForHistory === p.id ? "translate-x-0" : "-translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
+                      </button>
+                    ))}
+                 </div>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-8 space-y-8">
+              <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
+                <CardHeader className="bg-primary/5 border-b p-8">
+                  <div className="flex justify-between items-center">
+                     <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3">
+                        <BarChart className="w-5 h-5 text-accent" /> Performance Trends
+                     </CardTitle>
+                     <Badge variant="secondary" className="font-black">Monthly Aggregate</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-10">
+                  <div className="h-[400px] w-full">
+                    {chartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={chartData}>
+                          <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
+                          <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
+                          <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.08} name="Avg Score" />
+                          <Line type="monotone" dataKey="m1" stroke="#f59e0b" strokeWidth={3} name={currentLabels.metric1} />
+                          <Line type="monotone" dataKey="m2" stroke="#10b981" strokeWidth={3} name={currentLabels.metric2} />
+                          <Legend verticalAlign="top" iconType="circle" />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest">No historical data recorded</p></div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
+                <CardHeader className="bg-primary p-6 text-white"><CardTitle className="text-xs font-black uppercase tracking-widest">Historical Registry Log</CardTitle></CardHeader>
+                <CardContent className="p-0">
+                   <Table>
+                      <TableHeader><TableRow><TableHead className="font-black text-[10px] uppercase">Month</TableHead><TableHead className="font-black text-[10px] uppercase text-center">Score</TableHead><TableHead className="font-black text-[10px] uppercase text-right">Status</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                         {historyData.slice().reverse().map((h: any, idx) => (
+                           <TableRow key={idx}>
+                              <TableCell className="font-black uppercase text-xs">{format(new Date(h.month + "-01"), 'MMMM yyyy')}</TableCell>
+                              <TableCell className="text-center font-black text-primary">{h.score}%</TableCell>
+                              <TableCell className="text-right"><Badge variant="outline" className="font-black uppercase text-[9px] border-primary/20">{h.status}</Badge></TableCell>
+                           </TableRow>
+                         ))}
+                      </TableBody>
+                   </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={isLabelDialogOpen} onOpenChange={setIsLabelDialogOpen}>
+        <DialogContent className="sm:max-w-[450px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
+          <DialogHeader className="bg-primary p-8 text-white relative">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10">
+              <Settings2 className="w-6 h-6 text-accent" /> Customize Metrics
+            </DialogTitle>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] relative z-10">Standard {std} &bull; {selectedMonth}</p>
+          </DialogHeader>
+
+          <div className="p-8 space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              {Object.keys(DEFAULT_PERFORMANCE_LABELS).map((field) => (
+                <div key={field} className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
+                  <Input 
+                    value={editingLabels[field as keyof PerformanceLabels]} 
+                    onChange={(e) => setEditingLabels({...editingLabels, [field]: e.target.value})}
+                    className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="p-8 bg-slate-50 border-t">
+            <Button onClick={handleSaveLabels} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active-scale">Archive Configuration</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { collection, doc, query, where, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from '@/firebase';
-import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile, ExamLabels, TacticalEvent, GoalRecord } from '@/lib/types';
+import type { Player, AttendanceRecord, FitnessAssessment, SportSkill, HealthIncident, SchoolProfile, ExamLabels, PerformanceLabels, TacticalEvent, GoalRecord } from '@/lib/types';
 import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { format } from 'date-fns';
 
@@ -32,6 +32,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [skillsHistory, setSkillsHistory] = useState<Record<string, (SportSkill & { sportName: string })[]>>({});
   const [gameRules, setGameRulesData] = useState<Record<string, any>>({});
   const [examConfigs, setExamConfigs] = useState<Record<string, ExamLabels>>({});
+  const [performanceConfigs, setPerformanceConfigs] = useState<Record<string, PerformanceLabels>>({});
   const [dailyReadiness, setDailyReadinessData] = useState<Record<string, any>>({});
   const [tacticalEvents, setTacticalEventsData] = useState<TacticalEvent[]>([]);
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
@@ -201,6 +202,18 @@ export function useSchoolData(isActive: boolean = true) {
       setExamConfigs(configMap);
     });
 
+    const performanceConfigQuery = query(
+      collection(db, 'performance_configs'),
+      where('schoolId', '==', user.uid)
+    );
+    const unsubPerformanceConfigs = onSnapshot(performanceConfigQuery, (snapshot) => {
+      const configMap: Record<string, PerformanceLabels> = {};
+      snapshot.docs.forEach(doc => {
+        configMap[doc.id] = doc.data().labels as PerformanceLabels;
+      });
+      setPerformanceConfigs(configMap);
+    });
+
     const today = format(new Date(), 'yyyy-MM-dd');
     const readinessQuery = query(
       collection(db, 'readiness_registry'),
@@ -257,6 +270,7 @@ export function useSchoolData(isActive: boolean = true) {
       unsubSkills();
       unsubRules();
       unsubExamConfigs();
+      unsubPerformanceConfigs();
       unsubReadiness();
       unsubTactical();
       unsubGoals();
@@ -322,6 +336,7 @@ export function useSchoolData(isActive: boolean = true) {
     drillCompletions,
     gameRules,
     examConfigs,
+    performanceConfigs,
     dailyReadiness,
     tacticalEvents,
     goals,
@@ -337,7 +352,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions]);
+  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions]);
 
   const isActuallyLoaded = useMemo(() => {
     if (!isActive) return false;
@@ -384,7 +399,7 @@ export function useSchoolData(isActive: boolean = true) {
     setAttendance,
     setFitness: (playerId: string, assessment: FitnessAssessment) => {
       if (!user || !db) return;
-      const dateId = new Date().toISOString().split('T')[0];
+      const dateId = assessment.month || new Date().toISOString().split('T')[0];
       const fitnessRef = doc(db, 'fitness_registry', `${playerId}_${dateId}`);
       setDocumentNonBlocking(fitnessRef, { ...assessment, playerId, schoolId: user.uid, date: dateId, updatedAt: new Date().toISOString(), academicYear: selectedYear }, { merge: true });
     },
@@ -436,6 +451,12 @@ export function useSchoolData(isActive: boolean = true) {
       const configId = `${std}_${term}`;
       const configRef = doc(db, 'exam_configs', configId);
       setDocumentNonBlocking(configRef, { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    setPerformanceLabels: (std: string, month: string, labels: PerformanceLabels) => {
+      if (!user || !db) return;
+      const configId = `${std}_${month}`;
+      const configRef = doc(db, 'performance_configs', configId);
+      setDocumentNonBlocking(configRef, { labels, std, month, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
     },
     setSportSkill: (playerId: string, sport: string, skill: SportSkill) => {
       if (!user || !db) return;

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -12,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -20,8 +18,6 @@ import {
   Camera, 
   CircleX, 
   ImageIcon, 
-  Fingerprint, 
-  Scan, 
   Upload, 
   ShieldAlert, 
   Hash, 
@@ -31,8 +27,7 @@ import {
   RefreshCcw,
   Baby,
   Search,
-  CheckCircle2,
-  HeartPulse
+  CheckCircle2
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -216,7 +211,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to registry.` });
     
-    // Hard reset for next institutional entry
     form.reset({
       ...defaultValues,
       category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
@@ -245,7 +239,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 {suggestedStudents.length > 0 && (
                   <div className="mt-2 p-2 bg-white rounded-2xl border-2 border-accent/20 shadow-xl space-y-1">
                     {suggestedStudents.map((s: any) => (
-                      <button key={s.id} onClick={() => handleAutoFill(s)} className="w-full text-left p-4 hover:bg-accent/5 rounded-xl flex items-center justify-between group">
+                      <button key={s.id} type="button" onClick={() => handleAutoFill(s)} className="w-full text-left p-4 hover:bg-accent/5 rounded-xl flex items-center justify-between group">
                         <div>
                           <p className="font-black text-primary uppercase text-sm">{s.name}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase">Std {s.std} &bull; GR: {s.generalRegisterNumber || 'N/A'}</p>
