@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -65,6 +64,29 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const defaultValues: FormValues = {
+  name: "", 
+  std: "1", 
+  category: "student",
+  gender: "Male", 
+  serialNumber: "", 
+  dob: "", 
+  height: "", 
+  sittingHeight: "",
+  weight: "",
+  bloodGroup: "None", 
+  aadharNumber: "", 
+  mobileNumber: "", 
+  generalRegisterNumber: "", 
+  address: "",
+  sports: [], 
+  history: "No", 
+  histDetail: "", 
+  medical: "", 
+  photoUrl: "", 
+  aadharPhotoUrl: ""
+};
+
 export function Registration({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
@@ -87,32 +109,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
     lookup: isMarathi ? 'रजिस्ट्री मधून डेटा मिळवा' : 'Search Existing Student'
   };
 
-  const defaultValues: FormValues = {
-    name: "", 
-    std: "1", 
-    category: (section === 'sports' ? 'athlete' : 'student') as 'athlete' | 'student',
-    gender: "Male", 
-    serialNumber: "", 
-    dob: "", 
-    height: "", 
-    sittingHeight: "",
-    weight: "",
-    bloodGroup: "None", 
-    aadharNumber: "", 
-    mobileNumber: "", 
-    generalRegisterNumber: "", 
-    address: "",
-    sports: [], 
-    history: "No", 
-    histDetail: "", 
-    medical: "", 
-    photoUrl: "", 
-    aadharPhotoUrl: ""
-  };
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
+    },
   });
 
   const suggestedStudents = useMemo(() => {
@@ -238,7 +240,10 @@ export function Registration({ store, section, language = 'English' }: { store: 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     
     // Clean Slate Reset: Purging all fields for the next institutional entry
-    form.reset(defaultValues);
+    form.reset({
+      ...defaultValues,
+      category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
+    });
   };
 
   return (
@@ -535,11 +540,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
                   </div>
                 </div>
               </div>
+              <canvas ref={canvasRef} className="hidden" />
             </form>
           </Form>
-          <canvas ref={canvasRef} className="hidden" />
         </CardContent>
       </Card>
+      
       <div className="fixed bottom-24 right-8 z-50">
         <Badge variant="outline" className="bg-white border-2 border-primary/20 text-primary font-black uppercase text-[10px] px-6 py-2 rounded-full shadow-2xl">
           WGB HUB V4.3.24 STABLE

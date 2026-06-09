@@ -1,7 +1,6 @@
-
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -22,7 +21,7 @@ export interface UseDocResult<T> {
 
 /**
  * useDoc - Real-time document listener hook
- * Hardened v4.3.24: Added stability guards to prevent depth-exceeded infinite loops.
+ * Hardened v4.3.24: Added path-based stability guards to prevent depth-exceeded infinite loops.
  */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
@@ -30,21 +29,30 @@ export function useDoc<T = any>(
   const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  
+  // Track the current active path to prevent recursive loading resets
+  const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
       setError(null);
+      lastPathRef.current = null;
       return;
     }
 
-    let isMounted = true;
+    const currentPath = memoizedDocRef.path;
     
-    // Stability Guard: Only reset loading if we aren't already loading
-    // and if the ref is truly new.
-    setIsLoading(true);
-    setError(null);
+    // Stability Guard: Only reset loading if the path has actually changed.
+    // This prevents the "Maximum update depth exceeded" loop caused by unstable refs.
+    if (lastPathRef.current !== currentPath) {
+      setIsLoading(true);
+      setError(null);
+      lastPathRef.current = currentPath;
+    }
+
+    let isMounted = true;
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
