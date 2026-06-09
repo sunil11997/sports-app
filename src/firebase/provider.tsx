@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
@@ -163,10 +164,10 @@ export const useUser = (): UserHookResult => {
 
 /**
  * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.24: Removed factory from dependencies to prevent unstable query loops.
- * Ensuring references are truly stable for Firestore hooks.
+ * Hardened v4.3.24: Ensuring references are truly stable for Firestore hooks.
+ * Removed factory from deps to prevent depth-exceeded loops.
  */
-export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
+export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedValue = useMemo(() => {
     const val = factory();

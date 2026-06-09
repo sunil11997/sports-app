@@ -292,7 +292,7 @@ export default function WaghambaApp() {
               )}
 
               {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection || 'general'} t={t} />}
-              {subTab === "enroll" && <Registration store={schoolData} section={selectedSection || 'general'} language={language} />}
+              {subTab === "enroll" && <Registration store={schoolData} section={selectedSection || 'general'} />}
             </TabsContent>
 
             <TabsContent value="sport" className="mt-0 animate-in fade-in duration-700">

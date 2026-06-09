@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -87,7 +88,7 @@ const defaultValues: FormValues = {
   aadharPhotoUrl: ""
 };
 
-export function Registration({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
+export function Registration({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -99,15 +100,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
-
-  const isMarathi = language === 'Marathi';
-
-  const t = {
-    title: isMarathi ? 'संस्थात्मक नावनोंदणी' : 'Institutional Enrollment',
-    subtitle: isMarathi ? 'विद्यार्थी व खेळाडू संपूर्ण नोंदणी' : 'Full Student & Athlete Registry Hub',
-    enrollBtn: isMarathi ? 'नोंदणी जतन करा' : 'Register Profile',
-    lookup: isMarathi ? 'रजिस्ट्री मधून डेटा मिळवा' : 'Search Existing Student'
-  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -138,13 +130,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
       className: "bg-emerald-600 text-white"
     });
   };
-
-  const watchedSports = form.watch('sports');
-  useEffect(() => {
-    if (watchedSports && watchedSports.length > 0) {
-      form.setValue('category', 'athlete');
-    }
-  }, [watchedSports, form]);
 
   useEffect(() => {
     if (videoRef.current && stream && activeCam) {
@@ -207,7 +192,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
         const dataUrl = reader.result as string;
         if (type === 'profile') form.setValue('photoUrl', dataUrl);
         else form.setValue('aadharPhotoUrl', dataUrl);
-        toast({ title: "Photo Ready", description: "Identity document captured successfully." });
+        toast({ title: "Photo Ready" });
       };
       reader.readAsDataURL(file);
     }
@@ -224,14 +209,8 @@ export function Registration({ store, section, language = 'English' }: { store: 
       bmi = (w / (h * h)).toFixed(1);
     }
 
-    let finalCategory = values.category;
-    if (values.sports && values.sports.length > 0) {
-      finalCategory = 'athlete';
-    }
-
     store.addPlayer({
       ...values,
-      category: finalCategory,
       id: Math.random().toString(36).substr(2, 9),
       age: isNaN(age) ? 0 : age,
       bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi,
@@ -239,6 +218,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     
+    // Total reset for Teacher Sunil's next entry
     form.reset({
       ...defaultValues,
       category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
@@ -254,7 +234,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 <Search className="text-white w-7 h-7" />
               </div>
               <div className="flex-1 w-full space-y-2">
-                <label className="text-[10px] font-black uppercase text-accent tracking-widest ml-1">{t.lookup}</label>
+                <label className="text-[10px] font-black uppercase text-accent tracking-widest ml-1">Search Existing Student</label>
                 <div className="relative group">
                   <Input 
                     value={registrySearch}
@@ -296,8 +276,8 @@ export function Registration({ store, section, language = 'English' }: { store: 
                 <UserPlus className="w-10 h-10" />
               </div>
               <div>
-                <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">{t.title}</CardTitle>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">{t.subtitle}</p>
+                <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Enrollment</CardTitle>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Full Student & Athlete Registry Hub</p>
               </div>
             </div>
             
@@ -331,7 +311,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
                       <ImageIcon className="w-4 h-4" /> Identity Photo
                     </FormLabel>
-                    <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-2xl group">
+                    <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden border-4 border-primary/10 bg-muted/30 shadow-2xl">
                       {activeCam === 'profile' ? (
                         <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                       ) : form.watch('photoUrl') ? (
@@ -343,9 +323,9 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       )}
                       {activeCam === 'profile' && (
                         <div className="absolute bottom-6 left-0 right-0 flex flex-col gap-3 px-6 z-20">
-                          <Button type="button" onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 backdrop-blur h-10 rounded-xl font-black text-[9px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Flip Camera</Button>
+                          <Button type="button" onClick={toggleCamera} variant="secondary" className="w-full bg-white/80 h-10 rounded-xl font-black text-[9px] uppercase"><RefreshCcw className="w-3 h-3 mr-2" /> Flip Camera</Button>
                           <div className="flex gap-3">
-                            <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-14 rounded-2xl shadow-xl active-scale">CAPTURE</Button>
+                            <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-accent-foreground font-black text-xs h-14 rounded-2xl shadow-xl">CAPTURE</Button>
                             <Button type="button" variant="destructive" onClick={stopCamera} className="w-14 h-14 p-0 rounded-2xl shadow-xl"><CircleX className="w-6 h-6" /></Button>
                           </div>
                         </div>
@@ -353,13 +333,13 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     </div>
                     {!activeCam && (
                       <div className="flex gap-2">
-                        <Button type="button" onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest hover:bg-primary/10 transition-all">
+                        <Button type="button" onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">
                           <Camera className="w-4 h-4 mr-2" /> Camera
                         </Button>
                         <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="w-14 h-14 p-0 rounded-2xl border-2">
                           <Upload className="w-6 h-6" />
                         </Button>
-                        <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e, 'profile')} />
+                        <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
                       </div>
                     )}
                   </div>
@@ -368,7 +348,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
                       <Scan className="w-4 h-4" /> Aadhar Identity Scan
                     </FormLabel>
-                    <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20 shadow-inner">
+                    <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/20">
                       {activeCam === 'aadhar' ? (
                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                       ) : form.watch('aadharPhotoUrl') ? (
@@ -390,13 +370,13 @@ export function Registration({ store, section, language = 'English' }: { store: 
                     </div>
                     {!activeCam && (
                       <div className="flex gap-2">
-                        <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest hover:bg-accent/10 transition-all">
+                        <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-accent/5 text-accent-foreground border-2 border-accent/20 rounded-2xl h-12 font-black uppercase text-[10px] tracking-widest">
                           <Fingerprint className="w-4 h-4 mr-2" /> Live Scan
                         </Button>
                         <Button type="button" variant="outline" onClick={() => aadharUploadRef.current?.click()} className="w-12 h-12 p-0 rounded-2xl border-2">
                           <Upload className="w-6 h-6" />
                         </Button>
-                        <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e, 'aadhar')} />
+                        <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                       </div>
                     )}
                   </div>
@@ -413,11 +393,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="e.g. Sunil Deshmukh" 
-                              className="h-14 font-black border-2 rounded-2xl bg-white focus:border-primary shadow-sm text-lg" 
-                              {...field} 
-                            />
+                            <Input placeholder="e.g. Sunil Deshmukh" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -429,7 +405,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem>
                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard (Std) *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl text-md shadow-sm"><SelectValue /></FormControl></SelectTrigger>
+                            <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl"><SelectValue /></FormControl></SelectTrigger>
                             <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
                           </Select>
                           <FormMessage />
@@ -469,7 +445,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                         <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Height (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="sittingHeight" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting Ht (cm)</FormLabel><FormControl><Input type="number" placeholder="Optional" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1"><Baby className="w-3 h-3" /> Sitting Ht (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="weight" render={({ field }) => (
                         <FormItem><FormLabel className="text-[9px] font-black uppercase text-muted-foreground">Weight (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
@@ -501,7 +477,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <h3 className="font-black uppercase text-sm tracking-[0.2em]">Health & Medical</h3>
                     </div>
                     <FormField control={form.control} name="medical" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">Medical Conditions & Alerts</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" placeholder="e.g. Asthma, Past injuries, Surgeries..." {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Conditions & Alerts</FormLabel><FormControl><Textarea className="min-h-[80px] border-2 rounded-2xl" {...field} /></FormControl></FormItem>
                     )} />
                   </div>
 
@@ -519,7 +495,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
                               <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
                                 const curr = field.value || [];
                                 return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
-                              }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent" /></FormControl>
+                              }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent" /></FormControl>
                               <FormLabel className="text-xs font-black uppercase text-foreground/70 cursor-pointer group-hover:text-accent transition-colors">{sport}</FormLabel>
                             </FormItem>
                           )} />
@@ -533,8 +509,8 @@ export function Registration({ store, section, language = 'English' }: { store: 
                       <ShieldAlert className="w-6 h-6 opacity-30" />
                       <p className="text-[10px] font-bold uppercase tracking-widest max-w-xs leading-relaxed opacity-40">Records are cryptographically secured in the institutional cloud vault.</p>
                     </div>
-                    <Button type="submit" className="w-full md:w-auto px-20 h-20 bg-primary hover:bg-primary/90 text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] active-scale transition-all text-lg">
-                      {t.enrollBtn}
+                    <Button type="submit" className="w-full md:w-auto px-20 h-20 bg-primary text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] text-lg">
+                      Register Profile
                     </Button>
                   </div>
                 </div>
