@@ -161,11 +161,6 @@ export const useUser = (): UserHookResult => {
   };
 };
 
-/**
- * useMemoFirebase - Institutional Memoization Utility
- * Hardened v4.3.24: Ensuring references are truly stable for Firestore hooks.
- * Removed factory from deps to prevent depth-exceeded loops.
- */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedValue = useMemo(() => {

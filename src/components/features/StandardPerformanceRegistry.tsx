@@ -9,17 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Save, 
-  Printer, 
   History, 
   Settings2, 
   Loader2, 
   TrendingUp, 
   ArrowRight,
   Target,
-  Medal,
-  Activity,
-  BarChart,
-  Calendar
+  BarChart
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -102,24 +98,23 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     setIsSaving(player.id);
     const data = localRecords[player.id];
     
-    // Calculate aggregate (simple average of numeric metrics)
     const metrics = ['metric1', 'metric2', 'metric3', 'metric4', 'metric5', 'metric6', 'metric7'];
-    let sum = 0;
+    let sumVal = 0;
     let count = 0;
     metrics.forEach(m => {
       if (data[m] && !isNaN(parseFloat(data[m]))) {
-        sum += parseFloat(data[m]);
+        sumVal += parseFloat(data[m]);
         count++;
       }
     });
 
-    const score = count > 0 ? (sum / count).toFixed(1) : "0";
+    const scoreStr = count > 0 ? (sumVal / count).toFixed(1) : "0";
 
     await store.setFitness(player.id, {
       ...data,
       month: selectedMonth,
-      score,
-      status: parseFloat(score) >= 80 ? 'Elite' : parseFloat(score) >= 60 ? 'Optimal' : 'Developing'
+      score: scoreStr,
+      status: parseFloat(scoreStr) >= 80 ? 'Elite' : parseFloat(scoreStr) >= 60 ? 'Optimal' : 'Developing'
     });
 
     setIsSaving(null);
@@ -326,7 +321,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
                   <Input 
                     value={editingLabels[field as keyof PerformanceLabels]} 
-                    onChange={(e) => setEditingLabels({...editingLabels, [field]: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field]: e.target.value})}
                     className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner"
                   />
                 </div>

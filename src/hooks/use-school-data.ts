@@ -9,15 +9,10 @@ import { format } from 'date-fns';
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
-/**
- * useSchoolData - Institutional Registry Engine
- * Hardened v4.3.25: Consolidated all hooks to the top level to resolve "Rules of Hooks" order mismatch.
- */
 export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
   const { user } = useUser();
   
-  // 1. ALL useState hooks at the ABSOLUTE TOP to ensure stable order
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -34,10 +29,8 @@ export function useSchoolData(isActive: boolean = true) {
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
   const [drillCompletions, setDrillCompletionsData] = useState<Record<string, boolean>>({});
 
-  // Internal sync lock to prevent render loops
   const syncLockRef = useRef(false);
 
-  // 2. Stable Memoized References
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
@@ -57,7 +50,6 @@ export function useSchoolData(isActive: boolean = true) {
   }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
-  // 3. Sync Logic
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
 
@@ -114,7 +106,6 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }, [db, user, selectedYear]);
 
-  // 4. Data Listeners
   useEffect(() => {
     if (!user || !db || !isActive) return;
 
@@ -371,6 +362,23 @@ export function useSchoolData(isActive: boolean = true) {
       deleteDocumentNonBlocking(doc(db, 'school_activities', id));
     },
     exportBackupData: () => {
+      const aggregatedData = {
+        players: allPlayers || [],
+        attendance,
+        fitness,
+        fitnessHistory,
+        sportSkills,
+        skillsHistory,
+        drillCompletions,
+        gameRules,
+        examConfigs,
+        performanceConfigs,
+        dailyReadiness,
+        tacticalEvents,
+        goals,
+        healthIncidents: healthIncidents || [],
+        schoolProfile: schoolProfile
+      };
       const backup = { data: aggregatedData, timestamp: new Date().toISOString() };
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);

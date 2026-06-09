@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,12 +17,10 @@ import {
   Zap, 
   Clock,
   History,
-  CheckCircle2,
   Activity,
   LineChart as LineChartIcon
 } from 'lucide-react';
 import { 
-  LineChart, 
   Line, 
   XAxis, 
   YAxis, 
@@ -59,6 +57,13 @@ const SESSION_TYPES = [
   "Active Recovery"
 ];
 
+interface LoadEntry {
+  date: string;
+  load: number;
+  rpe: number;
+  type: string;
+}
+
 export function TrainingLoad({ store }: { store: any }) {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -68,22 +73,20 @@ export function TrainingLoad({ store }: { store: any }) {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load history for the selected student
   const playerLoadHistory = useMemo(() => {
     if (!selectedPlayerId || !store.data.fitnessHistory[selectedPlayerId]) return [];
     
     return store.data.fitnessHistory[selectedPlayerId]
-      .filter((h: any) => h.lastTrainingLoad) // Only entries with load data
-      .map((h: any) => ({
+      .filter((h: any) => h.lastTrainingLoad)
+      .map((h: any): LoadEntry => ({
         date: h.date || h.updatedAt?.split('T')[0] || "Unknown",
         load: parseInt(h.lastTrainingLoad) || 0,
         rpe: parseInt(h.lastRpe) || 0,
         type: h.sessionType || "Practice"
       }))
-      .sort((a: any, b: any) => a.date.localeCompare(b.date));
+      .sort((a: LoadEntry, b: LoadEntry) => a.date.localeCompare(b.date));
   }, [selectedPlayerId, store.data.fitnessHistory]);
 
-  // ACWR Analytics (Acute:Chronic Workload Ratio)
   const loadMetrics = useMemo(() => {
     if (playerLoadHistory.length === 0) return { acute: 0, chronic: 0, ratio: 0, status: 'Insufficient Data' };
 
@@ -91,16 +94,14 @@ export function TrainingLoad({ store }: { store: any }) {
     const sevenDaysAgo = subDays(today, 7);
     const twentyEightDaysAgo = subDays(today, 28);
 
-    const acuteLoads = playerLoadHistory.filter((h: any) => isAfter(parseISO(h.date), sevenDaysAgo));
-    const chronicLoads = playerLoadHistory.filter((h: any) => isAfter(parseISO(h.date), twentyEightDaysAgo));
+    const acuteLoads = playerLoadHistory.filter((h: LoadEntry) => isAfter(parseISO(h.date), sevenDaysAgo));
+    const chronicLoads = playerLoadHistory.filter((h: LoadEntry) => isAfter(parseISO(h.date), twentyEightDaysAgo));
 
-    const acuteAvg = acuteLoads.length > 0 
-      ? acuteLoads.reduce((sum, h) => sum + h.load, 0) / 7 // Standardized to 7 days
-      : 0;
+    const acuteTotal = acuteLoads.reduce((sum: number, entry: LoadEntry) => sum + entry.load, 0);
+    const chronicTotal = chronicLoads.reduce((sum: number, entry: LoadEntry) => sum + entry.load, 0);
 
-    const chronicAvg = chronicLoads.length > 0 
-      ? chronicLoads.reduce((sum, h) => sum + h.load, 0) / 28 // Standardized to 28 days
-      : 0;
+    const acuteAvg = acuteTotal / 7;
+    const chronicAvg = chronicTotal / 28;
 
     const ratio = chronicAvg > 0 ? (acuteAvg / chronicAvg) : 0;
 
@@ -117,7 +118,7 @@ export function TrainingLoad({ store }: { store: any }) {
     };
   }, [playerLoadHistory]);
 
-  const trainingLoad = useMemo(() => {
+  const trainingLoadValue = useMemo(() => {
     const mins = parseInt(duration) || 0;
     return rpe * mins;
   }, [rpe, duration]);
@@ -134,7 +135,7 @@ export function TrainingLoad({ store }: { store: any }) {
     try {
       await store.setFitness(selectedPlayerId, {
         ...store.data.fitness[selectedPlayerId],
-        lastTrainingLoad: trainingLoad.toString(),
+        lastTrainingLoad: trainingLoadValue.toString(),
         lastRpe: rpe.toString(),
         sessionType: sessionType,
         date: date,
@@ -143,7 +144,7 @@ export function TrainingLoad({ store }: { store: any }) {
 
       toast({ 
         title: "Load Registry Updated", 
-        description: `Archived ${trainingLoad} load units for ${player?.name}.`,
+        description: `Archived ${trainingLoadValue} load units for ${player?.name}.`,
         className: "bg-primary text-white font-black"
       });
     } catch (err) {
@@ -154,7 +155,6 @@ export function TrainingLoad({ store }: { store: any }) {
   };
 
   const chartData = useMemo(() => {
-    // Last 14 entries for trend
     return playerLoadHistory.slice(-14).map(h => ({
       name: format(parseISO(h.date), 'dd/MM'),
       load: h.load,
@@ -194,7 +194,6 @@ export function TrainingLoad({ store }: { store: any }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Input and ACWR */}
         <div className="lg:col-span-5 space-y-8">
           <Card className="border-2 rounded-[2.5rem] p-8 shadow-xl bg-white space-y-8">
             <div className="space-y-6">
@@ -273,7 +272,6 @@ export function TrainingLoad({ store }: { store: any }) {
           </Card>
         </div>
 
-        {/* Right Column: Visualization and History */}
         <div className="lg:col-span-7 space-y-8">
            <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl h-[450px] flex flex-col">
               <CardHeader className="bg-slate-50 border-b p-8 flex flex-row justify-between items-center">
@@ -329,7 +327,7 @@ export function TrainingLoad({ store }: { store: any }) {
                           </tr>
                        </thead>
                        <tbody className="divide-y">
-                          {playerLoadHistory.slice().reverse().slice(0, 5).map((h, i) => (
+                          {playerLoadHistory.slice().reverse().slice(0, 5).map((h: LoadEntry, i: number) => (
                             <tr key={i} className="h-16 hover:bg-muted/10 transition-colors">
                                <td className="px-8 font-black text-xs text-primary uppercase">{format(parseISO(h.date), 'dd MMM yyyy')}</td>
                                <td className="px-4"><Badge variant="secondary" className="text-[9px] font-black uppercase px-3">{h.type}</Badge></td>

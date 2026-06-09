@@ -60,29 +60,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultValues: FormValues = {
-  name: "", 
-  std: "1", 
-  category: "student",
-  gender: "Male", 
-  serialNumber: "", 
-  dob: "", 
-  height: "", 
-  sittingHeight: "",
-  weight: "",
-  bloodGroup: "None", 
-  aadharNumber: "", 
-  mobileNumber: "", 
-  generalRegisterNumber: "", 
-  address: "",
-  sports: [], 
-  history: "No", 
-  histDetail: "", 
-  medical: "", 
-  photoUrl: "", 
-  aadharPhotoUrl: ""
-};
-
 export function Registration({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
   const { isOnline } = usePWA();
@@ -96,12 +73,32 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
 
+  const defaultValues: FormValues = useMemo(() => ({
+    name: "", 
+    std: "1", 
+    category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student",
+    gender: "Male", 
+    serialNumber: "", 
+    dob: "", 
+    height: "", 
+    sittingHeight: "",
+    weight: "",
+    bloodGroup: "None", 
+    aadharNumber: "", 
+    mobileNumber: "", 
+    generalRegisterNumber: "", 
+    address: "",
+    sports: [], 
+    history: "No", 
+    histDetail: "", 
+    medical: "", 
+    photoUrl: "", 
+    aadharPhotoUrl: ""
+  }), [section]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...defaultValues,
-      category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
-    },
+    defaultValues
   });
 
   const suggestedStudents = useMemo(() => {
@@ -195,26 +192,22 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     const dobDate = values.dob ? new Date(values.dob) : null;
     const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : 0;
     
-    let bmi = "0.0";
+    let bmiValue = "0.0";
     if (values.height && values.weight) {
       const h = parseFloat(values.height) / 100;
       const w = parseFloat(values.weight);
-      bmi = (w / (h * h)).toFixed(1);
+      bmiValue = (w / (h * h)).toFixed(1);
     }
 
     store.addPlayer({
       ...values,
       id: Math.random().toString(36).substr(2, 9),
       age: isNaN(age) ? 0 : age,
-      bmi: isNaN(parseFloat(bmi)) ? "0.0" : bmi,
+      bmi: isNaN(parseFloat(bmiValue)) ? "0.0" : bmiValue,
     });
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to registry.` });
-    
-    form.reset({
-      ...defaultValues,
-      category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
-    });
+    form.reset(defaultValues);
   };
 
   return (
@@ -230,7 +223,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 <div className="relative">
                   <Input 
                     value={registrySearch}
-                    onChange={(e) => setRegistrySearch(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegistrySearch(e.target.value)}
                     placeholder="Type name or GR number..." 
                     className="h-14 rounded-2xl border-2 border-accent/20 font-bold bg-white pl-12"
                   />
@@ -424,6 +417,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 </div>
               </div>
               <canvas ref={canvasRef} className="hidden" />
+              <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
             </form>
           </Form>
         </CardContent>

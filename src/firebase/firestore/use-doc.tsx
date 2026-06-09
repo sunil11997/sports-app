@@ -30,7 +30,6 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // Track the current active path to prevent recursive loading resets
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -43,9 +42,6 @@ export function useDoc<T = any>(
     }
 
     const currentPath = memoizedDocRef.path;
-    
-    // Stability Guard: Only reset loading if the path has actually changed.
-    // This prevents the "Maximum update depth exceeded" loop caused by unstable refs.
     if (lastPathRef.current !== currentPath) {
       setIsLoading(true);
       setError(null);
@@ -90,7 +86,7 @@ export function useDoc<T = any>(
   }, [memoizedDocRef]);
 
   if(memoizedDocRef && !memoizedDocRef.__memo) {
-    throw new Error(memoizedDocRef.path + ' was not properly memoized using useMemoFirebase. This prevents infinite loops.');
+    throw new Error(memoizedDocRef.path + ' was not properly memoized using useMemoFirebase.');
   }
 
   return { data, isLoading, error };
