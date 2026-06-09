@@ -11,13 +11,13 @@ const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 /**
  * useSchoolData - Institutional Registry Engine
- * Hardened v4.3.24: Consolidated hook order and resolved sync loops.
+ * Hardened v4.3.25: Consolidated all hooks to the top level to resolve "Rules of Hooks" order mismatch.
  */
 export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
   const { user } = useUser();
   
-  // 1. ALL useState hooks at the TOP level for stable ordering
+  // 1. ALL useState hooks at the ABSOLUTE TOP to ensure stable order
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -57,7 +57,7 @@ export function useSchoolData(isActive: boolean = true) {
   }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
-  // 3. Stable Callbacks
+  // 3. Sync Logic
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
 
@@ -114,7 +114,7 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }, [db, user, selectedYear]);
 
-  // 4. Data Listeners (Effects)
+  // 4. Data Listeners
   useEffect(() => {
     if (!user || !db || !isActive) return;
 
