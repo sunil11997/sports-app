@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 export function useSchoolData(isActive: boolean = true) {
-  // 1. ALL Hooks defined at the top level in a stable order
+  // 1. ALL useState Hooks defined at the absolute top for stability
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -29,26 +29,9 @@ export function useSchoolData(isActive: boolean = true) {
 
   const db = useFirestore();
   const { user } = useUser();
+  
+  // 2. Stable Sync Lock Ref to prevent infinite effect loops
   const syncLockRef = useRef(false);
-
-  const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
-  const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
-
-  const playersQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(collection(db, 'players'), where('ownerId', '==', user.uid));
-  }, [db, user, isActive]);
-  const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
-
-  const incidentsQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(
-      collection(db, 'all_health_incidents'), 
-      where('schoolId', '==', user.uid),
-      where('academicYear', '==', selectedYear)
-    );
-  }, [db, user, selectedYear, isActive]);
-  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
@@ -83,6 +66,22 @@ export function useSchoolData(isActive: boolean = true) {
       syncLockRef.current = false;
     }
   }, [db, user, selectedYear]);
+
+  // Remaining Firebase Hooks in stable order
+  const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
+  const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
+
+  const playersQuery = useMemoFirebase(() => {
+    if (!user || !db || !isActive) return null;
+    return query(collection(db, 'players'), where('ownerId', '==', user.uid));
+  }, [db, user, isActive]);
+  const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
+
+  const incidentsQuery = useMemoFirebase(() => {
+    if (!user || !db || !isActive) return null;
+    return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear));
+  }, [db, user, selectedYear, isActive]);
+  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
   useEffect(() => {
     if (!user || !db || !isActive) return;

@@ -67,7 +67,7 @@ export function TrainingLoad({ store }: { store: any }) {
 
   const playerLoadHistory = useMemo(() => {
     if (!selectedPlayerId || !store.data.fitnessHistory[selectedPlayerId]) return [];
-    return store.data.fitnessHistory[selectedPlayerId]
+    return (store.data.fitnessHistory[selectedPlayerId] as any[])
       .filter((h: any) => h.lastTrainingLoad)
       .map((h: any): LoadEntry => ({
         date: h.date || h.updatedAt?.split('T')[0] || "Unknown",
@@ -86,7 +86,6 @@ export function TrainingLoad({ store }: { store: any }) {
     const acuteLoads = playerLoadHistory.filter((h: LoadEntry) => isAfter(parseISO(h.date), sevenDaysAgo));
     const chronicLoads = playerLoadHistory.filter((h: LoadEntry) => isAfter(parseISO(h.date), twentyEightDaysAgo));
     
-    // Fixed Type: Explicitly type reducers
     const acuteTotal = acuteLoads.reduce((sum: number, h: LoadEntry) => sum + h.load, 0);
     const chronicTotal = chronicLoads.reduce((sum: number, h: LoadEntry) => sum + h.load, 0);
     

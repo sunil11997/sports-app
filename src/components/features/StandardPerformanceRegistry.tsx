@@ -224,14 +224,12 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               </Card>
             </div>
             <div className="lg:col-span-8 space-y-8">
-              <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl">
+              <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
                 <CardHeader className="bg-primary/5 border-b p-8">
-                  <div className="flex justify-between items-center">
-                     <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3"><BarChart className="w-5 h-5 text-accent" /> Trend</CardTitle>
-                  </div>
+                   <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3"><BarChart className="w-5 h-5 text-accent" /> Progress History</CardTitle>
                 </CardHeader>
-                <CardContent className="p-10">
-                  <div className="h-[400px] w-full">
+                <CardContent className="p-0 flex-1 flex flex-col">
+                  <div className="h-[350px] w-full p-8 border-b">
                     {chartData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData}>
@@ -247,6 +245,20 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                     ) : (
                       <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest text-sm">No historical data</p></div>
                     )}
+                  </div>
+                  <div className="p-0 overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead className="font-black text-[10px] uppercase pl-8">Month</TableHead><TableHead className="font-black text-[10px] uppercase text-center">Score</TableHead><TableHead className="font-black text-[10px] uppercase text-right pr-8">Status</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                         {historyData.slice().reverse().map((h: any, idx: number) => (
+                           <TableRow key={idx}>
+                              <TableCell className="font-black uppercase text-xs pl-8">{format(new Date(h.month + "-01"), 'MMMM yyyy')}</TableCell>
+                              <TableCell className="text-center font-black text-primary">{h.score}%</TableCell>
+                              <TableCell className="text-right pr-8"><Badge variant="outline" className="text-[9px] font-black uppercase">{h.status}</Badge></TableCell>
+                           </TableRow>
+                         ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </CardContent>
               </Card>
