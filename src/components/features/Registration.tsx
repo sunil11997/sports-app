@@ -129,7 +129,7 @@ export function Registration({ store, section, language = 'English' }: { store: 
   const handleAutoFill = (student: any) => {
     form.reset({
       ...student,
-      category: section === 'sports' ? 'athlete' : student.category,
+      category: (section === 'sports' ? 'athlete' : student.category) as "athlete" | "student",
     });
     setRegistrySearch("");
     toast({
@@ -166,6 +166,12 @@ export function Registration({ store, section, language = 'English' }: { store: 
     }
   };
 
+  const stopCamera = () => {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    setStream(null);
+    setActiveCam(null);
+  };
+
   const toggleCamera = () => {
     if (!activeCam) return;
     const nextMode = facingMode === 'user' ? 'environment' : 'user';
@@ -191,12 +197,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
         stopCamera();
       }
     }
-  };
-
-  const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    setStream(null);
-    setActiveCam(null);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
@@ -239,7 +239,6 @@ export function Registration({ store, section, language = 'English' }: { store: 
 
     toast({ title: "Enrollment Success", description: `${values.name} archived to cloud registry.` });
     
-    // Clean Slate Reset: Purging all fields for the next institutional entry
     form.reset({
       ...defaultValues,
       category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student"
