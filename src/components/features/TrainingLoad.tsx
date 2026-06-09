@@ -97,8 +97,8 @@ export function TrainingLoad({ store }: { store: any }) {
     const acuteLoads = playerLoadHistory.filter((h: LoadEntry) => isAfter(parseISO(h.date), sevenDaysAgo));
     const chronicLoads = playerLoadHistory.filter((h: LoadEntry) => isAfter(parseISO(h.date), twentyEightDaysAgo));
 
-    const acuteTotal = acuteLoads.reduce((sum: number, entry: LoadEntry) => sum + entry.load, 0);
-    const chronicTotal = chronicLoads.reduce((sum: number, entry: LoadEntry) => sum + entry.load, 0);
+    const acuteTotal = acuteLoads.reduce((sum: number, h: LoadEntry) => sum + h.load, 0);
+    const chronicTotal = chronicLoads.reduce((sum: number, h: LoadEntry) => sum + h.load, 0);
 
     const acuteAvg = acuteTotal / 7;
     const chronicAvg = chronicTotal / 28;

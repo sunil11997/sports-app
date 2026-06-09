@@ -1,9 +1,34 @@
-# Block Environment Variables and Keys
+# Block production build directories
+.vercel/
+.next/
+build/
+dist/
+out/
+
+# Block dependency trees
+node_modules/
+package-lock.json
+yarn.lock
+
+# Block native mobile app bundles & wrapper builds
+*.apk
+*.ipa
+android/build/
+ios/build/
+
+# Block Supabase local state but keep migrations
+.supabase/
+supabase/.temp/
+
+# Block credentials and environment configurations
 .env
 .env.*
-*.pem
-*.key
+*.local
 
-# Block Build Directories, Framework, and Deploy Cache
-.n
+# Block system files and logs
+*.log
+.DS_Store
+.idea/
+.vscode/
+
 

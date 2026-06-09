@@ -13,6 +13,7 @@ export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
   const { user } = useUser();
   
+  // Rules of Hooks: Define all state at the top level
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);

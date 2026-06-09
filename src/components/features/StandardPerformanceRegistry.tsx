@@ -85,7 +85,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     if (playersInStd.length > 0 && !selectedPlayerForHistory) {
       setSelectedPlayerId(playersInStd[0].id);
     }
-  }, [selectedMonth, playersInStd, store.data.fitnessHistory]);
+  }, [selectedMonth, playersInStd, store.data.fitnessHistory, selectedPlayerForHistory]);
 
   const handleValueChange = (pId: string, field: string, val: string) => {
     setLocalRecords(prev => ({
@@ -101,7 +101,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     const metrics = ['metric1', 'metric2', 'metric3', 'metric4', 'metric5', 'metric6', 'metric7'];
     let sumVal = 0;
     let count = 0;
-    metrics.forEach(m => {
+    metrics.forEach((m: string) => {
       if (data[m] && !isNaN(parseFloat(data[m]))) {
         sumVal += parseFloat(data[m]);
         count++;
@@ -321,7 +321,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
                   <Input 
                     value={editingLabels[field as keyof PerformanceLabels]} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field]: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field as keyof PerformanceLabels]: e.target.value})}
                     className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner"
                   />
                 </div>
