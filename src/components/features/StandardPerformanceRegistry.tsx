@@ -294,7 +294,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                    <Table>
                       <TableHeader><TableRow><TableHead className="font-black text-[10px] uppercase">Month</TableHead><TableHead className="font-black text-[10px] uppercase text-center">Score</TableHead><TableHead className="font-black text-[10px] uppercase text-right">Status</TableHead></TableRow></TableHeader>
                       <TableBody>
-                         {historyData.slice().reverse().map((h: any, idx) => (
+                         {historyData.slice().reverse().map((h: any, idx: number) => (
                            <TableRow key={idx}>
                               <TableCell className="font-black uppercase text-xs">{format(new Date(h.month + "-01"), 'MMMM yyyy')}</TableCell>
                               <TableCell className="text-center font-black text-primary">{h.score}%</TableCell>
@@ -321,7 +321,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 gap-4">
-              {Object.keys(DEFAULT_PERFORMANCE_LABELS).map((field) => (
+              {Object.keys(DEFAULT_PERFORMANCE_LABELS).map((field: string) => (
                 <div key={field} className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
                   <Input 
