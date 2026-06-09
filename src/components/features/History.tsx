@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -9,15 +10,8 @@ import {
   Printer, 
   TrendingUp, 
   ChartLine, 
-  Target, 
-  Ruler, 
   Activity, 
   BrainCircuit, 
-  Medal, 
-  Zap, 
-  InfoIcon, 
-  Timer, 
-  MoveUpRight 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +30,7 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import type { FitnessAssessment } from '@/lib/types';
 
 export function PerformanceDossier({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -205,7 +200,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
               `).join('')}
             </tbody>
           </table>
-          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.22</p>
+          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.24</p>
         </body>
       </html>
     `;
@@ -225,7 +220,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.22</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.24</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
@@ -340,7 +335,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
             <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl flex flex-col">
               <CardHeader className="bg-primary p-8 text-white">
                 <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-3">
-                  <Zap className="w-5 h-5 text-accent" /> Registry Archive
+                  <Activity className="w-5 h-5 text-accent" /> Registry Archive
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8">
