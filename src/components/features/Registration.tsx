@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -11,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
   UserPlus, 
@@ -252,7 +252,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
               </div>
               <div>
                 <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Enrollment Hub</CardTitle>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Institutional Registry v4.3.24</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Institutional Registry v4.3.26</p>
               </div>
             </div>
             <div className="bg-white p-2 rounded-2xl border-2 border-primary/10 shadow-inner inline-flex">
@@ -415,3 +415,4 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     </div>
   );
 }
+

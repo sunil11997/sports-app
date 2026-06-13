@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -40,6 +41,8 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
+
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { 
   loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" /> 
@@ -84,6 +87,7 @@ const translations = {
 };
 
 const LOGO_PATH = "/icon-512.png";
+const SPLASH_LOTTIE_URL = "https://lottie.host/33acb9fa-1151-11ee-9728-ff4c18263730/8X5iIe9y9f.json";
 
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
@@ -103,7 +107,7 @@ export default function WaghambaApp() {
   useEffect(() => {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
-    const timer = setTimeout(() => setShowSplash(false), 2500);
+    const timer = setTimeout(() => setShowSplash(false), 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -135,23 +139,19 @@ export default function WaghambaApp() {
     return (
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
-        <div className="max-w-xs w-full text-center space-y-12 relative z-10">
-           <div className="w-56 h-56 mx-auto relative bg-white rounded-full p-2 shadow-[0_0_80px_rgba(255,255,255,0.4)] animate-in zoom-in duration-700 flex items-center justify-center overflow-hidden border-4 border-white/20">
-             <Image 
-               src={LOGO_PATH} 
-               alt="Institutional Logo" 
-               width={224}
-               height={224}
-               unoptimized 
-               className="object-contain w-full h-full scale-110" 
-               priority 
+        <div className="max-w-xs w-full text-center space-y-8 relative z-10">
+           <div className="w-64 h-64 mx-auto relative animate-in zoom-in duration-1000">
+             <Lottie 
+               path={SPLASH_LOTTIE_URL}
+               loop={true}
+               className="w-full h-full"
              />
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.24</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.26</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-                 <div className="h-full bg-white w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
+                 <div className="h-full bg-accent w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
                </div>
                <p className="text-white/40 text-[10px] font-display font-black uppercase tracking-[0.5em]">Synchronizing Registry</p>
              </div>
@@ -474,3 +474,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+

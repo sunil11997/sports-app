@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
@@ -10,7 +11,7 @@ import { format } from 'date-fns';
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 export function useSchoolData(isActive: boolean = true) {
-  // 1. ALL hook definitions at the top in stable order
+  // Hook Sequence Stabilization - ALL useState at the absolute top
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);

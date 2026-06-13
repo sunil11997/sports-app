@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -10,14 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Save, 
   Gauge, 
-  TrendingUp, 
-  BrainCircuit, 
-  AlertTriangle, 
   ShieldCheck, 
   Zap, 
-  Clock,
   History,
-  Activity,
+  BrainCircuit,
   LineChart as LineChartIcon
 } from 'lucide-react';
 import { 
@@ -142,7 +139,7 @@ export function TrainingLoad({ store }: { store: any }) {
             <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center shadow-xl border border-primary/10"><Gauge className="w-10 h-10 text-primary animate-pulse" /></div>
             <div>
               <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Load Management</h2>
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-500" /> Sports Science Registry v4.3.24</p>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-500" /> Sports Science Registry v4.3.26</p>
             </div>
           </div>
           <div className="flex flex-col w-full md:w-80 gap-3">
@@ -163,7 +160,7 @@ export function TrainingLoad({ store }: { store: any }) {
             <div className="space-y-8"><div className="flex justify-between items-center"><h4 className="text-[11px] font-black text-primary uppercase tracking-widest flex items-center gap-2"><BrainCircuit className="w-4 h-4 text-accent" /> Perceived Exertion (RPE)</h4><Badge className="bg-primary text-white font-black text-xs px-3">{rpe}/10</Badge></div><Slider value={[rpe]} onValueChange={(val) => setRpe(val[0])} min={1} max={10} step={1} /><div className="bg-muted/10 p-6 rounded-[2rem] border-2 border-dashed border-muted text-center space-y-2"><p className={cn("text-3xl font-black uppercase tracking-tight", BORG_DESCRIPTIONS[rpe].color)}>{BORG_DESCRIPTIONS[rpe].label}</p><p className="text-xs font-medium text-foreground/60 leading-relaxed">&quot;{BORG_DESCRIPTIONS[rpe].desc}&quot;</p></div></div>
             <Button onClick={handleSave} disabled={isSaving || !selectedPlayerId} className="w-full h-20 bg-primary text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl active-scale">{isSaving ? <Zap className="w-6 h-6 animate-spin mr-3" /> : <Save className="w-6 h-6 mr-3" />} Archive Session Load</Button>
           </Card>
-          <Card className={cn("border-2 rounded-[2.5rem] p-8 shadow-xl text-white relative overflow-hidden", loadMetrics.status.includes('Danger') ? "bg-destructive" : loadMetrics.status.includes('Warning') ? "bg-orange-500" : "bg-emerald-600")}><div className="relative z-10 space-y-6"><div className="flex justify-between items-start"><div><p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Workload Ratio (ACWR)</p><h3 className="text-5xl font-black tracking-tighter mt-1">{loadMetrics.ratio || '0.0'}</h3></div><Badge className="bg-white/20 text-white border-0 font-black uppercase text-[10px] px-4">{loadMetrics.status}</Badge></div><div className="grid grid-cols-2 gap-6 pt-2 border-t border-white/10"><div><p className="text-[9px] font-black text-white/50 uppercase">Acute (7d Avg)</p><p className="text-2xl font-black">{loadMetrics.acute}</p></div><div><p className="text-[9px] font-black text-white/50 uppercase">Chronic (28d Avg)</p><p className="text-2xl font-black">{loadMetrics.chronic}</p></div></div>{loadMetrics.ratio > 1.5 && (<div className="bg-black/20 p-4 rounded-2xl flex items-start gap-3 border border-white/10"><AlertTriangle className="w-5 h-5 text-white shrink-0" /><p className="text-xs font-bold leading-tight">INJURY WARNING: Athlete workload is increasing too fast. Reduce intensity tomorrow.</p></div>)}</div></Card>
+          <Card className={cn("border-2 rounded-[2.5rem] p-8 shadow-xl text-white relative overflow-hidden", loadMetrics.status.includes('Danger') ? "bg-destructive" : loadMetrics.status.includes('Warning') ? "bg-orange-500" : "bg-emerald-600")}><div className="relative z-10 space-y-6"><div className="flex justify-between items-start"><div><p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Workload Ratio (ACWR)</p><h3 className="text-5xl font-black tracking-tighter mt-1">{loadMetrics.ratio || '0.0'}</h3></div><Badge className="bg-white/20 text-white border-0 font-black uppercase text-[10px] px-4">{loadMetrics.status}</Badge></div><div className="grid grid-cols-2 gap-6 pt-2 border-t border-white/10"><div><p className="text-[9px] font-black text-white/50 uppercase">Acute (7d Avg)</p><p className="text-2xl font-black">{loadMetrics.acute}</p></div><div><p className="text-[9px] font-black text-white/50 uppercase">Chronic (28d Avg)</p><p className="text-2xl font-black">{loadMetrics.chronic}</p></div></div>{loadMetrics.ratio > 1.5 && (<div className="bg-black/20 p-4 rounded-2xl flex items-start gap-3 border border-white/10"><ShieldAlert className="w-5 h-5 text-white shrink-0" /><p className="text-xs font-bold leading-tight">INJURY WARNING: Athlete workload is increasing too fast. Reduce intensity tomorrow.</p></div>)}</div></Card>
         </div>
         <div className="lg:col-span-7 space-y-8">
            <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl h-[450px] flex flex-col"><CardHeader className="bg-slate-50 border-b p-8 flex flex-row justify-between items-center"><div className="flex items-center gap-3"><LineChartIcon className="w-6 h-6 text-primary" /><CardTitle className="text-sm font-black uppercase tracking-widest text-primary">Load Intensity Trend</CardTitle></div><Badge variant="outline" className="border-primary/20 text-primary font-black uppercase text-[9px] px-3">Last 14 Records</Badge></CardHeader><CardContent className="flex-1 p-10">{chartData.length > 0 ? (<ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData}><defs><linearGradient id="colorLoad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#1e3a8a" stopOpacity={0.1}/><stop offset="95%" stopColor="#1e3a8a" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} /><Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} /><Area type="monotone" dataKey="load" stroke="#1e3a8a" strokeWidth={4} fillOpacity={1} fill="url(#colorLoad)" name="Unit Load" /><Line type="monotone" dataKey="rpe" stroke="#f59e0b" strokeWidth={2} dot={false} name="RPE Score" /></AreaChart></ResponsiveContainer>) : (<div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4 text-primary" /><p className="font-black uppercase tracking-widest text-sm">No historical load data found</p></div>)}</CardContent></Card>

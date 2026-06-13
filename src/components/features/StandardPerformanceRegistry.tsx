@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -274,10 +275,10 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
           </DialogHeader>
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 gap-4">
-              {Object.keys(DEFAULT_PERFORMANCE_LABELS).map((field: string) => (
+              {(Object.keys(DEFAULT_PERFORMANCE_LABELS) as Array<keyof PerformanceLabels>).map((field) => (
                 <div key={field} className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
-                  <Input value={editingLabels[field as keyof PerformanceLabels]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field as keyof PerformanceLabels]: e.target.value})} className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner" />
+                  <Input value={editingLabels[field]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field]: e.target.value})} className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner" />
                 </div>
               ))}
             </div>
