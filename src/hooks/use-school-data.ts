@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
@@ -11,7 +10,7 @@ import { format } from 'date-fns';
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 export function useSchoolData(isActive: boolean = true) {
-  // Hook Sequence Stabilization - ALL useState at the absolute top
+  // 1. STATE DEFINITIONS (Absolute Top)
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -32,6 +31,7 @@ export function useSchoolData(isActive: boolean = true) {
   const { user } = useUser();
   const syncLockRef = useRef(false);
 
+  // 2. STABLE CALLBACKS
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
 
@@ -66,6 +66,7 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }, [db, user, selectedYear]);
 
+  // 3. FIREBASE QUERIES (MEMOIZED)
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
@@ -81,6 +82,7 @@ export function useSchoolData(isActive: boolean = true) {
   }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
+  // 4. REAL-TIME SYNCHRONIZATION
   useEffect(() => {
     if (!user || !db || !isActive) return;
 
@@ -176,6 +178,7 @@ export function useSchoolData(isActive: boolean = true) {
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
+  // 5. AGGREGATED DATA MEMO
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,

@@ -26,6 +26,7 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
+  // Use a ref to track the current path and avoid infinite loops
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export function useDoc<T = any>(
     }
 
     const currentPath = memoizedDocRef.path;
+    // Only set loading if the path has actually changed
     if (lastPathRef.current !== currentPath) {
       setIsLoading(true);
       setError(null);

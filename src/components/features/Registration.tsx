@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -27,7 +26,11 @@ import {
   RefreshCcw,
   Baby,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  Contact,
+  HeartPulse,
+  MapPin
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -207,7 +210,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   }, [stream, activeCam]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <Card className="border-2 rounded-[3rem] bg-accent/5 border-accent/10 shadow-lg overflow-hidden">
         <CardContent className="p-8">
            <div className="flex flex-col md:flex-row items-center gap-6">
@@ -303,6 +306,34 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       </div>
                     )}
                   </div>
+
+                  <div className="space-y-4">
+                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                      <Scan className="w-4 h-4" /> Aadhar Card Scan
+                    </FormLabel>
+                    <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/10">
+                      {activeCam === 'aadhar' ? (
+                        <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                      ) : form.watch('aadharPhotoUrl') ? (
+                        <div className="relative w-full h-full"><Image src={form.watch('aadharPhotoUrl')} alt="Aadhar" fill unoptimized className="object-cover" /></div>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center opacity-10"><Upload className="w-8 h-8" /></div>
+                      )}
+                      {activeCam === 'aadhar' && (
+                         <div className="absolute bottom-4 left-4 right-4 flex gap-2">
+                            <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-white font-black text-[10px] h-10 rounded-xl shadow-lg">CAPTURE SCAN</Button>
+                            <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl shadow-lg"><CircleX className="w-4 h-4" /></Button>
+                         </div>
+                      )}
+                    </div>
+                    {!activeCam && (
+                      <div className="flex gap-2">
+                        <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-xl h-10 font-black uppercase text-[9px]">Scan Aadhar</Button>
+                        <Button type="button" onClick={() => aadharUploadRef.current?.click()} variant="outline" className="w-10 h-10 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                        <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="lg:col-span-8 space-y-12">
@@ -350,10 +381,34 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
                   <div className="space-y-6">
                     <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                      <Calendar className="w-5 h-5" />
+                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Demographics</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <FormField control={form.control} name="dob" render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Date of Birth</FormLabel>
+                           <FormControl><Input type="date" className="h-12 font-bold border-2 rounded-xl bg-white" {...field} /></FormControl>
+                         </FormItem>
+                       )} />
+                       <FormField control={form.control} name="bloodGroup" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black text-primary uppercase tracking-widest">Blood Group</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl bg-white font-bold"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </FormItem>
+                      )} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
                       <Ruler className="w-5 h-5" />
                       <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical Details</h3>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                       <FormField control={form.control} name="height" render={({ field }) => (
                         <FormItem><FormLabel className="text-[9px] font-black uppercase">Ht (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
@@ -363,22 +418,40 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       <FormField control={form.control} name="weight" render={({ field }) => (
                         <FormItem><FormLabel className="text-[9px] font-black uppercase">Wt (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
                       )} />
-                      <FormField control={form.control} name="bloodGroup" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[9px] font-black uppercase">Blood Grp</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </FormItem>
-                      )} />
                     </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                      <Contact className="w-5 h-5" />
+                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Contact & Identity</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <FormField control={form.control} name="aadharNumber" render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar Number (12 Digit)</FormLabel>
+                           <FormControl><Input maxLength={12} placeholder="0000 0000 0000" className="h-12 font-black border-2 rounded-xl" {...field} /></FormControl>
+                         </FormItem>
+                       )} />
+                       <FormField control={form.control} name="mobileNumber" render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mobile Number</FormLabel>
+                           <FormControl><Input placeholder="+91" className="h-12 font-black border-2 rounded-xl" {...field} /></FormControl>
+                         </FormItem>
+                       )} />
+                    </div>
+                    <FormField control={form.control} name="address" render={({ field }) => (
+                       <FormItem>
+                         <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3" /> Permanent Address</FormLabel>
+                         <FormControl><Input placeholder="Village, Taluka, District..." className="h-12 border-2 rounded-xl" {...field} /></FormControl>
+                       </FormItem>
+                    )} />
                   </div>
 
                   <div className="space-y-6">
                     <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
                       <Medal className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Games</h3>
+                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Games & History</h3>
                     </div>
                     <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-dashed border-accent/20">
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
@@ -395,14 +468,31 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         ))}
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                       <FormField control={form.control} name="history" render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="text-[10px] font-black uppercase text-primary">Previous Sports History?</FormLabel>
+                           <Select onValueChange={field.onChange} value={field.value}>
+                             <FormControl><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl>
+                             <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                           </Select>
+                         </FormItem>
+                       )} />
+                       <FormField control={form.control} name="medical" render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions</FormLabel>
+                           <FormControl><Input placeholder="None or specify..." className="h-12 border-2 rounded-xl font-medium" {...field} /></FormControl>
+                         </FormItem>
+                       )} />
+                    </div>
                   </div>
                   
                   <div className="pt-8 border-t border-dashed flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-4 text-muted-foreground">
                       <ShieldAlert className="w-6 h-6 opacity-30" />
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Records are cryptographically secured.</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Records are cryptographically secured in the WGB Cloud Vault.</p>
                     </div>
-                    <Button type="submit" className="w-full md:w-auto px-20 h-20 bg-primary text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] text-lg active-scale">Register Profile</Button>
+                    <Button type="submit" disabled={!isOnline} className="w-full md:w-auto px-20 h-20 bg-primary text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] text-lg active-scale">Register Profile</Button>
                   </div>
                 </div>
               </div>
@@ -415,4 +505,3 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     </div>
   );
 }
-

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -15,7 +14,8 @@ import {
   Zap, 
   History,
   BrainCircuit,
-  LineChart as LineChartIcon
+  LineChart as LineChartIcon,
+  ShieldAlert
 } from 'lucide-react';
 import { 
   Line, 
