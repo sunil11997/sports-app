@@ -92,6 +92,7 @@ const SPLASH_LOTTIE_URL = "https://lottie.host/33acb9fa-1151-11ee-9728-ff4c18263
 export default function WaghambaApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [splashData, setSplashData] = useState<any>(null);
   const [stage, setStage] = useState<'landing' | 'selector' | 'hub'>('landing');
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
@@ -100,14 +101,21 @@ export default function WaghambaApp() {
   const [headerDate, setHeaderDate] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   
-  const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' && isMounted);
+  const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' || showSplash);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
   useEffect(() => {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
-    const timer = setTimeout(() => setShowSplash(false), 3000);
+    
+    // Fetch Splash Lottie Data
+    fetch(SPLASH_LOTTIE_URL)
+      .then(res => res.json())
+      .then(data => setSplashData(data))
+      .catch(err => console.error("WGB: Splash load failed", err));
+
+    const timer = setTimeout(() => setShowSplash(false), 3500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -141,11 +149,17 @@ export default function WaghambaApp() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
         <div className="max-w-xs w-full text-center space-y-8 relative z-10">
            <div className="w-64 h-64 mx-auto relative animate-in zoom-in duration-1000">
-             <Lottie 
-               path={SPLASH_LOTTIE_URL}
-               loop={true}
-               className="w-full h-full"
-             />
+             {splashData ? (
+               <Lottie 
+                 animationData={splashData}
+                 loop={true}
+                 className="w-full h-full"
+               />
+             ) : (
+               <div className="w-full h-full flex items-center justify-center">
+                 <Loader2 className="w-12 h-12 text-white/20 animate-spin" />
+               </div>
+             )}
            </div>
            <div className="space-y-4">
              <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.26</h2>
@@ -474,4 +488,3 @@ export default function WaghambaApp() {
     </div>
   );
 }
-

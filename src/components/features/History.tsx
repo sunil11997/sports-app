@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -29,7 +30,6 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import type { FitnessAssessment } from '@/lib/types';
 
 export function PerformanceDossier({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");

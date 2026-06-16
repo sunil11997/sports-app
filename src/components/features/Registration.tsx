@@ -31,7 +31,7 @@ import {
   Contact,
   HeartPulse,
   MapPin,
-  Scan
+  ScanFace
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -256,7 +256,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
               </div>
               <div>
                 <CardTitle className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Enrollment Hub</CardTitle>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-3">Institutional Registry v4.3.26</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v4.3.26</p>
               </div>
             </div>
             <div className="bg-white p-2 rounded-2xl border-2 border-primary/10 shadow-inner inline-flex">
@@ -310,7 +310,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
                   <div className="space-y-4">
                     <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
-                      <Scan className="w-4 h-4" /> Aadhar Card Scan
+                      <ScanFace className="w-4 h-4" /> Aadhar Card Scan
                     </FormLabel>
                     <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-dashed border-primary/20 bg-muted/10">
                       {activeCam === 'aadhar' ? (
