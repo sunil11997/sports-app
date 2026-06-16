@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -200,7 +199,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
               `).join('')}
             </tbody>
           </table>
-          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.24</p>
+          <p style="font-size: 8px; margin-top: 50px; text-align: center; opacity: 0.5;">Waghamba Institutional Hub Registry Engine v4.3.26</p>
         </body>
       </html>
     `;
@@ -220,7 +219,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Performance Dossier</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.24</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Registry Progress Hub v4.3.26</p>
           </div>
         </div>
         <div className="flex flex-col w-full md:w-80 gap-3">
@@ -321,7 +320,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
                         <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
                         <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
-                        <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={5} fill="#0048A0" fillOpacity={0.08} name="Aggregate Score" />
+                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={5} fill="#1e3a8a" fillOpacity={0.08} name="Aggregate Score" />
                         <Line type="monotone" dataKey="stamina" stroke="#f59e0b" strokeWidth={3} name="Endurance" />
                         <Line type="monotone" dataKey="agility" stroke="#10b981" strokeWidth={3} name="Agility" />
                         <Legend verticalAlign="top" iconType="circle" />

@@ -29,6 +29,8 @@ export function useSchoolData(isActive: boolean = true) {
 
   const db = useFirestore();
   const { user } = useUser();
+  
+  // Use a ref for the sync lock to prevent recursive render loops
   const syncLockRef = useRef(false);
 
   // 2. STABLE CALLBACKS
@@ -52,8 +54,19 @@ export function useSchoolData(isActive: boolean = true) {
         if (parts.length < 3) continue;
         const [playerId, date, session] = parts;
         const attRef = doc(db, 'attendance_registry', `${playerId}_${date}_${session}`);
-        if (!status) deleteDocumentNonBlocking(attRef);
-        else setDocumentNonBlocking(attRef, { status, playerId, date, session, schoolId: user.uid, academicYear: selectedYear }, { merge: true });
+        
+        if (!status) {
+          deleteDocumentNonBlocking(attRef);
+        } else {
+          setDocumentNonBlocking(attRef, { 
+            status, 
+            playerId, 
+            date, 
+            session, 
+            schoolId: user.uid, 
+            academicYear: selectedYear 
+          }, { merge: true });
+        }
         delete queue[key];
       }
       localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
@@ -115,7 +128,9 @@ export function useSchoolData(isActive: boolean = true) {
           const data = doc.data() as FitnessAssessment;
           const pId = data.playerId;
           if (!pId) return;
-          if (!latestMap[pId] || (data.updatedAt && latestMap[pId].updatedAt && new Date(data.updatedAt) > new Date(latestMap[pId].updatedAt!))) latestMap[pId] = data;
+          if (!latestMap[pId] || (data.updatedAt && latestMap[pId].updatedAt && new Date(data.updatedAt) > new Date(latestMap[pId].updatedAt!))) {
+            latestMap[pId] = data;
+          }
           if (!historyMap[pId]) historyMap[pId] = [];
           historyMap[pId].push({ ...data, date: data.date || data.updatedAt?.split('T')[0] });
         });
@@ -130,7 +145,9 @@ export function useSchoolData(isActive: boolean = true) {
           const pId = data.playerId;
           if (!pId) return;
           const key = `${pId}_${data.sportName}`;
-          if (!skillsMap[key] || (data.lastUpdated && skillsMap[key].lastUpdated && new Date(data.lastUpdated) > new Date(skillsMap[key].lastUpdated!))) skillsMap[key] = data;
+          if (!skillsMap[key] || (data.lastUpdated && skillsMap[key].lastUpdated && new Date(data.lastUpdated) > new Date(skillsMap[key].lastUpdated!))) {
+            skillsMap[key] = data;
+          }
           if (!historyMap[pId]) historyMap[pId] = [];
           historyMap[pId].push({ ...data, sportName: data.sportName || 'Unknown' });
         });
@@ -154,7 +171,10 @@ export function useSchoolData(isActive: boolean = true) {
       }),
       onSnapshot(query(collection(db, 'readiness_registry'), where('schoolId', '==', user.uid), where('date', '==', today)), (snapshot) => {
         const map: Record<string, any> = {};
-        snapshot.docs.forEach(doc => { const d = doc.data(); map[d.playerId] = d; });
+        snapshot.docs.forEach(doc => { 
+          const d = doc.data(); 
+          map[d.playerId] = d; 
+        });
         setDailyReadinessData(map);
       }),
       onSnapshot(query(collection(db, 'tactical_registry'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear)), (snapshot) => {
