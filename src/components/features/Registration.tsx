@@ -30,7 +30,8 @@ import {
   Calendar,
   Contact,
   HeartPulse,
-  MapPin
+  MapPin,
+  Scan
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
