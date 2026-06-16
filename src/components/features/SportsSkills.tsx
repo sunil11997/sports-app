@@ -185,17 +185,10 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
     return store.data.players
       .filter((p: any) => p.category === targetCategory && (isGeneral || (p.sports && p.sports.includes(activeSport))))
       .sort((a: any, b: any) => {
-        // Academic Standard
         const stdA = parseInt(a.std) || 0;
         const stdB = parseInt(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
-
-        // Gender: Boys first (Male prioritized)
-        if (a.gender !== b.gender) {
-          return a.gender === 'Male' ? -1 : 1;
-        }
-
-        // Roll Number
+        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, targetCategory, isGeneral, activeSport]);

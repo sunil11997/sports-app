@@ -36,49 +36,56 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
     skills: [
       "Target serving drill", "Partner passing drill", "Wall setting drill", 
       "Toss and spike drill", "Blocking jump drill", "Digging defense drill", 
-      "Circle passing drill", "Serve receive drill", "3-touch drill"
+      "Circle passing drill", "Serve receive drill", "3-touch drill", "Defense rotation"
     ]
   },
   'Kho Kho': {
     skills: [
       "Pole dive drill", "Zig-zag running drill", "Chase and tag drill", "Giving kho drill",
-      "Direction change drill", "Reaction speed drill", "Sitting position drill", "Dodging practice drill"
+      "Direction change drill", "Reaction speed drill", "Sitting position drill", "Dodging practice drill",
+      "Turning at pole", "Low sitting stance"
     ]
   },
   'Handball': {
     skills: [
       "Partner passing drill", "Wall passing drill", "Zig-zag dribbling drill", "Cone dribbling drill",
-      "Target shooting drill", "Jump shot drill", "Bounce shot drill", "Goalkeeper reaction drill"
+      "Target shooting drill", "Jump shot drill", "Bounce shot drill", "Goalkeeper reaction drill",
+      "Defense shifting", "Fast break transition"
     ]
   },
   'Running': {
     skills: [
       "Sprint start drill", "Acceleration drill", "Shuttle run drill", "High-knee drive",
-      "Baton exchange drill", "Stride length drill", "Explosive reaction drill", "Interval pacing"
+      "Baton exchange drill", "Stride length drill", "Explosive reaction drill", "Interval pacing",
+      "Finish lean technique"
     ]
   },
   'Shot Put': {
     skills: [
       "Glide technique", "Grip and carry", "Initial stance", "Power position",
-      "Extension and push", "Wrist flick", "Reverse recovery", "Balance maintenance"
+      "Extension and push", "Wrist flick", "Reverse recovery", "Balance maintenance",
+      "Rotational delivery"
     ]
   },
   'Javelin Throw': {
     skills: [
       "Grip and carry", "Approach run", "Cross-over steps", "Withdrawal",
-      "Power position", "Delivery strike", "Recovery step", "Tip control"
+      "Power position", "Delivery strike", "Recovery step", "Tip control",
+      "Arm speed drills"
     ]
   },
   'Disc Throw': {
     skills: [
       "Grip technique", "Initial stance", "Wind-up", "Turning rhythm",
-      "Power position", "Release and flick", "Reverse/Recovery", "Spin control"
+      "Power position", "Release and flick", "Reverse/Recovery", "Spin control",
+      "Centrifugal balance"
     ]
   },
   'Athletics': {
     skills: [
       "Sprint start drill", "Acceleration drill", "Shuttle run drill", "Relay baton exchange drill",
-      "Long jump take-off drill", "Sand pit landing drill", "High jump approach drill", "Scissor jump drill"
+      "Long jump take-off drill", "Sand pit landing drill", "High jump approach drill", "Scissor jump drill",
+      "Fosbury flop drills"
     ]
   }
 };

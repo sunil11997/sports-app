@@ -156,7 +156,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
           </div>
         </div>
         <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
-          <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" />
+          <Input type="month" value={selectedMonth} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMonth(e.target.value)} className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" />
         </div>
       </div>
 

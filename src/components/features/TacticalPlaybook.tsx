@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -38,11 +37,19 @@ const STANDARD_STRATEGIES: Record<string, any[]> = {
     { title: '५-१-१ डिफेन्स सेटअप', type: 'Defense', intensity: 'High', desc: 'डिफेंडरची साखळी आणि कोपरं सांभाळण्याची रणनीती. जेव्हा बोनस ऑन असतो तेव्हा ही वापरतात.', howTo: '१. दोन्ही कोपरे (Corners) लाइनच्या आत खोलवर राहातात.\n२. मधले कव्हर्स रेडरच्या हालचालीवर लक्ष ठेवतात आणि त्याला बोनस घेण्यास प्रवृत्त करतात.\n३. जसा रेडर बोनससाठी पाय टाकतो, तसे कोपरे आणि कव्हर्स मिळून त्याला घेतात.', img: 'https://picsum.photos/seed/kdef1/600/400' },
     { title: '३-२-२ कव्वर पॅटर्न', type: 'Defense', intensity: 'Extreme', desc: 'मधल्या डिफेंडर्सनी रेडरला घेरण्याची रणनीती. अत्यंत वेगवान हालचाल आवश्यक.', howTo: '१. ही रणनीती प्रामुख्याने ७ खेळाडू मैदानात असताना वापरली जाते.\n२. मधले दोन खेळाडू (In-Covers) रेडरला कोपऱ्याकडे ढकलतात.\n३. रेडर कोपऱ्यात अडकला की संपूर्ण टीम साखळीने त्याला डॅश करते.', img: 'https://picsum.photos/seed/kdef2/600/400' },
     { title: 'बोनस एस्केप अटॅक', type: 'Offense', intensity: 'Moderate', desc: 'रेडरने बोनस घेताना कोपऱ्यातून पळून जाण्याचे तंत्र.', howTo: '१. रेडर कोपऱ्यातील डिफेंडरला फसवून पाय बोनस लाईनच्या पलीकडे टाकतो.\n२. पाय पडताच कंबर फिरवून मध्यरेषेकडे झेप घेतो.\n३. हे करताना डिफेंडरचा डॅश चुकवणे महत्त्वाचे असते.', img: 'https://picsum.photos/seed/koff1/600/400' },
-    { title: 'साखळी पकड (Chain Tackle)', type: 'Defense', intensity: 'High', desc: 'दोन खेळाडूंनी हात धरून रेडरला घेरण्याची आणि डॅश करण्याची पद्धत.', howTo: '१. दोन डिफेंडर्स एकमेकांचे हात घट्ट धरतात.\n२. रेडर जेव्हा कोपऱ्यात जातो, तेव्हा हे doघे वर्तुळाकार फिरून त्याचा रस्ता रोखतात.\n३. साखळीचा वापर करून रेडरला उचलून बाहेर ढकलले जाते.', img: 'https://picsum.photos/seed/k4/600/400' }
+    { title: 'साखळी पकड (Chain Tackle)', type: 'Defense', intensity: 'High', desc: 'दोन खेळाडूंनी हात धरून रेडरला घेरण्याची आणि डॅश करण्याची पद्धत.', howTo: '१. दोन डिफेंडर्स एकमेकांचे हात घट्ट धरतात.\n२. रेडर जेव्हा कोपऱ्यात जातो, तेव्हा हे दोघे वर्तुळाकार फिरून त्याचा रस्ता रोखतात.\n३. साखळीचा वापर करून रेडरला उचलून बाहेर ढकलले जाते.', img: 'https://picsum.photos/seed/k4/600/400' },
+    { title: 'डॅश डिफेन्स (Dash)', type: 'Defense', intensity: 'High', desc: 'रेडरला मध्यरेषेकडे जाण्यापासून जोरात धक्का देऊन बाहेर काढणे.', howTo: '१. कव्हर डिफेन्स रेडरच्या हालचालीचा अंदाज घेतात.\n२. जसा रेडर कोपऱ्यात जातो, कव्हर खेळाडू जोरात धावत येऊन त्याला खांद्याने धक्का देतो.', img: 'https://picsum.photos/seed/k5/600/400' },
+    { title: 'थाय होल्ड (Thigh Hold)', type: 'Defense', intensity: 'Moderate', desc: 'रेडरचे पाय पकडून त्याला जागीच रोखण्याची पद्धत.', howTo: '१. डिफेंडर रेडरच्या एका पायावर लक्ष केंद्रित करतो.\n२. जसा पाय जवळ येतो, डिफेंडर दोन्ही हातांनी मांडी धरून त्याला खाली पाडतो.', img: 'https://picsum.photos/seed/k6/600/400' }
   ],
   'Volleyball': [
     { title: '६-२ रोटेशन पॅटर्न', type: 'Rotation', intensity: 'Moderate', desc: 'दोन सेटर वापरून आक्रमणाची धार वाढवण्याची पद्धत.', howTo: '१. दोन सेटर विरुद्ध दिशेला उभे राहतात.\n२. मागच्या रांगेतील सेटर सेट करण्यासाठी पुढे येतो.\n३. यामुळे समोरच्या रांगेत नेहमी ३ अटॅकर्स उपलब्ध असतात.', img: 'https://picsum.photos/seed/v1/600/400' },
-    { title: 'ट्रिपल ब्लॉक कव्हरेज', type: 'Defense', intensity: 'High', desc: 'प्रतिस्पर्धी स्पायकरला रोखण्यासाठी तीन खेळाडूंनी एकत्र उडी मारणे.', howTo: '१. समोरच्या रांगेतील तिन्ही खेळाडू स्पायकरच्या समोर एकत्र येतात.\n२. एकाच वेळी उडी मारून हातांची भिंत उभी करतात.\n३. यामुळे बॉल परत जाण्याची शक्यता ९०% वाढते.', img: 'https://picsum.photos/seed/v2/600/400' }
+    { title: 'ट्रिपल ब्लॉक कव्हरेज', type: 'Defense', intensity: 'High', desc: 'प्रतिस्पर्धी स्पायकरला रोखण्यासाठी तीन खेळाडूंनी एकत्र उडी मारणे.', howTo: '१. समोरच्या रांगेतील तिन्ही खेळाडू स्पायकरच्या समोर एकत्र येतात.\n२. एकाच वेळी उडी मारून हातांची भिंत उभी करतात.\n३. यामुळे बॉल परत जाण्याची शक्यता ९०% वाढते.', img: 'https://picsum.photos/seed/v2/600/400' },
+    { title: 'लिबेरो डिफेन्स (Libero)', type: 'Defense', intensity: 'High', desc: 'विशेष संरक्षण खेळाडू जो फक्त मागच्या रांगेत खेळतो.', howTo: '१. लिबेरोचा गणवेश वेगळ्या रंगाचा असतो.\n२. तो बॉल रिसीव्ह करण्यात आणि डिगिंग करण्यात तज्ज्ञ असतो.', img: 'https://picsum.photos/seed/v3/600/400' },
+    { title: 'फ्लोट सर्व्हिस (Float)', type: 'Offense', intensity: 'Low', desc: 'बॉल न फिरवता मारणे जेणेकरून तो हवेत डोलत जाईल.', howTo: '१. बॉलच्या मध्यभागी सरळ हाताने मारा.\n२. बॉलला स्पिन देऊ नका.', img: 'https://picsum.photos/seed/v4/600/400' }
+  ],
+  'Running': [
+    { title: '१००मी स्टार्ट (Start)', type: 'Technique', intensity: 'Extreme', desc: 'सुरुवातीच्या सेकंदात जास्तीत जास्त वेग पकडण्याची पद्धत.', howTo: '१. ब्लॉक्सवर योग्य स्थितीत बसा.\n२. गोळी सुटताच हातांच्या वेगाने पुढे झेपावा.', img: 'https://picsum.photos/seed/r1/600/400' },
+    { title: 'बॅटन एक्सचेंज (Relay)', type: 'Teamwork', intensity: 'High', desc: 'रिले रेसमध्ये बॅटन न पाहता यशस्वीपणे दुसऱ्या खेळाडूकडे सोपवणे.', howTo: '१. एक्सचेंज झोनमध्ये येताच बॅटन देणाऱ्याने ओरडावे.\n२. घेणाऱ्याने हात मागे करून बॅटन घट्ट पकडावे.', img: 'https://picsum.photos/seed/r2/600/400' }
   ]
 };
 
@@ -76,7 +83,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      <div className="bg-accent p-10 rounded-[3.5rem] shadow-2xl relative overflow-hidden text-white">
+      <div className="bg-accent p-10 rounded-[3rem] shadow-2xl relative overflow-hidden text-white">
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
            <div className="flex items-center gap-6">
              <div className="w-20 h-20 bg-white/20 rounded-[1.5rem] flex items-center justify-center backdrop-blur-md border border-white/30">
@@ -84,7 +91,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
              </div>
              <div className="space-y-2">
                <h2 className="text-4xl font-black uppercase tracking-tighter leading-none">Playbook</h2>
-               <p className="text-xs font-bold text-white/70 uppercase tracking-[0.3em]">Elite Tactical Hub v4.3.24</p>
+               <p className="text-xs font-bold text-white/70 uppercase tracking-[0.3em]">Elite Tactical Hub v4.3.26</p>
              </div>
            </div>
            <Button onClick={() => setIsBuilderOpen(true)} className="bg-white text-accent h-14 rounded-2xl font-black uppercase text-[10px] px-8 shadow-xl">
@@ -163,9 +170,9 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                       <Card key={plan.id} className="border-2 rounded-[2rem] p-6 hover:border-primary/30 transition-all group bg-white shadow-sm">
                         <div className="flex justify-between items-start mb-2">
                            <h5 className="font-black text-primary uppercase text-sm">{plan.title}</h5>
-                           <Button variant="ghost" size="icon" onClick={() => setCustomPlans(customPlans.filter(p => p.id !== plan.id))} className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                           <button onClick={() => setCustomPlans(customPlans.filter(p => p.id !== plan.id))} className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                              <Trash2 className="w-4 h-4" />
-                           </Button>
+                           </button>
                         </div>
                         <p className="text-xs font-medium text-foreground/60 line-clamp-2 italic">&quot;{plan.desc}&quot;</p>
                         <div className="mt-4 pt-4 border-t flex justify-between items-center">
@@ -234,11 +241,11 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
               <div className="p-8 space-y-6 bg-white">
                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Title</label>
-                    <Input value={planTitle} onChange={(e) => setPlanTitle(e.target.value)} placeholder="Strategy Name..." className="h-14 rounded-2xl border-2 font-bold px-6 shadow-inner" />
+                    <Input value={planTitle} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPlanTitle(e.target.value)} placeholder="Strategy Name..." className="h-14 rounded-2xl border-2 font-bold px-6 shadow-inner" />
                  </div>
                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Description</label>
-                    <Textarea value={planDesc} onChange={(e) => setPlanDesc(e.target.value)} placeholder="Tactical breakdown..." className="min-h-[150px] rounded-2xl border-2 font-medium p-6 shadow-inner" />
+                    <Textarea value={planDesc} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPlanDesc(e.target.value)} placeholder="Tactical breakdown..." className="min-h-[150px] rounded-2xl border-2 font-medium p-6 shadow-inner" />
                  </div>
                  <div className="flex gap-4 pt-4">
                     <Button onClick={() => setIsBuilderOpen(false)} variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest">Discard</Button>
