@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -196,45 +197,47 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               <span className="text-[9px] font-black uppercase text-primary">Live Sync</span>
             </div>
           </CardHeader>
-          <CardContent className="p-8 flex-1 bg-muted/5 overflow-y-auto">
-            <div className="space-y-12">
-               {Object.entries(groupedSquads).map(([cat, squad]) => (
-                 <div key={cat} className="space-y-6">
-                    <div className="flex items-center justify-between border-b-2 border-primary/5 pb-2">
-                       <h3 className="font-black text-primary uppercase text-sm flex items-center gap-2">
-                         <Users className="w-4 h-4 text-accent" /> {cat} Athletes
-                       </h3>
-                       <Badge variant="secondary" className="bg-primary/5 text-primary font-black text-[9px] px-3">{squad.length} Active</Badge>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {squad.map((player: any) => (
-                         <div key={player.id} className="flex items-center justify-between bg-white p-4 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
-                           <div className="flex items-center gap-3">
-                             <Avatar className="w-10 h-10 border-2 border-primary/5">
-                               <AvatarImage src={player.photoUrl} className="object-cover" />
-                               <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">{player.name[0]}</AvatarFallback>
-                             </Avatar>
-                             <div className="min-w-0">
-                               <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[120px]">{player.name}</p>
-                               <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std}</span>
-                             </div>
-                           </div>
-                           <div className="flex items-center gap-2">
-                              <Button onClick={() => handleMasteryToggle(player.id, false)} disabled={!!isProcessing} variant="outline" size="icon" className="h-9 w-9 text-destructive border-2"><X className="w-4 h-4" /></Button>
-                              <Button onClick={() => handleMasteryToggle(player.id, true)} disabled={!!isProcessing} className="h-9 w-9 bg-emerald-500 text-white shadow-md active-scale"><Check className="w-4 h-4" /></Button>
-                           </div>
-                         </div>
-                       ))}
-                       {squad.length === 0 && (
-                         <div className="col-span-full py-10 text-center opacity-20 border-2 border-dashed rounded-3xl">
-                            <Flame className="w-6 h-6 mx-auto mb-2" />
-                            <p className="text-[8px] font-black uppercase">No {cat} athletes pending</p>
-                         </div>
-                       )}
-                    </div>
-                 </div>
-               ))}
-            </div>
+          <CardContent className="p-8 flex-1 bg-muted/5">
+            <ScrollArea className="h-full">
+              <div className="space-y-12 pr-4">
+                {Object.entries(groupedSquads).map(([cat, squad]) => (
+                  <div key={cat} className="space-y-6">
+                      <div className="flex items-center justify-between border-b-2 border-primary/5 pb-2">
+                        <h3 className="font-black text-primary uppercase text-sm flex items-center gap-2">
+                          <Users className="w-4 h-4 text-accent" /> {cat} Athletes
+                        </h3>
+                        <Badge variant="secondary" className="bg-primary/5 text-primary font-black text-[9px] px-3">{squad.length} Active</Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {squad.map((player: any) => (
+                          <div key={player.id} className="flex items-center justify-between bg-white p-4 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-10 h-10 border-2 border-primary/5">
+                                <AvatarImage src={player.photoUrl} className="object-cover" />
+                                <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">{player.name[0]}</AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[120px]">{player.name}</p>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button onClick={() => handleMasteryToggle(player.id, false)} disabled={!!isProcessing} variant="outline" size="icon" className="h-9 w-9 text-destructive border-2"><X className="w-4 h-4" /></Button>
+                                <Button onClick={() => handleMasteryToggle(player.id, true)} disabled={!!isProcessing} className="h-9 w-9 bg-emerald-500 text-white shadow-md active-scale"><Check className="w-4 h-4" /></Button>
+                            </div>
+                          </div>
+                        ))}
+                        {squad.length === 0 && (
+                          <div className="col-span-full py-10 text-center opacity-20 border-2 border-dashed rounded-3xl">
+                              <Flame className="w-6 h-6 mx-auto mb-2" />
+                              <p className="text-[8px] font-black uppercase">No {cat} athletes pending</p>
+                          </div>
+                        )}
+                      </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
 
@@ -264,7 +267,6 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                 </div>
               )}
             </CardContent>
-            <ScrollBar orientation="vertical" />
           </ScrollArea>
         </Card>
       </div>

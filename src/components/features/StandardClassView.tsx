@@ -320,7 +320,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <Input type="number" value={editingPlayer.weight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label>
+                        <Label className="text-[10px) font-black uppercase text-primary ml-2">Blood Group</Label>
                         <Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}>
                           <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>

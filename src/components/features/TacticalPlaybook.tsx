@@ -231,31 +231,6 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
           )}
         </DialogContent>
       </Dialog>
-
-      {isBuilderOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-           <Card className="w-full max-w-lg rounded-[3rem] border-none shadow-3xl overflow-hidden animate-in zoom-in-95 duration-500">
-              <div className="bg-primary p-8 text-white text-center">
-                 <h4 className="text-2xl font-black uppercase tracking-tight">Strategy Builder</h4>
-                 <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Archive Tactics</p>
-              </div>
-              <div className="p-8 space-y-6 bg-white">
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Title</label>
-                    <Input value={planTitle} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPlanTitle(e.target.value)} placeholder="Strategy Name..." className="h-14 rounded-2xl border-2 font-bold px-6 shadow-inner" />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-2">Description</label>
-                    <Textarea value={planDesc} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPlanDesc(e.target.value)} placeholder="Tactical breakdown..." className="min-h-[150px] rounded-2xl border-2 font-medium p-6 shadow-inner" />
-                 </div>
-                 <div className="flex gap-4 pt-4">
-                    <Button onClick={() => setIsBuilderOpen(false)} variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest">Discard</Button>
-                    <Button onClick={handleSavePlan} className="flex-1 h-14 bg-accent text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Save</Button>
-                 </div>
-              </div>
-           </Card>
-        </div>
-      )}
     </div>
   );
 }

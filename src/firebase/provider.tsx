@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -107,15 +108,20 @@ export const useUser = () => {
   return { user: context.user, isUserLoading: context.isUserLoading, userError: context.userError };
 };
 
+/**
+ * useMemoFirebase - Hardened Memoization for Firestore Refs
+ * Corrected to avoid the 'factory' dependency warning and satisfy React Hook linting.
+ */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => {
-    const val = factory();
+  const val = useMemo(factory, deps);
+  
+  useEffect(() => {
     if (val && typeof val === 'object') {
       try {
         Object.defineProperty(val, '__memo', { value: true, configurable: true, enumerable: false, writable: true });
       } catch (e) {}
     }
-    return val;
-  }, deps); 
+  }, [val]);
+  
+  return val;
 }

@@ -10,8 +10,16 @@ import { format } from 'date-fns';
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
+/**
+ * useSchoolData - Institutional Registry Engine v4.3.26
+ * Hardened for high-resilience persistence and strict hook execution order.
+ */
 export function useSchoolData(isActive: boolean = true) {
-  // 1. Hook Sequence Guard (All state at the top)
+  // 1. ALL Hook definitions MUST remain at the top level
+  const db = useFirestore();
+  const { user } = useUser();
+  const syncLockRef = useRef(false);
+
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -28,13 +36,22 @@ export function useSchoolData(isActive: boolean = true) {
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
   const [drillCompletions, setDrillCompletionsData] = useState<Record<string, boolean>>({});
 
-  const db = useFirestore();
-  const { user } = useUser();
-  
-  // Stable Sync Lock (Ref based to avoid re-renders)
-  const syncLockRef = useRef(false);
+  // Memoized Firebase References
+  const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
+  const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
-  // 2. Stable Callbacks
+  const playersQuery = useMemoFirebase(() => {
+    if (!user || !db || !isActive) return null;
+    return query(collection(db, 'players'), where('ownerId', '==', user.uid));
+  }, [db, user, isActive]);
+  const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
+
+  const incidentsQuery = useMemoFirebase(() => {
+    if (!user || !db || !isActive) return null;
+    return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear));
+  }, [db, user, selectedYear, isActive]);
+  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
+
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
 
@@ -73,30 +90,14 @@ export function useSchoolData(isActive: boolean = true) {
       localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
       setPendingCount(0);
     } catch (error) {
-      console.warn("WGB: Offline sync retry required");
+      console.warn("WGB: Offline sync failed, retry required.");
     } finally {
       setIsSyncing(false);
       syncLockRef.current = false;
     }
   }, [db, user, selectedYear]);
 
-  // 3. Firebase Queries (Memoized)
-  const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
-  const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
-
-  const playersQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(collection(db, 'players'), where('ownerId', '==', user.uid));
-  }, [db, user, isActive]);
-  const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
-
-  const incidentsQuery = useMemoFirebase(() => {
-    if (!user || !db || !isActive) return null;
-    return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear));
-  }, [db, user, selectedYear, isActive]);
-  const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
-
-  // 4. Synchronization Effect
+  // 2. Synchronization Effect
   useEffect(() => {
     if (!user || !db || !isActive) return;
 
@@ -140,7 +141,6 @@ export function useSchoolData(isActive: boolean = true) {
       }),
       onSnapshot(query(collection(db, 'skills_registry'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear)), (snapshot) => {
         const skillsMap: Record<string, SportSkill> = {};
-        const historyMap: Record<string, (SportSkill & { sportName: string })[]> = {};
         snapshot.docs.forEach(doc => {
           const data = doc.data() as SportSkill;
           const pId = data.playerId;
@@ -149,26 +149,8 @@ export function useSchoolData(isActive: boolean = true) {
           if (!skillsMap[key] || (data.lastUpdated && skillsMap[key].lastUpdated && new Date(data.lastUpdated) > new Date(skillsMap[key].lastUpdated!))) {
             skillsMap[key] = data;
           }
-          if (!historyMap[pId]) historyMap[pId] = [];
-          historyMap[pId].push({ ...data, sportName: data.sportName || 'Unknown' });
         });
         setSportSkillsData(skillsMap);
-        setSkillsHistory(historyMap);
-      }),
-      onSnapshot(query(collection(db, 'game_rules_registry'), where('schoolId', '==', user.uid)), (snapshot) => {
-        const rulesMap: Record<string, any> = {};
-        snapshot.docs.forEach(doc => rulesMap[doc.id] = doc.data());
-        setGameRulesData(rulesMap);
-      }),
-      onSnapshot(query(collection(db, 'exam_configs'), where('schoolId', '==', user.uid)), (snapshot) => {
-        const configMap: Record<string, ExamLabels> = {};
-        snapshot.docs.forEach(doc => configMap[doc.id] = doc.data().labels as ExamLabels);
-        setExamConfigs(configMap);
-      }),
-      onSnapshot(query(collection(db, 'performance_configs'), where('schoolId', '==', user.uid)), (snapshot) => {
-        const configMap: Record<string, PerformanceLabels> = {};
-        snapshot.docs.forEach(doc => configMap[doc.id] = doc.data().labels as PerformanceLabels);
-        setPerformanceConfigs(configMap);
       }),
       onSnapshot(query(collection(db, 'readiness_registry'), where('schoolId', '==', user.uid), where('date', '==', today)), (snapshot) => {
         const map: Record<string, any> = {};
@@ -190,6 +172,21 @@ export function useSchoolData(isActive: boolean = true) {
         const map: Record<string, boolean> = {};
         snapshot.docs.forEach(doc => map[doc.id] = true);
         setDrillCompletionsData(map);
+      }),
+      onSnapshot(query(collection(db, 'game_rules_registry'), where('schoolId', '==', user.uid)), (snapshot) => {
+        const rulesMap: Record<string, any> = {};
+        snapshot.docs.forEach(doc => rulesMap[doc.id] = doc.data());
+        setGameRulesData(rulesMap);
+      }),
+      onSnapshot(query(collection(db, 'exam_configs'), where('schoolId', '==', user.uid)), (snapshot) => {
+        const configMap: Record<string, ExamLabels> = {};
+        snapshot.docs.forEach(doc => configMap[doc.id] = doc.data().labels as ExamLabels);
+        setExamConfigs(configMap);
+      }),
+      onSnapshot(query(collection(db, 'performance_configs'), where('schoolId', '==', user.uid)), (snapshot) => {
+        const configMap: Record<string, PerformanceLabels> = {};
+        snapshot.docs.forEach(doc => configMap[doc.id] = doc.data().labels as PerformanceLabels);
+        setPerformanceConfigs(configMap);
       })
     ];
 
@@ -199,7 +196,7 @@ export function useSchoolData(isActive: boolean = true) {
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
-  // 5. Aggregated Data Memo
+  // 3. Aggregated Data Memo
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
@@ -272,14 +269,6 @@ export function useSchoolData(isActive: boolean = true) {
     setGameRule: (s: string, pdf: string | null) => { if (!user || !db) return; if (!pdf) deleteDocumentNonBlocking(doc(db, 'game_rules_registry', s)); else setDocumentNonBlocking(doc(db, 'game_rules_registry', s), { sportName: s, pdfData: pdf, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     addHealthIncident: (i: HealthIncident) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'all_health_incidents', i.id), { ...i, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteHealthIncident: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id)); },
-    addActivity: (a: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'school_activities', a.id), { ...a, schoolId: user.uid, timestamp: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
-    deleteActivity: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'school_activities', id)); },
-    exportBackupData: () => {
-      const b = { data: { players: allPlayers || [], attendance, fitness, fitnessHistory, sportSkills, skillsHistory, drillCompletions, gameRules, examConfigs, performanceConfigs, dailyReadiness, tacticalEvents, goals, healthIncidents: healthIncidents || [], schoolProfile }, timestamp: new Date().toISOString() };
-      const blob = new Blob([JSON.stringify(b, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `wgb_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
-    },
     importBackupData: async (b: any) => {
       if (!user || !db || !b.data) return;
       const { data } = b;
