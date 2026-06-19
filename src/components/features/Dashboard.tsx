@@ -27,12 +27,16 @@ import {
   Contact,
   Fingerprint,
   MapPin,
-  HeartPulse
+  HeartPulse,
+  Baby,
+  History,
+  ScanFace
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -49,6 +53,7 @@ interface DashboardProps {
 }
 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 export function Dashboard({ store, section, searchTerm: initialSearch = "", selectedSport: initialSport = "all", t }: DashboardProps) {
   const { toast } = useToast();
@@ -312,10 +317,14 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                         <Input type="date" value={editingPlayer.dob || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Height (cm)</Label>
                         <Input type="number" value={editingPlayer.height || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-1"><Baby className="w-3 h-3" /> Sit Ht (cm)</Label>
+                        <Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Weight (kg)</Label>
@@ -345,6 +354,48 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Mobile Number</Label>
                         <Input value={editingPlayer.mobileNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
+                      <Input value={editingPlayer.address || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 text-accent border-b-2 border-accent/5 pb-2">
+                      <Medal className="w-4 h-4" />
+                      <h3 className="font-black uppercase text-xs tracking-widest">Institutional Sports</h3>
+                    </div>
+                    <div className="bg-accent/5 p-6 rounded-2xl border-2 border-dashed border-accent/10">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {SPORTS_LIST.map(sport => (
+                          <div key={sport} className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={editingPlayer.sports?.includes(sport)} 
+                              onCheckedChange={(checked) => {
+                                const curr = editingPlayer.sports || [];
+                                const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                                setEditingPlayer({...editingPlayer, sports: next});
+                              }}
+                              className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
+                            />
+                            <Label className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Sports History?</Label>
+                          <Select value={editingPlayer.history} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, history: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                          </Select>
+                       </div>
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">History Details</Label>
+                          <Input value={editingPlayer.histDetail || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                       </div>
                     </div>
                   </div>
 

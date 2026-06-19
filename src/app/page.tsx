@@ -335,7 +335,7 @@ export default function WaghambaApp() {
                       { id: "fitness", label: "Fitness Tracking", icon: Activity },
                       { id: "exams", label: "Exam Hub", icon: FileText },
                       { id: "classes", label: "Classes Hub", icon: GraduationCap },
-                      { id: "promotion", label: "Promotion Hub", icon: CircleArrowUp },
+                      { id: "promotion", label: "Standard Promotion", icon: CircleArrowUp },
                       { id: "medical", label: "Injury Hub", icon: ShieldAlert },
                       { id: "reports", label: "Daily Reports", icon: ClipboardList }
                     ].map(item => (

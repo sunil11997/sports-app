@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
 export function useSchoolData(isActive: boolean = true) {
-  // 1. STATE DEFINITIONS (Consolidated at the absolute top for Hook Rules)
+  // 1. Hook Sequence Guard (All state at the top)
   const [selectedYear, setSelectedYear] = useState("2024-25");
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -31,10 +31,10 @@ export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
   const { user } = useUser();
   
-  // Use a ref for the sync lock to prevent recursive render loops
+  // Stable Sync Lock (Ref based to avoid re-renders)
   const syncLockRef = useRef(false);
 
-  // 2. STABLE CALLBACKS
+  // 2. Stable Callbacks
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
 
@@ -80,7 +80,7 @@ export function useSchoolData(isActive: boolean = true) {
     }
   }, [db, user, selectedYear]);
 
-  // 3. FIREBASE QUERIES (MEMOIZED)
+  // 3. Firebase Queries (Memoized)
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
@@ -96,7 +96,7 @@ export function useSchoolData(isActive: boolean = true) {
   }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
-  // 4. REAL-TIME SYNCHRONIZATION
+  // 4. Synchronization Effect
   useEffect(() => {
     if (!user || !db || !isActive) return;
 
@@ -109,9 +109,9 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(query(collection(db, 'attendance_registry'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear)), (snapshot) => {
         const newAtt: AttendanceRecord = {};
         snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const sessionSuffix = data.session ? `_${data.session}` : '_Morning';
-          newAtt[`${data.playerId}_${data.date}${sessionSuffix}`] = data.status;
+          const d = doc.data();
+          const sessionSuffix = d.session ? `_${d.session}` : '_Morning';
+          newAtt[`${d.playerId}_${d.date}${sessionSuffix}`] = d.status;
         });
         const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY);
         if (queueStr) {
@@ -199,7 +199,7 @@ export function useSchoolData(isActive: boolean = true) {
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
-  // 5. AGGREGATED DATA MEMO
+  // 5. Aggregated Data Memo
   const aggregatedData = useMemo(() => ({
     players: allPlayers || [],
     attendance,
