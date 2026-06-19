@@ -109,11 +109,17 @@ export default function WaghambaApp() {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     
-    // Fetch Splash Lottie Data
+    // Robust Fetch for Institutional Splash
     fetch(SPLASH_LOTTIE_URL)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Registry Error");
+        return res.json();
+      })
       .then(data => setSplashData(data))
-      .catch(err => console.error("WGB: Splash load failed", err));
+      .catch(err => {
+        console.warn("WGB: Splash load fallback active");
+        setSplashData(null);
+      });
 
     const timer = setTimeout(() => setShowSplash(false), 3500);
     return () => clearTimeout(timer);
@@ -156,8 +162,9 @@ export default function WaghambaApp() {
                  className="w-full h-full"
                />
              ) : (
-               <div className="w-full h-full flex items-center justify-center">
+               <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
                  <Loader2 className="w-12 h-12 text-white/20 animate-spin" />
+                 <p className="text-white/20 text-[8px] font-black uppercase tracking-widest">WGB Splash Protocol</p>
                </div>
              )}
            </div>
