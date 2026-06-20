@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
@@ -51,6 +50,12 @@ export function useSchoolData(isActive: boolean = true) {
     return query(collection(db, 'all_health_incidents'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear));
   }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
+
+  const activitiesQuery = useMemoFirebase(() => {
+    if (!user || !db || !isActive) return null;
+    return query(collection(db, 'school_activities'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear));
+  }, [db, user, selectedYear, isActive]);
+  const { data: schoolActivities } = useCollection(activitiesQuery);
 
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
@@ -212,7 +217,7 @@ export function useSchoolData(isActive: boolean = true) {
     tacticalEvents,
     goals,
     healthIncidents: healthIncidents || [],
-    activities: [],
+    activities: schoolActivities || [],
     schoolProfile: schoolProfile || {
       schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
       teacherName: "Sunil Deshmukh",
@@ -223,7 +228,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions]);
+  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, schoolActivities]);
 
   return {
     data: aggregatedData,
@@ -237,6 +242,8 @@ export function useSchoolData(isActive: boolean = true) {
     addPlayer: (playerData: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'players', playerData.id), { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     updatePlayer: (player: any) => { if (!db) return; updateDocumentNonBlocking(doc(db, 'players', player.id), player); },
     deletePlayer: (playerId: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'players', playerId)); },
+    addActivity: (act: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'school_activities', act.id), { ...act, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
+    deleteActivity: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'school_activities', id)); },
     setAttendance: (newAttendance: AttendanceRecord) => {
       if (!user || !db) return;
       setAttendanceData(prev => ({ ...prev, ...newAttendance }));

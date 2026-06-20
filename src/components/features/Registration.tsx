@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -37,7 +36,6 @@ import {
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { usePWA } from '@/components/providers/pwa-provider';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
