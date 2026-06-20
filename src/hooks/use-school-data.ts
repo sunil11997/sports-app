@@ -276,6 +276,19 @@ export function useSchoolData(isActive: boolean = true) {
     setGameRule: (s: string, pdf: string | null) => { if (!user || !db) return; if (!pdf) deleteDocumentNonBlocking(doc(db, 'game_rules_registry', s)); else setDocumentNonBlocking(doc(db, 'game_rules_registry', s), { sportName: s, pdfData: pdf, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     addHealthIncident: (i: HealthIncident) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'all_health_incidents', i.id), { ...i, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteHealthIncident: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id)); },
+    exportBackupData: () => {
+      const data = {
+        data: aggregatedData,
+        exportedAt: new Date().toISOString(),
+        version: "4.3.26"
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `WGB_Registry_Backup_${format(new Date(), 'yyyy-MM-dd')}.json`;
+      a.click();
+    },
     importBackupData: async (b: any) => {
       if (!user || !db || !b.data) return;
       const { data } = b;

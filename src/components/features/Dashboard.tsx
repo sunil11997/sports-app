@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 interface DashboardProps {
   store: any;
