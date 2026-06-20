@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -11,16 +10,10 @@ import {
   Zap, 
   Printer, 
   Edit, 
-  Camera, 
-  CircleX, 
-  ImageIcon, 
-  Scan, 
-  Fingerprint, 
   Hash, 
   Ruler, 
   Activity,
   Trash2,
-  Languages,
   Calendar,
   Contact,
   HeartPulse,
@@ -30,7 +23,6 @@ import {
   Medal,
   ScanFace
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -50,8 +42,6 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
-  
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     setIsMarathiView(language === 'Marathi');
@@ -90,15 +80,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             th, td { border: 1px solid #111; padding: 10px; text-align: left; }
             th { background: #f1f1f1; font-weight: 900; }
             .center { text-align: center; }
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
-            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; background: #f59e0b; color: white; }
           </style>
         </head>
-        <body style="padding-top: 60px;">
-          <div class="no-print print-controls">
-            <button onclick="window.close()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">&larr; ${isM ? 'मागे जा' : 'Go Back'}</button>
-            <button onclick="window.print()" class="btn">${isM ? 'प्रिंट करा' : 'Print Sheet'}</button>
-          </div>
+        <body style="padding-top: 20px;">
           <div class="header">
             <h1>${schoolName}</h1>
             <div class="report-title">${reportTitle}</div>
@@ -111,22 +95,18 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                 <th class="center">${isM ? 'लिंग' : 'Gender'}</th>
                 <th class="center">${isM ? 'जी.आर. नंबर' : 'GR Number'}</th>
                 <th class="center">${isM ? 'आधार नंबर' : 'Aadhar No'}</th>
-                <th class="center">${isM ? 'उंची/वजन' : 'Ht/Wt'}</th>
               </tr>
             </thead>
             <tbody>
-              ${students.map((s: any) => {
-                return `
-                  <tr>
-                    <td class="center">${s.serialNumber || '-'}</td>
-                    <td><strong>${s.name.toUpperCase()}</strong></td>
-                    <td class="center">${s.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>
-                    <td class="center">${s.generalRegisterNumber || '-'}</td>
-                    <td class="center">${s.aadharNumber || '-'}</td>
-                    <td class="center">${s.height || '-'} cm / ${s.weight || '-'} kg</td>
-                  </tr>
-                `;
-              }).join('')}
+              ${students.map((s: any) => `
+                <tr>
+                  <td class="center">${s.serialNumber || '-'}</td>
+                  <td><strong>${s.name.toUpperCase()}</strong></td>
+                  <td class="center">${s.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>
+                  <td class="center">${s.generalRegisterNumber || '-'}</td>
+                  <td class="center">${s.aadharNumber || '-'}</td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
         </body>
@@ -320,7 +300,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <Input type="number" value={editingPlayer.weight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px) font-black uppercase text-primary ml-2">Blood Group</Label>
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label>
                         <Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}>
                           <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
@@ -347,6 +327,16 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
                       <Input value={editingPlayer.address || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                        <ScanFace className="w-4 h-4" /> Aadhar Scan Data
+                      </Label>
+                      {editingPlayer.aadharPhotoUrl && (
+                        <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-primary/10">
+                          <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -408,7 +398,6 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <canvas ref={canvasRef} hidden />
     </div>
   );
 }

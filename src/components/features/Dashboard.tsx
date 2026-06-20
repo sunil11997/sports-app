@@ -1,8 +1,6 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,17 +9,11 @@ import {
   Edit, 
   Search, 
   Trash2, 
-  Camera, 
-  CircleX, 
   RefreshCcw,
-  ImageIcon,
   Hash,
   Ruler,
   Medal,
-  GraduationCap,
-  Languages,
   Printer,
-  ChevronRight,
   UserCheck,
   Calendar,
   Contact,
@@ -29,7 +21,6 @@ import {
   MapPin,
   HeartPulse,
   Baby,
-  History,
   ScanFace
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -62,8 +53,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(false);
   
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const isGeneral = section === 'general';
 
   const filteredPlayers = useMemo(() => {
@@ -359,6 +348,16 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
                       <Input value={editingPlayer.address || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                     </div>
+                    <div className="space-y-4">
+                      <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
+                        <ScanFace className="w-4 h-4" /> Aadhar Scan Data
+                      </Label>
+                      {editingPlayer.aadharPhotoUrl && (
+                        <div className="relative aspect-[1.6/1] rounded-[1.5rem] overflow-hidden border-2 border-primary/10">
+                          <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -420,7 +419,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <canvas ref={canvasRef} hidden />
     </div>
   );
 }

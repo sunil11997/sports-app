@@ -109,7 +109,7 @@ export const useUser = () => {
 
 /**
  * useMemoFirebase - Hardened Memoization for Firestore Refs
- * Fixed: Property injection occurs WITHIN the memo factory to ensure it exists on the first render.
+ * Property injection occurs WITHIN the memo factory to ensure it exists on the first render.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   return useMemo(() => {
@@ -123,7 +123,6 @@ export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList)
           writable: true 
         });
       } catch (e) {
-        // Fallback for primitive or sealed objects
         (val as any).__memo = true;
       }
     }
