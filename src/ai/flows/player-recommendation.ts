@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview A Genkit flow for generating personalized recommendations for school sports players.
+ * Upgraded to Gemini 2.5 Flash for high-resilience institutional performance.
  */
 
 import {ai} from '@/ai/genkit';
@@ -71,7 +72,7 @@ const playerRecommendationFlow = ai.defineFlow(
       throw new Error("AI Configuration Error: Missing API Key.");
     }
 
-    const selectedModel = 'gemini-1.5-flash';
+    const selectedModel = 'gemini-2.5-flash';
     let attempts = 0;
     const maxAttempts = 2; 
 

@@ -109,11 +109,11 @@ export const useUser = () => {
 
 /**
  * useMemoFirebase - Hardened Memoization for Firestore Refs
- * Property injection occurs WITHIN the memo factory to ensure it exists on the first render.
+ * Refactored to satisfy ESLint static analysis and production build readiness.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => {
+  const memoizedValue = useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
@@ -129,4 +129,6 @@ export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList)
     }
     return val;
   }, deps);
+  
+  return memoizedValue;
 }

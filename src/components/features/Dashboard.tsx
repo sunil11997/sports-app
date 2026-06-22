@@ -24,7 +24,8 @@ import {
   Upload,
   RefreshCcw,
   CircleX,
-  User
+  User,
+  Type
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -318,7 +319,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                           <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2">नाव (मराठी)</Label>
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</Label>
                           <Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                         </div>
                         <div className="space-y-2">
