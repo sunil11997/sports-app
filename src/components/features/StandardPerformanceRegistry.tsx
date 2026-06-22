@@ -16,7 +16,9 @@ import {
   TrendingUp, 
   ArrowRight,
   Target,
-  BarChart
+  BarChart,
+  Trophy,
+  Users
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -140,6 +142,30 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     }));
   }, [historyData]);
 
+  const rankings = useMemo(() => {
+    const boys = playersInStd
+      .filter(p => p.gender === 'Male')
+      .map(p => {
+        const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
+        return { ...p, score: parseFloat(hist?.score || '0') };
+      })
+      .filter(p => p.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    const girls = playersInStd
+      .filter(p => p.gender === 'Female')
+      .map(p => {
+        const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
+        return { ...p, score: parseFloat(hist?.score || '0') };
+      })
+      .filter(p => p.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    return { boys, girls };
+  }, [playersInStd, store.data.fitnessHistory, selectedMonth]);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="bg-white p-8 rounded-[3rem] border-2 border-primary/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
@@ -163,14 +189,17 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner">
-          <TabsTrigger value="entry" className="rounded-full px-10 py-3 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Data Entry</TabsTrigger>
-          <TabsTrigger value="history" className="rounded-full px-10 py-3 font-black uppercase text-xs tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Progress History</TabsTrigger>
+        <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner w-full flex justify-between overflow-x-auto scrollbar-hide">
+          <TabsTrigger value="entry" className="rounded-full flex-1 px-4 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Data Entry</TabsTrigger>
+          <TabsTrigger value="rankings" className="rounded-full flex-1 px-4 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white flex items-center gap-2">
+            <Trophy className="w-3.5 h-3.5" /> Rankings
+          </TabsTrigger>
+          <TabsTrigger value="history" className="rounded-full flex-1 px-4 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Progress History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="entry" className="mt-0">
           <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl">
-            <div className="overflow-x-auto scrollbar-hide">
+            <ScrollArea className="w-full">
               <Table className="min-w-max border-collapse">
                 <TableHeader className="bg-muted/80 sticky top-0 z-20">
                   <TableRow>
@@ -206,8 +235,75 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   })}
                 </TableBody>
               </Table>
-            </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="rankings" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+              <CardHeader className="bg-pink-50 border-b p-6 flex flex-row justify-between items-center">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-pink-700 flex items-center gap-2">
+                  <Trophy className="w-5 h-5" /> Top 5 Girls (Std {std})
+                </CardTitle>
+                <Badge className="bg-pink-600 text-white font-black">{rankings.girls.length}</Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  {rankings.girls.map((p, idx) => (
+                    <div key={p.id} className="flex items-center justify-between p-4 bg-pink-50/50 rounded-2xl border border-pink-100 shadow-sm animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center font-black text-pink-700">{idx + 1}</div>
+                        <div>
+                          <p className="font-black text-xs uppercase text-pink-900">{p.name}</p>
+                          <p className="text-[8px] font-bold text-pink-600 uppercase tracking-widest">Mastery Level: Elite</p>
+                        </div>
+                      </div>
+                      <span className="text-xl font-black text-pink-700">{p.score}%</span>
+                    </div>
+                  ))}
+                  {rankings.girls.length === 0 && (
+                    <div className="py-20 text-center opacity-20 border-2 border-dashed rounded-3xl">
+                      <Users className="w-10 h-10 mx-auto mb-2" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">No girl records for this month</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+              <CardHeader className="bg-blue-50 border-b p-6 flex flex-row justify-between items-center">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-blue-700 flex items-center gap-2">
+                  <Trophy className="w-5 h-5" /> Top 5 Boys (Std {std})
+                </CardTitle>
+                <Badge className="bg-blue-600 text-white font-black">{rankings.boys.length}</Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  {rankings.boys.map((p, idx) => (
+                    <div key={p.id} className="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm animate-in slide-in-from-right duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-black text-blue-700">{idx + 1}</div>
+                        <div>
+                          <p className="font-black text-xs uppercase text-blue-900">{p.name}</p>
+                          <p className="text-[8px] font-bold text-blue-600 uppercase tracking-widest">Mastery Level: Elite</p>
+                        </div>
+                      </div>
+                      <span className="text-xl font-black text-blue-700">{p.score}%</span>
+                    </div>
+                  ))}
+                  {rankings.boys.length === 0 && (
+                    <div className="py-20 text-center opacity-20 border-2 border-dashed rounded-3xl">
+                      <Users className="w-10 h-10 mx-auto mb-2" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">No boy records for this month</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="history" className="mt-0 space-y-8">
@@ -215,14 +311,16 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
             <div className="lg:col-span-4 space-y-6">
               <Card className="border-2 rounded-[3rem] bg-white p-8 shadow-xl">
                  <h3 className="text-xl font-black text-primary uppercase flex items-center gap-3 mb-6"><Target className="w-6 h-6 text-accent" /> Student</h3>
-                 <div className="space-y-2">
-                    {playersInStd.map((p: any) => (
-                      <button key={p.id} onClick={() => setSelectedPlayerId(p.id)} className={cn("w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between group", selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5 hover:border-primary/10")}>
-                        {p.name}
-                        <ArrowRight className={cn("w-4 h-4 transition-transform", selectedPlayerForHistory === p.id ? "translate-x-0" : "-translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
-                      </button>
-                    ))}
-                 </div>
+                 <ScrollArea className="h-[400px]">
+                   <div className="space-y-2 pr-4">
+                      {playersInStd.map((p: any) => (
+                        <button key={p.id} onClick={() => setSelectedPlayerId(p.id)} className={cn("w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between group", selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5 hover:border-primary/10")}>
+                          {p.name}
+                          <ArrowRight className={cn("w-4 h-4 transition-transform", selectedPlayerForHistory === p.id ? "translate-x-0" : "-translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
+                        </button>
+                      ))}
+                   </div>
+                 </ScrollArea>
               </Card>
             </div>
             <div className="lg:col-span-8 space-y-8">

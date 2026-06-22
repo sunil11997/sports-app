@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -33,7 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
@@ -156,8 +157,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         </div>
       </div>
 
-      <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
-        <CardContent className="p-0 overflow-x-auto">
+      <div className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
+        <ScrollArea className="w-full">
           <Table>
             <TableHeader className="bg-muted/10">
               <TableRow>
@@ -211,8 +212,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
               })}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[95vh]">

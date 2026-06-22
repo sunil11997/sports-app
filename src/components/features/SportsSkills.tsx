@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -204,7 +205,9 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">{activeSport} Mastery</h2>
             <div className="flex items-center gap-3 mt-1">
               <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Institutional Scorecard</Badge>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> 10-Point Grading Active</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 mt-0.5 tracking-widest">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> 10-Point Grading Active
+              </span>
             </div>
           </div>
         </div>
@@ -233,48 +236,51 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
       )}
 
       <div className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl">
-        <Table className="min-w-max border-collapse">
-          <TableHeader className="bg-muted/30">
-            <TableRow className="h-14">
-              <TableHead className="font-black text-[11px] uppercase px-8">Student Athlete</TableHead>
-              <TableHead className="font-black text-[11px] uppercase text-center w-[200px]">Aggregate Mastery</TableHead>
-              <TableHead className="font-black text-[11px] uppercase text-right px-8">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPlayers.length === 0 ? (
-              <TableRow><TableCell colSpan={3} className="text-center py-32 font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
-            ) : (
-              filteredPlayers.map((p: any) => {
-                const sportName = isGeneral ? 'General P.E.' : activeSport;
-                const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
-                return (
-                  <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-all group border-b last:border-0">
-                    <TableCell className="px-8">
-                       <div className="flex flex-col">
-                          <span className="font-black uppercase text-sm text-primary leading-none">{p.name}</span>
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Roll No: #{p.serialNumber || '0'} • Std {p.std}</span>
-                       </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="inline-flex flex-col items-center">
-                        <span className="text-2xl font-black text-primary leading-none">{s.score}%</span>
-                        <div className="w-16 h-1 bg-muted rounded-full mt-2 overflow-hidden">
-                           <div className="h-full bg-accent" style={{ width: `${s.score}%` }} />
+        <ScrollArea className="w-full">
+          <Table className="min-w-max border-collapse">
+            <TableHeader className="bg-muted/30">
+              <TableRow className="h-14">
+                <TableHead className="font-black text-[11px] uppercase px-8">Student Athlete</TableHead>
+                <TableHead className="font-black text-[11px] uppercase text-center w-[200px]">Aggregate Mastery</TableHead>
+                <TableHead className="font-black text-[11px] uppercase text-right px-8">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPlayers.length === 0 ? (
+                <TableRow><TableCell colSpan={3} className="text-center py-32 font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
+              ) : (
+                filteredPlayers.map((p: any) => {
+                  const sportName = isGeneral ? 'General P.E.' : activeSport;
+                  const s = store.data.sportSkills[`${p.id}_${sportName}`] || { score: '0' };
+                  return (
+                    <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-all group border-b last:border-0">
+                      <TableCell className="px-8">
+                         <div className="flex flex-col">
+                            <span className="font-black uppercase text-sm text-primary leading-none">{p.name}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Roll No: #{p.serialNumber || '0'} • Std {p.std}</span>
+                         </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <span className="text-2xl font-black text-primary leading-none">{s.score}%</span>
+                          <div className="w-16 h-1 bg-muted rounded-full mt-2 overflow-hidden">
+                             <div className="h-full bg-accent" style={{ width: `${s.score}%` }} />
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right px-8">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenEvaluation(p, sportName)} className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-white transition-all h-10 px-6">
-                        Evaluate Technical Moves <ChevronRight className="w-3 h-3 ml-2" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      </TableCell>
+                      <TableCell className="text-right px-8">
+                        <Button variant="outline" size="sm" onClick={() => handleOpenEvaluation(p, sportName)} className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-white transition-all h-10 px-6">
+                          Evaluate Technical Moves <ChevronRight className="w-3 h-3 ml-2" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
 
       <Dialog open={!!editingDetailedPlayer} onOpenChange={() => setEditingDetailedPlayer(null)}>

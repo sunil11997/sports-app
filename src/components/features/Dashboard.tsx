@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -33,7 +34,7 @@ import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 
 interface DashboardProps {
@@ -186,53 +187,56 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </div>
       </div>
 
-      <div className="google-card overflow-hidden overflow-x-auto border">
-        <Table className="min-w-max border-collapse">
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="h-12 px-6 text-[10px] font-black uppercase w-[100px]">{isMarathiView ? 'अनु. क्र.' : 'Roll (Sr)'}</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase">{isMarathiView ? 'विद्यार्थी माहिती' : 'Profile'}</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">{isMarathiView ? 'जी.आर. नंबर' : 'GR Number'}</TableHead>
-              <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">{isMarathiView ? 'इयत्ता' : 'Standard'}</TableHead>
-              <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-right">{isMarathiView ? 'क्रिया' : 'Actions'}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPlayers.map((p: any) => (
-              <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
-                <TableCell className="px-6">
-                   <Badge className="bg-primary/10 text-primary font-black text-sm border-0 h-10 w-10 flex items-center justify-center rounded-xl">{p.serialNumber || '0'}</Badge>
-                </TableCell>
-                <TableCell className="px-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12 border-2 border-white shadow-md">
-                      <AvatarImage src={p.photoUrl} className="object-cover" />
-                      <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-black text-sm uppercase text-primary leading-none">
-                        {p.name}
-                      </p>
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{isMarathiView ? (p.gender === 'Male' ? 'मुलगा' : 'मुलगी') : p.gender}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 text-center">
-                   <span className="font-black text-[10px] text-primary/80 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">{p.generalRegisterNumber || '---'}</span>
-                </TableCell>
-                <TableCell className="px-4 text-center">
-                  <Badge variant="outline" className="rounded-full px-3 py-1 border-primary/20 text-[10px] font-black text-primary bg-primary/5">{isMarathiView ? `इ. ${p.std} वी` : `Std ${p.std}`}</Badge>
-                </TableCell>
-                <TableCell className="px-6 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => handleDeletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
-                  </div>
-                </TableCell>
+      <div className="google-card overflow-hidden border">
+        <ScrollArea className="w-full">
+          <Table className="min-w-max border-collapse">
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="h-12 px-6 text-[10px] font-black uppercase w-[100px]">{isMarathiView ? 'अनु. क्र.' : 'Roll (Sr)'}</TableHead>
+                <TableHead className="h-12 px-4 text-[10px] font-black uppercase">{isMarathiView ? 'विद्यार्थी माहिती' : 'Profile'}</TableHead>
+                <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">{isMarathiView ? 'जी.आर. नंबर' : 'GR Number'}</TableHead>
+                <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">{isMarathiView ? 'इयत्ता' : 'Standard'}</TableHead>
+                <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-right">{isMarathiView ? 'क्रिया' : 'Actions'}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredPlayers.map((p: any) => (
+                <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
+                  <TableCell className="px-6">
+                    <Badge className="bg-primary/10 text-primary font-black text-sm border-0 h-10 w-10 flex items-center justify-center rounded-xl">{p.serialNumber || '0'}</Badge>
+                  </TableCell>
+                  <TableCell className="px-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                        <AvatarImage src={p.photoUrl} className="object-cover" />
+                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-black text-sm uppercase text-primary leading-none">
+                          {p.name}
+                        </p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{isMarathiView ? (p.gender === 'Male' ? 'मुलगा' : 'मुलगी') : p.gender}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 text-center">
+                    <span className="font-black text-[10px] text-primary/80 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">{p.generalRegisterNumber || '---'}</span>
+                  </TableCell>
+                  <TableCell className="px-4 text-center">
+                    <Badge variant="outline" className="rounded-full px-3 py-1 border-primary/20 text-[10px] font-black text-primary bg-primary/5">{isMarathiView ? `इ. ${p.std} वी` : `Std ${p.std}`}</Badge>
+                  </TableCell>
+                  <TableCell className="px-6 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => handleDeletePlayer(p.id)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
