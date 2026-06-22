@@ -112,6 +112,7 @@ export const useUser = () => {
  * Property injection occurs WITHIN the memo factory to ensure it exists on the first render.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {

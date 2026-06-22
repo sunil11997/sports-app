@@ -18,7 +18,8 @@ import {
   HeartPulse, 
   Baby, 
   ScanFace,
-  Medal
+  Medal,
+  Ruler
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -102,7 +103,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
               placeholder={isMarathiView ? "नाव / आधार शोधा..." : "Search name/GR/Aadhar..."} 
               className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner" 
               value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} 
             />
           </div>
         </div>
@@ -185,15 +186,15 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name</Label>
-                        <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label>
-                        <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Roll / Serial Number</Label>
-                        <Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input value={editingPlayer.serialNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Standard (Class)</Label>
@@ -227,21 +228,21 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label>
-                        <Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input type="date" value={editingPlayer.dob || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Ht (cm)</Label>
-                        <Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input type="number" value={editingPlayer.height || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-1"><Baby className="w-3 h-3" /> Sit Ht (cm)</Label>
-                        <Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Wt (kg)</Label>
-                        <Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input type="number" value={editingPlayer.weight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label>
@@ -261,16 +262,16 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Aadhar Number (12 Digit)</Label>
-                        <Input maxLength={12} value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input maxLength={12} value={editingPlayer.aadharNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary ml-2">Mobile Number</Label>
-                        <Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        <Input value={editingPlayer.mobileNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
-                      <Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      <Input value={editingPlayer.address || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                     </div>
                     <div className="space-y-4">
                       <Label className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2">
@@ -317,7 +318,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                        </div>
                        <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-primary ml-2">History Details</Label>
-                          <Input value={editingPlayer.histDetail || ""} onChange={(e) => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                          <Input value={editingPlayer.histDetail || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                        </div>
                     </div>
                   </div>
@@ -329,7 +330,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-primary ml-2">Medical Conditions & Alerts</Label>
-                      <Input value={editingPlayer.medical || ""} onChange={(e) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      <Input value={editingPlayer.medical || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                     </div>
                   </div>
                 </>

@@ -219,10 +219,10 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                       <TableRow key={p.id} className="border-b h-14 group">
                         <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[200px]">{p.name.toUpperCase()}</TableCell>
                         <TableCell className="border-r text-center font-bold text-xs">{p.age}</TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.height || ''} onChange={(e) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.weight || ''} onChange={(e) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric1 || ''} onChange={(e) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric2 || ''} onChange={(e) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.metric1 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.metric2 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
                         <TableCell className="border-r text-center bg-primary/5 font-black text-primary">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
                         <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
                           <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
@@ -319,6 +319,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         </button>
                       ))}
                    </div>
+                   <ScrollBar orientation="vertical" />
                  </ScrollArea>
               </Card>
             </div>
@@ -336,7 +337,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                           <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
                           <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
-                          <Area type="monotone" dataKey="score" stroke="#0048A0" strokeWidth={4} fill="#0048A0" fillOpacity={0.08} name="Avg Score" />
+                          <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fill="#1e3a8a" fillOpacity={0.08} name="Avg Score" />
                           <Line type="monotone" dataKey="m1" stroke="#f59e0b" strokeWidth={3} name={currentLabels.metric1} />
                           <Legend verticalAlign="top" iconType="circle" />
                         </ComposedChart>
@@ -376,7 +377,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               {(Object.keys(DEFAULT_PERFORMANCE_LABELS) as Array<keyof PerformanceLabels>).map((field) => (
                 <div key={field} className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
-                  <Input value={editingLabels[field]} onChange={(e) => setEditingLabels({...editingLabels, [field]: e.target.value})} className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner" />
+                  <Input value={editingLabels[field]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field]: e.target.value})} className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner" />
                 </div>
               ))}
             </div>

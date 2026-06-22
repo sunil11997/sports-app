@@ -36,6 +36,7 @@ import {
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { usePWA } from '@/components/providers/pwa-provider';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
@@ -338,155 +339,160 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 </div>
 
                 <div className="lg:col-span-8 space-y-12">
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                      <Hash className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Institutional Identity</h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-8">
-                      <FormField control={form.control} name="name" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
-                          <FormControl><Input placeholder="Full legal name" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <FormField control={form.control} name="std" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
-                          </Select>
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="gender" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
-                          </Select>
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="serialNumber" render={({ field }) => (
-                        <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Roll No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
-                      )} />
-                      <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
-                        <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">GR No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
-                      )} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                      <Calendar className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Demographics</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <FormField control={form.control} name="dob" render={({ field }) => (
-                         <FormItem>
-                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Date of Birth</FormLabel>
-                           <FormControl><Input type="date" className="h-12 font-bold border-2 rounded-xl bg-white" {...field} /></FormControl>
-                         </FormItem>
-                       )} />
-                       <FormField control={form.control} name="bloodGroup" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black text-primary uppercase tracking-widest">Blood Group</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 border-2 rounded-xl bg-white font-bold"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </FormItem>
-                      )} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                      <Ruler className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical Details</h3>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                      <FormField control={form.control} name="height" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase">Ht (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
-                      )} />
-                      <FormField control={form.control} name="sittingHeight" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase flex items-center gap-1"><Baby className="w-3 h-3" /> Sit Ht (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
-                      )} />
-                      <FormField control={form.control} name="weight" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-black uppercase">Wt (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
-                      )} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                      <Contact className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Contact & Identity</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <FormField control={form.control} name="aadharNumber" render={({ field }) => (
-                         <FormItem>
-                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar Number (12 Digit)</FormLabel>
-                           <FormControl><Input maxLength={12} placeholder="0000 0000 0000" className="h-12 font-black border-2 rounded-xl" {...field} /></FormControl>
-                         </FormItem>
-                       )} />
-                       <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                         <FormItem>
-                           <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mobile Number</FormLabel>
-                           <FormControl><Input placeholder="+91" className="h-12 font-black border-2 rounded-xl" {...field} /></FormControl>
-                         </FormItem>
-                       )} />
-                    </div>
-                    <FormField control={form.control} name="address" render={({ field }) => (
-                       <FormItem>
-                         <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3" /> Permanent Address</FormLabel>
-                         <FormControl><Input placeholder="Village, Taluka, District..." className="h-12 border-2 rounded-xl" {...field} /></FormControl>
-                       </FormItem>
-                    )} />
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
-                      <Medal className="w-5 h-5" />
-                      <h3 className="font-black uppercase text-sm tracking-[0.2em]">Games & History</h3>
-                    </div>
-                    <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-dashed border-accent/20">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
-                        {SPORTS_LIST.map(sport => (
-                          <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                              <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
-                                const curr = field.value || [];
-                                return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
-                              }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent" /></FormControl>
-                              <FormLabel className="text-xs font-black uppercase text-foreground/70 cursor-pointer">{sport}</FormLabel>
+                  <ScrollArea className="h-[800px] pr-6">
+                    <div className="space-y-12">
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                          <Hash className="w-5 h-5" />
+                          <h3 className="font-black uppercase text-sm tracking-[0.2em]">Institutional Identity</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-8">
+                          <FormField control={form.control} name="name" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
+                              <FormControl><Input placeholder="Full legal name" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
+                              <FormMessage />
                             </FormItem>
                           )} />
-                        ))}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <FormField control={form.control} name="std" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Standard *</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger className="h-12 font-black border-2 bg-white rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                              </Select>
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="gender" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Gender</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
+                              </Select>
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="serialNumber" render={({ field }) => (
+                            <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">Roll No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
+                          )} />
+                          <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
+                            <FormItem><FormLabel className="font-black text-muted-foreground uppercase text-[9px]">GR No</FormLabel><FormControl><Input className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl></FormItem>
+                          )} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                          <Calendar className="w-5 h-5" />
+                          <h3 className="font-black uppercase text-sm tracking-[0.2em]">Demographics</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField control={form.control} name="dob" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Date of Birth</FormLabel>
+                              <FormControl><Input type="date" className="h-12 font-bold border-2 rounded-xl bg-white" {...field} /></FormControl>
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="bloodGroup" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-black text-primary uppercase tracking-widest">Blood Group</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger className="h-12 border-2 rounded-xl bg-white font-bold"><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent>{['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </FormItem>
+                          )} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                          <Ruler className="w-5 h-5" />
+                          <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical Details</h3>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                          <FormField control={form.control} name="height" render={({ field }) => (
+                            <FormItem><FormLabel className="text-[9px] font-black uppercase">Ht (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                          )} />
+                          <FormField control={form.control} name="sittingHeight" render={({ field }) => (
+                            <FormItem><FormLabel className="text-[9px] font-black uppercase flex items-center gap-1"><Baby className="w-3 h-3" /> Sit Ht (cm)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                          )} />
+                          <FormField control={form.control} name="weight" render={({ field }) => (
+                            <FormItem><FormLabel className="text-[9px] font-black uppercase">Wt (kg)</FormLabel><FormControl><Input type="number" className="h-12 border-2 rounded-xl" {...field} /></FormControl></FormItem>
+                          )} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
+                          <Contact className="w-5 h-5" />
+                          <h3 className="font-black uppercase text-sm tracking-[0.2em]">Contact & Identity</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField control={form.control} name="aadharNumber" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar Number (12 Digit)</FormLabel>
+                              <FormControl><Input maxLength={12} placeholder="0000 0000 0000" className="h-12 font-black border-2 rounded-xl" {...field} /></FormControl>
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="mobileNumber" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mobile Number</FormLabel>
+                              <FormControl><Input placeholder="+91" className="h-12 font-black border-2 rounded-xl" {...field} /></FormControl>
+                            </FormItem>
+                          )} />
+                        </div>
+                        <FormField control={form.control} name="address" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3" /> Permanent Address</FormLabel>
+                            <FormControl><Input placeholder="Village, Taluka, District..." className="h-12 border-2 rounded-xl" {...field} /></FormControl>
+                          </FormItem>
+                        )} />
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 text-accent border-b-2 border-accent/10 pb-3">
+                          <Medal className="w-5 h-5" />
+                          <h3 className="font-black uppercase text-sm tracking-[0.2em]">Games & History</h3>
+                        </div>
+                        <div className="bg-accent/5 p-8 rounded-[2.5rem] border-2 border-dashed border-accent/20">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-8">
+                            {SPORTS_LIST.map(sport => (
+                              <FormField key={sport} control={form.control} name="sports" render={({ field }) => (
+                                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                  <FormControl><Checkbox checked={field.value?.includes(sport)} onCheckedChange={(checked) => {
+                                    const curr = field.value || [];
+                                    return checked ? field.onChange([...curr, sport]) : field.onChange(curr.filter(v => v !== sport))
+                                  }} className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent" /></FormControl>
+                                  <FormLabel className="text-xs font-black uppercase text-foreground/70 cursor-pointer">{sport}</FormLabel>
+                                </FormItem>
+                              )} />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                          <FormField control={form.control} name="history" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-black uppercase text-primary">Previous Sports History?</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                              </Select>
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="medical" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions</FormLabel>
+                              <FormControl><Input placeholder="None or specify..." className="h-12 border-2 rounded-xl font-medium" {...field} /></FormControl>
+                            </FormItem>
+                          )} />
+                        </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                       <FormField control={form.control} name="history" render={({ field }) => (
-                         <FormItem>
-                           <FormLabel className="text-[10px] font-black uppercase text-primary">Previous Sports History?</FormLabel>
-                           <Select onValueChange={field.onChange} value={field.value}>
-                             <FormControl><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl>
-                             <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                           </Select>
-                         </FormItem>
-                       )} />
-                       <FormField control={form.control} name="medical" render={({ field }) => (
-                         <FormItem>
-                           <FormLabel className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><HeartPulse className="w-3 h-3" /> Medical Conditions</FormLabel>
-                           <FormControl><Input placeholder="None or specify..." className="h-12 border-2 rounded-xl font-medium" {...field} /></FormControl>
-                         </FormItem>
-                       )} />
-                    </div>
-                  </div>
+                    <ScrollBar orientation="vertical" />
+                  </ScrollArea>
                   
                   <div className="pt-8 border-t border-dashed flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-4 text-muted-foreground">

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Trophy, 
   Target, 
-  Dumbbell, 
   ArrowLeft,
   ChevronRight,
   ShieldCheck,
