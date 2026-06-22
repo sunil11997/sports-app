@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -251,7 +250,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-3">
-                  {rankings.girls.map((p, idx) => (
+                  {rankings.girls.map((p, idx: number) => (
                     <div key={p.id} className="flex items-center justify-between p-4 bg-pink-50/50 rounded-2xl border border-pink-100 shadow-sm animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center font-black text-pink-700">{idx + 1}</div>
@@ -282,7 +281,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-3">
-                  {rankings.boys.map((p, idx) => (
+                  {rankings.boys.map((p, idx: number) => (
                     <div key={p.id} className="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm animate-in slide-in-from-right duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-black text-blue-700">{idx + 1}</div>
@@ -390,4 +389,3 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     </div>
   );
 }
-

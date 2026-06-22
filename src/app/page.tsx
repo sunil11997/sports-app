@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -111,14 +110,18 @@ export default function WaghambaApp() {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     
+    // Hardened Lottie Fetch with JSON verification
     fetch(SPLASH_LOTTIE_URL)
       .then(res => {
-        if (!res.ok) throw new Error("Registry Error");
+        if (!res.ok) throw new Error("Network Response Error");
         return res.json();
       })
-      .then(data => setSplashData(data))
+      .then(data => {
+        if (data && typeof data === 'object') setSplashData(data);
+        else throw new Error("Invalid Lottie JSON");
+      })
       .catch(err => {
-        console.warn("WGB: Splash load fallback active");
+        console.warn("WGB: Splash load fallback active (CDN offline/Syncing)");
         setSplashData(null);
       });
 
@@ -165,7 +168,7 @@ export default function WaghambaApp() {
              ) : (
                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
                  <Loader2 className="w-12 h-12 text-white/20 animate-spin" />
-                 <p className="text-white/20 text-[8px] font-black uppercase tracking-widest">WGB Splash Protocol</p>
+                 <p className="text-white/20 text-[8px] font-black uppercase tracking-widest">WGB Registry Protocol</p>
                </div>
              )}
            </div>
@@ -498,4 +501,3 @@ export default function WaghambaApp() {
     </div>
   );
 }
-

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const sportsList = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
@@ -324,6 +323,7 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
                   ))}
                </div>
             </div>
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <DialogFooter className="p-10 bg-slate-50 border-t shrink-0">
