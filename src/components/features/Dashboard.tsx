@@ -23,7 +23,8 @@ import {
   Camera,
   Upload,
   RefreshCcw,
-  CircleX
+  CircleX,
+  User
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -55,7 +56,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(false);
   
-  // Camera handling for edit dialog
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -139,6 +139,19 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+    const file = e.target.files?.[0];
+    if (file && editingPlayer) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        if (type === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   React.useEffect(() => {
     if (videoRef.current && stream && activeCam) {
       videoRef.current.srcObject = stream;
@@ -195,7 +208,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-black text-sm uppercase text-primary leading-none">{p.name}</p>
+                        <p className="font-black text-sm uppercase text-primary leading-none">{isMarathiView ? (p.nameMarathi || p.name) : p.name}</p>
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{isMarathiView ? (p.gender === 'Male' ? 'मुलगा' : 'मुलगी') : p.gender}</p>
                       </div>
                     </div>
@@ -238,203 +251,213 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
           <ScrollArea className="flex-1">
             <div className="p-10 space-y-10">
               {editingPlayer && (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                    <div className="lg:col-span-4 space-y-8">
-                       <div className="space-y-4">
-                         <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><Camera className="w-3 h-3" /> Profile Photo</Label>
-                         <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/5 bg-muted/20 shadow-inner">
-                           {activeCam === 'profile' ? (
-                             <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
-                           ) : editingPlayer.photoUrl ? (
-                             <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
-                           ) : (
-                             <div className="w-full h-full flex items-center justify-center"><UserCheck className="w-12 h-12 opacity-10" /></div>
-                           )}
-                           {activeCam === 'profile' && (
-                             <div className="absolute bottom-4 inset-x-4 flex gap-2">
-                               <Button size="sm" onClick={takePhoto} className="flex-1 h-10 bg-accent text-white font-black text-[9px] rounded-xl">CAPTURE</Button>
-                               <Button size="sm" variant="destructive" onClick={stopCamera} className="h-10 w-10 p-0 rounded-xl"><CircleX className="w-4 h-4" /></Button>
-                             </div>
-                           )}
-                         </div>
-                         {!activeCam && (
-                           <div className="flex gap-2">
-                             <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                  <div className="lg:col-span-4 space-y-8">
+                     <div className="space-y-4">
+                       <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><Camera className="w-3 h-3" /> Profile Photo</Label>
+                       <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/5 bg-muted/20 shadow-inner">
+                         {activeCam === 'profile' ? (
+                           <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                         ) : editingPlayer.photoUrl ? (
+                           <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                         ) : (
+                           <div className="w-full h-full flex items-center justify-center"><UserCheck className="w-12 h-12 opacity-10" /></div>
+                         )}
+                         {activeCam === 'profile' && (
+                           <div className="absolute bottom-4 inset-x-4 flex gap-2">
+                             <Button size="sm" onClick={takePhoto} className="flex-1 h-10 bg-accent text-white font-black text-[9px] rounded-xl">CAPTURE</Button>
+                             <Button size="sm" variant="destructive" onClick={stopCamera} className="h-10 w-10 p-0 rounded-xl"><CircleX className="w-4 h-4" /></Button>
                            </div>
                          )}
                        </div>
+                       {!activeCam && (
+                         <div className="flex gap-2">
+                           <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                           <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
+                           <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                         </div>
+                       )}
+                     </div>
 
-                       <div className="space-y-4">
-                          <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
-                          <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10">
-                            {activeCam === 'aadhar' ? (
-                              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                            ) : editingPlayer.aadharPhotoUrl ? (
-                              <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center opacity-10"><ScanFace className="w-8 h-8" /></div>
-                            )}
-                            {activeCam === 'aadhar' && (
-                               <div className="absolute bottom-2 inset-x-2 flex gap-2">
-                                  <Button size="sm" onClick={takePhoto} className="flex-1 h-8 bg-accent text-white font-black text-[8px] rounded-lg">SCAN</Button>
-                                  <Button size="sm" variant="destructive" onClick={stopCamera} className="h-8 w-8 p-0 rounded-lg"><CircleX className="w-3 h-3" /></Button>
-                               </div>
-                            )}
+                     <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
+                        <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10">
+                          {activeCam === 'aadhar' ? (
+                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                          ) : editingPlayer.aadharPhotoUrl ? (
+                            <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center opacity-10"><ScanFace className="w-8 h-8" /></div>
+                          )}
+                          {activeCam === 'aadhar' && (
+                             <div className="absolute bottom-2 inset-x-2 flex gap-2">
+                                <Button size="sm" onClick={takePhoto} className="flex-1 h-8 bg-accent text-white font-black text-[8px] rounded-lg">SCAN</Button>
+                                <Button size="sm" variant="destructive" onClick={stopCamera} className="h-8 w-8 p-0 rounded-lg"><CircleX className="w-3 h-3" /></Button>
+                             </div>
+                          )}
+                        </div>
+                        {!activeCam && (
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>
+                            <Button size="sm" variant="ghost" onClick={() => aadharUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
+                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                           </div>
-                          {!activeCam && <Button size="sm" variant="outline" className="w-full h-10 rounded-xl font-black text-[9px]" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>}
-                       </div>
+                        )}
+                     </div>
+                  </div>
+
+                  <div className="lg:col-span-8 space-y-10">
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <Hash className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
+                          <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">नाव (मराठी)</Label>
+                          <Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label>
+                          <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Roll / Serial Number</Label>
+                          <Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Standard (Class)</Label>
+                          <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
+                          <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="lg:col-span-8 space-y-10">
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                          <Hash className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity</h3>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name</Label>
-                            <Input value={editingPlayer.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label>
-                            <Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Roll / Serial Number</Label>
-                            <Input value={editingPlayer.serialNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Standard (Class)</Label>
-                            <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}>
-                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                              <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <Calendar className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Demographics & Physical</h3>
                       </div>
-
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                          <Calendar className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-xs tracking-widest">Demographics & Physical</h3>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Gender</Label>
-                            <Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}>
-                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                              <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
-                            <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
-                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                              <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label>
-                            <Input type="date" value={editingPlayer.dob || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Ht (cm)</Label>
-                            <Input type="number" value={editingPlayer.height || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-1"><Baby className="w-3 h-3" /> Sit Ht (cm)</Label>
-                            <Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Wt (kg)</Label>
-                            <Input type="number" value={editingPlayer.weight || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label>
-                            <Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}>
-                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                              <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                          <Contact className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-xs tracking-widest">Aadhar & Contact</h3>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Aadhar Number (12 Digit)</Label>
-                            <Input maxLength={12} value={editingPlayer.aadharNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Mobile Number</Label>
-                            <Input value={editingPlayer.mobileNumber || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Gender</Label>
+                          <Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
-                          <Input value={editingPlayer.address || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 text-accent border-b-2 border-accent/5 pb-2">
-                          <Medal className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-xs tracking-widest">Institutional Sports</h3>
-                        </div>
-                        <div className="bg-accent/5 p-8 rounded-[2rem] border-2 border-dashed border-accent/20">
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {SPORTS_LIST.map(sport => (
-                              <div key={sport} className="flex items-center space-x-3">
-                                <Checkbox 
-                                  checked={editingPlayer.sports?.includes(sport)} 
-                                  onCheckedChange={(checked) => {
-                                    const curr = editingPlayer.sports || [];
-                                    const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
-                                    setEditingPlayer({...editingPlayer, sports: next});
-                                  }}
-                                  className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
-                                />
-                                <Label className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</Label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Sports History?</Label>
-                            <Select value={editingPlayer.history} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, history: val})}>
-                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                              <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary ml-2">History Details</Label>
-                            <Input value={editingPlayer.histDetail || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                          <HeartPulse className="w-4 h-4" />
-                          <h3 className="font-black uppercase text-xs tracking-widest">Medical Registry</h3>
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label>
+                          <Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Medical Conditions & Alerts</Label>
-                          <Input value={editingPlayer.medical || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label>
+                          <Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
+                          </Select>
                         </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Ht (cm)</Label>
+                          <Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-1"><Baby className="w-3 h-3" /> Sit Ht (cm)</Label>
+                          <Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Wt (kg)</Label>
+                          <Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <Contact className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Aadhar & Contact</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Aadhar Number (12 Digit)</Label>
+                          <Input maxLength={12} value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Mobile Number</Label>
+                          <Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Permanent Address</Label>
+                        <Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-accent border-b-2 border-accent/5 pb-2">
+                        <Medal className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Institutional Sports</h3>
+                      </div>
+                      <div className="bg-accent/5 p-8 rounded-[2rem] border-2 border-dashed border-accent/20">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {SPORTS_LIST.map(sport => (
+                            <div key={sport} className="flex items-center space-x-3">
+                              <Checkbox 
+                                checked={editingPlayer.sports?.includes(sport)} 
+                                onCheckedChange={(checked) => {
+                                  const curr = editingPlayer.sports || [];
+                                  const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                                  setEditingPlayer({...editingPlayer, sports: next});
+                                }}
+                                className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
+                              />
+                              <Label className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Sports History?</Label>
+                          <Select value={editingPlayer.history} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, history: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">History Details</Label>
+                          <Input value={editingPlayer.histDetail || ""} onChange={(e) => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <HeartPulse className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Medical Registry</h3>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Medical Conditions & Alerts</Label>
+                        <Input value={editingPlayer.medical || ""} onChange={(e) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
             <ScrollBar orientation="vertical" />

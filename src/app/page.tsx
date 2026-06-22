@@ -45,28 +45,30 @@ import { PasscodeLock } from '@/components/features/PasscodeLock';
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { 
+  ssr: false,
   loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" /> 
 });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), {
+  ssr: false,
   loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" />
 });
-const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance));
-const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(m => m.HealthIncidents));
-const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness));
-const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport));
-const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub));
-const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection));
-const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub));
-const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(m => m.TrainingLoad));
-const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub));
-const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings));
-const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(m => m.SchoolRegistration));
-const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(m => m.NotificationCenter));
-const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier));
-const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification));
-const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice));
-const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub));
-const TeacherActivities = dynamic(() => import('@/components/features/TeacherActivities').then(m => m.TeacherActivities));
+const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance), { ssr: false });
+const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(m => m.HealthIncidents), { ssr: false });
+const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness), { ssr: false });
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
+const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub), { ssr: false });
+const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
+const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub), { ssr: false });
+const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(m => m.TrainingLoad), { ssr: false });
+const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub), { ssr: false });
+const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings), { ssr: false });
+const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(m => m.SchoolRegistration), { ssr: false });
+const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(m => m.NotificationCenter), { ssr: false });
+const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier), { ssr: false });
+const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification), { ssr: false });
+const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
+const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
+const TeacherActivities = dynamic(() => import('@/components/features/TeacherActivities').then(m => m.TeacherActivities), { ssr: false });
 
 const translations = {
   English: {
@@ -110,7 +112,6 @@ export default function WaghambaApp() {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     
-    // Hardened Lottie Fetch with JSON verification
     fetch(SPLASH_LOTTIE_URL)
       .then(res => {
         if (!res.ok) throw new Error("Network Response Error");

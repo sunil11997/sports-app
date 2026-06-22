@@ -31,7 +31,8 @@ import {
   Contact,
   HeartPulse,
   MapPin,
-  ScanFace
+  ScanFace,
+  Type
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
+  nameMarathi: z.string().optional().default(""),
   std: z.string().min(1, "Standard is required"),
   category: z.enum(["athlete", "student"]),
   gender: z.enum(["Male", "Female"]),
@@ -81,6 +83,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
   const defaultValues: FormValues = useMemo(() => ({
     name: "", 
+    nameMarathi: "",
     std: "1", 
     category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student",
     gender: "Male", 
@@ -346,11 +349,18 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           <Hash className="w-5 h-5" />
                           <h3 className="font-black uppercase text-sm tracking-[0.2em]">Institutional Identity</h3>
                         </div>
-                        <div className="grid grid-cols-1 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
                               <FormControl><Input placeholder="Full legal name" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="nameMarathi" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</FormLabel>
+                              <FormControl><Input placeholder="पूर्ण नाव मराठीत" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )} />

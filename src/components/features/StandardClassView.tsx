@@ -46,12 +46,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
 
-  // Camera handling for edit dialog
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
+  const profileUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsMarathiView(language === 'Marathi');
@@ -123,6 +124,19 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+    const file = e.target.files?.[0];
+    if (file && editingPlayer) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        if (type === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   React.useEffect(() => {
     if (videoRef.current && stream && activeCam) {
       videoRef.current.srcObject = stream;
@@ -177,7 +191,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <AvatarImage src={student.photoUrl} className="object-cover" />
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
                       </Avatar>
-                      {student.name}
+                      {isMarathiView ? (student.nameMarathi || student.name) : student.name}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
@@ -245,14 +259,20 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                             </div>
                           )}
                         </div>
-                        {!activeCam && <Button size="sm" variant="outline" className="w-full rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>}
+                        {!activeCam && (
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                            <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
+                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-4">
                         <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
                         <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10">
                           {activeCam === 'aadhar' ? (
-                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                           ) : editingPlayer.aadharPhotoUrl ? (
                             <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
                           ) : (
@@ -265,7 +285,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                              </div>
                           )}
                         </div>
-                        {!activeCam && <Button size="sm" variant="outline" className="w-full h-10 rounded-xl font-black text-[9px]" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>}
+                        {!activeCam && (
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>
+                            <Button size="sm" variant="ghost" onClick={() => aadharUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
+                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                          </div>
+                        )}
                       </div>
                    </div>
 
@@ -276,7 +302,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <h3 className="font-black uppercase text-xs tracking-widest">Identity</h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name</Label><Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label><Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">नाव (मराठी)</Label><Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Roll No</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2">
@@ -284,6 +311,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                            <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}>
                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                              <SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent>
+                           </Select>
+                        </div>
+                        <div className="space-y-2">
+                           <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
+                           <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
+                             <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                             <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>
                            </Select>
                         </div>
                       </div>
@@ -296,14 +330,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent></Select></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Sit Ht</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                       </div>
                     </div>
 
@@ -335,11 +368,24 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                                   const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
                                   setEditingPlayer({...editingPlayer, sports: next});
                                 }}
-                                className="w-5 h-5 rounded-md border-2 border-accent/30"
+                                className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
                               />
                               <Label className="text-[10px] font-black uppercase text-foreground/70">{sport}</Label>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Sports History?</Label>
+                          <Select value={editingPlayer.history} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, history: val})}>
+                            <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">History Details</Label>
+                          <Input value={editingPlayer.histDetail || ""} onChange={(e) => setEditingPlayer({...editingPlayer, histDetail: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                         </div>
                       </div>
                     </div>
@@ -359,7 +405,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
           </ScrollArea>
 
           <DialogFooter className="p-8 border-t bg-muted/10 shrink-0">
-             <Button onClick={handleUpdatePlayer} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg">Save Registry Update</Button>
+             <Button onClick={handleUpdatePlayer} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg active-scale">Save Registry Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
