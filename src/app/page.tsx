@@ -33,7 +33,8 @@ import {
   Medal,
   BrainCircuit,
   Cake,
-  TrendingUp
+  TrendingUp,
+  Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -66,6 +67,7 @@ const PerformanceDossier = dynamic(() => import('@/components/features/History')
 const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification));
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice));
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub));
+const TeacherActivities = dynamic(() => import('@/components/features/TeacherActivities').then(m => m.TeacherActivities));
 
 const translations = {
   English: {
@@ -109,7 +111,6 @@ export default function WaghambaApp() {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     
-    // Robust Fetch for Institutional Splash
     fetch(SPLASH_LOTTIE_URL)
       .then(res => {
         if (!res.ok) throw new Error("Registry Error");
@@ -188,7 +189,6 @@ export default function WaghambaApp() {
     );
   }
 
-  // Passcode Gate Integration
   if (stage !== 'landing' && schoolData.data.schoolProfile?.passcode && !isUnlocked) {
     return <PasscodeLock correctPasscode={schoolData.data.schoolProfile.passcode} onSuccess={() => setIsUnlocked(true)} teacherEmail={user?.email} />;
   }
@@ -322,12 +322,13 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" || subTab === "leaderboard" || subTab === "ai" || subTab === "monthly-progress" ? (
+              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" || subTab === "leaderboard" || subTab === "ai" || subTab === "monthly-progress" || subTab === "teacher-activities" ? (
                 <div className="relative group/scroll">
                   <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
                     {[
                       { id: "leaderboard", label: "Leaderboard", icon: Medal },
                       { id: "ai", label: "AI Hub", icon: BrainCircuit },
+                      { id: "teacher-activities", label: "Activity Hub", icon: Megaphone },
                       { id: "attendance", label: "Attendance", icon: CalendarDays },
                       { id: "monthly-progress", label: "Monthly Progress", icon: TrendingUp },
                       { id: "performance", label: "Dossier", icon: BarChart },
@@ -357,6 +358,7 @@ export default function WaghambaApp() {
                    {[
                       { id: "leaderboard", label: "Top 5 Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
                       { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
+                      { id: "teacher-activities", label: "Activity Hub", desc: "Mass PT & Yoga", icon: Megaphone, color: "bg-emerald-600" },
                       { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
                       { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
                       { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart, color: "bg-indigo-500" },
@@ -382,6 +384,7 @@ export default function WaghambaApp() {
               
               {subTab === "leaderboard" && <Gamification store={schoolData} />}
               {subTab === "ai" && <AIAdvice store={schoolData} />}
+              {subTab === "teacher-activities" && <TeacherActivities />}
               {subTab === "monthly-progress" && <PerformanceHub store={schoolData} />}
               {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} language={language} />}
               {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}
@@ -495,3 +498,4 @@ export default function WaghambaApp() {
     </div>
   );
 }
+

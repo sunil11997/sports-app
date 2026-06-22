@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -183,7 +184,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
           </div>
         </div>
         <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
-          <Input type="month" value={selectedMonth} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMonth(e.target.value)} className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" />
+          <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" />
         </div>
       </div>
 
@@ -219,10 +220,10 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                       <TableRow key={p.id} className="border-b h-14 group">
                         <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[200px]">{p.name.toUpperCase()}</TableCell>
                         <TableCell className="border-r text-center font-bold text-xs">{p.age}</TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric1 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric2 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.height || ''} onChange={(e) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.weight || ''} onChange={(e) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric1 || ''} onChange={(e) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent" value={r.metric2 || ''} onChange={(e) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
                         <TableCell className="border-r text-center bg-primary/5 font-black text-primary">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
                         <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
                           <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
@@ -376,7 +377,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               {(Object.keys(DEFAULT_PERFORMANCE_LABELS) as Array<keyof PerformanceLabels>).map((field) => (
                 <div key={field} className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-primary ml-2 tracking-widest">{field}</Label>
-                  <Input value={editingLabels[field]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingLabels({...editingLabels, [field]: e.target.value})} className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner" />
+                  <Input value={editingLabels[field]} onChange={(e) => setEditingLabels({...editingLabels, [field]: e.target.value})} className="h-12 font-black border-2 rounded-xl bg-muted/20 focus:bg-white shadow-inner" />
                 </div>
               ))}
             </div>
@@ -389,3 +390,4 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     </div>
   );
 }
+
