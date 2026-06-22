@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -196,7 +195,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 <TableHead className="h-12 px-4 text-[10px] font-black uppercase">{isMarathiView ? 'विद्यार्थी माहिती' : 'Profile'}</TableHead>
                 <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">{isMarathiView ? 'जी.आर. नंबर' : 'GR Number'}</TableHead>
                 <TableHead className="h-12 px-4 text-[10px] font-black uppercase text-center">{isMarathiView ? 'इयत्ता' : 'Standard'}</TableHead>
-                <TableHead className="h-12 px-6 text-[10px] font-black uppercase text-right">{isMarathiView ? 'क्रिया' : 'Actions'}</TableHead>
+                <TableHead className="h-12 px-6 text-[10px) font-black uppercase text-right">{isMarathiView ? 'क्रिया' : 'Actions'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -350,7 +349,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
+                      <Label className="text-[10px) font-black uppercase text-primary ml-2 flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label>
                       <Input value={editingPlayer.address || ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                     </div>
                     <div className="space-y-4">
@@ -416,6 +415,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 </>
               )}
             </div>
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <DialogFooter className="bg-muted/10 p-8 border-t flex gap-4 shrink-0">
