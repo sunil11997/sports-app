@@ -117,70 +117,6 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
     setEditingDetailedPlayer(null);
   };
 
-  const handlePrint = () => {
-    const sportName = isGeneral ? 'General P.E.' : activeSport;
-    const skills = DETAILED_SKILLS[sportName] || [];
-    const printContent = `
-      <html>
-        <head>
-          <title>Skill Mastery Sheet - ${sportName}</title>
-          <style>
-            @media print { 
-              @page { size: landscape; margin: 1cm; } 
-              .no-print { display: none !important; }
-              body { padding-top: 0 !important; }
-            }
-            body { font-family: Inter, sans-serif; padding: 20px; font-size: 11px; color: #111; }
-            .header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
-            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 15px; text-decoration: underline; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-            th { background-color: #f4f4f4; font-weight: 900; text-transform: uppercase; font-size: 9px; }
-            .name-cell { text-align: left; font-weight: 800; min-width: 150px; }
-            
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
-            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
-            .btn-print { background: #F59E0B; color: white; }
-          </style>
-        </head>
-        <body style="padding-top: 80px;">
-          <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">← GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
-          </div>
-          <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
-            <div class="report-type">Technical Mastery Registry: ${sportName.toUpperCase()}</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>SNR</th>
-                <th>STUDENT NAME</th>
-                <th>STD</th>
-                ${skills.map(s => `<th>${s.toUpperCase()}</th>`).join('')}
-                <th>TOTAL %</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredPlayers.map((p: any, i: number) => {
-                const s = store.data.sportSkills[`${p.id}_${sportName}`] || {};
-                const detailed = s.detailedSkills || {};
-                const skillCells = skills.map(skill => `<td>${detailed[skill] ? (parseFloat(detailed[skill])/10) : '-'}</td>`).join('');
-                return `<tr><td>${p.serialNumber || i+1}</td><td class="name-cell">${p.name.toUpperCase()}</td><td>${p.std}</td>${skillCells}<td><strong>${s.score || '0'}%</strong></td></tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
-    const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
-  };
-
   const filteredPlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.category === targetCategory && (isGeneral || (p.sports && p.sports.includes(activeSport))))
@@ -210,7 +146,7 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
             </div>
           </div>
         </div>
-        <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl px-10 shadow-2xl active-scale transition-all">
+        <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl px-10 shadow-2xl active-scale transition-all">
           <Printer className="w-5 h-5 mr-2" /> Export Technical Registry
         </Button>
       </div>
