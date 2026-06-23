@@ -6,24 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { 
   Sparkles, 
   Loader2, 
   BrainCircuit, 
-  HeartPulse, 
-  Dumbbell, 
-  Zap, 
   Printer, 
-  Languages, 
-  WifiOff,
-  MessageSquare,
+  Zap, 
   Send,
-  User,
-  Bot,
-  Apple,
-  Cpu,
   ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -115,7 +106,7 @@ export function AIAdvice({ store }: { store: any }) {
       
       const input = {
         id: p.id, name: p.name, gender: p.gender, std: p.std, age: p.age.toString(), height: p.height, weight: p.weight, bmi: p.bmi,
-        sports: p.sports || [], history: p.history, medical: p.medical || "None", language: language, engine: aiEngine === 'Gemini Pro' ? 'Gemini' : 'Genkit' as any,
+        sports: p.sports || [], history: p.history, medical: p.medical || "None", language: language, engine: (aiEngine === 'Gemini Pro' ? 'Gemini' : 'Genkit') as any,
         fitnessScore: fit.score || "N/A", fitnessStatus: fit.status || "N/A"
       };
 
@@ -260,7 +251,6 @@ export function AIAdvice({ store }: { store: any }) {
                   </div>
                 )}
                 <div ref={scrollRef} />
-                <ScrollBar orientation="vertical" />
               </ScrollArea>
               <div className="p-8 bg-white border-t flex gap-4">
                 <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendChat()} placeholder="Discuss tactics with AI Coach..." className="flex-1 h-14 rounded-2xl border-2 px-6" />

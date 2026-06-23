@@ -36,7 +36,7 @@ import {
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { usePWA } from '@/components/providers/pwa-provider';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
@@ -500,7 +500,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         </div>
                       </div>
                     </div>
-                    <ScrollBar orientation="vertical" />
                   </ScrollArea>
                   
                   <div className="pt-8 border-t border-dashed flex flex-col md:flex-row items-center justify-between gap-6">

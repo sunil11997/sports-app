@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ClipboardList, 
   Users, 
@@ -272,7 +272,6 @@ export function TeacherActivities() {
                         </div>
                       ))}
                     </div>
-                    <ScrollBar orientation="vertical" />
                   </ScrollArea>
 
                   <div className="mt-8 pt-8 border-t border-dashed flex flex-col sm:flex-row items-center justify-between gap-6">

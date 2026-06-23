@@ -35,7 +35,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -185,8 +185,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </div>
       </div>
 
-      <div className="google-card overflow-hidden border">
-        <ScrollArea className="w-full">
+      <Card className="google-card overflow-hidden border">
+        <div className="overflow-x-auto scrollbar-hide">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-muted/30">
               <TableRow>
@@ -201,7 +201,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
               {filteredPlayers.map((p: any) => (
                 <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors border-b last:border-0">
                   <TableCell className="px-6">
-                    <Badge className="bg-primary/10 text-primary font-black text-sm border-0 h-10 w-10 flex items-center justify-center rounded-xl">{p.serialNumber || '0'}</Badge>
+                    <Badge variant="secondary" className="font-black text-xs h-9 w-9 flex items-center justify-center rounded-lg bg-primary/5 text-primary border-primary/10">
+                      {p.serialNumber || '0'}
+                    </Badge>
                   </TableCell>
                   <TableCell className="px-4">
                     <div className="flex items-center gap-4">
@@ -231,9 +233,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
               ))}
             </TableBody>
           </Table>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
+        </div>
+      </Card>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
         <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[90vh]">
@@ -285,7 +286,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                         <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
                         <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10">
                           {activeCam === 'aadhar' ? (
-                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                           ) : editingPlayer.aadharPhotoUrl ? (
                             <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
                           ) : (
@@ -435,7 +436,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px) font-black uppercase text-primary ml-2">Sports History?</Label>
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Sports History?</Label>
                           <Select value={editingPlayer.history} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, history: val})}>
                             <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
@@ -462,7 +463,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 </div>
               )}
             </div>
-            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <DialogFooter className="bg-muted/10 p-8 border-t flex gap-4 shrink-0">

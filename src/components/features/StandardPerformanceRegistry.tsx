@@ -35,8 +35,8 @@ import {
   Line,
   Legend
 } from 'recharts';
-import type { PerformanceLabels } from '@/lib/types';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import type { PerformanceLabels, Player } from '@/lib/types';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DEFAULT_PERFORMANCE_LABELS: PerformanceLabels = {
   metric1: 'Running (100m)',
@@ -60,10 +60,10 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
   const playersInStd = useMemo(() => {
     return (store.data.players || [])
-      .filter((p: any) => p.std === std)
-      .sort((a: any, b: any) => {
+      .filter((p: Player) => p.std === std)
+      .sort((a: Player, b: Player) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
-        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
+        return (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0);
       });
   }, [store.data.players, std]);
 
@@ -74,7 +74,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
   useEffect(() => {
     const newRecords: Record<string, any> = {};
-    playersInStd.forEach((p: any) => {
+    playersInStd.forEach((p: Player) => {
       const historyList = store.data.fitnessHistory[p.id] || [];
       const history = historyList.find((h: any) => h.month === selectedMonth);
       newRecords[p.id] = history || {
@@ -87,7 +87,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     if (playersInStd.length > 0 && !selectedPlayerForHistory) {
       setSelectedPlayerId(playersInStd[0].id);
     }
-  }, [selectedMonth, playersInStd, store.data.fitnessHistory, selectedPlayerForHistory]);
+  }, [selectedMonth, playersInStd, store.data.fitnessHistory, selectedPlayerForHistory, store.isLoaded]);
 
   const handleValueChange = (pId: string, field: string, val: string) => {
     setLocalRecords(prev => ({
@@ -96,7 +96,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     }));
   };
 
-  const handleSave = async (player: any) => {
+  const handleSave = async (player: Player) => {
     setIsSaving(player.id);
     const data = localRecords[player.id];
     const metrics = ['metric1', 'metric2', 'metric3', 'metric4', 'metric5', 'metric6', 'metric7'];
@@ -143,23 +143,23 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
   const rankings = useMemo(() => {
     const boys = playersInStd
-      .filter(p => p.gender === 'Male')
-      .map(p => {
+      .filter((p: Player) => p.gender === 'Male')
+      .map((p: Player) => {
         const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
-      .filter(p => p.score > 0)
-      .sort((a, b) => b.score - a.score)
+      .filter((p: any) => p.score > 0)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 5);
 
     const girls = playersInStd
-      .filter(p => p.gender === 'Female')
-      .map(p => {
+      .filter((p: Player) => p.gender === 'Female')
+      .map((p: Player) => {
         const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
-      .filter(p => p.score > 0)
-      .sort((a, b) => b.score - a.score)
+      .filter((p: any) => p.score > 0)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 5);
 
     return { boys, girls };
@@ -198,7 +198,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
         <TabsContent value="entry" className="mt-0">
           <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl">
-            <ScrollArea className="w-full">
+            <div className="overflow-x-auto scrollbar-hide">
               <Table className="min-w-max border-collapse">
                 <TableHeader className="bg-muted/80 sticky top-0 z-20">
                   <TableRow>
@@ -213,16 +213,16 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {playersInStd.map((p: any) => {
+                  {playersInStd.map((p: Player) => {
                     const r = localRecords[p.id] || {};
                     return (
                       <TableRow key={p.id} className="border-b h-14 group">
                         <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[200px]">{p.name.toUpperCase()}</TableCell>
                         <TableCell className="border-r text-center font-bold text-xs">{p.age}</TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.metric1 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.metric2 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric1 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric2 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
                         <TableCell className="border-r text-center bg-primary/5 font-black text-primary">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
                         <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
                           <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
@@ -234,8 +234,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   })}
                 </TableBody>
               </Table>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            </div>
           </Card>
         </TabsContent>
 
@@ -250,7 +249,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-3">
-                  {rankings.girls.map((p, idx: number) => (
+                  {rankings.girls.map((p: any, idx: number) => (
                     <div key={p.id} className="flex items-center justify-between p-4 bg-pink-50/50 rounded-2xl border border-pink-100 shadow-sm animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center font-black text-pink-700">{idx + 1}</div>
@@ -281,7 +280,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-3">
-                  {rankings.boys.map((p, idx: number) => (
+                  {rankings.boys.map((p: any, idx: number) => (
                     <div key={p.id} className="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm animate-in slide-in-from-right duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-black text-blue-700">{idx + 1}</div>
@@ -309,24 +308,23 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-4 space-y-6">
               <Card className="border-2 rounded-[3rem] bg-white p-8 shadow-xl">
-                 <h3 className="text-xl font-black text-primary uppercase flex items-center gap-3 mb-6"><Target className="w-6 h-6 text-accent" /> Student</h3>
+                 <h3 className="text-xl font-black text-primary uppercase flex items-center gap-3 mb-6"><Target className="w-6 h-6 text-accent" /> Student List</h3>
                  <ScrollArea className="h-[400px]">
                    <div className="space-y-2 pr-4">
-                      {playersInStd.map((p: any) => (
+                      {playersInStd.map((p: Player) => (
                         <button key={p.id} onClick={() => setSelectedPlayerId(p.id)} className={cn("w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between group", selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5 hover:border-primary/10")}>
                           {p.name}
                           <ArrowRight className={cn("w-4 h-4 transition-transform", selectedPlayerForHistory === p.id ? "translate-x-0" : "-translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
                         </button>
                       ))}
                    </div>
-                   <ScrollBar orientation="vertical" />
                  </ScrollArea>
               </Card>
             </div>
             <div className="lg:col-span-8 space-y-8">
               <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
                 <CardHeader className="bg-primary/5 border-b p-8">
-                   <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3"><BarChart className="w-5 h-5 text-accent" /> Progress History</CardTitle>
+                   <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3"><BarChart className="w-5 h-5 text-accent" /> Progress Trends</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 flex flex-col">
                   <div className="h-[350px] w-full p-8 border-b">
@@ -343,12 +341,12 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         </ComposedChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest text-sm">No historical data</p></div>
+                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest text-sm">No historical data found</p></div>
                     )}
                   </div>
-                  <div className="p-0 overflow-x-auto">
+                  <div className="p-0 overflow-x-auto scrollbar-hide">
                     <Table>
-                      <TableHeader><TableRow><TableHead className="font-black text-[10px] uppercase pl-8">Month</TableHead><TableHead className="font-black text-[10px] uppercase text-center">Score</TableHead><TableHead className="font-black text-[10px] uppercase text-right pr-8">Status</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead className="font-black text-[10px] uppercase pl-8">Month</TableHead><TableHead className="font-black text-[10px] uppercase text-center">Score</TableHead><TableHead className="font-black text-[10px] uppercase text-right pr-8">Status Rank</TableHead></TableRow></TableHeader>
                       <TableBody>
                          {historyData.slice().reverse().map((h: any, idx: number) => (
                            <TableRow key={idx}>
