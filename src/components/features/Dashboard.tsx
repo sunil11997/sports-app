@@ -435,7 +435,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Sports History?</Label>
+                          <Label className="text-[10px) font-black uppercase text-primary ml-2">Sports History?</Label>
                           <Select value={editingPlayer.history} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, history: val})}>
                             <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
@@ -472,7 +472,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </DialogContent>
       </Dialog>
       <canvas ref={canvasRef} className="hidden" />
-      <ScrollBar orientation="vertical" />
     </div>
   );
 }

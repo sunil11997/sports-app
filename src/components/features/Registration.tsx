@@ -518,7 +518,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           </Form>
         </CardContent>
       </Card>
-      <ScrollBar orientation="vertical" />
     </div>
   );
 }

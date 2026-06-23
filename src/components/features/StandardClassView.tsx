@@ -411,7 +411,6 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         </DialogContent>
       </Dialog>
       <canvas ref={canvasRef} className="hidden" />
-      <ScrollBar orientation="vertical" />
     </div>
   );
 }

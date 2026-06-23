@@ -291,7 +291,6 @@ export function TeacherActivities() {
           </Card>
         ))}
       </div>
-      <ScrollBar orientation="vertical" />
     </div>
   );
 }
