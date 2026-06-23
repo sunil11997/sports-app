@@ -24,7 +24,8 @@ import {
   ScanFace,
   Camera,
   Upload,
-  CircleX
+  CircleX,
+  Type
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -303,7 +304,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label><Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">नाव (मराठी)</Label><Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2"><Type className="w-3 h-3 mr-2" />नाव (मराठी)</Label><Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Roll No</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2">
@@ -349,7 +350,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Aadhar</Label><Input maxLength={12} value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Mobile</Label><Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                       </div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2"><MapPin className="w-3 h-3 mr-2" />Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                     </div>
 
                     <div className="space-y-6">
@@ -410,6 +411,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         </DialogContent>
       </Dialog>
       <canvas ref={canvasRef} className="hidden" />
+      <ScrollBar orientation="vertical" />
     </div>
   );
 }

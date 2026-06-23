@@ -471,6 +471,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
         </DialogContent>
       </Dialog>
       <canvas ref={canvasRef} className="hidden" />
+      <ScrollBar orientation="vertical" />
     </div>
   );
 }

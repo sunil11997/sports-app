@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -240,7 +239,7 @@ export function TeacherActivities() {
                   </div>
                   <div className="relative z-10 pt-8 mt-12 border-t border-white/10">
                      <p className="text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2">
-                       <ShieldCheck className="w-4 h-4" /> Coach Sunil's Advice
+                       <ShieldCheck className="w-4 h-4" /> Coach Sunil&apos;s Advice
                      </p>
                      <p className="text-xs font-bold leading-relaxed bg-black/10 p-4 rounded-2xl border border-white/10">
                        {guide.proTips}
@@ -292,7 +291,7 @@ export function TeacherActivities() {
           </Card>
         ))}
       </div>
+      <ScrollBar orientation="vertical" />
     </div>
   );
 }
-

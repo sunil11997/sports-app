@@ -109,11 +109,11 @@ export const useUser = () => {
 
 /**
  * useMemoFirebase - Hardened Memoization for Firestore Refs
- * Refactored to satisfy ESLint static analysis and production build readiness.
+ * Suppressing standard dependency checks to allow factory-based ref generation while ensuring validation property.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoizedValue = useMemo(() => {
+  return useMemo(() => {
     const val = factory();
     if (val && typeof val === 'object') {
       try {
@@ -129,6 +129,4 @@ export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList)
     }
     return val;
   }, deps);
-  
-  return memoizedValue;
 }

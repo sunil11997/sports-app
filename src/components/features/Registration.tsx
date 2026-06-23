@@ -22,7 +22,6 @@ import {
   Hash, 
   UserCircle2, 
   Medal,
-  Ruler,
   RefreshCcw,
   Baby,
   Search,
@@ -419,7 +418,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
                       <div className="space-y-6">
                         <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-3">
-                          <Ruler className="w-5 h-5" />
+                          <Baby className="w-5 h-5" />
                           <h3 className="font-black uppercase text-sm tracking-[0.2em]">Physical Details</h3>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -519,6 +518,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           </Form>
         </CardContent>
       </Card>
+      <ScrollBar orientation="vertical" />
     </div>
   );
 }
