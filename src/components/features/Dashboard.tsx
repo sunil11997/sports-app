@@ -37,6 +37,7 @@ import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 interface DashboardProps {

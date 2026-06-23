@@ -326,7 +326,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       {activeCam === 'aadhar' && (
                          <div className="absolute bottom-4 left-4 right-4 flex gap-2">
                             <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-white font-black text-[10px] h-10 rounded-xl shadow-lg">CAPTURE SCAN</Button>
-                            <Button type="button" variant="destructive" onClick={stopCamera} className="w-10 h-10 p-0 rounded-xl shadow-lg"><CircleX className="w-4 h-4" /></Button>
+                            <Button type="button" variant="destructive" onClick={stopCamera} className="h-10 w-10 p-0 rounded-xl shadow-lg"><CircleX className="w-4 h-4" /></Button>
                          </div>
                       )}
                     </div>
