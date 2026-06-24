@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -6,10 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Printer, Save, Loader2, ClipboardList, Settings2, Search } from 'lucide-react';
+import { Printer, Save, Loader2, ClipboardList, Settings2, Search, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, shareToWhatsApp } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -110,6 +109,27 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
     });
     setIsSaving(null);
     toast({ title: "Record Saved" });
+  };
+
+  const handleWhatsAppShare = (player: any) => {
+    const total = calculateTotal(player.id);
+    const grade = getGrade(total);
+    const profile = store.data.schoolProfile;
+    
+    shareToWhatsApp({
+      phone: player.mobileNumber,
+      schoolName: profile.schoolName,
+      teacherName: profile.teacherName,
+      studentName: isMarathiView ? (player.nameMarathi || player.name) : player.name,
+      std: player.std,
+      age: player.age,
+      dob: player.dob,
+      bmi: player.bmi || "---",
+      height: player.height || "---",
+      weight: player.weight || "---",
+      reportType: `परीक्षा निकाल (${activeTerm === 'First' ? 'प्रथम' : 'द्वितीय'} सत्र)`,
+      reportData: `एकूण गुण: ${total}/70\nश्रेणी (Grade): ${grade}`
+    });
   };
 
   const handleSaveLabels = () => {
@@ -281,7 +301,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
               <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[55px] text-blue-600">{currentLabels.chachani}</TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[55px] text-blue-600">{currentLabels.swadhyay}</TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[60px] bg-primary/10">TOTAL</TableHead>
-              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
+              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[100px] sticky right-0 bg-muted/95 z-30">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -306,9 +326,12 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
                   <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.chachani || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'chachani', e.target.value)} /></TableCell>
                   <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white" value={r.swadhyay || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(p.id, 'swadhyay', e.target.value)} /></TableCell>
                   <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary">{total}</TableCell>
-                  <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
-                    <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
-                      {isSaving === p.id ? <Loader2 className="animate-spin" /> : <Save className="w-4 h-4" />}
+                  <TableCell className="p-0 sticky right-0 bg-white z-10 flex items-center justify-end h-14 px-2 gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(p)} disabled={!p.mobileNumber} className="text-emerald-600 hover:bg-emerald-50">
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
+                      {isSaving === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     </Button>
                   </TableCell>
                 </TableRow>

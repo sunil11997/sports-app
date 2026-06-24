@@ -15,10 +15,11 @@ import {
   Search,
   CheckCircle2,
   RefreshCw,
-  WifiOff
+  WifiOff,
+  MessageSquare
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, shareToWhatsApp } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -127,6 +128,26 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 800);
     setIsSaving(null);
+  };
+
+  const handleWhatsAppShare = (player: any) => {
+    const fit = store.data.fitness?.[player.id] || {};
+    const profile = store.data.schoolProfile;
+    
+    shareToWhatsApp({
+      phone: player.mobileNumber,
+      schoolName: profile.schoolName,
+      teacherName: profile.teacherName,
+      studentName: localMarathiView ? (player.nameMarathi || player.name) : player.name,
+      std: player.std,
+      age: player.age,
+      dob: player.dob,
+      bmi: player.bmi || "---",
+      height: player.height || "---",
+      weight: player.weight || "---",
+      reportType: "शारीरिक चाचणी (Fitness)",
+      reportData: `एकूण स्कोअर: ${fit.score || '0'}%\nस्टेटस: ${fit.status || 'Pending'}\nगती (50m): ${fit.run50m || '-'}s\nस्टॅमिना (600m): ${fit.run600m || '-'}\nउडी (Jump): ${fit.boardJump || '-'}cm`
+    });
   };
 
   const handleChange = (id: string, field: string, value: string) => {
@@ -281,11 +302,12 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-primary">Stamina (600m)</TableHead>
                 <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-emerald-600">Core (Situps)</TableHead>
                 <TableHead className="px-6 font-black text-[12px] uppercase text-center w-[130px] bg-primary/5">Excellence Score</TableHead>
+                <TableHead className="px-4 font-black text-[12px] uppercase text-center w-[80px]">Share</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPlayers.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-32 font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-32 font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
               ) : filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                 const isPulse = lastSavedId === player.id;
@@ -318,6 +340,17 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                           {current.status || 'PENDING'}
                         </Badge>
                       </div>
+                    </TableCell>
+                    <TableCell className="p-2 text-center">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleWhatsAppShare(player)}
+                        disabled={!player.mobileNumber}
+                        className="rounded-full text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      >
+                        <MessageSquare className="w-5 h-5" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

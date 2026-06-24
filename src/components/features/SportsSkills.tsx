@@ -6,10 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Trophy, Save, Printer, UserCircle, Star, Target, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Trophy, Save, Printer, UserCircle, Star, Target, ShieldCheck, ChevronRight, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn, shareToWhatsApp } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
@@ -117,6 +117,27 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
     setEditingDetailedPlayer(null);
   };
 
+  const handleWhatsAppShare = (player: any) => {
+    const sportName = isGeneral ? 'General P.E.' : activeSport;
+    const s = store.data.sportSkills[`${player.id}_${sportName}`] || { score: '0' };
+    const profile = store.data.schoolProfile;
+    
+    shareToWhatsApp({
+      phone: player.mobileNumber,
+      schoolName: profile.schoolName,
+      teacherName: profile.teacherName,
+      studentName: player.nameMarathi || player.name,
+      std: player.std,
+      age: player.age,
+      dob: player.dob,
+      bmi: player.bmi || "---",
+      height: player.height || "---",
+      weight: player.weight || "---",
+      reportType: `क्रीडा कौशल्य अहवाल (${sportName})`,
+      reportData: `तांत्रिक गुणवत्ता (Mastery): ${s.score}%`
+    });
+  };
+
   const filteredPlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => p.category === targetCategory && (isGeneral || (p.sports && p.sports.includes(activeSport))))
@@ -204,9 +225,14 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
                         </div>
                       </TableCell>
                       <TableCell className="text-right px-8">
-                        <Button variant="outline" size="sm" onClick={() => handleOpenEvaluation(p, sportName)} className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-white transition-all h-10 px-6">
-                          Evaluate Technical Moves <ChevronRight className="w-3 h-3 ml-2" />
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(p)} disabled={!p.mobileNumber} className="text-emerald-600 hover:bg-emerald-50 rounded-full h-10 w-10">
+                            <MessageSquare className="w-5 h-5" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleOpenEvaluation(p, sportName)} className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-white transition-all h-10 px-6">
+                            Evaluate Technical Moves <ChevronRight className="w-3 h-3 ml-2" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

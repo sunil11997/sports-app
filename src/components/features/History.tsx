@@ -18,11 +18,12 @@ import {
   Search,
   History,
   Target,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
 import { format, subDays, isAfter, startOfDay, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, shareToWhatsApp } from '@/lib/utils';
 import { 
   XAxis, 
   YAxis, 
@@ -129,6 +130,27 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
       stamina: parseFloat(f.enduranceScore || '0') || 0,
     })),
   [historyData]);
+
+  const handleWhatsAppShare = () => {
+    if (!currentPlayer) return;
+    const profile = store.data.schoolProfile;
+    const lastFit = historyData[historyData.length - 1] || {};
+    
+    shareToWhatsApp({
+      phone: currentPlayer.mobileNumber,
+      schoolName: profile.schoolName,
+      teacherName: profile.teacherName,
+      studentName: isMarathi ? (currentPlayer.nameMarathi || currentPlayer.name) : currentPlayer.name,
+      std: currentPlayer.std,
+      age: currentPlayer.age,
+      dob: currentPlayer.dob,
+      bmi: currentPlayer.bmi || "---",
+      height: currentPlayer.height || "---",
+      weight: currentPlayer.weight || "---",
+      reportType: "सर्वसमावेशक इतिहास (Dossier)",
+      reportData: `उपस्थिती (30-दिवस): ${attendanceStats.rate}%\nअखेरचा फिटनेस स्कोअर: ${lastFit.score || '0'}%\nPHV मॅच्युरिटी: ${phvData?.offset}yr`
+    });
+  };
 
   const handlePrintDossier = () => {
     if (!currentPlayer) return;
@@ -274,7 +296,10 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
                </CardContent>
             </Card>
 
-            <Button onClick={handlePrintDossier} className="w-full h-20 bg-accent text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl active-scale"><Printer className="w-6 h-6 mr-3" /> Print Full Dossier</Button>
+            <div className="flex gap-4">
+               <Button onClick={handlePrintDossier} className="flex-1 h-20 bg-accent text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl active-scale"><Printer className="w-6 h-6 mr-3" /> Print PDF</Button>
+               <Button onClick={handleWhatsAppShare} className="w-20 h-20 bg-emerald-600 text-white rounded-3xl flex items-center justify-center shadow-2xl active-scale"><MessageSquare className="w-8 h-8" /></Button>
+            </div>
           </div>
 
           <div className="lg:col-span-8 space-y-8">

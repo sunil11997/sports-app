@@ -19,12 +19,13 @@ import {
   Trophy,
   Users,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, shareToWhatsApp } from '@/lib/utils';
 import { format } from 'date-fns';
 import { 
   XAxis, 
@@ -128,6 +129,27 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     setIsSaving(null);
   };
 
+  const handleWhatsAppShare = (player: Player) => {
+    const r = localRecords[player.id] || {};
+    const profile = store.data.schoolProfile;
+    const monthName = format(new Date(selectedMonth + "-01"), 'MMMM yyyy');
+    
+    shareToWhatsApp({
+      phone: player.mobileNumber,
+      schoolName: profile.schoolName,
+      teacherName: profile.teacherName,
+      studentName: player.nameMarathi || player.name,
+      std: player.std,
+      age: player.age,
+      dob: player.dob,
+      bmi: player.bmi || "---",
+      height: r.height || player.height || "---",
+      weight: r.weight || player.weight || "---",
+      reportType: `मासिक प्रगती अहवाल (${monthName})`,
+      reportData: `सरासरी गुणवत्ता: ${r.score || '0'}%\n${currentLabels.metric1}: ${r.metric1 || '-'}\n${currentLabels.metric7}: ${r.metric7 || '-'}`
+    });
+  };
+
   const handleSaveLabels = () => {
     store.setPerformanceLabels(std, selectedMonth, editingLabels);
     setIsLabelDialogOpen(false);
@@ -152,8 +174,8 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
   const rankings = useMemo(() => {
     const boys = playersInStd
-      .filter((p: any) => p.gender === 'Male')
-      .map((p: any) => {
+      .filter((p: Player) => p.gender === 'Male')
+      .map((p: Player) => {
         const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
@@ -162,8 +184,8 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
       .slice(0, 5);
 
     const girls = playersInStd
-      .filter((p: any) => p.gender === 'Female')
-      .map((p: any) => {
+      .filter((p: Player) => p.gender === 'Female')
+      .map((p: Player) => {
         const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
@@ -230,7 +252,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px] text-blue-600">{currentLabels.metric2}</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px] text-accent">{currentLabels.metric7}</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[11px] uppercase text-center w-[90px] bg-primary/5">SCORE</TableHead>
-                    <TableHead className="h-14 px-2 font-black text-[11px] uppercase text-center w-[80px] sticky right-0 bg-muted/95 z-30">Status</TableHead>
+                    <TableHead className="h-14 px-2 font-black text-[11px] uppercase text-right w-[100px] sticky right-0 bg-muted/95 z-30">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -256,7 +278,10 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric2 || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
                         <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-accent/5 focus:bg-white rounded-none font-black" value={r.metric7 || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric7', e.target.value)} /></TableCell>
                         <TableCell className="border-r text-center bg-primary/5 font-black text-primary text-base">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
-                        <TableCell className="text-center sticky right-0 bg-white z-10 px-2">
+                        <TableCell className="text-right sticky right-0 bg-white z-10 px-2 flex items-center justify-end gap-2 h-14">
+                           <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(p)} disabled={!p.mobileNumber} className="text-emerald-600 hover:bg-emerald-50">
+                             <MessageSquare className="w-4 h-4" />
+                           </Button>
                            <Badge variant="outline" className="text-[8px] font-black uppercase px-2 py-0.5 border-primary/20">
                              {r.status || 'NEW'}
                            </Badge>
