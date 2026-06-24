@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
@@ -129,5 +128,5 @@ export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList)
       }
     }
     return val;
-  }, [factory, ...deps]);
+  }, [...deps]);
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -23,6 +22,7 @@ import {
   Star
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { cn } from '@/lib/utils';
 
 const SportsSkills = dynamic(() => import('./SportsSkills').then(m => m.SportsSkills), { ssr: false });
 const SportsDrills = dynamic(() => import('./SportsDrills').then(m => m.SportsDrills), { ssr: false });
@@ -162,22 +162,25 @@ export function GameHub({ store }: { store: any }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {GAMES.map((game) => (
-          <Card 
-            key={game.id} 
-            onClick={() => setSelectedGame(game.id)}
-            className="border-2 rounded-[3rem] p-10 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden text-center"
-          >
-            <div className={cn("w-20 h-20 mx-auto rounded-[1.5rem] flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500", game.bg)}>
-              <game.icon className={cn("w-10 h-10", game.color)} />
-            </div>
-            <h3 className="text-3xl font-black text-primary uppercase tracking-tight">{game.label}</h3>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Open Management Deck</p>
-            <div className="absolute top-6 right-8 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-              <ChevronRight className="w-6 h-6 text-primary/20" />
-            </div>
-          </Card>
-        ))}
+        {GAMES.map((game) => {
+          const GameIcon = game.icon;
+          return (
+            <Card 
+              key={game.id} 
+              onClick={() => setSelectedGame(game.id)}
+              className="border-2 rounded-[3rem] p-10 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden text-center"
+            >
+              <div className={cn("w-20 h-20 mx-auto rounded-[1.5rem] flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500", game.bg)}>
+                <GameIcon className={cn("w-10 h-10", game.color)} />
+              </div>
+              <h3 className="text-3xl font-black text-primary uppercase tracking-tight">{game.label}</h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Open Management Deck</p>
+              <div className="absolute top-6 right-8 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                <ChevronRight className="w-6 h-6 text-primary/20" />
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
