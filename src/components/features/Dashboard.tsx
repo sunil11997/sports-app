@@ -35,7 +35,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -237,7 +237,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
       </Card>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[90vh]">
+        <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col h-[85vh] max-h-[90vh]">
           <DialogHeader className="bg-primary p-8 text-white shrink-0 relative overflow-hidden">
              <div className="relative z-10 flex items-center gap-4">
                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
@@ -463,6 +463,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 </div>
               )}
             </div>
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <DialogFooter className="bg-muted/10 p-8 border-t flex gap-4 shrink-0">

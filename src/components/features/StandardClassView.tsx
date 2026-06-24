@@ -224,7 +224,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[90vh]">
+        <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col h-[85vh] max-h-[90vh]">
           <DialogHeader className="bg-primary p-8 text-white shrink-0 relative overflow-hidden">
              <div className="relative z-10 flex items-center gap-4">
                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
@@ -315,7 +315,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                            </Select>
                         </div>
                         <div className="space-y-2">
-                           <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
+                           <Label className="text-[10px) font-black uppercase text-primary ml-2">Category</Label>
                            <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                              <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>

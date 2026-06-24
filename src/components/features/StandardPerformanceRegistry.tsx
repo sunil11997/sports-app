@@ -36,7 +36,7 @@ import {
   Legend
 } from 'recharts';
 import type { PerformanceLabels, Player } from '@/lib/types';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const DEFAULT_PERFORMANCE_LABELS: PerformanceLabels = {
   metric1: 'Running (100m)',
