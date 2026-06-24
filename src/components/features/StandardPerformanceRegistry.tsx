@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -165,7 +166,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
   const chartData = useMemo(() => {
     return historyData.map((h: any) => ({
-      month: format(new Date(h.month + "-01"), 'MMM yy'),
+      month: h.month ? format(new Date(h.month + "-01"), 'MMM yy') : "---",
       score: parseFloat(h.score) || 0,
       m1: parseFloat(h.metric1) || 0,
       m2: parseFloat(h.metric2) || 0
@@ -321,12 +322,6 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                       <span className="text-xl font-black text-pink-700">{p.score}%</span>
                     </div>
                   ))}
-                  {rankings.girls.length === 0 && (
-                    <div className="py-20 text-center opacity-20 border-2 border-dashed rounded-3xl">
-                      <Users className="w-10 h-10 mx-auto mb-2" />
-                      <p className="text-[10px] font-black uppercase tracking-widest">No girl records for this month</p>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -352,12 +347,6 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                       <span className="text-xl font-black text-blue-700">{p.score}%</span>
                     </div>
                   ))}
-                  {rankings.boys.length === 0 && (
-                    <div className="py-20 text-center opacity-20 border-2 border-dashed rounded-3xl">
-                      <Users className="w-10 h-10 mx-auto mb-2" />
-                      <p className="text-[10px] font-black uppercase tracking-widest">No boy records for this month</p>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
