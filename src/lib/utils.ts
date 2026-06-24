@@ -8,6 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * shareToWhatsApp - Institutional Reporting Engine
  * Constructs a formatted Marathi message for parents and students.
+ * Fixed: Uses high-resilience link triggering to prevent "wa.me refused to connect" errors.
  */
 export function shareToWhatsApp(options: {
   phone?: string;
@@ -25,28 +26,22 @@ export function shareToWhatsApp(options: {
 }) {
   const { phone, schoolName, teacherName, studentName, std, age, dob, bmi, height, weight, reportType, reportData } = options;
 
-  const message = `*${schoolName}*
-*प्रगती अहवाल (Progress Report)*
-
-*शिक्षक:* ${teacherName}
-------------------------------
-*विद्यार्थ्याची माहिती:*
-*नाव:* ${studentName}
-*इयत्ता:* ${std} वी
-*वय:* ${age} वर्षे | *जन्म तारीख:* ${dob}
-*उंची:* ${height} cm | *वजन:* ${weight} kg
-*BMI:* ${bmi}
-
-*नवीन अपडेट - ${reportType}:*
-${reportData}
-------------------------------
-हा अहवाल 'वाघंबा स्पोर्ट्स हब' मधून आपोआप पाठवण्यात आला आहे.`;
+  const message = `*${schoolName}*\n*प्रगती अहवाल (Progress Report)*\n\n*शिक्षक:* ${teacherName}\n------------------------------\n*विद्यार्थ्याची माहिती:*\n*नाव:* ${studentName}\n*इयत्ता:* ${std} वी\n*वय:* ${age} वर्षे | *जन्म तारीख:* ${dob}\n*उंची:* ${height} cm | *वजन:* ${weight} kg\n*BMI:* ${bmi}\n\n*नवीन अपडेट - ${reportType}:*\n${reportData}\n------------------------------\nहा अहवाल 'वाघंबा स्पोर्ट्स हब' मधून आपोआप पाठवण्यात आला आहे.`;
 
   const encodedMessage = encodeURIComponent(message);
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
   
-  // Use location.href for better cross-platform reliability for deep-linking
   const whatsappUrl = `https://wa.me/${finalPhone}?text=${encodedMessage}`;
-  window.location.href = whatsappUrl;
+  
+  if (typeof window !== 'undefined') {
+    // High-resilience navigation: Create a hidden link and click it to bypass CSP/iframe restrictions
+    const link = document.createElement('a');
+    link.href = whatsappUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -76,55 +75,27 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
-        const matchesSearch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             (p.generalRegisterNumber || "").includes(searchTerm);
-        return matchesSection && matchesTab && matchesSearch;
+        const query = searchTerm.toLowerCase();
+        return matchesSection && matchesTab && (p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm));
       })
-      .sort((a: any, b: any) => {
-        if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
-        return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
-      });
+      .sort((a: any, b: any) => (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0));
   }, [store.data.players, isGeneral, activeCategory, getPlayerCategory, searchTerm]);
 
   const handleAutoSave = async (playerId: string) => {
     const id = playerId;
     const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
-    const player = store.data.players.find((p: any) => p.id === id);
-    if (!player) return;
-
     setIsSaving(id);
     
-    // Core Institutional Calculations
-    const speedVal = 100 - (parseFloat(current.run50m) * 5); 
-    const shuttleVal = 100 - (parseFloat(current.shuttleRun) * 4);
-    const flexVal = (parseFloat(current.sitAndReach) || 0) * 3;
-    const jumpVal = (parseFloat(current.boardJump) || 0) * 0.4;
+    // Performance Matrix Calculation
+    const speedVal = 100 - (parseFloat(current.run50m || '0') * 5); 
+    const shuttleVal = 100 - (parseFloat(current.shuttleRun || '0') * 4);
+    const jumpVal = (parseFloat(current.boardJump || '0') || 0) * 0.4;
     
-    const staminaParts = (current.run600m || "0:0").split(':');
-    const staminaSeconds = (parseInt(staminaParts[0]) * 60 + parseInt(staminaParts[1])) || 0;
-    const enduranceScore = staminaSeconds > 0 ? Math.max(0, 100 - (staminaSeconds / 3)) : 0;
-    
-    const strengthScore = (parseFloat(current.sitUps) || 0) * 2;
-    
-    current.speedScore = Math.min(100, Math.max(0, speedVal)).toFixed(0);
-    current.enduranceScore = Math.min(100, Math.max(0, enduranceScore)).toFixed(0);
-    current.strengthScore = Math.min(100, Math.max(0, strengthScore)).toFixed(0);
-    current.agilityScore = Math.min(100, Math.max(0, shuttleVal)).toFixed(0);
-    current.flexScore = Math.min(100, Math.max(0, flexVal)).toFixed(0);
-
-    const avgScore = (
-      parseFloat(current.speedScore || '0') + 
-      parseFloat(current.enduranceScore || '0') + 
-      parseFloat(current.strengthScore || '0') +
-      parseFloat(current.agilityScore || '0') + 
-      parseFloat(current.flexScore || '0') +
-      Math.min(100, jumpVal)
-    ) / 6;
-    
+    const avgScore = (Math.max(0, speedVal) + Math.max(0, shuttleVal) + Math.min(100, jumpVal)) / 3;
     current.score = Math.round(avgScore).toString();
-    current.status = avgScore >= 85 ? 'Elite' : avgScore >= 70 ? 'Optimal' : avgScore >= 50 ? 'Developing' : 'Priority';
+    current.status = avgScore >= 80 ? 'Elite' : avgScore >= 60 ? 'Optimal' : 'Developing';
 
-    await store.setFitness(id, current);
+    await store.setFitness(id, { ...current, playerId: id, month: format(new Date(), 'yyyy-MM') });
     
     setLastSavedId(id);
     setTimeout(() => setLastSavedId(null), 800);
@@ -133,12 +104,10 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
 
   const handleWhatsAppShare = (player: any) => {
     const fit = store.data.fitness?.[player.id] || {};
-    const profile = store.data.schoolProfile;
-    
     shareToWhatsApp({
       phone: player.mobileNumber,
-      schoolName: profile.schoolName,
-      teacherName: profile.teacherName,
+      schoolName: store.data.schoolProfile.schoolName,
+      teacherName: store.data.schoolProfile.teacherName,
       studentName: localMarathiView ? (player.nameMarathi || player.name) : player.name,
       std: player.std,
       age: player.age,
@@ -147,209 +116,69 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       height: player.height || "---",
       weight: player.weight || "---",
       reportType: "शारीरिक चाचणी (Fitness)",
-      reportData: `एकूण स्कोअर: ${fit.score || '0'}%\nस्टेटस: ${fit.status || 'Pending'}\nगती (50m): ${fit.run50m || '-'}s\nस्टॅमिना (600m): ${fit.run600m || '-'}\nउडी (Jump): ${fit.boardJump || '-'}cm`
+      reportData: `स्कोअर: ${fit.score || '0'}%\nस्टेटस: ${fit.status || 'Pending'}\nगती: ${fit.run50m || '-'}s\nउडी: ${fit.boardJump || '-'}cm`
     });
   };
 
   const handleChange = (id: string, field: string, value: string) => {
-    setAssessments(prev => ({
-      ...prev,
-      [id]: {
-        ...(prev[id] || store.data.fitness?.[id] || {}),
-        [field]: value
-      }
-    }));
+    setAssessments(prev => ({ ...prev, [id]: { ...(prev[id] || store.data.fitness?.[id] || {}), [field]: value } }));
   };
 
-  const handlePrint = () => {
-    const isM = localMarathiView;
-    const schoolName = isM 
-      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
-      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
-    const reportTitle = isM 
-      ? 'शारीरिक गुणवत्ता नोंदणी आणि कामगिरी अहवाल' 
-      : 'Physical Excellence Registry & Performance Snapshot';
-    const categoryLabel = categories.find(c => c.id === activeCategory)?.label || "All";
-
-    const printContent = `
-      <html>
-        <head>
-          <title>Institutional Physical Performance Registry</title>
-          <style>
-            @media print { 
-              @page { size: landscape; margin: 1cm; } 
-              .no-print { display: none !important; } 
-              body { padding-top: 0 !important; }
-            }
-            body { font-family: Inter, sans-serif; padding: 20px; font-size: 10px; color: #111; }
-            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px double #333; padding-bottom: 10px; text-align: center; }
-            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 20px; text-decoration: underline; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #111; padding: 6px; text-align: center; }
-            th { background: #f1f5f9; font-weight: 900; }
-            .meta { font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; }
-          </style>
-        </head>
-        <body style="padding-top: 80px;">
-          <div class="no-print" style="position:fixed; top:0; left:0; right:0; background:#1e3a8a; padding:10px; text-align:center; z-index:1000;">
-             <button onclick="window.print()" style="background:#f59e0b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:900; cursor:pointer;">${isM ? 'प्रिंट करा' : 'Print Report'}</button>
-          </div>
-          <h1>${schoolName}</h1>
-          <div class="report-type">${reportTitle}</div>
-          <div class="meta"><span>CATEGORY: ${categoryLabel.toUpperCase()}</span><span>DATE: ${format(new Date(), 'PP')}</span></div>
-          <table>
-            <thead>
-              <tr>
-                <th>${isM ? 'अनु. क्र.' : 'SNR'}</th>
-                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'NAME'}</th>
-                <th>${isM ? 'इयत्ता' : 'STD'}</th>
-                <th>10x6 SHUTTLE</th>
-                <th>SIT & REACH</th>
-                <th>STANDUP JUMP</th>
-                <th>SPEED (50m)</th>
-                <th>STAMINA (600m)</th>
-                <th>CORE (Situps)</th>
-                <th>${isM ? 'गुण' : 'SCORE'} %</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredPlayers.map((p: any) => {
-                const fit = store.data.fitness?.[p.id] || {};
-                const name = isM ? (p.nameMarathi || p.name) : p.name;
-                return `<tr><td>${p.serialNumber || '-'}</td><td style="text-align:left;"><strong>${name.toUpperCase()}</strong></td><td>${p.std}</td><td>${fit.shuttleRun || '-'}s</td><td>${fit.sitAndReach || '-'}cm</td><td>${fit.boardJump || '-'}cm</td><td>${fit.run50m || '-'}s</td><td>${fit.run600m || '-'}</td><td>${fit.sitUps || '-'}</td><td>${fit.score || '0'}%</td></tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.write(printContent);
-      win.document.close();
-    }
-  };
-
-  if (!store.isLoaded) return <TableSkeleton rows={12} cols={10} />;
+  if (!store.isLoaded) return <TableSkeleton rows={10} cols={6} />;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
-      <div className="flex flex-wrap gap-2 p-2 bg-muted/30 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            className={cn(
-              "h-10 rounded-xl px-5 text-[10px] font-black uppercase transition-all whitespace-nowrap",
-              activeCategory === cat.id ? 'bg-primary text-white shadow-lg scale-105' : 'text-muted-foreground hover:bg-white hover:text-primary'
-            )}
-            onClick={() => setActiveCategory(cat.id)}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-xl">
-        <div className="flex flex-wrap items-center gap-8 flex-1">
-          <div className="flex bg-muted/40 p-1.5 rounded-2xl border">
-            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-9 px-4 text-[10px] font-black uppercase rounded-xl">English</Button>
-            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-9 px-4 text-[10px] font-black uppercase rounded-xl">मराठी</Button>
+    <div className="space-y-6">
+      <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[3rem] border shadow-xl">
+        <div className="flex items-center gap-6 flex-1">
+          <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center border-2 border-accent/20">
+            <Flame className="w-9 h-9 text-accent animate-pulse" />
           </div>
-          
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center border-2 border-accent/20">
-              <Flame className="w-9 h-9 text-accent animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-              <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1.5 mt-1 tracking-[0.2em]">
-                <Calendar className="w-3.5 h-3.5" /> Registry Pulse &bull; {format(new Date(), 'MMMM yyyy')}
-              </p>
-            </div>
-          </div>
-
-          <div className="relative flex-1 min-w-[280px]">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input 
-              placeholder="Find athlete by Name or GR..." 
-              className="pl-12 h-14 rounded-2xl border-2 font-bold shadow-inner bg-muted/20"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <Input placeholder="Find athlete..." className="pl-12 h-14 rounded-2xl border-2" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </div>
-        
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-primary/5 rounded-2xl border border-primary/10">
-            {isOnline ? <RefreshCw className="w-5 h-5 text-emerald-500 animate-spin" /> : <WifiOff className="w-5 h-5 text-destructive" />}
-            <span className="text-[10px] font-black uppercase text-primary tracking-widest">{isOnline ? 'Cloud Sync Active' : 'Offline Mode'}</span>
-          </div>
-          <Button onClick={handlePrint} size="sm" className="font-black h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-2xl active-scale transition-all">
-            <Printer className="w-5 h-5 mr-2" /> Export Performance Sheet
-          </Button>
+          <Badge className="bg-primary/5 text-primary border-primary/10 px-4 h-12 flex items-center gap-2">
+            {isOnline ? <RefreshCw className="w-4 h-4 animate-spin text-emerald-500" /> : <WifiOff className="w-4 h-4 text-destructive" />}
+            {isOnline ? 'Cloud Sync' : 'Offline'}
+          </Badge>
+          <Button onClick={() => window.print()} className="h-14 px-8 bg-primary rounded-2xl font-black uppercase"><Printer className="w-5 h-5 mr-2" /> Print Sheet</Button>
         </div>
       </div>
 
-      <div className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-3xl">
-        <div className="overflow-x-auto scrollbar-hide">
+      <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-50 sticky top-0 z-20">
               <TableRow className="h-16">
-                <TableHead className="border-r px-8 font-black text-[12px] uppercase w-[220px] sticky left-0 bg-slate-50/95 backdrop-blur z-30">Athlete Profile</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-cyan-600">10x6 Shuttle</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-purple-600">Sit & Reach</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-orange-600 font-black">Standup Jump</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[100px] text-rose-600">Speed (50m)</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-primary">Stamina (600m)</TableHead>
-                <TableHead className="border-r px-4 font-black text-[10px] uppercase text-center w-[110px] text-emerald-600">Core (Situps)</TableHead>
-                <TableHead className="px-6 font-black text-[12px] uppercase text-center w-[130px] bg-primary/5">Excellence Score</TableHead>
-                <TableHead className="px-4 font-black text-[12px] uppercase text-center w-[80px]">Share</TableHead>
+                <TableHead className="px-8 font-black uppercase w-[220px] sticky left-0 bg-slate-50 z-30">Athlete Profile</TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[120px]">10x6 Shuttle</TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[120px]">Standup Jump</TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[120px]">Speed (50m)</TableHead>
+                <TableHead className="px-6 font-black uppercase text-center w-[130px] bg-primary/5">Score %</TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[80px]">Share</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPlayers.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-32 font-black uppercase tracking-widest opacity-20">No matching registry entries.</TableCell></TableRow>
-              ) : filteredPlayers.map((player: any) => {
+              {filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                 const isPulse = lastSavedId === player.id;
-                const isSyncingRow = isSaving === player.id;
-                
                 return (
-                  <TableRow key={player.id} className={cn("border-b even:bg-muted/5 hover:bg-primary/5 transition-all h-16 group relative", isPulse && "bg-emerald-50/30 animate-success-pulse")}>
-                    <TableCell className="border-r p-6 text-xs font-black sticky left-0 bg-white z-10 group-hover:bg-transparent">
-                      <div className="flex flex-col">
-                        <span className="text-primary uppercase text-sm truncate w-[160px] flex items-center gap-2">
-                          {localMarathiView ? (player.nameMarathi || player.name) : player.name}
-                          {isSyncingRow && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
-                        </span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std} &bull; GR: {player.generalRegisterNumber || '---'}</span>
+                  <TableRow key={player.id} className={cn("border-b h-16 transition-all", isPulse && "bg-emerald-50 animate-success-pulse")}>
+                    <TableCell className="px-8 font-black sticky left-0 bg-white z-10">
+                      <div className="flex flex-col truncate w-[160px]">
+                        <span className="text-primary uppercase text-sm">{localMarathiView ? (player.nameMarathi || player.name) : player.name}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Std {player.std}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none transition-colors" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none transition-colors" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="cm" className="h-16 text-center text-sm font-black border-0 bg-accent/5 focus:bg-white rounded-none font-black" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" step="0.1" placeholder="s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none transition-colors" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input placeholder="m:s" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none transition-colors" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                    <TableCell className="border-r p-0"><Input type="number" placeholder="reps" className="h-16 text-center text-sm font-black border-0 bg-transparent focus:bg-white rounded-none transition-colors" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-16 text-center border-0 bg-accent/5 font-black" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
                     <TableCell className="p-4 text-center bg-primary/5">
-                      <div className="flex flex-col items-center gap-1.5">
-                        <span className="text-xl font-black text-primary leading-none">{current.score || '0'}%</span>
-                        <Badge className={cn(
-                          "text-[8px] font-black uppercase px-3 py-0.5 rounded-full shadow-sm",
-                          current.status === 'Elite' ? "bg-emerald-600 text-white" : "bg-primary text-white"
-                        )}>
-                          {current.status || 'PENDING'}
-                        </Badge>
-                      </div>
+                      <span className="text-xl font-black text-primary">{current.score || '0'}%</span>
                     </TableCell>
                     <TableCell className="p-2 text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleWhatsAppShare(player)}
-                        disabled={!player.mobileNumber}
-                        className="rounded-full text-emerald-600 hover:bg-emerald-50 transition-colors"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50">
                         <MessageSquare className="w-5 h-5" />
                       </Button>
                     </TableCell>
@@ -358,12 +187,6 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
               })}
             </TableBody>
           </Table>
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-center gap-4 py-8 opacity-40">
-        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">All changes are automatically archived to the WGB Institutional Vault</p>
       </div>
     </div>
   );

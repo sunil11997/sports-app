@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -27,15 +26,12 @@ import {
   GraduationCap,
   FileText,
   CircleArrowUp,
-  BarChart,
-  Gauge,
-  ShieldAlert,
-  Medal,
-  BrainCircuit,
   Cake,
   TrendingUp,
   Megaphone,
-  History
+  History,
+  Medal,
+  BrainCircuit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -44,16 +40,13 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
 
+/**
+ * SSR Hardening: Features are dynamically imported with ssr: false 
+ * to prevent the "Black Screen" caused by server-side execution of browser-only libs.
+ */
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
-
-const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { 
-  ssr: false,
-  loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" /> 
-});
-const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), {
-  ssr: false,
-  loading: () => <div className="p-10 animate-pulse bg-muted rounded-[2rem] h-64" />
-});
+const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
+const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance), { ssr: false });
 const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(m => m.HealthIncidents), { ssr: false });
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness), { ssr: false });
@@ -115,18 +108,9 @@ export default function WaghambaApp() {
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     
     fetch(SPLASH_LOTTIE_URL)
-      .then(res => {
-        if (!res.ok) throw new Error("Network Response Error");
-        return res.json();
-      })
-      .then(data => {
-        if (data && typeof data === 'object') setSplashData(data);
-        else throw new Error("Invalid Lottie JSON");
-      })
-      .catch(err => {
-        console.warn("WGB: Splash load fallback active (CDN offline/Syncing)");
-        setSplashData(null);
-      });
+      .then(res => res.ok ? res.json() : null)
+      .then(data => setSplashData(data))
+      .catch(() => setSplashData(null));
 
     const timer = setTimeout(() => setShowSplash(false), 3500);
     return () => clearTimeout(timer);
@@ -159,15 +143,11 @@ export default function WaghambaApp() {
   if (showSplash) {
     return (
       <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950 overflow-hidden" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950" />
         <div className="max-w-xs w-full text-center space-y-8 relative z-10">
            <div className="w-64 h-64 mx-auto relative animate-in zoom-in duration-1000">
              {splashData ? (
-               <Lottie 
-                 animationData={splashData}
-                 loop={true}
-                 className="w-full h-full"
-               />
+               <Lottie animationData={splashData} loop={true} className="w-full h-full" />
              ) : (
                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
                  <Loader2 className="w-12 h-12 text-white/20 animate-spin" />
@@ -221,7 +201,7 @@ export default function WaghambaApp() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
                 <CalendarDays className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-black text-primary uppercase whitespace-nowrap tracking-widest">{headerDate}</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest">{headerDate}</span>
               </div>
               <button onClick={() => setStage('selector')} className="rounded-full h-8 w-8 text-primary hover:bg-primary/5 flex items-center justify-center transition-colors">
                 <Menu className="w-5 h-5" />
@@ -251,7 +231,7 @@ export default function WaghambaApp() {
 
               {subTab === "overview" && (
                 <div className="space-y-12">
-                  <Card className="rounded-[3.5rem] bg-primary p-12 text-white shadow-2xl relative overflow-hidden group border-none">
+                  <Card className="rounded-[3.5rem] bg-primary p-12 text-white shadow-2xl relative overflow-hidden border-none">
                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                       <div className="lg:col-span-7 space-y-8">
                         <div className="space-y-3">
@@ -260,15 +240,11 @@ export default function WaghambaApp() {
                             Welcome,<br/>{teacher.teacherName.split(' ')[0]}
                           </h2>
                         </div>
-                        
-                        <div className="grid grid-cols-1 gap-6">
-                           <div className="bg-white/5 rounded-3xl p-8 border border-white/10 backdrop-blur-sm max-w-sm">
-                              <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5 text-accent" /> {countLabel}</p>
-                              <p className="text-5xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
-                              <p className="text-sm font-bold text-white/60">Active Registry</p>
-                           </div>
+                        <div className="bg-white/5 rounded-3xl p-8 border border-white/10 backdrop-blur-sm max-w-sm">
+                           <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-3 flex items-center gap-2"><UsersRound className="w-3.5 h-3.5 text-accent" /> {countLabel}</p>
+                           <p className="text-5xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
+                           <p className="text-sm font-bold text-white/60">Active Registry</p>
                         </div>
-
                         <Button onClick={() => setSubTab('roster')} className="h-20 w-full md:w-auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
                           Manage Registry <ArrowRight className="ml-4 w-6 h-6" />
                         </Button>
@@ -276,7 +252,7 @@ export default function WaghambaApp() {
 
                       <div className="lg:col-span-5 grid grid-cols-1 gap-4">
                          {selectedSection === 'general' && birthdaysToday.length > 0 && (
-                           <div className="bg-accent rounded-[2.5rem] p-8 border border-white/10 shadow-xl animate-in zoom-in-95 duration-700">
+                           <div className="bg-accent rounded-[2.5rem] p-8 border border-white/10 shadow-xl">
                              <div className="flex justify-between items-start mb-6">
                                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
                                 <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today&apos;s Birthdays</span>
@@ -291,7 +267,6 @@ export default function WaghambaApp() {
                              </div>
                            </div>
                          )}
-
                          <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                            <div className="flex justify-between items-start mb-6">
                               <div className="w-12 h-12 bg-emerald-50/20 rounded-2xl flex items-center justify-center"><Activity className="text-emerald-400 w-6 h-6" /></div>
@@ -300,21 +275,8 @@ export default function WaghambaApp() {
                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Attendance consistency</p>
                            <p className="text-3xl font-black">94% <span className="text-sm font-bold text-emerald-400 ml-2">↑ 2%</span></p>
                          </div>
-
-                         <div className="bg-black/20 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
-                           <div className="flex justify-between items-start mb-6">
-                              <div className="w-12 h-12 bg-blue-50/20 rounded-2xl flex items-center justify-center"><Target className="text-blue-400 w-6 h-6" /></div>
-                              <Zap className="w-5 h-5 text-blue-400 animate-pulse" />
-                           </div>
-                           <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Fitness Goal</p>
-                           <p className="text-2xl font-black uppercase tracking-tight">90% Peak Fitness</p>
-                           <div className="w-full h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
-                              <div className="h-full bg-blue-400 w-[78%]" />
-                           </div>
-                         </div>
                       </div>
                     </div>
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full translate-x-1/2 -translate-y-1/2 blur-[120px] pointer-events-none" />
                   </Card>
                 </div>
               )}
@@ -323,102 +285,47 @@ export default function WaghambaApp() {
               {subTab === "enroll" && <Registration store={schoolData} section={selectedSection || 'general'} />}
             </TabsContent>
 
-            <TabsContent value="sport" className="mt-0 animate-in fade-in duration-700">
+            <TabsContent value="sport" className="mt-0">
               <GameHub store={schoolData} />
             </TabsContent>
 
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              {subTab === "attendance" || subTab === "performance" || subTab === "fitness" || subTab === "exams" || subTab === "classes" || subTab === "promotion" || subTab === "medical" || subTab === "reports" || subTab === "loads" || subTab === "leaderboard" || subTab === "ai" || subTab === "monthly-progress" || subTab === "teacher-activities" ? (
-                <div className="relative group/scroll">
-                  <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-full mb-6 overflow-x-auto scrollbar-hide shadow-inner gap-1">
-                    {[
-                      { id: "leaderboard", label: "Leaderboard", icon: Medal },
-                      { id: "ai", label: "AI Hub", icon: BrainCircuit },
-                      { id: "performance", label: "History Hub", icon: History },
-                      { id: "teacher-activities", label: "Activity Hub", icon: Megaphone },
-                      { id: "attendance", label: "Attendance", icon: CalendarDays },
-                      { id: "monthly-progress", label: "Monthly Progress", icon: TrendingUp },
-                      { id: "loads", label: "Training Load", icon: Gauge },
-                      { id: "fitness", label: "Fitness Tracking", icon: Activity },
-                      { id: "exams", label: "Exam Hub", icon: FileText },
-                      { id: "classes", label: "Classes Registry", icon: GraduationCap },
-                      { id: "promotion", label: "Standard Promotion", icon: CircleArrowUp },
-                      { id: "medical", label: "Injury Hub", icon: ShieldAlert },
-                      { id: "reports", label: "Daily Reports", icon: ClipboardList }
-                    ].map(item => (
-                      <button 
-                        key={item.id}
-                        onClick={() => setSubTab(item.id)} 
-                        className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] whitespace-nowrap tracking-widest transition-all shrink-0 flex items-center gap-2", subTab === item.id ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                      >
-                        <item.icon className="w-3.5 h-3.5" /> {item.label}
-                      </button>
-                    ))}
-                    <button onClick={() => setSubTab("all")} className="rounded-xl h-11 px-8 font-black uppercase text-[11px] text-muted-foreground hover:bg-white border-l ml-2 flex items-center gap-2 shrink-0">
-                      <Menu className="w-3.5 h-3.5" /> Back to Selector
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                   {[
-                      { id: "leaderboard", label: "Top 5 Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
-                      { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
-                      { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
-                      { id: "teacher-activities", label: "Activity Hub", desc: "Mass PT & Yoga", icon: Megaphone, color: "bg-emerald-600" },
-                      { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
-                      { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
-                      { id: "loads", label: "Training Load (RPE)", desc: "Periodization metrics", icon: Gauge, color: "bg-orange-600" },
-                      { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
-                      { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
-                      { id: "classes", label: "Classes Registry", desc: "Standard wise data", icon: GraduationCap, color: "bg-purple-500" },
-                      { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
-                      { id: "medical", label: "Injury Hub", desc: "Advanced medical log", icon: ShieldAlert, color: "bg-red-500" },
-                      { id: "reports", label: "Daily Briefings", desc: "Archival summaries", icon: ClipboardList, color: "bg-slate-700" }
-                    ].map(item => (
-                      <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
-                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
-                          <item.icon className="w-7 h-7" />
-                        </div>
-                        <h3 className="text-xl font-black text-primary uppercase tracking-tight">{item.label}</h3>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{item.desc}</p>
-                        <ChevronRight className="absolute bottom-8 right-8 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
-                      </Card>
-                    ))}
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 {[
+                    { id: "leaderboard", label: "Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
+                    { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
+                    { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
+                    { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
+                    { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
+                    { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
+                    { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
+                    { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
+                  ].map(item => (
+                    <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
+                      <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
+                        <item.icon className="w-7 h-7" />
+                      </div>
+                      <h3 className="text-xl font-black text-primary uppercase tracking-tight">{item.label}</h3>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{item.desc}</p>
+                      <ChevronRight className="absolute bottom-8 right-8 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+                    </Card>
+                  ))}
+              </div>
               
-              {subTab === "leaderboard" && <Gamification store={schoolData} />}
-              {subTab === "ai" && <AIAdvice store={schoolData} />}
-              {subTab === "teacher-activities" && <TeacherActivities />}
-              {subTab === "monthly-progress" && <PerformanceHub store={schoolData} />}
-              {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} language={language} />}
-              {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}
-              {subTab === "loads" && <TrainingLoad store={schoolData} />}
-              {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} language={language} />}
-              {subTab === "exams" && <ExamsHub store={schoolData} language={language} />}
-              {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
-              {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} language={language} />}
-              {subTab === "medical" && <HealthIncidents store={schoolData} section={selectedSection || 'general'} language={language} />}
-              {subTab === "reports" && <DailyReport store={schoolData} section={selectedSection || 'general'} language={language} />}
+              <div className="pt-8 border-t border-dashed">
+                {subTab === "leaderboard" && <Gamification store={schoolData} />}
+                {subTab === "ai" && <AIAdvice store={schoolData} />}
+                {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}
+                {subTab === "monthly-progress" && <PerformanceHub store={schoolData} />}
+                {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} language={language} />}
+                {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} language={language} />}
+                {subTab === "exams" && <ExamsHub store={schoolData} language={language} />}
+                {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} language={language} />}
+              </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in duration-700">
-               <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 shadow-inner">
-                <button 
-                  onClick={() => setSubTab("profile")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "profile" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Teacher Profile</button>
-                <button 
-                  onClick={() => setSubTab("alerts")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "alerts" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Alert Hub</button>
-                <button 
-                  onClick={() => setSubTab("settings")} 
-                  className={cn("rounded-xl h-11 px-8 font-black uppercase text-[11px] tracking-widest transition-all", subTab === "settings" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:bg-white")}
-                >Settings</button>
-              </div>
-              {subTab === "profile" ? <SchoolRegistration store={schoolData} /> : subTab === "alerts" ? <NotificationCenter store={schoolData} /> : <Settings language={language} setLanguage={setLanguage} />}
+            <TabsContent value="profile" className="mt-0">
+               <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
 
           </Tabs>
@@ -429,7 +336,7 @@ export default function WaghambaApp() {
             {sportsTabs.map((tab) => (
               <button 
                 key={tab.id} 
-                onClick={() => { setActiveTab(tab.id); setSubTab(tab.id === 'home' ? 'overview' : tab.id === 'students' ? 'all' : 'profile'); }} 
+                onClick={() => { setActiveTab(tab.id); setSubTab("overview"); }} 
                 data-active={activeTab === tab.id} 
                 className={cn("google-nav-item min-w-[70px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}
               >
@@ -456,12 +363,12 @@ export default function WaghambaApp() {
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <button onClick={() => { setSelectedSection('sports'); setStage('hub'); setActiveTab('home'); setSubTab('overview'); }} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
+            <button onClick={() => { setSelectedSection('sports'); setStage('hub'); }} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
               <Trophy className="w-12 h-12 text-primary mx-auto mb-8 transition-transform group-hover:scale-110" />
               <h3 className="text-2xl font-display font-black text-primary uppercase tracking-tight">Sports Hub</h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Athletics & Training</p>
             </button>
-            <button onClick={() => { setSelectedSection('general'); setStage('hub'); setActiveTab('home'); setSubTab('overview'); }} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
+            <button onClick={() => { setSelectedSection('general'); setStage('hub'); }} className="bg-white rounded-[3rem] p-12 text-center shadow-sm hover:shadow-2xl transition-all active-scale group border-2 border-transparent hover:border-primary/20">
               <UsersRound className="w-12 h-12 text-primary mx-auto mb-8 transition-transform group-hover:scale-110" />
               <h3 className="text-2xl font-display font-black text-primary uppercase tracking-tight">Student Registry</h3>
               <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Profiles & Records</p>
@@ -474,27 +381,19 @@ export default function WaghambaApp() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/[0.03] rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl" />
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
         <div className="space-y-6">
-          <div className="relative w-64 h-64 mx-auto flex items-center justify-center overflow-hidden bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-primary/5">
+          <div className="relative w-64 h-64 mx-auto flex items-center justify-center overflow-hidden bg-white rounded-full shadow-2xl border-4 border-primary/5">
             <Image src={LOGO_PATH} alt="Logo" width={256} height={256} unoptimized className="object-contain w-full h-full" priority />
           </div>
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-6 py-2 bg-primary/5 rounded-full border border-primary/10 mb-2">
-              <Flame className="w-4 h-4 text-accent animate-pulse" />
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Hub</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-display font-black text-primary tracking-tighter leading-tight uppercase">
-              {language === 'Marathi' ? "शासकीय माध्यमिक" : "WAGHAMBA"}<br/>
-              <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "SPORTS HUB"}</span>
-            </h1>
-          </div>
+          <h1 className="text-4xl md:text-6xl font-display font-black text-primary tracking-tighter leading-tight uppercase">
+            {language === 'Marathi' ? "शासकीय माध्यमिक" : "WAGHAMBA"}<br/>
+            <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "SPORTS HUB"}</span>
+          </h1>
         </div>
         <div className="flex flex-col gap-4 max-sm mx-auto w-full">
-          <Button onClick={isUserLoading ? undefined : () => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl hover:bg-primary/90 transition-all active-scale group">
-            {isUserLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <>{translations[language].enter} <ArrowRight className="ml-4 w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+          <Button onClick={() => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl active-scale">
+            {translations[language].enter} <ArrowRight className="ml-4 w-6 h-6" />
           </Button>
           <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-display font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
             <Star className="w-4 h-4" /> {language === 'English' ? 'मराठी (Marathi)' : 'English'}
