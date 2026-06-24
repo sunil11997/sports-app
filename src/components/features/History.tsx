@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -18,7 +17,8 @@ import {
   ClipboardList,
   Search,
   History,
-  Target
+  Target,
+  ArrowRight
 } from 'lucide-react';
 import { format, subDays, isAfter, startOfDay, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';

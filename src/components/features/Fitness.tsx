@@ -14,7 +14,7 @@ import {
   Flame,
   Search,
   CheckCircle2,
-  CloudSync,
+  RefreshCw,
   WifiOff
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -259,7 +259,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-primary/5 rounded-2xl border border-primary/10">
-            {isOnline ? <CloudSync className="w-5 h-5 text-emerald-500 animate-spin" /> : <WifiOff className="w-5 h-5 text-destructive" />}
+            {isOnline ? <RefreshCw className="w-5 h-5 text-emerald-500 animate-spin" /> : <WifiOff className="w-5 h-5 text-destructive" />}
             <span className="text-[10px] font-black uppercase text-primary tracking-widest">{isOnline ? 'Cloud Sync Active' : 'Offline Mode'}</span>
           </div>
           <Button onClick={handlePrint} size="sm" className="font-black h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-2xl active-scale transition-all">
@@ -268,7 +268,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         </div>
       </div>
 
-      <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-3xl">
+      <div className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-3xl">
         <div className="overflow-x-auto scrollbar-hide">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-50 sticky top-0 z-20">
@@ -325,7 +325,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
             </TableBody>
           </Table>
         </div>
-      </Card>
+      </div>
       
       <div className="flex items-center justify-center gap-4 py-8 opacity-40">
         <CheckCircle2 className="w-5 h-5 text-emerald-500" />

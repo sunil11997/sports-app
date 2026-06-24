@@ -152,8 +152,8 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
   const rankings = useMemo(() => {
     const boys = playersInStd
-      .filter((p: Player) => p.gender === 'Male')
-      .map((p: Player) => {
+      .filter((p: any) => p.gender === 'Male')
+      .map((p: any) => {
         const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
@@ -162,8 +162,8 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
       .slice(0, 5);
 
     const girls = playersInStd
-      .filter((p: Player) => p.gender === 'Female')
-      .map((p: Player) => {
+      .filter((p: any) => p.gender === 'Female')
+      .map((p: any) => {
         const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
