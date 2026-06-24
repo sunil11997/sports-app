@@ -109,24 +109,23 @@ export const useUser = () => {
 
 /**
  * useMemoFirebase - Hardened Memoization for Firestore Refs
- * Suppressing standard dependency checks to allow factory-based ref generation while ensuring validation property.
+ * Standardizes dependency tracking and ensures validation property for institutional hooks.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => {
-    const val = factory();
-    if (val && typeof val === 'object') {
-      try {
-        Object.defineProperty(val, '__memo', {
-          value: true,
-          configurable: true,
-          enumerable: false,
-          writable: true 
-        });
-      } catch (e) {
-        (val as any).__memo = true;
-      }
+  const val = useMemo(factory, [...deps]);
+  
+  if (val && typeof val === 'object') {
+    try {
+      Object.defineProperty(val, '__memo', {
+        value: true,
+        configurable: true,
+        enumerable: false,
+        writable: true 
+      });
+    } catch (e) {
+      (val as any).__memo = true;
     }
-    return val;
-  }, [...deps]);
+  }
+  return val;
 }
