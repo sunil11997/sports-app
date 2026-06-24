@@ -1,22 +1,15 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   History, 
   Printer, 
-  TrendingUp, 
   ChartLine, 
-  Activity, 
-  CalendarDays,
-  ShieldAlert,
-  ClipboardList,
-  Search,
-  Target,
-  ArrowRight,
+  Search, 
   MessageSquare,
   ChevronRight,
   BarChart
@@ -142,7 +135,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-xl gap-6">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-xl">
         <div className="flex items-center gap-6">
           <History className="w-10 h-10 text-primary" />
           <div>
@@ -171,7 +164,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
 
       {!selectedPlayerId ? (
         <div className="p-24 text-center border-4 border-dashed rounded-[3.5rem] opacity-20 bg-white/50">
-          <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary" />
+          <History className="w-16 h-16 mx-auto mb-4 text-primary" />
           <p className="font-black uppercase tracking-widest">Select an entry to view exhaustive history</p>
         </div>
       ) : (
@@ -218,7 +211,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
             </Card>
 
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden p-8">
-               <h4 className="text-xs font-black uppercase text-primary mb-6 flex items-center gap-2"><ClipboardList className="w-4 h-4" /> Medical Audit History</h4>
+               <h4 className="text-xs font-black uppercase text-primary mb-6 flex items-center gap-2"><History className="w-4 h-4" /> Medical Audit History</h4>
                {medicalHistory.length === 0 ? (
                  <p className="text-center py-10 text-[10px] font-black uppercase text-muted-foreground/30">Clean Medical Record</p>
                ) : (
