@@ -52,7 +52,7 @@ const CoachAlertSystem = {
         statusColor: "YELLOW",
         action: "सराव मर्यादित करा",
         advice: isGrowthSpurt 
-            ? "मुलगा &quot;ग्रोथ स्पर्ट&quot; मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
+            ? "मुलगा \"ग्रोथ स्पर्ट\" मधून जात आहे आणि थकवा जास्त आहे. उड्या मारणे आणि वजन उचलणे पूर्ण बंद करा. फक्त कौशल्यांचा सराव घ्या."
             : "थकवा जास्त आहे आणि झोप कमी झाली आहे. धावण्याचा आणि ताकदीचा सराव कमी करून हलका तांत्रिक सराव घ्या.",
         color: "text-amber-600",
         bg: "bg-amber-50",
@@ -149,7 +149,7 @@ function SquadItem({ data }: { data: any }) {
             <div className="flex items-start gap-2">
               <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
               <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
-                &quot;{analysis.advice}&quot;
+                "{analysis.advice}"
               </p>
             </div>
           </div>
@@ -283,7 +283,7 @@ export function DailyReadiness({ store }: { store: any }) {
                </div>
                <div className="bg-white/60 p-5 rounded-2xl border border-white/50">
                 <p className="text-xs font-bold text-foreground/80 leading-relaxed italic">
-                  &quot;{activeAlert.advice}&quot;
+                  "{activeAlert.advice}"
                 </p>
                </div>
             </div>

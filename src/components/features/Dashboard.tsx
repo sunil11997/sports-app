@@ -74,7 +74,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
       store.updatePlayer(editingPlayer);
       setEditingPlayer(null);
       stopCamera();
-      toast({ title: "Registry Updated", description: `${editingPlayer.name}&apos;s profile has been modified.` });
+      toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
     }
   };
 

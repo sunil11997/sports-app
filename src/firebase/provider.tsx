@@ -113,7 +113,7 @@ export const useUser = () => {
  */
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const val = useMemo(factory, [...deps]);
+  const val = useMemo(factory, deps);
   
   if (val && typeof val === 'object') {
     try {

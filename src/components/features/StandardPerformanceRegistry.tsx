@@ -115,7 +115,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
         return { ...p, score: parseFloat(hist?.score || '0') };
       })
       .filter((p: any) => p.score > 0)
-      .sort((a: any, b: any) => b.score - a.score);
+      .sort((a: any, b: any) => (b.score as number) - (a.score as number));
 
     return { 
       boys: sorted.filter((p: any) => p.gender === 'Male').slice(0, 5), 
