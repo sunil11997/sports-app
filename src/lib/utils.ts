@@ -46,6 +46,7 @@ ${reportData}
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
   
+  // Use location.href for better cross-platform reliability for deep-linking
   const whatsappUrl = `https://wa.me/${finalPhone}?text=${encodedMessage}`;
-  window.open(whatsappUrl, '_blank');
+  window.location.href = whatsappUrl;
 }
