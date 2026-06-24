@@ -19,7 +19,7 @@ import {
   ArrowRight,
   MessageSquare
 } from 'lucide-react';
-import { format, subDays, isAfter, startOfDay, parseISO } from 'date-fns';
+import { format, subDays, startOfDay, parseISO, isAfter } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn, shareToWhatsApp } from '@/lib/utils';
 import { 
@@ -29,9 +29,7 @@ import {
   Tooltip, 
   ResponsiveContainer,
   ComposedChart,
-  Area,
-  Line,
-  Legend,
+  Area
 } from 'recharts';
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -142,7 +140,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-lg">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-xl">
         <div className="flex items-center gap-6">
           <History className="w-10 h-10 text-primary" />
           <div>

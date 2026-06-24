@@ -74,7 +74,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     });
     setLocalRecords(newRecords);
     if (playersInStd.length > 0 && !selectedPlayerForHistory) setSelectedPlayerId(playersInStd[0].id);
-  }, [selectedMonth, playersInStd, store.data.fitnessHistory, selectedPlayerForHistory, store.isLoaded]);
+  }, [selectedMonth, playersInStd, store.data.fitnessHistory, selectedPlayerForHistory]);
 
   const handleValueChange = (pId: string, field: string, val: string) => {
     setLocalRecords(prev => ({ ...prev, [pId]: { ...prev[pId], [field]: val } }));
@@ -232,12 +232,12 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                 <div className="h-[280px]">
                   {historyData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={historyData.map(h => ({ month: format(new Date(h.month + "-01"), 'MMM yy'), score: parseFloat(h.score) || 0 }))}>
+                      <ComposedChart data={historyData.map((h: any) => ({ month: h.month ? format(new Date(h.month + "-01"), 'MMM yy') : '---', score: parseFloat(h.score) || 0 }))}>
                         <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fill="#1e3a8a" fillOpacity={0.08} name="Score" />
+                        <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fill="#1e3a8a" fillOpacity={0.08} name="Score %" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   ) : (

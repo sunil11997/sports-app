@@ -21,17 +21,18 @@ import {
   Layout,
   Star
 } from 'lucide-react';
-import { SportsSkills } from './SportsSkills';
-import { SportsDrills } from './SportsDrills';
-import { TournamentRosters } from './TournamentRosters';
-import { Teams } from './Teams';
-import { HealthIncidents } from './HealthIncidents';
-import { DailyReport } from './DailyReport';
-import { DailyReadiness } from './DailyReadiness';
-import { TacticalAnalytics } from './TacticalAnalytics';
-import { TacticalPlaybook } from './TacticalPlaybook';
-import { GoalTracker } from './GoalTracker';
-import { cn } from '@/lib/utils';
+import dynamic from 'next/dynamic';
+
+const SportsSkills = dynamic(() => import('./SportsSkills').then(m => m.SportsSkills), { ssr: false });
+const SportsDrills = dynamic(() => import('./SportsDrills').then(m => m.SportsDrills), { ssr: false });
+const TournamentRosters = dynamic(() => import('./TournamentRosters').then(m => m.TournamentRosters), { ssr: false });
+const Teams = dynamic(() => import('./Teams').then(m => m.Teams), { ssr: false });
+const HealthIncidents = dynamic(() => import('./HealthIncidents').then(m => m.HealthIncidents), { ssr: false });
+const DailyReport = dynamic(() => import('./DailyReport').then(m => m.DailyReport), { ssr: false });
+const DailyReadiness = dynamic(() => import('./DailyReadiness').then(m => m.DailyReadiness), { ssr: false });
+const TacticalAnalytics = dynamic(() => import('./TacticalAnalytics').then(m => m.TacticalAnalytics), { ssr: false });
+const TacticalPlaybook = dynamic(() => import('./TacticalPlaybook').then(m => m.TacticalPlaybook), { ssr: false });
+const GoalTracker = dynamic(() => import('./GoalTracker').then(m => m.GoalTracker), { ssr: false });
 
 const GAMES = [
   { id: 'Kabaddi', label: 'Kabaddi', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50' },

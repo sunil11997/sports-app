@@ -20,16 +20,11 @@ import {
   Star,
   Loader2,
   CalendarDays,
-  Target,
-  Zap,
   ChevronRight,
-  ClipboardList,
-  GraduationCap,
   FileText,
   CircleArrowUp,
   Cake,
   TrendingUp,
-  Megaphone,
   History,
   Medal,
   BrainCircuit
@@ -52,7 +47,6 @@ const Attendance = dynamic(() => import('@/components/features/Attendance').then
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness), { ssr: false });
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
 const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub), { ssr: false });
-const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub), { ssr: false });
 const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub), { ssr: false });
 const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings), { ssr: false });
@@ -112,7 +106,7 @@ export default function WaghambaApp() {
     return () => clearTimeout(timer);
   }, []);
 
-  // When activeTab changes, we reset the subTab to ensure content displays correctly
+  // Ensure navigation always resets on main tab change
   useEffect(() => {
     if (activeTab === 'home') setSubTab('overview');
     else if (activeTab === 'students') setSubTab('list');
@@ -257,7 +251,7 @@ export default function WaghambaApp() {
                            <div className="bg-accent rounded-[2.5rem] p-8 border border-white/10 shadow-xl">
                              <div className="flex justify-between items-start mb-6">
                                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today&apos;s Birthdays</span>
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today's Birthdays</span>
                              </div>
                              <div className="space-y-3">
                                {birthdaysToday.map((p: any) => (
