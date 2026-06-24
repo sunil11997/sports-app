@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -237,7 +238,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
                         <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fill="#1e3a8a" fillOpacity={0.08} name="Score %" />
+                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fillOpacity={1} fill="url(#colorLoad)" name="Score %" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   ) : (

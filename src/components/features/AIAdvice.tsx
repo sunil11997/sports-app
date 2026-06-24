@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -319,7 +320,7 @@ PROMPT: Please act as an elite sports scientist and head coach. Based on the dat
               <div className="space-y-2">
                  <h3 className="text-2xl font-black text-primary uppercase">AI Connect Engine</h3>
                  <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto">
-                    Export student biometrics and fitness data to external high-intelligence platforms like Gemini or ChatGPT.
+                    Export student&apos;s biometrics and fitness data to external high-intelligence platforms like Gemini or ChatGPT.
                  </p>
               </div>
               <div className="pt-4">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -40,7 +41,6 @@ import { PasscodeLock } from '@/components/features/PasscodeLock';
  * SSR Hardening: Features are dynamically imported with ssr: false 
  * to prevent the "Black Screen" caused by server-side execution of browser-only libs.
  */
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance), { ssr: false });
@@ -54,6 +54,7 @@ const PerformanceDossier = dynamic(() => import('@/components/features/History')
 const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification), { ssr: false });
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
   English: {
@@ -241,7 +242,7 @@ export default function WaghambaApp() {
                            <p className="text-5xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
                            <p className="text-sm font-bold text-white/60">Active Registry</p>
                         </div>
-                        <Button onClick={() => setSubTab('roster')} className="h-20 w-full md:w-auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
+                        <Button onClick={() => setSubTab('roster')} className="h-20 w-full md:auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
                           Manage Registry <ArrowRight className="ml-4 w-6 h-6" />
                         </Button>
                       </div>
@@ -250,8 +251,8 @@ export default function WaghambaApp() {
                          {selectedSection === 'general' && birthdaysToday.length > 0 && (
                            <div className="bg-accent rounded-[2.5rem] p-8 border border-white/10 shadow-xl">
                              <div className="flex justify-between items-start mb-6">
-                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today's Birthdays</span>
+                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today&apos;s Birthdays</span>
                              </div>
                              <div className="space-y-3">
                                {birthdaysToday.map((p: any) => (

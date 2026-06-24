@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -140,7 +141,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-xl">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] border-2 shadow-xl gap-6">
         <div className="flex items-center gap-6">
           <History className="w-10 h-10 text-primary" />
           <div>
@@ -151,7 +152,12 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
         <div className="flex flex-col w-full md:w-80 gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Find student/GR..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-11 rounded-full border-2 bg-muted/20" />
+            <Input 
+              placeholder="Find student/GR..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              className="pl-9 h-11 rounded-full border-2 bg-muted/20" 
+            />
           </div>
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
             <SelectTrigger className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"><SelectValue placeholder="Pick student..." /></SelectTrigger>
