@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -154,7 +153,7 @@ export default function WaghambaApp() {
     return schoolData.data.players.filter((p: any) => p.dob && p.dob.endsWith(today));
   }, [isMounted, schoolData.data.players]);
 
-  if (!isMounted) return null;
+  if (!isMounted) return <div className="min-h-screen bg-[#1e3a8a]" />;
 
   if (showSplash) {
     return (

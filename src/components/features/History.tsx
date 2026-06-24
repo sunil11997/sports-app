@@ -328,7 +328,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
             <Card className="border-2 rounded-[3rem] bg-white shadow-xl overflow-hidden">
                <CardHeader className="bg-primary/5 border-b p-6"><CardTitle className="text-xs font-black uppercase flex items-center gap-2"><ClipboardList className="w-4 h-4 text-primary" /> Exam & Record Archive</CardTitle></CardHeader>
                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto scrollbar-hide">
                     <table className="w-full text-xs border-collapse">
                        <thead className="bg-muted/30"><tr><th className="p-4 font-black uppercase text-primary">Period/Term</th><th className="p-4 font-black uppercase text-primary text-center">Score</th><th className="p-4 font-black uppercase text-primary text-center">Status</th><th className="p-4 font-black uppercase text-primary text-right">Metrics</th></tr></thead>
                        <tbody>
