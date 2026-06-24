@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -19,7 +18,8 @@ import {
   BarChart,
   Trophy,
   Users,
-  Search
+  Search,
+  CheckCircle2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -47,7 +47,7 @@ const DEFAULT_PERFORMANCE_LABELS: PerformanceLabels = {
   metric4: 'Long Jump',
   metric5: 'High Jump',
   metric6: 'Shot Put',
-  metric7: 'Agility'
+  metric7: 'Standup Jump'
 };
 
 export function StandardPerformanceRegistry({ store, std }: { store: any, std: string }) {
@@ -56,6 +56,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [selectedPlayerForHistory, setSelectedPlayerId] = useState("");
   const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const [editingLabels, setEditingLabels] = useState(DEFAULT_PERFORMANCE_LABELS);
   const [localRecords, setLocalRecords] = useState<Record<string, any>>({});
@@ -103,7 +104,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     }));
   };
 
-  const handleSave = async (player: Player) => {
+  const handleAutoSave = async (player: Player) => {
     setIsSaving(player.id);
     const data = localRecords[player.id];
     const metrics = ['metric1', 'metric2', 'metric3', 'metric4', 'metric5', 'metric6', 'metric7'];
@@ -122,8 +123,9 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
       score: scoreStr,
       status: parseFloat(scoreStr) >= 80 ? 'Elite' : parseFloat(scoreStr) >= 60 ? 'Optimal' : 'Developing'
     });
+    setLastSavedId(player.id);
+    setTimeout(() => setLastSavedId(null), 800);
     setIsSaving(null);
-    toast({ title: "Progress Archived", description: `Performance for ${player.name} updated.` });
   };
 
   const handleSaveLabels = () => {
@@ -136,7 +138,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
     if (!selectedPlayerForHistory) return [];
     return (store.data.fitnessHistory[selectedPlayerForHistory] || [])
       .filter((h: any) => h.month)
-      .sort((a: any, b: any) => a.month.localeCompare(b.month));
+      .sort((a: any, b: any) => (a.month || "").localeCompare(b.month || ""));
   }, [selectedPlayerForHistory, store.data.fitnessHistory]);
 
   const chartData = useMemo(() => {
@@ -220,34 +222,44 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               <Table className="min-w-max border-collapse">
                 <TableHeader className="bg-muted/80 sticky top-0 z-20">
                   <TableRow>
-                    <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[200px] sticky left-0 bg-muted/95 z-30">Student Profile</TableHead>
+                    <TableHead className="border-r h-14 px-4 font-black text-[11px] uppercase w-[200px] sticky left-0 bg-muted/95 z-30">Student Profile</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Age</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Ht (cm)</TableHead>
                     <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">Wt (kg)</TableHead>
-                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric1}</TableHead>
-                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[100px] text-blue-600">{currentLabels.metric2}</TableHead>
-                    <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[80px] bg-primary/5">SCORE</TableHead>
-                    <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[60px] sticky right-0 bg-muted/95 z-30">Save</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px] text-blue-600">{currentLabels.metric1}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px] text-blue-600">{currentLabels.metric2}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px] text-accent">{currentLabels.metric7}</TableHead>
+                    <TableHead className="border-r h-14 px-2 font-black text-[11px] uppercase text-center w-[90px] bg-primary/5">SCORE</TableHead>
+                    <TableHead className="h-14 px-2 font-black text-[11px] uppercase text-center w-[80px] sticky right-0 bg-muted/95 z-30">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {playersInStd.length === 0 ? (
-                    <TableRow><TableCell colSpan={8} className="text-center py-20 font-black uppercase opacity-20">No matching athletes.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={9} className="text-center py-20 font-black uppercase opacity-20">No matching athletes.</TableCell></TableRow>
                   ) : playersInStd.map((p: Player) => {
                     const r = localRecords[p.id] || {};
+                    const isSavingRow = isSaving === p.id;
+                    const isPulse = lastSavedId === p.id;
+                    
                     return (
-                      <TableRow key={p.id} className="border-b h-14 group">
-                        <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[200px]">{p.name.toUpperCase()}</TableCell>
+                      <TableRow key={p.id} className={cn("border-b h-14 group transition-colors", isPulse && "bg-emerald-50/50 animate-success-pulse")}>
+                        <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[200px]">
+                          <div className="flex items-center gap-2">
+                             {p.name.toUpperCase()}
+                             {isSavingRow && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
+                          </div>
+                        </TableCell>
                         <TableCell className="border-r text-center font-bold text-xs">{p.age}</TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.height || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.weight || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric1 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
-                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric2 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
-                        <TableCell className="border-r text-center bg-primary/5 font-black text-primary">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
-                        <TableCell className="p-0 text-right sticky right-0 bg-white z-10">
-                          <Button variant="ghost" className="h-14 w-full rounded-none hover:bg-primary hover:text-white" onClick={() => handleSave(p)} disabled={isSaving === p.id}>
-                            {isSaving === p.id ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
-                          </Button>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.height || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'height', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.weight || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'weight', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric1 || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-transparent focus:bg-white rounded-none" value={r.metric2 || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric2', e.target.value)} /></TableCell>
+                        <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-accent/5 focus:bg-white rounded-none font-black" value={r.metric7 || ''} onBlur={() => handleAutoSave(p)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleValueChange(p.id, 'metric7', e.target.value)} /></TableCell>
+                        <TableCell className="border-r text-center bg-primary/5 font-black text-primary text-base">{parseFloat(r.score || '0').toFixed(0)}</TableCell>
+                        <TableCell className="text-center sticky right-0 bg-white z-10 px-2">
+                           <Badge variant="outline" className="text-[8px] font-black uppercase px-2 py-0.5 border-primary/20">
+                             {r.status || 'NEW'}
+                           </Badge>
                         </TableCell>
                       </TableRow>
                     );
@@ -256,6 +268,9 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
               </Table>
             </div>
           </Card>
+          <p className="mt-6 text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.4em] text-center flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-3 h-3" /> Auto-Save Active &bull; Registry Synced
+          </p>
         </TabsContent>
 
         <TabsContent value="rankings" className="mt-0">
@@ -370,7 +385,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                       <TableBody>
                          {historyData.slice().reverse().map((h: any, idx: number) => (
                            <TableRow key={idx}>
-                              <TableCell className="font-black uppercase text-xs pl-8">{format(new Date(h.month + "-01"), 'MMMM yyyy')}</TableCell>
+                              <TableCell className="font-black uppercase text-xs pl-8">{h.month ? format(new Date(h.month + "-01"), 'MMMM yyyy') : '---'}</TableCell>
                               <TableCell className="text-center font-black text-primary">{h.score}%</TableCell>
                               <TableCell className="text-right pr-8"><Badge variant="outline" className="text-[9px] font-black uppercase">{h.status}</Badge></TableCell>
                            </TableRow>

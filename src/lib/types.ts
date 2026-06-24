@@ -49,7 +49,7 @@ export interface FitnessAssessment {
   run50m?: string;       // 50 Meter Run (Speed)
   run600m?: string;      // 600 Meter Run (Endurance / Stamina)
   sitAndReach?: string;  // Flexibility
-  boardJump?: string;    // Power / Broad Jump
+  boardJump?: string;    // Standup Jump / Broad Jump (cm)
   sitUps?: string;       // Core Strength
   sprint30m?: string;    // Raw 30m Linear Sprint
   proAgility?: string;   // Pro-Agility (5-10-5) Shuttle
@@ -59,7 +59,7 @@ export interface FitnessAssessment {
   enduranceScore?: string; // Specific Endurance Rating (0-100)
   speedScore?: string;    // Specific Speed Rating (0-100)
   
-  // New Monthly Performance Fields
+  // Monthly Performance Fields
   metric1?: string;
   metric2?: string;
   metric3?: string;
