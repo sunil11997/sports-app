@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { cn, shareToWhatsApp } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
 
 const DEFAULT_LABELS = {
   nirikshan: 'OBS',
@@ -44,7 +43,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
       .filter((p: any) => p.std === std)
       .filter((p: any) => {
         const query = searchTerm.toLowerCase();
-        return p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+        return (p.name || "").toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
       })
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
@@ -186,11 +185,11 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
           <table>
             <thead>
               <tr>
-                <th>${isM ? 'अनु. क्र.' : 'SNR'}</th>
-                <th>${isM ? 'विद्यार्थ्याचे नाव' : 'STUDENT NAME'}</th>
-                <th>${isM ? 'लिंग' : 'GEN'}</th>
-                <th>${isM ? 'उंची' : 'HT'}</th>
-                <th>${isM ? 'वजन' : 'WT'}</th>
+                <th>SNR</th>
+                <th>STUDENT NAME</th>
+                <th>GEN</th>
+                <th>HT</th>
+                <th>WT</th>
                 <th>${labels.nirikshan}</th>
                 <th>${labels.tondikam}</th>
                 <th>${labels.pratyashike}</th>
@@ -198,8 +197,8 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
                 <th>${labels.prakalp}</th>
                 <th>${labels.chachani}</th>
                 <th>${labels.swadhyay}</th>
-                <th>${isM ? 'एकूण' : 'TOT'}</th>
-                <th>${isM ? 'श्रेणी' : 'GRD'}</th>
+                <th>TOT</th>
+                <th>GRD</th>
               </tr>
             </thead>
             <tbody>
@@ -286,7 +285,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
         <Printer className="w-5 h-5 mr-2" /> Print Term Sheet
       </Button>
 
-      <div className="border border-border rounded-3xl overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
+      <div className="overflow-x-auto scrollbar-hide border border-border rounded-3xl bg-white shadow-2xl">
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow>

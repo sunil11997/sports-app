@@ -48,22 +48,17 @@ const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance), { ssr: false });
-const HealthIncidents = dynamic(() => import('@/components/features/HealthIncidents').then(m => m.HealthIncidents), { ssr: false });
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness), { ssr: false });
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
 const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub), { ssr: false });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub), { ssr: false });
-const TrainingLoad = dynamic(() => import('@/components/features/TrainingLoad').then(m => m.TrainingLoad), { ssr: false });
 const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub), { ssr: false });
 const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings), { ssr: false });
-const SchoolRegistration = dynamic(() => import('@/components/features/SchoolRegistration').then(m => m.SchoolRegistration), { ssr: false });
-const NotificationCenter = dynamic(() => import('@/components/features/NotificationCenter').then(m => m.NotificationCenter), { ssr: false });
 const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier), { ssr: false });
 const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification), { ssr: false });
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
-const TeacherActivities = dynamic(() => import('@/components/features/TeacherActivities').then(m => m.TeacherActivities), { ssr: false });
 
 const translations = {
   English: {
@@ -116,6 +111,12 @@ export default function WaghambaApp() {
     return () => clearTimeout(timer);
   }, []);
 
+  // When activeTab changes, we reset the subTab to ensure content displays correctly
+  useEffect(() => {
+    if (activeTab === 'home') setSubTab('overview');
+    else if (activeTab === 'students') setSubTab('leaderboard');
+  }, [activeTab]);
+
   useEffect(() => {
     if (isMounted && !isUserLoading && !user && auth) {
       const timer = setTimeout(() => initiateAnonymousSignIn(auth), 1000);
@@ -135,7 +136,7 @@ export default function WaghambaApp() {
   const birthdaysToday = useMemo(() => {
     if (!isMounted || !schoolData.data.players) return [];
     const today = format(new Date(), 'MM-dd');
-    return schoolData.data.players.filter((p: any) => p.dob && p.dob.endsWith(today));
+    return (schoolData.data.players || []).filter((p: any) => p.dob && p.dob.endsWith(today));
   }, [isMounted, schoolData.data.players]);
 
   if (!isMounted) return <div className="min-h-screen bg-[#1e3a8a]" />;
@@ -181,8 +182,8 @@ export default function WaghambaApp() {
 
   if (stage === 'hub' && selectedSection) {
     const teacher = schoolData.data.schoolProfile;
-    const totalAthletes = schoolData.data.players.filter((p: any) => p.category === 'athlete').length;
-    const totalStudents = schoolData.data.players.length;
+    const totalAthletes = (schoolData.data.players || []).filter((p: any) => p.category === 'athlete').length;
+    const totalStudents = (schoolData.data.players || []).length;
     const activeDisplayCount = selectedSection === 'sports' ? totalAthletes : totalStudents;
     const countLabel = selectedSection === 'sports' ? "Total Athletes" : "Registered Students";
     
@@ -237,7 +238,7 @@ export default function WaghambaApp() {
                         <div className="space-y-3">
                           <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">Command Center</Badge>
                           <h2 className="text-5xl font-display font-black leading-tight tracking-tighter uppercase">
-                            Welcome,<br/>{teacher.teacherName.split(' ')[0]}
+                            Welcome,<br/>{teacher?.teacherName?.split(' ')[0] || "Coach"}
                           </h2>
                         </div>
                         <div className="bg-white/5 rounded-3xl p-8 border border-white/10 backdrop-blur-sm max-w-sm">
@@ -336,7 +337,7 @@ export default function WaghambaApp() {
             {sportsTabs.map((tab) => (
               <button 
                 key={tab.id} 
-                onClick={() => { setActiveTab(tab.id); setSubTab("overview"); }} 
+                onClick={() => setActiveTab(tab.id)} 
                 data-active={activeTab === tab.id} 
                 className={cn("google-nav-item min-w-[70px] flex flex-col items-center gap-1 transition-all", activeTab === tab.id ? "text-primary" : "text-muted-foreground")}
               >

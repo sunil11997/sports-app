@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Sparkles, 
   Loader2, 
   BrainCircuit, 
   Printer, 

@@ -1,26 +1,21 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  History, 
-  Settings2, 
-  Loader2, 
   TrendingUp, 
   BarChart, 
   Trophy, 
   Search, 
   MessageSquare,
-  Printer,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn, shareToWhatsApp } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -31,11 +26,9 @@ import {
   Tooltip, 
   ResponsiveContainer,
   ComposedChart,
-  Area,
-  Legend
+  Area
 } from 'recharts';
 import type { PerformanceLabels, Player } from '@/lib/types';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DEFAULT_PERFORMANCE_LABELS: PerformanceLabels = {
   metric1: 'Sprint (100m)',
@@ -54,8 +47,6 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
   const [selectedPlayerForHistory, setSelectedPlayerId] = useState("");
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
-  const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
-  const [editingLabels, setEditingLabels] = useState(DEFAULT_PERFORMANCE_LABELS);
   const [localRecords, setLocalRecords] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -64,9 +55,9 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
       .filter((p: Player) => p.std === std)
       .filter((p: Player) => {
         const query = searchTerm.toLowerCase();
-        return p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+        return (p.name || "").toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
       })
-      .sort((a: any, b: any) => (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0));
+      .sort((a: Player, b: Player) => (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0));
   }, [store.data.players, std, searchTerm]);
 
   const currentLabels = useMemo(() => {
@@ -118,11 +109,18 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
   };
 
   const rankings = useMemo(() => {
-    const sorted = playersInStd
-      .map((p: any) => ({ ...p, score: parseFloat((store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth)?.score || '0') }))
+    const sorted = (playersInStd || [])
+      .map((p: Player) => {
+        const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
+        return { ...p, score: parseFloat(hist?.score || '0') };
+      })
       .filter((p: any) => p.score > 0)
       .sort((a: any, b: any) => b.score - a.score);
-    return { boys: sorted.filter((p: any) => p.gender === 'Male').slice(0, 5), girls: sorted.filter((p: any) => p.gender === 'Female').slice(0, 5) };
+
+    return { 
+      boys: sorted.filter((p: any) => p.gender === 'Male').slice(0, 5), 
+      girls: sorted.filter((p: any) => p.gender === 'Female').slice(0, 5) 
+    };
   }, [playersInStd, store.data.fitnessHistory, selectedMonth]);
 
   const historyData = useMemo(() => 
@@ -155,7 +153,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
         </TabsList>
 
         <TabsContent value="entry" className="mt-0">
-          <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
+          <div className="overflow-x-auto scrollbar-hide border-2 rounded-[3rem] bg-white shadow-2xl">
             <Table className="min-w-max border-collapse">
               <TableHeader className="bg-muted/80 sticky top-0 z-20">
                 <TableRow>
@@ -173,9 +171,11 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   const isPulse = lastSavedId === p.id;
                   return (
                     <TableRow key={p.id} className={cn("border-b h-14", isPulse && "bg-emerald-50 animate-success-pulse")}>
-                      <TableCell className="border-r px-8 font-black sticky left-0 bg-white z-10 flex items-center gap-2">
-                         {p.name.toUpperCase()}
-                         {isSyncing && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
+                      <TableCell className="border-r px-8 font-black sticky left-0 bg-white z-10">
+                        <div className="flex items-center gap-2">
+                           {p.name.toUpperCase()}
+                           {isSyncing && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
+                        </div>
                       </TableCell>
                       <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.metric1 || ''} onBlur={() => handleAutoSave(p)} onChange={(e) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
                       <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0 bg-accent/5 font-black" value={r.metric7 || ''} onBlur={() => handleAutoSave(p)} onChange={(e) => handleValueChange(p.id, 'metric7', e.target.value)} /></TableCell>
@@ -188,7 +188,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                 })}
               </TableBody>
             </Table>
-          </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="rankings" className="mt-0">
