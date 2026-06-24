@@ -4,6 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   BarChart, 
@@ -36,6 +37,7 @@ import {
 import { DashboardHomeSkeleton } from '@/components/ui/loading-skeletons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { Player } from '@/lib/types';
 
 export function PerformanceDossier({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
@@ -45,12 +47,14 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
 
   const availablePlayers = useMemo(() => {
     return (store.data.players || [])
-      .filter((p: any) => isGeneral ? true : p.category === 'athlete')
-      .filter((p: any) => {
+      .filter((p: Player) => isGeneral ? true : p.category === 'athlete')
+      .filter((p: Player) => {
         const query = searchTerm.toLowerCase();
-        return p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+        const matchesName = (p.name || "").toLowerCase().includes(query) || (p.nameMarathi || "").includes(searchTerm);
+        const matchesGR = (p.generalRegisterNumber || "").includes(searchTerm);
+        return matchesName || matchesGR;
       })
-      .sort((a: any, b: any) => {
+      .sort((a: Player, b: Player) => {
         const stdA = Number(a.std) || 0;
         const stdB = Number(b.std) || 0;
         if (stdA !== stdB) return stdA - stdB;
@@ -60,13 +64,8 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
   }, [store.data.players, isGeneral, searchTerm]);
 
   const currentPlayer = useMemo(() => 
-    (store.data.players || []).find((p: any) => p.id === selectedPlayerId),
+    (store.data.players || []).find((p: Player) => p.id === selectedPlayerId),
     [selectedPlayerId, store.data.players]
-  );
-
-  const currentFitness = useMemo(() => 
-    store.data.fitness[selectedPlayerId] || null,
-    [selectedPlayerId, store.data.fitness]
   );
 
   const medicalHistory = useMemo(() => 
@@ -74,7 +73,6 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
     [selectedPlayerId, store.data.healthIncidents]
   );
 
-  // Attendance Summary logic for last 30 days
   const attendanceStats = useMemo(() => {
     if (!selectedPlayerId) return { rate: 0, streak: 0 };
     const today = startOfDay(new Date());
