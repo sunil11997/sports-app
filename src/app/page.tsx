@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -33,7 +34,8 @@ import {
   BrainCircuit,
   Cake,
   TrendingUp,
-  Megaphone
+  Megaphone,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -332,10 +334,10 @@ export default function WaghambaApp() {
                     {[
                       { id: "leaderboard", label: "Leaderboard", icon: Medal },
                       { id: "ai", label: "AI Hub", icon: BrainCircuit },
+                      { id: "performance", label: "History Hub", icon: History },
                       { id: "teacher-activities", label: "Activity Hub", icon: Megaphone },
                       { id: "attendance", label: "Attendance", icon: CalendarDays },
                       { id: "monthly-progress", label: "Monthly Progress", icon: TrendingUp },
-                      { id: "performance", label: "Dossier", icon: BarChart },
                       { id: "loads", label: "Training Load", icon: Gauge },
                       { id: "fitness", label: "Fitness Tracking", icon: Activity },
                       { id: "exams", label: "Exam Hub", icon: FileText },
@@ -362,10 +364,10 @@ export default function WaghambaApp() {
                    {[
                       { id: "leaderboard", label: "Top 5 Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
                       { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
+                      { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
                       { id: "teacher-activities", label: "Activity Hub", desc: "Mass PT & Yoga", icon: Megaphone, color: "bg-emerald-600" },
                       { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
                       { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
-                      { id: "performance", label: "Performance Dossier", desc: "Analytics & Trends", icon: BarChart, color: "bg-indigo-500" },
                       { id: "loads", label: "Training Load (RPE)", desc: "Periodization metrics", icon: Gauge, color: "bg-orange-600" },
                       { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
                       { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },

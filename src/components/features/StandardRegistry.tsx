@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -139,7 +140,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
               body { padding-top: 0 !important; }
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
-            .header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
             .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 15px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }

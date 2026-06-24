@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -69,7 +70,7 @@ const ACTIVITY_GUIDES = [
       { t: 'B-Skips (Leg Extension)', d: 'Extension of the lower leg before striking the ground under center of mass.' },
       { t: 'Arm Action Drill', d: 'Seated or standing, swing arms from hip to chin at 90-degree angles.' },
       { t: 'Falling Starts', d: 'Leaning forward until balance is lost, then exploding into a 10m sprint.' },
-      { t: 'Stretches for Runners', d: 'Calf, quad, and hamstring dynamic stretches.' }
+      { t: 'Stretches for Runners', d: 'Calf, quad, and hamming dynamic stretches.' }
     ],
     proTips: 'Focus on "Toe-Up" (dorsiflexion) and "Chest-Up" posture. Speed follows form.'
   },
