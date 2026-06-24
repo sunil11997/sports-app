@@ -25,7 +25,8 @@ import {
   Camera,
   Upload,
   CircleX,
-  Type
+  Type,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -37,7 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
@@ -46,6 +47,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -62,11 +64,17 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const students = useMemo(() => {
     return [...(store.data.players || [])]
       .filter((p: any) => p.std === std)
+      .filter((p: any) => {
+        const query = searchTerm.toLowerCase();
+        return (p.name || "").toLowerCase().includes(query) || 
+               (p.nameMarathi || "").includes(searchTerm) ||
+               (p.generalRegisterNumber || "").includes(searchTerm);
+      })
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, std]);
+  }, [store.data.players, std, searchTerm]);
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
@@ -159,16 +167,24 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-           <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-black uppercase text-xs shadow-lg active-scale">
-             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'प्रिंट काढा' : 'Print Sheet'}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+           <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder={isMarathiView ? "नाव किंवा GR ने शोधा..." : "Find by Name/GR..."} 
+                className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+           </div>
+           <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-6 font-black uppercase text-xs shadow-lg active-scale">
+             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'प्रिंट काढा' : 'Print'}
            </Button>
         </div>
       </div>
 
-      <div className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
-        <ScrollArea className="w-full">
-          <Table>
+      <div className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl overflow-x-auto scrollbar-hide">
+          <Table className="min-w-max border-collapse">
             <TableHeader className="bg-muted/10">
               <TableRow>
                 <TableHead className="font-black text-[10px] uppercase pl-8 w-[100px]">{isMarathiView ? 'अनु. क्र.' : 'Roll (Sr)'}</TableHead>
@@ -179,7 +195,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student: any) => (
+              {students.length === 0 ? (
+                <TableRow><TableCell colSpan={5} className="text-center py-20 opacity-20 font-black uppercase">No entries found.</TableCell></TableRow>
+              ) : students.map((student: any) => (
                 <TableRow key={student.id} className="hover:bg-primary/5 h-16">
                   <TableCell className="pl-8">
                     <Badge variant="secondary" className="font-black text-xs h-9 w-9 flex items-center justify-center rounded-lg bg-primary/5 text-primary border-primary/10">
@@ -219,8 +237,6 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
               ))}
             </TableBody>
           </Table>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
       </div>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
@@ -315,7 +331,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                            </Select>
                         </div>
                         <div className="space-y-2">
-                           <Label className="text-[10px) font-black uppercase text-primary ml-2">Category</Label>
+                           <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
                            <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                              <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>
@@ -402,7 +418,6 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                 </div>
               )}
             </div>
-            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <DialogFooter className="p-8 border-t bg-muted/10 shrink-0">

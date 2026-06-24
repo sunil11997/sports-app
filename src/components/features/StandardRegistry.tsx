@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Printer, Save, Loader2, ClipboardList, Settings2 } from 'lucide-react';
+import { Printer, Save, Loader2, ClipboardList, Settings2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
   const [editingLabels, setEditingLabels] = useState(DEFAULT_LABELS);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   const [isMounted, setIsMounted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setIsMounted(true);
@@ -41,11 +42,15 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
   const playersInStd = useMemo(() => {
     return (store.data.players || [])
       .filter((p: any) => p.std === std)
+      .filter((p: any) => {
+        const query = searchTerm.toLowerCase();
+        return p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+      })
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, std]);
+  }, [store.data.players, std, searchTerm]);
 
   const [termRecords, setTermRecords] = useState<Record<string, any>>({});
 
@@ -155,7 +160,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
           </div>
           <div class="header">
             <div class="school-name">${schoolName}</div>
-            <div class="report-type">${reportTitle}</div>
+            <div class="report-title">${reportTitle}</div>
           </div>
           <table>
             <thead>
@@ -239,9 +244,20 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
           </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
-          <Button variant={activeTerm === 'First' ? "default" : "ghost"} onClick={() => setActiveTerm('First')} className="rounded-xl px-6 font-black uppercase text-xs shadow-none">First Term</Button>
-          <Button variant={activeTerm === 'Second' ? "default" : "ghost"} onClick={() => setActiveTerm('Second')} className="rounded-xl px-6 font-black uppercase text-xs shadow-none">Second Term</Button>
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Find student..." 
+              className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
+            <Button variant={activeTerm === 'First' ? "default" : "ghost"} onClick={() => setActiveTerm('First')} className="rounded-xl px-6 font-black uppercase text-xs shadow-none">First Term</Button>
+            <Button variant={activeTerm === 'Second' ? "default" : "ghost"} onClick={() => setActiveTerm('Second')} className="rounded-xl px-6 font-black uppercase text-xs shadow-none">Second Term</Button>
+          </div>
         </div>
       </div>
 
@@ -268,7 +284,9 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {playersInStd.map((p: any) => {
+            {playersInStd.length === 0 ? (
+               <TableRow><TableCell colSpan={12} className="text-center py-20 font-black uppercase opacity-20">No matching entries found.</TableCell></TableRow>
+            ) : playersInStd.map((p: any) => {
               const r = termRecords[p.id] || {};
               const total = calculateTotal(p.id);
               const dName = isMarathiView ? (p.nameMarathi || p.name) : p.name;
@@ -300,7 +318,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
       </div>
 
       <Dialog open={isLabelDialogOpen} onOpenChange={setIsLabelDialogOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl">
+        <DialogContent className="sm:max-w-[450px] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-3xl">
           <DialogHeader className="bg-primary p-8 text-white relative">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10">
               <Settings2 className="w-6 h-6 text-accent" /> Customize Column Labels

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from 'react';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 interface DashboardProps {
   store: any;
@@ -363,7 +363,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label>
+                          <Label className="text-[10px) font-black uppercase text-primary ml-2">Date of Birth</Label>
                           <Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                         </div>
                         <div className="space-y-2">
@@ -463,7 +463,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", sele
                 </div>
               )}
             </div>
-            <ScrollBar orientation="vertical" />
           </ScrollArea>
 
           <DialogFooter className="bg-muted/10 p-8 border-t flex gap-4 shrink-0">

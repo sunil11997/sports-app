@@ -17,7 +17,8 @@ import {
   Target,
   BarChart,
   Trophy,
-  Users
+  Users,
+  Search
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -36,7 +37,7 @@ import {
   Legend
 } from 'recharts';
 import type { PerformanceLabels, Player } from '@/lib/types';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DEFAULT_PERFORMANCE_LABELS: PerformanceLabels = {
   metric1: 'Running (100m)',
@@ -57,15 +58,20 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
   const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
   const [editingLabels, setEditingLabels] = useState(DEFAULT_PERFORMANCE_LABELS);
   const [localRecords, setLocalRecords] = useState<Record<string, any>>({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   const playersInStd = useMemo(() => {
     return (store.data.players || [])
       .filter((p: Player) => p.std === std)
+      .filter((p: Player) => {
+        const query = searchTerm.toLowerCase();
+        return p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+      })
       .sort((a: Player, b: Player) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0);
       });
-  }, [store.data.players, std]);
+  }, [store.data.players, std, searchTerm]);
 
   const currentLabels = useMemo(() => {
     const configId = `${std}_${selectedMonth}`;
@@ -182,8 +188,19 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
-          <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" />
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Find student..." 
+              className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-4 bg-muted/40 p-2 rounded-2xl border">
+            <Input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="h-10 w-40 font-black border-0 bg-transparent shadow-none focus:ring-0" />
+          </div>
         </div>
       </div>
 
@@ -213,7 +230,9 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {playersInStd.map((p: Player) => {
+                  {playersInStd.length === 0 ? (
+                    <TableRow><TableCell colSpan={8} className="text-center py-20 font-black uppercase opacity-20">No matching athletes.</TableCell></TableRow>
+                  ) : playersInStd.map((p: Player) => {
                     const r = localRecords[p.id] || {};
                     return (
                       <TableRow key={p.id} className="border-b h-14 group">
