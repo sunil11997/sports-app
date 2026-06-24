@@ -13,6 +13,7 @@ import {
   UsersRound, 
   UserCircle,
   Activity,
+  ArrowLeft,
   ArrowRight,
   Flame,
   Menu,
@@ -114,7 +115,7 @@ export default function WaghambaApp() {
   // When activeTab changes, we reset the subTab to ensure content displays correctly
   useEffect(() => {
     if (activeTab === 'home') setSubTab('overview');
-    else if (activeTab === 'students') setSubTab('leaderboard');
+    else if (activeTab === 'students') setSubTab('list');
   }, [activeTab]);
 
   useEffect(() => {
@@ -212,9 +213,9 @@ export default function WaghambaApp() {
         </header>
 
         <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 h-full">
             
-            <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700">
+            <TabsContent value="home" className="mt-0 space-y-8 animate-in fade-in duration-700 h-full">
               <div className="flex bg-muted/40 p-1.5 rounded-2xl border w-fit mb-6 shadow-inner">
                 <button 
                   onClick={() => setSubTab("overview")} 
@@ -286,46 +287,57 @@ export default function WaghambaApp() {
               {subTab === "enroll" && <Registration store={schoolData} section={selectedSection || 'general'} />}
             </TabsContent>
 
-            <TabsContent value="sport" className="mt-0">
+            <TabsContent value="sport" className="mt-0 h-full">
               <GameHub store={schoolData} />
             </TabsContent>
 
-            <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {[
-                    { id: "leaderboard", label: "Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
-                    { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
-                    { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
-                    { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
-                    { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
-                    { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
-                    { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
-                    { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
-                  ].map(item => (
-                    <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
-                      <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
-                        <item.icon className="w-7 h-7" />
-                      </div>
-                      <h3 className="text-xl font-black text-primary uppercase tracking-tight">{item.label}</h3>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{item.desc}</p>
-                      <ChevronRight className="absolute bottom-8 right-8 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
-                    </Card>
-                  ))}
-              </div>
-              
-              <div className="pt-8 border-t border-dashed">
-                {subTab === "leaderboard" && <Gamification store={schoolData} />}
-                {subTab === "ai" && <AIAdvice store={schoolData} />}
-                {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}
-                {subTab === "monthly-progress" && <PerformanceHub store={schoolData} />}
-                {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} language={language} />}
-                {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} language={language} />}
-                {subTab === "exams" && <ExamsHub store={schoolData} language={language} />}
-                {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} language={language} />}
-              </div>
+            <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700 h-full">
+              {subTab === "list" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                   {[
+                      { id: "leaderboard", label: "Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
+                      { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
+                      { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
+                      { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
+                      { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
+                      { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
+                      { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
+                      { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
+                    ].map(item => (
+                      <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
+                          <item.icon className="w-7 h-7" />
+                        </div>
+                        <h3 className="text-xl font-black text-primary uppercase tracking-tight">{item.label}</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">{item.desc}</p>
+                        <ChevronRight className="absolute bottom-8 right-8 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+                      </Card>
+                    ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setSubTab("list")}
+                    className="font-black uppercase text-xs tracking-widest text-primary hover:bg-primary/5 rounded-full px-6 h-10 border border-primary/10 mb-4"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
+                  </Button>
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "leaderboard" && <Gamification store={schoolData} />}
+                    {subTab === "ai" && <AIAdvice store={schoolData} />}
+                    {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}
+                    {subTab === "monthly-progress" && <PerformanceHub store={schoolData} />}
+                    {subTab === "attendance" && <Attendance store={schoolData} section={selectedSection || 'general'} language={language} />}
+                    {subTab === "fitness" && <Fitness store={schoolData} section={selectedSection || 'general'} language={language} />}
+                    {subTab === "exams" && <ExamsHub store={schoolData} language={language} />}
+                    {subTab === "promotion" && <PromotionHub store={schoolData} section={selectedSection || 'general'} language={language} />}
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
-            <TabsContent value="profile" className="mt-0">
+            <TabsContent value="profile" className="mt-0 h-full">
                <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
 
