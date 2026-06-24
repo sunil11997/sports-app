@@ -58,6 +58,8 @@ export interface FitnessAssessment {
   strengthScore?: string; // Specific Strength Rating (0-100)
   enduranceScore?: string; // Specific Endurance Rating (0-100)
   speedScore?: string;    // Specific Speed Rating (0-100)
+  flexScore?: string;
+  agilityScore?: string;
   
   // Monthly Performance Fields
   metric1?: string;

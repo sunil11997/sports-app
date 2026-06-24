@@ -112,9 +112,10 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
     }
 
     const offsetNum = parseFloat(offset.toFixed(2));
-    let advice = offsetNum < -1.0 ? "Pre-Growth Spurt: Skill coordination focus." : offsetNum <= 1.0 ? "Circa-PHV: High injury risk. Focus on core stability." : "Post-Growth Spurt: Peak window for power.";
+    let statusLabel = offsetNum < 0 ? 'Pre-growth spurt' : 'Post-growth spurt';
+    let advice = offsetNum < -1.0 ? "Skill coordination focus." : offsetNum <= 1.0 ? "High injury risk. Focus on core stability." : "Peak window for power.";
 
-    return { offset: offset.toFixed(2), offsetNum, status: offsetNum < 0 ? 'Pre-growth spurt' : 'Post-growth spurt', advice };
+    return { offset: offset.toFixed(2), offsetNum, status: statusLabel, advice };
   }, [currentPlayer]);
 
   const historyData = useMemo(() => 
@@ -252,7 +253,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
             <SelectTrigger className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"><SelectValue placeholder="Pick student..." /></SelectTrigger>
             <SelectContent>
-              {availablePlayers.map((p: any) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || p.name) : p.name} (Std {p.std})</SelectItem>))}
+              {availablePlayers.map((p: Player) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || p.name) : p.name} (Std {p.std})</SelectItem>))}
             </SelectContent>
           </Select>
         </div>

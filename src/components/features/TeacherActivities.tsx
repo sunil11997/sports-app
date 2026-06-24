@@ -253,8 +253,8 @@ export function TeacherActivities() {
                     <Play className="w-3 h-3 text-accent fill-accent" /> Sequence of Execution
                   </h4>
                   
-                  <ScrollArea className="flex-1 min-h-[350px] pr-8">
-                    <div className="space-y-8">
+                  <ScrollArea className="flex-1 min-h-[350px]">
+                    <div className="space-y-8 pr-8">
                       {guide.steps.map((step, idx) => (
                         <div key={idx} className="flex gap-6 group">
                           <div className="flex flex-col items-center">

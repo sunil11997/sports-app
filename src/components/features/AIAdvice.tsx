@@ -239,18 +239,20 @@ export function AIAdvice({ store }: { store: any }) {
               {aiEngine === 'Gemini Pro' && <Badge className="bg-accent text-white font-black text-[9px] px-3">PRO ENGINE ACTIVE</Badge>}
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col">
-              <ScrollArea className="flex-1 p-8 space-y-6">
-                {chatHistory.map((msg, idx) => (
-                  <div key={idx} className={cn("flex gap-4", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
-                    <div className={cn("p-4 rounded-3xl text-sm font-medium shadow-sm", msg.role === 'user' ? "bg-primary text-white" : "bg-white border")}>{msg.content}</div>
-                  </div>
-                ))}
-                {chatLoading && (
-                  <div className="flex gap-4">
-                    <div className="p-4 rounded-3xl bg-muted animate-pulse"><Loader2 className="w-4 h-4 animate-spin" /></div>
-                  </div>
-                )}
-                <div ref={scrollRef} />
+              <ScrollArea className="flex-1 p-8">
+                <div className="space-y-6">
+                  {chatHistory.map((msg, idx) => (
+                    <div key={idx} className={cn("flex gap-4", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
+                      <div className={cn("p-4 rounded-3xl text-sm font-medium shadow-sm max-w-[80%]", msg.role === 'user' ? "bg-primary text-white" : "bg-white border")}>{msg.content}</div>
+                    </div>
+                  ))}
+                  {chatLoading && (
+                    <div className="flex gap-4">
+                      <div className="p-4 rounded-3xl bg-muted animate-pulse"><Loader2 className="w-4 h-4 animate-spin" /></div>
+                    </div>
+                  )}
+                  <div ref={scrollRef} />
+                </div>
               </ScrollArea>
               <div className="p-8 bg-white border-t flex gap-4">
                 <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendChat()} placeholder="Discuss tactics with AI Coach..." className="flex-1 h-14 rounded-2xl border-2 px-6" />

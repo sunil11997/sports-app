@@ -45,7 +45,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
     if (!initializedFirestoreApps.has(appKey)) {
       try {
         // Standardized initialization for high-resilience environments.
-        // experimentalAutoDetectLongPolling enabled to resolve 'Could not reach backend' errors in proxied environments.
+        // experimentalAutoDetectLongPolling enabled to resolve 'Could not reach backend' errors in proxied environments (Cloud Workstations).
         firestore = initializeFirestore(firebaseApp, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager(),

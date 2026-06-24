@@ -401,7 +401,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         </ComposedChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4" /><p className="font-black uppercase tracking-widest text-sm">No historical data found</p></div>
+                      <div className="h-full flex flex-col items-center justify-center opacity-20"><History className="w-16 h-16 mb-4 text-primary" /><p className="font-black uppercase tracking-widest text-sm">No historical data found</p></div>
                     )}
                   </div>
                   <div className="p-0 overflow-x-auto scrollbar-hide">
