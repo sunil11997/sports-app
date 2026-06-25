@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -393,27 +392,27 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                                 <FormControl><Input type="number" placeholder="155" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
+                            <FormField control={form.control} name="sittingHeight" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1"><Ruler className="w-3 h-3" /> Sit Ht (cm)</FormLabel>
+                                <FormControl><Input type="number" placeholder="85" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
                             <FormField control={form.control} name="weight" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1"><Weight className="w-3 h-3" /> Wt (kg)</FormLabel>
                                 <FormControl><Input type="number" placeholder="48" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             <FormField control={form.control} name="bloodGroup" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Blood</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Blood Group</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl>
                                   <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
                                 </Select>
-                              </FormItem>
-                            )} />
-                          </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <FormField control={form.control} name="sittingHeight" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Sitting Ht (cm)</FormLabel>
-                                <FormControl><Input type="number" placeholder="85" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
                             <FormField control={form.control} name="serialNumber" render={({ field }) => (

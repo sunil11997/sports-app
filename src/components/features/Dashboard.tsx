@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef } from 'react';
@@ -25,7 +24,8 @@ import {
   Weight,
   Phone,
   FileDigit,
-  Home
+  Home,
+  ScanFace
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -53,7 +53,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const profileUploadRef = useRef<HTMLInputElement>(null);
 
   const isGeneral = section === 'general';
 
@@ -283,11 +282,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Calendar className="w-3 h-3" /> Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Ruler className="w-3 h-3" /> Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Ruler className="w-3 h-3" /> Sit Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Weight className="w-3 h-3" /> Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Sitting Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Roll Number</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                       </div>
                     </div>

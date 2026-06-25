@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -14,8 +13,6 @@ import {
   Activity, 
   Target,
   Zap,
-  Weight,
-  Ruler,
   Dumbbell
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -50,8 +47,9 @@ export function HallOfFame({ store }: { store: any }) {
     
     return playersInStd.map((p: any) => {
       const history = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
-      const score = parseFloat(history?.[activeMetric] || '0');
-      return { ...p, rankScore: score };
+      // Ensure we pull the specific metric value. For 'Overall Fitness', use the 'score' field.
+      const scoreValue = parseFloat(history?.[activeMetric] || '0');
+      return { ...p, rankScore: scoreValue };
     })
     .filter(p => p.rankScore > 0)
     .sort((a, b) => b.rankScore - a.rankScore)
