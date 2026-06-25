@@ -149,7 +149,7 @@ function SquadItem({ data }: { data: any }) {
             <div className="flex items-start gap-2">
               <Info className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
               <p className="text-[11px] font-medium text-foreground/80 leading-relaxed italic">
-                "{analysis.advice}"
+                &quot;{analysis.advice}&quot;
               </p>
             </div>
           </div>
@@ -283,7 +283,7 @@ export function DailyReadiness({ store }: { store: any }) {
                </div>
                <div className="bg-white/60 p-5 rounded-2xl border border-white/50">
                 <p className="text-xs font-bold text-foreground/80 leading-relaxed italic">
-                  "{activeAlert.advice}"
+                  &quot;{activeAlert.advice}&quot;
                 </p>
                </div>
             </div>
@@ -335,7 +335,7 @@ export function DailyReadiness({ store }: { store: any }) {
           <Button 
             onClick={handleSave} 
             disabled={!selectedPlayerId || isSaving} 
-            className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl active-scale"
+            className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale"
           >
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />} 
             नोंद सबमिट करा
