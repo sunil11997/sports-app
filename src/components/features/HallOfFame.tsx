@@ -117,7 +117,7 @@ export function HallOfFame({ store }: { store: any }) {
           
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-4">
              <div className="flex bg-muted/40 p-1.5 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide max-w-full">
-                {METRICS.map(m => (
+                {METRICS.map((m: any) => (
                   <button 
                     key={m.id}
                     onClick={() => { setActiveMetric(m.id); setIsEditMode(false); }}
@@ -134,7 +134,7 @@ export function HallOfFame({ store }: { store: any }) {
                <Input 
                  type="month" 
                  value={selectedMonth} 
-                 onChange={(e) => setSelectedMonth(e.target.value)} 
+                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMonth(e.target.value)} 
                  className="w-40 h-12 rounded-xl border-2 font-black uppercase text-[10px]" 
                />
                <Button 
@@ -150,7 +150,7 @@ export function HallOfFame({ store }: { store: any }) {
       </div>
 
       <div className="grid grid-cols-1 gap-16">
-        {standards.map(std => {
+        {standards.map((std: string) => {
           const topBoys = getRankings(std, 'Male');
           const topGirls = getRankings(std, 'Female');
           const allInStd = (store.data.players || []).filter((p: any) => p.std === std);
@@ -255,7 +255,7 @@ export function HallOfFame({ store }: { store: any }) {
                       <CardContent className="p-4 space-y-3">
                          {topBoys.length === 0 ? (
                            <div className="py-10 text-center opacity-20"><Dumbbell className="w-8 h-8 mx-auto mb-2" /><p className="text-[8px] font-black uppercase">No records found</p></div>
-                         ) : topBoys.map((p, i) => (
+                         ) : topBoys.map((p: any, i: number) => (
                            <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-blue-50 group hover:border-blue-400 transition-all shadow-sm">
                               <div className="flex items-center gap-4">
                                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-blue-50 text-blue-600")}>
@@ -290,7 +290,7 @@ export function HallOfFame({ store }: { store: any }) {
                       <CardContent className="p-4 space-y-3">
                          {topGirls.length === 0 ? (
                            <div className="py-10 text-center opacity-20"><Dumbbell className="w-8 h-8 mx-auto mb-2" /><p className="text-[8px] font-black uppercase">No records found</p></div>
-                         ) : topGirls.map((p, i) => (
+                         ) : topGirls.map((p: any, i: number) => (
                            <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-pink-50 group hover:border-pink-400 transition-all shadow-sm">
                               <div className="flex items-center gap-4">
                                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-pink-50 text-pink-600")}>
