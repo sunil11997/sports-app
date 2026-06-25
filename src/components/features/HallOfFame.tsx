@@ -5,7 +5,6 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Crown, 
   Medal, 
@@ -23,6 +22,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+
+const Disc = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="4" />
+  </svg>
+);
 
 const METRICS = [
   { id: 'score', label: 'Overall Fitness', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -31,13 +38,6 @@ const METRICS = [
   { id: 'metric7', label: 'Disc Throw', icon: Disc, color: 'text-rose-600', bg: 'bg-rose-50' },
   { id: 'metric1', label: '100m Sprint', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
 ];
-
-const Disc = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="12" r="4" />
-  </svg>
-);
 
 export function HallOfFame({ store }: { store: any }) {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -122,7 +122,6 @@ export function HallOfFame({ store }: { store: any }) {
                </div>
 
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Boys Column */}
                   <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl hover:border-blue-200 transition-all">
                     <CardHeader className="bg-blue-50/50 border-b border-blue-100 p-6 flex flex-row justify-between items-center">
                        <div className="flex items-center gap-3">
@@ -158,35 +157,34 @@ export function HallOfFame({ store }: { store: any }) {
                     </CardContent>
                   </Card>
 
-                  {/* Girls Column */}
-                  <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl hover:border-rose-200 transition-all">
-                    <CardHeader className="bg-rose-50/50 border-b border-rose-100 p-6 flex flex-row justify-between items-center">
+                  <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-xl hover:border-pink-200 transition-all">
+                    <CardHeader className="bg-pink-50/50 border-b border-pink-100 p-6 flex flex-row justify-between items-center">
                        <div className="flex items-center gap-3">
-                          <Medal className="w-6 h-6 text-rose-600" />
-                          <CardTitle className="text-lg font-black text-rose-900 uppercase">Top 5 Girls</CardTitle>
+                          <Medal className="w-6 h-6 text-pink-600" />
+                          <CardTitle className="text-lg font-black text-pink-900 uppercase">Top 5 Girls</CardTitle>
                        </div>
-                       <Badge className="bg-rose-600 text-white font-black text-[9px] px-3">STD {std}</Badge>
+                       <Badge className="bg-pink-600 text-white font-black text-[9px] px-3">STD {std}</Badge>
                     </CardHeader>
                     <CardContent className="p-4 space-y-3">
                        {topGirls.length === 0 ? (
                          <div className="py-10 text-center opacity-20"><Dumbbell className="w-8 h-8 mx-auto mb-2" /><p className="text-[8px] font-black uppercase">No records found</p></div>
                        ) : topGirls.map((p, i) => (
-                         <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-rose-50 group hover:border-rose-400 transition-all shadow-sm">
+                         <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-pink-50 group hover:border-pink-400 transition-all shadow-sm">
                             <div className="flex items-center gap-4">
-                               <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-rose-50 text-rose-600")}>
+                               <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-pink-50 text-pink-600")}>
                                   {i + 1}
                                </div>
                                <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                                   <AvatarImage src={p.photoUrl} className="object-cover" />
-                                  <AvatarFallback className="bg-rose-50 text-rose-600 font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
+                                  <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
                                </Avatar>
                                <div>
-                                  <p className="font-black text-primary uppercase text-sm group-hover:text-rose-600 transition-colors">{p.name}</p>
+                                  <p className="font-black text-primary uppercase text-sm group-hover:text-pink-600 transition-colors">{p.name}</p>
                                   <p className="text-[9px] font-bold text-muted-foreground uppercase">GR: {p.generalRegisterNumber || '---'}</p>
                                </div>
                             </div>
                             <div className="text-right">
-                               <p className="text-xl font-black text-rose-600">{p.rankScore}{activeMetric === 'score' ? '%' : 'm'}</p>
+                               <p className="text-xl font-black text-pink-600">{p.rankScore}{activeMetric === 'score' ? '%' : 'm'}</p>
                                <p className="text-[8px] font-black uppercase text-muted-foreground">Rating</p>
                             </div>
                          </div>
