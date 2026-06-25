@@ -15,7 +15,6 @@ import {
   Activity,
   ArrowLeft,
   ArrowRight,
-  Flame,
   Menu,
   Star,
   Loader2,
@@ -27,7 +26,8 @@ import {
   TrendingUp,
   History,
   Medal,
-  BrainCircuit
+  BrainCircuit,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -44,7 +44,6 @@ const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
 const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance), { ssr: false });
 const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness), { ssr: false });
-const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
 const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub), { ssr: false });
 const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub), { ssr: false });
 const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub), { ssr: false });
@@ -288,6 +287,7 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
+                      { id: "roster", label: "Student Registry", desc: "Profile Management", icon: ClipboardList, color: "bg-blue-600" },
                       { id: "leaderboard", label: "Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
                       { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
                       { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
@@ -317,6 +317,7 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection || 'general'} t={t} />}
                     {subTab === "leaderboard" && <Gamification store={schoolData} />}
                     {subTab === "ai" && <AIAdvice store={schoolData} />}
                     {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}

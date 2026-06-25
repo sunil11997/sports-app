@@ -85,13 +85,11 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
   const handleAutoSave = async (player: Player) => {
     setIsSaving(player.id);
     const data = localRecords[player.id];
-    // Dynamic calculation for ranking score: Using 100m sprint and Standup jump as indicators
     const m1 = parseFloat(data.metric1 || '0');
     const m7 = parseFloat(data.metric7 || '0');
     
     let scoreNum = 0;
     if (m1 > 0 && m7 > 0) {
-       // Simplified logic: higher jump = better, lower time = better
        const sprintPoints = Math.max(0, 100 - (m1 * 5));
        const jumpPoints = Math.min(100, (m7 / 200) * 100);
        scoreNum = Math.round((sprintPoints + jumpPoints) / 2);

@@ -16,11 +16,8 @@ import {
   Contact, 
   MapPin, 
   HeartPulse, 
-  Baby, 
-  ScanFace,
   Medal,
   Camera,
-  Upload,
   CircleX,
   Type
 } from 'lucide-react';
@@ -50,7 +47,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const aadharUploadRef = useRef<HTMLInputElement>(null);
   const profileUploadRef = useRef<HTMLInputElement>(null);
 
   const isGeneral = section === 'general';
@@ -120,7 +116,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   };
 
   const handleDeletePlayer = (playerId: string) => {
-    if (confirm("Permanently delete this student?")) {
+    if (confirm("Permanently delete this student from the institutional registry?")) {
       store.deletePlayer(playerId);
       toast({ title: "Registry Purged", variant: "destructive" });
     }
@@ -168,9 +164,10 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="px-6 text-[10px] font-black uppercase w-[100px]">Roll</TableHead>
-                <TableHead className="px-4 text-[10px] font-black uppercase">Student Name</TableHead>
+                <TableHead className="px-4 text-[10px] font-black uppercase">Student Profile</TableHead>
                 <TableHead className="px-4 text-[10px] font-black uppercase text-center">GR No</TableHead>
                 <TableHead className="px-4 text-[10px] font-black uppercase text-center">Standard</TableHead>
+                <TableHead className="px-4 text-[10px] font-black uppercase text-center">Height/Weight</TableHead>
                 <TableHead className="px-6 text-[10px] font-black uppercase text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -186,12 +183,17 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       </Avatar>
                       <div>
                         <p className="font-black text-sm uppercase text-primary">{isMarathiView ? (p.nameMarathi || p.name) : p.name}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.gender}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.gender} &bull; Age {p.age}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 text-center font-bold text-xs">{p.generalRegisterNumber || '---'}</TableCell>
                   <TableCell className="px-4 text-center"><Badge variant="outline" className="font-black text-[10px]">Std {p.std}</Badge></TableCell>
+                  <TableCell className="px-4 text-center">
+                    <div className="text-[10px] font-black text-primary/60 uppercase">
+                      {p.height ? `${p.height}cm` : '--'} / {p.weight ? `${p.weight}kg` : '--'}
+                    </div>
+                  </TableCell>
                   <TableCell className="px-6 text-right flex justify-end gap-2 pt-6">
                     <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4 text-primary" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDeletePlayer(p.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -208,7 +210,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
           <DialogHeader className="bg-primary p-8 text-white shrink-0">
              <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md"><UserCheck className="w-8 h-8 text-white" /></div>
-                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Profile Editor</DialogTitle>
+                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Institutional Profile Editor</DialogTitle>
              </div>
           </DialogHeader>
 
@@ -251,16 +253,27 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                         <Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                       </div>
                     </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Standard</Label><Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Category</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">Student</SelectItem><SelectItem value="athlete">Athlete</SelectItem></SelectContent></Select></div>
                     </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Mobile Number</Label><Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                     </div>
+
                     <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                    
                     <div className="space-y-4">
                       <Label className="text-xs font-black uppercase text-accent flex items-center gap-2"><Medal className="w-4 h-4" /> Sports Registry</Label>
                       <div className="bg-accent/5 p-6 rounded-3xl border-2 border-dashed border-accent/10 grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -286,7 +299,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
           </ScrollArea>
 
           <DialogFooter className="p-8 border-t bg-muted/10 shrink-0">
-             <Button onClick={handleUpdatePlayer} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-lg">Save Profile Update</Button>
+             <Button onClick={handleUpdatePlayer} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-lg">Save Registry Profile</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

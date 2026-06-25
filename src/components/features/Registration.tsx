@@ -22,12 +22,9 @@ import {
   Hash, 
   UserCircle2, 
   Medal,
-  RefreshCcw,
-  Baby,
   Search,
   CheckCircle2,
   Calendar,
-  Contact,
   HeartPulse,
   MapPin,
   ScanFace,
@@ -316,7 +313,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 <div className="lg:col-span-8 space-y-12">
                   <ScrollArea className="h-[750px] pr-6">
                     <div className="space-y-12">
-                        {/* Section: Basic Identity */}
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <UserCircle2 className="w-5 h-5" />
@@ -340,7 +336,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           </div>
                         </div>
 
-                        {/* Section: Academic & Classification */}
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <Hash className="w-5 h-5" />
@@ -377,7 +372,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           </div>
                         </div>
 
-                        {/* Section: Biometrics */}
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <HeartPulse className="w-5 h-5" />
@@ -428,7 +422,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           </div>
                         </div>
 
-                        {/* Section: Institutional Records */}
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <MapPin className="w-5 h-5" />
@@ -464,7 +457,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           </div>
                         </div>
 
-                        {/* Section: Sports Hub Specs */}
                         <div className="space-y-8">
                           <div className="flex items-center gap-3 text-accent border-b-2 border-accent/5 pb-2">
                             <Medal className="w-5 h-5" />
