@@ -117,7 +117,7 @@ export function HallOfFame({ store }: { store: any }) {
           
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-4">
              <div className="flex bg-muted/40 p-1.5 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide max-w-full">
-                {METRICS.map((m: any) => (
+                {METRICS.map((m) => (
                   <button 
                     key={m.id}
                     onClick={() => { setActiveMetric(m.id); setIsEditMode(false); }}
@@ -150,7 +150,7 @@ export function HallOfFame({ store }: { store: any }) {
       </div>
 
       <div className="grid grid-cols-1 gap-16">
-        {standards.map((std: string) => {
+        {standards.map((std) => {
           const topBoys = getRankings(std, 'Male');
           const topGirls = getRankings(std, 'Female');
           const allInStd = (store.data.players || []).filter((p: any) => p.std === std);
