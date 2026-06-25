@@ -106,7 +106,7 @@ export default function WaghambaApp() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Ensure navigation always resets on main tab change
+  // Ensure navigation resets on main tab change to prevent module persistence
   useEffect(() => {
     if (activeTab === 'home') setSubTab('overview');
     else if (activeTab === 'students') setSubTab('list');
