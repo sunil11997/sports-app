@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -27,7 +28,8 @@ import {
   History,
   Medal,
   BrainCircuit,
-  ClipboardList
+  ClipboardList,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -38,7 +40,6 @@ import { PasscodeLock } from '@/components/features/PasscodeLock';
 
 /**
  * SSR Hardening: Features are dynamically imported with ssr: false 
- * to prevent the "Black Screen" caused by server-side execution of browser-only libs.
  */
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
@@ -52,6 +53,7 @@ const PerformanceDossier = dynamic(() => import('@/components/features/History')
 const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification), { ssr: false });
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
+const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
@@ -288,7 +290,8 @@ export default function WaghambaApp() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
                       { id: "roster", label: "Student Registry", desc: "Profile Management", icon: ClipboardList, color: "bg-blue-600" },
-                      { id: "leaderboard", label: "Leaderboard", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
+                      { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
+                      { id: "leaderboard", label: "Monthly Medals", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
                       { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
                       { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
                       { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
@@ -318,6 +321,7 @@ export default function WaghambaApp() {
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                     {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection || 'general'} t={t} />}
+                    {subTab === "hall-of-fame" && <HallOfFame store={schoolData} />}
                     {subTab === "leaderboard" && <Gamification store={schoolData} />}
                     {subTab === "ai" && <AIAdvice store={schoolData} />}
                     {subTab === "performance" && <PerformanceDossier store={schoolData} section={selectedSection || 'general'} language={language} />}

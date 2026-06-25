@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -29,7 +30,9 @@ import {
   MapPin,
   ScanFace,
   Type,
-  Loader2
+  Loader2,
+  Weight,
+  Ruler
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -380,19 +383,19 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             <FormField control={form.control} name="dob" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Birth Date</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Birth Date</FormLabel>
                                 <FormControl><Input type="date" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
                             <FormField control={form.control} name="height" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Ht (cm)</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1"><Ruler className="w-3 h-3" /> Ht (cm)</FormLabel>
                                 <FormControl><Input type="number" placeholder="155" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
                             <FormField control={form.control} name="weight" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Wt (kg)</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1"><Weight className="w-3 h-3" /> Wt (kg)</FormLabel>
                                 <FormControl><Input type="number" placeholder="48" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />

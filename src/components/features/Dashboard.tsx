@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef } from 'react';
@@ -19,7 +20,12 @@ import {
   Medal,
   Camera,
   CircleX,
-  Type
+  Type,
+  Ruler,
+  Weight,
+  Phone,
+  FileDigit,
+  Home
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -122,19 +128,6 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
-    const file = e.target.files?.[0];
-    if (file && editingPlayer) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        if (type === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={5} />;
 
   return (
@@ -221,11 +214,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                   <div className="lg:col-span-4 space-y-8">
                      <div className="space-y-4">
                        <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><Camera className="w-3 h-3" /> Profile Photo</Label>
-                       <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/5 bg-muted/20">
+                       <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/5 bg-muted/20 shadow-inner">
                          {activeCam === 'profile' ? (
                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                          ) : editingPlayer.photoUrl ? (
-                           <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                           <div className="relative w-full h-full"><Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" /></div>
                          ) : (
                            <div className="w-full h-full flex items-center justify-center opacity-10"><UserCheck className="w-12 h-12" /></div>
                          )}
@@ -240,39 +233,77 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                          <Button size="sm" variant="outline" className="w-full h-12 rounded-2xl font-black text-[9px] uppercase" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
                        )}
                      </div>
+
+                     <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
+                        <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10 shadow-inner">
+                          {activeCam === 'aadhar' ? (
+                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover")} />
+                          ) : editingPlayer.aadharPhotoUrl ? (
+                            <div className="relative w-full h-full"><Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" /></div>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center opacity-10"><ScanFace className="w-8 h-8" /></div>
+                          )}
+                        </div>
+                        {!activeCam && (
+                          <Button size="sm" variant="outline" className="w-full h-10 rounded-xl font-black text-[9px] uppercase" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>
+                        )}
+                      </div>
                   </div>
 
-                  <div className="lg:col-span-8 space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
-                        <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                  <div className="lg:col-span-8 space-y-12">
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <Hash className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Primary Details</h3>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</Label>
-                        <Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
+                          <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</Label>
+                          <Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Standard</Label><Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Registry Role</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">Student</SelectItem><SelectItem value="athlete">Athlete</SelectItem></SelectContent></Select></div>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Standard</Label><Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Category</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">Student</SelectItem><SelectItem value="athlete">Athlete</SelectItem></SelectContent></Select></div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <HeartPulse className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Biometric Profile</h3>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Calendar className="w-3 h-3" /> Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Ruler className="w-3 h-3" /> Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Weight className="w-3 h-3" /> Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Sitting Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Roll Number</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
+                        <Contact className="w-4 h-4" />
+                        <h3 className="font-black uppercase text-xs tracking-widest">Administrative</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><FileDigit className="w-3 h-3" /> Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile Number</Label><Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Home className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Mobile Number</Label><Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                    </div>
-
-                    <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-2"><MapPin className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                     
                     <div className="space-y-4">
                       <Label className="text-xs font-black uppercase text-accent flex items-center gap-2"><Medal className="w-4 h-4" /> Sports Registry</Label>
@@ -291,6 +322,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary ml-2">Medical Notes</Label>
+                      <Input value={editingPlayer.medical || ""} onChange={(e) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
                     </div>
                   </div>
                 </div>
