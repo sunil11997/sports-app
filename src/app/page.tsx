@@ -38,7 +38,8 @@ import { format } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
 
 /**
- * SSR Hardening: Features are dynamically imported with ssr: false 
+ * Platinum Hub v5.0 Stable
+ * Standard-wise Registry Architecture
  */
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
@@ -53,6 +54,7 @@ const Gamification = dynamic(() => import('@/components/features/Gamification').
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
+const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
@@ -288,7 +290,7 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
-                      { id: "roster", label: "Student Registry", desc: "Profile Management", icon: ClipboardList, color: "bg-blue-600" },
+                      { id: "classes", label: "Students Registry", desc: "Std-wise Profiles", icon: ClipboardList, color: "bg-blue-600" },
                       { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
                       { id: "leaderboard", label: "Monthly Medals", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
                       { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
@@ -319,7 +321,7 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                    {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection || 'general'} t={t} />}
+                    {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
                     {subTab === "hall-of-fame" && <HallOfFame store={schoolData} />}
                     {subTab === "leaderboard" && <Gamification store={schoolData} />}
                     {subTab === "ai" && <AIAdvice store={schoolData} />}

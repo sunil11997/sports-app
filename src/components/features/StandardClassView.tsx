@@ -26,7 +26,8 @@ import {
   Upload,
   CircleX,
   Type,
-  Search
+  Search,
+  Weight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -122,7 +123,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       store.updatePlayer(editingPlayer);
       setEditingPlayer(null);
       stopCamera();
-      toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
+      toast({ title: "Registry Updated", description: `${editingPlayer.name}&apos;s profile has been modified.` });
     }
   };
 
@@ -248,7 +249,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                 </div>
                 <div>
                    <DialogTitle className="text-2xl font-black uppercase tracking-tight">Institutional Profile Editor</DialogTitle>
-                   <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Registry Update Cycle v4.3.26</p>
+                   <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Registry Update Cycle v5.0 Stable</p>
                 </div>
              </div>
              <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />

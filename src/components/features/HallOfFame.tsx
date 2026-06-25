@@ -70,7 +70,6 @@ export function HallOfFame({ store }: { store: any }) {
       const existing = (store.data.fitnessHistory[playerId] || []).find((h: any) => h.month === selectedMonth) || {};
       
       let updatedScore = existing.score || "0";
-      // If updating specific metrics, we could re-derive the score here if needed
       
       await store.setFitness(playerId, {
         ...existing,
@@ -212,7 +211,7 @@ export function HallOfFame({ store }: { store: any }) {
                                                   placeholder="0.0"
                                                   className="h-12 text-center font-black text-lg focus:ring-accent border-2 rounded-xl"
                                                   defaultValue={hist[activeMetric] || ""}
-                                                  onBlur={(e) => handleUpdateScore(p.id, e.target.value)}
+                                                  onBlur={(e: React.ChangeEvent<HTMLInputElement>) => handleUpdateScore(p.id, e.target.value)}
                                                />
                                                {isUpdating && <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-xl"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
                                             </div>

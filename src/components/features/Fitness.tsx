@@ -72,7 +72,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
     setIsSaving(id);
     
-    // Performance Matrix Calculation for All Tests
+    // Performance Matrix Calculation for All Core Tests
     const shuttleVal = 100 - (parseFloat(current.shuttleRun || '0') * 4);
     const jumpVal = (parseFloat(current.boardJump || '0') || 0) * 0.4;
     const speedVal = 100 - (parseFloat(current.run50m || '0') * 5); 
