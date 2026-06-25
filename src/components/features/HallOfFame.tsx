@@ -9,15 +9,13 @@ import {
   Medal, 
   Trophy, 
   Star, 
-  ChevronRight, 
   Activity, 
   Target,
   Zap,
   Dumbbell,
   Save,
   Loader2,
-  Edit3,
-  CheckCircle2
+  Edit3
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -72,16 +70,8 @@ export function HallOfFame({ store }: { store: any }) {
       const existing = (store.data.fitnessHistory[playerId] || []).find((h: any) => h.month === selectedMonth) || {};
       
       let updatedScore = existing.score || "0";
-      if (activeMetric !== 'score') {
-        const m1 = activeMetric === 'metric1' ? parseFloat(value) : parseFloat(existing.metric1 || '0');
-        const m7 = activeMetric === 'metric7' ? parseFloat(value) : parseFloat(existing.metric7 || '0');
-        if (m1 > 0 && m7 > 0) {
-          const sprintPoints = Math.max(0, 100 - (m1 * 5));
-          const jumpPoints = Math.min(100, (m7 / 200) * 100);
-          updatedScore = Math.round((sprintPoints + jumpPoints) / 2).toString();
-        }
-      }
-
+      // If updating specific metrics, we could re-derive the score here if needed
+      
       await store.setFitness(playerId, {
         ...existing,
         [activeMetric]: value,
@@ -111,7 +101,7 @@ export function HallOfFame({ store }: { store: any }) {
           <div className="space-y-2">
             <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame</h2>
             <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
-              Recognizing the elite Top 5 athletes for every standard at Ashram Shala Waghamba.
+              Recognizing the elite Top 5 athletes for every standard based on fitness and performance metrics.
             </p>
           </div>
           
@@ -137,13 +127,15 @@ export function HallOfFame({ store }: { store: any }) {
                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMonth(e.target.value)} 
                  className="w-40 h-12 rounded-xl border-2 font-black uppercase text-[10px]" 
                />
-               <Button 
-                 variant={isEditMode ? "default" : "outline"} 
-                 onClick={() => setIsEditMode(!isEditMode)}
-                 className={cn("h-12 rounded-xl font-black uppercase text-[10px] px-6 border-2", isEditMode && "bg-accent text-white border-accent")}
-               >
-                 <Edit3 className="w-4 h-4 mr-2" /> {isEditMode ? 'Close Editor' : 'Edit Metrics'}
-               </Button>
+               {activeMetric !== 'score' && (
+                 <Button 
+                   variant={isEditMode ? "default" : "outline"} 
+                   onClick={() => setIsEditMode(!isEditMode)}
+                   className={cn("h-12 rounded-xl font-black uppercase text-[10px] px-6 border-2", isEditMode && "bg-accent text-white border-accent")}
+                 >
+                   <Edit3 className="w-4 h-4 mr-2" /> {isEditMode ? 'Close Editor' : 'Edit Metrics'}
+                 </Button>
+               )}
              </div>
           </div>
         </div>
@@ -189,8 +181,7 @@ export function HallOfFame({ store }: { store: any }) {
                                 <tr>
                                    <th className="p-6 text-left text-[10px] font-black uppercase text-primary border-r w-[250px]">Student Athlete</th>
                                    <th className="p-6 text-center text-[10px] font-black uppercase text-primary border-r">Gender</th>
-                                   <th className="p-6 text-center text-[10px] font-black uppercase text-primary w-[200px]">Current Score</th>
-                                   <th className="p-6 text-center text-[10px] font-black uppercase text-primary w-[200px]">Derived Fitness</th>
+                                   <th className="p-6 text-center text-[10px] font-black uppercase text-primary w-[200px]">Result Value</th>
                                 </tr>
                              </thead>
                              <tbody>
@@ -213,25 +204,17 @@ export function HallOfFame({ store }: { store: any }) {
                                                {p.gender.toUpperCase()}
                                             </Badge>
                                          </td>
-                                         <td className="p-6 border-r">
-                                            <div className="relative">
+                                         <td className="p-6">
+                                            <div className="relative max-w-[150px] mx-auto">
                                                <Input 
-                                                  disabled={activeMetric === 'score'}
                                                   type="number"
-                                                  placeholder={activeMetric === 'score' ? "Locked" : "0.0"}
+                                                  step="0.1"
+                                                  placeholder="0.0"
                                                   className="h-12 text-center font-black text-lg focus:ring-accent border-2 rounded-xl"
                                                   defaultValue={hist[activeMetric] || ""}
                                                   onBlur={(e) => handleUpdateScore(p.id, e.target.value)}
                                                />
                                                {isUpdating && <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-xl"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
-                                            </div>
-                                         </td>
-                                         <td className="p-6 text-center">
-                                            <div className="inline-flex flex-col items-center">
-                                               <span className="text-xl font-black text-primary">{hist.score || '0'}%</span>
-                                               <div className="w-12 h-1 bg-muted rounded-full mt-1 overflow-hidden">
-                                                  <div className="h-full bg-accent" style={{ width: `${hist.score || 0}%` }} />
-                                               </div>
                                             </div>
                                          </td>
                                       </tr>
@@ -271,7 +254,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                               </div>
                               <div className="text-right">
-                                 <p className="text-xl font-black text-blue-600">{p.rankScore}{activeMetric === 'score' ? '%' : 'm'}</p>
+                                 <p className="text-xl font-black text-blue-600">{p.rankScore}{activeMetric === 'score' ? '%' : ''}</p>
                                  <p className="text-[8px] font-black uppercase text-muted-foreground">Rating</p>
                               </div>
                            </div>
@@ -306,7 +289,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                               </div>
                               <div className="text-right">
-                                 <p className="text-xl font-black text-pink-600">{p.rankScore}{activeMetric === 'score' ? '%' : 'm'}</p>
+                                 <p className="text-xl font-black text-pink-600">{p.rankScore}{activeMetric === 'score' ? '%' : ''}</p>
                                  <p className="text-[8px] font-black uppercase text-muted-foreground">Rating</p>
                               </div>
                            </div>
