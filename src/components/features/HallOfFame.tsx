@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -27,7 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
-const Disc = ({ className }: { className?: string }) => (
+const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="10" />
     <circle cx="12" cy="12" r="4" />
@@ -38,7 +37,7 @@ const METRICS = [
   { id: 'score', label: 'Overall Fitness', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { id: 'metric2', label: 'Javelin Throw', icon: Target, color: 'text-orange-600', bg: 'bg-orange-50' },
   { id: 'metric3', label: 'Shot Put', icon: Trophy, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { id: 'metric7', label: 'Disc Throw', icon: Disc, color: 'text-rose-600', bg: 'bg-rose-50' },
+  { id: 'metric7', label: 'Disc Throw', icon: DiscIcon, color: 'text-rose-600', bg: 'bg-rose-50' },
   { id: 'metric1', label: '100m Sprint', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
 ];
 
@@ -57,12 +56,13 @@ export function HallOfFame({ store }: { store: any }) {
     const playersInStd = (store.data.players || []).filter((p: any) => p.std === std && p.gender === gender);
     
     return playersInStd.map((p: any) => {
-      const history = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth);
+      const historyList = store.data.fitnessHistory?.[p.id] || [];
+      const history = historyList.find((h: any) => h.month === selectedMonth);
       const scoreValue = parseFloat(history?.[activeMetric] || '0');
       return { ...p, rankScore: scoreValue };
     })
-    .filter(p => p.rankScore > 0)
-    .sort((a, b) => b.rankScore - a.rankScore)
+    .filter((p: any) => p.rankScore > 0)
+    .sort((a: any, b: any) => b.rankScore - a.rankScore)
     .slice(0, 5);
   };
 
@@ -71,8 +71,6 @@ export function HallOfFame({ store }: { store: any }) {
     try {
       const existing = (store.data.fitnessHistory[playerId] || []).find((h: any) => h.month === selectedMonth) || {};
       
-      // Calculate derived fitness score if specific metrics are updated
-      // This is a simplified institutional logic for v5.0
       let updatedScore = existing.score || "0";
       if (activeMetric !== 'score') {
         const m1 = activeMetric === 'metric1' ? parseFloat(value) : parseFloat(existing.metric1 || '0');
@@ -91,8 +89,11 @@ export function HallOfFame({ store }: { store: any }) {
         month: selectedMonth,
         updatedAt: new Date().toISOString()
       });
+      
+      toast({ title: "Registry Updated", description: "Performance data archived successfully." });
     } catch (error) {
       console.error(error);
+      toast({ variant: "destructive", title: "Sync Error" });
     } finally {
       setIsSaving(null);
     }
@@ -202,7 +203,7 @@ export function HallOfFame({ store }: { store: any }) {
                                             <div className="flex items-center gap-3">
                                                <Avatar className="w-8 h-8 border shadow-sm">
                                                   <AvatarImage src={p.photoUrl} className="object-cover" />
-                                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black">{p.name[0]}</AvatarFallback>
+                                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black">{p.name?.[0] || '?'}</AvatarFallback>
                                                </Avatar>
                                                <span className="font-black text-sm uppercase text-primary truncate max-w-[150px]">{p.name}</span>
                                             </div>
@@ -218,7 +219,7 @@ export function HallOfFame({ store }: { store: any }) {
                                                   disabled={activeMetric === 'score'}
                                                   type="number"
                                                   placeholder={activeMetric === 'score' ? "Locked" : "0.0"}
-                                                  className="h-12 border-2 rounded-xl text-center font-black text-lg focus:ring-accent"
+                                                  className="h-12 text-center font-black text-lg focus:ring-accent border-2 rounded-xl"
                                                   defaultValue={hist[activeMetric] || ""}
                                                   onBlur={(e) => handleUpdateScore(p.id, e.target.value)}
                                                />
@@ -262,7 +263,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-md">
                                     <AvatarImage src={p.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="bg-blue-50 text-blue-600 font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
+                                    <AvatarFallback className="bg-blue-50 text-blue-600 font-black uppercase text-xs">{p.name?.[0] || '?'}</AvatarFallback>
                                  </Avatar>
                                  <div>
                                     <p className="font-black text-primary uppercase text-sm group-hover:text-blue-600 transition-colors">{p.name}</p>
@@ -297,7 +298,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                                     <AvatarImage src={p.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{p.name[0]}</AvatarFallback>
+                                    <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{p.name?.[0] || '?'}</AvatarFallback>
                                  </Avatar>
                                  <div>
                                     <p className="font-black text-primary uppercase text-sm group-hover:text-pink-600 transition-colors">{p.name}</p>
