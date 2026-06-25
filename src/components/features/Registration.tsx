@@ -478,7 +478,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                                     }}
                                     className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
                                   />
-                                  <Label htmlFor={`sport-${sport}`} className="text-[10px] font-black uppercase text-foreground/70 cursor-pointer">{sport}</Label>
+                                  <Label htmlFor={`sport-${sport}`} className="text-[10px] font-black uppercase text-foreground/70">{sport}</Label>
                                 </div>
                               ))}
                             </div>
