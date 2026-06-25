@@ -58,9 +58,11 @@ export function TeacherActivities() {
   const handlePrint = (guide: any) => {
     const printContent = `<html><body style="font-family:sans-serif;padding:40px;"><h1>${guide.title}</h1><p>${guide.objective}</p></body></html>`;
     const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
-    win?.print();
+    if (win) {
+       win.document.write(printContent);
+       win.document.close();
+       win.print();
+    }
   };
 
   return (

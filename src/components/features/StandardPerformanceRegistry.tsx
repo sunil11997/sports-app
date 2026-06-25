@@ -14,7 +14,9 @@ import {
   Search, 
   MessageSquare,
   ChevronRight,
-  Loader2
+  Loader2,
+  Medal,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn, shareToWhatsApp } from '@/lib/utils';
@@ -83,8 +85,20 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
   const handleAutoSave = async (player: Player) => {
     setIsSaving(player.id);
     const data = localRecords[player.id];
-    const scoreStr = (parseFloat(data.metric1 || '0') + parseFloat(data.metric7 || '0')) / 2 > 0 ? "75" : "0";
-    await store.setFitness(player.id, { ...data, month: selectedMonth, score: scoreStr, status: 'Active' });
+    // Dynamic calculation for ranking score: Using 100m sprint and Standup jump as indicators
+    const m1 = parseFloat(data.metric1 || '0');
+    const m7 = parseFloat(data.metric7 || '0');
+    
+    let scoreNum = 0;
+    if (m1 > 0 && m7 > 0) {
+       // Simplified logic: higher jump = better, lower time = better
+       const sprintPoints = Math.max(0, 100 - (m1 * 5));
+       const jumpPoints = Math.min(100, (m7 / 200) * 100);
+       scoreNum = Math.round((sprintPoints + jumpPoints) / 2);
+    }
+    
+    const scoreStr = scoreNum.toString();
+    await store.setFitness(player.id, { ...data, month: selectedMonth, score: scoreStr, status: scoreNum >= 75 ? 'Elite' : 'Active' });
     setLastSavedId(player.id);
     setTimeout(() => setLastSavedId(null), 800);
     setIsSaving(null);
@@ -193,34 +207,51 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
 
         <TabsContent value="rankings" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="border-2 rounded-[2.5rem] p-6 space-y-4">
-              <h3 className="text-xl font-black uppercase text-pink-600 flex items-center gap-2"><Trophy className="w-5 h-5" /> Top Girls</h3>
-              {rankings.girls.map((p: any, idx: number) => (
-                <div key={p.id} className="flex justify-between items-center p-4 bg-pink-50 rounded-2xl border border-pink-100">
-                  <span className="font-black text-xs uppercase">{idx + 1}. {p.name}</span>
-                  <span className="font-black text-pink-600">{p.score}%</span>
-                </div>
-              ))}
+            <Card className="border-2 rounded-[2.5rem] p-6 space-y-4 shadow-lg bg-white">
+              <h3 className="text-xl font-black uppercase text-pink-600 flex items-center gap-2 border-b pb-2"><Medal className="w-6 h-6" /> Top 5 Girls (Std {std})</h3>
+              <div className="space-y-3">
+                {rankings.girls.length === 0 ? (
+                  <p className="py-10 text-center text-[10px] font-black uppercase opacity-30">No data archived for this month</p>
+                ) : rankings.girls.map((p: any, idx: number) => (
+                  <div key={p.id} className="flex justify-between items-center p-4 bg-pink-50 rounded-2xl border border-pink-100 group hover:shadow-md transition-all">
+                    <div className="flex items-center gap-4">
+                       <span className={cn("w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm", idx === 0 ? "bg-amber-400" : "bg-pink-300")}>{idx + 1}</span>
+                       <span className="font-black text-xs uppercase text-pink-800">{p.name}</span>
+                    </div>
+                    <span className="font-black text-pink-600 bg-white px-3 py-1 rounded-full text-xs shadow-inner">{p.score}%</span>
+                  </div>
+                ))}
+              </div>
             </Card>
-            <Card className="border-2 rounded-[2.5rem] p-6 space-y-4">
-              <h3 className="text-xl font-black uppercase text-blue-600 flex items-center gap-2"><Trophy className="w-5 h-5" /> Top Boys</h3>
-              {rankings.boys.map((p: any, idx: number) => (
-                <div key={p.id} className="flex justify-between items-center p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                  <span className="font-black text-xs uppercase">{idx + 1}. {p.name}</span>
-                  <span className="font-black text-blue-600">{p.score}%</span>
-                </div>
-              ))}
+            <Card className="border-2 rounded-[2.5rem] p-6 space-y-4 shadow-lg bg-white">
+              <h3 className="text-xl font-black uppercase text-blue-600 flex items-center gap-2 border-b pb-2"><Medal className="w-6 h-6" /> Top 5 Boys (Std {std})</h3>
+              <div className="space-y-3">
+                {rankings.boys.length === 0 ? (
+                  <p className="py-10 text-center text-[10px] font-black uppercase opacity-30">No data archived for this month</p>
+                ) : rankings.boys.map((p: any, idx: number) => (
+                  <div key={p.id} className="flex justify-between items-center p-4 bg-blue-50 rounded-2xl border border-blue-100 group hover:shadow-md transition-all">
+                    <div className="flex items-center gap-4">
+                       <span className={cn("w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm", idx === 0 ? "bg-amber-400" : "bg-blue-300")}>{idx + 1}</span>
+                       <span className="font-black text-xs uppercase text-blue-800">{p.name}</span>
+                    </div>
+                    <span className="font-black text-blue-600 bg-white px-3 py-1 rounded-full text-xs shadow-inner">{p.score}%</span>
+                  </div>
+                ))}
+              </div>
             </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="history" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4 h-[400px] overflow-y-auto pr-2">
+            <div className="lg:col-span-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
               <div className="space-y-2">
                 {playersInStd.map((p: Player) => (
-                  <button key={p.id} onClick={() => setSelectedPlayerId(p.id)} className={cn("w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between", selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5")}>
-                    {p.name}
+                  <button key={p.id} onClick={() => setSelectedPlayerId(p.id)} className={cn("w-full text-left p-4 rounded-2xl border-2 transition-all font-black uppercase text-xs flex items-center justify-between", selectedPlayerForHistory === p.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-primary/5 hover:border-primary/10")}>
+                    <div className="flex items-center gap-3">
+                       <Users className="w-4 h-4 opacity-40" />
+                       {p.name}
+                    </div>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 ))}
@@ -237,11 +268,11 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800 }} domain={[0, 100]} />
                         <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fillOpacity={1} fill="url(#colorLoad)" name="Score %" />
+                        <Area type="monotone" dataKey="score" stroke="#1e3a8a" strokeWidth={4} fillOpacity={0.08} fill="#1e3a8a" name="Score %" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center opacity-20 font-black uppercase">No trend data</div>
+                    <div className="h-full flex items-center justify-center opacity-20 font-black uppercase border-4 border-dashed rounded-[2rem]">No trend data archived</div>
                   )}
                 </div>
               </Card>

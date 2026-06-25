@@ -106,7 +106,6 @@ export default function WaghambaApp() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Ensure navigation resets on main tab change to prevent module persistence
   useEffect(() => {
     if (activeTab === 'home') setSubTab('overview');
     else if (activeTab === 'students') setSubTab('list');
@@ -152,7 +151,7 @@ export default function WaghambaApp() {
              )}
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V4.3.26</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V5.0</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-accent w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />

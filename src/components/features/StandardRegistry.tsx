@@ -91,7 +91,8 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
     if (total >= 63) return "अ-1"; 
     if (total >= 56) return "अ-2";
     if (total >= 49) return "ब-1";
-    return "ब-2";
+    if (total >= 42) return "ब-2";
+    return "क-1";
   };
 
   const handleSave = async (player: any) => {
@@ -104,10 +105,11 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
       ...(termRecords[id] || {}),
       term: activeTerm,
       score: total.toString(),
-      status: grade
+      status: grade,
+      updatedAt: new Date().toISOString()
     });
     setIsSaving(null);
-    toast({ title: "Record Saved" });
+    toast({ title: "Record Saved", description: `Archived result for ${player.name}.` });
   };
 
   const handleWhatsAppShare = (player: any) => {
@@ -249,7 +251,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Std {std} Exam Hub</h2>
             <div className="flex items-center gap-3 mt-1">
-              <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Term Registry</Badge>
+              <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">Platinum V5.0 Registry</Badge>
               <button 
                 onClick={() => { setEditingLabels(currentLabels); setIsLabelDialogOpen(true); }}
                 className="text-[9px] font-black text-accent uppercase flex items-center gap-1 hover:underline"
