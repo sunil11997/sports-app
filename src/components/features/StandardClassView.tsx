@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
@@ -76,6 +77,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
   }, [store.data.players, std, searchTerm]);
+
+  const getBmiStatus = (bmi: number) => {
+    if (bmi < 18.5) return { en: "Underweight", mr: "कमी वजन" };
+    if (bmi < 25) return { en: "Normal", mr: "योग्य वजन" };
+    if (bmi < 30) return { en: "Overweight", mr: "जास्त वजन" };
+    return { en: "Obese", mr: "अति वजन" };
+  };
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
@@ -123,7 +131,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       store.updatePlayer(editingPlayer);
       setEditingPlayer(null);
       stopCamera();
-      toast({ title: "Registry Updated", description: `${editingPlayer.name}&apos;s profile has been modified.` });
+      toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
     }
   };
 
@@ -147,11 +155,106 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     }
   };
 
-  React.useEffect(() => {
-    if (videoRef.current && stream && activeCam) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream, activeCam]);
+  const handlePrint = () => {
+    const isM = isMarathiView;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? `विद्यार्थी आरोग्य आणि शारीरिक नोंदणी - इयत्ता ${std} वी` 
+      : `Student Health & Physical Registry - Standard ${std}`;
+
+    const printContent = `
+      <html>
+        <head>
+          <title>Institutional Registry - Std ${std}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+            @media print { 
+              @page { size: A4 landscape; margin: 1cm; } 
+              .no-print { display: none !important; }
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.2; font-size: 10px; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 20px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+            th { background-color: #f2f2f2; font-weight: 900; text-transform: uppercase; font-size: 8px; }
+            .name-cell { text-align: left; font-weight: 900; min-width: 150px; text-transform: uppercase; }
+            .status-normal { color: #059669; }
+            .status-warning { color: #d97706; font-weight: 900; }
+            .status-danger { color: #dc2626; font-weight: 900; }
+            
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; }
+          </style>
+        </head>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
+            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
+          </div>
+          <div class="header">
+            <div class="school-name">${schoolName}</div>
+            <div class="report-type">${reportTitle}</div>
+            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.0 Stable</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>SR</th>
+                <th>STUDENT NAME</th>
+                <th>GEN</th>
+                <th>AGE</th>
+                <th>HT (cm)</th>
+                <th>SIT HT</th>
+                <th>WT (kg)</th>
+                <th>BMI</th>
+                <th>WEIGHT STATUS / वजन स्थिती</th>
+                <th>GR NO.</th>
+                <th>BLOOD</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map((p: any, i: number) => {
+                const bmiNum = parseFloat(p.bmi) || 0;
+                const status = getBmiStatus(bmiNum);
+                const statusClass = bmiNum >= 25 ? 'status-danger' : (bmiNum < 18.5 ? 'status-warning' : 'status-normal');
+                const displayName = isM ? (p.nameMarathi || p.name) : p.name;
+                return `
+                  <tr>
+                    <td>${p.serialNumber || i+1}</td>
+                    <td class="name-cell">${displayName}</td>
+                    <td>${p.gender[0]}</td>
+                    <td>${p.age}</td>
+                    <td>${p.height || '-'}</td>
+                    <td>${p.sittingHeight || '-'}</td>
+                    <td>${p.weight || '-'}</td>
+                    <td><strong>${p.bmi || '-'}</strong></td>
+                    <td class="${statusClass}"><strong>${status.en} / ${status.mr}</strong></td>
+                    <td>${p.generalRegisterNumber || '-'}</td>
+                    <td>${p.bloodGroup || '-'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top: 30px; display: flex; justify-content: space-between; font-weight: 900; text-transform: uppercase; font-size: 9px;">
+            <span>Class Teacher Signature</span>
+            <span>Sports Director</span>
+            <span>Principal Signature</span>
+          </div>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -178,8 +281,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
            </div>
-           <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-6 font-black uppercase text-xs shadow-lg active-scale">
-             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'प्रिंट काढा' : 'Print'}
+           <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-6 font-black uppercase text-xs shadow-lg active-scale">
+             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'रिपोर्ट प्रिंट करा' : 'Print Health Roster'}
            </Button>
         </div>
       </div>
@@ -191,51 +294,65 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                 <TableHead className="font-black text-[10px] uppercase pl-8 w-[100px]">{isMarathiView ? 'अनु. क्र.' : 'Roll (Sr)'}</TableHead>
                 <TableHead className="font-black text-[10px] uppercase">{isMarathiView ? 'विद्यार्थी नाव' : 'Student Name'}</TableHead>
                 <TableHead className="text-center font-black text-[10px] uppercase">{isMarathiView ? 'जी.आर. नंबर' : 'GR Number'}</TableHead>
+                <TableHead className="text-center font-black text-[10px] uppercase">BMI / Status</TableHead>
                 <TableHead className="text-center font-black text-[10px] uppercase">{isMarathiView ? 'लिंग' : 'Gender'}</TableHead>
                 <TableHead className="text-right font-black text-[10px] uppercase pr-8">{isMarathiView ? 'बदला' : 'Actions'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {students.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-20 opacity-20 font-black uppercase">No entries found.</TableCell></TableRow>
-              ) : students.map((student: any) => (
-                <TableRow key={student.id} className="hover:bg-primary/5 h-16">
-                  <TableCell className="pl-8">
-                    <Badge variant="secondary" className="font-black text-xs h-9 w-9 flex items-center justify-center rounded-lg bg-primary/5 text-primary border-primary/10">
-                      {student.serialNumber || '0'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-bold text-xs uppercase text-primary">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 border shadow-sm">
-                        <AvatarImage src={student.photoUrl} className="object-cover" />
-                        <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
-                      </Avatar>
-                      {isMarathiView ? (student.nameMarathi || student.name) : student.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="font-black text-[10px] text-primary/70 bg-muted/50 px-3 py-1 rounded-md border">
-                      {student.generalRegisterNumber || '---'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/10 text-primary">
-                      {isMarathiView ? (student.gender === 'Male' ? 'मुलगा' : 'मुलगी') : student.gender}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(student)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => handleDeletePlayer(student.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                <TableRow><TableCell colSpan={6} className="text-center py-20 opacity-20 font-black uppercase">No entries found.</TableCell></TableRow>
+              ) : students.map((student: any) => {
+                const bmi = parseFloat(student.bmi) || 0;
+                const status = getBmiStatus(bmi);
+                return (
+                  <TableRow key={student.id} className="hover:bg-primary/5 h-16">
+                    <TableCell className="pl-8">
+                      <Badge variant="secondary" className="font-black text-xs h-9 w-9 flex items-center justify-center rounded-lg bg-primary/5 text-primary border-primary/10">
+                        {student.serialNumber || '0'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-bold text-xs uppercase text-primary">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8 border shadow-sm">
+                          <AvatarImage src={student.photoUrl} className="object-cover" />
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
+                        </Avatar>
+                        {isMarathiView ? (student.nameMarathi || student.name) : student.name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-black text-[10px] text-primary/70 bg-muted/50 px-3 py-1 rounded-md border">
+                        {student.generalRegisterNumber || '---'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="font-black text-xs text-primary">{student.bmi || '--'}</span>
+                        <span className={cn(
+                          "text-[8px] font-black uppercase",
+                          bmi >= 25 ? "text-destructive" : (bmi < 18.5 ? "text-amber-600" : "text-emerald-600")
+                        )}>{isMarathiView ? status.mr : status.en}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/10 text-primary">
+                        {isMarathiView ? (student.gender === 'Male' ? 'मुलगा' : 'मुलगी') : student.gender}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(student)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => handleDeletePlayer(student.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
       </div>
@@ -266,7 +383,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                           {activeCam === 'profile' ? (
                             <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                           ) : editingPlayer.photoUrl ? (
-                            <Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" />
+                            <div className="relative w-full h-full"><Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" /></div>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center"><UserCheck className="w-12 h-12 opacity-10" /></div>
                           )}
@@ -292,7 +409,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                           {activeCam === 'aadhar' ? (
                             <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
                           ) : editingPlayer.aadharPhotoUrl ? (
-                            <Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" />
+                            <div className="relative w-full h-full"><Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" /></div>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center opacity-10"><ScanFace className="w-8 h-8" /></div>
                           )}
@@ -422,7 +539,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
           </ScrollArea>
 
           <DialogFooter className="p-8 border-t bg-muted/10 shrink-0">
-             <Button onClick={handleUpdatePlayer} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-widest shadow-lg active-scale">Save Registry Update</Button>
+             <Button onClick={handleUpdatePlayer} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-lg active-scale">Save Registry Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
