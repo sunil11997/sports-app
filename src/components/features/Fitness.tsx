@@ -134,12 +134,21 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Exhaustive Physical Evaluation Registry</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Badge className="bg-primary/5 text-primary border-primary/10 px-4 h-12 flex items-center gap-2">
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Search Name/GR..."} 
+              className="pl-9 h-11 rounded-full border-2 bg-muted/20" 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+            />
+          </div>
+          <Badge className="bg-primary/5 text-primary border-primary/10 px-4 h-11 flex items-center gap-2">
             {isOnline ? <RefreshCw className="w-4 h-4 animate-spin text-emerald-500" /> : <WifiOff className="w-4 h-4 text-destructive" />}
             {isOnline ? 'Cloud Sync' : 'Offline'}
           </Badge>
-          <Button onClick={() => window.print()} className="h-14 px-8 bg-primary rounded-2xl font-black uppercase"><Printer className="w-5 h-5 mr-2" /> Print Sheet</Button>
+          <Button onClick={() => window.print()} className="h-11 px-8 bg-primary rounded-xl font-black uppercase text-xs shadow-lg"><Printer className="w-4 h-4 mr-2" /> Print</Button>
         </div>
       </div>
 

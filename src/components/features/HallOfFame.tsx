@@ -69,12 +69,9 @@ export function HallOfFame({ store }: { store: any }) {
     try {
       const existing = (store.data.fitnessHistory[playerId] || []).find((h: any) => h.month === selectedMonth) || {};
       
-      let updatedScore = existing.score || "0";
-      
       await store.setFitness(playerId, {
         ...existing,
         [activeMetric]: value,
-        score: updatedScore,
         month: selectedMonth,
         updatedAt: new Date().toISOString()
       });
