@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/loading-skeletons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -24,7 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Printer,
-  WifiOff
+  WifiOff,
+  Search
 } from "lucide-react";
 
 const SPORTS_CATEGORIES = [
@@ -51,6 +53,7 @@ export function Attendance({ store, section, language = 'English' }: { store: an
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSession, setActiveSession] = useState<'Morning' | 'Evening'>('Morning');
   const [localMarathiView, setLocalMarathiView] = useState(language === 'Marathi');
+  const [searchTerm, setSearchTerm] = useState("");
   const { isOnline } = usePWA();
 
   useEffect(() => {
@@ -86,13 +89,15 @@ export function Attendance({ store, section, language = 'English' }: { store: an
       .filter((p: any) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
-        return matchesSection && matchesTab;
+        const query = searchTerm.toLowerCase();
+        const matchesSearch = (p.name || "").toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+        return matchesSection && matchesTab && matchesSearch;
       })
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, isGeneral, activeCategory, getPlayerCategory]);
+  }, [store.data.players, isGeneral, activeCategory, getPlayerCategory, searchTerm]);
 
   const handleToggle = (playerId: string, date: Date) => {
     const key = `${playerId}_${format(date, 'yyyy-MM-dd')}_${activeSession}`;
@@ -225,6 +230,17 @@ export function Attendance({ store, section, language = 'English' }: { store: an
             </div>
           </div>
         </div>
+        <div className="flex flex-1 items-center justify-center max-w-sm">
+           <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find by Name/GR..."} 
+                className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+           </div>
+        </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border shadow-inner">
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
@@ -257,7 +273,9 @@ export function Attendance({ store, section, language = 'English' }: { store: an
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPlayers.map((player: any) => {
+            {filteredPlayers.length === 0 ? (
+              <TableRow><TableCell colSpan={days.length + 2} className="text-center py-10 opacity-30 font-black uppercase">No matching students found.</TableCell></TableRow>
+            ) : filteredPlayers.map((player: any) => {
               let monthlyTotal = 0;
               return (
                 <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
