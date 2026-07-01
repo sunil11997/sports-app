@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -275,7 +276,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         </div>
       </div>
 
-      <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-2xl relative">
+      <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
         <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
