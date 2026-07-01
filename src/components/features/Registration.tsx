@@ -132,7 +132,6 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     }
     
     try {
-      // Robust constraints for mobile browsers and Capacitor
       const constraints = {
         video: {
           facingMode: mode,
@@ -151,7 +150,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       toast({ 
         variant: 'destructive', 
         title: 'Camera Access Denied',
-        description: 'Please ensure camera permissions are granted in your browser settings and you are using a secure (HTTPS) connection.'
+        description: 'Please ensure camera permissions are granted in your settings.'
       });
     }
   };
@@ -271,7 +270,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
             <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl"><UserPlus className="w-10 h-10" /></div>
             <div>
               <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub</CardTitle>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.0</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.0 Stable</p>
             </div>
           </div>
         </CardHeader>
@@ -322,9 +321,15 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     </div>
                     {!activeCam && (
                        <div className="flex gap-2">
-                          <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-12 font-black uppercase text-[9px]">Scan ID</Button>
+                          <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-12 font-black uppercase text-[9px]">Back Scan</Button>
                           <Button type="button" onClick={() => aadharUploadRef.current?.click()} variant="outline" className="h-12 w-12 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
                           <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                       </div>
+                    )}
+                    {activeCam === 'aadhar' && (
+                       <div className="flex gap-2">
+                          <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-white rounded-2xl h-12 font-black uppercase text-[9px]">Scan ID</Button>
+                          <Button type="button" onClick={stopCamera} variant="destructive" className="h-12 w-12 rounded-xl"><CircleX className="w-4 h-4" /></Button>
                        </div>
                     )}
                   </div>

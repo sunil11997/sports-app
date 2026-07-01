@@ -256,6 +256,10 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     win?.document.close();
   };
 
+  React.useEffect(() => {
+    if (videoRef.current && stream && activeCam) { videoRef.current.srcObject = stream; }
+  }, [stream, activeCam]);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -316,7 +320,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                       <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8 border shadow-sm">
                           <AvatarImage src={student.photoUrl} className="object-cover" />
-                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{(student.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         {isMarathiView ? (student.nameMarathi || student.name) : student.name}
                       </div>
@@ -396,7 +400,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         </div>
                         {!activeCam && (
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> BACK CAM</Button>
                             <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
                             <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
                           </div>
@@ -407,7 +411,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
                         <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10">
                           {activeCam === 'aadhar' ? (
-                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
+                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover")} />
                           ) : editingPlayer.aadharPhotoUrl ? (
                             <div className="relative w-full h-full"><Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" /></div>
                           ) : (
@@ -422,7 +426,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         </div>
                         {!activeCam && (
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>
+                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('aadhar', 'environment')}>BACK SCAN</Button>
                             <Button size="sm" variant="ghost" onClick={() => aadharUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
                             <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                           </div>

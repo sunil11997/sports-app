@@ -58,7 +58,7 @@ export function HallOfFame({ store }: { store: any }) {
       return { ...p, rankScore: scoreValue };
     })
     .filter((p: any) => p.rankScore > 0)
-    .sort((a: any, b: any) => b.rankScore - a.rankScore)
+    .sort((a: any, b: any) => (b.rankScore as number) - (a.rankScore as number))
     .slice(0, 5);
   };
 
@@ -188,7 +188,7 @@ export function HallOfFame({ store }: { store: any }) {
                                             <div className="flex items-center gap-3">
                                                <Avatar className="w-8 h-8 border shadow-sm">
                                                   <AvatarImage src={p.photoUrl} className="object-cover" />
-                                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black">{p.name?.[0] || '?'}</AvatarFallback>
+                                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black">{(p.name || "?")[0]}</AvatarFallback>
                                                </Avatar>
                                                <span className="font-black text-sm uppercase text-primary truncate max-w-[150px]">{p.name}</span>
                                             </div>
@@ -240,7 +240,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-md">
                                     <AvatarImage src={p.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="bg-blue-50 text-blue-600 font-black uppercase text-xs">{p.name?.[0] || '?'}</AvatarFallback>
+                                    <AvatarFallback className="bg-blue-50 text-blue-600 font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                                  </Avatar>
                                  <div>
                                     <p className="font-black text-primary uppercase text-sm group-hover:text-blue-600 transition-colors">{p.name}</p>
@@ -275,7 +275,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                                     <AvatarImage src={p.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{p.name?.[0] || '?'}</AvatarFallback>
+                                    <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                                  </Avatar>
                                  <div>
                                     <p className="font-black text-primary uppercase text-sm group-hover:text-pink-600 transition-colors">{p.name}</p>

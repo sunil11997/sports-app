@@ -25,7 +25,8 @@ import {
   Phone,
   FileDigit,
   Home,
-  ScanFace
+  ScanFace,
+  Upload
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -53,6 +54,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const profileUploadRef = useRef<HTMLInputElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
 
   const isGeneral = section === 'general';
 
@@ -63,6 +66,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
         const query = searchTerm.toLowerCase();
         return matchesSection && (
           p.name.toLowerCase().includes(query) || 
+          (p.nameMarathi || "").includes(searchTerm) ||
           (p.aadharNumber || "").includes(searchTerm) || 
           (p.generalRegisterNumber || "").toLowerCase().includes(query)
         );
@@ -120,12 +124,29 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+    const file = e.target.files?.[0];
+    if (file && editingPlayer) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        if (type === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDeletePlayer = (playerId: string) => {
     if (confirm("Permanently delete this student from the institutional registry?")) {
       store.deletePlayer(playerId);
       toast({ title: "Registry Purged", variant: "destructive" });
     }
   };
+
+  React.useEffect(() => {
+    if (videoRef.current && stream && activeCam) { videoRef.current.srcObject = stream; }
+  }, [stream, activeCam]);
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={5} />;
 
@@ -229,7 +250,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                          )}
                        </div>
                        {!activeCam && (
-                         <Button size="sm" variant="outline" className="w-full h-12 rounded-2xl font-black text-[9px] uppercase" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                         <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 h-12 rounded-2xl font-black text-[9px] uppercase" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> BACK CAM</Button>
+                            <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-12 w-12 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                         </div>
                        )}
                      </div>
 
@@ -245,7 +270,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                           )}
                         </div>
                         {!activeCam && (
-                          <Button size="sm" variant="outline" className="w-full h-10 rounded-xl font-black text-[9px] uppercase" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase" onClick={() => startCamera('aadhar', 'environment')}>BACK SCAN</Button>
+                            <Button size="sm" variant="ghost" onClick={() => aadharUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                          </div>
                         )}
                       </div>
                   </div>
