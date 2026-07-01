@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -328,8 +327,8 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                     <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
                     <TableCell className="p-0 border-r"><Input type="number" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
                     <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
                     <TableCell className="p-0 border-r"><Input type="number" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
                     <TableCell className="p-6 text-center bg-primary/5 border-r">
                       <div className="flex flex-col items-center justify-center">

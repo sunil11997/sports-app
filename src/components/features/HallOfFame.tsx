@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -69,7 +68,8 @@ export function HallOfFame({ store }: { store: any }) {
   const handleUpdateScore = async (playerId: string, value: string) => {
     setIsSaving(playerId);
     try {
-      const existing = (store.data.fitnessHistory[playerId] || []).find((h: any) => h.month === selectedMonth) || {};
+      const existingList = store.data.fitnessHistory[playerId] || [];
+      const existing = existingList.find((h: any) => h.month === selectedMonth) || {};
       
       await store.setFitness(playerId, {
         ...existing,
@@ -184,7 +184,8 @@ export function HallOfFame({ store }: { store: any }) {
                              </thead>
                              <tbody>
                                 {allInStd.sort((a: any, b: any) => a.gender.localeCompare(b.gender)).map((p: any) => {
-                                   const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth) || {};
+                                   const histList = store.data.fitnessHistory[p.id] || [];
+                                   const hist = histList.find((h: any) => h.month === selectedMonth) || {};
                                    const isUpdating = isSaving === p.id;
                                    return (
                                       <tr key={p.id} className="border-b last:border-0 hover:bg-primary/5 transition-colors">
