@@ -90,7 +90,9 @@ export function Attendance({ store, section, language = 'English' }: { store: an
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
         const query = searchTerm.toLowerCase();
-        const matchesSearch = (p.name || "").toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm);
+        const matchesSearch = (p.name || "").toLowerCase().includes(query) || 
+                             (p.nameMarathi || "").toLowerCase().includes(query) ||
+                             (p.generalRegisterNumber || "").includes(searchTerm);
         return matchesSection && matchesTab && matchesSearch;
       })
       .sort((a: any, b: any) => {
@@ -216,13 +218,13 @@ export function Attendance({ store, section, language = 'English' }: { store: an
         ))}
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[2.5rem] border shadow-sm">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2.5rem] border shadow-xl">
+        <div className="flex items-center gap-6 flex-1">
           <div className="flex bg-muted/40 p-1 rounded-xl border">
-            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">English</Button>
-            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">मराठी</Button>
+            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-10 px-6 text-[10px] font-black uppercase rounded-lg">English</Button>
+            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-10 px-6 text-[10px] font-black uppercase rounded-lg">मराठी</Button>
           </div>
-          <div>
+          <div className="flex flex-col">
             <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Presence Log</h2>
             <div className="flex bg-muted/40 p-1 rounded-xl border mt-2">
               <Button variant={activeSession === 'Morning' ? "default" : "ghost"} onClick={() => setActiveSession('Morning')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Morning</Button>
@@ -230,85 +232,89 @@ export function Attendance({ store, section, language = 'English' }: { store: an
             </div>
           </div>
         </div>
-        <div className="flex flex-1 items-center justify-center max-w-sm">
-           <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find by Name/GR..."} 
-                className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border shadow-inner">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="font-black text-primary uppercase text-[10px] min-w-[120px] text-center tracking-widest">
-              {currentDate ? format(currentDate, 'MMMM yyyy') : 'Loading...'}
-            </span>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+        
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
+          <div className="relative flex-1 lg:w-[450px]">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-primary/40" />
+            <Input 
+              placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
+              className="pl-14 h-16 rounded-[1.2rem] border-2 border-primary/10 bg-muted/20 font-black text-lg shadow-inner focus:bg-white transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <Button onClick={handlePrint} size="sm" className="font-black h-12 px-6 bg-primary text-white rounded-2xl shadow-xl active-scale">
-            <Printer className="w-4 h-4 mr-2" /> Print Sheet
-          </Button>
+          
+          <div className="flex items-center gap-2">
+             <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border shadow-inner">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="font-black text-primary uppercase text-[10px] min-w-[100px] text-center tracking-widest">
+                  {currentDate ? format(currentDate, 'MMM yyyy') : '...'}
+                </span>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <Button onClick={handlePrint} className="h-12 px-6 bg-primary text-white rounded-xl font-black uppercase text-xs shadow-lg active-scale">
+                <Printer className="w-4 h-4 mr-2" /> Print
+              </Button>
+          </div>
         </div>
       </div>
 
-      <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
-        <Table className="border-collapse min-w-max">
-          <TableHeader className="bg-muted/50 sticky top-0 z-20">
-            <TableRow className="border-b h-14">
-              <TableHead className="border-r px-6 font-black text-[10px] uppercase w-[180px] sticky left-0 bg-muted/95 z-30">Student Name</TableHead>
-              {days.map(day => (
-                <TableHead key={day.toString()} className="border-r px-1 font-black text-[10px] uppercase text-center w-[35px]">
-                  {format(day, 'd')}
-                </TableHead>
-              ))}
-              <TableHead className="px-4 font-black text-[10px] uppercase text-center w-[60px] bg-primary/5">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPlayers.length === 0 ? (
-              <TableRow><TableCell colSpan={days.length + 2} className="text-center py-10 opacity-30 font-black uppercase">No matching students found.</TableCell></TableRow>
-            ) : filteredPlayers.map((player: any) => {
-              let monthlyTotal = 0;
-              return (
-                <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
-                  <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-10 uppercase">
-                    {localMarathiView ? (player.nameMarathi || player.name) : player.name}
-                  </TableCell>
-                  {days.map(day => {
-                    const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
-                    const status = store.data.attendance[key];
-                    if (status === 'P') monthlyTotal++;
-                    return (
-                      <TableCell 
-                        key={day.toString()} 
-                        className="border-r p-0 text-center cursor-pointer transition-colors"
-                        onClick={() => handleToggle(player.id, day)}
-                      >
-                        <div className={cn(
-                          "w-full h-14 flex items-center justify-center text-[10px] font-black",
-                          status === 'P' ? "bg-primary text-white shadow-inner" : 
-                          status === 'A' ? "bg-destructive text-white shadow-inner" : 
-                          'text-muted-foreground/10'
-                        )}>
-                          {status || '-'}
-                        </div>
-                      </TableCell>
-                    );
-                  })}
-                  <TableCell className="px-4 text-center font-black text-primary text-sm bg-primary/5">{monthlyTotal}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
+        <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
+          <Table className="border-collapse min-w-max">
+            <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
+              <TableRow className="h-14">
+                <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[220px] sticky left-0 top-0 bg-slate-200 z-[60]">Student Profile</TableHead>
+                {days.map(day => (
+                  <TableHead key={day.toString()} className="border-r px-1 font-black text-[10px] uppercase text-center w-[40px] sticky top-0 bg-slate-100 z-40">
+                    {format(day, 'd')}
+                  </TableHead>
+                ))}
+                <TableHead className="px-4 font-black text-[10px] uppercase text-center w-[70px] bg-primary/10 sticky top-0 right-0 z-[60]">Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPlayers.length === 0 ? (
+                <TableRow><TableCell colSpan={days.length + 2} className="text-center py-40 opacity-20 font-black uppercase text-2xl">No registry entries</TableCell></TableRow>
+              ) : filteredPlayers.map((player: any) => {
+                let monthlyTotal = 0;
+                return (
+                  <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
+                    <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-20 uppercase border-r group-hover:bg-muted/5">
+                      {localMarathiView ? (player.nameMarathi || player.name) : player.name}
+                    </TableCell>
+                    {days.map(day => {
+                      const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;
+                      const status = store.data.attendance[key];
+                      if (status === 'P') monthlyTotal++;
+                      return (
+                        <TableCell 
+                          key={day.toString()} 
+                          className="border-r p-0 text-center cursor-pointer transition-colors"
+                          onClick={() => handleToggle(player.id, day)}
+                        >
+                          <div className={cn(
+                            "w-full h-14 flex items-center justify-center text-[10px] font-black",
+                            status === 'P' ? "bg-primary text-white shadow-inner" : 
+                            status === 'A' ? "bg-destructive text-white shadow-inner" : 
+                            'text-muted-foreground/10'
+                          )}>
+                            {status || '-'}
+                          </div>
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell className="px-4 text-center font-black text-primary text-sm bg-primary/5 sticky right-0 z-20 shadow-[-5px_0_10px_rgba(0,0,0,0.05)]">{monthlyTotal}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
     </div>
   );
