@@ -179,7 +179,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         ))}
       </div>
 
-      <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide relative">
+      <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide relative max-h-[800px]">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-50 sticky top-0 z-50 shadow-sm border-b">
               <TableRow className="h-16">

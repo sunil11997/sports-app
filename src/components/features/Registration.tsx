@@ -127,21 +127,39 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   };
 
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
+      // Robust constraints for mobile browsers and Capacitor
+      const constraints = {
+        video: {
+          facingMode: mode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      };
+      
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Access Denied' });
+    } catch (error: any) {
+      console.error("Camera Error:", error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Camera Access Denied',
+        description: 'Please ensure camera permissions are granted in your browser settings and you are using a secure (HTTPS) connection.'
+      });
     }
   };
 
   const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
     setStream(null);
     setActiveCam(null);
   };
@@ -277,7 +295,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     {!activeCam && (
                       <div className="flex gap-2">
                         <Button type="button" onClick={() => startCamera('profile', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
-                          <Camera className="w-4 h-4 mr-2" /> Open Camera
+                          <Camera className="w-4 h-4 mr-2" /> Back Camera
                         </Button>
                         <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="h-14 w-14 rounded-2xl border-2"><Upload className="w-5 h-5" /></Button>
                         <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
