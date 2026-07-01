@@ -56,13 +56,28 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     return p.std;
   }, []);
 
+  // Optimized Search & Filter Engine
   const filteredPlayers = useMemo(() => {
-    return (store.data.players || [])
+    if (!store.data.players) return [];
+    const query = searchTerm.trim().toLowerCase();
+    
+    return store.data.players
       .filter((p: any) => {
+        // 1. Section Logic (Athlete vs Student)
         const matchesSection = isGeneral ? true : p.category === 'athlete';
+        if (!matchesSection) return false;
+
+        // 2. Tab/Standard Logic
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
-        const query = searchTerm.toLowerCase();
-        return matchesSection && matchesTab && (p.name.toLowerCase().includes(query) || (p.generalRegisterNumber || "").includes(searchTerm));
+        if (!matchesTab) return false;
+
+        // 3. Search Logic (Name or GR Number)
+        if (!query) return true;
+        const name = (p.name || "").toLowerCase();
+        const marathiName = (p.nameMarathi || "").toLowerCase();
+        const gr = (p.generalRegisterNumber || "").toLowerCase();
+        
+        return name.includes(query) || marathiName.includes(query) || gr.includes(query);
       })
       .sort((a: any, b: any) => (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0));
   }, [store.data.players, isGeneral, activeCategory, getPlayerCategory, searchTerm]);
@@ -72,7 +87,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
     setIsSaving(id);
     
-    // Performance Matrix Calculation for All Core Tests
+    // Performance Matrix Calculation
     const shuttleVal = 100 - (parseFloat(current.shuttleRun || '0') * 4);
     const jumpVal = (parseFloat(current.boardJump || '0') || 0) * 0.4;
     const speedVal = 100 - (parseFloat(current.run50m || '0') * 5); 
@@ -171,26 +186,28 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
 
       <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
           <Table className="min-w-max border-collapse">
-            <TableHeader className="bg-slate-50 sticky top-0 z-20">
+            <TableHeader className="bg-slate-50 sticky top-0 z-50 shadow-sm">
               <TableRow className="h-16">
-                <TableHead className="px-8 font-black uppercase w-[200px] sticky left-0 bg-slate-50 z-30">Athlete</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px]"><Zap className="w-3 h-3 mx-auto mb-1" />10x6 Shuttle</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px]"><Trophy className="w-3 h-3 mx-auto mb-1" />Board Jump</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px]"><Timer className="w-3 h-3 mx-auto mb-1" />50m Speed</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px]"><Activity className="w-3 h-3 mx-auto mb-1" />600m Run</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px]"><Ruler className="w-3 h-3 mx-auto mb-1" />Sit & Reach</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px]"><Zap className="w-3 h-3 mx-auto mb-1" />Sit-Ups</TableHead>
-                <TableHead className="px-4 font-black uppercase text-center w-[110px] bg-primary/5">Score %</TableHead>
-                <TableHead className="px-4 font-black uppercase text-center w-[60px]">Share</TableHead>
+                <TableHead className="px-8 font-black uppercase w-[200px] sticky left-0 top-0 bg-slate-100 z-50 border-r">Student Athlete</TableHead>
+                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Zap className="w-3 h-3 mx-auto mb-1" />10x6 Shuttle</TableHead>
+                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Trophy className="w-3 h-3 mx-auto mb-1" />Board Jump</TableHead>
+                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Timer className="w-3 h-3 mx-auto mb-1" />50m Speed</TableHead>
+                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Activity className="w-3 h-3 mx-auto mb-1" />600m Run</TableHead>
+                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Ruler className="w-3 h-3 mx-auto mb-1" />Sit & Reach</TableHead>
+                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Zap className="w-3 h-3 mx-auto mb-1" />Sit-Ups</TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[110px] bg-primary/5 sticky top-0 z-40">Score %</TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[60px] sticky top-0 bg-slate-50 z-40">Share</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPlayers.map((player: any) => {
+              {filteredPlayers.length === 0 ? (
+                <TableRow><TableCell colSpan={9} className="text-center py-20 opacity-20 font-black uppercase">No matching students found.</TableCell></TableRow>
+              ) : filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                 const isPulse = lastSavedId === player.id;
                 return (
                   <TableRow key={player.id} className={cn("border-b h-16 transition-all", isPulse && "bg-emerald-50 animate-success-pulse")}>
-                    <TableCell className="px-8 font-black sticky left-0 bg-white z-10 uppercase text-[10px]">
+                    <TableCell className="px-8 font-black sticky left-0 bg-white z-10 uppercase text-[10px] border-r">
                       {localMarathiView ? (player.nameMarathi || player.name) : player.name}
                     </TableCell>
                     <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent text-xs" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
