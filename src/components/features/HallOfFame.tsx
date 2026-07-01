@@ -97,7 +97,7 @@ export function HallOfFame({ store }: { store: any }) {
             <Crown className="w-10 h-10 text-amber-500 animate-bounce" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame</h2>
+            <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame v5.1</h2>
             <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
               Recognizing the elite Top 5 athletes for every standard based on fitness and performance metrics.
             </p>
@@ -239,7 +239,7 @@ export function HallOfFame({ store }: { store: any }) {
                          ) : topBoys.map((p: any, i: number) => (
                            <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-blue-50 group hover:border-blue-400 transition-all shadow-sm">
                               <div className="flex items-center gap-4">
-                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-blue-50 text-blue-600")}>
+                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400" : "bg-blue-50 text-blue-600")}>
                                     {i + 1}
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-md">
@@ -274,7 +274,7 @@ export function HallOfFame({ store }: { store: any }) {
                          ) : topGirls.map((p: any, i: number) => (
                            <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-pink-50 group hover:border-pink-400 transition-all shadow-sm">
                               <div className="flex items-center gap-4">
-                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-pink-50 text-pink-600")}>
+                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400" : "bg-pink-50 text-pink-600")}>
                                     {i + 1}
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
