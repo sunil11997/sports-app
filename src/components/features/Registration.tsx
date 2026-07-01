@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -143,15 +144,17 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       setActiveCam(type);
       setFacingMode(mode);
     } catch (error: any) {
-      console.warn("WGB Camera: Environment mode failed, trying fallback...", error.name);
-      try {
-        const fallbackConstraints = { video: true, audio: false };
-        const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-        setStream(fallbackStream);
-        setActiveCam(type);
-        setFacingMode('user');
-      } catch (inner) {
-        toast({ variant: 'destructive', title: 'Camera Error', description: 'Failed to access camera. Check permissions.' });
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          setStream(fallbackStream);
+          setActiveCam(type);
+          setFacingMode('user');
+        } catch (inner) {
+          toast({ variant: 'destructive', title: 'Camera Error' });
+        }
+      } else {
+        toast({ variant: 'destructive', title: 'Camera Access Denied' });
       }
     }
   };

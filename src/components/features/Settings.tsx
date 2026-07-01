@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -115,17 +116,31 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     });
   };
 
+  /**
+   * toggleRotation - Hardware-Level Orientation Controller
+   * Programmatically rotates the application view.
+   */
   const toggleRotation = async () => {
     try {
       if (typeof window !== 'undefined' && window.screen?.orientation) {
-        // Unlock orientation to allow system-level rotation settings to take over
-        await (window.screen.orientation as any).unlock?.();
-        toast({ title: "Rotation Unlocked", description: "The app will now rotate with your system settings." });
+        const orientation = window.screen.orientation;
+        if (orientation.type.startsWith('portrait')) {
+          await (orientation as any).lock('landscape').catch(() => {
+             orientation.unlock();
+             toast({ title: "Rotation Enabled", description: "Turn device to rotate view." });
+          });
+          toast({ title: "Landscape Active", description: "App locked to wide view." });
+        } else {
+          await (orientation as any).lock('portrait').catch(() => {
+             orientation.unlock();
+          });
+          toast({ title: "Portrait Active", description: "App locked to tall view." });
+        }
       } else {
         throw new Error("API Not Supported");
       }
     } catch (e) {
-      toast({ title: "Unsupported", description: "Browser does not support direct orientation control.", variant: "destructive" });
+      toast({ title: "System Restricted", description: "Orientation lock requires Standalone PWA mode.", variant: "destructive" });
     }
   };
 
@@ -256,7 +271,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <Smartphone className="w-3 h-3 text-primary" /> System Controls
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
-             <SettingsItem icon={RotateCcw} color="bg-orange-600" label="Toggle Screen Rotation" sublabel="Unlock orientation for landscape" onClick={toggleRotation} />
+             <SettingsItem icon={RotateCcw} color="bg-orange-600" label="Rotate Application View" sublabel="Toggle Landscape/Portrait" onClick={toggleRotation} />
              <SettingsItem icon={Phone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
           </div>
         </div>
