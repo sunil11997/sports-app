@@ -31,7 +31,8 @@ import {
   Lock,
   Smartphone as Phone,
   UploadCloud,
-  History
+  History,
+  RotateCcw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -97,7 +98,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       }
     };
     reader.readAsText(file);
-    // Reset input
     if (restoreFileRef.current) restoreFileRef.current.value = "";
   };
 
@@ -114,6 +114,20 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       description: "App passcode has been set successfully.",
       className: "bg-primary text-white"
     });
+  };
+
+  const toggleRotation = async () => {
+    try {
+      if (typeof window !== 'undefined' && window.screen?.orientation) {
+        // Unlock orientation to allow system-level rotation settings to take over
+        await (window.screen.orientation as any).unlock?.();
+        toast({ title: "Rotation Unlocked", description: "The app will now rotate with your system settings." });
+      } else {
+        throw new Error("API Not Supported");
+      }
+    } catch (e) {
+      toast({ title: "Unsupported", description: "Browser does not support direct orientation control.", variant: "destructive" });
+    }
   };
 
   const handleAuthAction = async () => {
@@ -191,7 +205,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
         <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v4.3.24</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v5.1.0</p>
       </div>
 
       <div className="space-y-6">
@@ -238,6 +252,16 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </div>
         </div>
 
+        <div className="space-y-2">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Smartphone className="w-3 h-3 text-primary" /> System Controls
+          </label>
+          <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
+             <SettingsItem icon={RotateCcw} color="bg-orange-600" label="Toggle Screen Rotation" sublabel="Unlock orientation for landscape" onClick={toggleRotation} />
+             <SettingsItem icon={Phone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
+          </div>
+        </div>
+
         {user?.isAnonymous ? (
           <Alert className="bg-amber-50 border-amber-200 rounded-[2rem] p-6 shadow-sm">
             <Info className="h-5 w-5 text-amber-600" />
@@ -255,7 +279,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                   <p className="text-[10px] font-bold text-emerald-700/60 uppercase truncate max-w-[150px]">{user?.email}</p>
                </div>
             </div>
-            <Button variant="ghost" onClick={handleLogout} className="text-emerald-700 hover:text-destructive font-black text-[10px] uppercase">Sign Out</Button>
+            <button onClick={handleLogout} className="text-emerald-700 hover:text-destructive font-black text-[10px] uppercase">Sign Out</button>
           </div>
         )}
 
@@ -303,7 +327,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Interface Settings</label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
-            <SettingsItem icon={Phone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
             <SettingsItem icon={Languages} color="bg-purple-500" label="System Language" sublabel="Select primary display language" accessory={
               <div className="flex items-center gap-1 bg-primary/5 p-1 rounded-full border border-primary/10">
                 <Button variant={language === 'Marathi' ? "default" : "ghost"} size="sm" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setLanguage('Marathi'); }} className="h-7 rounded-full font-black text-[9px] px-3">मराठी</Button>

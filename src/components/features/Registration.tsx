@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -132,9 +133,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     }
     
     try {
-      // First attempt with preferred mode (Back Camera)
       const constraints = {
-        video: { facingMode: mode },
+        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       };
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -142,18 +142,15 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       setActiveCam(type);
       setFacingMode(mode);
     } catch (error: any) {
-      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        // Fallback to any available camera if the specific mode isn't found
-        try {
-          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          setStream(fallbackStream);
-          setActiveCam(type);
-          setFacingMode('user');
-        } catch (innerError) {
-          toast({ variant: 'destructive', title: 'Device Not Found', description: 'No camera hardware detected on this device.' });
-        }
-      } else {
-        toast({ variant: 'destructive', title: 'Camera Access Denied', description: 'Please ensure camera permissions are granted.' });
+      console.warn("WGB Camera: Environment mode failed, trying fallback...", error.name);
+      try {
+        const fallbackConstraints = { video: true, audio: false };
+        const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        setStream(fallbackStream);
+        setActiveCam(type);
+        setFacingMode('user');
+      } catch (inner) {
+        toast({ variant: 'destructive', title: 'Camera Error', description: 'Failed to access camera. Check permissions.' });
       }
     }
   };
@@ -212,7 +209,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
       await store.addPlayer({ 
         ...values, 
-        id: Math.random().toString(36).substr(2, 9), 
+        id: values.id || Math.random().toString(36).substr(2, 9), 
         age: isNaN(age) ? 0 : age,
         bmi 
       });
@@ -272,8 +269,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           <div className="flex items-center gap-6">
             <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl"><UserPlus className="w-10 h-10" /></div>
             <div>
-              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub</CardTitle>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.0 Stable</p>
+              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub V5.1</CardTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.1 Stable</p>
             </div>
           </div>
         </CardHeader>

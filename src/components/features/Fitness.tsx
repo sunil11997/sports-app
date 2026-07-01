@@ -19,7 +19,8 @@ import {
   Trophy,
   Zap,
   Timer,
-  Ruler
+  Ruler,
+  ChevronLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn, shareToWhatsApp } from '@/lib/utils';
@@ -150,7 +151,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           <div class="header">
             <div class="school-name">${schoolName}</div>
             <div class="report-type">${reportTitle}</div>
-            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.0 Stable</div>
+            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.1 Stable</div>
           </div>
           <table>
             <thead>
@@ -190,11 +191,6 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
               }).join('')}
             </tbody>
           </table>
-          <div style="margin-top: 40px; display: flex; justify-content: space-between; font-weight: 900; text-transform: uppercase; font-size: 9px;">
-            <span>Class Teacher</span>
-            <span>Physical Education Director</span>
-            <span>Principal Signature</span>
-          </div>
         </body>
       </html>
     `;
@@ -238,21 +234,21 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v5.0 Stable</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v5.1 Stable</p>
           </div>
         </div>
         <div className="flex items-center gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-[450px]">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-primary/40" />
+          <div className="relative flex-1 lg:w-[550px]">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-primary/40" />
             <Input 
               placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
-              className="pl-16 h-20 rounded-[1.5rem] border-2 border-primary/10 bg-muted/20 font-black text-xl shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/30" 
+              className="pl-16 h-24 rounded-[1.5rem] border-2 border-primary/10 bg-muted/20 font-black text-2xl shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/30" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
             />
           </div>
-          <Button onClick={handlePrint} className="h-20 px-10 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-sm shadow-2xl active-scale transition-all">
-            <Printer className="w-6 h-6 mr-3" /> Export Report
+          <Button onClick={handlePrint} className="h-24 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-sm shadow-2xl active-scale transition-all">
+            <Printer className="w-8 h-8 mr-3" /> Export Report
           </Button>
         </div>
       </div>
@@ -281,7 +277,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       </div>
 
       <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-2xl relative">
-        <div className="overflow-x-auto scrollbar-hide relative max-h-[75vh] overflow-y-auto">
+        <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
               <TableRow className="h-20">

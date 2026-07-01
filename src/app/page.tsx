@@ -39,7 +39,7 @@ import { format } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
 
 /**
- * Platinum Hub v5.0 Stable
+ * Platinum Hub v5.1 Stable
  * Hardened for Screen Rotation and Nothing Phone (2a) Safe Areas.
  */
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
@@ -154,7 +154,7 @@ export default function WaghambaApp() {
              )}
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V5.0</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V5.1</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-accent w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -233,7 +233,7 @@ export default function WaghambaApp() {
                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                       <div className="lg:col-span-7 space-y-8">
                         <div className="space-y-3">
-                          <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">Command Center</Badge>
+                          <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">Command Center V5.1</Badge>
                           <h2 className="text-5xl font-display font-black leading-tight tracking-tighter uppercase">
                             Welcome,<br/>{teacher?.teacherName?.split(' ')[0] || "Coach"}
                           </h2>

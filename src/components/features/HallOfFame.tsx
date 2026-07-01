@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 /**
- * DiscIcon - Hoisted to prevent initialization runtime errors.
+ * DiscIcon - Hoisted to top to fix runtime TypeError
  */
 const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -306,7 +306,7 @@ export function HallOfFame({ store }: { store: any }) {
            <Trophy className="w-12 h-12 text-accent mx-auto" />
            <h4 className="text-2xl font-black uppercase">Institutional Pride</h4>
            <p className="text-sm font-medium opacity-70 max-w-xl mx-auto italic">
-             "The Hall of Fame is updated in real-time based on the most recent fitness evaluations archived in the institutional registry."
+             &quot;The Hall of Fame is updated in real-time based on the most recent fitness evaluations archived in the institutional registry.&quot;
            </p>
            <Button className="mt-6 bg-accent text-white h-16 rounded-2xl px-12 font-black uppercase tracking-widest shadow-xl active-scale">
              Export Annual Medalist PDF
