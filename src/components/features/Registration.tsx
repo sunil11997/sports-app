@@ -132,26 +132,29 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     }
     
     try {
+      // First attempt with preferred mode (Back Camera)
       const constraints = {
-        video: {
-          facingMode: mode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+        video: { facingMode: mode },
         audio: false
       };
-      
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
     } catch (error: any) {
-      console.error("Camera Error:", error);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Camera Access Denied',
-        description: 'Please ensure camera permissions are granted in your settings.'
-      });
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        // Fallback to any available camera if the specific mode isn't found
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setStream(fallbackStream);
+          setActiveCam(type);
+          setFacingMode('user');
+        } catch (innerError) {
+          toast({ variant: 'destructive', title: 'Device Not Found', description: 'No camera hardware detected on this device.' });
+        }
+      } else {
+        toast({ variant: 'destructive', title: 'Camera Access Denied', description: 'Please ensure camera permissions are granted.' });
+      }
     }
   };
 
@@ -293,9 +296,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     </div>
                     {!activeCam && (
                       <div className="flex gap-2">
-                        <Button type="button" onClick={() => startCamera('profile', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
+                        <button type="button" onClick={() => startCamera('profile', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
                           <Camera className="w-4 h-4 mr-2" /> Back Camera
-                        </Button>
+                        </button>
                         <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="h-14 w-14 rounded-2xl border-2"><Upload className="w-5 h-5" /></Button>
                         <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
                       </div>
@@ -321,7 +324,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     </div>
                     {!activeCam && (
                        <div className="flex gap-2">
-                          <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-12 font-black uppercase text-[9px]">Back Scan</Button>
+                          <button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-12 font-black uppercase text-[9px]">Back Scan</button>
                           <Button type="button" onClick={() => aadharUploadRef.current?.click()} variant="outline" className="h-12 w-12 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
                           <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                        </div>

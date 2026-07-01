@@ -86,14 +86,24 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
+      const constraints = { video: { facingMode: mode }, audio: false };
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Error' });
+    } catch (error: any) {
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setStream(fallbackStream);
+          setActiveCam(type);
+          setFacingMode('user');
+        } catch (inner) {
+          toast({ variant: 'destructive', title: 'Camera Not Found' });
+        }
+      } else {
+        toast({ variant: 'destructive', title: 'Camera Access Denied' });
+      }
     }
   };
 
