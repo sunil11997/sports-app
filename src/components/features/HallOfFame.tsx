@@ -157,7 +157,7 @@ export function HallOfFame({ store }: { store: any }) {
                   <div className="flex-1 border-b-4 border-dashed border-primary/10 pb-4">
                     <h3 className="text-3xl font-black text-primary uppercase tracking-tighter">Standard {std} Elite Squad</h3>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mt-1">
-                      <MetricIcon className={cn("w-3 h-3", currentMetricConfig.color)} /> {currentMetricConfig.label} Registry &bull; {format(new Date(selectedMonth + "-01"), 'MMMM yyyy')}
+                      <MetricIcon className={cn("w-3 h-3", currentMetricConfig.color)} /> {currentMetricConfig.label} Registry & bull; {format(new Date(selectedMonth + "-01"), 'MMMM yyyy')}
                     </p>
                   </div>
                </div>

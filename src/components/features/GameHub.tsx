@@ -65,14 +65,12 @@ export function GameHub({ store }: { store: any }) {
       <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border-2 border-primary/10 shadow-sm">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <button 
               onClick={() => setSelectedGame(null)} 
-              className="rounded-full h-12 w-12 hover:bg-primary/5 text-primary"
+              className="rounded-full h-12 w-12 hover:bg-primary/5 text-primary flex items-center justify-center"
             >
               <ArrowLeft className="w-6 h-6" />
-            </Button>
+            </button>
             <div className="h-10 w-px bg-muted mx-2" />
             <div>
               <h2 className="text-3xl font-black text-primary uppercase tracking-tight leading-none">{selectedGame} Hub</h2>

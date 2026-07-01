@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
@@ -29,7 +29,8 @@ import {
   Medal,
   BrainCircuit,
   ClipboardList,
-  Crown
+  Crown,
+  RotateCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -37,6 +38,7 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Platinum Hub v5.1 Stable
@@ -81,6 +83,7 @@ const LOGO_PATH = "/icon-512.png";
 const SPLASH_LOTTIE_URL = "https://lottie.host/33acb9fa-1151-11ee-9728-ff4c18263730/8X5iIe9y9f.json";
 
 export default function WaghambaApp() {
+  const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [splashData, setSplashData] = useState<any>(null);
@@ -120,6 +123,30 @@ export default function WaghambaApp() {
       return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, auth, isMounted]);
+
+  const toggleRotation = useCallback(async () => {
+    try {
+      if (typeof window !== 'undefined' && window.screen?.orientation) {
+        const orientation = window.screen.orientation;
+        if (orientation.type.startsWith('portrait')) {
+          await (orientation as any).lock('landscape').catch(() => {
+             orientation.unlock();
+             toast({ title: "Rotation Enabled", description: "Turn device to rotate view." });
+          });
+          toast({ title: "Landscape Active", description: "App locked to wide view." });
+        } else {
+          await (orientation as any).lock('portrait').catch(() => {
+             orientation.unlock();
+          });
+          toast({ title: "Portrait Active", description: "App locked to tall view." });
+        }
+      } else {
+        toast({ title: "System Restricted", description: "Rotation API requires PWA mode." });
+      }
+    } catch (e) {
+      toast({ title: "System Restricted", description: "Orientation lock restricted by browser.", variant: "destructive" });
+    }
+  }, [toast]);
 
   const t = useMemo(() => translations[language], [language]);
 
@@ -197,6 +224,9 @@ export default function WaghambaApp() {
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleRotation} className="h-8 w-8 rounded-full bg-primary/5 text-primary flex items-center justify-center hover:bg-primary/10 transition-colors">
+                <RotateCw className="w-4 h-4" />
+              </button>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
                 <CalendarDays className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">{headerDate}</span>
@@ -243,9 +273,14 @@ export default function WaghambaApp() {
                            <p className="text-5xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
                            <p className="text-sm font-bold text-white/60">Active Registry</p>
                         </div>
-                        <Button onClick={() => setSubTab('roster')} className="h-20 w-full md:auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
-                          Manage Registry <ArrowRight className="ml-4 w-6 h-6" />
-                        </Button>
+                        <div className="flex gap-4">
+                          <Button onClick={() => setSubTab('roster')} className="h-20 flex-1 px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
+                            Manage <ArrowRight className="ml-4 w-6 h-6" />
+                          </Button>
+                          <Button onClick={toggleRotation} variant="outline" className="h-20 w-20 rounded-3xl border-2 border-white/20 bg-white/5 hover:bg-white/10">
+                            <RotateCw className="w-8 h-8 text-white" />
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="lg:col-span-5 grid grid-cols-1 gap-4">
@@ -404,9 +439,12 @@ export default function WaghambaApp() {
             <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "SPORTS HUB"}</span>
           </h1>
         </div>
-        <div className="flex flex-col gap-4 max-sm mx-auto w-full">
+        <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
           <Button onClick={() => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl active-scale">
             {translations[language].enter} <ArrowRight className="ml-4 w-6 h-6" />
+          </Button>
+          <Button onClick={toggleRotation} variant="outline" className="h-16 rounded-[2rem] border-2 border-primary/10 text-primary font-display font-black uppercase tracking-widest shadow-sm active-scale">
+            <RotateCw className="mr-3 w-5 h-5" /> Rotate View
           </Button>
           <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-display font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
             <Star className="w-4 h-4" /> {language === 'English' ? 'मराठी (Marathi)' : 'English'}
