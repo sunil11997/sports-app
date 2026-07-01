@@ -52,7 +52,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const [searchTerm, setSearchTerm] = useState("");
 
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,7 +85,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     return { en: "Obese", mr: "अति वजन" };
   };
 
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
+  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ 
@@ -396,7 +396,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         </div>
                         {!activeCam && (
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                            <Button size="sm" variant="outline" className="flex-1 rounded-xl h-10 font-black text-[9px]" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
                             <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border"><Upload className="w-3 h-3" /></Button>
                             <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
                           </div>

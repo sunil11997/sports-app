@@ -56,22 +56,18 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     return p.std;
   }, []);
 
-  // Optimized Search & Filter Engine
   const filteredPlayers = useMemo(() => {
     if (!store.data.players) return [];
     const query = searchTerm.trim().toLowerCase();
     
     return store.data.players
       .filter((p: any) => {
-        // 1. Section Logic (Athlete vs Student)
         const matchesSection = isGeneral ? true : p.category === 'athlete';
         if (!matchesSection) return false;
 
-        // 2. Tab/Standard Logic
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
         if (!matchesTab) return false;
 
-        // 3. Search Logic (Name or GR Number)
         if (!query) return true;
         const name = (p.name || "").toLowerCase();
         const marathiName = (p.nameMarathi || "").toLowerCase();
@@ -87,7 +83,6 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
     setIsSaving(id);
     
-    // Performance Matrix Calculation
     const shuttleVal = 100 - (parseFloat(current.shuttleRun || '0') * 4);
     const jumpVal = (parseFloat(current.boardJump || '0') || 0) * 0.4;
     const speedVal = 100 - (parseFloat(current.run50m || '0') * 5); 
@@ -184,9 +179,9 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         ))}
       </div>
 
-      <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide">
+      <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide relative">
           <Table className="min-w-max border-collapse">
-            <TableHeader className="bg-slate-50 sticky top-0 z-50 shadow-sm">
+            <TableHeader className="bg-slate-50 sticky top-0 z-50 shadow-sm border-b">
               <TableRow className="h-16">
                 <TableHead className="px-8 font-black uppercase w-[200px] sticky left-0 top-0 bg-slate-100 z-50 border-r">Student Athlete</TableHead>
                 <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Zap className="w-3 h-3 mx-auto mb-1" />10x6 Shuttle</TableHead>

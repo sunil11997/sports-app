@@ -73,7 +73,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const { isOnline } = usePWA();
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,7 +126,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     toast({ title: "Data Fetched", description: `Loaded registry details for ${student.name}.` });
   };
 
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
+  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({ 
@@ -276,7 +276,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     </div>
                     {!activeCam && (
                       <div className="flex gap-2">
-                        <Button type="button" onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
+                        <Button type="button" onClick={() => startCamera('profile', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
                           <Camera className="w-4 h-4 mr-2" /> Open Camera
                         </Button>
                         <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="h-14 w-14 rounded-2xl border-2"><Upload className="w-5 h-5" /></Button>
