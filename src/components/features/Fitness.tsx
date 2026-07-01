@@ -49,8 +49,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
   }, [language]);
 
   const isGeneral = section === 'general';
-  const categories = GENERAL_CATEGORIES;
-
+  
   const getPlayerCategory = useCallback((p: any) => {
     if (!p) return 'all';
     return p.std;
@@ -62,8 +61,6 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     
     return store.data.players
       .filter((p: any) => {
-        // Institutional Filter: In Fitness Hub, we show both athletes and students
-        // unless explicitly told otherwise, but we respect the category tab selection.
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
         if (!matchesTab) return false;
 
@@ -83,9 +80,8 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
   }, [store.data.players, activeCategory, getPlayerCategory, searchTerm]);
 
   const handleAutoSave = async (playerId: string) => {
-    const id = playerId;
-    const current = { ...(assessments[id] || store.data.fitness?.[id] || {}) };
-    setIsSaving(id);
+    const current = { ...(assessments[playerId] || store.data.fitness?.[playerId] || {}) };
+    setIsSaving(playerId);
     
     const shuttleVal = 100 - (parseFloat(current.shuttleRun || '0') * 4);
     const jumpVal = (parseFloat(current.boardJump || '0') || 0) * 0.4;
@@ -105,11 +101,109 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     current.score = Math.round(avgScore).toString();
     current.status = avgScore >= 80 ? 'Elite' : avgScore >= 60 ? 'Optimal' : 'Developing';
 
-    await store.setFitness(id, { ...current, playerId: id, month: format(new Date(), 'yyyy-MM') });
+    await store.setFitness(playerId, { ...current, playerId, month: format(new Date(), 'yyyy-MM') });
     
-    setLastSavedId(id);
+    setLastSavedId(playerId);
     setTimeout(() => setLastSavedId(null), 800);
     setIsSaving(null);
+  };
+
+  const handlePrint = () => {
+    const isM = localMarathiView;
+    const schoolName = isM 
+      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const reportTitle = isM 
+      ? `विद्यार्थी शारीरिक क्षमता चाचणी अहवाल - ${activeCategory === 'all' ? 'सर्व इयत्ता' : 'इयत्ता ' + activeCategory}`
+      : `Student Physical Fitness Registry - ${activeCategory === 'all' ? 'All Classes' : 'Standard ' + activeCategory}`;
+
+    const printContent = `
+      <html>
+        <head>
+          <title>Fitness Registry - ${format(new Date(), 'dd/MM/yyyy')}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+            @media print { 
+              @page { size: landscape; margin: 1cm; } 
+              .no-print { display: none !important; } 
+              body { padding-top: 0 !important; }
+            }
+            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
+            .school-name { font-size: 18px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+            th { background-color: #f2f2f2; font-weight: 900; text-transform: uppercase; font-size: 8px; }
+            .name-cell { text-align: left; font-weight: 900; min-width: 150px; text-transform: uppercase; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+            .btn { cursor: pointer; padding: 12px 25px; border-radius: 12px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; transition: all 0.2s; }
+            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-print { background: #f59e0b; color: white; box-shadow: 0 4px 10px rgba(245,158,11,0.3); }
+            .btn:active { scale: 0.95; }
+          </style>
+        </head>
+        <body style="padding-top: 80px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; ${isM ? 'मागे जा' : 'GO BACK'}</button>
+            <button onclick="window.print()" class="btn btn-print">${isM ? 'प्रिंट करा' : 'CONFIRM PRINT'}</button>
+          </div>
+          <div class="header">
+            <div class="school-name">${schoolName}</div>
+            <div class="report-type">${reportTitle}</div>
+            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.0 Stable</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>SNR</th>
+                <th>STUDENT NAME</th>
+                <th>STD</th>
+                <th>10x6 SHUTTLE</th>
+                <th>BOARD JUMP</th>
+                <th>50m RUN</th>
+                <th>600m RUN</th>
+                <th>SIT & REACH</th>
+                <th>SIT-UPS</th>
+                <th>SCORE %</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredPlayers.map((p: any, i: number) => {
+                const fit = store.data.fitness?.[p.id] || {};
+                const dName = isM ? (p.nameMarathi || p.name) : p.name;
+                return `
+                  <tr>
+                    <td>${p.serialNumber || i+1}</td>
+                    <td class="name-cell">${dName}</td>
+                    <td>${p.std}</td>
+                    <td>${fit.shuttleRun || '-'}</td>
+                    <td>${fit.boardJump || '-'}</td>
+                    <td>${fit.run50m || '-'}</td>
+                    <td>${fit.run600m || '-'}</td>
+                    <td>${fit.sitAndReach || '-'}</td>
+                    <td>${fit.sitUps || '-'}</td>
+                    <td><strong>${fit.score || '0'}%</strong></td>
+                    <td><strong>${fit.status || 'Active'}</strong></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top: 40px; display: flex; justify-content: space-between; font-weight: 900; text-transform: uppercase; font-size: 9px;">
+            <span>Class Teacher</span>
+            <span>Physical Education Director</span>
+            <span>Principal Signature</span>
+          </div>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(printContent);
+      win.document.close();
+    }
   };
 
   const handleWhatsAppShare = (player: any) => {
@@ -149,23 +243,23 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           </div>
         </div>
         <div className="flex items-center gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <div className="relative flex-1 lg:w-[450px]">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-primary/40" />
             <Input 
               placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
-              className="pl-12 h-16 rounded-2xl border-2 border-primary/10 bg-muted/20 font-black text-lg shadow-inner focus:bg-white transition-all" 
+              className="pl-16 h-20 rounded-[1.5rem] border-2 border-primary/10 bg-muted/20 font-black text-xl shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/30" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
             />
           </div>
-          <Button onClick={() => window.print()} className="h-16 px-10 bg-primary hover:bg-primary/90 rounded-2xl font-black uppercase text-xs shadow-2xl active-scale transition-all">
-            <Printer className="w-5 h-5 mr-3" /> Print Registry
+          <Button onClick={handlePrint} className="h-20 px-10 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-sm shadow-2xl active-scale transition-all">
+            <Printer className="w-6 h-6 mr-3" /> Export Report
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2 p-2 bg-muted/40 rounded-[2rem] border shadow-inner overflow-x-auto scrollbar-hide">
-        {categories.map(cat => (
+        {GENERAL_CATEGORIES.map(cat => (
           <Button
             key={cat.id}
             variant={activeCategory === cat.id ? "default" : "ghost"}
@@ -188,7 +282,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       </div>
 
       <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-2xl relative">
-        <div className="overflow-x-auto scrollbar-hide relative max-h-[75vh] overflow-y-auto">
+        <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
               <TableRow className="h-20">
