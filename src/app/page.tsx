@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -39,7 +40,7 @@ import { PasscodeLock } from '@/components/features/PasscodeLock';
 
 /**
  * Platinum Hub v5.0 Stable
- * Standard-wise Registry Architecture
+ * Hardened for Screen Rotation and Nothing Phone (2a) Safe Areas.
  */
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });

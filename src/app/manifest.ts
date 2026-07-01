@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * v3.4.1: Prioritizing icon-512.png as the high-resolution primary identity for professional Android installation.
+ * v5.0.0: Enabled 'any' orientation to support screen rotation.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#1e3a8a', 
     theme_color: '#1e3a8a',
-    orientation: 'portrait',
+    orientation: 'any',
     icons: [
       {
         src: '/icon-512.png',

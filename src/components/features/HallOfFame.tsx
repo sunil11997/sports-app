@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -22,6 +23,7 @@ import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
+// 1. Hoisted component to top to prevent "reading 'call'" runtime error
 const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="10" />
@@ -48,6 +50,7 @@ export function HallOfFame({ store }: { store: any }) {
 
   const currentMetricConfig = useMemo(() => METRICS.find(m => m.id === activeMetric)!, [activeMetric]);
 
+  // Hardened with explicit types to resolve build failures
   const getRankings = (std: string, gender: 'Male' | 'Female') => {
     const playersInStd = (store.data.players || []).filter((p: any) => p.std === std && p.gender === gender);
     

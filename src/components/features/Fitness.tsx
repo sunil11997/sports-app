@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -48,8 +49,6 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     setLocalMarathiView(language === 'Marathi');
   }, [language]);
 
-  const isGeneral = section === 'general';
-  
   const getPlayerCategory = useCallback((p: any) => {
     if (!p) return 'all';
     return p.std;
