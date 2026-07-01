@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 /**
- * DiscIcon - Hoisted to top to fix runtime TypeError
+ * DiscIcon - Component hoisted to fix TypeError initialization
  */
 const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>

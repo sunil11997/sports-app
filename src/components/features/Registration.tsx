@@ -44,7 +44,7 @@ const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 const formSchema = z.object({
-  id: z.string().optional(),
+  id: z.string().optional().default(""),
   name: z.string().min(2, "Name is required"),
   nameMarathi: z.string().optional().default(""),
   std: z.string().min(1, "Standard is required"),

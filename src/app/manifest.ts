@@ -3,12 +3,12 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * v5.0.0: Enabled 'any' orientation to support screen rotation.
+ * v5.1.0: Enabled 'any' orientation to support screen rotation across all devices.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Waghamba Institutional Sports & Health Hub',
-    short_name: 'WGB Sports',
+    short_name: 'WGB Hub v5.1',
     description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',
