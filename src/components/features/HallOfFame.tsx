@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 
 /**
  * Module Components for Hall of Fame
+ * Hoisted to top to prevent runtime TypeError during initialization
  */
 const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -79,7 +80,7 @@ export function HallOfFame({ store }: { store: any }) {
       
       toast({ title: "Registry Updated", description: "Performance data archived successfully." });
     } catch (error) {
-      console.error(error);
+      console.error("WGB Rank Engine Error:", error);
       toast({ variant: "destructive", title: "Sync Error" });
     } finally {
       setIsSaving(null);

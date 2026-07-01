@@ -62,9 +62,8 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     
     return store.data.players
       .filter((p: any) => {
-        const matchesSection = isGeneral ? true : p.category === 'athlete';
-        if (!matchesSection) return false;
-
+        // Institutional Filter: In Fitness Hub, we show both athletes and students
+        // unless explicitly told otherwise, but we respect the category tab selection.
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
         if (!matchesTab) return false;
 
@@ -75,8 +74,13 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         
         return name.includes(query) || marathiName.includes(query) || gr.includes(query);
       })
-      .sort((a: any, b: any) => (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0));
-  }, [store.data.players, isGeneral, activeCategory, getPlayerCategory, searchTerm]);
+      .sort((a: any, b: any) => {
+        const stdA = parseInt(a.std) || 0;
+        const stdB = parseInt(b.std) || 0;
+        if (stdA !== stdB) return stdA - stdB;
+        return (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0);
+      });
+  }, [store.data.players, activeCategory, getPlayerCategory, searchTerm]);
 
   const handleAutoSave = async (playerId: string) => {
     const id = playerId;
@@ -136,87 +140,120 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[3rem] border shadow-xl">
         <div className="flex items-center gap-6 flex-1">
-          <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center border-2 border-accent/20">
-            <Flame className="w-9 h-9 text-accent animate-pulse" />
+          <div className="w-20 h-20 bg-accent/10 rounded-[2rem] flex items-center justify-center border-2 border-accent/20 shadow-inner">
+            <Flame className="w-10 h-10 text-accent animate-pulse" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Exhaustive Physical Evaluation Registry</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v5.0 Stable</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-4 w-full lg:w-auto">
+          <div className="relative flex-1 lg:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 
-              placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Search Name/GR..."} 
-              className="pl-9 h-11 rounded-full border-2 bg-muted/20" 
+              placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
+              className="pl-12 h-16 rounded-2xl border-2 border-primary/10 bg-muted/20 font-black text-lg shadow-inner focus:bg-white transition-all" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
             />
           </div>
-          <Badge className="bg-primary/5 text-primary border-primary/10 px-4 h-11 flex items-center gap-2">
-            {isOnline ? <RefreshCw className="w-4 h-4 animate-spin text-emerald-500" /> : <WifiOff className="w-4 h-4 text-destructive" />}
-            {isOnline ? 'Cloud Sync' : 'Offline'}
-          </Badge>
-          <Button onClick={() => window.print()} className="h-11 px-8 bg-primary rounded-xl font-black uppercase text-xs shadow-lg"><Printer className="w-4 h-4 mr-2" /> Print</Button>
+          <Button onClick={() => window.print()} className="h-16 px-10 bg-primary hover:bg-primary/90 rounded-2xl font-black uppercase text-xs shadow-2xl active-scale transition-all">
+            <Printer className="w-5 h-5 mr-3" /> Print Registry
+          </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/40 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
+      <div className="flex flex-wrap gap-2 p-2 bg-muted/40 rounded-[2rem] border shadow-inner overflow-x-auto scrollbar-hide">
         {categories.map(cat => (
           <Button
             key={cat.id}
             variant={activeCategory === cat.id ? "default" : "ghost"}
             size="sm"
             className={cn(
-              "h-9 rounded-xl px-5 text-[10px] font-black uppercase transition-all whitespace-nowrap",
-              activeCategory === cat.id ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:bg-white'
+              "h-11 rounded-xl px-8 text-[11px] font-black uppercase transition-all whitespace-nowrap",
+              activeCategory === cat.id ? 'bg-primary text-white shadow-lg scale-105' : 'text-muted-foreground hover:bg-white'
             )}
             onClick={() => setActiveCategory(cat.id)}
           >
             {cat.label}
           </Button>
         ))}
+        <div className="ml-auto flex items-center px-4">
+           <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 h-8 flex items-center gap-2 px-4 rounded-full">
+              <RefreshCw className={cn("w-3 h-3", isOnline && "animate-spin")} />
+              {isOnline ? 'CLOUD SYNC' : 'OFFLINE MODE'}
+           </Badge>
+        </div>
       </div>
 
-      <div className="border rounded-[3rem] overflow-hidden bg-white shadow-2xl overflow-x-auto scrollbar-hide relative max-h-[800px]">
+      <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-2xl relative">
+        <div className="overflow-x-auto scrollbar-hide relative max-h-[75vh] overflow-y-auto">
           <Table className="min-w-max border-collapse">
-            <TableHeader className="bg-slate-50 sticky top-0 z-50 shadow-sm border-b">
-              <TableRow className="h-16">
-                <TableHead className="px-8 font-black uppercase w-[200px] sticky left-0 top-0 bg-slate-100 z-50 border-r">Student Athlete</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Zap className="w-3 h-3 mx-auto mb-1" />10x6 Shuttle</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Trophy className="w-3 h-3 mx-auto mb-1" />Board Jump</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Timer className="w-3 h-3 mx-auto mb-1" />50m Speed</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Activity className="w-3 h-3 mx-auto mb-1" />600m Run</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Ruler className="w-3 h-3 mx-auto mb-1" />Sit & Reach</TableHead>
-                <TableHead className="px-2 font-black text-[8px] uppercase text-center w-[90px] sticky top-0 bg-slate-50 z-40 border-r"><Zap className="w-3 h-3 mx-auto mb-1" />Sit-Ups</TableHead>
-                <TableHead className="px-4 font-black uppercase text-center w-[110px] bg-primary/5 sticky top-0 z-40">Score %</TableHead>
-                <TableHead className="px-4 font-black uppercase text-center w-[60px] sticky top-0 bg-slate-50 z-40">Share</TableHead>
+            <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
+              <TableRow className="h-20">
+                <TableHead className="px-10 font-black uppercase w-[250px] sticky left-0 top-0 bg-slate-200 z-[60] border-r">
+                   Student Profile
+                </TableHead>
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Zap className="w-4 h-4 mx-auto mb-2 text-accent" />10x6 Shuttle
+                </TableHead>
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Trophy className="w-4 h-4 mx-auto mb-2 text-amber-500" />Board Jump
+                </TableHead>
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Timer className="w-4 h-4 mx-auto mb-2 text-blue-500" />50m Speed
+                </TableHead>
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Activity className="w-4 h-4 mx-auto mb-2 text-emerald-500" />600m Run
+                </TableHead>
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Ruler className="w-4 h-4 mx-auto mb-2 text-purple-500" />Sit & Reach
+                </TableHead>
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Zap className="w-4 h-4 mx-auto mb-2 text-rose-500" />Sit-Ups
+                </TableHead>
+                <TableHead className="px-6 font-black uppercase text-center w-[130px] bg-primary/10 sticky top-0 z-40 border-r">
+                   Fitness %
+                </TableHead>
+                <TableHead className="px-4 font-black uppercase text-center w-[80px] sticky top-0 bg-slate-100 z-40">
+                   Report
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPlayers.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-20 opacity-20 font-black uppercase">No matching students found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-40 opacity-20 font-black uppercase text-2xl tracking-[0.3em]">No registry entries</TableCell></TableRow>
               ) : filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                 const isPulse = lastSavedId === player.id;
+                const isSyncing = isSaving === player.id;
                 return (
-                  <TableRow key={player.id} className={cn("border-b h-16 transition-all", isPulse && "bg-emerald-50 animate-success-pulse")}>
-                    <TableCell className="px-8 font-black sticky left-0 bg-white z-10 uppercase text-[10px] border-r">
-                      {localMarathiView ? (player.nameMarathi || player.name) : player.name}
+                  <TableRow key={player.id} className={cn("border-b h-20 transition-all", isPulse && "bg-emerald-50 animate-success-pulse", isSyncing && "bg-muted/50")}>
+                    <TableCell className="px-10 font-black sticky left-0 bg-white z-20 uppercase text-xs border-r group-hover:bg-muted/5 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="text-primary leading-none truncate max-w-[200px]">{localMarathiView ? (player.nameMarathi || player.name) : player.name}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Roll #{player.serialNumber || '0'} &bull; Std {player.std}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent text-xs" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" className="h-16 text-center border-0 bg-transparent text-xs" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent text-xs" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent text-xs" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-16 text-center border-0 bg-transparent text-xs" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" className="h-16 text-center border-0 bg-transparent text-xs" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                    <TableCell className="p-4 text-center bg-primary/5">
-                      <span className="text-lg font-black text-primary">{current.score || '0'}%</span>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                    <TableCell className="p-6 text-center bg-primary/5 border-r">
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-2xl font-black text-primary leading-none">{current.score || '0'}%</span>
+                        <Badge className={cn(
+                          "mt-2 text-[8px] font-black uppercase border-0 px-3",
+                          current.status === 'Elite' ? "bg-amber-400 text-white" : "bg-emerald-500 text-white"
+                        )}>{current.status || 'Active'}</Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="p-2 text-center">
-                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50">
-                        <MessageSquare className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50 rounded-full h-12 w-12 shadow-inner border border-transparent hover:border-emerald-100">
+                        <MessageSquare className="w-5 h-5" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -224,7 +261,8 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
               })}
             </TableBody>
           </Table>
-      </div>
+        </div>
+      </Card>
     </div>
   );
 }
