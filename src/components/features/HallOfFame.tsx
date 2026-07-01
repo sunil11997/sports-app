@@ -23,7 +23,9 @@ import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
-// 1. Hoisted component to top to prevent "reading 'call'" runtime error
+/**
+ * DiscIcon - Hoisted to prevent initialization runtime errors.
+ */
 const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="10" />
@@ -50,7 +52,6 @@ export function HallOfFame({ store }: { store: any }) {
 
   const currentMetricConfig = useMemo(() => METRICS.find(m => m.id === activeMetric)!, [activeMetric]);
 
-  // Hardened with explicit types to resolve build failures
   const getRankings = (std: string, gender: 'Male' | 'Female') => {
     const playersInStd = (store.data.players || []).filter((p: any) => p.std === std && p.gender === gender);
     
@@ -305,7 +306,7 @@ export function HallOfFame({ store }: { store: any }) {
            <Trophy className="w-12 h-12 text-accent mx-auto" />
            <h4 className="text-2xl font-black uppercase">Institutional Pride</h4>
            <p className="text-sm font-medium opacity-70 max-w-xl mx-auto italic">
-             &quot;The Hall of Fame is updated in real-time based on the most recent fitness evaluations archived in the institutional registry.&quot;
+             "The Hall of Fame is updated in real-time based on the most recent fitness evaluations archived in the institutional registry."
            </p>
            <Button className="mt-6 bg-accent text-white h-16 rounded-2xl px-12 font-black uppercase tracking-widest shadow-xl active-scale">
              Export Annual Medalist PDF
