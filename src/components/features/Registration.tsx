@@ -122,7 +122,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const handleAutoFill = (student: any) => {
     form.reset({ 
       ...student, 
-      category: (section === 'sports' ? 'athlete' : student.category) as "athlete" | "student" 
+      category: (section === 'sports' ? 'athlete' : (student.category || 'student')) as "athlete" | "student" 
     });
     setRegistrySearch("");
     toast({ title: "Data Fetched", description: `Loaded registry details for ${student.name}.` });
