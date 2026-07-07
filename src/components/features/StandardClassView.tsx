@@ -35,7 +35,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -48,6 +48,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   const [searchTerm, setSearchTerm] = useState("");
+
+  const editingAgeValidation = useMemo(() => getAgeValidation(editingPlayer?.dob), [editingPlayer?.dob]);
 
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -119,7 +121,14 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      store.updatePlayer(editingPlayer);
+      const ageValidation = getAgeValidation(editingPlayer.dob);
+      const updatedPlayer = {
+        ...editingPlayer,
+        age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
+        ageCategory: ageValidation ? ageValidation.category : "None",
+        ageDetailed: ageValidation ? ageValidation.ageString : "",
+      };
+      store.updatePlayer(updatedPlayer);
       setEditingPlayer(null);
       stopCamera();
       toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
@@ -210,7 +219,15 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <AvatarImage src={student.photoUrl} className="object-cover" />
                         <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{student.name[0]}</AvatarFallback>
                       </Avatar>
-                      {isMarathiView ? (student.nameMarathi || student.name) : student.name}
+                      <div>
+                        <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || student.name) : student.name}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Age {student.age}
+                          {student.ageCategory && student.ageCategory !== "None" && (
+                            <> &bull; {getLocalizedAgeCategory(student.ageCategory, isMarathiView)}</>
+                          )}
+                        </p>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
@@ -350,6 +367,59 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                       </div>
+
+                      {editingAgeValidation && (
+                        <div className="p-6 bg-slate-50 rounded-[2rem] border-2 border-primary/5 space-y-4 shadow-inner">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "जन्म तारीख" : "Date of Birth"}
+                              </span>
+                              <p className="text-sm font-black text-primary">{editingPlayer.dob}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "वय (३१ डिसेंबर २०२६ रोजी)" : "Age (as of 31 Dec 2026)"}
+                              </span>
+                              <p className="text-sm font-black text-primary">
+                                {isMarathiView ? (
+                                  editingAgeValidation.ageString
+                                    .replace(/Years/g, "वर्षे")
+                                    .replace(/Months/g, "महिने")
+                                    .replace(/Days/g, "दिवस")
+                                ) : (
+                                  editingAgeValidation.ageString
+                                )}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "नियुक्त गट" : "Assigned Category"}
+                              </span>
+                              <p className={cn("text-sm font-black uppercase", editingAgeValidation.eligible ? "text-primary" : "text-destructive")}>
+                                {getLocalizedAgeCategory(editingAgeValidation.category, isMarathiView)}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "पात्रता स्थिती" : "Eligibility Status"}
+                              </span>
+                              <div>
+                                <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", 
+                                  editingAgeValidation.eligible ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-destructive/5 text-destructive border border-destructive/20"
+                                )}>
+                                  {editingAgeValidation.eligible ? (isMarathiView ? "पात्र" : "Eligible") : (isMarathiView ? "अपात्र" : "Not eligible")}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {!editingAgeValidation.eligible && (
+                            <p className="text-xs font-black text-destructive uppercase tracking-wide bg-destructive/5 p-3 rounded-xl border border-destructive/10">
+                              {isMarathiView ? "उपलब्ध वयोगटासाठी पात्र नाही." : "Not eligible for available age categories."}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Sit Ht</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>

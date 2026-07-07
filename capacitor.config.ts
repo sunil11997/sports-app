@@ -6,7 +6,8 @@ const config: CapacitorConfig = {
   appName: 'Physical Education App',
   webDir: 'out',
   server: {
-    androidScheme: 'https'
+    url: 'http://10.54.20.193:9002',
+    cleartext: true
   }
 };
 

@@ -12,7 +12,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Fragments allowed queries here for sub-packages
-             indexedErrors true
+             // indexedErrors true
         }
     }
     buildTypes {
@@ -32,6 +32,7 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation project(':capacitor-android')
     implementation project(':capacitor-cordova-android-plugins')
     implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0'

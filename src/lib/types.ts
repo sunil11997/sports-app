@@ -25,6 +25,8 @@ export interface Player {
   category: 'athlete' | 'student';
   examMarks?: string;
   academicYear?: string;
+  ageCategory?: string;
+  ageDetailed?: string;
 }
 
 export interface SchoolProfile {

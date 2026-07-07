@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -47,6 +47,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(false);
+  
+  const editingAgeValidation = useMemo(() => getAgeValidation(editingPlayer?.dob), [editingPlayer?.dob]);
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -72,7 +74,14 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
 
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
-      store.updatePlayer(editingPlayer);
+      const ageValidation = getAgeValidation(editingPlayer.dob);
+      const updatedPlayer = {
+        ...editingPlayer,
+        age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
+        ageCategory: ageValidation ? ageValidation.category : "None",
+        ageDetailed: ageValidation ? ageValidation.ageString : "",
+      };
+      store.updatePlayer(updatedPlayer);
       setEditingPlayer(null);
       stopCamera();
       toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
@@ -175,7 +184,12 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       </Avatar>
                       <div>
                         <p className="font-black text-sm uppercase text-primary">{isMarathiView ? (p.nameMarathi || p.name) : p.name}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{p.gender} &bull; Age {p.age}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">
+                          {p.gender} &bull; Age {p.age}
+                          {p.ageCategory && p.ageCategory !== "None" && (
+                            <> &bull; {getLocalizedAgeCategory(p.ageCategory, isMarathiView)}</>
+                          )}
+                        </p>
                       </div>
                     </div>
                   </TableCell>
@@ -285,6 +299,59 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Ruler className="w-3 h-3" /> Sit Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Weight className="w-3 h-3" /> Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                       </div>
+
+                      {editingAgeValidation && (
+                        <div className="p-6 bg-slate-50 rounded-[2rem] border-2 border-primary/5 space-y-4 shadow-inner">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "जन्म तारीख" : "Date of Birth"}
+                              </span>
+                              <p className="text-sm font-black text-primary">{editingPlayer.dob}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "वय (३१ डिसेंबर २०२६ रोजी)" : "Age (as of 31 Dec 2026)"}
+                              </span>
+                              <p className="text-sm font-black text-primary">
+                                {isMarathiView ? (
+                                  editingAgeValidation.ageString
+                                    .replace(/Years/g, "वर्षे")
+                                    .replace(/Months/g, "महिने")
+                                    .replace(/Days/g, "दिवस")
+                                ) : (
+                                  editingAgeValidation.ageString
+                                )}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "नियुक्त गट" : "Assigned Category"}
+                              </span>
+                              <p className={cn("text-sm font-black uppercase", editingAgeValidation.eligible ? "text-primary" : "text-destructive")}>
+                                {getLocalizedAgeCategory(editingAgeValidation.category, isMarathiView)}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                                {isMarathiView ? "पात्रता स्थिती" : "Eligibility Status"}
+                              </span>
+                              <div>
+                                <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", 
+                                  editingAgeValidation.eligible ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-destructive/5 text-destructive border border-destructive/20"
+                                )}>
+                                  {editingAgeValidation.eligible ? (isMarathiView ? "पात्र" : "Eligible") : (isMarathiView ? "अपात्र" : "Not eligible")}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {!editingAgeValidation.eligible && (
+                            <p className="text-xs font-black text-destructive uppercase tracking-wide bg-destructive/5 p-3 rounded-xl border border-destructive/10">
+                              {isMarathiView ? "उपलब्ध वयोगटासाठी पात्र नाही." : "Not eligible for available age categories."}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Roll Number</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>

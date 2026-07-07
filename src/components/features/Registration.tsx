@@ -34,7 +34,7 @@ import {
   Ruler
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, getAgeValidation } from '@/lib/utils';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
@@ -109,6 +109,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
   const form = useForm<FormValues>({ resolver: zodResolver(formSchema), defaultValues });
 
+  const dobValue = form.watch('dob');
+  const ageValidation = useMemo(() => getAgeValidation(dobValue), [dobValue]);
+
   const suggestedStudents = useMemo(() => {
     if (!registrySearch || registrySearch.length < 2) return [];
     return (store.data.players || []).filter((p: any) => 
@@ -180,8 +183,10 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const dobDate = values.dob ? new Date(values.dob) : null;
-      const age = (dobDate && isValid(dobDate)) ? differenceInYears(new Date(), dobDate) : 0;
+      const ageValidation = getAgeValidation(values.dob);
+      const calculatedAge = ageValidation ? ageValidation.ageYears : 0;
+      const ageCategory = ageValidation ? ageValidation.category : "None";
+      const ageDetailed = ageValidation ? ageValidation.ageString : "";
       
       let bmi = "---";
       if (values.height && values.weight) {
@@ -193,7 +198,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       await store.addPlayer({ 
         ...values, 
         id: Math.random().toString(36).substr(2, 9), 
-        age: isNaN(age) ? 0 : age,
+        age: calculatedAge,
+        ageCategory,
+        ageDetailed,
         bmi 
       });
       
@@ -405,6 +412,42 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                               </FormItem>
                             )} />
                           </div>
+
+                          {ageValidation && (
+                            <div className="p-6 bg-slate-50 rounded-[2rem] border-2 border-primary/5 space-y-4 shadow-inner">
+                              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Date of Birth</span>
+                                  <p className="text-sm font-black text-primary">{dobValue}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Age (as of 31 Dec 2026)</span>
+                                  <p className="text-sm font-black text-primary">{ageValidation.ageString}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Assigned Category</span>
+                                  <p className={cn("text-sm font-black uppercase", ageValidation.eligible ? "text-primary" : "text-destructive")}>
+                                    {ageValidation.category}
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Eligibility Status</span>
+                                  <div>
+                                    <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", 
+                                      ageValidation.eligible ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-destructive/5 text-destructive border border-destructive/20"
+                                    )}>
+                                      {ageValidation.eligible ? "Eligible" : "Not eligible"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              {!ageValidation.eligible && (
+                                <p className="text-xs font-black text-destructive uppercase tracking-wide bg-destructive/5 p-3 rounded-xl border border-destructive/10">
+                                  Not eligible for available age categories.
+                                </p>
+                              )}
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             <FormField control={form.control} name="bloodGroup" render={({ field }) => (
                               <FormItem>
