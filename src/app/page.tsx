@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
@@ -28,7 +29,8 @@ import {
   Medal,
   BrainCircuit,
   ClipboardList,
-  Crown
+  Crown,
+  RotateCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -36,9 +38,11 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
+import { useToast } from '@/hooks/use-toast';
 
 /**
- * SSR Hardening: Features are dynamically imported with ssr: false 
+ * Platinum Hub v5.1 Stable
+ * Hardened for Screen Rotation and Nothing Phone (2a) Safe Areas.
  */
 const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
 const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
@@ -53,6 +57,7 @@ const Gamification = dynamic(() => import('@/components/features/Gamification').
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
+const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
@@ -78,6 +83,7 @@ const LOGO_PATH = "/icon-512.png";
 const SPLASH_LOTTIE_URL = "https://lottie.host/33acb9fa-1151-11ee-9728-ff4c18263730/8X5iIe9y9f.json";
 
 export default function WaghambaApp() {
+  const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [splashData, setSplashData] = useState<any>(null);
@@ -118,6 +124,30 @@ export default function WaghambaApp() {
     }
   }, [user, isUserLoading, auth, isMounted]);
 
+  const toggleRotation = useCallback(async () => {
+    try {
+      if (typeof window !== 'undefined' && window.screen?.orientation) {
+        const orientation = window.screen.orientation;
+        if (orientation.type.startsWith('portrait')) {
+          await (orientation as any).lock('landscape').catch(() => {
+             orientation.unlock();
+             toast({ title: "Rotation Enabled", description: "Turn device to rotate view." });
+          });
+          toast({ title: "Landscape Active", description: "App locked to wide view." });
+        } else {
+          await (orientation as any).lock('portrait').catch(() => {
+             orientation.unlock();
+          });
+          toast({ title: "Portrait Active", description: "App locked to tall view." });
+        }
+      } else {
+        toast({ title: "System Restricted", description: "Rotation API requires PWA mode." });
+      }
+    } catch (e) {
+      toast({ title: "System Restricted", description: "Orientation lock restricted by browser.", variant: "destructive" });
+    }
+  }, [toast]);
+
   const t = useMemo(() => translations[language], [language]);
 
   const sportsTabs = useMemo(() => [
@@ -151,7 +181,7 @@ export default function WaghambaApp() {
              )}
            </div>
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V5.0</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V5.1</h2>
              <div className="flex flex-col items-center gap-3">
                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                  <div className="h-full bg-accent w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
@@ -194,6 +224,9 @@ export default function WaghambaApp() {
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleRotation} className="h-8 w-8 rounded-full bg-primary/5 text-primary flex items-center justify-center hover:bg-primary/10 transition-colors">
+                <RotateCw className="w-4 h-4" />
+              </button>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
                 <CalendarDays className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">{headerDate}</span>
@@ -230,7 +263,7 @@ export default function WaghambaApp() {
                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                       <div className="lg:col-span-7 space-y-8">
                         <div className="space-y-3">
-                          <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">Command Center</Badge>
+                          <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">Command Center V5.1</Badge>
                           <h2 className="text-5xl font-display font-black leading-tight tracking-tighter uppercase">
                             Welcome,<br/>{teacher?.teacherName?.split(' ')[0] || "Coach"}
                           </h2>
@@ -240,9 +273,14 @@ export default function WaghambaApp() {
                            <p className="text-5xl font-black uppercase tracking-tighter">{activeDisplayCount}</p>
                            <p className="text-sm font-bold text-white/60">Active Registry</p>
                         </div>
-                        <Button onClick={() => setSubTab('roster')} className="h-20 w-full md:auto px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
-                          Manage Registry <ArrowRight className="ml-4 w-6 h-6" />
-                        </Button>
+                        <div className="flex gap-4">
+                          <Button onClick={() => setSubTab('roster')} className="h-20 flex-1 px-12 rounded-3xl bg-accent text-accent-foreground font-black uppercase tracking-widest shadow-xl hover:bg-white hover:text-primary transition-all active-scale text-lg">
+                            Manage <ArrowRight className="ml-4 w-6 h-6" />
+                          </Button>
+                          <Button onClick={toggleRotation} variant="outline" className="h-20 w-20 rounded-3xl border-2 border-white/20 bg-white/5 hover:bg-white/10">
+                            <RotateCw className="w-8 h-8 text-white" />
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="lg:col-span-5 grid grid-cols-1 gap-4">
@@ -288,7 +326,7 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
-                      { id: "roster", label: "Student Registry", desc: "Profile Management", icon: ClipboardList, color: "bg-blue-600" },
+                      { id: "classes", label: "Students Registry", desc: "Std-wise Profiles", icon: ClipboardList, color: "bg-blue-600" },
                       { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
                       { id: "leaderboard", label: "Monthly Medals", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
                       { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
@@ -319,7 +357,7 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                    {subTab === "roster" && <Dashboard store={schoolData} section={selectedSection || 'general'} t={t} />}
+                    {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
                     {subTab === "hall-of-fame" && <HallOfFame store={schoolData} />}
                     {subTab === "leaderboard" && <Gamification store={schoolData} />}
                     {subTab === "ai" && <AIAdvice store={schoolData} />}
@@ -401,9 +439,12 @@ export default function WaghambaApp() {
             <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "SPORTS HUB"}</span>
           </h1>
         </div>
-        <div className="flex flex-col gap-4 max-sm mx-auto w-full">
+        <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
           <Button onClick={() => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl active-scale">
             {translations[language].enter} <ArrowRight className="ml-4 w-6 h-6" />
+          </Button>
+          <Button onClick={toggleRotation} variant="outline" className="h-16 rounded-[2rem] border-2 border-primary/10 text-primary font-display font-black uppercase tracking-widest shadow-sm active-scale">
+            <RotateCw className="mr-3 w-5 h-5" /> Rotate View
           </Button>
           <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-display font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
             <Star className="w-4 h-4" /> {language === 'English' ? 'मराठी (Marathi)' : 'English'}

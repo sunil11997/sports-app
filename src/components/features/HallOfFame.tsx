@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -9,23 +10,22 @@ import {
   Medal, 
   Trophy, 
   Star, 
-  ChevronRight, 
   Activity, 
   Target,
   Zap,
   Dumbbell,
-  Save,
   Loader2,
-  Edit3,
-  CheckCircle2
+  Edit3
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * DiscIcon - Hoisted to resolve Webpack initialization order errors.
+ */
 const DiscIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="10" />
@@ -62,37 +62,26 @@ export function HallOfFame({ store }: { store: any }) {
       return { ...p, rankScore: scoreValue };
     })
     .filter((p: any) => p.rankScore > 0)
-    .sort((a: any, b: any) => b.rankScore - a.rankScore)
+    .sort((a: any, b: any) => (b.rankScore as number) - (a.rankScore as number))
     .slice(0, 5);
   };
 
   const handleUpdateScore = async (playerId: string, value: string) => {
     setIsSaving(playerId);
     try {
-      const existing = (store.data.fitnessHistory[playerId] || []).find((h: any) => h.month === selectedMonth) || {};
+      const existingList = store.data.fitnessHistory[playerId] || [];
+      const existing = existingList.find((h: any) => h.month === selectedMonth) || {};
       
-      let updatedScore = existing.score || "0";
-      if (activeMetric !== 'score') {
-        const m1 = activeMetric === 'metric1' ? parseFloat(value) : parseFloat(existing.metric1 || '0');
-        const m7 = activeMetric === 'metric7' ? parseFloat(value) : parseFloat(existing.metric7 || '0');
-        if (m1 > 0 && m7 > 0) {
-          const sprintPoints = Math.max(0, 100 - (m1 * 5));
-          const jumpPoints = Math.min(100, (m7 / 200) * 100);
-          updatedScore = Math.round((sprintPoints + jumpPoints) / 2).toString();
-        }
-      }
-
       await store.setFitness(playerId, {
         ...existing,
         [activeMetric]: value,
-        score: updatedScore,
         month: selectedMonth,
         updatedAt: new Date().toISOString()
       });
       
       toast({ title: "Registry Updated", description: "Performance data archived successfully." });
     } catch (error) {
-      console.error(error);
+      console.error("WGB Rank Engine Error:", error);
       toast({ variant: "destructive", title: "Sync Error" });
     } finally {
       setIsSaving(null);
@@ -109,9 +98,9 @@ export function HallOfFame({ store }: { store: any }) {
             <Crown className="w-10 h-10 text-amber-500 animate-bounce" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame</h2>
+            <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame v5.1</h2>
             <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
-              Recognizing the elite Top 5 athletes for every standard at Ashram Shala Waghamba.
+              Recognizing the elite Top 5 athletes for every standard based on fitness and performance metrics.
             </p>
           </div>
           
@@ -137,13 +126,15 @@ export function HallOfFame({ store }: { store: any }) {
                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMonth(e.target.value)} 
                  className="w-40 h-12 rounded-xl border-2 font-black uppercase text-[10px]" 
                />
-               <Button 
-                 variant={isEditMode ? "default" : "outline"} 
-                 onClick={() => setIsEditMode(!isEditMode)}
-                 className={cn("h-12 rounded-xl font-black uppercase text-[10px] px-6 border-2", isEditMode && "bg-accent text-white border-accent")}
-               >
-                 <Edit3 className="w-4 h-4 mr-2" /> {isEditMode ? 'Close Editor' : 'Edit Metrics'}
-               </Button>
+               {activeMetric !== 'score' && (
+                 <Button 
+                   variant={isEditMode ? "default" : "outline"} 
+                   onClick={() => setIsEditMode(!isEditMode)}
+                   className={cn("h-12 rounded-xl font-black uppercase text-[10px] px-6 border-2", isEditMode && "bg-accent text-white border-accent")}
+                 >
+                   <Edit3 className="w-4 h-4 mr-2" /> {isEditMode ? 'Close Editor' : 'Edit Metrics'}
+                 </Button>
+               )}
              </div>
           </div>
         </div>
@@ -166,7 +157,7 @@ export function HallOfFame({ store }: { store: any }) {
                   <div className="flex-1 border-b-4 border-dashed border-primary/10 pb-4">
                     <h3 className="text-3xl font-black text-primary uppercase tracking-tighter">Standard {std} Elite Squad</h3>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mt-1">
-                      <MetricIcon className={cn("w-3 h-3", currentMetricConfig.color)} /> {currentMetricConfig.label} Registry &bull; {format(new Date(selectedMonth + "-01"), 'MMMM yyyy')}
+                      <MetricIcon className={cn("w-3 h-3", currentMetricConfig.color)} /> {currentMetricConfig.label} Registry & bull; {format(new Date(selectedMonth + "-01"), 'MMMM yyyy')}
                     </p>
                   </div>
                </div>
@@ -189,13 +180,13 @@ export function HallOfFame({ store }: { store: any }) {
                                 <tr>
                                    <th className="p-6 text-left text-[10px] font-black uppercase text-primary border-r w-[250px]">Student Athlete</th>
                                    <th className="p-6 text-center text-[10px] font-black uppercase text-primary border-r">Gender</th>
-                                   <th className="p-6 text-center text-[10px] font-black uppercase text-primary w-[200px]">Current Score</th>
-                                   <th className="p-6 text-center text-[10px] font-black uppercase text-primary w-[200px]">Derived Fitness</th>
+                                   <th className="p-6 text-center text-[10px] font-black uppercase text-primary w-[200px]">Result Value</th>
                                 </tr>
                              </thead>
                              <tbody>
                                 {allInStd.sort((a: any, b: any) => a.gender.localeCompare(b.gender)).map((p: any) => {
-                                   const hist = (store.data.fitnessHistory[p.id] || []).find((h: any) => h.month === selectedMonth) || {};
+                                   const histList = store.data.fitnessHistory[p.id] || [];
+                                   const hist = histList.find((h: any) => h.month === selectedMonth) || {};
                                    const isUpdating = isSaving === p.id;
                                    return (
                                       <tr key={p.id} className="border-b last:border-0 hover:bg-primary/5 transition-colors">
@@ -203,7 +194,7 @@ export function HallOfFame({ store }: { store: any }) {
                                             <div className="flex items-center gap-3">
                                                <Avatar className="w-8 h-8 border shadow-sm">
                                                   <AvatarImage src={p.photoUrl} className="object-cover" />
-                                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black">{p.name?.[0] || '?'}</AvatarFallback>
+                                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black">{(p.name || "?")[0]}</AvatarFallback>
                                                </Avatar>
                                                <span className="font-black text-sm uppercase text-primary truncate max-w-[150px]">{p.name}</span>
                                             </div>
@@ -213,25 +204,17 @@ export function HallOfFame({ store }: { store: any }) {
                                                {p.gender.toUpperCase()}
                                             </Badge>
                                          </td>
-                                         <td className="p-6 border-r">
-                                            <div className="relative">
+                                         <td className="p-6">
+                                            <div className="relative max-w-[150px] mx-auto">
                                                <Input 
-                                                  disabled={activeMetric === 'score'}
                                                   type="number"
-                                                  placeholder={activeMetric === 'score' ? "Locked" : "0.0"}
+                                                  step="0.1"
+                                                  placeholder="0.0"
                                                   className="h-12 text-center font-black text-lg focus:ring-accent border-2 rounded-xl"
                                                   defaultValue={hist[activeMetric] || ""}
-                                                  onBlur={(e) => handleUpdateScore(p.id, e.target.value)}
+                                                  onBlur={(e: React.ChangeEvent<HTMLInputElement>) => handleUpdateScore(p.id, e.target.value)}
                                                />
                                                {isUpdating && <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-xl"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
-                                            </div>
-                                         </td>
-                                         <td className="p-6 text-center">
-                                            <div className="inline-flex flex-col items-center">
-                                               <span className="text-xl font-black text-primary">{hist.score || '0'}%</span>
-                                               <div className="w-12 h-1 bg-muted rounded-full mt-1 overflow-hidden">
-                                                  <div className="h-full bg-accent" style={{ width: `${hist.score || 0}%` }} />
-                                               </div>
                                             </div>
                                          </td>
                                       </tr>
@@ -258,12 +241,12 @@ export function HallOfFame({ store }: { store: any }) {
                          ) : topBoys.map((p: any, i: number) => (
                            <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-blue-50 group hover:border-blue-400 transition-all shadow-sm">
                               <div className="flex items-center gap-4">
-                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-blue-50 text-blue-600")}>
+                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400" : "bg-blue-50 text-blue-600")}>
                                     {i + 1}
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-md">
                                     <AvatarImage src={p.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="bg-blue-50 text-blue-600 font-black uppercase text-xs">{p.name?.[0] || '?'}</AvatarFallback>
+                                    <AvatarFallback className="bg-blue-50 text-blue-600 font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                                  </Avatar>
                                  <div>
                                     <p className="font-black text-primary uppercase text-sm group-hover:text-blue-600 transition-colors">{p.name}</p>
@@ -271,7 +254,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                               </div>
                               <div className="text-right">
-                                 <p className="text-xl font-black text-blue-600">{p.rankScore}{activeMetric === 'score' ? '%' : 'm'}</p>
+                                 <p className="text-xl font-black text-blue-600">{p.rankScore}{activeMetric === 'score' ? '%' : ''}</p>
                                  <p className="text-[8px] font-black uppercase text-muted-foreground">Rating</p>
                               </div>
                            </div>
@@ -293,12 +276,12 @@ export function HallOfFame({ store }: { store: any }) {
                          ) : topGirls.map((p: any, i: number) => (
                            <div key={p.id} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white border-2 border-pink-50 group hover:border-pink-400 transition-all shadow-sm">
                               <div className="flex items-center gap-4">
-                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400 text-white" : "bg-pink-50 text-pink-600")}>
+                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-inner", i === 0 ? "bg-amber-400" : "bg-pink-50 text-pink-600")}>
                                     {i + 1}
                                  </div>
                                  <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
                                     <AvatarImage src={p.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{p.name?.[0] || '?'}</AvatarFallback>
+                                    <AvatarFallback className="bg-pink-50 text-pink-600 font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                                  </Avatar>
                                  <div>
                                     <p className="font-black text-primary uppercase text-sm group-hover:text-pink-600 transition-colors">{p.name}</p>
@@ -306,7 +289,7 @@ export function HallOfFame({ store }: { store: any }) {
                                  </div>
                               </div>
                               <div className="text-right">
-                                 <p className="text-xl font-black text-pink-600">{p.rankScore}{activeMetric === 'score' ? '%' : 'm'}</p>
+                                 <p className="text-xl font-black text-pink-600">{p.rankScore}{activeMetric === 'score' ? '%' : ''}</p>
                                  <p className="text-[8px] font-black uppercase text-muted-foreground">Rating</p>
                               </div>
                            </div>

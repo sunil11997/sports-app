@@ -3,18 +3,18 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * v3.4.1: Prioritizing icon-512.png as the high-resolution primary identity for professional Android installation.
+ * v5.1.0: Enabled 'any' orientation to support screen rotation across all devices.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Waghamba Institutional Sports & Health Hub',
-    short_name: 'WGB Sports',
+    short_name: 'WGB Hub v5.1',
     description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',
     background_color: '#1e3a8a', 
     theme_color: '#1e3a8a',
-    orientation: 'portrait',
+    orientation: 'any',
     icons: [
       {
         src: '/icon-512.png',

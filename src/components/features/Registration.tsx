@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
@@ -43,6 +44,7 @@ const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 const formSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(2, "Name is required"),
   nameMarathi: z.string().optional().default(""),
   std: z.string().min(1, "Standard is required"),
@@ -73,7 +75,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const { isOnline } = usePWA();
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,6 +86,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const profileUploadRef = useRef<HTMLInputElement>(null);
 
   const defaultValues: FormValues = useMemo(() => ({
+    id: "",
     name: "", 
     nameMarathi: "",
     std: "1", 
@@ -123,28 +126,46 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const handleAutoFill = (student: any) => {
     form.reset({ 
       ...student, 
-      category: (section === 'sports' ? 'athlete' : student.category) as "athlete" | "student" 
+      category: (section === 'sports' ? 'athlete' : (student.category || 'student')) as "athlete" | "student" 
     });
     setRegistrySearch("");
     toast({ title: "Data Fetched", description: `Loaded registry details for ${student.name}.` });
   };
 
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
+      const constraints = {
+        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      };
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Access Denied' });
+    } catch (error: any) {
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          setStream(fallbackStream);
+          setActiveCam(type);
+          setFacingMode('user');
+        } catch (inner) {
+          toast({ variant: 'destructive', title: 'Camera Error' });
+        }
+      } else {
+        toast({ variant: 'destructive', title: 'Camera Access Denied' });
+      }
     }
   };
 
   const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
     setStream(null);
     setActiveCam(null);
   };
@@ -196,8 +217,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       }
 
       await store.addPlayer({ 
-        ...values, 
-        id: Math.random().toString(36).substr(2, 9), 
+        ...values,
+        id: values.id || Math.random().toString(36).substr(2, 9), 
         age: calculatedAge,
         ageCategory,
         ageDetailed,
@@ -259,8 +280,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           <div className="flex items-center gap-6">
             <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl"><UserPlus className="w-10 h-10" /></div>
             <div>
-              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub</CardTitle>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.0</p>
+              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub V5.1</CardTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.1 Stable</p>
             </div>
           </div>
         </CardHeader>
@@ -283,9 +304,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     </div>
                     {!activeCam && (
                       <div className="flex gap-2">
-                        <Button type="button" onClick={() => startCamera('profile')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
-                          <Camera className="w-4 h-4 mr-2" /> Open Camera
-                        </Button>
+                        <button type="button" onClick={() => startCamera('profile', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-14 font-black uppercase text-[10px]">
+                          <Camera className="w-4 h-4 mr-2" /> Back Camera
+                        </button>
                         <Button type="button" onClick={() => profileUploadRef.current?.click()} variant="outline" className="h-14 w-14 rounded-2xl border-2"><Upload className="w-5 h-5" /></Button>
                         <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
                       </div>
@@ -311,9 +332,15 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                     </div>
                     {!activeCam && (
                        <div className="flex gap-2">
-                          <Button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-12 font-black uppercase text-[9px]">Scan ID</Button>
+                          <button type="button" onClick={() => startCamera('aadhar', 'environment')} className="flex-1 bg-primary/5 text-primary border-2 border-primary/10 rounded-2xl h-12 font-black uppercase text-[9px]">Back Scan</button>
                           <Button type="button" onClick={() => aadharUploadRef.current?.click()} variant="outline" className="h-12 w-12 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
                           <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                       </div>
+                    )}
+                    {activeCam === 'aadhar' && (
+                       <div className="flex gap-2">
+                          <Button type="button" onClick={takePhoto} className="flex-1 bg-accent text-white rounded-2xl h-12 font-black uppercase text-[9px]">Scan ID</Button>
+                          <Button type="button" onClick={stopCamera} variant="destructive" className="h-12 w-12 rounded-xl"><CircleX className="w-4 h-4" /></Button>
                        </div>
                     )}
                   </div>

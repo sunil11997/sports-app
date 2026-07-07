@@ -270,7 +270,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Find student..." 
+              placeholder={isMarathiView ? "नाव किंवा GR ने शोधा..." : "Find by Name/GR..."} 
               className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

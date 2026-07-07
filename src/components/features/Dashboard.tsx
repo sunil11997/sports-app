@@ -25,7 +25,8 @@ import {
   Phone,
   FileDigit,
   Home,
-  ScanFace
+  ScanFace,
+  Upload
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -51,10 +52,12 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const editingAgeValidation = useMemo(() => getAgeValidation(editingPlayer?.dob), [editingPlayer?.dob]);
   
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const profileUploadRef = useRef<HTMLInputElement>(null);
+  const aadharUploadRef = useRef<HTMLInputElement>(null);
 
   const isGeneral = section === 'general';
 
@@ -65,6 +68,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
         const query = searchTerm.toLowerCase();
         return matchesSection && (
           p.name.toLowerCase().includes(query) || 
+          (p.nameMarathi || "").includes(searchTerm) ||
           (p.aadharNumber || "").includes(searchTerm) || 
           (p.generalRegisterNumber || "").toLowerCase().includes(query)
         );
@@ -88,17 +92,27 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
     }
   };
 
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'user') => {
+  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
     if (stream) stream.getTracks().forEach(track => track.stop());
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
+      const constraints = { video: { facingMode: mode }, audio: false };
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       setActiveCam(type);
       setFacingMode(mode);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Camera Error' });
+    } catch (error: any) {
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setStream(fallbackStream);
+          setActiveCam(type);
+          setFacingMode('user');
+        } catch (inner) {
+          toast({ variant: 'destructive', title: 'Camera Not Found' });
+        }
+      } else {
+        toast({ variant: 'destructive', title: 'Camera Access Denied' });
+      }
     }
   };
 
@@ -129,12 +143,29 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+    const file = e.target.files?.[0];
+    if (file && editingPlayer) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        if (type === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
+        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDeletePlayer = (playerId: string) => {
     if (confirm("Permanently delete this student from the institutional registry?")) {
       store.deletePlayer(playerId);
       toast({ title: "Registry Purged", variant: "destructive" });
     }
   };
+
+  React.useEffect(() => {
+    if (videoRef.current && stream && activeCam) { videoRef.current.srcObject = stream; }
+  }, [stream, activeCam]);
 
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={5} />;
 
@@ -243,7 +274,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                          )}
                        </div>
                        {!activeCam && (
-                         <Button size="sm" variant="outline" className="w-full h-12 rounded-2xl font-black text-[9px] uppercase" onClick={() => startCamera('profile')}><Camera className="w-3 h-3 mr-2" /> NEW PHOTO</Button>
+                         <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 h-12 rounded-2xl font-black text-[9px] uppercase" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> BACK CAM</Button>
+                            <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-12 w-12 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
+                         </div>
                        )}
                      </div>
 
@@ -259,7 +294,11 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                           )}
                         </div>
                         {!activeCam && (
-                          <Button size="sm" variant="outline" className="w-full h-10 rounded-xl font-black text-[9px] uppercase" onClick={() => startCamera('aadhar', 'environment')}>UPDATE SCAN</Button>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase" onClick={() => startCamera('aadhar', 'environment')}>BACK SCAN</Button>
+                            <Button size="sm" variant="ghost" onClick={() => aadharUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
+                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
+                          </div>
                         )}
                       </div>
                   </div>
@@ -282,9 +321,9 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Standard</Label><Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Registry Role</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">Student</SelectItem><SelectItem value="athlete">Athlete</SelectItem></SelectContent></Select></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Standard</Label><Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Registry Role</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">Student</SelectItem><SelectItem value="athlete">Athlete</SelectItem></SelectContent></Select></div>
                       </div>
                     </div>
 
@@ -353,7 +392,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                         </div>
                       )}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Roll Number</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                       </div>
                     </div>

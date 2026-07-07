@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -8,6 +9,7 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 /**
  * initializeFirebase - Institutional Registry Engine
  * Optimized for high-resilience persistence and Native Android environments.
+ * v5.1 Update: Enabled experimentalAutoDetectLongPolling for proxied environments.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
@@ -25,7 +27,6 @@ export function initializeFirebase() {
   return getSdks(firebaseApp);
 }
 
-// Singleton tracker to prevent "failed-precondition" during multiple initialization attempts
 const initializedFirestoreApps = new Set<string>();
 
 export function getSdks(firebaseApp: FirebaseApp) {
@@ -44,8 +45,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
     if (!initializedFirestoreApps.has(appKey)) {
       try {
-        // Standardized initialization for high-resilience environments.
-        // experimentalAutoDetectLongPolling enabled to resolve 'Could not reach backend' errors in proxied environments (Cloud Workstations).
         firestore = initializeFirestore(firebaseApp, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager(),
@@ -54,12 +53,11 @@ export function getSdks(firebaseApp: FirebaseApp) {
           experimentalAutoDetectLongPolling: true
         });
         initializedFirestoreApps.add(appKey);
-        console.log("WGB: Firestore Registry initialized with 100MB persistent cache and Auto-Long-Polling.");
+        console.log("WGB: Firestore Registry initialized with 100MB persistent cache and Long-Polling.");
       } catch (e: any) {
         firestore = getFirestore(firebaseApp);
         if (e.code === 'failed-precondition') {
           initializedFirestoreApps.add(appKey);
-          console.log("WGB: Firestore persistence already active.");
         } else {
           console.warn('WGB: Firestore initialization fallback.', e.code, e.message);
         }
