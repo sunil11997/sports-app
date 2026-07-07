@@ -27,7 +27,12 @@ import {
   CircleX,
   Type,
   Search,
-  Weight
+  Weight,
+  Eye,
+  Download,
+  FolderOpen,
+  FileImage,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -458,6 +463,103 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                             <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
                           </div>
                         )}
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t-2 border-primary/5">
+                        <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><FolderOpen className="w-3 h-3" /> Documents</Label>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 rounded-2xl border-2 bg-muted/5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                                <FileImage className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-primary uppercase leading-tight">Profile Photo</p>
+                                <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">
+                                  {editingPlayer.photoUrl ? "Available" : "No Document"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-1.5">
+                              {editingPlayer.photoUrl && (
+                                <>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 p-0 rounded-xl border-2 text-primary hover:bg-primary/5"
+                                    onClick={() => {
+                                      const link = document.createElement('a');
+                                      link.href = editingPlayer.photoUrl || '';
+                                      link.download = `${editingPlayer.name || 'student'}_profile.jpg`;
+                                      link.click();
+                                    }}
+                                    title="Download Profile Photo"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 p-0 rounded-xl border-2 text-primary hover:bg-primary/5"
+                                    onClick={() => {
+                                      const w = window.open();
+                                      w?.document.write(`<img src="${editingPlayer.photoUrl}" style="max-width:100%; max-height:100vh; display:block; margin:auto;" />`);
+                                    }}
+                                    title="View Profile Photo"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 rounded-2xl border-2 bg-muted/5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-primary uppercase leading-tight">Aadhaar Card</p>
+                                <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">
+                                  {editingPlayer.aadharPhotoUrl ? "Available" : "No Document"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-1.5">
+                              {editingPlayer.aadharPhotoUrl && (
+                                <>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 p-0 rounded-xl border-2 text-primary hover:bg-primary/5"
+                                    onClick={() => {
+                                      const link = document.createElement('a');
+                                      link.href = editingPlayer.aadharPhotoUrl || '';
+                                      link.download = `${editingPlayer.name || 'student'}_aadhar.jpg`;
+                                      link.click();
+                                    }}
+                                    title="Download Aadhaar Card"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 p-0 rounded-xl border-2 text-primary hover:bg-primary/5"
+                                    onClick={() => {
+                                      const w = window.open();
+                                      w?.document.write(`<img src="${editingPlayer.aadharPhotoUrl}" style="max-width:100%; max-height:100vh; display:block; margin:auto;" />`);
+                                    }}
+                                    title="View Aadhaar Card"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                    </div>
 
