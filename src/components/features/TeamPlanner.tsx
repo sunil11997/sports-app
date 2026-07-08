@@ -271,6 +271,13 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     const u17GDetails = u17GirlsLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
     const u19GDetails = u19GirlsLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
 
+    const hasU14B = u14BoysLineup.some(id => id !== null);
+    const hasU17B = u17BoysLineup.some(id => id !== null);
+    const hasU19B = u19BoysLineup.some(id => id !== null);
+    const hasU14G = u14GirlsLineup.some(id => id !== null);
+    const hasU17G = u17GirlsLineup.some(id => id !== null);
+    const hasU19G = u19GirlsLineup.some(id => id !== null);
+
     const renderTable = (title: string, list: { index: number; player: any }[]) => `
       <div style="flex: 1; margin: 10px; min-width: 230px; max-width: 32%;">
         <h3 style="background: #235C36; color: white; margin: 0; padding: 10px; font-size: 14px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 8px 8px 0 0;">
@@ -301,6 +308,35 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
       </div>
     `;
 
+    let boysSection = '';
+    if (hasU14B || hasU17B || hasU19B) {
+      boysSection = `
+        <div class="section-heading">BOYS SQUADS</div>
+        <div class="tables-container">
+          ${hasU14B ? renderTable("Under 14 Boys (U14B)", u14BDetails) : ''}
+          ${hasU17B ? renderTable("Under 17 Boys (U17B)", u17BDetails) : ''}
+          ${hasU19B ? renderTable("Under 19 Boys (U19B)", u19BDetails) : ''}
+        </div>
+      `;
+    }
+
+    let girlsSection = '';
+    if (hasU14G || hasU17G || hasU19G) {
+      girlsSection = `
+        <div class="section-heading" style="margin-top: 20px;">GIRLS SQUADS</div>
+        <div class="tables-container">
+          ${hasU14G ? renderTable("Under 14 Girls (U14G)", u14GDetails) : ''}
+          ${hasU17G ? renderTable("Under 17 Girls (U17G)", u17GDetails) : ''}
+          ${hasU19G ? renderTable("Under 19 Girls (U19G)", u19GDetails) : ''}
+        </div>
+      `;
+    }
+
+    const hasAnyPlayers = hasU14B || hasU17B || hasU19B || hasU14G || hasU17G || hasU19G;
+    const squadsContent = hasAnyPlayers
+      ? `${boysSection} ${girlsSection}`
+      : `<div style="text-align: center; padding: 50px; font-weight: bold; color: #999; text-transform: uppercase; border: 2px dashed #ddd; border-radius: 8px;">No players selected in any squad for this session.</div>`;
+
     const printContent = `
       <html>
         <head>
@@ -319,7 +355,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             .drills-title { font-size: 12px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #235C36; padding-bottom: 4px; margin-bottom: 10px; color: #235C36; }
             .drills-list { display: flex; flex-wrap: wrap; gap: 8px; }
             .drill-item { background: white; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; }
-            .tables-container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 30px; }
+            .tables-container { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-bottom: 30px; }
             .section-heading { font-size: 14px; font-weight: 900; text-transform: uppercase; color: #235C36; border-left: 4px solid #235C36; padding-left: 8px; margin-bottom: 15px; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
@@ -353,19 +389,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             </div>
           </div>
 
-          <div class="section-heading">BOYS SQUADS</div>
-          <div class="tables-container">
-            ${renderTable("Under 14 Boys (U14B)", u14BDetails)}
-            ${renderTable("Under 17 Boys (U17B)", u17BDetails)}
-            ${renderTable("Under 19 Boys (U19B)", u19BDetails)}
-          </div>
-
-          <div class="section-heading" style="margin-top: 20px;">GIRLS SQUADS</div>
-          <div class="tables-container">
-            ${renderTable("Under 14 Girls (U14G)", u14GDetails)}
-            ${renderTable("Under 17 Girls (U17G)", u17GDetails)}
-            ${renderTable("Under 19 Girls (U19G)", u19GDetails)}
-          </div>
+          ${squadsContent}
         </body>
       </html>
     `;
