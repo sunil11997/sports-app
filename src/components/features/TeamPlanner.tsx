@@ -116,16 +116,26 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
 
   const [selectedDrills, setSelectedDrills] = useState<string[]>([]);
   
-  const [u14BoysLineup, setU14BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u17BoysLineup, setU17BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u19BoysLineup, setU19BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u14GirlsLineup, setU14GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u17GirlsLineup, setU17GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u19GirlsLineup, setU19GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [u14BoysLineup, setU14BoysLineup] = useState<(string | null)[]>(Array(12).fill(null));
+  const [u17BoysLineup, setU17BoysLineup] = useState<(string | null)[]>(Array(12).fill(null));
+  const [u19BoysLineup, setU19BoysLineup] = useState<(string | null)[]>(Array(12).fill(null));
+  const [u14GirlsLineup, setU14GirlsLineup] = useState<(string | null)[]>(Array(12).fill(null));
+  const [u17GirlsLineup, setU17GirlsLineup] = useState<(string | null)[]>(Array(12).fill(null));
+  const [u19GirlsLineup, setU19GirlsLineup] = useState<(string | null)[]>(Array(12).fill(null));
   const [isSaving, setIsSaving] = useState(false);
 
   const [historySearch, setHistorySearch] = useState('');
   const [historySportFilter, setHistorySportFilter] = useState('all');
+
+  const padLineup = useCallback((arr?: (string | null)[]) => {
+    const base = Array(12).fill(null);
+    if (Array.isArray(arr)) {
+      for (let i = 0; i < Math.min(arr.length, 12); i++) {
+        base[i] = arr[i];
+      }
+    }
+    return base;
+  }, []);
 
   useEffect(() => {
     if (preselectedSport) setSelectedSport(preselectedSport);
@@ -138,22 +148,22 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
   useEffect(() => {
     if (savedPlan) {
       setSelectedDrills(savedPlan.drills || []);
-      setU14BoysLineup(savedPlan.u14Players || Array(7).fill(null));
-      setU17BoysLineup(savedPlan.u17Players || Array(7).fill(null));
-      setU19BoysLineup(savedPlan.u19Players || Array(7).fill(null));
-      setU14GirlsLineup(savedPlan.u14GirlsPlayers || Array(7).fill(null));
-      setU17GirlsLineup(savedPlan.u17GirlsPlayers || Array(7).fill(null));
-      setU19GirlsLineup(savedPlan.u19GirlsPlayers || Array(7).fill(null));
+      setU14BoysLineup(padLineup(savedPlan.u14Players));
+      setU17BoysLineup(padLineup(savedPlan.u17Players));
+      setU19BoysLineup(padLineup(savedPlan.u19Players));
+      setU14GirlsLineup(padLineup(savedPlan.u14GirlsPlayers));
+      setU17GirlsLineup(padLineup(savedPlan.u17GirlsPlayers));
+      setU19GirlsLineup(padLineup(savedPlan.u19GirlsPlayers));
     } else {
       setSelectedDrills([]);
-      setU14BoysLineup(Array(7).fill(null));
-      setU17BoysLineup(Array(7).fill(null));
-      setU19BoysLineup(Array(7).fill(null));
-      setU14GirlsLineup(Array(7).fill(null));
-      setU17GirlsLineup(Array(7).fill(null));
-      setU19GirlsLineup(Array(7).fill(null));
+      setU14BoysLineup(Array(12).fill(null));
+      setU17BoysLineup(Array(12).fill(null));
+      setU19BoysLineup(Array(12).fill(null));
+      setU14GirlsLineup(Array(12).fill(null));
+      setU17GirlsLineup(Array(12).fill(null));
+      setU19GirlsLineup(Array(12).fill(null));
     }
-  }, [savedPlan, selectedSport, selectedDate]);
+  }, [savedPlan, selectedSport, selectedDate, padLineup]);
 
   const drillsList = useMemo(() => SPORTS_DATA[selectedSport]?.skills || [], [selectedSport]);
 
@@ -704,12 +714,12 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                     <span className="text-lg font-black uppercase text-primary block leading-none">{cat.title}</span>
                     <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
                   </div>
-                  <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-primary'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
-                    {filledCount} / 7 SELECTED
+                  <Badge className={`${filledCount === 12 ? 'bg-emerald-500' : 'bg-primary'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
+                    {filledCount} / 12 SELECTED
                   </Badge>
                 </div>
                 <CardContent className="p-6 flex-1 space-y-4">
-                  {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
+                  {Array(12).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
                 </CardContent>
               </Card>
             );
@@ -733,12 +743,12 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                     <span className="text-lg font-black uppercase text-accent block leading-none">{cat.title}</span>
                     <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
                   </div>
-                  <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-accent'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
-                    {filledCount} / 7 SELECTED
+                  <Badge className={`${filledCount === 12 ? 'bg-emerald-500' : 'bg-accent'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
+                    {filledCount} / 12 SELECTED
                   </Badge>
                 </div>
                 <CardContent className="p-6 flex-1 space-y-4">
-                  {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
+                  {Array(12).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
                 </CardContent>
               </Card>
             );
