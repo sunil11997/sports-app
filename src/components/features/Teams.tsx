@@ -5,19 +5,22 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Printer } from 'lucide-react';
+import { cn, getAgeValidation } from '@/lib/utils';
 
 export function Teams({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const players = store.data.players;
   
   const getCategory = useCallback((p: any) => {
-    const age = parseInt(p.age) || 0;
+    const ageVal = getAgeValidation(p.dob);
+    const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+    if (!age || age <= 0 || isNaN(age)) return 'Age Pending';
     const gender = p.gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${gender} U14`;
     if (age < 17) return `${gender} U17`;
     return `${gender} Senior`;
   }, []);
 
-  const categories = useMemo(() => ['Girls U14', 'Girls U17', 'Boys U14', 'Boys U17', 'Boys Senior', 'Girls Senior'], []);
+  const categories = useMemo(() => ['Girls U14', 'Girls U17', 'Boys U14', 'Boys U17', 'Boys Senior', 'Girls Senior', 'Age Pending'], []);
   
   const groups = useMemo(() => {
     const map: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
@@ -106,16 +109,20 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
                     <tr className="text-left font-bold text-primary">
                       <th className="p-3">Player Name</th>
                       <th className="p-3">Std</th>
+                      <th className="p-3">Age</th>
                       <th className="p-3">Skill Rating</th>
                     </tr>
                   </thead>
                   <tbody>
                     {groups[cat].map((p, i) => {
                       const skill = store.data.sportSkills[`${p.id}_${preselectedSport || p.sports?.[0]}`];
+                      const ageVal = getAgeValidation(p.dob);
+                      const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
                       return (
                         <tr key={p.id} className={`border-b border-primary/5 ${i % 2 === 0 ? 'bg-white' : 'bg-primary/[0.02]'}`}>
                           <td className="p-3 font-bold text-foreground/80 uppercase">{p.name}</td>
                           <td className="p-3 text-muted-foreground">Std {p.std}</td>
+                          <td className="p-3 font-bold text-foreground/75">{age <= 0 ? "Pending" : age}</td>
                           <td className="p-3 font-black text-primary">{skill?.score || '0'}%</td>
                         </tr>
                       );

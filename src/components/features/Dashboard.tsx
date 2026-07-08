@@ -215,12 +215,22 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       </Avatar>
                       <div>
                         <p className="font-black text-sm uppercase text-primary">{isMarathiView ? (p.nameMarathi || p.name) : p.name}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">
-                          {p.gender} &bull; Age {p.age}
-                          {p.ageCategory && p.ageCategory !== "None" && (
-                            <> &bull; {getLocalizedAgeCategory(p.ageCategory, isMarathiView)}</>
-                          )}
-                        </p>
+                        {(() => {
+                          const ageVal = getAgeValidation(p.dob);
+                          const age = ageVal ? ageVal.ageYears : (parseInt(p.age as any) || 0);
+                          const displayAge = (!age || age <= 0 || isNaN(age)) 
+                            ? (isMarathiView ? "वय: अपूर्ण" : "Age: Pending") 
+                            : `${isMarathiView ? "वय" : "Age"} ${age}`;
+                          const category = ageVal ? ageVal.category : (p.ageCategory || "None");
+                          return (
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">
+                              {p.gender} &bull; {displayAge}
+                              {category && category !== "None" && age > 0 && (
+                                <> &bull; {getLocalizedAgeCategory(category, isMarathiView)}</>
+                              )}
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
                   </TableCell>

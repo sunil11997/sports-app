@@ -348,12 +348,22 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         </Avatar>
                         <div>
                           <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || student.name) : student.name}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase">
-                            Age {student.age}
-                            {student.ageCategory && student.ageCategory !== "None" && (
-                              <> &bull; {getLocalizedAgeCategory(student.ageCategory, isMarathiView)}</>
-                            )}
-                          </p>
+                          {(() => {
+                            const ageVal = getAgeValidation(student.dob);
+                            const age = ageVal ? ageVal.ageYears : (parseInt(student.age as any) || 0);
+                            const displayAge = (!age || age <= 0 || isNaN(age)) 
+                              ? (isMarathiView ? "वय: अपूर्ण" : "Age: Pending") 
+                              : `${isMarathiView ? "वय" : "Age"} ${age}`;
+                            const category = ageVal ? ageVal.category : (student.ageCategory || "None");
+                            return (
+                              <p className="text-[9px] font-bold text-muted-foreground uppercase">
+                                {displayAge}
+                                {category && category !== "None" && age > 0 && (
+                                  <> &bull; {getLocalizedAgeCategory(category, isMarathiView)}</>
+                                )}
+                              </p>
+                            );
+                          })()}
                         </div>
                       </div>
                     </TableCell>

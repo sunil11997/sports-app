@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/loading-skeletons";
-import { cn } from "@/lib/utils";
+import { cn, getAgeValidation } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +37,7 @@ const SPORTS_CATEGORIES = [
   { id: 'girls-u14', label: 'Girls U14' },
   { id: 'girls-u17', label: 'Girls U17' },
   { id: 'girls-senior', label: 'Girls Senior' },
+  { id: 'age-pending', label: 'Age Pending' },
 ];
 
 const GENERAL_CATEGORIES = [
@@ -76,7 +77,9 @@ export function Attendance({ store, section, language = 'English' }: { store: an
 
   const getPlayerCategory = useCallback((p: any) => {
     if (isGeneral) return p.std;
-    const age = parseInt(p.age) || 0;
+    const ageVal = getAgeValidation(p.dob);
+    const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+    if (!age || age <= 0 || isNaN(age)) return 'age-pending';
     const genderPart = p.gender === 'Female' ? 'girls' : 'boys';
     let agePart = 'senior';
     if (age < 14) agePart = 'u14';

@@ -34,6 +34,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [tacticalEvents, setTacticalEventsData] = useState<TacticalEvent[]>([]);
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
   const [drillCompletions, setDrillCompletionsData] = useState<Record<string, boolean>>({});
+  const [teamPlans, setTeamPlans] = useState<Record<string, any>>({});
 
   // Memoized Firebase References
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
@@ -192,6 +193,13 @@ export function useSchoolData(isActive: boolean = true) {
         const configMap: Record<string, PerformanceLabels> = {};
         snapshot.docs.forEach(doc => configMap[doc.id] = doc.data().labels as PerformanceLabels);
         setPerformanceConfigs(configMap);
+      }),
+      onSnapshot(query(collection(db, 'team_plans'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear)), (snapshot) => {
+        const plansMap: Record<string, any> = {};
+        snapshot.docs.forEach(doc => {
+          plansMap[doc.id] = doc.data();
+        });
+        setTeamPlans(plansMap);
       })
     ];
 
@@ -218,6 +226,7 @@ export function useSchoolData(isActive: boolean = true) {
     goals,
     healthIncidents: healthIncidents || [],
     activities: schoolActivities || [],
+    teamPlans,
     schoolProfile: schoolProfile || {
       schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
       teacherName: "Sunil Deshmukh",
@@ -228,7 +237,7 @@ export function useSchoolData(isActive: boolean = true) {
       role: "Physical Education Director",
       updatedAt: "2024-01-01T00:00:00.000Z"
     }
-  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, schoolActivities]);
+  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, schoolActivities, teamPlans]);
 
   return {
     data: aggregatedData,
@@ -241,6 +250,19 @@ export function useSchoolData(isActive: boolean = true) {
     updatePasscode: (passcode: string) => { if (!user || !db) return; updateDocumentNonBlocking(doc(db, 'schools', user.uid), { passcode }); },
     addPlayer: (playerData: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'players', playerData.id), { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     updatePlayer: (player: any) => { if (!db) return; updateDocumentNonBlocking(doc(db, 'players', player.id), player); },
+    setTeamPlan: (sport: string, date: string, plan: any) => {
+      if (!user || !db) return;
+      const id = `${user.uid}_${sport}_${date}`;
+      setDocumentNonBlocking(doc(db, 'team_plans', id), {
+        ...plan,
+        id,
+        sport,
+        date,
+        schoolId: user.uid,
+        academicYear: selectedYear,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    },
     deletePlayer: (playerId: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'players', playerId)); },
     addActivity: (act: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'school_activities', act.id), { ...act, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteActivity: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'school_activities', id)); },

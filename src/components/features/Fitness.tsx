@@ -23,7 +23,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn, shareToWhatsApp } from '@/lib/utils';
+import { cn, shareToWhatsApp, getAgeValidation } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { usePWA } from '@/components/providers/pwa-provider';

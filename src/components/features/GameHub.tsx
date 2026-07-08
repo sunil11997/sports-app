@@ -20,7 +20,8 @@ import {
   ShieldAlert,
   BrainCircuit,
   Layout,
-  Star
+  Star,
+  Users
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ const DailyReadiness = dynamic(() => import('./DailyReadiness').then(m => m.Dail
 const TacticalAnalytics = dynamic(() => import('./TacticalAnalytics').then(m => m.TacticalAnalytics), { ssr: false });
 const TacticalPlaybook = dynamic(() => import('./TacticalPlaybook').then(m => m.TacticalPlaybook), { ssr: false });
 const GoalTracker = dynamic(() => import('./GoalTracker').then(m => m.GoalTracker), { ssr: false });
+const TeamPlanner = dynamic(() => import('./TeamPlanner').then(m => m.TeamPlanner), { ssr: false });
 
 const GAMES = [
   { id: 'Kabaddi', label: 'Kabaddi', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -89,6 +91,9 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="readiness" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
+              <TabsTrigger value="planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <Users className="w-3.5 h-3.5" /> Team Planner
+              </TabsTrigger>
               <TabsTrigger value="goals" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <Target className="w-3.5 h-3.5" /> Targets
               </TabsTrigger>
@@ -113,6 +118,9 @@ export function GameHub({ store }: { store: any }) {
 
           <TabsContent value="readiness" className="mt-0">
             <DailyReadiness store={store} />
+          </TabsContent>
+          <TabsContent value="planner" className="mt-0">
+            <TeamPlanner store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="goals" className="mt-0">
             <GoalTracker store={store} preselectedSport={selectedGame || undefined} />

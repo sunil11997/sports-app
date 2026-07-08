@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Printer, Medal } from 'lucide-react';
+import { getAgeValidation } from '@/lib/utils';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
@@ -18,14 +19,16 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   }, [preselectedSport]);
 
   const getCategory = useCallback((p: any) => {
-    const age = parseInt(p.age) || 0;
+    const ageVal = getAgeValidation(p.dob);
+    const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+    if (!age || age <= 0 || isNaN(age)) return 'Age Pending';
     const gender = p.gender === 'Female' ? 'Girls' : 'Boys';
     if (age < 14) return `${gender} U14`;
     if (age < 17) return `${gender} U17`;
     return `${gender} Senior`;
   }, []);
 
-  const categories = useMemo(() => ['Boys U14', 'Boys U17', 'Boys Senior', 'Girls U14', 'Girls U17', 'Girls Senior'], []);
+  const categories = useMemo(() => ['Boys U14', 'Boys U17', 'Boys Senior', 'Girls U14', 'Girls U17', 'Girls Senior', 'Age Pending'], []);
   
   const processedGroups = useMemo(() => {
     const groups: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
@@ -98,7 +101,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                   <td>${p.generalRegisterNumber || '-'}</td>
                   <td><strong>${p.name.toUpperCase()}</strong></td>
                   <td>${p.std}</td>
-                  <td>${p.age}</td>
+                  <td>${getAgeValidation(p.dob)?.ageYears || p.age || '-'}</td>
                   <td>${p.aadharNumber || '-'}</td>
                 </tr>
               `).join('')}
@@ -145,14 +148,25 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             </div>
             <div className="flex-1 overflow-auto p-4">
               <Table>
-                <TableHeader><TableRow><TableHead className="text-[10px] font-black uppercase">Athlete</TableHead><TableHead className="text-center text-[10px] font-black uppercase">Rating</TableHead></TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[10px] font-black uppercase">Athlete</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center">Age</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase">Rating</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
-                  {processedGroups[cat].slice(0, 15).map((p, i) => (
-                    <TableRow key={p.id} className={i < 12 ? 'bg-emerald-50/30' : ''}>
-                      <TableCell className="text-xs font-bold truncate max-w-[150px]">{p.name.toUpperCase()}</TableCell>
-                      <TableCell className="text-center font-black text-primary">{p.competencyRating}</TableCell>
-                    </TableRow>
-                  ))}
+                  {processedGroups[cat].slice(0, 15).map((p, i) => {
+                    const ageVal = getAgeValidation(p.dob);
+                    const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+                    return (
+                      <TableRow key={p.id} className={i < 12 ? 'bg-emerald-50/30' : ''}>
+                        <TableCell className="text-xs font-bold truncate max-w-[150px]">{p.name.toUpperCase()}</TableCell>
+                        <TableCell className="text-xs font-bold text-center">{age <= 0 ? "Pending" : age}</TableCell>
+                        <TableCell className="text-center font-black text-primary">{p.competencyRating}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

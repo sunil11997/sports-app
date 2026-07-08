@@ -21,7 +21,7 @@ import {
   Users
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { cn, getAgeValidation } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 const SPORTS_DATA: Record<string, { skills: string[] }> = {
@@ -118,16 +118,18 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   [store.data.players, activeSport]);
 
   const groupedSquads = useMemo(() => {
-    const groups: Record<string, any[]> = { 'U14': [], 'U17': [], 'Senior': [] };
+    const groups: Record<string, any[]> = { 'U14': [], 'U17': [], 'Senior': [], 'Age Pending': [] };
     
     playersInSport.forEach((p: any) => {
       const lookupKey = p.id + "_" + drillKey;
       const isMastered = !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
       
       if (!isMastered) {
-        const age = parseInt(p.age) || 0;
+        const ageVal = getAgeValidation(p.dob);
+        const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
         let cat = 'Senior';
-        if (age < 14) cat = 'U14';
+        if (!age || age <= 0 || isNaN(age)) cat = 'Age Pending';
+        else if (age < 14) cat = 'U14';
         else if (age < 17) cat = 'U17';
         groups[cat].push(p);
       }
