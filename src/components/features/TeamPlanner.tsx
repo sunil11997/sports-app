@@ -107,7 +107,12 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
   const [u14Lineup, setU14Lineup] = useState<(string | null)[]>(Array(7).fill(null));
   const [u17Lineup, setU17Lineup] = useState<(string | null)[]>(Array(7).fill(null));
   const [u19Lineup, setU19Lineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [femaleLineup, setFemaleLineup] = useState<(string | null)[]>(Array(7).fill(null));
   const [isSaving, setIsSaving] = useState(false);
+
+  // History search/filter state
+  const [historySearch, setHistorySearch] = useState('');
+  const [historySportFilter, setHistorySportFilter] = useState('all');
 
   useEffect(() => {
     if (preselectedSport) setSelectedSport(preselectedSport);
@@ -124,11 +129,13 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
       setU14Lineup(savedPlan.u14Players || Array(7).fill(null));
       setU17Lineup(savedPlan.u17Players || Array(7).fill(null));
       setU19Lineup(savedPlan.u19Players || Array(7).fill(null));
+      setFemaleLineup(savedPlan.femalePlayers || Array(7).fill(null));
     } else {
       setSelectedDrills([]);
       setU14Lineup(Array(7).fill(null));
       setU17Lineup(Array(7).fill(null));
       setU19Lineup(Array(7).fill(null));
+      setFemaleLineup(Array(7).fill(null));
     }
   }, [savedPlan, selectedSport, selectedDate]);
 
@@ -140,7 +147,42 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     );
   };
 
-  const getEligiblePlayers = useCallback((catType: 'U14' | 'U17' | 'U19') => {
+  // Find all players assigned to other sports on the same date
+  const assignedPlayerIdsOnDate = useMemo(() => {
+    const ids = new Set<string>();
+    const schoolId = store.data.schoolProfile?.id || "default";
+    
+    if (store.data.teamPlans) {
+      Object.entries(store.data.teamPlans).forEach(([key, plan]: [string, any]) => {
+        const parts = key.split('_');
+        if (parts.length >= 3) {
+          const planSchoolId = parts[0];
+          const planSport = parts[1];
+          const planDate = parts.slice(2).join('_');
+          
+          if (planSchoolId === schoolId && planDate === selectedDate && planSport !== selectedSport) {
+            if (Array.isArray(plan.u14Players)) plan.u14Players.forEach((id: any) => id && ids.add(id));
+            if (Array.isArray(plan.u17Players)) plan.u17Players.forEach((id: any) => id && ids.add(id));
+            if (Array.isArray(plan.u19Players)) plan.u19Players.forEach((id: any) => id && ids.add(id));
+            if (Array.isArray(plan.femalePlayers)) plan.femalePlayers.forEach((id: any) => id && ids.add(id));
+          }
+        }
+      });
+    }
+    return ids;
+  }, [store.data.teamPlans, store.data.schoolProfile?.id, selectedDate, selectedSport]);
+
+  // Find all players assigned to the current sport's lineup
+  const currentLineupPlayerIds = useMemo(() => {
+    const ids = new Set<string>();
+    u14Lineup.forEach(id => id && ids.add(id));
+    u17Lineup.forEach(id => id && ids.add(id));
+    u19Lineup.forEach(id => id && ids.add(id));
+    femaleLineup.forEach(id => id && ids.add(id));
+    return ids;
+  }, [u14Lineup, u17Lineup, u19Lineup, femaleLineup]);
+
+  const getEligiblePlayers = useCallback((catType: 'U14' | 'U17' | 'U19' | 'Female', excludeExceptionId?: string | null) => {
     return (store.data.players || []).filter((p: any) => {
       if (p.category !== 'athlete') return false;
       if (!p.sports?.includes(selectedSport)) return false;
@@ -151,20 +193,38 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
       
       if (!age || age <= 0 || isNaN(age)) return false;
 
-      if (catType === 'U14') return age < 14;
-      if (catType === 'U17') return age >= 14 && age < 17;
-      if (catType === 'U19') return age >= 17; // U19/Senior
-      return false;
+      // Gender check
+      const isFemale = p.gender && p.gender.toLowerCase() === 'female';
+      if (catType === 'Female') {
+        if (!isFemale) return false;
+      } else {
+        if (isFemale) return false;
+      }
+
+      if (catType === 'U14' && age >= 14) return false;
+      if (catType === 'U17' && (age < 14 || age >= 17)) return false;
+      if (catType === 'U19' && age < 17) return false;
+
+      // Daily single session constraint (exclude players assigned to other sports on same date)
+      if (assignedPlayerIdsOnDate.has(p.id)) return false;
+
+      // Exclude players already selected in other slots of the current sport (except for the slot's current player)
+      if (currentLineupPlayerIds.has(p.id) && p.id !== excludeExceptionId) return false;
+
+      return true;
     }).sort((a: any, b: any) => a.name.localeCompare(b.name));
-  }, [store.data.players, selectedSport]);
+  }, [store.data.players, selectedSport, assignedPlayerIdsOnDate, currentLineupPlayerIds]);
 
   const getPlayerDetails = useCallback((playerId: string | null) => {
     if (!playerId) return null;
     return (store.data.players || []).find((p: any) => p.id === playerId);
   }, [store.data.players]);
 
-  const handlePlayerChange = (catType: 'U14' | 'U17' | 'U19', index: number, playerId: string) => {
-    const updater = catType === 'U14' ? setU14Lineup : catType === 'U17' ? setU17Lineup : setU19Lineup;
+  const handlePlayerChange = (catType: 'U14' | 'U17' | 'U19' | 'Female', index: number, playerId: string) => {
+    const updater = catType === 'U14' ? setU14Lineup 
+                  : catType === 'U17' ? setU17Lineup 
+                  : catType === 'U19' ? setU19Lineup 
+                  : setFemaleLineup;
     
     updater(prev => {
       const next = [...prev];
@@ -185,7 +245,8 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
         drills: selectedDrills,
         u14Players: u14Lineup,
         u17Players: u17Lineup,
-        u19Players: u19Lineup
+        u19Players: u19Lineup,
+        femalePlayers: femaleLineup
       });
       toast({ title: "Plan Saved", description: "Daily practice schedule synced successfully." });
     } catch (e) {
@@ -200,9 +261,10 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     const u14Details = u14Lineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
     const u17Details = u17Lineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
     const u19Details = u19Lineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const femaleDetails = femaleLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
 
     const renderTable = (title: string, list: { index: number; player: any }[]) => `
-      <div style="flex: 1; margin: 10px; min-width: 250px;">
+      <div style="flex: 1; margin: 10px; min-width: 230px;">
         <h3 style="background: #235C36; color: white; margin: 0; padding: 10px; font-size: 14px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 8px 8px 0 0;">
           ${title}
         </h3>
@@ -286,6 +348,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             ${renderTable("Under 14 (U14)", u14Details)}
             ${renderTable("Under 17 (U17)", u17Details)}
             ${renderTable("Under 19 (U19)", u19Details)}
+            ${renderTable("Female (Girls)", femaleDetails)}
           </div>
         </body>
       </html>
@@ -296,9 +359,9 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     win?.document.close();
   };
 
-  const renderSlotSelector = (catType: 'U14' | 'U17' | 'U19', lineup: (string | null)[], index: number) => {
-    const eligible = getEligiblePlayers(catType);
+  const renderSlotSelector = (catType: 'U14' | 'U17' | 'U19' | 'Female', lineup: (string | null)[], index: number) => {
     const selectedPlayerId = lineup[index];
+    const eligible = getEligiblePlayers(catType, selectedPlayerId);
     const details = getPlayerDetails(selectedPlayerId);
     
     // Determine player age to display in dropdown
@@ -349,8 +412,75 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     );
   };
 
+  const practiceHistory = useMemo(() => {
+    const historyList: {
+      date: string;
+      sport: string;
+      player: any;
+      category: string;
+      drills: string[];
+    }[] = [];
+    
+    const schoolId = store.data.schoolProfile?.id || "default";
+    
+    if (store.data.teamPlans && store.data.players) {
+      Object.entries(store.data.teamPlans).forEach(([key, plan]: [string, any]) => {
+        const parts = key.split('_');
+        if (parts.length >= 3) {
+          const planSchoolId = parts[0];
+          const planSport = parts[1];
+          const planDate = parts.slice(2).join('_');
+          
+          if (planSchoolId === schoolId) {
+            const drills = plan.drills || [];
+            
+            const addPlayers = (playerIds: any[], catName: string) => {
+              if (Array.isArray(playerIds)) {
+                playerIds.forEach(id => {
+                  if (id) {
+                    const playerObj = store.data.players.find((p: any) => p.id === id);
+                    if (playerObj) {
+                      historyList.push({
+                        date: planDate,
+                        sport: planSport,
+                        player: playerObj,
+                        category: catName,
+                        drills
+                      });
+                    }
+                  }
+                });
+              }
+            };
+            
+            addPlayers(plan.u14Players, 'U14');
+            addPlayers(plan.u17Players, 'U17');
+            addPlayers(plan.u19Players, 'U19');
+            addPlayers(plan.femalePlayers, 'Female');
+          }
+        }
+      });
+    }
+    
+    return historyList.sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      const sportCompare = a.sport.localeCompare(b.sport);
+      if (sportCompare !== 0) return sportCompare;
+      return a.player.name.localeCompare(b.player.name);
+    });
+  }, [store.data.teamPlans, store.data.players, store.data.schoolProfile?.id]);
+
+  const filteredHistory = useMemo(() => {
+    return practiceHistory.filter(record => {
+      const matchesSearch = record.player.name.toLowerCase().includes(historySearch.toLowerCase());
+      const matchesSport = historySportFilter === 'all' || record.sport === historySportFilter;
+      return matchesSearch && matchesSport;
+    });
+  }, [practiceHistory, historySearch, historySportFilter]);
+
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-32">
       {/* Configuration Header Card */}
       <div className="bg-white p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex items-center gap-6">
@@ -429,11 +559,12 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
       </Card>
 
       {/* Lineup Selection Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {[
           { title: "Under 14 (U14)", type: 'U14' as const, lineup: u14Lineup },
           { title: "Under 17 (U17)", type: 'U17' as const, lineup: u17Lineup },
-          { title: "Under 19 (U19)", type: 'U19' as const, lineup: u19Lineup }
+          { title: "Under 19 (U19)", type: 'U19' as const, lineup: u19Lineup },
+          { title: "Female (Girls)", type: 'Female' as const, lineup: femaleLineup }
         ].map(cat => {
           const filledCount = cat.lineup.filter(id => id !== null).length;
           return (
@@ -454,6 +585,101 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
           );
         })}
       </div>
+
+      {/* Practice History Section Card */}
+      <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-md">
+        <CardHeader className="bg-muted/30 border-b p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <BookOpen className="w-6 h-6 text-primary" />
+            <div>
+              <CardTitle className="text-lg font-black text-primary uppercase tracking-tight">Practice History Log</CardTitle>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Audit log of all registered student practices</p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative w-full sm:w-60">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              <Input 
+                placeholder="Search athlete name..." 
+                value={historySearch} 
+                onChange={(e) => setHistorySearch(e.target.value)} 
+                className="pl-9 h-10 border-2 rounded-xl font-bold text-xs"
+              />
+            </div>
+            <Select value={historySportFilter} onValueChange={setHistorySportFilter}>
+              <SelectTrigger className="h-10 w-full sm:w-44 font-bold border-2 rounded-xl shadow-sm text-xs bg-white"><SelectValue placeholder="All Sports" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="font-bold">All Sports</SelectItem>
+                {SPORTS_LIST.map(s => <SelectItem key={s} value={s} className="font-bold">{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-muted/10 border-b border-primary/5">
+                  <th className="p-4 pl-8 text-[10px] font-black uppercase text-muted-foreground">Date</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-muted-foreground">Discipline</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-muted-foreground">Athlete Name</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-muted-foreground text-center">Squad</th>
+                  <th className="p-4 pr-8 text-[10px] font-black uppercase text-muted-foreground">Focus Drills</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-primary/5">
+                {filteredHistory.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-12 text-center text-xs font-black uppercase text-muted-foreground opacity-55">
+                      No practice records found.
+                    </td>
+                  </tr>
+                ) : filteredHistory.slice(0, 50).map((record, i) => (
+                  <tr key={i} className="hover:bg-primary/[0.02] transition-colors h-14">
+                    <td className="p-4 pl-8 text-xs font-bold text-primary">{record.date}</td>
+                    <td className="p-4">
+                      <Badge variant="secondary" className="font-black text-[9px] uppercase bg-accent/5 text-accent border border-accent/10">
+                        {record.sport}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <div>
+                        <p className="text-xs font-bold text-primary uppercase">{record.player.name}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">Std {record.player.std}</p>
+                      </div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <Badge variant="outline" className={`font-black text-[9px] uppercase ${
+                        record.category === 'Female' ? 'bg-pink-50 text-pink-700 border-pink-200' : 'bg-primary/5 text-primary'
+                      }`}>
+                        {record.category === 'Female' ? 'Female' : record.category}
+                      </Badge>
+                    </td>
+                    <td className="p-4 pr-8 max-w-xs md:max-w-md">
+                      <div className="flex flex-wrap gap-1">
+                        {record.drills.length > 0 ? (
+                          record.drills.map((drill, idx) => (
+                            <Badge key={idx} variant="outline" className="text-[8px] font-black uppercase tracking-wide border-primary/5 bg-primary/[0.02]">
+                              {drill}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-[9px] font-semibold text-muted-foreground/60 italic">No drills selected</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {filteredHistory.length > 50 && (
+            <div className="p-4 text-center border-t bg-muted/5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+              Showing latest 50 records of {filteredHistory.length} total
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Floating Save & Print Controls */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl border-2 border-primary/10 shadow-2xl px-8 py-5 rounded-[2rem] flex items-center justify-center gap-4 z-40 w-[90%] max-w-xl animate-in slide-in-from-bottom-8 duration-500">
