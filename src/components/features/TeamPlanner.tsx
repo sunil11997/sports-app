@@ -356,27 +356,27 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
 
     const renderTable = (title: string, list: { index: number; player: any }[], width: string) => `
       <div style="flex: 1 1 ${width}; margin: 8px; box-sizing: border-box; max-width: ${width}; page-break-inside: avoid;">
-        <h3 style="background: #235C36; color: white; margin: 0; padding: 8px 10px; font-size: 12px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 6px 6px 0 0;">
+        <h3 style="background: #235C36; color: white; margin: 0; padding: 10px 12px; font-size: 15px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 6px 6px 0 0;">
           ${title}
         </h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <thead>
             <tr style="background: #f2f2f2;">
-              <th style="border: 1px solid #ddd; padding: 5px; text-align: center; width: 35px;">SLOT</th>
-              <th style="border: 1px solid #ddd; padding: 5px; text-align: left;">PLAYER NAME</th>
-              <th style="border: 1px solid #ddd; padding: 5px; text-align: center; width: 45px;">STD</th>
-              <th style="border: 1px solid #ddd; padding: 5px; text-align: center; width: 35px;">AGE</th>
+              <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 40px; font-weight: 900;">SLOT</th>
+              <th style="border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-weight: 900;">PLAYER NAME</th>
+              <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 55px; font-weight: 900;">STD</th>
+              <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 40px; font-weight: 900;">AGE</th>
             </tr>
           </thead>
           <tbody>
             ${list.map(item => `
               <tr>
-                <td style="border: 1px solid #ddd; padding: 5px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
-                <td style="border: 1px solid #ddd; padding: 5px; font-weight: bold; text-transform: uppercase;">
+                <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
+                <td style="border: 1px solid #ddd; padding: 8px 10px; font-weight: bold; text-transform: uppercase;">
                   ${item.player ? item.player.name : '<span style="color: #ccc;">- VACANT -</span>'}
                 </td>
-                <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">${item.player ? item.player.std : '-'}</td>
-                <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">${item.player ? (getAgeValidation(item.player.dob)?.ageYears || item.player.age || '-') : '-'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center;">${item.player ? item.player.std : '-'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center;">${item.player ? (getAgeValidation(item.player.dob)?.ageYears || item.player.age || '-') : '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -428,15 +428,15 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.4; }
             .header { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 12px; margin-bottom: 20px; }
-            .school-title { font-size: 20px; font-weight: 900; color: #235C36; text-transform: uppercase; }
-            .subtitle { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-top: 6px; }
-            .meta-grid { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 20px; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; }
+            .school-title { font-size: 26px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .subtitle { font-size: 20px; font-weight: 800; text-transform: uppercase; margin-top: 6px; }
+            .meta-grid { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-bottom: 20px; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; }
             .drills-section { background: #fafafa; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
-            .drills-title { font-size: 12px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #235C36; padding-bottom: 4px; margin-bottom: 10px; color: #235C36; }
+            .drills-title { font-size: 15px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #235C36; padding-bottom: 4px; margin-bottom: 10px; color: #235C36; }
             .drills-list { display: flex; flex-wrap: wrap; gap: 8px; }
-            .drill-item { background: white; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; }
+            .drill-item { background: white; border: 1px solid #ccc; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; }
             .tables-container { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-bottom: 30px; }
-            .section-heading { font-size: 14px; font-weight: 900; text-transform: uppercase; color: #235C36; border-left: 4px solid #235C36; padding-left: 8px; margin-bottom: 15px; }
+            .section-heading { font-size: 18px; font-weight: 900; text-transform: uppercase; color: #235C36; border-left: 4px solid #235C36; padding-left: 8px; margin-bottom: 15px; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
