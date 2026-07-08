@@ -104,6 +104,16 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     return `${yyyy}-${mm}-${dd}`;
   });
 
+  const todayDateString = useMemo(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const isPastDate = selectedDate < todayDateString;
+
   const [selectedDrills, setSelectedDrills] = useState<string[]>([]);
   
   const [u14BoysLineup, setU14BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
@@ -332,29 +342,41 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     const hasU17G = u17GirlsLineup.some(id => id !== null);
     const hasU19G = u19GirlsLineup.some(id => id !== null);
 
-    const renderTable = (title: string, list: { index: number; player: any }[]) => `
-      <div style="flex: 1; margin: 10px; min-width: 230px; max-width: 32%;">
-        <h3 style="background: #235C36; color: white; margin: 0; padding: 10px; font-size: 14px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 8px 8px 0 0;">
+    const countB = [hasU14B, hasU17B, hasU19B].filter(Boolean).length;
+    const countG = [hasU14G, hasU17G, hasU19G].filter(Boolean).length;
+
+    const getTableWidth = (count: number) => {
+      if (count === 3) return '31%';
+      if (count === 2) return '48%';
+      return '100%';
+    };
+
+    const bWidth = getTableWidth(countB);
+    const gWidth = getTableWidth(countG);
+
+    const renderTable = (title: string, list: { index: number; player: any }[], width: string) => `
+      <div style="flex: 1 1 ${width}; margin: 8px; box-sizing: border-box; max-width: ${width}; page-break-inside: avoid;">
+        <h3 style="background: #235C36; color: white; margin: 0; padding: 8px 10px; font-size: 12px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 6px 6px 0 0;">
           ${title}
         </h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
           <thead>
             <tr style="background: #f2f2f2;">
-              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 40px;">SLOT</th>
-              <th style="border: 1px solid #ddd; padding: 6px; text-align: left;">PLAYER NAME</th>
-              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 50px;">STD</th>
-              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; width: 40px;">AGE</th>
+              <th style="border: 1px solid #ddd; padding: 5px; text-align: center; width: 35px;">SLOT</th>
+              <th style="border: 1px solid #ddd; padding: 5px; text-align: left;">PLAYER NAME</th>
+              <th style="border: 1px solid #ddd; padding: 5px; text-align: center; width: 45px;">STD</th>
+              <th style="border: 1px solid #ddd; padding: 5px; text-align: center; width: 35px;">AGE</th>
             </tr>
           </thead>
           <tbody>
             ${list.map(item => `
               <tr>
-                <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
-                <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; text-transform: uppercase;">
+                <td style="border: 1px solid #ddd; padding: 5px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
+                <td style="border: 1px solid #ddd; padding: 5px; font-weight: bold; text-transform: uppercase;">
                   ${item.player ? item.player.name : '<span style="color: #ccc;">- VACANT -</span>'}
                 </td>
-                <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${item.player ? item.player.std : '-'}</td>
-                <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${item.player ? (getAgeValidation(item.player.dob)?.ageYears || item.player.age || '-') : '-'}</td>
+                <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">${item.player ? item.player.std : '-'}</td>
+                <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">${item.player ? (getAgeValidation(item.player.dob)?.ageYears || item.player.age || '-') : '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -366,10 +388,10 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     if (hasU14B || hasU17B || hasU19B) {
       boysSection = `
         <div class="section-heading">BOYS SQUADS</div>
-        <div class="tables-container">
-          ${hasU14B ? renderTable("Under 14 Boys (U14B)", u14BDetails) : ''}
-          ${hasU17B ? renderTable("Under 17 Boys (U17B)", u17BDetails) : ''}
-          ${hasU19B ? renderTable("Under 19 Boys (U19B)", u19BDetails) : ''}
+        <div class="tables-container" style="display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 4px; margin-bottom: 15px;">
+          ${hasU14B ? renderTable("Under 14 Boys (U14B)", u14BDetails, bWidth) : ''}
+          ${hasU17B ? renderTable("Under 17 Boys (U17B)", u17BDetails, bWidth) : ''}
+          ${hasU19B ? renderTable("Under 19 Boys (U19B)", u19BDetails, bWidth) : ''}
         </div>
       `;
     }
@@ -377,11 +399,11 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     let girlsSection = '';
     if (hasU14G || hasU17G || hasU19G) {
       girlsSection = `
-        <div class="section-heading" style="margin-top: 20px;">GIRLS SQUADS</div>
-        <div class="tables-container">
-          ${hasU14G ? renderTable("Under 14 Girls (U14G)", u14GDetails) : ''}
-          ${hasU17G ? renderTable("Under 17 Girls (U17G)", u17GDetails) : ''}
-          ${hasU19G ? renderTable("Under 19 Girls (U19G)", u19GDetails) : ''}
+        <div class="section-heading" style="margin-top: 15px;">GIRLS SQUADS</div>
+        <div class="tables-container" style="display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 4px; margin-bottom: 15px;">
+          ${hasU14G ? renderTable("Under 14 Girls (U14G)", u14GDetails, gWidth) : ''}
+          ${hasU17G ? renderTable("Under 17 Girls (U17G)", u17GDetails, gWidth) : ''}
+          ${hasU19G ? renderTable("Under 19 Girls (U19G)", u19GDetails, gWidth) : ''}
         </div>
       `;
     }
@@ -398,7 +420,11 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
           <style>
             @media print {
               .no-print { display: none !important; }
-              body { padding-top: 0 !important; }
+              body { padding-top: 0 !important; margin: 0 !important; }
+              @page {
+                size: A4 portrait;
+                margin: 15mm 10mm 15mm 10mm;
+              }
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.4; }
             .header { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 12px; margin-bottom: 20px; }
@@ -472,6 +498,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
           <Select 
             value={selectedPlayerId || "vacant"} 
             onValueChange={(val) => handlePlayerChange(ageCat, gender, index, val)}
+            disabled={isPastDate}
           >
             <SelectTrigger className="h-10 text-xs font-bold border-0 bg-transparent shadow-none px-0 hover:bg-primary/[0.02] rounded-lg transition-colors w-full focus:ring-0">
               <SelectValue placeholder="Select Player" />
@@ -491,7 +518,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             </p>
           )}
         </div>
-        {selectedPlayerId && (
+        {selectedPlayerId && !isPastDate && (
           <Button 
             variant="ghost" 
             size="icon" 
@@ -582,7 +609,14 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             <Users className="w-10 h-10 text-primary" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Practice Planner</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Practice Planner</h2>
+              {isPastDate && (
+                <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider border-none">
+                  Archived
+                </Badge>
+              )}
+            </div>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Daily squad selection & drills</p>
           </div>
         </div>
@@ -628,8 +662,11 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                 return (
                   <button
                     key={drill}
-                    onClick={() => handleDrillToggle(drill)}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left border-2 font-bold text-xs transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                    disabled={isPastDate}
+                    onClick={() => !isPastDate && handleDrillToggle(drill)}
+                    className={`flex items-center gap-3 p-4 rounded-2xl text-left border-2 font-bold text-xs transition-all ${
+                      isPastDate ? 'opacity-80 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
+                    } ${
                       isSelected 
                         ? 'bg-primary/5 border-primary text-primary shadow-sm' 
                         : 'bg-white border-primary/5 text-muted-foreground hover:border-primary/10 hover:text-foreground'
@@ -828,11 +865,13 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
         </Button>
         <Button 
           onClick={handleSave} 
-          disabled={isSaving}
+          disabled={isSaving || isPastDate}
           className="rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-wider h-12 flex-1 shadow-lg active-scale"
         >
           {isSaving ? (
             <span className="flex items-center justify-center gap-2">Saving...</span>
+          ) : isPastDate ? (
+            <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> Archived Session</span>
           ) : (
             <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> Save Plan</span>
           )}
