@@ -16,7 +16,8 @@ import {
   Calendar,
   Sparkles,
   Search,
-  BookOpen
+  BookOpen,
+  Trash2
 } from 'lucide-react';
 import { getAgeValidation } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -235,6 +236,59 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
       next[index] = playerId === "clear" ? null : playerId;
       return next;
     });
+  };
+
+  const handleRemoveHistoryPlayer = async (record: { date: string; sport: string; player: any; category: string }) => {
+    if (!store.setTeamPlan) {
+      toast({ title: "Action Restricted", description: "Storage system initialization pending.", variant: "destructive" });
+      return;
+    }
+
+    const schoolId = store.data.schoolProfile?.id || "default";
+    const targetPlanKey = `${schoolId}_${record.sport}_${record.date}`;
+    const plan = store.data.teamPlans?.[targetPlanKey];
+
+    if (!plan) {
+      toast({ title: "Error", description: "Could not find the associated practice plan.", variant: "destructive" });
+      return;
+    }
+
+    let lineupField: string;
+    if (record.category === 'U14 Boys') lineupField = 'u14Players';
+    else if (record.category === 'U17 Boys') lineupField = 'u17Players';
+    else if (record.category === 'U19 Boys') lineupField = 'u19Players';
+    else if (record.category === 'U14 Girls') lineupField = 'u14GirlsPlayers';
+    else if (record.category === 'U17 Girls') lineupField = 'u17GirlsPlayers';
+    else if (record.category === 'U19 Girls') lineupField = 'u19GirlsPlayers';
+    else return;
+
+    const currentLineup = plan[lineupField];
+    if (!Array.isArray(currentLineup)) return;
+
+    const updatedLineup = currentLineup.map((id: string | null) => id === record.player.id ? null : id);
+
+    try {
+      await store.setTeamPlan(record.sport, record.date, {
+        ...plan,
+        [lineupField]: updatedLineup
+      });
+
+      if (record.sport === selectedSport && record.date === selectedDate) {
+        if (lineupField === 'u14Players') setU14BoysLineup(updatedLineup);
+        else if (lineupField === 'u17Players') setU17BoysLineup(updatedLineup);
+        else if (lineupField === 'u19Players') setU19BoysLineup(updatedLineup);
+        else if (lineupField === 'u14GirlsPlayers') setU14GirlsLineup(updatedLineup);
+        else if (lineupField === 'u17GirlsPlayers') setU17GirlsLineup(updatedLineup);
+        else if (lineupField === 'u19GirlsPlayers') setU19GirlsLineup(updatedLineup);
+      }
+
+      toast({ 
+        title: "Player Removed", 
+        description: `Removed ${record.player.name} from ${record.sport} (${record.category}) on ${record.date}.` 
+      });
+    } catch (e) {
+      toast({ title: "Failed to Remove", description: "Could not update the database.", variant: "destructive" });
+    }
   };
 
   const handleSave = async () => {
@@ -692,13 +746,14 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                   <th className="p-4 text-[10px] font-black uppercase text-muted-foreground">Discipline</th>
                   <th className="p-4 text-[10px] font-black uppercase text-muted-foreground">Athlete Name</th>
                   <th className="p-4 text-[10px] font-black uppercase text-muted-foreground text-center">Squad</th>
-                  <th className="p-4 pr-8 text-[10px] font-black uppercase text-muted-foreground">Focus Drills</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-muted-foreground">Focus Drills</th>
+                  <th className="p-4 pr-8 text-[10px] font-black uppercase text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
                 {filteredHistory.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-12 text-center text-xs font-black uppercase text-muted-foreground opacity-55">
+                    <td colSpan={6} className="p-12 text-center text-xs font-black uppercase text-muted-foreground opacity-55">
                       No practice records found.
                     </td>
                   </tr>
@@ -725,7 +780,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                           {record.category}
                         </Badge>
                       </td>
-                      <td className="p-4 pr-8 max-w-xs md:max-w-md">
+                      <td className="p-4 max-w-xs md:max-w-md">
                         <div className="flex flex-wrap gap-1">
                           {record.drills.length > 0 ? (
                             record.drills.map((drill, idx) => (
@@ -737,6 +792,17 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                             <span className="text-[9px] font-semibold text-muted-foreground/60 italic">No drills selected</span>
                           )}
                         </div>
+                      </td>
+                      <td className="p-4 pr-8 text-right">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0 rounded-xl hover:text-destructive hover:bg-destructive/5 text-muted-foreground border"
+                          onClick={() => handleRemoveHistoryPlayer(record)}
+                          title={`Remove ${record.player.name} from practice`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </td>
                     </tr>
                   );
