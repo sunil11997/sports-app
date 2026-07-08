@@ -125,7 +125,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
   const [isSaving, setIsSaving] = useState(false);
 
   const [historySearch, setHistorySearch] = useState('');
-  const [historySportFilter, setHistorySportFilter] = useState('all');
 
   const padLineup = useCallback((arr?: (string | null)[]) => {
     const base = Array(12).fill(null);
@@ -606,10 +605,10 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
   const filteredHistory = useMemo(() => {
     return practiceHistory.filter(record => {
       const matchesSearch = record.player.name.toLowerCase().includes(historySearch.toLowerCase());
-      const matchesSport = historySportFilter === 'all' || record.sport === historySportFilter;
+      const matchesSport = record.sport === selectedSport;
       return matchesSearch && matchesSport;
     });
-  }, [practiceHistory, historySearch, historySportFilter]);
+  }, [practiceHistory, historySearch, selectedSport]);
 
   return (
     <div className="space-y-8 pb-32">
@@ -775,13 +774,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                 className="pl-9 h-10 border-2 rounded-xl font-bold text-xs"
               />
             </div>
-            <Select value={historySportFilter} onValueChange={setHistorySportFilter}>
-              <SelectTrigger className="h-10 w-full sm:w-44 font-bold border-2 rounded-xl shadow-sm text-xs bg-white"><SelectValue placeholder="All Sports" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="font-bold">All Sports</SelectItem>
-                {SPORTS_LIST.map(s => <SelectItem key={s} value={s} className="font-bold">{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
         <CardContent className="p-0">
