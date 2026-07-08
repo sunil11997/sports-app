@@ -104,13 +104,15 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
   });
 
   const [selectedDrills, setSelectedDrills] = useState<string[]>([]);
-  const [u14Lineup, setU14Lineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u17Lineup, setU17Lineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u19Lineup, setU19Lineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [femaleLineup, setFemaleLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  
+  const [u14BoysLineup, setU14BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [u17BoysLineup, setU17BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [u19BoysLineup, setU19BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [u14GirlsLineup, setU14GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [u17GirlsLineup, setU17GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  const [u19GirlsLineup, setU19GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
   const [isSaving, setIsSaving] = useState(false);
 
-  // History search/filter state
   const [historySearch, setHistorySearch] = useState('');
   const [historySportFilter, setHistorySportFilter] = useState('all');
 
@@ -118,7 +120,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     if (preselectedSport) setSelectedSport(preselectedSport);
   }, [preselectedSport]);
 
-  // Load saved plan from Firebase via store
   const schoolId = store.data.schoolProfile?.id || "default";
   const planKey = `${schoolId}_${selectedSport}_${selectedDate}`;
   const savedPlan = store.data.teamPlans?.[planKey];
@@ -126,16 +127,20 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
   useEffect(() => {
     if (savedPlan) {
       setSelectedDrills(savedPlan.drills || []);
-      setU14Lineup(savedPlan.u14Players || Array(7).fill(null));
-      setU17Lineup(savedPlan.u17Players || Array(7).fill(null));
-      setU19Lineup(savedPlan.u19Players || Array(7).fill(null));
-      setFemaleLineup(savedPlan.femalePlayers || Array(7).fill(null));
+      setU14BoysLineup(savedPlan.u14Players || Array(7).fill(null));
+      setU17BoysLineup(savedPlan.u17Players || Array(7).fill(null));
+      setU19BoysLineup(savedPlan.u19Players || Array(7).fill(null));
+      setU14GirlsLineup(savedPlan.u14GirlsPlayers || Array(7).fill(null));
+      setU17GirlsLineup(savedPlan.u17GirlsPlayers || Array(7).fill(null));
+      setU19GirlsLineup(savedPlan.u19GirlsPlayers || Array(7).fill(null));
     } else {
       setSelectedDrills([]);
-      setU14Lineup(Array(7).fill(null));
-      setU17Lineup(Array(7).fill(null));
-      setU19Lineup(Array(7).fill(null));
-      setFemaleLineup(Array(7).fill(null));
+      setU14BoysLineup(Array(7).fill(null));
+      setU17BoysLineup(Array(7).fill(null));
+      setU19BoysLineup(Array(7).fill(null));
+      setU14GirlsLineup(Array(7).fill(null));
+      setU17GirlsLineup(Array(7).fill(null));
+      setU19GirlsLineup(Array(7).fill(null));
     }
   }, [savedPlan, selectedSport, selectedDate]);
 
@@ -147,7 +152,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     );
   };
 
-  // Find all players assigned to other sports on the same date
   const assignedPlayerIdsOnDate = useMemo(() => {
     const ids = new Set<string>();
     const schoolId = store.data.schoolProfile?.id || "default";
@@ -164,7 +168,9 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             if (Array.isArray(plan.u14Players)) plan.u14Players.forEach((id: any) => id && ids.add(id));
             if (Array.isArray(plan.u17Players)) plan.u17Players.forEach((id: any) => id && ids.add(id));
             if (Array.isArray(plan.u19Players)) plan.u19Players.forEach((id: any) => id && ids.add(id));
-            if (Array.isArray(plan.femalePlayers)) plan.femalePlayers.forEach((id: any) => id && ids.add(id));
+            if (Array.isArray(plan.u14GirlsPlayers)) plan.u14GirlsPlayers.forEach((id: any) => id && ids.add(id));
+            if (Array.isArray(plan.u17GirlsPlayers)) plan.u17GirlsPlayers.forEach((id: any) => id && ids.add(id));
+            if (Array.isArray(plan.u19GirlsPlayers)) plan.u19GirlsPlayers.forEach((id: any) => id && ids.add(id));
           }
         }
       });
@@ -172,43 +178,35 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     return ids;
   }, [store.data.teamPlans, store.data.schoolProfile?.id, selectedDate, selectedSport]);
 
-  // Find all players assigned to the current sport's lineup
   const currentLineupPlayerIds = useMemo(() => {
     const ids = new Set<string>();
-    u14Lineup.forEach(id => id && ids.add(id));
-    u17Lineup.forEach(id => id && ids.add(id));
-    u19Lineup.forEach(id => id && ids.add(id));
-    femaleLineup.forEach(id => id && ids.add(id));
+    u14BoysLineup.forEach(id => id && ids.add(id));
+    u17BoysLineup.forEach(id => id && ids.add(id));
+    u19BoysLineup.forEach(id => id && ids.add(id));
+    u14GirlsLineup.forEach(id => id && ids.add(id));
+    u17GirlsLineup.forEach(id => id && ids.add(id));
+    u19GirlsLineup.forEach(id => id && ids.add(id));
     return ids;
-  }, [u14Lineup, u17Lineup, u19Lineup, femaleLineup]);
+  }, [u14BoysLineup, u17BoysLineup, u19BoysLineup, u14GirlsLineup, u17GirlsLineup, u19GirlsLineup]);
 
-  const getEligiblePlayers = useCallback((catType: 'U14' | 'U17' | 'U19' | 'Female', excludeExceptionId?: string | null) => {
+  const getEligiblePlayers = useCallback((ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female', excludeExceptionId?: string | null) => {
     return (store.data.players || []).filter((p: any) => {
       if (p.category !== 'athlete') return false;
       if (!p.sports?.includes(selectedSport)) return false;
 
-      // Resolve age dynamically
       const ageVal = getAgeValidation(p.dob);
       const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
       
       if (!age || age <= 0 || isNaN(age)) return false;
 
-      // Gender check
-      const isFemale = p.gender && p.gender.toLowerCase() === 'female';
-      if (catType === 'Female') {
-        if (!isFemale) return false;
-      } else {
-        if (isFemale) return false;
-      }
+      const playerGender = p.gender || 'Male';
+      if (playerGender.toLowerCase() !== gender.toLowerCase()) return false;
 
-      if (catType === 'U14' && age >= 14) return false;
-      if (catType === 'U17' && (age < 14 || age >= 17)) return false;
-      if (catType === 'U19' && age < 17) return false;
+      if (ageCat === 'U14' && age >= 14) return false;
+      if (ageCat === 'U17' && (age < 14 || age >= 17)) return false;
+      if (ageCat === 'U19' && age < 17) return false;
 
-      // Daily single session constraint (exclude players assigned to other sports on same date)
       if (assignedPlayerIdsOnDate.has(p.id)) return false;
-
-      // Exclude players already selected in other slots of the current sport (except for the slot's current player)
       if (currentLineupPlayerIds.has(p.id) && p.id !== excludeExceptionId) return false;
 
       return true;
@@ -220,11 +218,17 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     return (store.data.players || []).find((p: any) => p.id === playerId);
   }, [store.data.players]);
 
-  const handlePlayerChange = (catType: 'U14' | 'U17' | 'U19' | 'Female', index: number, playerId: string) => {
-    const updater = catType === 'U14' ? setU14Lineup 
-                  : catType === 'U17' ? setU17Lineup 
-                  : catType === 'U19' ? setU19Lineup 
-                  : setFemaleLineup;
+  const handlePlayerChange = (ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female', index: number, playerId: string) => {
+    let updater;
+    if (gender === 'Male') {
+      updater = ageCat === 'U14' ? setU14BoysLineup 
+              : ageCat === 'U17' ? setU17BoysLineup 
+              : setU19BoysLineup;
+    } else {
+      updater = ageCat === 'U14' ? setU14GirlsLineup 
+              : ageCat === 'U17' ? setU17GirlsLineup 
+              : setU19GirlsLineup;
+    }
     
     updater(prev => {
       const next = [...prev];
@@ -243,10 +247,12 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     try {
       await store.setTeamPlan(selectedSport, selectedDate, {
         drills: selectedDrills,
-        u14Players: u14Lineup,
-        u17Players: u17Lineup,
-        u19Players: u19Lineup,
-        femalePlayers: femaleLineup
+        u14Players: u14BoysLineup,
+        u17Players: u17BoysLineup,
+        u19Players: u19BoysLineup,
+        u14GirlsPlayers: u14GirlsLineup,
+        u17GirlsPlayers: u17GirlsLineup,
+        u19GirlsPlayers: u19GirlsLineup
       });
       toast({ title: "Plan Saved", description: "Daily practice schedule synced successfully." });
     } catch (e) {
@@ -258,13 +264,15 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
 
   const handlePrint = () => {
     const schoolName = store.data.schoolProfile?.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
-    const u14Details = u14Lineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
-    const u17Details = u17Lineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
-    const u19Details = u19Lineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
-    const femaleDetails = femaleLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const u14BDetails = u14BoysLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const u17BDetails = u17BoysLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const u19BDetails = u19BoysLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const u14GDetails = u14GirlsLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const u17GDetails = u17GirlsLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const u19GDetails = u19GirlsLineup.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
 
     const renderTable = (title: string, list: { index: number; player: any }[]) => `
-      <div style="flex: 1; margin: 10px; min-width: 230px;">
+      <div style="flex: 1; margin: 10px; min-width: 230px; max-width: 32%;">
         <h3 style="background: #235C36; color: white; margin: 0; padding: 10px; font-size: 14px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 8px 8px 0 0;">
           ${title}
         </h3>
@@ -311,7 +319,8 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             .drills-title { font-size: 12px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #235C36; padding-bottom: 4px; margin-bottom: 10px; color: #235C36; }
             .drills-list { display: flex; flex-wrap: wrap; gap: 8px; }
             .drill-item { background: white; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; }
-            .tables-container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+            .tables-container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 30px; }
+            .section-heading { font-size: 14px; font-weight: 900; text-transform: uppercase; color: #235C36; border-left: 4px solid #235C36; padding-left: 8px; margin-bottom: 15px; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -344,11 +353,18 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
             </div>
           </div>
 
+          <div class="section-heading">BOYS SQUADS</div>
           <div class="tables-container">
-            ${renderTable("Under 14 (U14)", u14Details)}
-            ${renderTable("Under 17 (U17)", u17Details)}
-            ${renderTable("Under 19 (U19)", u19Details)}
-            ${renderTable("Female (Girls)", femaleDetails)}
+            ${renderTable("Under 14 Boys (U14B)", u14BDetails)}
+            ${renderTable("Under 17 Boys (U17B)", u17BDetails)}
+            ${renderTable("Under 19 Boys (U19B)", u19BDetails)}
+          </div>
+
+          <div class="section-heading" style="margin-top: 20px;">GIRLS SQUADS</div>
+          <div class="tables-container">
+            ${renderTable("Under 14 Girls (U14G)", u14GDetails)}
+            ${renderTable("Under 17 Girls (U17G)", u17GDetails)}
+            ${renderTable("Under 19 Girls (U19G)", u19GDetails)}
           </div>
         </body>
       </html>
@@ -359,12 +375,11 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
     win?.document.close();
   };
 
-  const renderSlotSelector = (catType: 'U14' | 'U17' | 'U19' | 'Female', lineup: (string | null)[], index: number) => {
+  const renderSlotSelector = (ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female', lineup: (string | null)[], index: number) => {
     const selectedPlayerId = lineup[index];
-    const eligible = getEligiblePlayers(catType, selectedPlayerId);
+    const eligible = getEligiblePlayers(ageCat, gender, selectedPlayerId);
     const details = getPlayerDetails(selectedPlayerId);
     
-    // Determine player age to display in dropdown
     const displayAge = (p: any) => {
       const ageVal = getAgeValidation(p.dob);
       return ageVal ? `${ageVal.ageYears} yrs` : `${p.age || '?'} yrs`;
@@ -378,7 +393,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
         <div className="flex-1 min-w-0">
           <Select 
             value={selectedPlayerId || "vacant"} 
-            onValueChange={(val) => handlePlayerChange(catType, index, val)}
+            onValueChange={(val) => handlePlayerChange(ageCat, gender, index, val)}
           >
             <SelectTrigger className="h-10 text-xs font-bold border-0 bg-transparent shadow-none px-0 hover:bg-primary/[0.02] rounded-lg transition-colors w-full focus:ring-0">
               <SelectValue placeholder="Select Player" />
@@ -402,7 +417,7 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => handlePlayerChange(catType, index, "clear")}
+            onClick={() => handlePlayerChange(ageCat, gender, index, "clear")}
             className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-full"
           >
             <X className="w-4.5 h-4.5" />
@@ -453,10 +468,12 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
               }
             };
             
-            addPlayers(plan.u14Players, 'U14');
-            addPlayers(plan.u17Players, 'U17');
-            addPlayers(plan.u19Players, 'U19');
-            addPlayers(plan.femalePlayers, 'Female');
+            addPlayers(plan.u14Players, 'U14 Boys');
+            addPlayers(plan.u17Players, 'U17 Boys');
+            addPlayers(plan.u19Players, 'U19 Boys');
+            addPlayers(plan.u14GirlsPlayers, 'U14 Girls');
+            addPlayers(plan.u17GirlsPlayers, 'U17 Girls');
+            addPlayers(plan.u19GirlsPlayers, 'U19 Girls');
           }
         }
       });
@@ -481,7 +498,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
 
   return (
     <div className="space-y-8 pb-32">
-      {/* Configuration Header Card */}
       <div className="bg-white p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex items-center gap-6">
           <div className="bg-primary/5 p-4 rounded-[1.5rem] border-2 border-primary/10 shadow-inner">
@@ -518,7 +534,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
         </div>
       </div>
 
-      {/* Drills Section Card */}
       <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-md">
         <CardHeader className="bg-muted/30 border-b p-6 flex flex-row items-center gap-3">
           <Target className="w-6 h-6 text-primary animate-pulse" />
@@ -558,35 +573,64 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
         </CardContent>
       </Card>
 
-      {/* Lineup Selection Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {[
-          { title: "Under 14 (U14)", type: 'U14' as const, lineup: u14Lineup },
-          { title: "Under 17 (U17)", type: 'U17' as const, lineup: u17Lineup },
-          { title: "Under 19 (U19)", type: 'U19' as const, lineup: u19Lineup },
-          { title: "Female (Girls)", type: 'Female' as const, lineup: femaleLineup }
-        ].map(cat => {
-          const filledCount = cat.lineup.filter(id => id !== null).length;
-          return (
-            <Card key={cat.title} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
-              <div className="bg-primary/5 p-6 border-b flex justify-between items-center">
-                <div>
-                  <span className="text-lg font-black uppercase text-primary block leading-none">{cat.title}</span>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
+      <div className="space-y-4">
+        <h3 className="text-xs font-black uppercase text-primary tracking-widest pl-2 border-l-4 border-primary">Boys Practice Squads</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[
+            { title: "Under 14 Boys (U14)", ageCat: 'U14' as const, gender: 'Male' as const, lineup: u14BoysLineup },
+            { title: "Under 17 Boys (U17)", ageCat: 'U17' as const, gender: 'Male' as const, lineup: u17BoysLineup },
+            { title: "Under 19 Boys (U19)", ageCat: 'U19' as const, gender: 'Male' as const, lineup: u19BoysLineup }
+          ].map(cat => {
+            const filledCount = cat.lineup.filter(id => id !== null).length;
+            return (
+              <Card key={cat.title} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
+                <div className="bg-primary/5 p-6 border-b flex justify-between items-center">
+                  <div>
+                    <span className="text-lg font-black uppercase text-primary block leading-none">{cat.title}</span>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
+                  </div>
+                  <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-primary'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
+                    {filledCount} / 7 SELECTED
+                  </Badge>
                 </div>
-                <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-primary'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
-                  {filledCount} / 7 SELECTED
-                </Badge>
-              </div>
-              <CardContent className="p-6 flex-1 space-y-4">
-                {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.type, cat.lineup, i))}
-              </CardContent>
-            </Card>
-          );
-        })}
+                <CardContent className="p-6 flex-1 space-y-4">
+                  {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Practice History Section Card */}
+      <div className="space-y-4 pt-4">
+        <h3 className="text-xs font-black uppercase text-accent tracking-widest pl-2 border-l-4 border-accent">Girls Practice Squads</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[
+            { title: "Under 14 Girls (U14)", ageCat: 'U14' as const, gender: 'Female' as const, lineup: u14GirlsLineup },
+            { title: "Under 17 Girls (U17)", ageCat: 'U17' as const, gender: 'Female' as const, lineup: u17GirlsLineup },
+            { title: "Under 19 Girls (U19)", ageCat: 'U19' as const, gender: 'Female' as const, lineup: u19GirlsLineup }
+          ].map(cat => {
+            const filledCount = cat.lineup.filter(id => id !== null).length;
+            return (
+              <Card key={cat.title} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
+                <div className="bg-accent/5 p-6 border-b flex justify-between items-center">
+                  <div>
+                    <span className="text-lg font-black uppercase text-accent block leading-none">{cat.title}</span>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
+                  </div>
+                  <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-accent'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
+                    {filledCount} / 7 SELECTED
+                  </Badge>
+                </div>
+                <CardContent className="p-6 flex-1 space-y-4">
+                  {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
       <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-md">
         <CardHeader className="bg-muted/30 border-b p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -634,42 +678,45 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
                       No practice records found.
                     </td>
                   </tr>
-                ) : filteredHistory.slice(0, 50).map((record, i) => (
-                  <tr key={i} className="hover:bg-primary/[0.02] transition-colors h-14">
-                    <td className="p-4 pl-8 text-xs font-bold text-primary">{record.date}</td>
-                    <td className="p-4">
-                      <Badge variant="secondary" className="font-black text-[9px] uppercase bg-accent/5 text-accent border border-accent/10">
-                        {record.sport}
-                      </Badge>
-                    </td>
-                    <td className="p-4">
-                      <div>
-                        <p className="text-xs font-bold text-primary uppercase">{record.player.name}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">Std {record.player.std}</p>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <Badge variant="outline" className={`font-black text-[9px] uppercase ${
-                        record.category === 'Female' ? 'bg-pink-50 text-pink-700 border-pink-200' : 'bg-primary/5 text-primary'
-                      }`}>
-                        {record.category === 'Female' ? 'Female' : record.category}
-                      </Badge>
-                    </td>
-                    <td className="p-4 pr-8 max-w-xs md:max-w-md">
-                      <div className="flex flex-wrap gap-1">
-                        {record.drills.length > 0 ? (
-                          record.drills.map((drill, idx) => (
-                            <Badge key={idx} variant="outline" className="text-[8px] font-black uppercase tracking-wide border-primary/5 bg-primary/[0.02]">
-                              {drill}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-[9px] font-semibold text-muted-foreground/60 italic">No drills selected</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                ) : filteredHistory.slice(0, 50).map((record, i) => {
+                  const isGirlsCategory = record.category.includes('Girls');
+                  return (
+                    <tr key={i} className="hover:bg-primary/[0.02] transition-colors h-14">
+                      <td className="p-4 pl-8 text-xs font-bold text-primary">{record.date}</td>
+                      <td className="p-4">
+                        <Badge variant="secondary" className="font-black text-[9px] uppercase bg-accent/5 text-accent border border-accent/10">
+                          {record.sport}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <div>
+                          <p className="text-xs font-bold text-primary uppercase">{record.player.name}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Std {record.player.std}</p>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <Badge variant="outline" className={`font-black text-[9px] uppercase ${
+                          isGirlsCategory ? 'bg-pink-50 text-pink-700 border-pink-200' : 'bg-primary/5 text-primary'
+                        }`}>
+                          {record.category}
+                        </Badge>
+                      </td>
+                      <td className="p-4 pr-8 max-w-xs md:max-w-md">
+                        <div className="flex flex-wrap gap-1">
+                          {record.drills.length > 0 ? (
+                            record.drills.map((drill, idx) => (
+                              <Badge key={idx} variant="outline" className="text-[8px] font-black uppercase tracking-wide border-primary/5 bg-primary/[0.02]">
+                                {drill}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-[9px] font-semibold text-muted-foreground/60 italic">No drills selected</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -681,7 +728,6 @@ export function TeamPlanner({ store, preselectedSport }: { store: any; preselect
         </CardContent>
       </Card>
 
-      {/* Floating Save & Print Controls */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl border-2 border-primary/10 shadow-2xl px-8 py-5 rounded-[2rem] flex items-center justify-center gap-4 z-40 w-[90%] max-w-xl animate-in slide-in-from-bottom-8 duration-500">
         <Button 
           variant="outline" 
