@@ -65,6 +65,7 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
 
 export function DailyPracticePlanner({ store }: { store: any }) {
   const { toast } = useToast();
+  const db = useFirestore();
   
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<'U14' | 'U17' | 'U19'>('U14');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -97,9 +98,7 @@ export function DailyPracticePlanner({ store }: { store: any }) {
 
   // Load from Firebase
   useEffect(() => {
-    if (!store.isLoaded) return;
-    const db = useFirestore();
-    if (!db) return;
+    if (!store.isLoaded || !db) return;
 
     const docRef = doc(db, 'daily_practice_schedules', scheduleKey);
     const unsub = onSnapshot(docRef, (snapshot) => {
@@ -281,7 +280,6 @@ export function DailyPracticePlanner({ store }: { store: any }) {
 
   // Save Schedule
   const handleSave = async () => {
-    const db = useFirestore();
     if (!db) {
       toast({ title: "Storage Restructured", description: "Storage initialization failed.", variant: "destructive" });
       return;
@@ -313,9 +311,7 @@ export function DailyPracticePlanner({ store }: { store: any }) {
 
   // Copy Schedule
   const handleCopySchedule = async () => {
-    if (!copySourceDate) return;
-    const db = useFirestore();
-    if (!db) return;
+    if (!copySourceDate || !db) return;
 
     try {
       const sourceKey = `${schoolId}_${copySourceDate}_${selectedAgeGroup}`;
