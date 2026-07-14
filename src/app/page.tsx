@@ -167,26 +167,24 @@ export default function WaghambaApp() {
 
   if (showSplash) {
     return (
-      <div className="min-h-screen bg-[#1e3a8a] flex items-center justify-center p-6 z-[9999] fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950" />
-        <div className="max-w-xs w-full text-center space-y-8 relative z-10">
-           <div className="w-64 h-64 mx-auto relative animate-in zoom-in duration-1000">
-             {splashData ? (
-               <Lottie animationData={splashData} loop={true} className="w-full h-full" />
-             ) : (
-               <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
-                 <Loader2 className="w-12 h-12 text-white/20 animate-spin" />
-                 <p className="text-white/20 text-[8px] font-black uppercase tracking-widest">WGB Registry Protocol</p>
-               </div>
-             )}
+      <div 
+        className="min-h-screen flex items-center justify-center p-6 z-[9999] fixed inset-0 bg-cover bg-center select-none"
+        style={{ backgroundImage: `url('/splash.jpg')` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/65" />
+        
+        <div className="max-w-xs w-full text-center space-y-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
+           <div className="w-24 h-24 mx-auto relative rounded-full overflow-hidden border-2 border-white/20 shadow-2xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center">
+             <Image src={LOGO_PATH} alt="Logo" width={80} height={80} unoptimized className="object-contain" />
            </div>
+
            <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em]">WGB HUB V5.1</h2>
+             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em] drop-shadow-lg">WGB HUB V5.1</h2>
              <div className="flex flex-col items-center gap-3">
-               <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+               <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
                  <div className="h-full bg-accent w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
                </div>
-               <p className="text-white/40 text-[10px] font-display font-black uppercase tracking-[0.5em]">Synchronizing Registry</p>
+               <p className="text-white/60 text-[10px] font-display font-black uppercase tracking-[0.5em] drop-shadow-md">Synchronizing Registry</p>
              </div>
            </div>
         </div>
