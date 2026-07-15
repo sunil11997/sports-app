@@ -22,7 +22,8 @@ import {
   Layout,
   Star,
   Users,
-  CalendarDays
+  CalendarDays,
+  Sparkles
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,7 @@ const TacticalPlaybook = dynamic(() => import('./TacticalPlaybook').then(m => m.
 const GoalTracker = dynamic(() => import('./GoalTracker').then(m => m.GoalTracker), { ssr: false });
 const TeamPlanner = dynamic(() => import('./TeamPlanner').then(m => m.TeamPlanner), { ssr: false });
 const DailyPracticePlanner = dynamic(() => import('./DailyPracticePlanner').then(m => m.DailyPracticePlanner), { ssr: false });
+const AutoPracticePlanner = dynamic(() => import('./AutoPracticePlanner').then(m => m.AutoPracticePlanner), { ssr: false });
 
 const GAMES = [
   { id: 'Kabaddi', label: 'Kabaddi', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -96,6 +98,9 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <Users className="w-3.5 h-3.5" /> Team Planner
               </TabsTrigger>
+              <TabsTrigger value="auto-planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Auto Planner
+              </TabsTrigger>
               <TabsTrigger value="daily-planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <CalendarDays className="w-3.5 h-3.5" /> Daily Planner
               </TabsTrigger>
@@ -116,7 +121,7 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="teams" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
               <TabsTrigger value="reports" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-slate-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Activity className="w-3 h-3" /> Auto Reports
+                <Activity className="w-3.5 h-3.5" /> Auto Reports
               </TabsTrigger>
             </TabsList>
           </div>
@@ -126,6 +131,9 @@ export function GameHub({ store }: { store: any }) {
           </TabsContent>
           <TabsContent value="planner" className="mt-0">
             <TeamPlanner store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
+          <TabsContent value="auto-planner" className="mt-0">
+            <AutoPracticePlanner store={store} />
           </TabsContent>
           <TabsContent value="daily-planner" className="mt-0">
             <DailyPracticePlanner store={store} />
