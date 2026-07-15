@@ -85,6 +85,16 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const schoolId = store.data.schoolProfile?.id || "default";
   const scheduleKey = `${schoolId}_autoplan_${selectedDate}_${selectedSession}`;
 
+  const padLineupTo10 = useCallback((arr?: (string | null)[]) => {
+    const base = Array(10).fill(null);
+    if (Array.isArray(arr)) {
+      for (let i = 0; i < Math.min(arr.length, 10); i++) {
+        base[i] = arr[i];
+      }
+    }
+    return base;
+  }, []);
+
   // Load from Firebase
   useEffect(() => {
     if (!store.isLoaded || !db) return;
@@ -93,8 +103,30 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     const unsub = onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
         const d = snapshot.data();
-        setTeamPlans(d.teamPlans || {});
-        setOtherPlans(d.otherPlans || {});
+        
+        // Pad team plans to 10 slots
+        const paddedTeam: Record<string, SquadData> = {};
+        if (d.teamPlans) {
+          Object.entries(d.teamPlans).forEach(([sport, data]: [string, any]) => {
+            paddedTeam[sport] = {
+              u14Boys: padLineupTo10(data.u14Boys),
+              u17Boys: padLineupTo10(data.u17Boys),
+              u14Girls: padLineupTo10(data.u14Girls),
+              u17Girls: padLineupTo10(data.u17Girls)
+            };
+          });
+        }
+
+        // Pad other plans to 10 slots
+        const paddedOther: Record<string, (string | null)[]> = {};
+        if (d.otherPlans) {
+          Object.entries(d.otherPlans).forEach(([sport, list]: [string, any]) => {
+            paddedOther[sport] = padLineupTo10(list);
+          });
+        }
+
+        setTeamPlans(paddedTeam);
+        setOtherPlans(paddedOther);
         setDrills(d.drills || {});
       } else {
         // Clear state
@@ -104,7 +136,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       }
     });
     return () => unsub();
-  }, [store.isLoaded, scheduleKey, db]);
+  }, [store.isLoaded, scheduleKey, db, padLineupTo10]);
 
   // List of eligible athletes matching selected age group (U14 & U17)
   const eligibleAthletes = useMemo(() => {
@@ -174,9 +206,9 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     const nextOtherPlans: Record<string, (string | null)[]> = {};
     const nextDrills: Record<string, string[]> = {};
 
-    // 1. Helper to select 7 players for a squad category
+    // 1. Helper to select 10 players for a squad category
     const fillSquad = (sport: string, ageCat: 'U14' | 'U17', gender: 'Male' | 'Female') => {
-      const lineup = Array(7).fill(null);
+      const lineup = Array(10).fill(null);
       const pool = eligibleAthletes.filter((p: any) => {
         if (p.gender !== gender) return false;
         if (assignedSet.has(p.id)) return false; // Already practicing a game today
@@ -192,7 +224,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
       // Randomize selection
       const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
-      for (let i = 0; i < Math.min(7, shuffledPool.length); i++) {
+      for (let i = 0; i < Math.min(10, shuffledPool.length); i++) {
         lineup[i] = shuffledPool[i].id;
         assignedSet.add(shuffledPool[i].id); // Lock player for the day
       }
@@ -215,7 +247,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
     // 3. Schedule Athletics / Other Sports next
     OTHER_SPORTS.forEach(sport => {
-      const lineup = Array(7).fill(null);
+      const lineup = Array(10).fill(null);
       const pool = eligibleAthletes.filter((p: any) => {
         if (assignedSet.has(p.id)) return false;
         if (!Array.isArray(p.sports) || !p.sports.includes(sport)) return false;
@@ -223,7 +255,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       });
 
       const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
-      for (let i = 0; i < Math.min(7, shuffledPool.length); i++) {
+      for (let i = 0; i < Math.min(10, shuffledPool.length); i++) {
         lineup[i] = shuffledPool[i].id;
         assignedSet.add(shuffledPool[i].id);
       }
@@ -466,7 +498,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
           </div>
           <div className="space-y-1">
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Master Auto Planner</h2>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Automated Practice Planner (7 Slots)</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Automated Practice Planner (10 Slots)</p>
           </div>
         </div>
 
