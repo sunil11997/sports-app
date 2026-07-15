@@ -36,7 +36,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
 import { useToast } from '@/hooks/use-toast';
 
@@ -123,6 +123,102 @@ export default function WaghambaApp() {
       return () => clearTimeout(timer);
     }
   }, [user, isUserLoading, auth, isMounted]);
+
+  // Happy Birthday & New Achievement Notifications
+  useEffect(() => {
+    if (!schoolData.isLoaded || !schoolData.data.players) return;
+
+    // Request web notifications permission silently if default
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    const sendAppAlert = (title: string, body: string) => {
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(title, { body, icon: '/icon-512.png' });
+        } catch (e) {
+          toast({ title, description: body });
+        }
+      } else {
+        toast({ title, description: body });
+      }
+    };
+
+    const todayDate = format(new Date(), 'yyyy-MM-dd');
+    const todayBirthdayKey = format(new Date(), 'MM-dd');
+
+    // 1. Birthday Checks (Daily Notification)
+    const lastBirthdayNotify = localStorage.getItem('wgb_birthday_notify_date');
+    if (lastBirthdayNotify !== todayDate) {
+      const bdays = (schoolData.data.players || []).filter((p: any) => p.dob && p.dob.endsWith(todayBirthdayKey));
+      bdays.forEach((p: any) => {
+        sendAppAlert(
+          "Happy Birthday! 🎂🎉",
+          `Wishing ${p.name.toUpperCase()} (Std ${p.std}) a very happy birthday today!`
+        );
+      });
+      localStorage.setItem('wgb_birthday_notify_date', todayDate);
+    }
+
+    // 2. Achievement Checks (Trigger once per unique milestone achieved)
+    try {
+      const players = schoolData.data.players || [];
+      const attendance = schoolData.data.attendance || {};
+      const fitness = schoolData.data.fitness || {};
+      const health = schoolData.data.healthIncidents || [];
+      
+      const notifiedKey = 'wgb_notified_achievements';
+      const notifiedMap = JSON.parse(localStorage.getItem(notifiedKey) || '{}');
+      let mapChanged = false;
+
+      players.forEach((p: any) => {
+        if (p.category !== 'athlete') return;
+
+        // A. Consistency King: streak >= 15
+        let streak = 0;
+        const now = new Date();
+        for (let i = 0; i < 30; i++) {
+          const d = format(subDays(now, i), 'yyyy-MM-dd');
+          const isPresent = attendance[`${p.id}_${d}_Morning`] === 'P' || attendance[`${p.id}_${d}_Evening`] === 'P';
+          if (isPresent) streak++;
+          else break;
+        }
+
+        const consistencyKey = `${p.id}_consistency`;
+        if (streak >= 15 && !notifiedMap[consistencyKey]) {
+          sendAppAlert(
+            "New Achievement! 🏆🔥",
+            `${p.name.toUpperCase()} has earned the 'Consistency King' badge with a ${streak}-day practice streak!`
+          );
+          notifiedMap[consistencyKey] = true;
+          mapChanged = true;
+        }
+
+        // B. Recovery Champion
+        const hadCriticalInjury = health.some((h: any) => h.playerId === p.id && h.severity === 'Critical');
+        const fitData = fitness[p.id] || {};
+        const isRecoveryChampion = hadCriticalInjury && (fitData.status === 'Elite' || fitData.status === 'Optimal');
+
+        const recoveryKey = `${p.id}_recovery`;
+        if (isRecoveryChampion && !notifiedMap[recoveryKey]) {
+          sendAppAlert(
+            "New Achievement! 🏆🛡️",
+            `${p.name.toUpperCase()} has earned the 'Recovery Champion' badge after recovering to ${fitData.status} fitness!`
+          );
+          notifiedMap[recoveryKey] = true;
+          mapChanged = true;
+        }
+      });
+
+      if (mapChanged) {
+        localStorage.setItem(notifiedKey, JSON.stringify(notifiedMap));
+      }
+    } catch (err) {
+      console.warn("Failed to check achievements: ", err);
+    }
+
+  }, [schoolData.isLoaded, schoolData.data, toast]);
 
   const toggleRotation = useCallback(async () => {
     try {
