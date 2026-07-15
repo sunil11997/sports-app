@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore } from '@/firebase';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { getAgeValidation } from '@/lib/utils';
 import { 
   Users, 
@@ -23,49 +25,37 @@ import {
   MapPin, 
   BookOpen, 
   AlertTriangle,
-  ArrowRight,
-  TrendingUp
+  Clock,
+  Zap
 } from 'lucide-react';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
+const TEAM_SPORTS = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho'];
+const OTHER_SPORTS = ['Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 const SPORTS_DATA: Record<string, { skills: string[] }> = {
-  'Kabaddi': {
-    skills: ["Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill", "Bonus line drill", "Running raid drill", "Escape practice drill", "Ankle hold drill", "Thigh hold drill", "Chain tackle drill", "Dash practice drill", "Corner defense drill"]
-  },
-  'Volleyball': {
-    skills: ["Serve practice drill", "Underhand pass drill", "Overhand pass drill", "Set practice drill", "Spike approach drill", "Block timing drill", "Dig practice drill", "Court coverage drill", "Free ball pass drill", "Defense transition drill"]
-  },
-  'Handball': {
-    skills: ["Dribble speed drill", "Chest pass drill", "Bounce pass drill", "Jump shot drill", "Wing shoot drill", "Fallback defense drill", "Goalie reflexes drill", "Fastbreak transition drill", "Pivot turn drill", "Penalty throw drill"]
-  },
-  'Kho Kho': {
-    skills: ["Pole turn speed drill", "Chaser speed run", "Kho timing tap", "Dodging practice", "Single chain run", "Double chain run", "Dive attack drill", "Sudden turn drill", "Fake call tap", "Entry zone speed"]
-  },
-  'Running': {
-    skills: ["Starting block drill", "Spike speed stride", "Arm swing drill", "Knee drive drill", "Baton exchange drill", "Pacing strategy run", "Finish line dip", "High intensity sprints", "Interval conditioning"]
-  },
-  'Shot Put': {
-    skills: ["Glide technique drill", "Power position throw", "Spin rotation drill", "Release angle check", "Wrist snap practice", "Balance ring hold", "Med ball throw", "Core rotation lift"]
-  },
-  'Javelin Throw': {
-    skills: ["Cross-over step drill", "Approach rhythm run", "Release pull power", "Javelin carry sprint", "Elbow high extension", "Block leg plant", "Flight angle check", "Target throw accuracy"]
-  },
-  'Disc Throw': {
-    skills: ["Wind-up rotation drill", "Spin entry balance", "Power launch stance", "Release spin check", "Orbit trajectory check", "Footwork speed glide", "Core twisting power"]
-  },
-  'Long Jump': {
-    skills: ["Approach speed run", "Board takeoff lift", "Flight hitch-kick", "Landing extension", "Takeoff foot plant", "Speed retention stride", "Hurdle takeoff drill"]
-  },
-  'High Jump': {
-    skills: ["J-approach run speed", "Takeoff arch height", "Fosbury flop turn", "Landing roll safety", "Knee drive lift", "Bar clearance timing", "Vertical launch power"]
-  }
+  'Kabaddi': { skills: ["Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill", "Bonus line drill", "Running raid drill", "Escape practice drill", "Ankle hold drill", "Thigh hold drill", "Chain tackle drill"] },
+  'Volleyball': { skills: ["Serve practice drill", "Underhand pass drill", "Overhand pass drill", "Set practice drill", "Spike approach drill", "Block timing drill", "Dig practice drill", "Court coverage drill"] },
+  'Handball': { skills: ["Dribble speed drill", "Chest pass drill", "Bounce pass drill", "Jump shot drill", "Wing shoot drill", "Fallback defense drill", "Goalie reflexes drill", "Fastbreak transition drill"] },
+  'Kho Kho': { skills: ["Pole turn speed drill", "Chaser speed run", "Kho timing tap", "Dodging practice", "Single chain run", "Double chain run", "Dive attack drill", "Sudden turn drill"] },
+  'Running': { skills: ["Starting block drill", "Spike speed stride", "Arm swing drill", "Knee drive drill", "Baton exchange drill", "Pacing strategy run"] },
+  'Shot Put': { skills: ["Glide technique drill", "Power position throw", "Spin rotation drill", "Release angle check", "Wrist snap practice", "Balance ring hold"] },
+  'Javelin Throw': { skills: ["Cross-over step drill", "Approach rhythm run", "Release pull power", "Javelin carry sprint", "Elbow high extension", "Block leg plant"] },
+  'Disc Throw': { skills: ["Wind-up rotation drill", "Spin entry balance", "Power launch stance", "Release spin check", "Orbit trajectory check"] },
+  'Long Jump': { skills: ["Approach speed run", "Board takeoff lift", "Flight hitch-kick", "Landing extension", "Takeoff foot plant"] },
+  'High Jump': { skills: ["J-approach run speed", "Takeoff arch height", "Fosbury flop turn", "Landing roll safety", "Knee drive lift"] }
 };
+
+interface SquadData {
+  u14Boys: (string | null)[];
+  u17Boys: (string | null)[];
+  u14Girls: (string | null)[];
+  u17Girls: (string | null)[];
+}
 
 export function AutoPracticePlanner({ store }: { store: any }) {
   const { toast } = useToast();
+  const db = useFirestore();
 
-  const [selectedSport, setSelectedSport] = useState<string>("Kabaddi");
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -73,6 +63,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   });
+
+  const [selectedSession, setSelectedSession] = useState<'Morning' | 'Evening'>('Morning');
 
   const todayDateString = useMemo(() => {
     const today = new Date();
@@ -84,239 +76,237 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
   const isPastDate = selectedDate < todayDateString;
 
-  const [selectedDrills, setSelectedDrills] = useState<string[]>([]);
-  
-  const [u14BoysLineup, setU14BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u17BoysLineup, setU17BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u19BoysLineup, setU19BoysLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u14GirlsLineup, setU14GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u17GirlsLineup, setU17GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
-  const [u19GirlsLineup, setU19GirlsLineup] = useState<(string | null)[]>(Array(7).fill(null));
+  // Master auto plans state
+  const [teamPlans, setTeamPlans] = useState<Record<string, SquadData>>({});
+  const [otherPlans, setOtherPlans] = useState<Record<string, (string | null)[]>>({});
+  const [drills, setDrills] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   const schoolId = store.data.schoolProfile?.id || "default";
-  const planKey = `${schoolId}_${selectedSport}_${selectedDate}`;
-  const savedPlan = store.data.teamPlans?.[planKey];
+  const scheduleKey = `${schoolId}_autoplan_${selectedDate}_${selectedSession}`;
 
-  // Pad helper to fetch exactly 7 elements
-  const padLineupTo7 = useCallback((arr?: (string | null)[]) => {
-    const base = Array(7).fill(null);
-    if (Array.isArray(arr)) {
-      for (let i = 0; i < Math.min(arr.length, 7); i++) {
-        base[i] = arr[i];
-      }
-    }
-    return base;
-  }, []);
-
-  // Load plan from Firebase if exists
+  // Load from Firebase
   useEffect(() => {
-    if (savedPlan) {
-      setSelectedDrills(savedPlan.drills || []);
-      setU14BoysLineup(padLineupTo7(savedPlan.u14Players));
-      setU17BoysLineup(padLineupTo7(savedPlan.u17Players));
-      setU19BoysLineup(padLineupTo7(savedPlan.u19Players));
-      setU14GirlsLineup(padLineupTo7(savedPlan.u14GirlsPlayers));
-      setU17GirlsLineup(padLineupTo7(savedPlan.u17GirlsPlayers));
-      setU19GirlsLineup(padLineupTo7(savedPlan.u19GirlsPlayers));
-    } else {
-      setSelectedDrills([]);
-      setU14BoysLineup(Array(7).fill(null));
-      setU17BoysLineup(Array(7).fill(null));
-      setU19BoysLineup(Array(7).fill(null));
-      setU14GirlsLineup(Array(7).fill(null));
-      setU17GirlsLineup(Array(7).fill(null));
-      setU19GirlsLineup(Array(7).fill(null));
-    }
-  }, [savedPlan, selectedSport, selectedDate, padLineupTo7]);
+    if (!store.isLoaded || !db) return;
 
-  const drillsList = useMemo(() => SPORTS_DATA[selectedSport]?.skills || [], [selectedSport]);
+    const docRef = doc(db, 'master_auto_plans', scheduleKey);
+    const unsub = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const d = snapshot.data();
+        setTeamPlans(d.teamPlans || {});
+        setOtherPlans(d.otherPlans || {});
+        setDrills(d.drills || {});
+      } else {
+        // Clear state
+        setTeamPlans({});
+        setOtherPlans({});
+        setDrills({});
+      }
+    });
+    return () => unsub();
+  }, [store.isLoaded, scheduleKey, db]);
 
-  const handleDrillToggle = (drill: string) => {
-    if (isPastDate) return;
-    setSelectedDrills(prev => 
-      prev.includes(drill) ? prev.filter(d => d !== drill) : [...prev, drill]
-    );
-  };
+  // List of eligible athletes matching selected age group (U14 & U17)
+  const eligibleAthletes = useMemo(() => {
+    const athletes = (store.data.players || []).filter((p: any) => p.category === 'athlete');
+    return athletes.filter((p: any) => {
+      const ageVal = getAgeValidation(p.dob);
+      const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+      if (!age || age <= 0 || isNaN(age)) return false;
+      return age < 19; // Limit to U14 & U17
+    }).sort((a: any, b: any) => a.name.localeCompare(b.name));
+  }, [store.data.players]);
 
   const getPlayerDetails = useCallback((id: string | null) => {
     if (!id) return null;
     return (store.data.players || []).find((p: any) => p.id === id) || null;
   }, [store.data.players]);
 
-  // Find busy players scheduled in other games today
-  const busyPlayersOnDate = useMemo(() => {
+  // Check which players are already assigned in any selector today (to prevent duplicates)
+  const getAssignedPlayersSet = useCallback((currentTeamPlans: Record<string, SquadData>, currentOtherPlans: Record<string, (string | null)[]>) => {
     const ids = new Set<string>();
-    if (store.data.teamPlans) {
-      Object.entries(store.data.teamPlans).forEach(([key, plan]: [string, any]) => {
-        const parts = key.split('_');
-        if (parts.length >= 3) {
-          const planSchoolId = parts[0];
-          const planSport = parts[1];
-          const planDate = parts.slice(2).join('_');
-          
-          if (planSchoolId === schoolId && planDate === selectedDate && planSport !== selectedSport) {
-            if (Array.isArray(plan.u14Players)) plan.u14Players.forEach((id: any) => id && ids.add(id));
-            if (Array.isArray(plan.u17Players)) plan.u17Players.forEach((id: any) => id && ids.add(id));
-            if (Array.isArray(plan.u19Players)) plan.u19Players.forEach((id: any) => id && ids.add(id));
-            if (Array.isArray(plan.u14GirlsPlayers)) plan.u14GirlsPlayers.forEach((id: any) => id && ids.add(id));
-            if (Array.isArray(plan.u17GirlsPlayers)) plan.u17GirlsPlayers.forEach((id: any) => id && ids.add(id));
-            if (Array.isArray(plan.u19GirlsPlayers)) plan.u19GirlsPlayers.forEach((id: any) => id && ids.add(id));
-          }
-        }
-      });
-    }
+    Object.values(currentTeamPlans).forEach((squads: SquadData) => {
+      squads.u14Boys.forEach(id => id && ids.add(id));
+      squads.u17Boys.forEach(id => id && ids.add(id));
+      squads.u14Girls.forEach(id => id && ids.add(id));
+      squads.u17Girls.forEach(id => id && ids.add(id));
+    });
+    Object.values(currentOtherPlans).forEach((lineup: (string | null)[]) => {
+      lineup.forEach(id => id && ids.add(id));
+    });
     return ids;
-  }, [store.data.teamPlans, selectedDate, selectedSport, schoolId]);
+  }, []);
 
-  // Find players selected in the active lineups (to avoid double selection inside this plan)
-  const busyPlayersInCurrentPlan = useMemo(() => {
-    const ids = new Set<string>();
-    u14BoysLineup.forEach(id => id && ids.add(id));
-    u17BoysLineup.forEach(id => id && ids.add(id));
-    u19BoysLineup.forEach(id => id && ids.add(id));
-    u14GirlsLineup.forEach(id => id && ids.add(id));
-    u17GirlsLineup.forEach(id => id && ids.add(id));
-    u19GirlsLineup.forEach(id => id && ids.add(id));
-    return ids;
-  }, [u14BoysLineup, u17BoysLineup, u19BoysLineup, u14GirlsLineup, u17GirlsLineup, u19GirlsLineup]);
-
-  // Determine eligible players for dropdown selection
-  const getEligiblePlayers = useCallback((ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female', excludeExceptionId?: string | null) => {
-    const athletes = (store.data.players || []).filter((p: any) => p.category === 'athlete');
-    return athletes.filter((p: any) => {
-      if (p.id === excludeExceptionId) return true;
+  // Filter athletes for manually changing players in dropdowns
+  const getDropdownEligible = useCallback((ageCat: 'U14' | 'U17', gender: 'Male' | 'Female', sport: string, currentId?: string | null) => {
+    const currentAssigned = getAssignedPlayersSet(teamPlans, otherPlans);
+    return eligibleAthletes.filter((p: any) => {
+      if (p.id === currentId) return true;
       if (p.gender !== gender) return false;
-      if (busyPlayersOnDate.has(p.id)) return false;
-      if (busyPlayersInCurrentPlan.has(p.id)) return false;
-      if (!Array.isArray(p.sports) || !p.sports.includes(selectedSport)) return false;
+      if (currentAssigned.has(p.id)) return false;
+      if (!Array.isArray(p.sports) || !p.sports.includes(sport)) return false;
 
       const ageVal = getAgeValidation(p.dob);
       const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
-      if (!age || age <= 0 || isNaN(age)) return false;
-
       if (ageCat === 'U14' && age >= 14) return false;
       if (ageCat === 'U17' && (age < 14 || age >= 17)) return false;
-      if (ageCat === 'U19' && age < 17) return false;
 
       return true;
-    }).sort((a: any, b: any) => a.name.localeCompare(b.name));
-  }, [store.data.players, busyPlayersOnDate, busyPlayersInCurrentPlan, selectedSport]);
-
-  // Handle dropdown selection change
-  const handlePlayerChange = (ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female', index: number, playerId: string) => {
-    if (isPastDate) return;
-    const value = playerId === 'vacant' ? null : playerId;
-    const setter = gender === 'Male' 
-      ? (ageCat === 'U14' ? setU14BoysLineup : ageCat === 'U17' ? setU17BoysLineup : setU19BoysLineup)
-      : (ageCat === 'U14' ? setU14GirlsLineup : ageCat === 'U17' ? setU17GirlsLineup : setU19GirlsLineup);
-
-    setter(prev => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
     });
-  };
+  }, [eligibleAthletes, teamPlans, otherPlans, getAssignedPlayersSet]);
 
-  // Run auto planner generator
+  const getDropdownEligibleOther = useCallback((sport: string, currentId?: string | null) => {
+    const currentAssigned = getAssignedPlayersSet(teamPlans, otherPlans);
+    return eligibleAthletes.filter((p: any) => {
+      if (p.id === currentId) return true;
+      if (currentAssigned.has(p.id)) return false;
+      if (!Array.isArray(p.sports) || !p.sports.includes(sport)) return false;
+      return true;
+    });
+  }, [eligibleAthletes, teamPlans, otherPlans, getAssignedPlayersSet]);
+
+  // Main Solver: Auto Schedules ALL games without duplicate player assignments
   const handleAutoSchedule = () => {
     if (isPastDate) return;
 
-    // A. Auto Select 3-4 drills
-    if (drillsList.length > 0) {
-      const shuffledDrills = [...drillsList].sort(() => 0.5 - Math.random());
-      setSelectedDrills(shuffledDrills.slice(0, Math.min(4, drillsList.length)));
-    } else {
-      setSelectedDrills([]);
-    }
+    const assignedSet = new Set<string>();
+    const nextTeamPlans: Record<string, SquadData> = {};
+    const nextOtherPlans: Record<string, (string | null)[]> = {};
+    const nextDrills: Record<string, string[]> = {};
 
-    // B. Helper to auto-fill a lineup
-    const fillLineup = (ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female') => {
+    // 1. Helper to select 7 players for a squad category
+    const fillSquad = (sport: string, ageCat: 'U14' | 'U17', gender: 'Male' | 'Female') => {
       const lineup = Array(7).fill(null);
-      // Grab all players who are registered for this sport & match criteria
-      const athletes = (store.data.players || []).filter((p: any) => p.category === 'athlete');
-      const pool = athletes.filter((p: any) => {
+      const pool = eligibleAthletes.filter((p: any) => {
         if (p.gender !== gender) return false;
-        if (busyPlayersOnDate.has(p.id)) return false; // Plays another game today
-        if (!Array.isArray(p.sports) || !p.sports.includes(selectedSport)) return false;
+        if (assignedSet.has(p.id)) return false; // Already practicing a game today
+        if (!Array.isArray(p.sports) || !p.sports.includes(sport)) return false;
 
         const ageVal = getAgeValidation(p.dob);
         const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
-        if (!age || age <= 0 || isNaN(age)) return false;
-
         if (ageCat === 'U14' && age >= 14) return false;
         if (ageCat === 'U17' && (age < 14 || age >= 17)) return false;
-        if (ageCat === 'U19' && age < 17) return false;
 
         return true;
       });
 
-      // Sort / Shuffle pool to randomize selection fairly
+      // Randomize selection
       const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
-      
-      // Fill up to 7 players
       for (let i = 0; i < Math.min(7, shuffledPool.length); i++) {
         lineup[i] = shuffledPool[i].id;
-        // Mark as busy temporarily so we don't double select
-        busyPlayersInCurrentPlan.add(shuffledPool[i].id);
+        assignedSet.add(shuffledPool[i].id); // Lock player for the day
       }
       return lineup;
     };
 
-    // Clear busy list for fresh run
-    busyPlayersInCurrentPlan.clear();
+    // 2. Schedule Team Sports first
+    TEAM_SPORTS.forEach(sport => {
+      nextTeamPlans[sport] = {
+        u14Boys: fillSquad(sport, 'U14', 'Male'),
+        u17Boys: fillSquad(sport, 'U17', 'Male'),
+        u14Girls: fillSquad(sport, 'U14', 'Female'),
+        u17Girls: fillSquad(sport, 'U17', 'Female')
+      };
 
-    const u14B = fillLineup('U14', 'Male');
-    const u17B = fillLineup('U17', 'Male');
-    const u19B = fillLineup('U19', 'Male');
-    const u14G = fillLineup('U14', 'Female');
-    const u17G = fillLineup('U17', 'Female');
-    const u19G = fillLineup('U19', 'Female');
+      // Auto pick drills
+      const list = SPORTS_DATA[sport]?.skills || [];
+      nextDrills[sport] = [...list].sort(() => 0.5 - Math.random()).slice(0, 3);
+    });
 
-    setU14BoysLineup(u14B);
-    setU17BoysLineup(u17B);
-    setU19BoysLineup(u19B);
-    setU14GirlsLineup(u14G);
-    setU17GirlsLineup(u17G);
-    setU19GirlsLineup(u19G);
+    // 3. Schedule Athletics / Other Sports next
+    OTHER_SPORTS.forEach(sport => {
+      const lineup = Array(7).fill(null);
+      const pool = eligibleAthletes.filter((p: any) => {
+        if (assignedSet.has(p.id)) return false;
+        if (!Array.isArray(p.sports) || !p.sports.includes(sport)) return false;
+        return true;
+      });
 
-    toast({ title: "Auto-Filled Lineups", description: "Successfully auto-selected 7 eligible players per squad with focus drills." });
+      const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+      for (let i = 0; i < Math.min(7, shuffledPool.length); i++) {
+        lineup[i] = shuffledPool[i].id;
+        assignedSet.add(shuffledPool[i].id);
+      }
+      nextOtherPlans[sport] = lineup;
+
+      // Auto pick drills
+      const list = SPORTS_DATA[sport]?.skills || [];
+      nextDrills[sport] = [...list].sort(() => 0.5 - Math.random()).slice(0, 3);
+    });
+
+    setTeamPlans(nextTeamPlans);
+    setOtherPlans(nextOtherPlans);
+    setDrills(nextDrills);
+
+    toast({ title: "Master Planner Generated", description: "All sports auto-scheduled successfully with zero student conflicts." });
   };
 
-  // Save Plan
+  // Change player manually in Team Sports
+  const handleTeamPlayerChange = (sport: string, ageCat: 'u14Boys' | 'u17Boys' | 'u14Girls' | 'u17Girls', index: number, value: string) => {
+    if (isPastDate) return;
+    const playerId = value === 'vacant' ? null : value;
+    setTeamPlans(prev => {
+      const next = { ...prev };
+      if (!next[sport]) return prev;
+      const squad = { ...next[sport] };
+      const arr = [...squad[ageCat]];
+      arr[index] = playerId;
+      squad[ageCat] = arr;
+      next[sport] = squad;
+      return next;
+    });
+  };
+
+  // Change player manually in Other Sports
+  const handleOtherPlayerChange = (sport: string, index: number, value: string) => {
+    if (isPastDate) return;
+    const playerId = value === 'vacant' ? null : value;
+    setOtherPlans(prev => {
+      const next = { ...prev };
+      if (!next[sport]) return prev;
+      const arr = [...next[sport]];
+      arr[index] = playerId;
+      next[sport] = arr;
+      return next;
+    });
+  };
+
+  // Save Master Plan to Firestore
   const handleSave = async () => {
+    if (!db) return;
     setIsSaving(true);
     try {
-      await store.setTeamPlan(selectedSport, selectedDate, {
-        drills: selectedDrills,
-        u14Players: u14BoysLineup,
-        u17Players: u17BoysLineup,
-        u19Players: u19BoysLineup,
-        u14GirlsPlayers: u14GirlsLineup,
-        u17GirlsPlayers: u17GirlsLineup,
-        u19GirlsPlayers: u19GirlsLineup
-      });
-      toast({ title: "Auto Plan Saved", description: "Practice plan synced successfully." });
+      const docRef = doc(db, 'master_auto_plans', scheduleKey);
+      await setDoc(docRef, {
+        id: scheduleKey,
+        schoolId,
+        date: selectedDate,
+        session: selectedSession,
+        timeRange: selectedSession === 'Morning' ? '6:00 AM - 8:00 AM' : '5:00 PM - 7:00 PM',
+        teamPlans,
+        otherPlans,
+        drills,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      toast({ title: "Planner Saved", description: `Saved ${selectedSession} practice plan successfully.` });
     } catch (e) {
-      toast({ title: "Failed to Save", description: "Could not write plan to server.", variant: "destructive" });
+      toast({ title: "Failed to Save", description: "Error writing master planner to database.", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Print with age-category page breaks, bold player names, and attendance checkboxes
+  // Print A4 sheets with page breaks, bold names, and attendance checkboxes
   const handlePrint = () => {
     const schoolName = store.data.schoolProfile?.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
-    
-    // Group lineups by age group
-    const renderAgePageBlock = (title: string, boysIds: (string | null)[], girlsIds: (string | null)[]) => {
-      const boysList = boysIds.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
-      const girlsList = girlsIds.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+    const timeText = selectedSession === 'Morning' ? 'Morning Session: 6:00 AM - 8:00 AM' : 'Evening Session: 5:00 PM - 7:00 PM';
 
-      const renderTable = (squadTitle: string, list: { index: number; player: any }[]) => `
-        <div style="flex: 1 1 48%; min-width: 320px; box-sizing: border-box;">
-          <h3 style="background: #235C36; color: white; margin: 0; padding: 10px 12px; font-size: 15px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 6px 6px 0 0;">
-            ${squadTitle}
+    const renderPrintTable = (title: string, list: (string | null)[]) => {
+      const details = list.map((id, i) => ({ index: i + 1, player: getPlayerDetails(id) }));
+      return `
+        <div style="flex: 1 1 48%; min-width: 320px; box-sizing: border-box; margin-bottom: 15px; page-break-inside: avoid;">
+          <h3 style="background: #235C36; color: white; margin: 0; padding: 10px 12px; font-size: 14px; text-transform: uppercase; font-weight: 900; text-align: center; border-radius: 6px 6px 0 0;">
+            ${title}
           </h3>
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <thead>
@@ -324,46 +314,100 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                 <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 40px; font-weight: 900;">SLOT</th>
                 <th style="border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-weight: 900;">PLAYER NAME</th>
                 <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 55px; font-weight: 900;">STD</th>
-                <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 45px; font-weight: 900;">AGE</th>
-                <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 80px; font-weight: 900;">ATTEND</th>
+                <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 85px; font-weight: 900;">ATTEND</th>
               </tr>
             </thead>
             <tbody>
-              ${list.map(item => `
+              ${details.map(item => `
                 <tr>
                   <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
                   <td style="border: 1px solid #ddd; padding: 8px 10px; font-weight: 900; font-size: 14px; text-transform: uppercase; color: #000;">
                     ${item.player ? item.player.name : '<span style="color: #ccc; font-weight: normal;">- VACANT -</span>'}
                   </td>
                   <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-weight: bold;">${item.player ? item.player.std : '-'}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center;">${item.player ? (getAgeValidation(item.player.dob)?.ageYears || item.player.age || '-') : '-'}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center;">
-                    <span style="display: inline-block; width: 18px; height: 18px; border: 2px solid #333; border-radius: 4px; vertical-align: middle;"></span>
-                  </td>
+                  <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-size: 18px; font-weight: bold; color: #111;">☐</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
         </div>
       `;
-
-      return `
-        <div class="age-page-block" style="page-break-after: always; padding-bottom: 20px;">
-          <h2 style="font-size: 18px; font-weight: 900; color: #235C36; border-left: 6px solid #235C36; padding-left: 10px; margin-bottom: 15px; text-transform: uppercase;">
-            ${title} CATEGORY SQUADS
-          </h2>
-          <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin-bottom: 20px;">
-            ${renderTable(`${title} Boys Squad`, boysList)}
-            ${renderTable(`${title} Girls Squad`, girlsList)}
-          </div>
-        </div>
-      `;
     };
+
+    // Construct Page 1: Under-17 Boys and Girls Team Sports
+    let p1Content = `
+      <div class="print-page-block" style="page-break-after: always;">
+        <h2 style="font-size: 18px; font-weight: 900; color: #235C36; border-left: 6px solid #235C36; padding-left: 10px; margin-bottom: 15px; text-transform: uppercase;">
+          PAGE 1: UNDER 17 TEAM PRACTICE SQUADS
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          ${TEAM_SPORTS.map(sport => {
+            const data = teamPlans[sport];
+            if (!data) return '';
+            return `
+              <div style="page-break-inside: avoid;">
+                <h4 style="margin: 0 0 10px 0; text-transform: uppercase; color: #111; font-size: 14px; font-weight: 900;">DISCIPLINE: ${sport} - Focus: ${(drills[sport] || []).join(', ')}</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between;">
+                  ${renderPrintTable(`${sport} U17 Boys`, data.u17Boys)}
+                  ${renderPrintTable(`${sport} U17 Girls`, data.u17Girls)}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    // Construct Page 2: Under-14 Boys and Girls Team Sports
+    let p2Content = `
+      <div class="print-page-block" style="page-break-after: always;">
+        <h2 style="font-size: 18px; font-weight: 900; color: #235C36; border-left: 6px solid #235C36; padding-left: 10px; margin-bottom: 15px; text-transform: uppercase;">
+          PAGE 2: UNDER 14 TEAM PRACTICE SQUADS
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          ${TEAM_SPORTS.map(sport => {
+            const data = teamPlans[sport];
+            if (!data) return '';
+            return `
+              <div style="page-break-inside: avoid;">
+                <h4 style="margin: 0 0 10px 0; text-transform: uppercase; color: #111; font-size: 14px; font-weight: 900;">DISCIPLINE: ${sport} - Focus: ${(drills[sport] || []).join(', ')}</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between;">
+                  ${renderPrintTable(`${sport} U14 Boys`, data.u14Boys)}
+                  ${renderPrintTable(`${sport} U14 Girls`, data.u14Girls)}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    // Construct Page 3: Athletics & Other Games
+    let p3Content = `
+      <div class="print-page-block">
+        <h2 style="font-size: 18px; font-weight: 900; color: #235C36; border-left: 6px solid #235C36; padding-left: 10px; margin-bottom: 15px; text-transform: uppercase;">
+          PAGE 3: ATHLETICS & OTHER PRACTICE SQUADS
+        </h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between;">
+          ${OTHER_SPORTS.map(sport => {
+            const list = otherPlans[sport];
+            if (!list) return '';
+            return `
+              <div style="flex: 1 1 48%; min-width: 320px; box-sizing: border-box; page-break-inside: avoid;">
+                <h4 style="margin: 0 0 5px 0; text-transform: uppercase; color: #111; font-size: 13px; font-weight: 900;">DISCIPLINE: ${sport}</h4>
+                <p style="margin: 0 0 10px 0; font-size: 11px; font-style: italic; color: #555;">Drills: ${(drills[sport] || []).join(', ')}</p>
+                ${renderPrintTable(`${sport} Squad`, list)}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
 
     const printContent = `
       <html>
         <head>
-          <title>${selectedSport} Auto Practice Planner - ${selectedDate}</title>
+          <title>Master Auto Practice Planner - ${selectedDate}</title>
           <style>
             @media print {
               .no-print { display: none !important; }
@@ -372,18 +416,12 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                 size: A4 portrait;
                 margin: 15mm 10mm 15mm 10mm;
               }
-              .age-page-block:last-child {
-                page-break-after: avoid !important;
-              }
             }
             body { font-family: 'Inter', sans-serif; padding: 15px; color: #111; line-height: 1.3; }
             .header-main { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 10px; margin-bottom: 20px; }
             .school-title { font-size: 24px; font-weight: 900; color: #235C36; text-transform: uppercase; }
             .subtitle { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-top: 5px; }
             .meta-grid { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 25px; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; }
-            .drills-section { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 25px; }
-            .drills-title { font-size: 13px; font-weight: 900; text-transform: uppercase; color: #235C36; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 10px; }
-            .drill-item { display: inline-block; background: #f0fdf4; border: 1px dashed #bbf7d0; color: #166534; font-size: 12px; font-weight: bold; padding: 6px 14px; border-radius: 9999px; margin: 4px; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -398,27 +436,17 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
           <div class="header-main">
             <div class="school-title">${schoolName}</div>
-            <div class="subtitle">${selectedSport.toUpperCase()} PRACTICE PLANNER</div>
+            <div class="subtitle">MASTER AUTO PRACTICE PLANNER</div>
           </div>
 
           <div class="meta-grid">
             <div>DATE: <span>${selectedDate}</span></div>
-            <div>DISCIPLINE: <span style="text-transform: uppercase; color: #235C36;">${selectedSport}</span></div>
+            <div>SESSION: <span style="text-transform: uppercase; color: #235C36;">${timeText}</span></div>
           </div>
 
-          <div class="drills-section">
-            <div class="drills-title">Selected Focus Drills</div>
-            <div class="drills-list">
-              ${selectedDrills.length > 0 
-                ? selectedDrills.map(d => `<span class="drill-item">${d}</span>`).join('') 
-                : '<span style="color: #999; font-style: italic;">No drills selected for today\'s session.</span>'
-              }
-            </div>
-          </div>
-
-          ${renderAgePageBlock("Under 17", u17BoysLineup, u17GirlsLineup)}
-          ${renderAgePageBlock("Under 14", u14BoysLineup, u14GirlsLineup)}
-          ${renderAgePageBlock("Under 19", u19BoysLineup, u19GirlsLineup)}
+          ${p1Content}
+          ${p2Content}
+          ${p3Content}
         </body>
       </html>
     `;
@@ -428,70 +456,28 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     win?.document.close();
   };
 
-  const renderSlotSelector = (ageCat: 'U14' | 'U17' | 'U19', gender: 'Male' | 'Female', lineup: (string | null)[], index: number) => {
-    const selectedPlayerId = lineup[index];
-    const eligible = getEligiblePlayers(ageCat, gender, selectedPlayerId);
-    const details = getPlayerDetails(selectedPlayerId);
-    
-    const displayAge = (p: any) => {
-      const ageVal = getAgeValidation(p.dob);
-      return ageVal ? `${ageVal.ageYears} yrs` : `${p.age || '?'} yrs`;
-    };
-
-    return (
-      <div key={index} className="flex items-center gap-3 bg-white p-3 rounded-2xl border-2 border-primary/5 hover:border-primary/15 transition-all shadow-sm">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-xs text-primary shadow-inner">
-          {index + 1}
-        </div>
-        <div className="flex-1 min-w-0">
-          <Select 
-            value={selectedPlayerId || "vacant"} 
-            onValueChange={(val) => handlePlayerChange(ageCat, gender, index, val)}
-            disabled={isPastDate}
-          >
-            <SelectTrigger className="h-10 text-xs font-bold border-0 bg-transparent shadow-none px-0 hover:bg-primary/[0.02] rounded-lg transition-colors w-full focus:ring-0">
-              <SelectValue placeholder="Select Player" />
-            </SelectTrigger>
-            <SelectContent className="max-h-60">
-              <SelectItem value="vacant" className="text-muted-foreground font-semibold">-- VACANT --</SelectItem>
-              {eligible.map((p: any) => (
-                <SelectItem key={p.id} value={p.id} className="font-bold">
-                  {p.name.toUpperCase()} (Std {p.std} • {displayAge(p)})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {details && (
-          <Badge className="bg-primary/5 text-primary text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border-none">
-            Std {details.std}
-          </Badge>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-8 pb-32">
-      {/* 1. Header controls card */}
+      {/* Header controls card */}
       <div className="bg-white p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8 animate-in fade-in duration-500">
         <div className="flex items-center gap-6">
           <div className="bg-primary/5 p-4 rounded-[1.5rem] border-2 border-primary/10 shadow-inner">
             <Sparkles className="w-10 h-10 text-primary animate-pulse" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Auto Planner</h2>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Automated Squad Selecetion (7 Players)</p>
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Master Auto Planner</h2>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Automated Practice Planner (7 Slots)</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           <div className="space-y-1 w-full sm:w-48">
-            <label className="text-[9px] font-black text-primary uppercase ml-2">Discipline</label>
-            <Select value={selectedSport} onValueChange={(val) => setSelectedSport(val)}>
+            <label className="text-[9px] font-black text-primary uppercase ml-2">Training Session</label>
+            <Select value={selectedSession} onValueChange={(val: any) => setSelectedSession(val)}>
               <SelectTrigger className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SPORTS_LIST.map(s => <SelectItem key={s} value={s} className="font-bold">{s}</SelectItem>)}
+                <SelectItem value="Morning" className="font-bold">Morning (6 to 8 AM)</SelectItem>
+                <SelectItem value="Evening" className="font-bold">Evening (5 to 7 PM)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -512,121 +498,187 @@ export function AutoPracticePlanner({ store }: { store: any }) {
               disabled={isPastDate}
               className="h-12 w-full bg-accent text-white font-black uppercase text-xs tracking-wider rounded-xl shadow-md active-scale flex items-center justify-center gap-2"
             >
-              <Sparkles className="w-4 h-4 text-white animate-spin" /> Auto Select
+              <Sparkles className="w-4 h-4 text-white" /> Auto Plan Day
             </Button>
           </div>
         </div>
       </div>
 
-      {/* 2. Focus Drills Card */}
-      <Card className="border-2 rounded-[3.5rem] overflow-hidden bg-white shadow-xl">
-        <CardHeader className="bg-primary/5 border-b p-8">
-          <CardTitle className="text-xl font-black uppercase text-primary tracking-tight">Focus Drills Selection</CardTitle>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Select skills to focus on during today&apos;s practice sessions</p>
-        </CardHeader>
-        <CardContent className="p-8">
-          {drillsList.length > 0 ? (
-            <div className="flex flex-wrap gap-3">
-              {drillsList.map((drill) => {
-                const isSelected = selectedDrills.includes(drill);
+      {/* Main planner display grids */}
+      {Object.keys(teamPlans).length === 0 ? (
+        <Card className="border-2 rounded-[2.5rem] bg-white border-dashed p-12 text-center shadow-inner flex flex-col items-center justify-center min-h-[300px]">
+          <AlertTriangle className="w-8 h-8 text-amber-500 mb-4 animate-bounce" />
+          <p className="font-black text-primary uppercase text-sm tracking-widest">No Active Daily Planner</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest max-w-xs mx-auto">Click &apos;Auto Plan Day&apos; to schedule all team sports and athletics for the day.</p>
+        </Card>
+      ) : (
+        <div className="space-y-12">
+          {/* Section 1: Team Sports */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2 pl-2 border-l-4 border-primary">
+              Team Sports Lineups
+            </h3>
+            {TEAM_SPORTS.map(sport => {
+              const data = teamPlans[sport];
+              if (!data) return null;
+              return (
+                <div key={sport} className="space-y-4 bg-muted/20 p-6 rounded-[2.5rem] border-2 border-primary/5">
+                  <div className="flex justify-between items-center px-4 border-b border-primary/5 pb-2">
+                    <h4 className="text-lg font-black uppercase text-primary">{sport} Practice Plan</h4>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground">Focus Drills: {(drills[sport] || []).join(', ')}</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* U17 Boys */}
+                    <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-md">
+                      <div className="bg-primary/5 p-4 border-b font-black text-xs uppercase text-primary">Under 17 Boys</div>
+                      <CardContent className="p-4 space-y-3">
+                        {data.u17Boys.map((pId, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">{idx+1}</span>
+                            <div className="flex-1">
+                              <Select value={pId || "vacant"} onValueChange={(val) => handleTeamPlayerChange(sport, 'u17Boys', idx, val)}>
+                                <SelectTrigger className="h-8 text-xs font-bold border-0 bg-transparent py-0 focus:ring-0"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="vacant" className="text-muted-foreground font-semibold">-- VACANT --</SelectItem>
+                                  {getDropdownEligible('U17', 'Male', sport, pId).map((p: any) => (
+                                    <SelectItem key={p.id} value={p.id} className="font-bold">{p.name.toUpperCase()}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* U17 Girls */}
+                    <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-md">
+                      <div className="bg-accent/5 p-4 border-b font-black text-xs uppercase text-accent">Under 17 Girls</div>
+                      <CardContent className="p-4 space-y-3">
+                        {data.u17Girls.map((pId, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <span className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-black text-accent">{idx+1}</span>
+                            <div className="flex-1">
+                              <Select value={pId || "vacant"} onValueChange={(val) => handleTeamPlayerChange(sport, 'u17Girls', idx, val)}>
+                                <SelectTrigger className="h-8 text-xs font-bold border-0 bg-transparent py-0 focus:ring-0"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="vacant" className="text-muted-foreground font-semibold">-- VACANT --</SelectItem>
+                                  {getDropdownEligible('U17', 'Female', sport, pId).map((p: any) => (
+                                    <SelectItem key={p.id} value={p.id} className="font-bold">{p.name.toUpperCase()}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* U14 Boys */}
+                    <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-md">
+                      <div className="bg-primary/5 p-4 border-b font-black text-xs uppercase text-primary">Under 14 Boys</div>
+                      <CardContent className="p-4 space-y-3">
+                        {data.u14Boys.map((pId, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">{idx+1}</span>
+                            <div className="flex-1">
+                              <Select value={pId || "vacant"} onValueChange={(val) => handleTeamPlayerChange(sport, 'u14Boys', idx, val)}>
+                                <SelectTrigger className="h-8 text-xs font-bold border-0 bg-transparent py-0 focus:ring-0"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="vacant" className="text-muted-foreground font-semibold">-- VACANT --</SelectItem>
+                                  {getDropdownEligible('U14', 'Male', sport, pId).map((p: any) => (
+                                    <SelectItem key={p.id} value={p.id} className="font-bold">{p.name.toUpperCase()}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* U14 Girls */}
+                    <Card className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-md">
+                      <div className="bg-accent/5 p-4 border-b font-black text-xs uppercase text-accent">Under 14 Girls</div>
+                      <CardContent className="p-4 space-y-3">
+                        {data.u14Girls.map((pId, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <span className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-black text-accent">{idx+1}</span>
+                            <div className="flex-1">
+                              <Select value={pId || "vacant"} onValueChange={(val) => handleTeamPlayerChange(sport, 'u14Girls', idx, val)}>
+                                <SelectTrigger className="h-8 text-xs font-bold border-0 bg-transparent py-0 focus:ring-0"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="vacant" className="text-muted-foreground font-semibold">-- VACANT --</SelectItem>
+                                  {getDropdownEligible('U14', 'Female', sport, pId).map((p: any) => (
+                                    <SelectItem key={p.id} value={p.id} className="font-bold">{p.name.toUpperCase()}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Section 2: Athletics & Individual Events */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2 pl-2 border-l-4 border-primary">
+              Athletics & Other Sports
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {OTHER_SPORTS.map(sport => {
+                const list = otherPlans[sport];
+                if (!list) return null;
                 return (
-                  <button
-                    key={drill}
-                    disabled={isPastDate}
-                    onClick={() => handleDrillToggle(drill)}
-                    className={`flex items-center gap-3 px-5 py-3.5 border-2 rounded-2xl font-bold text-xs tracking-wide transition-all ${
-                      isSelected 
-                        ? 'bg-primary/5 border-primary text-primary shadow-sm' 
-                        : 'bg-white border-primary/5 text-muted-foreground hover:border-primary/10 hover:text-foreground'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border-2 transition-all ${
-                      isSelected ? 'border-primary bg-primary text-white' : 'border-muted-foreground/30'
-                    }`}>
-                      {isSelected && <span className="text-[8px] font-black">✓</span>}
+                  <Card key={sport} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[450px]">
+                    <div className="bg-primary/5 p-6 border-b">
+                      <span className="text-lg font-black uppercase text-primary block leading-none">{sport}</span>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
                     </div>
-                    <span className="truncate">{drill}</span>
-                  </button>
+                    <CardContent className="p-6 space-y-3 flex-1">
+                      {list.map((pId, idx) => (
+                        <div key={idx} className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">{idx+1}</span>
+                          <div className="flex-1">
+                            <Select value={pId || "vacant"} onValueChange={(val) => handleOtherPlayerChange(sport, idx, val)}>
+                              <SelectTrigger className="h-8 text-xs font-bold border-0 bg-transparent py-0 focus:ring-0"><SelectValue /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                <SelectItem value="vacant" className="text-muted-foreground font-semibold">-- VACANT --</SelectItem>
+                                {getDropdownEligibleOther(sport, pId).map((p: any) => (
+                                  <SelectItem key={p.id} value={p.id} className="font-bold">{p.name.toUpperCase()} (Std {p.std})</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
-          ) : (
-            <p className="text-sm font-semibold text-muted-foreground text-center py-6">No drills registered for this discipline.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 3. Squad grids */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-primary tracking-widest pl-2 border-l-4 border-primary">Boys Practice Squads</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[
-            { title: "Under 14 Boys (U14)", ageCat: 'U14' as const, gender: 'Male' as const, lineup: u14BoysLineup },
-            { title: "Under 17 Boys (U17)", ageCat: 'U17' as const, gender: 'Male' as const, lineup: u17BoysLineup },
-            { title: "Under 19 Boys (U19)", ageCat: 'U19' as const, gender: 'Male' as const, lineup: u19BoysLineup }
-          ].map(cat => {
-            const filledCount = cat.lineup.filter(id => id !== null).length;
-            return (
-              <Card key={cat.title} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
-                <div className="bg-primary/5 p-6 border-b flex justify-between items-center">
-                  <div>
-                    <span className="text-lg font-black uppercase text-primary block leading-none">{cat.title}</span>
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
-                  </div>
-                  <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-primary'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
-                    {filledCount} / 7 SELECTED
-                  </Badge>
-                </div>
-                <CardContent className="p-6 flex-1 space-y-4">
-                  {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
-                </CardContent>
-              </Card>
-            );
-          })}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="space-y-4 pt-4">
-        <h3 className="text-xs font-black uppercase text-accent tracking-widest pl-2 border-l-4 border-accent">Girls Practice Squads</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[
-            { title: "Under 14 Girls (U14)", ageCat: 'U14' as const, gender: 'Female' as const, lineup: u14GirlsLineup },
-            { title: "Under 17 Girls (U17)", ageCat: 'U17' as const, gender: 'Female' as const, lineup: u17GirlsLineup },
-            { title: "Under 19 Girls (U19)", ageCat: 'U19' as const, gender: 'Female' as const, lineup: u19GirlsLineup }
-          ].map(cat => {
-            const filledCount = cat.lineup.filter(id => id !== null).length;
-            return (
-              <Card key={cat.title} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[500px]">
-                <div className="bg-accent/5 p-6 border-b flex justify-between items-center">
-                  <div>
-                    <span className="text-lg font-black uppercase text-accent block leading-none">{cat.title}</span>
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase mt-2 block tracking-wider">Practice Squad</span>
-                  </div>
-                  <Badge className={`${filledCount === 7 ? 'bg-emerald-500' : 'bg-accent'} text-white font-black text-xs px-3.5 py-1 rounded-full`}>
-                    {filledCount} / 7 SELECTED
-                  </Badge>
-                </div>
-                <CardContent className="p-6 flex-1 space-y-4">
-                  {Array(7).fill(null).map((_, i) => renderSlotSelector(cat.ageCat, cat.gender, cat.lineup, i))}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 4. Action bar */}
+      {/* Action floating bar */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl border-2 border-primary/10 shadow-2xl px-8 py-5 rounded-[2rem] flex items-center justify-center gap-4 z-40 w-[90%] max-w-xl animate-in slide-in-from-bottom-8 duration-500">
         <Button 
           variant="outline" 
           onClick={handlePrint} 
+          disabled={Object.keys(teamPlans).length === 0}
           className="rounded-2xl border-2 font-black uppercase text-xs tracking-wider h-12 flex-1 shadow-sm"
         >
           <Printer className="w-5 h-5 mr-2 text-primary" /> Print Plan
         </Button>
         <Button 
           onClick={handleSave} 
-          disabled={isSaving || isPastDate}
+          disabled={isSaving || isPastDate || Object.keys(teamPlans).length === 0}
           className="rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-wider h-12 flex-1 shadow-lg active-scale"
         >
           {isSaving ? (
