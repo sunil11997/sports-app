@@ -422,7 +422,14 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       totalPages: number
     ) => {
       const renderTable = (subTitle: string, list: PlayerPlanEntry[]) => {
-        const details = list.map((item, i) => ({ 
+        const activeEntries = list.filter(item => {
+          if (!item.playerId || item.playerId === 'vacant') return false;
+          const player = getPlayerDetails(item.playerId);
+          if (!player) return false;
+          return true;
+        });
+
+        const details = activeEntries.map((item, i) => ({ 
           index: i + 1, 
           player: getPlayerDetails(item.playerId), 
           game1: item.game1, 
@@ -450,7 +457,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                 </tr>
               </thead>
               <tbody>
-                ${details.map(item => {
+                ${details.length === 0 ? `
+                  <tr>
+                    <td colspan="6" style="border: 1px solid #777; padding: 12px; text-align: center; color: #666; font-style: italic; font-weight: bold;">
+                      No active players scheduled.
+                    </td>
+                  </tr>
+                ` : details.map(item => {
                   const isGroupLeader = item.index <= 2;
                   const pName = item.player ? item.player.name : '- VACANT -';
                   const pNameText = isGroupLeader 
@@ -771,11 +784,16 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-64">
-                                  <SelectItem value={entry.playerId} className="font-bold">
-                                    {(player?.name || 'Vacant').toUpperCase()}
+                                  <SelectItem value="vacant" className="font-bold text-red-600">
+                                    -- VACANT / EMPTY --
                                   </SelectItem>
+                                  {entry.playerId && entry.playerId !== 'vacant' && (
+                                    <SelectItem value={entry.playerId} className="font-bold">
+                                      {(player?.name || 'Vacant').toUpperCase()}
+                                    </SelectItem>
+                                  )}
                                   {poolOptions
-                                    .filter((p: any) => p.id !== entry.playerId)
+                                    .filter((p: any) => p.id !== entry.playerId && p.id !== 'vacant')
                                     .map((p: any) => (
                                       <SelectItem key={p.id} value={p.id} className="font-bold">
                                         {p.name.toUpperCase()} (Std {p.std})
