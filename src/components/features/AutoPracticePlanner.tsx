@@ -136,31 +136,6 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     return () => unsub();
   }, [store.isLoaded, scheduleKey, db]);
 
-  // Fallbacks if states are empty
-  const u17BoysList = useMemo(() => u17BoysPlan.length > 0 ? u17BoysPlan : DEFAULT_U17_BOYS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u17BoysPlan]);
-  const u17GirlsList = useMemo(() => u17GirlsPlan.length > 0 ? u17GirlsPlan : DEFAULT_U17_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u17GirlsPlan]);
-  const u14BoysList = useMemo(() => u14BoysPlan.length > 0 ? u14BoysPlan : DEFAULT_U14_BOYS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u14BoysPlan]);
-  const u14GirlsList = useMemo(() => u14GirlsPlan.length > 0 ? u14GirlsPlan : DEFAULT_U14_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u14GirlsPlan]);
-  const khokhoBoysList = useMemo(() => khokhoBoysPlan.length > 0 ? khokhoBoysPlan : DEFAULT_KHOKHO_BOYS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [khokhoBoysPlan]);
-  const khokhoGirlsList = useMemo(() => khokhoGirlsPlan.length > 0 ? khokhoGirlsPlan : DEFAULT_KHOKHO_GIRLS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [khokhoGirlsPlan]);
-  const shotputGirlsList = useMemo(() => shotputGirlsPlan.length > 0 ? shotputGirlsPlan : DEFAULT_SHOTPUT_GIRLS.map((id, idx) => {
-    const comboIdx = idx % 6;
-    let game1 = 'None';
-    let game2 = 'None';
-    if (comboIdx === 0) { game1 = 'Shot Put'; game2 = 'Discus Throw'; }
-    else if (comboIdx === 1) { game1 = 'Discus Throw'; game2 = 'Javelin Throw'; }
-    else if (comboIdx === 2) { game1 = 'Javelin Throw'; game2 = 'Running'; }
-    else if (comboIdx === 3) { game1 = 'Shot Put'; game2 = 'Javelin Throw'; }
-    else if (comboIdx === 4) { game1 = 'Discus Throw'; game2 = 'Running'; }
-    else { game1 = 'Shot Put'; game2 = 'Running'; }
-    return { playerId: id, game1, game2, drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry;
-  }), [shotputGirlsPlan]);
-
-  const getPlayerDetails = useCallback((id: string | null) => {
-    if (!id) return null;
-    return (store.data.players || []).find((p: any) => p.id === id) || null;
-  }, [store.data.players]);
-
   const getCohortPlayers = useCallback((gender: 'Male' | 'Female', ageCat?: 'U17' | 'U14', isKhokhoOnly?: boolean, isShotPutOnly?: boolean) => {
     return (store.data.players || []).filter((p: any) => {
       if (p.category !== 'athlete') return false;
@@ -187,6 +162,61 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       return true;
     }).sort((a: any, b: any) => a.name.localeCompare(b.name));
   }, [store.data.players]);
+
+  const getPlayerDetails = useCallback((id: string | null) => {
+    if (!id) return null;
+    return (store.data.players || []).find((p: any) => p.id === id) || null;
+  }, [store.data.players]);
+
+  const getInitialList = useCallback((plan: PlayerPlanEntry[], gender: 'Male' | 'Female', ageCat?: 'U17' | 'U14', isKhokho?: boolean, isShotPut?: boolean, defaultIds: string[] = []) => {
+    if (plan.length > 0) return plan;
+    
+    // Get actual registered players from store
+    const registered = getCohortPlayers(gender, ageCat, isKhokho, isShotPut);
+    const registeredIds = registered.map((p: any) => p.id);
+    
+    // Merge or pad to 14 players
+    const listIds = [...registeredIds];
+    while (listIds.length < 14) {
+      // Find default ID that isn't already in listIds
+      const nextDefault = defaultIds.find(id => !listIds.includes(id));
+      if (nextDefault) {
+        listIds.push(nextDefault);
+      } else {
+        listIds.push('vacant');
+      }
+    }
+    
+    // Keep exactly 14
+    const finalIds = listIds.slice(0, 14);
+    
+    return finalIds.map((id, idx) => {
+      let game1 = 'None';
+      let game2 = 'None';
+      if (isKhokho) {
+        game1 = 'Kho Kho';
+        game2 = 'Kho Kho';
+      } else if (isShotPut) {
+        const comboIdx = idx % 6;
+        if (comboIdx === 0) { game1 = 'Shot Put'; game2 = 'Discus Throw'; }
+        else if (comboIdx === 1) { game1 = 'Discus Throw'; game2 = 'Javelin Throw'; }
+        else if (comboIdx === 2) { game1 = 'Javelin Throw'; game2 = 'Running'; }
+        else if (comboIdx === 3) { game1 = 'Shot Put'; game2 = 'Javelin Throw'; }
+        else if (comboIdx === 4) { game1 = 'Discus Throw'; game2 = 'Running'; }
+        else { game1 = 'Shot Put'; game2 = 'Running'; }
+      }
+      return { playerId: id, game1, game2, drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry;
+    });
+  }, [getCohortPlayers]);
+
+  // Fallbacks if states are empty
+  const u17BoysList = useMemo(() => getInitialList(u17BoysPlan, 'Male', 'U17', false, false, DEFAULT_U17_BOYS), [u17BoysPlan, getInitialList]);
+  const u17GirlsList = useMemo(() => getInitialList(u17GirlsPlan, 'Female', 'U17', false, false, DEFAULT_U17_GIRLS), [u17GirlsPlan, getInitialList]);
+  const u14BoysList = useMemo(() => getInitialList(u14BoysPlan, 'Male', 'U14', false, false, DEFAULT_U14_BOYS), [u14BoysPlan, getInitialList]);
+  const u14GirlsList = useMemo(() => getInitialList(u14GirlsPlan, 'Female', 'U14', false, false, DEFAULT_U14_GIRLS), [u14GirlsPlan, getInitialList]);
+  const khokhoBoysList = useMemo(() => getInitialList(khokhoBoysPlan, 'Male', undefined, true, false, DEFAULT_KHOKHO_BOYS), [khokhoBoysPlan, getInitialList]);
+  const khokhoGirlsList = useMemo(() => getInitialList(khokhoGirlsPlan, 'Female', undefined, true, false, DEFAULT_KHOKHO_GIRLS), [khokhoGirlsPlan, getInitialList]);
+  const shotputGirlsList = useMemo(() => getInitialList(shotputGirlsPlan, 'Female', undefined, false, true, DEFAULT_SHOTPUT_GIRLS), [shotputGirlsPlan, getInitialList]);
 
   // Solver
   const handleAutoSchedule = () => {
@@ -942,7 +972,20 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                                     </SelectItem>
                                   )}
                                   {poolOptions
-                                    .filter((p: any) => p.id !== entry.playerId && p.id !== 'vacant')
+                                    .filter((p: any) => {
+                                      if (p.id === entry.playerId) return false;
+                                      
+                                      const hasGame1 = entry.game1 && entry.game1 !== 'None';
+                                      const hasGame2 = entry.game2 && entry.game2 !== 'None';
+                                      
+                                      if (hasGame1 || hasGame2) {
+                                        const matchesGame1 = hasGame1 && Array.isArray(p.sports) && p.sports.includes(entry.game1);
+                                        const matchesGame2 = hasGame2 && Array.isArray(p.sports) && p.sports.includes(entry.game2);
+                                        return matchesGame1 || matchesGame2;
+                                      }
+                                      
+                                      return true;
+                                    })
                                     .map((p: any) => (
                                       <SelectItem key={p.id} value={p.id} className="font-bold">
                                         {p.name.toUpperCase()} (Std {p.std})
