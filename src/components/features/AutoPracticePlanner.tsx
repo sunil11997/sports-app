@@ -21,23 +21,29 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
   'Kabaddi': { skills: ["Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill", "Bonus line drill", "Running raid drill", "Escape practice drill", "Ankle hold drill", "Thigh hold drill", "Chain tackle drill"] },
   'Volleyball': { skills: ["Serve practice drill", "Underhand pass drill", "Overhand pass drill", "Set practice drill", "Spike approach drill", "Block timing drill", "Dig practice drill", "Court coverage drill"] },
   'Kho Kho': { skills: ["Pole turn speed drill", "Chaser speed run", "Kho timing tap", "Dodging practice", "Single chain run", "Double chain run", "Dive attack drill", "Sudden turn drill"] },
-  'Shot Put': { skills: ["Glide technique drill", "Power position throw", "Spin rotation drill", "Release angle check", "Wrist snap practice", "Balance ring hold"] }
+  'Shot Put': { skills: ["Glide technique drill", "Power position throw", "Spin rotation drill", "Release angle check", "Wrist snap practice", "Balance ring hold"] },
+  'Discus Throw': { skills: ["Stance and grip check", "Swing and rotation drill", "Release angle snap", "Follow-through balance"] },
+  'Javelin Throw': { skills: ["Grip and carry run", "Crossover steps drill", "Arch back power pull", "Release angle check"] },
+  'Running': { skills: ["Starting blocks push", "Acceleration phase stride", "Max speed sprint", "Finish line dip"] }
 };
 
 const GROUND_NUMBERS: Record<string, string> = {
   'Kabaddi': 'Ground No. 1',
   'Volleyball': 'Ground No. 2',
   'Kho Kho': 'Ground No. 3',
-  'Shot Put': 'Ground No. 4'
+  'Shot Put': 'Ground No. 4',
+  'Discus Throw': 'Discus Ring',
+  'Javelin Throw': 'Javelin Runway',
+  'Running': 'Running Track'
 };
 
-const DEFAULT_U17_BOYS = ["u17_b1", "u17_b2", "u17_b3", "u17_b4", "u17_b5", "u17_b6", "u17_b7", "u17_b8", "u17_b9", "u17_b10", "u17_b11", "u17_b12"];
-const DEFAULT_U17_GIRLS = ["u17_g1", "u17_g2", "u17_g3", "u17_g4", "u17_g5", "u17_g6", "u17_g7", "u17_g8", "u17_g9", "u17_g10", "u17_g11", "u17_g12"];
-const DEFAULT_U14_BOYS = ["u14_b1", "u14_b2", "u14_b3", "u14_b4", "u14_b5", "u14_b6", "u14_b7", "u14_b8", "u14_b9", "u14_b10"];
-const DEFAULT_U14_GIRLS = ["u14_g1", "u14_g2", "u14_g3", "u14_g4", "u14_g5", "u14_g6", "u14_g7", "u14_g8", "u14_g9"];
-const DEFAULT_KHOKHO_BOYS = ["kk_b1", "kk_b2", "kk_b3", "kk_b4", "kk_b5", "kk_b6", "kk_b7", "kk_b8", "kk_b9", "kk_b10"];
-const DEFAULT_KHOKHO_GIRLS = ["kk_g1", "kk_g2", "kk_g3", "kk_g4", "kk_g5", "kk_g6", "kk_g7", "kk_g8", "kk_g9"];
-const DEFAULT_SHOTPUT_GIRLS = ["sp_g1", "sp_g2", "sp_g3", "sp_g4"];
+const DEFAULT_U17_BOYS = ["u17_b1", "u17_b2", "u17_b3", "u17_b4", "u17_b5", "u17_b6", "u17_b7", "u17_b8", "u17_b9", "u17_b10", "u17_b11", "u17_b12", "u17_b13", "u17_b14"];
+const DEFAULT_U17_GIRLS = ["u17_g1", "u17_g2", "u17_g3", "u17_g4", "u17_g5", "u17_g6", "u17_g7", "u17_g8", "u17_g9", "u17_g10", "u17_g11", "u17_g12", "u17_g13", "u17_g14"];
+const DEFAULT_U14_BOYS = ["u14_b1", "u14_b2", "u14_b3", "u14_b4", "u14_b5", "u14_b6", "u14_b7", "u14_b8", "u14_b9", "u14_b10", "u14_b11", "u14_b12", "u14_b13", "u14_b14"];
+const DEFAULT_U14_GIRLS = ["u14_g1", "u14_g2", "u14_g3", "u14_g4", "u14_g5", "u14_g6", "u14_g7", "u14_g8", "u14_g9", "u14_g10", "u14_g11", "u14_g12", "u14_g13", "u14_g14"];
+const DEFAULT_KHOKHO_BOYS = ["kk_b1", "kk_b2", "kk_b3", "kk_b4", "kk_b5", "kk_b6", "kk_b7", "kk_b8", "kk_b9", "kk_b10", "kk_b11", "kk_b12", "kk_b13", "kk_b14"];
+const DEFAULT_KHOKHO_GIRLS = ["kk_g1", "kk_g2", "kk_g3", "kk_g4", "kk_g5", "kk_g6", "kk_g7", "kk_g8", "kk_g9", "kk_g10", "kk_g11", "kk_g12", "kk_g13", "kk_g14"];
+const DEFAULT_SHOTPUT_GIRLS = ["sp_g1", "sp_g2", "sp_g3", "sp_g4", "sp_g5", "sp_g6", "sp_g7", "sp_g8", "sp_g9", "sp_g10", "sp_g11", "sp_g12", "sp_g13", "sp_g14"];
 
 interface PlayerPlanEntry {
   playerId: string;
@@ -126,7 +132,18 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const u14GirlsList = useMemo(() => u14GirlsPlan.length > 0 ? u14GirlsPlan : DEFAULT_U14_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u14GirlsPlan]);
   const khokhoBoysList = useMemo(() => khokhoBoysPlan.length > 0 ? khokhoBoysPlan : DEFAULT_KHOKHO_BOYS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [khokhoBoysPlan]);
   const khokhoGirlsList = useMemo(() => khokhoGirlsPlan.length > 0 ? khokhoGirlsPlan : DEFAULT_KHOKHO_GIRLS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [khokhoGirlsPlan]);
-  const shotputGirlsList = useMemo(() => shotputGirlsPlan.length > 0 ? shotputGirlsPlan : DEFAULT_SHOTPUT_GIRLS.map(id => ({ playerId: id, game1: 'Shot Put', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [shotputGirlsPlan]);
+  const shotputGirlsList = useMemo(() => shotputGirlsPlan.length > 0 ? shotputGirlsPlan : DEFAULT_SHOTPUT_GIRLS.map((id, idx) => {
+    const comboIdx = idx % 6;
+    let game1 = 'None';
+    let game2 = 'None';
+    if (comboIdx === 0) { game1 = 'Shot Put'; game2 = 'Discus Throw'; }
+    else if (comboIdx === 1) { game1 = 'Discus Throw'; game2 = 'Javelin Throw'; }
+    else if (comboIdx === 2) { game1 = 'Javelin Throw'; game2 = 'Running'; }
+    else if (comboIdx === 3) { game1 = 'Shot Put'; game2 = 'Javelin Throw'; }
+    else if (comboIdx === 4) { game1 = 'Discus Throw'; game2 = 'Running'; }
+    else { game1 = 'Shot Put'; game2 = 'Running'; }
+    return { playerId: id, game1, game2, drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry;
+  }), [shotputGirlsPlan]);
 
   const getPlayerDetails = useCallback((id: string | null) => {
     if (!id) return null;
@@ -234,23 +251,37 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       };
     });
 
-    // Shot Put daily players practice Shot Put
-    const nextSpGirls = shotputGirlsList.map(item => {
-      const spDrills = [...(SPORTS_DATA['Shot Put']?.skills || [])].sort(() => 0.5 - Math.random());
+    // Athletics / Throws daily players practice 2 sports out of Shot Put, Discus Throw, Javelin Throw, Running
+    const nextSpGirls = shotputGirlsList.map((item, idx) => {
+      const comboIdx = idx % 6;
+      let game1 = 'None';
+      let game2 = 'None';
+      if (comboIdx === 0) { game1 = 'Shot Put'; game2 = 'Discus Throw'; }
+      else if (comboIdx === 1) { game1 = 'Discus Throw'; game2 = 'Javelin Throw'; }
+      else if (comboIdx === 2) { game1 = 'Javelin Throw'; game2 = 'Running'; }
+      else if (comboIdx === 3) { game1 = 'Shot Put'; game2 = 'Javelin Throw'; }
+      else if (comboIdx === 4) { game1 = 'Discus Throw'; game2 = 'Running'; }
+      else { game1 = 'Shot Put'; game2 = 'Running'; }
+
+      const g1Drills = SPORTS_DATA[game1]?.skills || [];
+      const g2Drills = SPORTS_DATA[game2]?.skills || [];
+      const shufG1 = [...g1Drills].sort(() => 0.5 - Math.random());
+      const shufG2 = [...g2Drills].sort(() => 0.5 - Math.random());
+
       return { 
         playerId: item.playerId, 
-        game1: 'Shot Put', 
-        game2: 'None',
-        drill1_1: spDrills[0] || '',
-        drill1_2: spDrills[1] || '',
-        drill2_1: 'None',
-        drill2_2: 'None'
+        game1, 
+        game2,
+        drill1_1: shufG1[0] || '',
+        drill1_2: shufG1[1] || '',
+        drill2_1: shufG2[0] || '',
+        drill2_2: shufG2[1] || ''
       };
     });
 
     // Select exactly 2 drills for each sport globally (backup)
     const nextDrills: Record<string, string[]> = {};
-    ['Kabaddi', 'Volleyball', 'Kho Kho', 'Shot Put'].forEach(sport => {
+    ['Kabaddi', 'Volleyball', 'Kho Kho', 'Shot Put', 'Discus Throw', 'Javelin Throw', 'Running'].forEach(sport => {
       const list = SPORTS_DATA[sport]?.skills || [];
       nextDrills[sport] = [...list].sort(() => 0.5 - Math.random()).slice(0, 2);
     });
@@ -503,7 +534,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       renderPrintPage("Under 17 Cohorts", u17BoysList, u17GirlsList, 1, 4),
       renderPrintPage("Under 14 Cohorts", u14BoysList, u14GirlsList, 2, 4),
       renderPrintPage("Kho Kho Daily Cohorts", khokhoBoysList, khokhoGirlsList, 3, 4),
-      renderPrintPage("Gola Phek (Shot Put) Girls Cohort", [], shotputGirlsList, 4, 4)
+      renderPrintPage("Athletics & Throws (Shot Put, Discus, Javelin & Running) Girls", [], shotputGirlsList, 4, 4)
     ].join('');
 
     const printContent = `
@@ -548,7 +579,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     { id: 'u14girls', label: 'U14 Girls' },
     { id: 'khokhoboys', label: 'Kho Kho Boys' },
     { id: 'khokhogirls', label: 'Kho Kho Girls' },
-    { id: 'shotputgirls', label: 'Shot Put Girls' },
+    { id: 'shotputgirls', label: 'Athletics / Throws Girls' },
     { id: 'drills', label: 'Focus Drills' }
   ] as const;
 
@@ -778,6 +809,9 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                                 <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
                                 <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
                                 <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
+                                <SelectItem value="Discus Throw" className="font-bold">DISCUS THROW (G5)</SelectItem>
+                                <SelectItem value="Javelin Throw" className="font-bold">JAVELIN THROW (G6)</SelectItem>
+                                <SelectItem value="Running" className="font-bold">RUNNING (G7)</SelectItem>
                               </SelectContent>
                             </Select>
                             {entry.game1 !== 'None' && (
@@ -827,6 +861,9 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                                 <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
                                 <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
                                 <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
+                                <SelectItem value="Discus Throw" className="font-bold">DISCUS THROW (G5)</SelectItem>
+                                <SelectItem value="Javelin Throw" className="font-bold">JAVELIN THROW (G6)</SelectItem>
+                                <SelectItem value="Running" className="font-bold">RUNNING (G7)</SelectItem>
                               </SelectContent>
                             </Select>
                             {entry.game2 !== 'None' && (
