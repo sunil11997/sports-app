@@ -88,6 +88,16 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const [khokhoBoysPlan, setKhokhoBoysPlan] = useState<PlayerPlanEntry[]>([]);
   const [khokhoGirlsPlan, setKhokhoGirlsPlan] = useState<PlayerPlanEntry[]>([]);
   const [shotputGirlsPlan, setShotputGirlsPlan] = useState<PlayerPlanEntry[]>([]);
+
+  const [bulkGame, setBulkGame] = useState<string>('None');
+  const [bulkDrill1, setBulkDrill1] = useState<string>('');
+  const [bulkDrill2, setBulkDrill2] = useState<string>('');
+  const [bulkSlot, setBulkSlot] = useState<'game1' | 'game2'>('game1');
+
+  useEffect(() => {
+    setBulkDrill1('');
+    setBulkDrill2('');
+  }, [bulkGame]);
   const [drills, setDrills] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -315,6 +325,43 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     if (cohort === 'khokhoboys') setKhokhoBoysPlan(prev => planUpdater(prev, khokhoBoysList));
     if (cohort === 'khokhogirls') setKhokhoGirlsPlan(prev => planUpdater(prev, khokhoGirlsList));
     if (cohort === 'shotputgirls') setShotputGirlsPlan(prev => planUpdater(prev, shotputGirlsList));
+  };
+
+  const handleBulkApply = (cohort: typeof activeTab) => {
+    if (isPastDate) return;
+    const planUpdater = (prev: PlayerPlanEntry[], list: PlayerPlanEntry[]) => {
+      const next = prev.length > 0 ? [...prev] : [...list];
+      return next.map(item => {
+        if (bulkSlot === 'game1') {
+          return {
+            ...item,
+            game1: bulkGame,
+            drill1_1: bulkDrill1,
+            drill1_2: bulkDrill2
+          };
+        } else {
+          return {
+            ...item,
+            game2: bulkGame,
+            drill2_1: bulkDrill1,
+            drill2_2: bulkDrill2
+          };
+        }
+      });
+    };
+
+    if (cohort === 'u17boys') setU17BoysPlan(prev => planUpdater(prev, u17BoysList));
+    if (cohort === 'u17girls') setU17GirlsPlan(prev => planUpdater(prev, u17GirlsList));
+    if (cohort === 'u14boys') setU14BoysPlan(prev => planUpdater(prev, u14BoysList));
+    if (cohort === 'u14girls') setU14GirlsPlan(prev => planUpdater(prev, u14GirlsList));
+    if (cohort === 'khokhoboys') setKhokhoBoysPlan(prev => planUpdater(prev, khokhoBoysList));
+    if (cohort === 'khokhogirls') setKhokhoGirlsPlan(prev => planUpdater(prev, khokhoGirlsList));
+    if (cohort === 'shotputgirls') setShotputGirlsPlan(prev => planUpdater(prev, shotputGirlsList));
+
+    toast({
+      title: "Bulk Applied",
+      description: `Successfully applied ${bulkGame} to all players in this cohort.`
+    });
   };
 
   const handleGameChange = (cohort: typeof activeTab, idx: number, gameSlot: 'game1' | 'game2', val: string) => {
@@ -746,8 +793,98 @@ export function AutoPracticePlanner({ store }: { store: any }) {
               })}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div className="space-y-4">
+              {/* Bulk Apply Bar */}
+              <div className="bg-amber-50/50 border border-amber-200/50 p-4 rounded-2xl flex flex-wrap gap-4 items-center justify-between shadow-sm">
+                <div className="space-y-1">
+                  <span className="text-xs font-black uppercase text-amber-800 flex items-center gap-1.5">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600" />
+                    Bulk Cohort Scheduler
+                  </span>
+                  <p className="text-[10px] font-bold text-amber-700 uppercase">
+                    Select game & drills to apply to all players in this cohort.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="w-40">
+                    <Select value={bulkGame} onValueChange={setBulkGame}>
+                      <SelectTrigger className="h-9 text-xs font-bold border bg-white rounded-lg">
+                        <SelectValue placeholder="Select Game" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        <SelectItem value="None" className="font-bold">-- NONE --</SelectItem>
+                        <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
+                        <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
+                        <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
+                        <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
+                        <SelectItem value="Discus Throw" className="font-bold">DISCUS THROW (G5)</SelectItem>
+                        <SelectItem value="Javelin Throw" className="font-bold">JAVELIN THROW (G6)</SelectItem>
+                        <SelectItem value="Running" className="font-bold">RUNNING (G7)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="w-44">
+                    <Select 
+                      value={bulkDrill1} 
+                      onValueChange={setBulkDrill1}
+                      disabled={bulkGame === 'None'}
+                    >
+                      <SelectTrigger className="h-9 text-xs font-bold border bg-white rounded-lg">
+                        <SelectValue placeholder="Select Drill 1" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-48">
+                        <SelectItem value="" className="font-bold">-- NO DRILL --</SelectItem>
+                        {(SPORTS_DATA[bulkGame]?.skills || []).map(skill => (
+                          <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="w-44">
+                    <Select 
+                      value={bulkDrill2} 
+                      onValueChange={setBulkDrill2}
+                      disabled={bulkGame === 'None'}
+                    >
+                      <SelectTrigger className="h-9 text-xs font-bold border bg-white rounded-lg">
+                        <SelectValue placeholder="Select Drill 2" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-48">
+                        <SelectItem value="" className="font-bold">-- NO DRILL --</SelectItem>
+                        {(SPORTS_DATA[bulkGame]?.skills || []).map(skill => (
+                          <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="w-32">
+                    <Select value={bulkSlot} onValueChange={(val: any) => setBulkSlot(val)}>
+                      <SelectTrigger className="h-9 text-xs font-bold border bg-white rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-48">
+                        <SelectItem value="game1" className="font-bold">GAME 1 SLOT</SelectItem>
+                        <SelectItem value="game2" className="font-bold">GAME 2 SLOT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <button
+                    onClick={() => handleBulkApply(activeTab)}
+                    disabled={isPastDate}
+                    className="h-9 px-4 text-xs font-black uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow transition-all duration-200 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Apply to All
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-primary/10 text-left">
                     <th className="pb-3 text-[10px] font-black text-primary uppercase w-16 text-center">Slot</th>
@@ -922,7 +1059,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                 </tbody>
               </table>
             </div>
-          )}
+          </div>
+        )}
         </CardContent>
       </Card>
 
