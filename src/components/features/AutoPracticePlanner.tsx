@@ -704,6 +704,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
               placeholder="e.g. 01/01/2011 to 30/05/2012"
               className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"
             />
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider ml-2">e.g. 01/01/2011 to 30/05/2012</p>
           </div>
 
           <div className="pt-5 w-full sm:w-auto">
