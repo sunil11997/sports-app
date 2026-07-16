@@ -90,13 +90,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const [shotputGirlsPlan, setShotputGirlsPlan] = useState<PlayerPlanEntry[]>([]);
 
   const [bulkGame, setBulkGame] = useState<string>('None');
-  const [bulkDrill1, setBulkDrill1] = useState<string>('');
-  const [bulkDrill2, setBulkDrill2] = useState<string>('');
+  const [bulkDrill1, setBulkDrill1] = useState<string>('None');
+  const [bulkDrill2, setBulkDrill2] = useState<string>('None');
   const [bulkSlot, setBulkSlot] = useState<'game1' | 'game2'>('game1');
 
   useEffect(() => {
-    setBulkDrill1('');
-    setBulkDrill2('');
+    setBulkDrill1('None');
+    setBulkDrill2('None');
   }, [bulkGame]);
   const [drills, setDrills] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -520,7 +520,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                   // Game 1 Details
                   const g1 = item.game1;
                   const g1Ground = getGroundNo(g1);
-                  const g1Drills = [item.drill1_1, item.drill1_2].filter(Boolean).join(', ') || drills[g1]?.join(', ') || 'No drills';
+                  const g1Drills = [item.drill1_1, item.drill1_2].filter(d => d && d !== 'None' && d !== 'none').join(', ') || drills[g1]?.filter(d => d && d !== 'None' && d !== 'none').join(', ') || 'No drills';
                   const g1Text = g1 !== 'None'
                     ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 10px; color: #111;">${g1}</div>
                        <div style="font-size: 8px; color: #b45309; font-weight: 900; margin-top: 0.5px;">${g1Ground}</div>
@@ -532,7 +532,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                   // Game 2 Details
                   const g2 = item.game2;
                   const g2Ground = getGroundNo(g2);
-                  const g2Drills = [item.drill2_1, item.drill2_2].filter(Boolean).join(', ') || drills[g2]?.join(', ') || 'No drills';
+                  const g2Drills = [item.drill2_1, item.drill2_2].filter(d => d && d !== 'None' && d !== 'none').join(', ') || drills[g2]?.filter(d => d && d !== 'None' && d !== 'none').join(', ') || 'No drills';
                   const g2Text = g2 !== 'None'
                     ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 10px; color: #111;">${g2}</div>
                        <div style="font-size: 8px; color: #b45309; font-weight: 900; margin-top: 0.5px;">${g2Ground}</div>
@@ -765,14 +765,14 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                       <div>
                         <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Focus Drill 1</label>
                         <Select 
-                          value={sportDrills[0] || ''} 
+                          value={sportDrills[0] || 'None'} 
                           onValueChange={(val) => handleDrillChange(sport, 0, val)}
                         >
                           <SelectTrigger className="h-10 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
                             <SelectValue placeholder="Select Focus Drill 1" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="" className="font-bold">-- Select Drill --</SelectItem>
+                            <SelectItem value="None" className="font-bold">-- Select Drill --</SelectItem>
                             {(SPORTS_DATA[sport]?.skills || []).map((skill) => (
                               <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
                             ))}
@@ -782,14 +782,14 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                       <div>
                         <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Focus Drill 2</label>
                         <Select 
-                          value={sportDrills[1] || ''} 
+                          value={sportDrills[1] || 'None'} 
                           onValueChange={(val) => handleDrillChange(sport, 1, val)}
                         >
                           <SelectTrigger className="h-10 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
                             <SelectValue placeholder="Select Focus Drill 2" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="" className="font-bold">-- Select Drill --</SelectItem>
+                            <SelectItem value="None" className="font-bold">-- Select Drill --</SelectItem>
                             {(SPORTS_DATA[sport]?.skills || []).map((skill) => (
                               <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
                             ))}
@@ -843,7 +843,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                         <SelectValue placeholder="Select Drill 1" />
                       </SelectTrigger>
                       <SelectContent className="max-h-48">
-                        <SelectItem value="" className="font-bold">-- NO DRILL --</SelectItem>
+                        <SelectItem value="None" className="font-bold">-- NO DRILL --</SelectItem>
                         {(SPORTS_DATA[bulkGame]?.skills || []).map(skill => (
                           <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
                         ))}
@@ -861,7 +861,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                         <SelectValue placeholder="Select Drill 2" />
                       </SelectTrigger>
                       <SelectContent className="max-h-48">
-                        <SelectItem value="" className="font-bold">-- NO DRILL --</SelectItem>
+                        <SelectItem value="None" className="font-bold">-- NO DRILL --</SelectItem>
                         {(SPORTS_DATA[bulkGame]?.skills || []).map(skill => (
                           <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
                         ))}
