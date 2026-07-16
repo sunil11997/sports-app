@@ -105,36 +105,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const safeDateKey = selectedDate.replace(/\//g, '-');
   const scheduleKey = `${schoolId}_autoplan_${safeDateKey}_${selectedSession}`;
 
-  // Load from Firebase
-  useEffect(() => {
-    if (!store.isLoaded || !db) return;
 
-    const docRef = doc(db, 'master_auto_plans', scheduleKey);
-    const unsub = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const d = snapshot.data();
-        setU17BoysPlan(d.u17BoysPlan || []);
-        setU17GirlsPlan(d.u17GirlsPlan || []);
-        setU14BoysPlan(d.u14BoysPlan || []);
-        setU14GirlsPlan(d.u14GirlsPlan || []);
-        setKhokhoBoysPlan(d.khokhoBoysPlan || []);
-        setKhokhoGirlsPlan(d.khokhoGirlsPlan || []);
-        setShotputGirlsPlan(d.shotputGirlsPlan || []);
-        setDrills(d.drills || {});
-      } else {
-        // Clear state
-        setU17BoysPlan([]);
-        setU17GirlsPlan([]);
-        setU14BoysPlan([]);
-        setU14GirlsPlan([]);
-        setKhokhoBoysPlan([]);
-        setKhokhoGirlsPlan([]);
-        setShotputGirlsPlan([]);
-        setDrills({});
-      }
-    });
-    return () => unsub();
-  }, [store.isLoaded, scheduleKey, db]);
 
   const getCohortPlayers = useCallback((gender: 'Male' | 'Female', ageCat?: 'U17' | 'U14', isKhokhoOnly?: boolean, isShotPutOnly?: boolean) => {
     return (store.data.players || []).filter((p: any) => {
@@ -217,6 +188,70 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const khokhoBoysList = useMemo(() => getInitialList(khokhoBoysPlan, 'Male', undefined, true, false, DEFAULT_KHOKHO_BOYS), [khokhoBoysPlan, getInitialList]);
   const khokhoGirlsList = useMemo(() => getInitialList(khokhoGirlsPlan, 'Female', undefined, true, false, DEFAULT_KHOKHO_GIRLS), [khokhoGirlsPlan, getInitialList]);
   const shotputGirlsList = useMemo(() => getInitialList(shotputGirlsPlan, 'Female', undefined, false, true, DEFAULT_SHOTPUT_GIRLS), [shotputGirlsPlan, getInitialList]);
+
+  // Load from Firebase
+  useEffect(() => {
+    if (!store.isLoaded || !db) return;
+
+    const docRef = doc(db, 'master_auto_plans', scheduleKey);
+    const unsub = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const d = snapshot.data();
+        setU17BoysPlan(d.u17BoysPlan || []);
+        setU17GirlsPlan(d.u17GirlsPlan || []);
+        setU14BoysPlan(d.u14BoysPlan || []);
+        setU14GirlsPlan(d.u14GirlsPlan || []);
+        setKhokhoBoysPlan(d.khokhoBoysPlan || []);
+        setKhokhoGirlsPlan(d.khokhoGirlsPlan || []);
+        setShotputGirlsPlan(d.shotputGirlsPlan || []);
+        setDrills(d.drills || {});
+      } else {
+        // Clear games and drills, but keep the current players from the state!
+        // If state is empty (e.g. first load), load getInitialList
+        setU17BoysPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Male', 'U17', false, false, DEFAULT_U17_BOYS);
+          return base.map(item => ({ ...item, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' }));
+        });
+        setU17GirlsPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Female', 'U17', false, false, DEFAULT_U17_GIRLS);
+          return base.map(item => ({ ...item, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' }));
+        });
+        setU14BoysPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Male', 'U14', false, false, DEFAULT_U14_BOYS);
+          return base.map(item => ({ ...item, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' }));
+        });
+        setU14GirlsPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Female', 'U14', false, false, DEFAULT_U14_GIRLS);
+          return base.map(item => ({ ...item, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' }));
+        });
+        setKhokhoBoysPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Male', undefined, true, false, DEFAULT_KHOKHO_BOYS);
+          return base.map(item => ({ ...item, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' }));
+        });
+        setKhokhoGirlsPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Female', undefined, true, false, DEFAULT_KHOKHO_GIRLS);
+          return base.map(item => ({ ...item, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' }));
+        });
+        setShotputGirlsPlan(prev => {
+          const base = prev.length > 0 ? prev : getInitialList([], 'Female', undefined, false, true, DEFAULT_SHOTPUT_GIRLS);
+          return base.map((item, idx) => {
+            const comboIdx = idx % 6;
+            let game1 = 'None';
+            let game2 = 'None';
+            if (comboIdx === 0) { game1 = 'Shot Put'; game2 = 'Discus Throw'; }
+            else if (comboIdx === 1) { game1 = 'Discus Throw'; game2 = 'Javelin Throw'; }
+            else if (comboIdx === 2) { game1 = 'Javelin Throw'; game2 = 'Running'; }
+            else if (comboIdx === 3) { game1 = 'Shot Put'; game2 = 'Javelin Throw'; }
+            else if (comboIdx === 4) { game1 = 'Discus Throw'; game2 = 'Running'; }
+            else { game1 = 'Shot Put'; game2 = 'Running'; }
+            return { ...item, game1, game2, drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' };
+          });
+        });
+        setDrills({});
+      }
+    });
+    return () => unsub();
+  }, [store.isLoaded, scheduleKey, db, getInitialList]);
 
   // Solver
   const handleAutoSchedule = () => {
