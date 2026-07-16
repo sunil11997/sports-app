@@ -43,6 +43,10 @@ interface PlayerPlanEntry {
   playerId: string;
   game1: string;
   game2: string;
+  drill1_1?: string;
+  drill1_2?: string;
+  drill2_1?: string;
+  drill2_2?: string;
 }
 
 export function AutoPracticePlanner({ store }: { store: any }) {
@@ -116,13 +120,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   }, [store.isLoaded, scheduleKey, db]);
 
   // Fallbacks if states are empty
-  const u17BoysList = useMemo(() => u17BoysPlan.length > 0 ? u17BoysPlan : DEFAULT_U17_BOYS.map(id => ({ playerId: id, game1: 'None', game2: 'None' })), [u17BoysPlan]);
-  const u17GirlsList = useMemo(() => u17GirlsPlan.length > 0 ? u17GirlsPlan : DEFAULT_U17_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None' })), [u17GirlsPlan]);
-  const u14BoysList = useMemo(() => u14BoysPlan.length > 0 ? u14BoysPlan : DEFAULT_U14_BOYS.map(id => ({ playerId: id, game1: 'None', game2: 'None' })), [u14BoysPlan]);
-  const u14GirlsList = useMemo(() => u14GirlsPlan.length > 0 ? u14GirlsPlan : DEFAULT_U14_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None' })), [u14GirlsPlan]);
-  const khokhoBoysList = useMemo(() => khokhoBoysPlan.length > 0 ? khokhoBoysPlan : DEFAULT_KHOKHO_BOYS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho' })), [khokhoBoysPlan]);
-  const khokhoGirlsList = useMemo(() => khokhoGirlsPlan.length > 0 ? khokhoGirlsPlan : DEFAULT_KHOKHO_GIRLS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho' })), [khokhoGirlsPlan]);
-  const shotputGirlsList = useMemo(() => shotputGirlsPlan.length > 0 ? shotputGirlsPlan : DEFAULT_SHOTPUT_GIRLS.map(id => ({ playerId: id, game1: 'Shot Put', game2: 'None' })), [shotputGirlsPlan]);
+  const u17BoysList = useMemo(() => u17BoysPlan.length > 0 ? u17BoysPlan : DEFAULT_U17_BOYS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u17BoysPlan]);
+  const u17GirlsList = useMemo(() => u17GirlsPlan.length > 0 ? u17GirlsPlan : DEFAULT_U17_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u17GirlsPlan]);
+  const u14BoysList = useMemo(() => u14BoysPlan.length > 0 ? u14BoysPlan : DEFAULT_U14_BOYS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u14BoysPlan]);
+  const u14GirlsList = useMemo(() => u14GirlsPlan.length > 0 ? u14GirlsPlan : DEFAULT_U14_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [u14GirlsPlan]);
+  const khokhoBoysList = useMemo(() => khokhoBoysPlan.length > 0 ? khokhoBoysPlan : DEFAULT_KHOKHO_BOYS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [khokhoBoysPlan]);
+  const khokhoGirlsList = useMemo(() => khokhoGirlsPlan.length > 0 ? khokhoGirlsPlan : DEFAULT_KHOKHO_GIRLS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [khokhoGirlsPlan]);
+  const shotputGirlsList = useMemo(() => shotputGirlsPlan.length > 0 ? shotputGirlsPlan : DEFAULT_SHOTPUT_GIRLS.map(id => ({ playerId: id, game1: 'Shot Put', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' } as PlayerPlanEntry)), [shotputGirlsPlan]);
 
   const getPlayerDetails = useCallback((id: string | null) => {
     if (!id) return null;
@@ -167,13 +171,33 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       
       shuffled.forEach((entry, idx) => {
         const mod = idx % 3;
+        let game1 = 'None';
+        let game2 = 'None';
         if (mod === 0) {
-          plan.push({ playerId: entry.playerId, game1: 'Kabaddi', game2: 'Volleyball' });
+          game1 = 'Kabaddi';
+          game2 = 'Volleyball';
         } else if (mod === 1) {
-          plan.push({ playerId: entry.playerId, game1: 'Volleyball', game2: 'Kho Kho' });
+          game1 = 'Volleyball';
+          game2 = 'Kho Kho';
         } else {
-          plan.push({ playerId: entry.playerId, game1: 'Kabaddi', game2: 'Kho Kho' });
+          game1 = 'Kabaddi';
+          game2 = 'Kho Kho';
         }
+
+        const g1Drills = SPORTS_DATA[game1]?.skills || [];
+        const g2Drills = SPORTS_DATA[game2]?.skills || [];
+        const shufG1 = [...g1Drills].sort(() => 0.5 - Math.random());
+        const shufG2 = [...g2Drills].sort(() => 0.5 - Math.random());
+
+        plan.push({ 
+          playerId: entry.playerId, 
+          game1, 
+          game2,
+          drill1_1: shufG1[0] || '',
+          drill1_2: shufG1[1] || '',
+          drill2_1: shufG2[0] || '',
+          drill2_2: shufG2[1] || ''
+        });
       });
       return plan;
     };
@@ -184,13 +208,47 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     const nextU14Girls = autoPlanCohort(u14GirlsList);
 
     // Kho Kho daily players practice Kho Kho
-    const nextKkBoys = khokhoBoysList.map(item => ({ playerId: item.playerId, game1: 'Kho Kho', game2: 'Kho Kho' }));
-    const nextKkGirls = khokhoGirlsList.map(item => ({ playerId: item.playerId, game1: 'Kho Kho', game2: 'Kho Kho' }));
+    const nextKkBoys = khokhoBoysList.map(item => {
+      const kkDrills = [...(SPORTS_DATA['Kho Kho']?.skills || [])].sort(() => 0.5 - Math.random());
+      return { 
+        playerId: item.playerId, 
+        game1: 'Kho Kho', 
+        game2: 'Kho Kho',
+        drill1_1: kkDrills[0] || '',
+        drill1_2: kkDrills[1] || '',
+        drill2_1: kkDrills[2] || kkDrills[0] || '',
+        drill2_2: kkDrills[3] || kkDrills[1] || ''
+      };
+    });
+    
+    const nextKkGirls = khokhoGirlsList.map(item => {
+      const kkDrills = [...(SPORTS_DATA['Kho Kho']?.skills || [])].sort(() => 0.5 - Math.random());
+      return { 
+        playerId: item.playerId, 
+        game1: 'Kho Kho', 
+        game2: 'Kho Kho',
+        drill1_1: kkDrills[0] || '',
+        drill1_2: kkDrills[1] || '',
+        drill2_1: kkDrills[2] || kkDrills[0] || '',
+        drill2_2: kkDrills[3] || kkDrills[1] || ''
+      };
+    });
 
     // Shot Put daily players practice Shot Put
-    const nextSpGirls = shotputGirlsList.map(item => ({ playerId: item.playerId, game1: 'Shot Put', game2: 'None' }));
+    const nextSpGirls = shotputGirlsList.map(item => {
+      const spDrills = [...(SPORTS_DATA['Shot Put']?.skills || [])].sort(() => 0.5 - Math.random());
+      return { 
+        playerId: item.playerId, 
+        game1: 'Shot Put', 
+        game2: 'None',
+        drill1_1: spDrills[0] || '',
+        drill1_2: spDrills[1] || '',
+        drill2_1: 'None',
+        drill2_2: 'None'
+      };
+    });
 
-    // Select exactly 2 drills for each sport
+    // Select exactly 2 drills for each sport globally (backup)
     const nextDrills: Record<string, string[]> = {};
     ['Kabaddi', 'Volleyball', 'Kho Kho', 'Shot Put'].forEach(sport => {
       const list = SPORTS_DATA[sport]?.skills || [];
@@ -233,7 +291,32 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     const planUpdater = (prev: PlayerPlanEntry[], list: PlayerPlanEntry[]) => {
       const next = prev.length > 0 ? [...prev] : [...list];
       if (next[idx]) {
-        next[idx] = { ...next[idx], [gameSlot]: val };
+        const defaultDrills = val !== 'None' ? (SPORTS_DATA[val]?.skills || []) : [];
+        next[idx] = { 
+          ...next[idx], 
+          [gameSlot]: val,
+          [gameSlot === 'game1' ? 'drill1_1' : 'drill2_1']: defaultDrills[0] || '',
+          [gameSlot === 'game1' ? 'drill1_2' : 'drill2_2']: defaultDrills[1] || ''
+        };
+      }
+      return next;
+    };
+
+    if (cohort === 'u17boys') setU17BoysPlan(prev => planUpdater(prev, u17BoysList));
+    if (cohort === 'u17girls') setU17GirlsPlan(prev => planUpdater(prev, u17GirlsList));
+    if (cohort === 'u14boys') setU14BoysPlan(prev => planUpdater(prev, u14BoysList));
+    if (cohort === 'u14girls') setU14GirlsPlan(prev => planUpdater(prev, u14GirlsList));
+    if (cohort === 'khokhoboys') setKhokhoBoysPlan(prev => planUpdater(prev, khokhoBoysList));
+    if (cohort === 'khokhogirls') setKhokhoGirlsPlan(prev => planUpdater(prev, khokhoGirlsList));
+    if (cohort === 'shotputgirls') setShotputGirlsPlan(prev => planUpdater(prev, shotputGirlsList));
+  };
+
+  const handleDrillFieldChange = (cohort: typeof activeTab, idx: number, drillSlot: 'drill1_1' | 'drill1_2' | 'drill2_1' | 'drill2_2', val: string) => {
+    if (isPastDate) return;
+    const planUpdater = (prev: PlayerPlanEntry[], list: PlayerPlanEntry[]) => {
+      const next = prev.length > 0 ? [...prev] : [...list];
+      if (next[idx]) {
+        next[idx] = { ...next[idx], [drillSlot]: val };
       }
       return next;
     };
@@ -312,23 +395,27 @@ export function AutoPracticePlanner({ store }: { store: any }) {
           index: i + 1, 
           player: getPlayerDetails(item.playerId), 
           game1: item.game1, 
-          game2: item.game2 
+          game2: item.game2,
+          drill1_1: item.drill1_1,
+          drill1_2: item.drill1_2,
+          drill2_1: item.drill2_1,
+          drill2_2: item.drill2_2
         }));
 
         return `
-          <div style="margin-bottom: 12px; page-break-inside: avoid;">
-            <div style="background: #235C36; color: white; padding: 6px 12px; font-size: 13px; font-weight: 900; text-transform: uppercase; border-radius: 4px 4px 0 0; letter-spacing: 0.5px; border: 1px solid #1c4a2b;">
+          <div style="margin-bottom: 6px; page-break-inside: avoid;">
+            <div style="background: #235C36; color: white; padding: 4px 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; border-radius: 4px 4px 0 0; border: 1px solid #1c4a2b; letter-spacing: 0.5px;">
               ${subTitle}
             </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #aaa;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #777;">
               <thead>
-                <tr style="background: #e8efe9; font-size: 11px; border-bottom: 2px solid #235C36;">
-                  <th style="border: 1px solid #999; padding: 5px; text-align: center; width: 45px; font-weight: 900; color: #111;">SLOT</th>
-                  <th style="border: 1px solid #999; padding: 5px 8px; text-align: left; font-weight: 900; color: #111;">PLAYER NAME</th>
-                  <th style="border: 1px solid #999; padding: 5px; text-align: center; width: 45px; font-weight: 900; color: #111;">STD</th>
-                  <th style="border: 1px solid #999; padding: 5px 8px; text-align: left; font-weight: 900; width: 175px; color: #111;">GAME 1 PRACTICE</th>
-                  <th style="border: 1px solid #999; padding: 5px 8px; text-align: left; font-weight: 900; width: 175px; color: #111;">GAME 2 PRACTICE</th>
-                  <th style="border: 1px solid #999; padding: 5px; text-align: center; width: 60px; font-weight: 900; color: #111;">ATTEND</th>
+                <tr style="background: #e8efe9; font-size: 10px; border-bottom: 2px solid #235C36;">
+                  <th style="border: 1px solid #777; padding: 3px; text-align: center; width: 40px; font-weight: 900; color: #111;">SLOT</th>
+                  <th style="border: 1px solid #777; padding: 3px 6px; text-align: left; font-weight: 900; color: #111;">PLAYER NAME</th>
+                  <th style="border: 1px solid #777; padding: 3px; text-align: center; width: 40px; font-weight: 900; color: #111;">STD</th>
+                  <th style="border: 1px solid #777; padding: 3px 6px; text-align: left; font-weight: 900; width: 180px; color: #111;">GAME 1 PRACTICE</th>
+                  <th style="border: 1px solid #777; padding: 3px 6px; text-align: left; font-weight: 900; width: 180px; color: #111;">GAME 2 PRACTICE</th>
+                  <th style="border: 1px solid #777; padding: 3px; text-align: center; width: 50px; font-weight: 900; color: #111;">ATTEND</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,43 +423,43 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                   const isGroupLeader = item.index <= 2;
                   const pName = item.player ? item.player.name : '- VACANT -';
                   const pNameText = isGroupLeader 
-                    ? `${pName} <span style="font-size: 8px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 900; border: 1px solid #f59e0b; margin-left: 5px; display: inline-block; vertical-align: middle;">LEADER</span>`
+                    ? `${pName} <span style="font-size: 7px; color: #b45309; background: #fef3c7; padding: 1px 3px; border-radius: 2px; font-weight: 900; border: 1px solid #f59e0b; margin-left: 4px; display: inline-block;">LEADER</span>`
                     : pName;
 
                   // Game 1 Details
                   const g1 = item.game1;
                   const g1Ground = getGroundNo(g1);
-                  const g1Drills = drills[g1] ? drills[g1].filter(d => d.trim() !== '').join(', ') : 'No drills';
+                  const g1Drills = [item.drill1_1, item.drill1_2].filter(Boolean).join(', ') || drills[g1]?.join(', ') || 'No drills';
                   const g1Text = g1 !== 'None'
-                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #111;">${g1}</div>
-                       <div style="font-size: 10px; color: #b45309; font-weight: 900; margin-top: 1px;">${g1Ground}</div>
-                       <div style="font-size: 10px; color: #444; font-style: italic; margin-top: 2px; line-height: 1.2;">
-                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #777; padding-bottom: 1px; font-weight: bold; cursor: text; color: #000;">${g1Drills}</span>
+                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 11px; color: #111;">${g1}</div>
+                       <div style="font-size: 9px; color: #b45309; font-weight: 900; margin-top: 1px;">${g1Ground}</div>
+                       <div style="font-size: 9px; color: #333; font-style: italic; margin-top: 1px; line-height: 1.1;">
+                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #666; cursor: text; color: #000; font-weight: bold;">${g1Drills}</span>
                        </div>`
                     : `<span style="color: #999;">-</span>`;
 
                   // Game 2 Details
                   const g2 = item.game2;
                   const g2Ground = getGroundNo(g2);
-                  const g2Drills = drills[g2] ? drills[g2].filter(d => d.trim() !== '').join(', ') : 'No drills';
+                  const g2Drills = [item.drill2_1, item.drill2_2].filter(Boolean).join(', ') || drills[g2]?.join(', ') || 'No drills';
                   const g2Text = g2 !== 'None'
-                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 12px; color: #111;">${g2}</div>
-                       <div style="font-size: 10px; color: #b45309; font-weight: 900; margin-top: 1px;">${g2Ground}</div>
-                       <div style="font-size: 10px; color: #444; font-style: italic; margin-top: 2px; line-height: 1.2;">
-                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #777; padding-bottom: 1px; font-weight: bold; cursor: text; color: #000;">${g2Drills}</span>
+                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 11px; color: #111;">${g2}</div>
+                       <div style="font-size: 9px; color: #b45309; font-weight: 900; margin-top: 1px;">${g2Ground}</div>
+                       <div style="font-size: 9px; color: #333; font-style: italic; margin-top: 1px; line-height: 1.1;">
+                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #666; cursor: text; color: #000; font-weight: bold;">${g2Drills}</span>
                        </div>`
                     : `<span style="color: #999;">-</span>`;
 
                   return `
-                    <tr style="border-bottom: 1px solid #bbb;">
-                      <td style="border: 1px solid #aaa; padding: 6px 4px; text-align: center; font-weight: bold; background: #fafafa; color: #111;">${item.index}</td>
-                      <td style="border: 1px solid #aaa; padding: 6px 8px; font-weight: 900; text-transform: uppercase; color: #000; font-size: 12px;" contenteditable="true">
+                    <tr style="height: 25px;">
+                      <td style="border: 1px solid #777; padding: 3px; text-align: center; font-weight: bold; background: #fafafa; color: #111;">${item.index}</td>
+                      <td style="border: 1px solid #777; padding: 3px 6px; font-weight: 900; text-transform: uppercase; color: #000; font-size: 11px;" contenteditable="true">
                         ${pNameText}
                       </td>
-                      <td style="border: 1px solid #aaa; padding: 6px 4px; text-align: center; font-weight: bold;" contenteditable="true">${item.player ? item.player.std : '-'}</td>
-                      <td style="border: 1px solid #aaa; padding: 6px 8px; vertical-align: top;">${g1Text}</td>
-                      <td style="border: 1px solid #aaa; padding: 6px 8px; vertical-align: top;">${g2Text}</td>
-                      <td style="border: 1px solid #aaa; padding: 6px 4px; text-align: center; font-size: 18px; font-weight: bold; color: #000; background: #fafafa;">☐</td>
+                      <td style="border: 1px solid #777; padding: 3px; text-align: center; font-weight: bold;" contenteditable="true">${item.player ? item.player.std : '-'}</td>
+                      <td style="border: 1px solid #777; padding: 3px 6px; vertical-align: top;">${g1Text}</td>
+                      <td style="border: 1px solid #777; padding: 3px 6px; vertical-align: top;">${g2Text}</td>
+                      <td style="border: 1px solid #777; padding: 3px; text-align: center; font-size: 16px; font-weight: bold; color: #000;">☐</td>
                     </tr>
                   `;
                 }).join('')}
@@ -386,13 +473,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       const girlsTableHtml = girlsList && girlsList.length > 0 ? renderTable("Girls Practice Timetable", girlsList) : '';
 
       return `
-        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; min-height: 330mm; box-sizing: border-box; display: flex; flex-direction: column; padding: 5px;">
-          <div style="text-align: center; border-bottom: 3px double #235C36; padding-bottom: 4px; margin-bottom: 10px;">
-            <div style="font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
-            <div style="font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 3px; color: #333; letter-spacing: 0.5px;">DAILY PRACTICE TIMETABLE - ${title}</div>
+        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; page-break-inside: avoid; max-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; padding: 2px;">
+          <div style="text-align: center; border-bottom: 2px double #235C36; padding-bottom: 2px; margin-bottom: 6px;">
+            <div style="font-size: 18px; font-weight: 900; color: #235C36; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-top: 1px; color: #333; letter-spacing: 0.5px;">DAILY PRACTICE TIMETABLE - ${title}</div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 12px; background: #f9f9f9; padding: 8px 12px; border-radius: 4px; border: 2px solid #ccc; text-transform: uppercase;">
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-bottom: 8px; background: #f9f9f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #bbb; text-transform: uppercase;">
             <div>DATE: <span style="color: #235C36; font-weight: 900;">${selectedDate}</span></div>
             <div>SESSION: <span style="color: #235C36; font-weight: 900;">${timeText}</span></div>
             <div>COACH: <span style="color: #235C36; font-weight: 900;">${coachName}</span></div>
@@ -403,7 +490,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
             ${girlsTableHtml}
           </div>
 
-          <div style="font-size: 9px; color: #555; text-align: center; margin-top: auto; padding-top: 10px; border-top: 2px solid #ccc; display: flex; justify-content: space-between; font-weight: bold;">
+          <div style="font-size: 8px; color: #555; text-align: center; margin-top: auto; padding-top: 4px; border-top: 1px solid #ccc; display: flex; justify-content: space-between; font-weight: bold;">
             <span>Page ${pageNum} of ${totalPages}</span>
             <span>Ashram Shala Waghamba &bull; Physical Education Registry</span>
             <span>Printed on: ${new Date().toLocaleDateString()}</span>
@@ -426,13 +513,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
           <style>
             @media print {
               .no-print { display: none !important; }
-              body { margin: 0 !important; }
+              body { margin: 0 !important; padding: 0 !important; }
               @page {
                 size: legal portrait;
-                margin: 12mm 10mm 12mm 10mm;
+                margin: 10mm 10mm 10mm 10mm;
               }
             }
-            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 10px; color: #111; line-height: 1.3; }
+            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 10px; color: #111; line-height: 1.25; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; font-family: inherit; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -622,8 +709,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                     <th className="pb-3 text-[10px] font-black text-primary uppercase w-16 text-center">Slot</th>
                     <th className="pb-3 text-[10px] font-black text-primary uppercase">Player Profile</th>
                     <th className="pb-3 text-[10px] font-black text-primary uppercase w-16 text-center">Std</th>
-                    <th className="pb-3 text-[10px] font-black text-primary uppercase w-60">Game 1 Practice</th>
-                    <th className="pb-3 text-[10px] font-black text-primary uppercase w-60">Game 2 Practice</th>
+                    <th className="pb-3 text-[10px] font-black text-primary uppercase w-80">Game 1 Practice</th>
+                    <th className="pb-3 text-[10px] font-black text-primary uppercase w-80">Game 2 Practice</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-primary/5">
@@ -677,38 +764,102 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                           {player ? player.std : '-'}
                         </td>
                         <td className="py-4 pr-4">
-                          <Select 
-                            value={entry.game1} 
-                            onValueChange={(val) => handleGameChange(activeTab, idx, 'game1', val)}
-                          >
-                            <SelectTrigger className="h-9 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="None" className="font-bold">-- NONE --</SelectItem>
-                              <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
-                              <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
-                              <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
-                              <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="space-y-2">
+                            <Select 
+                              value={entry.game1} 
+                              onValueChange={(val) => handleGameChange(activeTab, idx, 'game1', val)}
+                            >
+                              <SelectTrigger className="h-9 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="None" className="font-bold">-- NONE --</SelectItem>
+                                <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
+                                <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
+                                <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
+                                <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {entry.game1 !== 'None' && (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <Select 
+                                  value={entry.drill1_1 || ''} 
+                                  onValueChange={(val) => handleDrillFieldChange(activeTab, idx, 'drill1_1', val)}
+                                >
+                                  <SelectTrigger className="h-8 text-[10px] font-bold border bg-white rounded-lg shadow-sm">
+                                    <SelectValue placeholder="Drill 1" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-48">
+                                    {(SPORTS_DATA[entry.game1]?.skills || []).map(skill => (
+                                      <SelectItem key={skill} value={skill} className="text-[10px] font-bold">{skill}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select 
+                                  value={entry.drill1_2 || ''} 
+                                  onValueChange={(val) => handleDrillFieldChange(activeTab, idx, 'drill1_2', val)}
+                                >
+                                  <SelectTrigger className="h-8 text-[10px] font-bold border bg-white rounded-lg shadow-sm">
+                                    <SelectValue placeholder="Drill 2" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-48">
+                                    {(SPORTS_DATA[entry.game1]?.skills || []).map(skill => (
+                                      <SelectItem key={skill} value={skill} className="text-[10px] font-bold">{skill}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="py-4">
-                          <Select 
-                            value={entry.game2} 
-                            onValueChange={(val) => handleGameChange(activeTab, idx, 'game2', val)}
-                          >
-                            <SelectTrigger className="h-9 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="None" className="font-bold">-- NONE --</SelectItem>
-                              <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
-                              <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
-                              <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
-                              <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="space-y-2">
+                            <Select 
+                              value={entry.game2} 
+                              onValueChange={(val) => handleGameChange(activeTab, idx, 'game2', val)}
+                            >
+                              <SelectTrigger className="h-9 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="None" className="font-bold">-- NONE --</SelectItem>
+                                <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
+                                <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
+                                <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
+                                <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {entry.game2 !== 'None' && (
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <Select 
+                                  value={entry.drill2_1 || ''} 
+                                  onValueChange={(val) => handleDrillFieldChange(activeTab, idx, 'drill2_1', val)}
+                                >
+                                  <SelectTrigger className="h-8 text-[10px] font-bold border bg-white rounded-lg shadow-sm">
+                                    <SelectValue placeholder="Drill 1" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-48">
+                                    {(SPORTS_DATA[entry.game2]?.skills || []).map(skill => (
+                                      <SelectItem key={skill} value={skill} className="text-[10px] font-bold">{skill}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select 
+                                  value={entry.drill2_2 || ''} 
+                                  onValueChange={(val) => handleDrillFieldChange(activeTab, idx, 'drill2_2', val)}
+                                >
+                                  <SelectTrigger className="h-8 text-[10px] font-bold border bg-white rounded-lg shadow-sm">
+                                    <SelectValue placeholder="Drill 2" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-48">
+                                    {(SPORTS_DATA[entry.game2]?.skills || []).map(skill => (
+                                      <SelectItem key={skill} value={skill} className="text-[10px] font-bold">{skill}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
