@@ -489,24 +489,24 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
         return `
           <div style="margin-bottom: 4px; page-break-inside: avoid;">
-            <div style="background: #235C36; color: white; padding: 3px 8px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 4px 4px 0 0; border: 1px solid #1c4a2b; letter-spacing: 0.5px;">
+            <div style="background: #000000; color: #ffffff; padding: 3px 8px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-radius: 4px 4px 0 0; border: 1.5px solid #000000; letter-spacing: 0.5px;">
               ${subTitle}
             </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 9.5px; border: 1px solid #777; line-height: 1.15;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 9.5px; border: 1.5px solid #000000; line-height: 1.15; color: #000000;">
               <thead>
-                <tr style="background: #e8efe9; font-size: 9px; border-bottom: 2px solid #235C36;">
-                  <th style="border: 1px solid #777; padding: 2px; text-align: center; width: 40px; font-weight: 900; color: #111;">SLOT</th>
-                  <th style="border: 1px solid #777; padding: 2px 4px; text-align: left; font-weight: 900; color: #111;">PLAYER NAME</th>
-                  <th style="border: 1px solid #777; padding: 2px; text-align: center; width: 35px; font-weight: 900; color: #111;">STD</th>
-                  <th style="border: 1px solid #777; padding: 2px 4px; text-align: left; font-weight: 900; width: 185px; color: #111;">GAME 1 PRACTICE</th>
-                  <th style="border: 1px solid #777; padding: 2px 4px; text-align: left; font-weight: 900; width: 185px; color: #111;">GAME 2 PRACTICE</th>
-                  <th style="border: 1px solid #777; padding: 2px; text-align: center; width: 40px; font-weight: 900; color: #111;">ATTEND</th>
+                <tr style="background: #f0f0f0; font-size: 9px; border-bottom: 2px solid #000000;">
+                  <th style="border: 1.5px solid #000000; padding: 2px; text-align: center; width: 40px; font-weight: 900; color: #000000;">SLOT</th>
+                  <th style="border: 1.5px solid #000000; padding: 2px 4px; text-align: left; font-weight: 900; color: #000000;">PLAYER NAME</th>
+                  <th style="border: 1.5px solid #000000; padding: 2px; text-align: center; width: 35px; font-weight: 900; color: #000000;">STD</th>
+                  <th style="border: 1.5px solid #000000; padding: 2px 4px; text-align: left; font-weight: 900; width: 185px; color: #000000;">GAME 1 PRACTICE</th>
+                  <th style="border: 1px solid #000000; padding: 2px 4px; text-align: left; font-weight: 900; width: 185px; color: #000000;">GAME 2 PRACTICE</th>
+                  <th style="border: 1.5px solid #000000; padding: 2px; text-align: center; width: 40px; font-weight: 900; color: #000000;">ATTEND</th>
                 </tr>
               </thead>
               <tbody>
                 ${details.length === 0 ? `
                   <tr>
-                    <td colspan="6" style="border: 1px solid #777; padding: 8px; text-align: center; color: #666; font-style: italic; font-weight: bold;">
+                    <td colspan="6" style="border: 1.5px solid #000000; padding: 8px; text-align: center; color: #000000; font-style: italic; font-weight: bold;">
                       No active players scheduled.
                     </td>
                   </tr>
@@ -514,7 +514,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                   const isGroupLeader = item.index <= 2;
                   const pName = item.player ? item.player.name : '- VACANT -';
                   const pNameText = isGroupLeader 
-                    ? `${pName} <span style="font-size: 6.5px; color: #b45309; background: #fef3c7; padding: 0.5px 2px; border-radius: 2px; font-weight: 900; border: 1px solid #f59e0b; margin-left: 3px; display: inline-block;">LEADER</span>`
+                    ? `${pName} <span style="font-size: 6.5px; color: #000000; background: #ffffff; padding: 0.5px 2px; border-radius: 2px; font-weight: 900; border: 1.5px solid #000000; margin-left: 3px; display: inline-block;">[LEADER]</span>`
                     : pName;
 
                   // Game 1 Details
@@ -522,35 +522,35 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                   const g1Ground = getGroundNo(g1);
                   const g1Drills = [item.drill1_1, item.drill1_2].filter(d => d && d !== 'None' && d !== 'none').join(', ') || drills[g1]?.filter(d => d && d !== 'None' && d !== 'none').join(', ') || 'No drills';
                   const g1Text = g1 !== 'None'
-                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 10px; color: #111;">${g1}</div>
-                       <div style="font-size: 8px; color: #b45309; font-weight: 900; margin-top: 0.5px;">${g1Ground}</div>
-                       <div style="font-size: 8px; color: #333; font-style: italic; margin-top: 0.5px; line-height: 1.05;">
-                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #666; cursor: text; color: #000; font-weight: bold;">${g1Drills}</span>
+                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 10px; color: #000000;">${g1}</div>
+                       <div style="font-size: 8px; color: #000000; font-weight: bold; font-style: italic; margin-top: 0.5px;">${g1Ground}</div>
+                       <div style="font-size: 8px; color: #000000; margin-top: 0.5px; line-height: 1.05;">
+                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: bold;">${g1Drills}</span>
                        </div>`
-                    : `<span style="color: #999;">-</span>`;
+                    : `<span style="color: #000000;">-</span>`;
 
                   // Game 2 Details
                   const g2 = item.game2;
                   const g2Ground = getGroundNo(g2);
                   const g2Drills = [item.drill2_1, item.drill2_2].filter(d => d && d !== 'None' && d !== 'none').join(', ') || drills[g2]?.filter(d => d && d !== 'None' && d !== 'none').join(', ') || 'No drills';
                   const g2Text = g2 !== 'None'
-                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 10px; color: #111;">${g2}</div>
-                       <div style="font-size: 8px; color: #b45309; font-weight: 900; margin-top: 0.5px;">${g2Ground}</div>
-                       <div style="font-size: 8px; color: #333; font-style: italic; margin-top: 0.5px; line-height: 1.05;">
-                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #666; cursor: text; color: #000; font-weight: bold;">${g2Drills}</span>
+                    ? `<div style="font-weight: 900; text-transform: uppercase; font-size: 10px; color: #000000;">${g2}</div>
+                       <div style="font-size: 8px; color: #000000; font-weight: bold; font-style: italic; margin-top: 0.5px;">${g2Ground}</div>
+                       <div style="font-size: 8px; color: #000000; margin-top: 0.5px; line-height: 1.05;">
+                         Drills: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: bold;">${g2Drills}</span>
                        </div>`
-                    : `<span style="color: #999;">-</span>`;
+                    : `<span style="color: #000000;">-</span>`;
 
                   return `
                     <tr>
-                      <td style="border: 1px solid #777; padding: 2px; text-align: center; font-weight: bold; background: #fafafa; color: #111;">${item.index}</td>
-                      <td style="border: 1px solid #777; padding: 2px 4px; font-weight: 900; text-transform: uppercase; color: #000; font-size: 9.5px; line-height: 1.1;" contenteditable="true">
+                      <td style="border: 1.5px solid #000000; padding: 2px; text-align: center; font-weight: bold; background: #ffffff; color: #000000;">${item.index}</td>
+                      <td style="border: 1.5px solid #000000; padding: 2px 4px; font-weight: 900; text-transform: uppercase; color: #000000; font-size: 9.5px; line-height: 1.1;" contenteditable="true">
                         ${pNameText}
                       </td>
-                      <td style="border: 1px solid #777; padding: 2px; text-align: center; font-weight: bold;" contenteditable="true">${item.player ? item.player.std : '-'}</td>
-                      <td style="border: 1px solid #777; padding: 2px 4px; vertical-align: top;">${g1Text}</td>
-                      <td style="border: 1px solid #777; padding: 2px 4px; vertical-align: top;">${g2Text}</td>
-                      <td style="border: 1px solid #777; padding: 2px; text-align: center; font-size: 14px; font-weight: bold; color: #000;">☐</td>
+                      <td style="border: 1.5px solid #000000; padding: 2px; text-align: center; font-weight: bold; color: #000000;" contenteditable="true">${item.player ? item.player.std : '-'}</td>
+                      <td style="border: 1.5px solid #000000; padding: 2px 4px; vertical-align: top; color: #000000;">${g1Text}</td>
+                      <td style="border: 1.5px solid #000000; padding: 2px 4px; vertical-align: top; color: #000000;">${g2Text}</td>
+                      <td style="border: 1.5px solid #000000; padding: 2px; text-align: center; font-size: 14px; font-weight: bold; color: #000000;">☐</td>
                     </tr>
                   `;
                 }).join('')}
@@ -564,16 +564,16 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       const girlsTableHtml = girlsList && girlsList.length > 0 ? renderTable("Girls Practice Timetable", girlsList) : '';
 
       return `
-        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; page-break-inside: avoid; max-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; padding: 2px;">
-          <div style="text-align: center; border-bottom: 2px double #235C36; padding-bottom: 2px; margin-bottom: 6px;">
-            <div style="font-size: 18px; font-weight: 900; color: #235C36; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
-            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-top: 1px; color: #333; letter-spacing: 0.5px;">DAILY PRACTICE TIMETABLE - ${title}</div>
+        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; page-break-inside: avoid; max-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; padding: 2px; color: #000000;">
+          <div style="text-align: center; border-bottom: 2px solid #000000; padding-bottom: 2px; margin-bottom: 6px; color: #000000;">
+            <div style="font-size: 18px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-top: 1px; color: #000000; letter-spacing: 0.5px;">DAILY PRACTICE TIMETABLE - ${title}</div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-bottom: 8px; background: #f9f9f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #bbb; text-transform: uppercase;">
-            <div>DATE: <span style="color: #235C36; font-weight: 900;">${selectedDate}</span></div>
-            <div>SESSION: <span style="color: #235C36; font-weight: 900;">${timeText}</span></div>
-            <div>COACH: <span style="color: #235C36; font-weight: 900;">${coachName}</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-bottom: 8px; background: #ffffff; padding: 4px 8px; border: 1.5px solid #000000; text-transform: uppercase; color: #000000;">
+            <div>DATE: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: 900; padding: 0 4px;">${selectedDate}</span></div>
+            <div>SESSION: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: 900; padding: 0 4px;">${timeText}</span></div>
+            <div>COACH: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: 900; padding: 0 4px;">${coachName}</span></div>
           </div>
 
           <div style="flex: 1;">
@@ -581,7 +581,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
             ${girlsTableHtml}
           </div>
 
-          <div style="font-size: 8px; color: #555; text-align: center; margin-top: auto; padding-top: 4px; border-top: 1px solid #ccc; display: flex; justify-content: space-between; font-weight: bold;">
+          <div style="font-size: 8px; color: #000000; text-align: center; margin-top: auto; padding-top: 4px; border-top: 1.5px solid #000000; display: flex; justify-content: space-between; font-weight: bold;">
             <span>Page ${pageNum} of ${totalPages}</span>
             <span>Ashram Shala Waghamba &bull; Physical Education Registry</span>
             <span>Printed on: ${new Date().toLocaleDateString()}</span>
