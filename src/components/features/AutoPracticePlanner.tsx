@@ -386,7 +386,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       const girlsTableHtml = girlsList && girlsList.length > 0 ? renderTable("Girls Practice Timetable", girlsList) : '';
 
       return `
-        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; min-height: 275mm; box-sizing: border-box; display: flex; flex-direction: column; padding: 5px;">
+        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; min-height: 330mm; box-sizing: border-box; display: flex; flex-direction: column; padding: 5px;">
           <div style="text-align: center; border-bottom: 3px double #235C36; padding-bottom: 4px; margin-bottom: 10px;">
             <div style="font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
             <div style="font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 3px; color: #333; letter-spacing: 0.5px;">DAILY PRACTICE TIMETABLE - ${title}</div>
@@ -428,7 +428,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
               .no-print { display: none !important; }
               body { margin: 0 !important; }
               @page {
-                size: A4 portrait;
+                size: legal portrait;
                 margin: 12mm 10mm 12mm 10mm;
               }
             }
@@ -577,21 +577,37 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                     <CardContent className="p-4 space-y-4">
                       <div>
                         <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Focus Drill 1</label>
-                        <Input 
+                        <Select 
                           value={sportDrills[0] || ''} 
-                          onChange={(e) => handleDrillChange(sport, 0, e.target.value)} 
-                          className="mt-1 font-bold rounded-lg border-2 h-10" 
-                          placeholder="e.g. Toe touch drill"
-                        />
+                          onValueChange={(val) => handleDrillChange(sport, 0, val)}
+                        >
+                          <SelectTrigger className="h-10 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
+                            <SelectValue placeholder="Select Focus Drill 1" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="" className="font-bold">-- Select Drill --</SelectItem>
+                            {(SPORTS_DATA[sport]?.skills || []).map((skill) => (
+                              <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Focus Drill 2</label>
-                        <Input 
+                        <Select 
                           value={sportDrills[1] || ''} 
-                          onChange={(e) => handleDrillChange(sport, 1, e.target.value)} 
-                          className="mt-1 font-bold rounded-lg border-2 h-10" 
-                          placeholder="e.g. Set practice drill"
-                        />
+                          onValueChange={(val) => handleDrillChange(sport, 1, val)}
+                        >
+                          <SelectTrigger className="h-10 text-xs font-bold border-2 bg-white rounded-lg shadow-sm">
+                            <SelectValue placeholder="Select Focus Drill 2" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="" className="font-bold">-- Select Drill --</SelectItem>
+                            {(SPORTS_DATA[sport]?.skills || []).map((skill) => (
+                              <SelectItem key={skill} value={skill} className="font-bold">{skill}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </CardContent>
                   </Card>
