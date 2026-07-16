@@ -3,12 +3,12 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * v5.1.0: Enabled 'any' orientation to support screen rotation across all devices.
+ * v5.2.0: Added Shot Put Throw Girls cohort and updated Auto Planner.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Waghamba Institutional Sports & Health Hub',
-    short_name: 'WGB Hub v5.1',
+    short_name: 'WGB Hub v5.2',
     description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',

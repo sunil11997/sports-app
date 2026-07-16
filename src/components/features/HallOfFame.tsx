@@ -98,7 +98,7 @@ export function HallOfFame({ store }: { store: any }) {
             <Crown className="w-10 h-10 text-amber-500 animate-bounce" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame v5.1</h2>
+            <h2 className="text-4xl font-black text-primary uppercase tracking-tight leading-none">Institutional Hall of Fame v5.2</h2>
             <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
               Recognizing the elite Top 5 athletes for every standard based on fitness and performance metrics.
             </p>

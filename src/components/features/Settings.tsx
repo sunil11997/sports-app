@@ -218,8 +218,8 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         <div className="w-24 h-24 rounded-full shadow-2xl overflow-hidden relative mx-auto mb-4 border-4 border-white bg-white flex items-center justify-center p-0">
           <Image src={LOGO_INAPP} alt="Logo" width={96} height={96} unoptimized className="object-cover w-full h-full" />
         </div>
-        <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control v5.1</h2>
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v5.1.0 Stable</p>
+        <h2 className="text-3xl font-black text-primary tracking-tight uppercase">Hub Control v5.2</h2>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Registry Engine v5.2.0 Stable</p>
       </div>
 
       <div className="space-y-6">

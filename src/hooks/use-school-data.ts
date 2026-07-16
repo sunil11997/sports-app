@@ -80,7 +80,13 @@ const DEFAULT_KHOKHO_PLAYERS: Player[] = [
   { id: "kk_g6", name: "Manju Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
   { id: "kk_g7", name: "Anju Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
   { id: "kk_g8", name: "Gita Bagul", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
-  { id: "kk_g9", name: "Sonali Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" }
+];
+
+const DEFAULT_SHOTPUT_GIRLS: Player[] = [
+  { id: "sp_g1", name: "Tanvi Vijay Choudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Shot Put"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "sp_g2", name: "Shital Ragunath Bagul", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Shot Put"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "sp_g3", name: "Harshali Sajan Mahale", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Shot Put"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "sp_g4", name: "Tanvi Bajan Mahale", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Shot Put"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" }
 ];
 
 /**
@@ -287,7 +293,7 @@ export function useSchoolData(isActive: boolean = true) {
   const aggregatedData = useMemo(() => {
     const dbPlayers = allPlayers || [];
     const mergedPlayers = [...dbPlayers];
-    const defaultLists = [DEFAULT_U17_PLAYERS, DEFAULT_U14_PLAYERS, DEFAULT_KHOKHO_PLAYERS];
+    const defaultLists = [DEFAULT_U17_PLAYERS, DEFAULT_U14_PLAYERS, DEFAULT_KHOKHO_PLAYERS, DEFAULT_SHOTPUT_GIRLS];
     
     defaultLists.forEach(list => {
       list.forEach(p => {
@@ -391,7 +397,7 @@ export function useSchoolData(isActive: boolean = true) {
       const data = {
         data: aggregatedData,
         exportedAt: new Date().toISOString(),
-        version: "4.3.26"
+        version: "5.2.0"
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);

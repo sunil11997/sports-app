@@ -151,7 +151,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           <div class="header">
             <div class="school-name">${schoolName}</div>
             <div class="report-type">${reportTitle}</div>
-            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.1 Stable</div>
+            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.2 Stable</div>
           </div>
           <table>
             <thead>
@@ -234,7 +234,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v5.1 Stable</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v5.2 Stable</p>
           </div>
         </div>
         <div className="flex items-center gap-4 w-full lg:w-auto">

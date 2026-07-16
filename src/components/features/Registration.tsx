@@ -280,8 +280,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           <div className="flex items-center gap-6">
             <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl"><UserPlus className="w-10 h-10" /></div>
             <div>
-              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub V5.1</CardTitle>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.1 Stable</p>
+              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub V5.2</CardTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.2 Stable</p>
             </div>
           </div>
         </CardHeader>

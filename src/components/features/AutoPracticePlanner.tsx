@@ -14,20 +14,21 @@ import {
   Save, 
   Sparkles, 
   MapPin, 
-  SlidersHorizontal,
-  ChevronRight
+  SlidersHorizontal
 } from 'lucide-react';
 
 const SPORTS_DATA: Record<string, { skills: string[] }> = {
   'Kabaddi': { skills: ["Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill", "Bonus line drill", "Running raid drill", "Escape practice drill", "Ankle hold drill", "Thigh hold drill", "Chain tackle drill"] },
   'Volleyball': { skills: ["Serve practice drill", "Underhand pass drill", "Overhand pass drill", "Set practice drill", "Spike approach drill", "Block timing drill", "Dig practice drill", "Court coverage drill"] },
-  'Kho Kho': { skills: ["Pole turn speed drill", "Chaser speed run", "Kho timing tap", "Dodging practice", "Single chain run", "Double chain run", "Dive attack drill", "Sudden turn drill"] }
+  'Kho Kho': { skills: ["Pole turn speed drill", "Chaser speed run", "Kho timing tap", "Dodging practice", "Single chain run", "Double chain run", "Dive attack drill", "Sudden turn drill"] },
+  'Shot Put': { skills: ["Glide technique drill", "Power position throw", "Spin rotation drill", "Release angle check", "Wrist snap practice", "Balance ring hold"] }
 };
 
 const GROUND_NUMBERS: Record<string, string> = {
   'Kabaddi': 'Ground No. 1',
   'Volleyball': 'Ground No. 2',
-  'Kho Kho': 'Ground No. 3'
+  'Kho Kho': 'Ground No. 3',
+  'Shot Put': 'Ground No. 4'
 };
 
 const DEFAULT_U17_BOYS = ["u17_b1", "u17_b2", "u17_b3", "u17_b4", "u17_b5", "u17_b6", "u17_b7", "u17_b8", "u17_b9", "u17_b10", "u17_b11", "u17_b12"];
@@ -36,6 +37,7 @@ const DEFAULT_U14_BOYS = ["u14_b1", "u14_b2", "u14_b3", "u14_b4", "u14_b5", "u14
 const DEFAULT_U14_GIRLS = ["u14_g1", "u14_g2", "u14_g3", "u14_g4", "u14_g5", "u14_g6", "u14_g7", "u14_g8", "u14_g9"];
 const DEFAULT_KHOKHO_BOYS = ["kk_b1", "kk_b2", "kk_b3", "kk_b4", "kk_b5", "kk_b6", "kk_b7", "kk_b8", "kk_b9", "kk_b10"];
 const DEFAULT_KHOKHO_GIRLS = ["kk_g1", "kk_g2", "kk_g3", "kk_g4", "kk_g5", "kk_g6", "kk_g7", "kk_g8", "kk_g9"];
+const DEFAULT_SHOTPUT_GIRLS = ["sp_g1", "sp_g2", "sp_g3", "sp_g4"];
 
 interface PlayerPlanEntry {
   playerId: string;
@@ -56,7 +58,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   });
 
   const [selectedSession, setSelectedSession] = useState<'Morning' | 'Evening'>('Morning');
-  const [activeTab, setActiveTab] = useState<'u17boys' | 'u17girls' | 'u14boys' | 'u14girls' | 'khokhoboys' | 'khokhogirls' | 'drills'>('u17boys');
+  const [activeTab, setActiveTab] = useState<'u17boys' | 'u17girls' | 'u14boys' | 'u14girls' | 'khokhoboys' | 'khokhogirls' | 'shotputgirls' | 'drills'>('u17boys');
 
   const todayDateString = useMemo(() => {
     const today = new Date();
@@ -75,6 +77,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const [u14GirlsPlan, setU14GirlsPlan] = useState<PlayerPlanEntry[]>([]);
   const [khokhoBoysPlan, setKhokhoBoysPlan] = useState<PlayerPlanEntry[]>([]);
   const [khokhoGirlsPlan, setKhokhoGirlsPlan] = useState<PlayerPlanEntry[]>([]);
+  const [shotputGirlsPlan, setShotputGirlsPlan] = useState<PlayerPlanEntry[]>([]);
   const [drills, setDrills] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -95,6 +98,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
         setU14GirlsPlan(d.u14GirlsPlan || []);
         setKhokhoBoysPlan(d.khokhoBoysPlan || []);
         setKhokhoGirlsPlan(d.khokhoGirlsPlan || []);
+        setShotputGirlsPlan(d.shotputGirlsPlan || []);
         setDrills(d.drills || {});
       } else {
         // Clear state
@@ -104,6 +108,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
         setU14GirlsPlan([]);
         setKhokhoBoysPlan([]);
         setKhokhoGirlsPlan([]);
+        setShotputGirlsPlan([]);
         setDrills({});
       }
     });
@@ -117,13 +122,14 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const u14GirlsList = useMemo(() => u14GirlsPlan.length > 0 ? u14GirlsPlan : DEFAULT_U14_GIRLS.map(id => ({ playerId: id, game1: 'None', game2: 'None' })), [u14GirlsPlan]);
   const khokhoBoysList = useMemo(() => khokhoBoysPlan.length > 0 ? khokhoBoysPlan : DEFAULT_KHOKHO_BOYS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho' })), [khokhoBoysPlan]);
   const khokhoGirlsList = useMemo(() => khokhoGirlsPlan.length > 0 ? khokhoGirlsPlan : DEFAULT_KHOKHO_GIRLS.map(id => ({ playerId: id, game1: 'Kho Kho', game2: 'Kho Kho' })), [khokhoGirlsPlan]);
+  const shotputGirlsList = useMemo(() => shotputGirlsPlan.length > 0 ? shotputGirlsPlan : DEFAULT_SHOTPUT_GIRLS.map(id => ({ playerId: id, game1: 'Shot Put', game2: 'None' })), [shotputGirlsPlan]);
 
   const getPlayerDetails = useCallback((id: string | null) => {
     if (!id) return null;
     return (store.data.players || []).find((p: any) => p.id === id) || null;
   }, [store.data.players]);
 
-  const getCohortPlayers = useCallback((gender: 'Male' | 'Female', ageCat?: 'U17' | 'U14', isKhokhoOnly?: boolean) => {
+  const getCohortPlayers = useCallback((gender: 'Male' | 'Female', ageCat?: 'U17' | 'U14', isKhokhoOnly?: boolean, isShotPutOnly?: boolean) => {
     return (store.data.players || []).filter((p: any) => {
       if (p.category !== 'athlete') return false;
       if (p.gender !== gender) return false;
@@ -132,14 +138,19 @@ export function AutoPracticePlanner({ store }: { store: any }) {
         return Array.isArray(p.sports) && p.sports.length === 1 && p.sports[0] === 'Kho Kho';
       }
 
+      if (isShotPutOnly) {
+        return Array.isArray(p.sports) && p.sports.includes('Shot Put');
+      }
+
       // Filter by age category
       const ageVal = getAgeValidation(p.dob);
       const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
       if (ageCat === 'U14' && age >= 14) return false;
       if (ageCat === 'U17' && (age < 14 || age >= 17)) return false;
 
-      // Exclude khokho-only players from the general U17/U14 pool
+      // Exclude special groups from the general U17/U14 pool
       if (Array.isArray(p.sports) && p.sports.length === 1 && p.sports[0] === 'Kho Kho') return false;
+      if (Array.isArray(p.sports) && p.sports.includes('Shot Put')) return false;
 
       return true;
     }).sort((a: any, b: any) => a.name.localeCompare(b.name));
@@ -176,9 +187,12 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     const nextKkBoys = khokhoBoysList.map(item => ({ playerId: item.playerId, game1: 'Kho Kho', game2: 'Kho Kho' }));
     const nextKkGirls = khokhoGirlsList.map(item => ({ playerId: item.playerId, game1: 'Kho Kho', game2: 'Kho Kho' }));
 
+    // Shot Put daily players practice Shot Put
+    const nextSpGirls = shotputGirlsList.map(item => ({ playerId: item.playerId, game1: 'Shot Put', game2: 'None' }));
+
     // Select exactly 2 drills for each sport
     const nextDrills: Record<string, string[]> = {};
-    ['Kabaddi', 'Volleyball', 'Kho Kho'].forEach(sport => {
+    ['Kabaddi', 'Volleyball', 'Kho Kho', 'Shot Put'].forEach(sport => {
       const list = SPORTS_DATA[sport]?.skills || [];
       nextDrills[sport] = [...list].sort(() => 0.5 - Math.random()).slice(0, 2);
     });
@@ -189,6 +203,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     setU14GirlsPlan(nextU14Girls);
     setKhokhoBoysPlan(nextKkBoys);
     setKhokhoGirlsPlan(nextKkGirls);
+    setShotputGirlsPlan(nextSpGirls);
     setDrills(nextDrills);
 
     toast({ title: "Master Planner Generated", description: "Successfully generated practice plan with zero conflict." });
@@ -210,6 +225,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     if (cohort === 'u14girls') setU14GirlsPlan(prev => planUpdater(prev, u14GirlsList));
     if (cohort === 'khokhoboys') setKhokhoBoysPlan(prev => planUpdater(prev, khokhoBoysList));
     if (cohort === 'khokhogirls') setKhokhoGirlsPlan(prev => planUpdater(prev, khokhoGirlsList));
+    if (cohort === 'shotputgirls') setShotputGirlsPlan(prev => planUpdater(prev, shotputGirlsList));
   };
 
   const handleGameChange = (cohort: typeof activeTab, idx: number, gameSlot: 'game1' | 'game2', val: string) => {
@@ -228,6 +244,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     if (cohort === 'u14girls') setU14GirlsPlan(prev => planUpdater(prev, u14GirlsList));
     if (cohort === 'khokhoboys') setKhokhoBoysPlan(prev => planUpdater(prev, khokhoBoysList));
     if (cohort === 'khokhogirls') setKhokhoGirlsPlan(prev => planUpdater(prev, khokhoGirlsList));
+    if (cohort === 'shotputgirls') setShotputGirlsPlan(prev => planUpdater(prev, shotputGirlsList));
   };
 
   const handleDrillChange = (sport: string, drillIdx: number, val: string) => {
@@ -251,13 +268,14 @@ export function AutoPracticePlanner({ store }: { store: any }) {
         schoolId,
         date: selectedDate,
         session: selectedSession,
-        timeRange: selectedSession === 'Morning' ? '6:00 AM - 8:00 AM' : '5:00 PM - 7:00 PM',
+        timeRange: selectedSession === 'Morning' ? '6:00 AM - 7:30 AM' : '5:00 PM - 7:00 PM',
         u17BoysPlan: u17BoysList,
         u17GirlsPlan: u17GirlsList,
         u14BoysPlan: u14BoysList,
         u14GirlsPlan: u14GirlsList,
         khokhoBoysPlan: khokhoBoysList,
         khokhoGirlsPlan: khokhoGirlsList,
+        shotputGirlsPlan: shotputGirlsList,
         drills,
         updatedAt: new Date().toISOString()
       }, { merge: true });
@@ -271,13 +289,14 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
   const handlePrint = () => {
     const schoolName = store.data.schoolProfile?.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
-    const timeText = selectedSession === 'Morning' ? 'Morning Session: 6:00 AM - 8:00 AM' : 'Evening Session: 5:00 PM - 7:00 PM';
+    const timeText = selectedSession === 'Morning' ? 'Morning Session: 6:00 AM - 7:30 AM' : 'Evening Session: 5:00 PM - 7:00 PM';
     const coachName = "Sunil Deshmukh";
 
     const getGroundNo = (sport: string) => {
       if (sport === 'Kabaddi') return 'Ground No. 1';
       if (sport === 'Volleyball') return 'Ground No. 2';
       if (sport === 'Kho Kho') return 'Ground No. 3';
+      if (sport === 'Shot Put') return 'Ground No. 4';
       return '';
     };
 
@@ -366,12 +385,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     };
 
     const pagesHtml = [
-      renderPrintPage("Under 17 Boys Squad", u17BoysList, 1, 6),
-      renderPrintPage("Under 17 Girls Squad", u17GirlsList, 2, 6),
-      renderPrintPage("Under 14 Boys Squad", u14BoysList, 3, 6),
-      renderPrintPage("Under 14 Girls Squad", u14GirlsList, 4, 6),
-      renderPrintPage("Kho Kho Daily Boys Squad", khokhoBoysList, 5, 6),
-      renderPrintPage("Kho Kho Daily Girls Squad", khokhoGirlsList, 6, 6)
+      renderPrintPage("Under 17 Boys Squad", u17BoysList, 1, 7),
+      renderPrintPage("Under 17 Girls Squad", u17GirlsList, 2, 7),
+      renderPrintPage("Under 14 Boys Squad", u14BoysList, 3, 7),
+      renderPrintPage("Under 14 Girls Squad", u14GirlsList, 4, 7),
+      renderPrintPage("Kho Kho Daily Boys Squad", khokhoBoysList, 5, 7),
+      renderPrintPage("Kho Kho Daily Girls Squad", khokhoGirlsList, 6, 7),
+      renderPrintPage("Shot Put Throw Girls Squad", shotputGirlsList, 7, 7)
     ].join('');
 
     const printContent = `
@@ -416,21 +436,23 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     { id: 'u14girls', label: 'U14 Girls' },
     { id: 'khokhoboys', label: 'Kho Kho Boys' },
     { id: 'khokhogirls', label: 'Kho Kho Girls' },
+    { id: 'shotputgirls', label: 'Shot Put Girls' },
     { id: 'drills', label: 'Focus Drills' }
   ] as const;
 
   const currentCohortInfo = useMemo(() => {
-    if (activeTab === 'u17boys') return { gender: 'Male' as const, ageCat: 'U17' as const, list: u17BoysList, isKhokho: false };
-    if (activeTab === 'u17girls') return { gender: 'Female' as const, ageCat: 'U17' as const, list: u17GirlsList, isKhokho: false };
-    if (activeTab === 'u14boys') return { gender: 'Male' as const, ageCat: 'U14' as const, list: u14BoysList, isKhokho: false };
-    if (activeTab === 'u14girls') return { gender: 'Female' as const, ageCat: 'U14' as const, list: u14GirlsList, isKhokho: false };
-    if (activeTab === 'khokhoboys') return { gender: 'Male' as const, ageCat: undefined, list: khokhoBoysList, isKhokho: true };
-    return { gender: 'Female' as const, ageCat: undefined, list: khokhoGirlsList, isKhokho: true };
-  }, [activeTab, u17BoysList, u17GirlsList, u14BoysList, u14GirlsList, khokhoBoysList, khokhoGirlsList]);
+    if (activeTab === 'u17boys') return { gender: 'Male' as const, ageCat: 'U17' as const, list: u17BoysList, isKhokho: false, isShotPut: false };
+    if (activeTab === 'u17girls') return { gender: 'Female' as const, ageCat: 'U17' as const, list: u17GirlsList, isKhokho: false, isShotPut: false };
+    if (activeTab === 'u14boys') return { gender: 'Male' as const, ageCat: 'U14' as const, list: u14BoysList, isKhokho: false, isShotPut: false };
+    if (activeTab === 'u14girls') return { gender: 'Female' as const, ageCat: 'U14' as const, list: u14GirlsList, isKhokho: false, isShotPut: false };
+    if (activeTab === 'khokhoboys') return { gender: 'Male' as const, ageCat: undefined, list: khokhoBoysList, isKhokho: true, isShotPut: false };
+    if (activeTab === 'khokhogirls') return { gender: 'Female' as const, ageCat: undefined, list: khokhoGirlsList, isKhokho: true, isShotPut: false };
+    return { gender: 'Female' as const, ageCat: undefined, list: shotputGirlsList, isKhokho: false, isShotPut: true };
+  }, [activeTab, u17BoysList, u17GirlsList, u14BoysList, u14GirlsList, khokhoBoysList, khokhoGirlsList, shotputGirlsList]);
 
   const poolOptions = useMemo(() => {
     if (activeTab === 'drills') return [];
-    return getCohortPlayers(currentCohortInfo.gender, currentCohortInfo.ageCat, currentCohortInfo.isKhokho);
+    return getCohortPlayers(currentCohortInfo.gender, currentCohortInfo.ageCat, currentCohortInfo.isKhokho, currentCohortInfo.isShotPut);
   }, [activeTab, currentCohortInfo, getCohortPlayers]);
 
   return (
@@ -455,7 +477,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
             <Select value={selectedSession} onValueChange={(val: any) => setSelectedSession(val)}>
               <SelectTrigger className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="Morning" className="font-bold">Morning (6 to 8 AM)</SelectItem>
+                <SelectItem value="Morning" className="font-bold">Morning (6:00 to 7:30 AM)</SelectItem>
                 <SelectItem value="Evening" className="font-bold">Evening (5 to 7 PM)</SelectItem>
               </SelectContent>
             </Select>
@@ -515,8 +537,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
         <CardContent className="p-6">
           {activeTab === 'drills' ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {['Kabaddi', 'Volleyball', 'Kho Kho'].map(sport => {
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {['Kabaddi', 'Volleyball', 'Kho Kho', 'Shot Put'].map(sport => {
                 const sportDrills = drills[sport] || ['', ''];
                 const ground = GROUND_NUMBERS[sport];
                 return (
@@ -626,6 +648,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                               <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
                               <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
                               <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
+                              <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
@@ -642,6 +665,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
                               <SelectItem value="Kabaddi" className="font-bold">KABADDI (G1)</SelectItem>
                               <SelectItem value="Volleyball" className="font-bold">VOLLEYBALL (G2)</SelectItem>
                               <SelectItem value="Kho Kho" className="font-bold">KHO KHO (G3)</SelectItem>
+                              <SelectItem value="Shot Put" className="font-bold">SHOT PUT (G4)</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
