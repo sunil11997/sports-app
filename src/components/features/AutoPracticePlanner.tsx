@@ -78,7 +78,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     return `${yyyy}-${mm}-${dd}`;
   }, []);
 
-  const isPastDate = selectedDate < todayDateString;
+  const isPastDate = /^\d{4}-\d{2}-\d{2}$/.test(selectedDate) ? (selectedDate < todayDateString) : false;
 
   // Plan states
   const [u17BoysPlan, setU17BoysPlan] = useState<PlayerPlanEntry[]>([]);
@@ -695,12 +695,13 @@ export function AutoPracticePlanner({ store }: { store: any }) {
             </Select>
           </div>
 
-          <div className="space-y-1 w-full sm:w-44">
+          <div className="space-y-1 w-full sm:w-56">
             <label className="text-[9px] font-black text-primary uppercase ml-2">Planner Date</label>
             <Input 
-              type="date" 
+              type="text" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)} 
+              placeholder="e.g. 4 July to 7 July"
               className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"
             />
           </div>
