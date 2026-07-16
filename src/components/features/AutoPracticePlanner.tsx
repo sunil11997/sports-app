@@ -300,82 +300,113 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       return '';
     };
 
-    const renderPrintPage = (title: string, planList: PlayerPlanEntry[], pageNum: number, totalPages: number) => {
-      const details = planList.map((item, i) => ({ 
-        index: i + 1, 
-        player: getPlayerDetails(item.playerId), 
-        game1: item.game1, 
-        game2: item.game2 
-      }));
+    const renderPrintPage = (
+      title: string, 
+      boysList: PlayerPlanEntry[], 
+      girlsList: PlayerPlanEntry[] | null, 
+      pageNum: number, 
+      totalPages: number
+    ) => {
+      const activeSports = new Set<string>();
+      if (boysList) boysList.forEach(item => { if (item.game1 !== 'None') activeSports.add(item.game1); if (item.game2 !== 'None') activeSports.add(item.game2); });
+      if (girlsList) girlsList.forEach(item => { if (item.game1 !== 'None') activeSports.add(item.game1); if (item.game2 !== 'None') activeSports.add(item.game2); });
+
+      const activeSportsArray = Array.from(activeSports);
+      const drillsBoxHtml = activeSportsArray.length > 0
+        ? `
+          <div style="margin-bottom: 8px; font-size: 11px; background: #fffbeb; border: 1px solid #fef3c7; padding: 6px 10px; border-radius: 6px; display: flex; flex-wrap: wrap; gap: 15px;">
+            ${activeSportsArray.map(sport => {
+              const sportDrills = drills[sport] ? drills[sport].filter(d => d.trim() !== '').join(', ') : 'No drills';
+              const ground = getGroundNo(sport);
+              return `
+                <div style="flex: 1 1 30%; min-width: 150px;">
+                  <strong style="color: #235C36; text-transform: uppercase;">${sport} (${ground}):</strong> 
+                  <span contenteditable="true" style="border-bottom: 1px dashed #777; padding-bottom: 1px; font-weight: bold; cursor: text;">${sportDrills}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `
+        : '';
+
+      const renderTable = (subTitle: string, list: PlayerPlanEntry[]) => {
+        const details = list.map((item, i) => ({ 
+          index: i + 1, 
+          player: getPlayerDetails(item.playerId), 
+          game1: item.game1, 
+          game2: item.game2 
+        }));
+
+        return `
+          <div style="margin-bottom: 8px;">
+            <div style="background: #235C36; color: white; padding: 4px 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; border-radius: 4px 4px 0 0;">
+              ${subTitle}
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead>
+                <tr style="background: #f2f2f2; font-size: 10px;">
+                  <th style="border: 1px solid #ddd; padding: 3px; text-align: center; width: 35px; font-weight: 900;">SLOT</th>
+                  <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; font-weight: 900;">PLAYER NAME</th>
+                  <th style="border: 1px solid #ddd; padding: 3px; text-align: center; width: 35px; font-weight: 900;">STD</th>
+                  <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; font-weight: 900; width: 140px;">GAME 1</th>
+                  <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; font-weight: 900; width: 140px;">GAME 2</th>
+                  <th style="border: 1px solid #ddd; padding: 3px; text-align: center; width: 50px; font-weight: 900;">ATTEND</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${details.map(item => {
+                  const isGroupLeader = item.index <= 2;
+                  const pName = item.player ? item.player.name : '- VACANT -';
+                  const pNameText = isGroupLeader 
+                    ? `${pName} <span style="font-size: 7px; color: #b45309; background: #fef3c7; padding: 1px 3px; border-radius: 2px; font-weight: 900; border: 1px solid #f59e0b; margin-left: 3px; display: inline-block;">LEADER</span>`
+                    : pName;
+
+                  const g1Text = item.game1 !== 'None' ? `${item.game1} (${getGroundNo(item.game1)})` : '-';
+                  const g2Text = item.game2 !== 'None' ? `${item.game2} (${getGroundNo(item.game2)})` : '-';
+
+                  return `
+                    <tr style="height: 20px;">
+                      <td style="border: 1px solid #ddd; padding: 3px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
+                      <td style="border: 1px solid #ddd; padding: 3px 6px; font-weight: 900; text-transform: uppercase; color: #000;" contenteditable="true">
+                        ${pNameText}
+                      </td>
+                      <td style="border: 1px solid #ddd; padding: 3px; text-align: center; font-weight: bold;" contenteditable="true">${item.player ? item.player.std : '-'}</td>
+                      <td style="border: 1px solid #ddd; padding: 3px 6px; font-weight: bold; text-transform: uppercase;">${g1Text}</td>
+                      <td style="border: 1px solid #ddd; padding: 3px 6px; font-weight: bold; text-transform: uppercase;">${g2Text}</td>
+                      <td style="border: 1px solid #ddd; padding: 3px; text-align: center; font-size: 14px; font-weight: bold;">☐</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      const boysTableHtml = boysList.length > 0 ? renderTable("Boys Practice Timetable", boysList) : '';
+      const girlsTableHtml = girlsList && girlsList.length > 0 ? renderTable("Girls Practice Timetable", girlsList) : '';
 
       return `
-        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; min-height: 275mm; box-sizing: border-box; display: flex; flex-direction: column; padding: 10px;">
-          <div style="text-align: center; border-bottom: 3px double #235C36; padding-bottom: 8px; margin-bottom: 12px;">
-            <div style="font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
-            <div style="font-size: 15px; font-weight: 800; text-transform: uppercase; margin-top: 3px; color: #333; letter-spacing: 1px;">DAILY PRACTICE PLAN - ${title}</div>
+        <div class="print-page-block" style="page-break-after: ${pageNum < totalPages ? 'always' : 'avoid'}; min-height: 275mm; box-sizing: border-box; display: flex; flex-direction: column; padding: 5px;">
+          <div style="text-align: center; border-bottom: 2px double #235C36; padding-bottom: 4px; margin-bottom: 8px;">
+            <div style="font-size: 20px; font-weight: 900; color: #235C36; text-transform: uppercase; letter-spacing: 0.5px;">${schoolName}</div>
+            <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; margin-top: 2px; color: #333; letter-spacing: 0.5px;">DAILY PRACTICE TIMETABLE - ${title}</div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 15px; background: #f9f9f9; padding: 8px 12px; border-radius: 6px; border: 1px solid #eee; text-transform: uppercase;">
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-bottom: 8px; background: #f9f9f9; padding: 6px 10px; border-radius: 4px; border: 1px solid #eee; text-transform: uppercase;">
             <div>DATE: <span style="color: #235C36; font-weight: 900;">${selectedDate}</span></div>
             <div>SESSION: <span style="color: #235C36; font-weight: 900;">${timeText}</span></div>
             <div>COACH: <span style="color: #235C36; font-weight: 900;">${coachName}</span></div>
           </div>
 
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px; flex: 1;">
-            <thead>
-              <tr style="background: #235C36; color: white;">
-                <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 45px; font-weight: 900; text-transform: uppercase; font-size: 10px;">SLOT</th>
-                <th style="border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-weight: 900; text-transform: uppercase; font-size: 10px;">PLAYER NAME</th>
-                <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 50px; font-weight: 900; text-transform: uppercase; font-size: 10px;">STD</th>
-                <th style="border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-weight: 900; text-transform: uppercase; font-size: 10px;">GAME 1 PRACTICE</th>
-                <th style="border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-weight: 900; text-transform: uppercase; font-size: 10px;">GAME 2 PRACTICE</th>
-                <th style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; width: 75px; font-weight: 900; text-transform: uppercase; font-size: 10px;">ATTEND</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${details.map(item => {
-                const isGroupLeader = item.index <= 2;
-                const pName = item.player ? item.player.name : '- VACANT -';
-                const pNameText = isGroupLeader 
-                  ? `${pName} <span style="font-size: 8px; color: #b45309; background: #fef3c7; padding: 2px 5px; border-radius: 4px; font-weight: 900; border: 1px solid #f59e0b; margin-left: 5px; letter-spacing: 0.5px;">GROUP LEADER</span>`
-                  : pName;
+          ${drillsBoxHtml}
 
-                // Game 1 Details
-                const g1 = item.game1;
-                const g1Ground = getGroundNo(g1);
-                const g1Drills = drills[g1] ? drills[g1].filter(d => d.trim() !== '').join(', ') : '';
-                const g1Text = g1 !== 'None'
-                  ? `<div style="font-weight: 900; text-transform: uppercase; color: #111;">${g1}</div>
-                     <div style="font-size: 9px; color: #b45309; font-weight: bold; margin-top: 1px;">${g1Ground}</div>
-                     ${g1Drills ? `<div style="font-size: 9px; color: #555; font-style: italic; margin-top: 1px; line-height: 1.2;">Drills: ${g1Drills}</div>` : ''}`
-                  : `<span style="color: #bbb;">-</span>`;
+          <div style="flex: 1;">
+            ${boysTableHtml}
+            ${girlsTableHtml}
+          </div>
 
-                // Game 2 Details
-                const g2 = item.game2;
-                const g2Ground = getGroundNo(g2);
-                const g2Drills = drills[g2] ? drills[g2].filter(d => d.trim() !== '').join(', ') : '';
-                const g2Text = g2 !== 'None'
-                  ? `<div style="font-weight: 900; text-transform: uppercase; color: #111;">${g2}</div>
-                     <div style="font-size: 9px; color: #b45309; font-weight: bold; margin-top: 1px;">${g2Ground}</div>
-                     ${g2Drills ? `<div style="font-size: 9px; color: #555; font-style: italic; margin-top: 1px; line-height: 1.2;">Drills: ${g2Drills}</div>` : ''}`
-                  : `<span style="color: #bbb;">-</span>`;
-
-                return `
-                  <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-weight: bold; background: #fafafa;">${item.index}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px 10px; font-weight: 900; text-transform: uppercase; color: #000; font-size: 13px;">
-                      ${pNameText}
-                    </td>
-                    <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-weight: bold;">${item.player ? item.player.std : '-'}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px 10px;">${g1Text}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px 10px;">${g2Text}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px 5px; text-align: center; font-size: 18px; font-weight: bold; color: #111;">☐</td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-          <div style="font-size: 9px; color: #777; text-align: center; margin-top: auto; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between;">
+          <div style="font-size: 8px; color: #777; text-align: center; margin-top: auto; padding-top: 8px; border-top: 1px solid #eee; display: flex; justify-content: space-between;">
             <span>Page ${pageNum} of ${totalPages}</span>
             <span>Ashram Shala Waghamba &bull; Physical Education Registry</span>
             <span>Printed on: ${new Date().toLocaleDateString()}</span>
@@ -385,13 +416,10 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     };
 
     const pagesHtml = [
-      renderPrintPage("Under 17 Boys Squad", u17BoysList, 1, 7),
-      renderPrintPage("Under 17 Girls Squad", u17GirlsList, 2, 7),
-      renderPrintPage("Under 14 Boys Squad", u14BoysList, 3, 7),
-      renderPrintPage("Under 14 Girls Squad", u14GirlsList, 4, 7),
-      renderPrintPage("Kho Kho Daily Boys Squad", khokhoBoysList, 5, 7),
-      renderPrintPage("Kho Kho Daily Girls Squad", khokhoGirlsList, 6, 7),
-      renderPrintPage("Shot Put Throw Girls Squad", shotputGirlsList, 7, 7)
+      renderPrintPage("Under 17 Cohorts", u17BoysList, u17GirlsList, 1, 4),
+      renderPrintPage("Under 14 Cohorts", u14BoysList, u14GirlsList, 2, 4),
+      renderPrintPage("Kho Kho Daily Cohorts", khokhoBoysList, khokhoGirlsList, 3, 4),
+      renderPrintPage("Gola Phek (Shot Put) Girls Cohort", [], shotputGirlsList, 4, 4)
     ].join('');
 
     const printContent = `
