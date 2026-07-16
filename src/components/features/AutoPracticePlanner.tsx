@@ -701,7 +701,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
               type="text" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)} 
-              placeholder="e.g. 4 July to 7 July"
+              placeholder="e.g. 01/01/2011 to 30/05/2012"
               className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"
             />
           </div>
