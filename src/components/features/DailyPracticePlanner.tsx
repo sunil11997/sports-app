@@ -358,33 +358,36 @@ export function DailyPracticePlanner({ store }: { store: any }) {
           <style>
             @media print {
               .no-print { display: none !important; }
-              body { margin: 0 !important; }
+              body { margin: 0 !important; padding: 0 !important; }
               @page {
                 size: A4 portrait;
-                margin: 15mm 12mm 15mm 12mm;
+                margin: 12mm 10mm 12mm 10mm;
               }
             }
-            body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.3; }
-            .header { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 12px; margin-bottom: 20px; }
-            .school-title { font-size: 24px; font-weight: 900; color: #235C36; text-transform: uppercase; }
-            .subtitle { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-top: 6px; }
-            .meta-grid { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 20px; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; }
-            .slot-card { border: 1.5px solid #235C36; margin-bottom: 20px; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
-            .slot-header { background: #235C36; color: white; padding: 10px 15px; font-size: 14px; font-weight: 900; display: flex; justify-content: space-between; }
-            .slot-body { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #fafafa; }
-            .slot-meta { font-size: 12px; font-weight: bold; }
-            .slot-meta div { margin-bottom: 6px; }
-            .player-list { font-size: 11px; }
-            .player-title { font-weight: 900; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; color: #235C36; }
+            @media screen {
+              body { padding-top: 80px !important; }
+            }
+            body { font-family: 'Inter', sans-serif; padding: 20px; color: #000000; line-height: 1.3; }
+            .header { text-align: center; border-bottom: 2.5px solid #000000; padding-bottom: 10px; margin-bottom: 18px; color: #000000; }
+            .school-title { font-size: 22px; font-weight: 900; color: #000000; text-transform: uppercase; }
+            .subtitle { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-top: 4px; color: #000000; }
+            .meta-grid { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 18px; background: #ffffff; padding: 8px 12px; border: 1.5px solid #000000; color: #000000; text-transform: uppercase; }
+            .slot-card { border: 1.5px solid #000000; margin-bottom: 15px; border-radius: 6px; overflow: hidden; page-break-inside: avoid; background: #ffffff; }
+            .slot-header { background: #000000; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: 900; display: flex; justify-content: space-between; }
+            .slot-body { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #ffffff; color: #000000; }
+            .slot-meta { font-size: 11px; font-weight: bold; color: #000000; }
+            .slot-meta div { margin-bottom: 4px; }
+            .player-list { font-size: 11px; color: #000000; }
+            .player-title { font-weight: 900; font-size: 11px; text-transform: uppercase; margin-bottom: 6px; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; }
             .players-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-            .player-item { background: white; border: 1px solid #ddd; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .player-item { background: #ffffff; border: 1px solid #000000; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; color: #000000; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #000000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
-            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .btn-back { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
             .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body style="padding-top: 80px;">
+        <body>
           <div class="no-print print-controls">
             <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
             <button onclick="window.print()" class="btn btn-print">PRINT TIMETABLE</button>
@@ -396,17 +399,17 @@ export function DailyPracticePlanner({ store }: { store: any }) {
           </div>
 
           <div class="meta-grid">
-            <div>DATE: <span>${selectedDate}</span></div>
-            <div>DURATION: <span>${duration} Minutes</span></div>
-            <div>MAX GROUP SIZE: <span>${maxGroupSize} Athletes</span></div>
+            <div>DATE: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: 900; padding: 0 4px;">${selectedDate}</span></div>
+            <div>DURATION: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: 900; padding: 0 4px;">${duration} Minutes</span></div>
+            <div>MAX GROUP SIZE: <span contenteditable="true" style="border-bottom: 1px dashed #000000; cursor: text; color: #000000; font-weight: 900; padding: 0 4px;">${maxGroupSize} Athletes</span></div>
           </div>
 
           ${Object.entries(slotsByTime).map(([timeStr, slots]) => `
-            <div style="margin-bottom: 25px; page-break-inside: avoid;">
-              <h2 style="font-size: 16px; font-weight: 900; text-transform: uppercase; color: #235C36; border-left: 5px solid #235C36; padding-left: 8px; margin-bottom: 12px;">
+            <div style="margin-bottom: 20px; page-break-inside: avoid; color: #000000;">
+              <h2 style="font-size: 14px; font-weight: 900; text-transform: uppercase; color: #000000; border-left: 5px solid #000000; padding-left: 8px; margin-bottom: 10px;">
                 TIME BLOCK: ${timeStr}
               </h2>
-              <div style="display: flex; flex-direction: column; gap: 15px;">
+              <div style="display: flex; flex-direction: column; gap: 12px;">
                 ${slots.map(slot => `
                   <div class="slot-card">
                     <div class="slot-header">
@@ -553,12 +556,13 @@ export function DailyPracticePlanner({ store }: { store: any }) {
             </Select>
           </div>
 
-          <div className="space-y-1 w-full sm:w-44">
+          <div className="space-y-1 w-full sm:w-56">
             <label className="text-[9px] font-black text-primary uppercase ml-2">Schedule Date</label>
             <Input 
-              type="date" 
+              type="text" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)} 
+              placeholder="e.g. 01/01/2011 to 30/05/2012"
               className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"
             />
           </div>
@@ -782,9 +786,10 @@ export function DailyPracticePlanner({ store }: { store: any }) {
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-primary uppercase pl-2">Source Date</label>
                 <Input 
-                  type="date" 
+                  type="text" 
                   value={copySourceDate} 
                   onChange={(e) => setCopySourceDate(e.target.value)} 
+                  placeholder="e.g. 01/01/2011 to 30/05/2012"
                   className="h-12 border-2 rounded-xl font-bold text-xs"
                 />
               </div>
