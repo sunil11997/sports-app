@@ -377,7 +377,7 @@ export function useSchoolData(isActive: boolean = true) {
     saveSchoolProfile: (profile: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'schools', user.uid), { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     updatePasscode: (passcode: string) => { if (!user || !db) return; updateDocumentNonBlocking(doc(db, 'schools', user.uid), { passcode }); },
     addPlayer: (playerData: any) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'players', playerData.id), { ...playerData, ownerId: user.uid, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
-    updatePlayer: (player: any) => { if (!db) return; updateDocumentNonBlocking(doc(db, 'players', player.id), player); },
+    updatePlayer: (player: any) => { if (!db || !user) return; setDocumentNonBlocking(doc(db, 'players', player.id), { ...player, ownerId: user.uid, schoolId: user.uid }, { merge: true }); },
     setTeamPlan: (sport: string, date: string, plan: any) => {
       if (!user || !db) return;
       const id = `${user.uid}_${sport}_${date}`;
