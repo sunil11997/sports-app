@@ -9,6 +9,80 @@ import { format } from 'date-fns';
 
 const OFFLINE_ATTENDANCE_KEY = 'wgb_offline_attendance_queue';
 
+const DEFAULT_U17_PLAYERS: Player[] = [
+  { id: "u17_b1", name: "Uniram Yogesh Gavit", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b2", name: "Pankaj Ramesh Pawar", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b3", name: "Nikhil Kalu Suryawanshi", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b4", name: "Ankush Dattu Sonawane", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b5", name: "Parshuram Vishwsh Chavan", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b6", name: "Bhusan Suresh Bhoye", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b7", name: "Yash Gangram Kamdi", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b8", name: "Sagar Manohar Thakre", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b9", name: "Krushna Laxman Shinde", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b10", name: "Vijay Sanjay Bahiram", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b11", name: "Rushikesh Bebilal Gavali", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "u17_b12", name: "Ravi Raju Pawar", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+
+  { id: "u17_g1", name: "Laxmi Bagul", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g2", name: "Dipali Pawar", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g3", name: "Anusaya Khandavi", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g4", name: "Sangita Gangurde", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g5", name: "Sangita Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g6", name: "Arti Khair", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g7", name: "Bhaghsree Gavali", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g8", name: "Asha Suryawanshi", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g9", name: "Pinti Mahale", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g10", name: "Dhanshree Deshmukh", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g11", name: "Dhavali Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "u17_g12", name: "Mohini Mahale", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" }
+];
+
+const DEFAULT_U14_PLAYERS: Player[] = [
+  { id: "u14_b1", name: "Ravindra Chotiram Suryawanshi", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b2", name: "Dadaji Ramdas Bhoye", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b3", name: "Arjun Chotiram Suryawanshi", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b4", name: "Ravindra Soma Kamdi", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b5", name: "Pravin Shantaram Bahiram", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b6", name: "Sravan Hiraman Mali", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b7", name: "Bhavdas Popat Chaure", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b8", name: "Rodhan Ram Thakre", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b9", name: "Avinash Dhalu Kamdi", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+  { id: "u14_b10", name: "Somnath Sitaram Bhoye", gender: "Male", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "40", height: "145", bmi: "19.0" },
+
+  { id: "u14_g1", name: "Harshai Deshmukh", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g2", name: "Kalyani Gavit", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g3", name: "Rekha Jople", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g4", name: "Madhuri Jople", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g5", name: "Madhari Chaudhari", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g6", name: "Gita Bagul", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g7", name: "Sonali Chaure", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g8", name: "Gaytri Deshmukh", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" },
+  { id: "u14_g9", name: "Kirti", gender: "Female", std: "7", dob: "2014-06-01", category: "athlete", sports: ["Kabaddi", "Volleyball", "Kho Kho"], history: "No", age: 12, ageCategory: "U14", weight: "38", height: "140", bmi: "19.4" }
+];
+
+const DEFAULT_KHOKHO_PLAYERS: Player[] = [
+  { id: "kk_b1", name: "Haresh", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b2", name: "Ravindra", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b3", name: "Ramesh Valu Ahire", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b4", name: "Dipak Shantaram Bahiram", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b5", name: "Amit Eknath Gangurde", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b6", name: "Sai Kalu Aahire", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b7", name: "Roshan Shitaram Jadhav", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b8", name: "Ram Gotu Ahire", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b9", name: "Ashwin Prabhu Bhoye", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+  { id: "kk_b10", name: "Chetan Madhu Chure", gender: "Male", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "50", height: "165", bmi: "18.4" },
+
+  { id: "kk_g1", name: "Kalyani Gaikwad", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g2", name: "Gagruti Deshmukh", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g3", name: "Ashwini Chaure", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g4", name: "Ravina Pawar", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g5", name: "Tulshi Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g6", name: "Manju Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g7", name: "Anju Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g8", name: "Gita Bagul", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" },
+  { id: "kk_g9", name: "Sonali Chaudhari", gender: "Female", std: "9", dob: "2011-06-01", category: "athlete", sports: ["Kho Kho"], history: "No", age: 15, ageCategory: "U17", weight: "45", height: "155", bmi: "18.7" }
+];
+
 /**
  * useSchoolData - Institutional Registry Engine v4.3.26
  * Hardened for high-resilience persistence and strict hook execution order.
@@ -210,34 +284,49 @@ export function useSchoolData(isActive: boolean = true) {
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
   // 3. Aggregated Data Memo
-  const aggregatedData = useMemo(() => ({
-    players: allPlayers || [],
-    attendance,
-    fitness,
-    fitnessHistory,
-    sportSkills,
-    skillsHistory,
-    drillCompletions,
-    gameRules,
-    examConfigs,
-    performanceConfigs,
-    dailyReadiness,
-    tacticalEvents,
-    goals,
-    healthIncidents: healthIncidents || [],
-    activities: schoolActivities || [],
-    teamPlans,
-    schoolProfile: schoolProfile || {
-      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-      teacherName: "Sunil Deshmukh",
-      taluka: "Satana",
-      district: "Nashik",
-      id: "default",
-      qualification: "B.P.Ed / M.P.Ed",
-      role: "Physical Education Director",
-      updatedAt: "2024-01-01T00:00:00.000Z"
-    }
-  }), [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, schoolActivities, teamPlans]);
+  const aggregatedData = useMemo(() => {
+    const dbPlayers = allPlayers || [];
+    const mergedPlayers = [...dbPlayers];
+    const defaultLists = [DEFAULT_U17_PLAYERS, DEFAULT_U14_PLAYERS, DEFAULT_KHOKHO_PLAYERS];
+    
+    defaultLists.forEach(list => {
+      list.forEach(p => {
+        const exists = dbPlayers.some(dbP => dbP.name.toLowerCase() === p.name.toLowerCase());
+        if (!exists) {
+          mergedPlayers.push(p);
+        }
+      });
+    });
+
+    return {
+      players: mergedPlayers,
+      attendance,
+      fitness,
+      fitnessHistory,
+      sportSkills,
+      skillsHistory,
+      drillCompletions,
+      gameRules,
+      examConfigs,
+      performanceConfigs,
+      dailyReadiness,
+      tacticalEvents,
+      goals,
+      healthIncidents: healthIncidents || [],
+      activities: schoolActivities || [],
+      teamPlans,
+      schoolProfile: schoolProfile || {
+        schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+        teacherName: "Sunil Deshmukh",
+        taluka: "Satana",
+        district: "Nashik",
+        id: "default",
+        qualification: "B.P.Ed / M.P.Ed",
+        role: "Physical Education Director",
+        updatedAt: "2024-01-01T00:00:00.000Z"
+      }
+    };
+  }, [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, schoolActivities, teamPlans]);
 
   return {
     data: aggregatedData,
