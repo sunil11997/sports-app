@@ -102,7 +102,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const [isSaving, setIsSaving] = useState(false);
 
   const schoolId = store.data.schoolProfile?.id || "default";
-  const scheduleKey = `${schoolId}_autoplan_${selectedDate}_${selectedSession}`;
+  const safeDateKey = selectedDate.replace(/\//g, '-');
+  const scheduleKey = `${schoolId}_autoplan_${safeDateKey}_${selectedSession}`;
 
   // Load from Firebase
   useEffect(() => {
@@ -695,7 +696,7 @@ export function AutoPracticePlanner({ store }: { store: any }) {
             </Select>
           </div>
 
-          <div className="space-y-1 w-full sm:w-56">
+          <div className="space-y-1 w-full sm:w-80">
             <label className="text-[9px] font-black text-primary uppercase ml-2">Planner Date</label>
             <Input 
               type="text" 

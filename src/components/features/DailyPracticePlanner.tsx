@@ -94,7 +94,8 @@ export function DailyPracticePlanner({ store }: { store: any }) {
   const [searchPlayerQuery, setSearchPlayerQuery] = useState("");
 
   const schoolId = store.data.schoolProfile?.id || "default";
-  const scheduleKey = `${schoolId}_${selectedDate}_${selectedAgeGroup}`;
+  const safeDateKey = selectedDate.replace(/\//g, '-');
+  const scheduleKey = `${schoolId}_${safeDateKey}_${selectedAgeGroup}`;
 
   // Load from Firebase
   useEffect(() => {
@@ -314,7 +315,8 @@ export function DailyPracticePlanner({ store }: { store: any }) {
     if (!copySourceDate || !db) return;
 
     try {
-      const sourceKey = `${schoolId}_${copySourceDate}_${selectedAgeGroup}`;
+      const safeSourceDateKey = copySourceDate.replace(/\//g, '-');
+      const sourceKey = `${schoolId}_${safeSourceDateKey}_${selectedAgeGroup}`;
       const docRef = doc(db, 'daily_practice_schedules', sourceKey);
       
       const unsub = onSnapshot(docRef, (snapshot) => {
@@ -556,7 +558,7 @@ export function DailyPracticePlanner({ store }: { store: any }) {
             </Select>
           </div>
 
-          <div className="space-y-1 w-full sm:w-56">
+          <div className="space-y-1 w-full sm:w-80">
             <label className="text-[9px] font-black text-primary uppercase ml-2">Schedule Date</label>
             <Input 
               type="text" 
