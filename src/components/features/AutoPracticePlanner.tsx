@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -100,6 +100,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   }, [bulkGame]);
   const [drills, setDrills] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const hasLoadedFromDbRef = useRef(false);
+  const isIncomingChangeRef = useRef(false);
 
   const schoolId = store.data.schoolProfile?.id || "default";
   const safeDateKey = selectedDate.replace(/\//g, '-');
@@ -189,6 +191,8 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
     const docRef = doc(db, 'master_auto_plans', scheduleKey);
     const unsub = onSnapshot(docRef, (snapshot) => {
+      isIncomingChangeRef.current = true;
+      hasLoadedFromDbRef.current = true;
       if (snapshot.exists()) {
         const d = snapshot.data();
         setU17BoysPlan(d.u17BoysPlan || []);
@@ -243,9 +247,60 @@ export function AutoPracticePlanner({ store }: { store: any }) {
         });
         setDrills({});
       }
+      setTimeout(() => {
+        isIncomingChangeRef.current = false;
+      }, 100);
     });
     return () => unsub();
   }, [store.isLoaded, scheduleKey, db, getInitialList]);
+
+  // Auto-save changes to Firebase
+  useEffect(() => {
+    if (!store.isLoaded || !db || isPastDate || !hasLoadedFromDbRef.current || isIncomingChangeRef.current) return;
+
+    const autoSave = async () => {
+      try {
+        const docRef = doc(db, 'master_auto_plans', scheduleKey);
+        await setDoc(docRef, {
+          id: scheduleKey,
+          schoolId,
+          date: selectedDate,
+          session: selectedSession,
+          timeRange: selectedSession === 'Morning' ? '6:00 AM - 7:30 AM' : '5:00 PM - 7:00 PM',
+          u17BoysPlan: u17BoysPlan.length > 0 ? u17BoysPlan : getInitialList([], 'Male', 'U17', false, false),
+          u17GirlsPlan: u17GirlsPlan.length > 0 ? u17GirlsPlan : getInitialList([], 'Female', 'U17', false, false),
+          u14BoysPlan: u14BoysPlan.length > 0 ? u14BoysPlan : getInitialList([], 'Male', 'U14', false, false),
+          u14GirlsPlan: u14GirlsPlan.length > 0 ? u14GirlsPlan : getInitialList([], 'Female', 'U14', false, false),
+          khokhoBoysPlan: khokhoBoysPlan.length > 0 ? khokhoBoysPlan : getInitialList([], 'Male', undefined, true, false),
+          khokhoGirlsPlan: khokhoGirlsPlan.length > 0 ? khokhoGirlsPlan : getInitialList([], 'Female', undefined, true, false),
+          shotputGirlsPlan: shotputGirlsPlan.length > 0 ? shotputGirlsPlan : getInitialList([], 'Female', undefined, false, true),
+          drills,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) {
+        console.error("Auto-save failed:", e);
+      }
+    };
+
+    autoSave();
+  }, [
+    u17BoysPlan,
+    u17GirlsPlan,
+    u14BoysPlan,
+    u14GirlsPlan,
+    khokhoBoysPlan,
+    khokhoGirlsPlan,
+    shotputGirlsPlan,
+    drills,
+    scheduleKey,
+    db,
+    selectedDate,
+    selectedSession,
+    schoolId,
+    isPastDate,
+    store.isLoaded,
+    getInitialList
+  ]);
 
   // Solver
   const handleAutoSchedule = () => {
