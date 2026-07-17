@@ -252,23 +252,48 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     if (isPastDate) return;
 
     // Helper to auto plan multi-sport cohort
-    const autoPlanCohort = (playerList: { playerId: string }[]) => {
+    const autoPlanCohort = (playerList: PlayerPlanEntry[]) => {
       const plan: PlayerPlanEntry[] = [];
-      const shuffled = [...playerList].sort(() => 0.5 - Math.random());
       
-      shuffled.forEach((entry, idx) => {
-        const mod = idx % 3;
+      playerList.forEach((entry, idx) => {
+        if (!entry.playerId || entry.playerId === 'vacant') {
+          plan.push({
+            playerId: 'vacant',
+            game1: 'None',
+            game2: 'None',
+            drill1_1: '',
+            drill1_2: '',
+            drill2_1: '',
+            drill2_2: ''
+          });
+          return;
+        }
+
+        const player = getPlayerDetails(entry.playerId);
+        let playerSports = player && Array.isArray(player.sports) ? player.sports.filter((s: string) => s !== 'None') : [];
+        
         let game1 = 'None';
         let game2 = 'None';
-        if (mod === 0) {
-          game1 = 'Kabaddi';
-          game2 = 'Volleyball';
-        } else if (mod === 1) {
-          game1 = 'Volleyball';
-          game2 = 'Kho Kho';
+
+        if (playerSports.length === 1) {
+          game1 = playerSports[0];
+          game2 = playerSports[0];
+        } else if (playerSports.length >= 2) {
+          game1 = playerSports[0];
+          game2 = playerSports[1];
         } else {
-          game1 = 'Kabaddi';
-          game2 = 'Kho Kho';
+          // Fallback if no sports registered, cycle through cohort games
+          const mod = idx % 3;
+          if (mod === 0) {
+            game1 = 'Kabaddi';
+            game2 = 'Volleyball';
+          } else if (mod === 1) {
+            game1 = 'Volleyball';
+            game2 = 'Kho Kho';
+          } else {
+            game1 = 'Kabaddi';
+            game2 = 'Kho Kho';
+          }
         }
 
         const g1Drills = SPORTS_DATA[game1]?.skills || [];
@@ -296,6 +321,9 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
     // Kho Kho daily players practice Kho Kho
     const nextKkBoys = khokhoBoysList.map(item => {
+      if (!item.playerId || item.playerId === 'vacant') {
+        return { playerId: 'vacant', game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' };
+      }
       const kkDrills = [...(SPORTS_DATA['Kho Kho']?.skills || [])].sort(() => 0.5 - Math.random());
       return { 
         playerId: item.playerId, 
@@ -309,6 +337,9 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     });
     
     const nextKkGirls = khokhoGirlsList.map(item => {
+      if (!item.playerId || item.playerId === 'vacant') {
+        return { playerId: 'vacant', game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' };
+      }
       const kkDrills = [...(SPORTS_DATA['Kho Kho']?.skills || [])].sort(() => 0.5 - Math.random());
       return { 
         playerId: item.playerId, 
@@ -323,6 +354,9 @@ export function AutoPracticePlanner({ store }: { store: any }) {
 
     // Athletics / Throws daily players practice 2 sports out of Shot Put, Discus Throw, Javelin Throw, Running
     const nextSpGirls = shotputGirlsList.map((item, idx) => {
+      if (!item.playerId || item.playerId === 'vacant') {
+        return { playerId: 'vacant', game1: 'None', game2: 'None', drill1_1: '', drill1_2: '', drill2_1: '', drill2_2: '' };
+      }
       const comboIdx = idx % 6;
       let game1 = 'None';
       let game2 = 'None';
