@@ -19,6 +19,26 @@ export default function Error({
   useEffect(() => {
     // Log the error to your institutional monitoring service if available
     console.error('WGB-App-Error:', error);
+
+    // Automatically reload the page if it's a chunk loading failure (usually due to a new Vercel deployment)
+    const isChunkError = 
+      error.name === 'ChunkLoadError' || 
+      (error.message && (
+        error.message.toLowerCase().includes('chunk') || 
+        error.message.toLowerCase().includes('loading css chunk') ||
+        error.message.toLowerCase().includes('loading chunk')
+      ));
+
+    if (isChunkError) {
+      const lastReload = sessionStorage.getItem('chunk_reload_time');
+      const now = Date.now();
+      // Only reload if we haven't reloaded due to a chunk error in the last 10 seconds
+      if (!lastReload || now - parseInt(lastReload) > 10000) {
+        sessionStorage.setItem('chunk_reload_time', now.toString());
+        console.log('Detected chunk loading failure. Reloading page...');
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   return (
