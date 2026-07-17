@@ -60,6 +60,10 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const db = useFirestore();
 
   const [selectedDate, setSelectedDate] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wgb_auto_selectedDate');
+      if (saved) return saved;
+    }
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -67,8 +71,21 @@ export function AutoPracticePlanner({ store }: { store: any }) {
     return `${yyyy}-${mm}-${dd}`;
   });
 
-  const [selectedSession, setSelectedSession] = useState<'Morning' | 'Evening'>('Morning');
-  const [activeTab, setActiveTab] = useState<'u17boys' | 'u17girls' | 'u14boys' | 'u14girls' | 'khokhoboys' | 'khokhogirls' | 'shotputgirls' | 'drills'>('u17boys');
+  const [selectedSession, setSelectedSession] = useState<'Morning' | 'Evening'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wgb_auto_selectedSession');
+      if (saved === 'Morning' || saved === 'Evening') return saved;
+    }
+    return 'Morning';
+  });
+
+  const [activeTab, setActiveTab] = useState<'u17boys' | 'u17girls' | 'u14boys' | 'u14girls' | 'khokhoboys' | 'khokhogirls' | 'shotputgirls' | 'drills'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wgb_auto_activeTab');
+      if (saved) return saved as any;
+    }
+    return 'u17boys';
+  });
 
   const todayDateString = useMemo(() => {
     const today = new Date();
@@ -79,6 +96,24 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   }, []);
 
   const isPastDate = /^\d{4}-\d{2}-\d{2}$/.test(selectedDate) ? (selectedDate < todayDateString) : false;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('wgb_auto_selectedDate', selectedDate);
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('wgb_auto_selectedSession', selectedSession);
+    }
+  }, [selectedSession]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('wgb_auto_activeTab', activeTab);
+    }
+  }, [activeTab]);
 
   // Plan states
   const [u17BoysPlan, setU17BoysPlan] = useState<PlayerPlanEntry[]>([]);
@@ -185,6 +220,32 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   const khokhoGirlsList = useMemo(() => getInitialList(khokhoGirlsPlan, 'Female', undefined, true, false), [khokhoGirlsPlan, getInitialList]);
   const shotputGirlsList = useMemo(() => getInitialList(shotputGirlsPlan, 'Female', undefined, false, true), [shotputGirlsPlan, getInitialList]);
 
+  // Load from local cache first on scheduleKey change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(`wgb_draft_${scheduleKey}`);
+      if (cached) {
+        try {
+          const d = JSON.parse(cached);
+          isIncomingChangeRef.current = true;
+          setU17BoysPlan(d.u17BoysPlan || []);
+          setU17GirlsPlan(d.u17GirlsPlan || []);
+          setU14BoysPlan(d.u14BoysPlan || []);
+          setU14GirlsPlan(d.u14GirlsPlan || []);
+          setKhokhoBoysPlan(d.khokhoBoysPlan || []);
+          setKhokhoGirlsPlan(d.khokhoGirlsPlan || []);
+          setShotputGirlsPlan(d.shotputGirlsPlan || []);
+          setDrills(d.drills || {});
+          setTimeout(() => {
+            isIncomingChangeRef.current = false;
+          }, 100);
+        } catch (e) {
+          console.error("Failed to parse cached plan:", e);
+        }
+      }
+    }
+  }, [scheduleKey]);
+
   // Load from Firebase
   useEffect(() => {
     if (!store.isLoaded || !db) return;
@@ -195,14 +256,37 @@ export function AutoPracticePlanner({ store }: { store: any }) {
       hasLoadedFromDbRef.current = true;
       if (snapshot.exists()) {
         const d = snapshot.data();
-        setU17BoysPlan(d.u17BoysPlan || []);
-        setU17GirlsPlan(d.u17GirlsPlan || []);
-        setU14BoysPlan(d.u14BoysPlan || []);
-        setU14GirlsPlan(d.u14GirlsPlan || []);
-        setKhokhoBoysPlan(d.khokhoBoysPlan || []);
-        setKhokhoGirlsPlan(d.khokhoGirlsPlan || []);
-        setShotputGirlsPlan(d.shotputGirlsPlan || []);
-        setDrills(d.drills || {});
+        const nextU17Boys = d.u17BoysPlan || [];
+        const nextU17Girls = d.u17GirlsPlan || [];
+        const nextU14Boys = d.u14BoysPlan || [];
+        const nextU14Girls = d.u14GirlsPlan || [];
+        const nextKkBoys = d.khokhoBoysPlan || [];
+        const nextKkGirls = d.khokhoGirlsPlan || [];
+        const nextSpGirls = d.shotputGirlsPlan || [];
+        const nextDrills = d.drills || {};
+
+        setU17BoysPlan(nextU17Boys);
+        setU17GirlsPlan(nextU17Girls);
+        setU14BoysPlan(nextU14Boys);
+        setU14GirlsPlan(nextU14Girls);
+        setKhokhoBoysPlan(nextKkBoys);
+        setKhokhoGirlsPlan(nextKkGirls);
+        setShotputGirlsPlan(nextSpGirls);
+        setDrills(nextDrills);
+
+        // Update local cache
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`wgb_draft_${scheduleKey}`, JSON.stringify({
+            u17BoysPlan: nextU17Boys,
+            u17GirlsPlan: nextU17Girls,
+            u14BoysPlan: nextU14Boys,
+            u14GirlsPlan: nextU14Girls,
+            khokhoBoysPlan: nextKkBoys,
+            khokhoGirlsPlan: nextKkGirls,
+            shotputGirlsPlan: nextSpGirls,
+            drills: nextDrills
+          }));
+        }
       } else {
         // Clear games and drills, but keep the current players from the state!
         // If state is empty (e.g. first load), load getInitialList
@@ -257,6 +341,19 @@ export function AutoPracticePlanner({ store }: { store: any }) {
   // Auto-save changes to Firebase
   useEffect(() => {
     if (!store.isLoaded || !db || isPastDate || !hasLoadedFromDbRef.current || isIncomingChangeRef.current) return;
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`wgb_draft_${scheduleKey}`, JSON.stringify({
+        u17BoysPlan,
+        u17GirlsPlan,
+        u14BoysPlan,
+        u14GirlsPlan,
+        khokhoBoysPlan,
+        khokhoGirlsPlan,
+        shotputGirlsPlan,
+        drills
+      }));
+    }
 
     const autoSave = async () => {
       try {
