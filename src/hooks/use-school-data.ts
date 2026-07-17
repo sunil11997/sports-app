@@ -326,16 +326,6 @@ export function useSchoolData(isActive: boolean = true) {
   const aggregatedData = useMemo(() => {
     const dbPlayers = allPlayers || [];
     const mergedPlayers = [...dbPlayers];
-    const defaultLists = [DEFAULT_U17_PLAYERS, DEFAULT_U14_PLAYERS, DEFAULT_KHOKHO_PLAYERS, DEFAULT_SHOTPUT_GIRLS];
-    
-    defaultLists.forEach(list => {
-      list.forEach(p => {
-        const exists = dbPlayers.some(dbP => dbP.name.toLowerCase() === p.name.toLowerCase());
-        if (!exists) {
-          mergedPlayers.push(p);
-        }
-      });
-    });
 
     return {
       players: mergedPlayers,
