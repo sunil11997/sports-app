@@ -24,7 +24,10 @@ import {
   ChevronRight,
   Archive,
   Flame,
-  Award
+  Award,
+  Edit3,
+  Trash2,
+  History
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -66,6 +69,7 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
   const [selectedClasses, setSelectedClasses] = useState<string[]>(ALL_12_CLASSES);
 
   // Session Attendance & Archive Form State
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [sessionDate, setSessionDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [boysCount, setBoysCount] = useState<string>('30');
   const [girlsCount, setGirlsCount] = useState<string>('25');
@@ -73,6 +77,14 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
   const [isArchiving, setIsArchiving] = useState(false);
 
   const currentGuide: YogaPtGuide | undefined = YOGA_PT_KNOWLEDGE_BASE[selectedSkill];
+
+  const archivedActivities = React.useMemo(() => {
+    return (store.data.activities || []).filter((a: any) => 
+      a.type?.toLowerCase() === gameType.toLowerCase() || 
+      (isYoga && a.type?.toLowerCase().includes('yoga')) || 
+      (!isYoga && (a.type?.toLowerCase().includes('pt') || a.type?.toLowerCase().includes('mass')))
+    ).sort((a: any, b: any) => (b.date || "").localeCompare(a.date || ""));
+  }, [store.data.activities, gameType, isYoga]);
 
   const toggleClass = (cls: string) => {
     setSelectedClasses(prev => 
@@ -83,7 +95,29 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
   const selectAllClasses = () => setSelectedClasses(ALL_12_CLASSES);
   const clearAllClasses = () => setSelectedClasses([]);
 
-  // AUTOMATIC ARCHIVE FUNCTION
+  const handleEditActivity = (act: any) => {
+    setEditingId(act.id);
+    setSessionDate(act.date || format(new Date(), 'yyyy-MM-dd'));
+    setBoysCount((act.boysCount || '0').toString());
+    setGirlsCount((act.girlsCount || '0').toString());
+    setSessionNotes(act.summary || '');
+    toast({
+      title: "संपादन मोड सुरू (Edit Mode Active)",
+      description: "माहिती फॉर्ममध्ये भरली आहे. बदल करून पुन्हा जतन करा.",
+      className: "bg-amber-500 text-slate-950 font-bold"
+    });
+  };
+
+  const handleDeleteActivity = (id: string) => {
+    if (store?.deleteActivity) {
+      store.deleteActivity(id);
+    } else if (store?.data?.activities) {
+      store.data.activities = store.data.activities.filter((a: any) => a.id !== id);
+    }
+    toast({ title: "हटवले गेले", description: "सराव लॉग अर्काईव्हमधून काढला." });
+  };
+
+  // AUTOMATIC ARCHIVE FUNCTION (CREATES OR UPDATES)
   const handleAutoArchive = () => {
     const b = parseInt(boysCount) || 0;
     const g = parseInt(girlsCount) || 0;
@@ -100,7 +134,7 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
 
     setIsArchiving(true);
 
-    const activityId = `act_${Date.now()}`;
+    const activityId = editingId || `act_${Date.now()}`;
     const classSummaryStr = `[इयत्ता: ${selectedClasses.join(', ')} वी] ${selectedSkill}`;
     
     const newActivity = {
@@ -112,6 +146,11 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
       summary: classSummaryStr + (sessionNotes ? ` - ${sessionNotes}` : ''),
       createdAt: new Date().toISOString()
     };
+
+    // Remove old if editing
+    if (editingId && store?.data?.activities) {
+      store.data.activities = store.data.activities.filter((a: any) => a.id !== editingId);
+    }
 
     // 1. Add to store activities (Auto-Archived into Daily Report)
     store.addActivity(newActivity);
@@ -132,9 +171,10 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
     });
 
     setIsArchiving(false);
+    setEditingId(null);
 
     toast({
-      title: "ऑटो-अर्काईव्ह पूर्ण! (Automatic Archive Successful)",
+      title: editingId ? "माहिती अद्ययावत झाली! (Updated)" : "ऑटो-अर्काईव्ह पूर्ण! (Automatic Archive Successful)",
       description: `${gameType} - ${selectedSkill} सत्र इयत्ता ${selectedClasses.join(', ')} साठी दैनिक अहवालात ऑटो-अर्काईव्ह केले गेले. (एकूण: ${b + g} विद्यार्थी)`,
       className: "bg-emerald-600 text-white font-bold"
     });
@@ -463,8 +503,70 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
               disabled={isArchiving}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-16 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl active-scale transition-all flex items-center justify-center gap-2"
             >
-              <Archive className="w-5 h-5" /> सराव पूर्ण करा व आपोआप जतन (COMPLETE & AUTOMATIC ARCHIVE)
+              <Archive className="w-5 h-5" /> {editingId ? "अद्ययावत करा (UPDATE SESSION LOG)" : "सराव पूर्ण करा व आपोआप जतन (COMPLETE & AUTOMATIC ARCHIVE)"}
             </Button>
+          </Card>
+
+          {/* SECTION E: ARCHIVED SESSIONS LIST & EDITOR */}
+          <Card className="border-2 border-slate-200 rounded-[3rem] p-6 md:p-8 bg-white shadow-xl space-y-6">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div>
+                <Badge variant="outline" className="bg-slate-100 text-slate-800 text-[9px] font-black uppercase">
+                  Archived History ({archivedActivities.length} Sessions)
+                </Badge>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight mt-1 flex items-center gap-2">
+                  <History className="w-6 h-6 text-amber-500" /> अर्काईव्ह केलेला सराव इतिहास व संपादक (Archived Sessions & Editor)
+                </h3>
+                <p className="text-xs text-muted-foreground font-semibold">
+                  पूर्वी नोंदवलेल्या सरावांमध्ये बदल करण्यासाठी संपादन (Edit) किंवा हटवा (Delete) वापरा.
+                </p>
+              </div>
+            </div>
+
+            {archivedActivities.length === 0 ? (
+              <div className="py-12 text-center opacity-40 space-y-2">
+                <Archive className="w-12 h-12 mx-auto text-slate-400" />
+                <p className="text-xs font-black uppercase text-slate-500">अद्याप कोणताही सराव इतिहास जतन केलेला नाही</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {archivedActivities.map((act: any) => (
+                  <div key={act.id} className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200/80 hover:border-primary/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-primary text-white font-black text-[9px] uppercase">{act.type}</Badge>
+                        <span className="text-xs font-black text-slate-900">{act.summary}</span>
+                      </div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                        📅 {act.date} • 👦 मुले: {act.boysCount || 0} • 👧 मुली: {act.girlsCount || 0} • एकूण: {(parseInt(act.boysCount || '0') + parseInt(act.girlsCount || '0'))} विद्यार्थी
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 self-end md:self-auto">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditActivity(act)}
+                        className="h-10 px-4 rounded-xl text-xs font-black uppercase border-blue-200 text-blue-800 hover:bg-blue-50 flex items-center gap-1.5"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> संपादन करा (Edit)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteActivity(act.id)}
+                        className="h-10 px-3 rounded-xl text-xs font-black uppercase text-red-600 hover:bg-red-50 hover:text-red-700"
+                        title="हटवा"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       )}
