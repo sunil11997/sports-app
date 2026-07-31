@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -12,27 +11,25 @@ import {
   Sparkles, 
   Activity, 
   Users, 
-  CheckCircle2, 
-  Clock, 
   ShieldCheck, 
-  Printer, 
-  Share2, 
+  ShieldAlert,
   BookOpen, 
   Info,
   Calendar,
-  Flame,
-  Award,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
   Zap,
   Check,
-  ChevronRight
+  ChevronRight,
+  Archive,
+  Flame,
+  Award
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { SportsSkills } from './SportsSkills';
-import { SportsDrills } from './SportsDrills';
-import { DailyReport } from './DailyReport';
-import { YOGA_PT_KNOWLEDGE_BASE } from '@/lib/yogaPtKnowledge';
-import { YogaPtGuideModal } from '@/components/ui/YogaPtGuideModal';
+import { YOGA_PT_KNOWLEDGE_BASE, YogaPtGuide } from '@/lib/yogaPtKnowledge';
+import { HealthIncidents } from './HealthIncidents';
 import { format } from 'date-fns';
 
 interface YogaPtHubProps {
@@ -41,71 +38,114 @@ interface YogaPtHubProps {
   onBack?: () => void;
 }
 
+const ALL_12_CLASSES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+
 export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'session' | 'skills' | 'guide' | 'report'>('session');
-  const [selectedClasses, setSelectedClasses] = useState<string[]>(['5', '6', '7', '8', '9', '10']);
-  const [guideModalName, setGuideModalName] = useState<string | null>(null);
-
-  // Quick Daily Activity Logging state
-  const [selectedDrill, setSelectedDrill] = useState<string>(
-    gameType === 'Yoga' ? 'Surya Namaskar' : 'Mass PT Exercise No 1'
-  );
-  const [sessionDate, setSessionDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
-  const [boysCount, setBoysCount] = useState<string>('25');
-  const [girlsCount, setGirlsCount] = useState<string>('20');
-  const [sessionNotes, setSessionNotes] = useState<string>('');
-
+  // ONLY TWO TABS: 'drills' and 'injury'
+  const [activeMainTab, setActiveMainTab] = useState<'drills' | 'injury'>('drills');
+  
   const isYoga = gameType === 'Yoga';
 
+  // Full Drills Lists
   const drillsList = isYoga ? [
     'Surya Namaskar', 'Tadasana', 'Vrikshasana', 'Bhujangasana', 'Padmasana',
-    'Anulom Vilom', 'Kapalbhati', 'Shavasana', 'Trikonasana', 'Paschimottanasana', 'Vajrasana'
+    'Anulom Vilom', 'Kapalbhati', 'Shavasana', 'Trikonasana', 'Dhanurasana', 
+    'Paschimottanasana', 'Vajrasana'
   ] : [
     'Mass PT Exercise No 1', 'Mass PT Exercise No 2', 'Mass PT Exercise No 3', 
     'Mass PT Exercise No 4', 'Mass PT Exercise No 5', 'Freehand Warm-up', 
-    'Jumping Jacks', 'Marching in Place'
+    'Jumping Jacks', 'Arm Swings', 'Trunk Bending', 'Marching in Place',
+    'Deep Breathing PT', 'Cool-down Stretch Routine'
   ];
 
-  const handleSaveSessionLog = () => {
+  // Currently Selected Skill / Drill
+  const [selectedSkill, setSelectedSkill] = useState<string>(drillsList[0]);
+
+  // Multiple Classes Selector State (1st to 12th)
+  const [selectedClasses, setSelectedClasses] = useState<string[]>(ALL_12_CLASSES);
+
+  // Session Attendance & Archive Form State
+  const [sessionDate, setSessionDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [boysCount, setBoysCount] = useState<string>('30');
+  const [girlsCount, setGirlsCount] = useState<string>('25');
+  const [sessionNotes, setSessionNotes] = useState<string>('');
+  const [isArchiving, setIsArchiving] = useState(false);
+
+  const currentGuide: YogaPtGuide | undefined = YOGA_PT_KNOWLEDGE_BASE[selectedSkill];
+
+  const toggleClass = (cls: string) => {
+    setSelectedClasses(prev => 
+      prev.includes(cls) ? prev.filter(c => c !== cls) : [...prev, cls]
+    );
+  };
+
+  const selectAllClasses = () => setSelectedClasses(ALL_12_CLASSES);
+  const clearAllClasses = () => setSelectedClasses([]);
+
+  // AUTOMATIC ARCHIVE FUNCTION
+  const handleAutoArchive = () => {
     const b = parseInt(boysCount) || 0;
     const g = parseInt(girlsCount) || 0;
 
-    if (b === 0 && g === 0) {
-      toast({ variant: 'destructive', title: 'त्रुटी', description: 'कृपया उपस्थित मुलांची किंवा मुलींची संख्या टाका.' });
+    if (selectedClasses.length === 0) {
+      toast({ variant: 'destructive', title: 'इयत्ता निवडा', description: 'कृपया सराव केलेल्या इयत्ता (१ ली ते १२ वी) निवडा.' });
       return;
     }
 
+    if (b === 0 && g === 0) {
+      toast({ variant: 'destructive', title: 'संख्या टाका', description: 'कृपया उपस्थित मुलांची किंवा मुलींची संख्या टाका.' });
+      return;
+    }
+
+    setIsArchiving(true);
+
     const activityId = `act_${Date.now()}`;
+    const classSummaryStr = `[इयत्ता: ${selectedClasses.join(', ')} वी] ${selectedSkill}`;
+    
     const newActivity = {
       id: activityId,
       date: sessionDate,
       type: gameType,
       boysCount: b.toString(),
       girlsCount: g.toString(),
-      summary: selectedDrill + (sessionNotes ? ` (${sessionNotes})` : ''),
+      summary: classSummaryStr + (sessionNotes ? ` - ${sessionNotes}` : ''),
       createdAt: new Date().toISOString()
     };
 
+    // 1. Add to store activities (Auto-Archived into Daily Report)
     store.addActivity(newActivity);
 
+    // 2. Auto-Archive completion for players in selected classes
+    const playersInClasses = (store.data.players || []).filter((p: any) => 
+      selectedClasses.includes((p.std || "").toString().trim())
+    );
+
+    const drillKey = `${gameType}_${selectedSkill}`;
+    playersInClasses.forEach((player: any) => {
+      store.setDrillCompletion(drillKey, player.id, true, {
+        sportName: gameType,
+        drillName: selectedSkill,
+        gender: player.gender || 'Male',
+        std: player.std || ''
+      });
+    });
+
+    setIsArchiving(false);
+
     toast({
-      title: "सराव नोंद यशस्वी! (Log Archived)",
-      description: `${gameType} - ${selectedDrill} सराव अहवालात जोडला गेला. (मुले: ${b}, मुली: ${g})`,
+      title: "ऑटो-अर्काईव्ह पूर्ण! (Automatic Archive Successful)",
+      description: `${gameType} - ${selectedSkill} सत्र इयत्ता ${selectedClasses.join(', ')} साठी दैनिक अहवालात ऑटो-अर्काईव्ह केले गेले. (एकूण: ${b + g} विद्यार्थी)`,
       className: "bg-emerald-600 text-white font-bold"
     });
 
     setSessionNotes('');
   };
 
-  const toggleClass = (cls: string) => {
-    setSelectedClasses(prev => prev.includes(cls) ? prev.filter(c => c !== cls) : [...prev, cls]);
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      {/* Redesigned Header Banner Tailored specifically for Yoga or Mass PT */}
-      <div className={`p-8 md:p-12 rounded-[3.5rem] border-2 shadow-2xl text-white relative overflow-hidden ${
+      {/* Executive Header Banner */}
+      <div className={`p-8 md:p-10 rounded-[3.5rem] border-2 shadow-2xl text-white relative overflow-hidden ${
         isYoga 
           ? 'bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 border-indigo-500/30' 
           : 'bg-gradient-to-r from-teal-900 via-emerald-800 to-slate-900 border-teal-500/30'
@@ -113,7 +153,7 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
         <div className="relative z-10 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 bg-white/10 rounded-[1.8rem] flex items-center justify-center shadow-xl border border-white/20 backdrop-blur-md shrink-0">
+              <div className="w-18 h-18 bg-white/10 rounded-[1.5rem] flex items-center justify-center shadow-xl border border-white/20 backdrop-blur-md shrink-0">
                 {isYoga ? (
                   <Sparkles className="w-10 h-10 text-amber-300 animate-pulse" />
                 ) : (
@@ -125,309 +165,316 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
                   Institutional Physical Education • {gameType}
                 </Badge>
                 <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-none text-white">
-                  {isYoga ? 'योगासन व प्राणायाम हब' : 'सामूहिक पी.टी. व कवायत हब'}
+                  {isYoga ? 'योगासन व प्राणायाम सराव' : 'सामूहिक पी.टी. व कवायत सराव'}
                 </h2>
-                <p className="text-xs md:text-sm font-bold text-white/80 mt-2 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-300" />
+                <p className="text-xs md:text-sm font-bold text-white/80 mt-1.5">
                   {isYoga 
-                    ? 'सर्व इयत्तांसाठी सूर्य नमस्कार, आसने व ध्यान प्राणायाम सराव' 
-                    : 'शासकीय पी.टी. १ ते ५ कवायत प्रकार व सामूहिक व्यायाम'}
+                    ? 'सर्व १२ आसने, प्रात्यक्षिक माहिती, इयत्ता १ ते १२ वी निवड व ऑटो-अर्काईव्ह' 
+                    : 'शासकीय पी.टी. १ ते ५ कवायत प्रकार, प्रात्यक्षिक पायऱ्या व ऑटो-अर्काईव्ह'}
                 </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setGuideModalName(isYoga ? 'Surya Namaskar' : 'Mass PT Exercise No 1')}
-                className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase h-14 rounded-2xl px-6 shadow-xl active-scale flex items-center gap-2"
-              >
-                <BookOpen className="w-5 h-5" /> कसे करावे (Guide)
-              </Button>
-            </div>
           </div>
 
-          {/* Navigation Bar Specifically Designed for Yoga & Mass PT Functions */}
+          {/* MAIN TWO TABS ONLY: DRILLS & INJURY HUB */}
           <div className="pt-2">
-            <div className="inline-flex flex-wrap p-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 gap-2">
+            <div className="inline-flex p-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 gap-2">
               <Button
-                variant={activeTab === 'session' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('session')}
+                variant={activeMainTab === 'drills' ? 'default' : 'ghost'}
+                onClick={() => setActiveMainTab('drills')}
                 className={cn(
-                  "h-12 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2",
-                  activeTab === 'session' ? "bg-white text-slate-950 shadow-lg font-black scale-105" : "text-white hover:bg-white/10"
+                  "h-13 px-8 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2.5",
+                  activeMainTab === 'drills' ? "bg-white text-slate-950 shadow-xl font-black scale-105" : "text-white hover:bg-white/10"
                 )}
               >
-                <Calendar className="w-4 h-4" /> १. दैनंदिन सराव नोंद (Daily Session)
+                {isYoga ? <Sparkles className="w-4 h-4 text-amber-500" /> : <Activity className="w-4 h-4 text-emerald-500" />}
+                १. {isYoga ? 'योगासन ड्रील्स व सराव (Yoga Drills)' : 'पी.टी. कवायत ड्रील्स व सराव (Mass PT Drills)'}
               </Button>
+
               <Button
-                variant={activeTab === 'skills' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('skills')}
+                variant={activeMainTab === 'injury' ? 'default' : 'ghost'}
+                onClick={() => setActiveMainTab('injury')}
                 className={cn(
-                  "h-12 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2",
-                  activeTab === 'skills' ? "bg-white text-slate-950 shadow-lg font-black scale-105" : "text-white hover:bg-white/10"
+                  "h-13 px-8 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2.5",
+                  activeMainTab === 'injury' ? "bg-red-600 text-white shadow-xl font-black scale-105" : "text-white hover:bg-white/10"
                 )}
               >
-                <Users className="w-4 h-4" /> २. इयत्तानिहाय मूल्यमापन (Class Evaluation)
-              </Button>
-              <Button
-                variant={activeTab === 'guide' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('guide')}
-                className={cn(
-                  "h-12 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2",
-                  activeTab === 'guide' ? "bg-white text-slate-950 shadow-lg font-black scale-105" : "text-white hover:bg-white/10"
-                )}
-              >
-                <BookOpen className="w-4 h-4" /> ३. सविस्तर मार्गदर्शक (All Guides)
-              </Button>
-              <Button
-                variant={activeTab === 'report' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('report')}
-                className={cn(
-                  "h-12 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2",
-                  activeTab === 'report' ? "bg-white text-slate-950 shadow-lg font-black scale-105" : "text-white hover:bg-white/10"
-                )}
-              >
-                <Printer className="w-4 h-4" /> ४. अहवाल व WhatsApp (Report)
+                <ShieldAlert className="w-4 h-4" /> २. इंज्युरी हब व मेडिकल लॉग (Injury Hub)
               </Button>
             </div>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl pointer-events-none" />
       </div>
 
-      {/* TAB 1: DAILY PRACTICE LOG & QUICK ATTENDANCE ENTRY */}
-      {activeTab === 'session' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
-          {/* Practice Logger Card */}
-          <Card className="lg:col-span-7 border-2 border-primary/20 rounded-[3rem] p-8 bg-white shadow-xl space-y-6">
-            <div className="border-b pb-4">
+      {/* TAB 1: DRILLS & PRACTICE SECTION WITH AUTOMATIC ARCHIVE */}
+      {activeMainTab === 'drills' && (
+        <div className="space-y-8 animate-in fade-in duration-500">
+          
+          {/* SECTION A: DRILLS LIST SELECTOR */}
+          <Card className="border-2 border-primary/20 rounded-[3rem] p-6 md:p-8 bg-white shadow-xl space-y-4">
+            <div>
               <Badge className="bg-primary text-white text-[9px] uppercase px-3 py-1 mb-1">
-                {gameType} Daily Practice Entry
+                Step 1: Choose {gameType} Skill
               </Badge>
               <h3 className="text-2xl font-black text-primary uppercase tracking-tight">
-                {isYoga ? 'आजचा योगासन सराव नोंदवा' : 'आजचा पी.टी. कवायत सराव नोंदवा'}
+                {isYoga ? 'योगासन प्रकार निवडा (Select Yoga Asana)' : 'सामूहिक पी.टी. कवायत प्रकार निवडा (Select Mass PT Exercise)'}
               </h3>
-              <p className="text-xs text-muted-foreground font-semibold mt-1">
-                सराव केलेला प्रकार निवडून उपस्थित मुलांची व मुलींची संख्या नोंदवा.
+            </div>
+
+            <ScrollArea className="w-full pb-2">
+              <div className="flex gap-3 shrink-0 py-1">
+                {drillsList.map((skillName) => {
+                  const isSelected = selectedSkill === skillName;
+                  return (
+                    <Button
+                      key={skillName}
+                      type="button"
+                      variant={isSelected ? 'default' : 'outline'}
+                      onClick={() => setSelectedSkill(skillName)}
+                      className={cn(
+                        "h-14 px-6 rounded-2xl font-black text-xs uppercase transition-all shrink-0 border-2 flex items-center gap-2",
+                        isSelected 
+                          ? "bg-primary text-white shadow-lg border-primary scale-105" 
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:border-primary/40"
+                      )}
+                    >
+                      {isYoga ? <Sparkles className="w-4 h-4 text-amber-400" /> : <Activity className="w-4 h-4 text-emerald-500" />}
+                      {skillName}
+                    </Button>
+                  );
+                })}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </Card>
+
+          {/* SECTION B: DEEP SKILL INFORMATION CARD (AUTOMATICALLY SHOWN FOR SELECTED SKILL) */}
+          <Card className="border-2 border-slate-200 rounded-[3rem] p-6 md:p-8 bg-gradient-to-br from-slate-50 via-white to-amber-500/5 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between border-b pb-4 gap-3">
+              <div>
+                <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 text-[9.5px] font-black uppercase px-3 py-0.5">
+                  Deep Skill Protocol Guide
+                </Badge>
+                <h3 className="text-2xl font-black text-primary uppercase mt-1">
+                  {currentGuide?.nameMarathi || selectedSkill}
+                </h3>
+                <p className="text-xs font-bold text-muted-foreground uppercase">
+                  {currentGuide?.name || selectedSkill} • सविस्तर माहिती व प्रात्यक्षिक पायऱ्या
+                </p>
+              </div>
+              {currentGuide?.duration && (
+                <Badge className="bg-slate-900 text-amber-300 font-black text-xs px-4 py-2 self-start md:self-auto flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-400" /> वेळ / ताल: {currentGuide.duration}
+                </Badge>
+              )}
+            </div>
+
+            {/* Information Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 text-xs">
+              {/* Description */}
+              <div className="md:col-span-12 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1.5">
+                <span className="text-[9.5px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-amber-500" /> स्वरूप व प्रास्ताविक (Overview)
+                </span>
+                <p className="text-slate-800 font-semibold text-sm leading-relaxed">
+                  {currentGuide?.description || 'या प्रकाराचे सविस्तर प्रात्यक्षिक आणि मार्गदर्शक नियम...'}
+                </p>
+                {currentGuide?.countsOrRhythm && (
+                  <div className="pt-2 border-t border-slate-100 text-amber-900 font-extrabold flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-600" /> ताल / अंक पद्धती: {currentGuide.countsOrRhythm}
+                  </div>
+                )}
+              </div>
+
+              {/* Step-by-Step How to Conduct */}
+              <div className="md:col-span-7 space-y-3">
+                <h4 className="font-black text-primary uppercase text-xs tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="w-4.5 h-4.5 text-emerald-600" /> कसे करावे? (Step-by-Step Instructions)
+                </h4>
+                <div className="space-y-2">
+                  {(currentGuide?.howToConduct || ['सावधान स्थितीत उभे राहा.', 'श्वास घेत हालचाल करा.', 'मूळ स्थितीत या.']).map((step, idx) => (
+                    <div key={idx} className="flex gap-3 items-start bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs">
+                      <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <p className="font-semibold text-slate-800 text-xs leading-relaxed pt-0.5">{step}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Benefits & Precautions */}
+              <div className="md:col-span-5 space-y-4">
+                {/* Benefits */}
+                <div className="space-y-2">
+                  <h4 className="font-black text-emerald-800 uppercase text-xs tracking-wider flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" /> शारीरिक फायदे (Health Benefits)
+                  </h4>
+                  <div className="space-y-1.5">
+                    {(currentGuide?.benefits || ['शरीराची लवचिकता वाढते.', 'ताणतणाव कमी होतो.']).map((b, idx) => (
+                      <div key={idx} className="bg-emerald-50/90 p-2.5 rounded-xl border border-emerald-200 text-emerald-950 font-bold text-[11px] flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> {b}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Precautions */}
+                {currentGuide?.precautions && currentGuide.precautions.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-black text-amber-900 uppercase text-xs tracking-wider flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-600" /> खबरदारी व काळजी (Precautions)
+                    </h4>
+                    <div className="bg-amber-50/90 p-3 rounded-xl border border-amber-200 space-y-1 text-amber-950 text-[11px] font-semibold">
+                      {currentGuide.precautions.map((p, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" /> {p}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* SECTION C: CHOOSE MULTIPLE CLASSES (1ST TO 12TH) */}
+          <Card className="border-2 border-primary/20 rounded-[3rem] p-6 md:p-8 bg-white shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+              <div>
+                <Badge className="bg-primary text-white text-[9px] uppercase px-3 py-1 mb-1">
+                  Step 2: Choose Multiple Classes (इयत्ता १ ली ते १२ वी)
+                </Badge>
+                <h3 className="text-2xl font-black text-primary uppercase tracking-tight flex items-center gap-2">
+                  <Users className="w-6 h-6 text-accent" /> इयत्ता निवडा ({selectedClasses.length} इयत्ता निवडल्या)
+                </h3>
+                <p className="text-xs text-muted-foreground font-semibold mt-0.5">
+                  एकापेक्षा जास्त इयत्ता निवडून सराव एकाच वेळी जतन करा.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={selectAllClasses} 
+                  className="text-[10px] font-black uppercase rounded-xl border-primary/20 hover:bg-primary/10 h-10 px-4"
+                >
+                  <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" /> सर्व इयत्ता (Select All 1-12)
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearAllClasses} 
+                  className="text-[10px] font-black uppercase rounded-xl text-slate-500 hover:bg-slate-100 h-10 px-3"
+                >
+                  क्लियर (Clear)
+                </Button>
+              </div>
+            </div>
+
+            {/* Class Chips Grid (1st to 12th) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {ALL_12_CLASSES.map(cls => {
+                const isSelected = selectedClasses.includes(cls);
+                return (
+                  <Button
+                    key={cls}
+                    type="button"
+                    variant={isSelected ? "default" : "outline"}
+                    onClick={() => toggleClass(cls)}
+                    className={cn(
+                      "h-12 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 border-2",
+                      isSelected 
+                        ? "bg-primary text-white shadow-md border-primary scale-105" 
+                        : "bg-white text-slate-700 border-slate-200 hover:border-primary/40"
+                    )}
+                  >
+                    <span className={cn("w-4 h-4 rounded-md flex items-center justify-center border text-[9px]", isSelected ? "bg-white text-primary border-white" : "border-slate-300")}>
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </span>
+                    इयत्ता {cls} वी (Std {cls})
+                  </Button>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* SECTION D: AUTOMATIC ARCHIVE FORM */}
+          <Card className="border-2 border-emerald-500/30 rounded-[3rem] p-6 md:p-8 bg-gradient-to-r from-emerald-500/5 via-white to-teal-500/5 shadow-xl space-y-6">
+            <div className="border-b pb-4">
+              <Badge className="bg-emerald-600 text-white text-[9px] uppercase px-3 py-1 mb-1">
+                Step 3: Automatic Archive to Daily Report
+              </Badge>
+              <h3 className="text-2xl font-black text-emerald-950 uppercase tracking-tight flex items-center gap-2">
+                <Archive className="w-6 h-6 text-emerald-600" /> सराव उपस्थिती व ऑटो-अर्काईव्ह (Auto-Archive Log)
+              </h3>
+              <p className="text-xs text-slate-600 font-semibold mt-0.5">
+                बटणावर क्लिक करताच सराव सत्र दैनिक अहवालात (Daily Report) आपोआप जतन होईल.
               </p>
             </div>
 
-            <div className="space-y-5">
-              {/* Select Drill / Asana */}
-              <div className="space-y-2">
-                <Label className="text-xs font-black uppercase text-primary tracking-wider">
-                  १. सराव केलेला प्रकार निवडा (Select {gameType} Activity)
-                </Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-                  {drillsList.map(drill => {
-                    const isSel = selectedDrill === drill;
-                    return (
-                      <Button
-                        key={drill}
-                        type="button"
-                        variant={isSel ? 'default' : 'outline'}
-                        onClick={() => setSelectedDrill(drill)}
-                        className={cn(
-                          "h-12 px-3 text-xs font-black uppercase rounded-xl transition-all flex items-center justify-between border-2",
-                          isSel ? "bg-primary text-white shadow-md border-primary" : "bg-slate-50 text-slate-700 hover:bg-white"
-                        )}
-                      >
-                        <span className="truncate">{drill}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setGuideModalName(drill);
-                          }}
-                          className="h-7 w-7 rounded-lg text-amber-500 hover:bg-amber-100/50 shrink-0"
-                          title="कसे करावे (Guide)"
-                        >
-                          <Info className="w-4 h-4" />
-                        </Button>
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Date & Counts */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600">तारीख (Date)</Label>
-                  <Input 
-                    type="date" 
-                    value={sessionDate} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSessionDate(e.target.value)} 
-                    className="h-12 rounded-xl border-2 font-bold text-xs" 
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-blue-700">उपस्थित मुले (Boys)</Label>
-                  <Input 
-                    type="number" 
-                    value={boysCount} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBoysCount(e.target.value)} 
-                    className="h-12 rounded-xl border-2 border-blue-200 font-black text-base text-blue-800 text-center" 
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-pink-700">उपस्थित मुली (Girls)</Label>
-                  <Input 
-                    type="number" 
-                    value={girlsCount} 
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGirlsCount(e.target.value)} 
-                    className="h-12 rounded-xl border-2 border-pink-200 font-black text-base text-pink-800 text-center" 
-                  />
-                </div>
-              </div>
-
-              {/* Session Remarks */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-600">विशेष टीप / शेरा (Remarks Optional)</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-700">तारीख (Session Date)</Label>
                 <Input 
-                  value={sessionNotes} 
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSessionNotes(e.target.value)} 
-                  placeholder="उदा. सर्व मुलांनी उत्कृष्ट सूर्य नमस्कार केले..." 
-                  className="h-12 rounded-xl border-2 font-semibold text-xs" 
+                  type="date" 
+                  value={sessionDate} 
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSessionDate(e.target.value)} 
+                  className="h-12 rounded-xl border-2 font-bold text-xs bg-white" 
                 />
               </div>
 
-              <Button 
-                onClick={handleSaveSessionLog} 
-                className="w-full bg-primary hover:bg-primary/90 text-white h-14 rounded-2xl font-black uppercase tracking-wider text-xs shadow-xl active-scale"
-              >
-                <Check className="w-5 h-5 mr-2" /> आजचा सराव अहवालात जतन करा (Save Session Log)
-              </Button>
-            </div>
-          </Card>
-
-          {/* Quick Guide & Drills Library */}
-          <Card className="lg:col-span-5 border-2 border-slate-200 rounded-[3rem] p-8 bg-slate-50 shadow-lg space-y-6 flex flex-col">
-            <div className="border-b pb-4">
-              <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">
-                Quick Guide Library
-              </Badge>
-              <h3 className="text-xl font-black text-primary uppercase mt-1">
-                {isYoga ? 'योगासन प्रकार मार्गदर्शक' : 'कवायत व पी.टी. प्रकार सूची'}
-              </h3>
-              <p className="text-xs text-muted-foreground font-semibold mt-1">
-                कसे करावे पाहण्यासाठी कोणत्याही प्रकारावर क्लिक करा.
-              </p>
-            </div>
-
-            <ScrollArea className="flex-1 max-h-[420px] pr-2">
-              <div className="space-y-3">
-                {drillsList.map((item, idx) => (
-                  <div 
-                    key={item} 
-                    onClick={() => setGuideModalName(item)}
-                    className="flex items-center justify-between p-4 bg-white rounded-2xl border-2 border-slate-200/80 hover:border-primary/40 cursor-pointer transition-all shadow-xs group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-xl bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <h4 className="font-black text-xs text-primary uppercase group-hover:text-amber-600 transition-colors">
-                          {item}
-                        </h4>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase">
-                          {isYoga ? 'आसन / प्राणायाम' : 'कवायत प्रकार'}
-                        </span>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="text-amber-600 group-hover:bg-amber-50 rounded-xl font-bold text-[10px] uppercase">
-                      मार्गदर्शक <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                    </Button>
-                  </div>
-                ))}
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-blue-700">उपस्थित मुले (Boys Count)</Label>
+                <Input 
+                  type="number" 
+                  value={boysCount} 
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBoysCount(e.target.value)} 
+                  className="h-12 rounded-xl border-2 border-blue-200 font-black text-lg text-blue-800 text-center bg-white" 
+                />
               </div>
-              <ScrollBar orientation="vertical" />
-            </ScrollArea>
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-pink-700">उपस्थित मुली (Girls Count)</Label>
+                <Input 
+                  type="number" 
+                  value={girlsCount} 
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGirlsCount(e.target.value)} 
+                  className="h-12 rounded-xl border-2 border-pink-200 font-black text-lg text-pink-800 text-center bg-white" 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase text-slate-700">विशेष टीप / शेरा (Remarks Optional)</Label>
+              <Input 
+                value={sessionNotes} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSessionNotes(e.target.value)} 
+                placeholder="उदा. इयत्ता ५ वी ते १० वी मधील सर्व मुलांनी उत्कृष्ट सराव पूर्ण केला..." 
+                className="h-12 rounded-xl border-2 font-semibold text-xs bg-white" 
+              />
+            </div>
+
+            <Button 
+              onClick={handleAutoArchive} 
+              disabled={isArchiving}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-16 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl active-scale transition-all flex items-center justify-center gap-2"
+            >
+              <Archive className="w-5 h-5" /> सराव पूर्ण करा व आपोआप जतन (COMPLETE & AUTOMATIC ARCHIVE)
+            </Button>
           </Card>
         </div>
       )}
 
-      {/* TAB 2: CLASS EVALUATION GRID */}
-      {activeTab === 'skills' && (
+      {/* TAB 2: INJURY HUB & MEDICAL LOGS */}
+      {activeMainTab === 'injury' && (
         <div className="space-y-6 animate-in fade-in duration-500">
-          <SportsSkills store={store} preselectedSport={gameType} />
+          <HealthIncidents store={store} section="sports" preselectedSport={gameType} />
         </div>
       )}
-
-      {/* TAB 3: ALL DEEP GUIDES & PROTOCOLS */}
-      {activeTab === 'guide' && (
-        <div className="space-y-8 animate-in fade-in duration-500">
-          <div className="bg-white p-6 rounded-[2.5rem] border-2 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="text-2xl font-black text-primary uppercase flex items-center gap-2">
-                <BookOpen className="w-6 h-6 text-amber-500" /> 
-                {isYoga ? 'योगासन व प्राणायाम सविस्तर मार्गदर्शक पुस्तिका' : 'पी.टी. कवायत प्रकार १ ते ५ सविस्तर मार्गदर्शक'}
-              </h3>
-              <p className="text-xs font-bold text-muted-foreground uppercase mt-0.5">
-                प्रत्येक प्रकाराचे वर्णन, कसे करावे (पायऱ्या), शारीरिक फायदे आणि आवश्यक खबरदारी
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {drillsList.map((drillName) => {
-              const guide = YOGA_PT_KNOWLEDGE_BASE[drillName];
-              return (
-                <Card 
-                  key={drillName} 
-                  onClick={() => setGuideModalName(drillName)}
-                  className="border-2 rounded-[2.5rem] p-6 bg-white shadow-lg hover:border-primary/40 cursor-pointer transition-all hover:shadow-xl space-y-4 flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Badge className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-black uppercase">
-                        {isYoga ? 'Yoga Asana' : 'Mass PT'}
-                      </Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-500 rounded-full group-hover:bg-amber-50">
-                        <Info className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <h4 className="text-lg font-black text-primary uppercase tracking-tight group-hover:text-amber-600 transition-colors">
-                      {guide?.nameMarathi || drillName}
-                    </h4>
-
-                    <p className="text-xs text-slate-600 font-semibold line-clamp-3 leading-relaxed">
-                      {guide?.description || 'या प्रकाराचे सविस्तर प्रात्यक्षिक आणि मार्गदर्शक नियम...'}
-                    </p>
-                  </div>
-
-                  <div className="pt-3 border-t flex items-center justify-between">
-                    <span className="text-[9.5px] font-extrabold text-amber-800 uppercase flex items-center gap-1">
-                      <Zap className="w-3 h-3" /> {guide?.duration || '५ मिनिटे'}
-                    </span>
-                    <span className="text-xs font-black text-primary group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                      कसे करावे <ChevronRight className="w-4 h-4" />
-                    </span>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: DAILY REPORT & WHATSAPP SHARE */}
-      {activeTab === 'report' && (
-        <div className="space-y-6 animate-in fade-in duration-500">
-          <DailyReport store={store} section="sports" preselectedSport={gameType} />
-        </div>
-      )}
-
-      {/* Deep Information Guide Modal */}
-      <YogaPtGuideModal 
-        guideName={guideModalName} 
-        isOpen={!!guideModalName} 
-        onClose={() => setGuideModalName(null)} 
-      />
     </div>
   );
 }
