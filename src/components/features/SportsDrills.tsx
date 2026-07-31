@@ -18,11 +18,14 @@ import {
   RotateCcw,
   Flame,
   Info,
-  Users
+  Users,
+  Sparkles,
+  Filter
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getAgeValidation } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { YogaPtGuideModal } from '@/components/ui/YogaPtGuideModal';
 
 const SPORTS_DATA: Record<string, { skills: string[] }> = {
   'Yoga': {
@@ -133,6 +136,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const [activeSport, setActiveSport] = useState(preselectedSport || 'Kabaddi');
   const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi']?.skills[0] || "Standard Drill");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [guideModalName, setGuideModalName] = useState<string | null>(null);
 
   useEffect(() => {
     if (preselectedSport && SPORTS_DATA[preselectedSport]) {
@@ -142,33 +146,49 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   }, [preselectedSport]);
 
   const drillKey = `${activeSport}_${activeDrill}`;
+  const isYogaOrPt = activeSport === 'Yoga' || activeSport === 'PT Mass';
 
   const playersInSport = useMemo(() => 
     (store.data.players || []).filter((p: any) => 
-      p.category === 'athlete' && p.sports?.includes(activeSport)
+      p.category === 'athlete' && (isYogaOrPt || p.sports?.includes(activeSport))
     ),
-  [store.data.players, activeSport]);
+  [store.data.players, activeSport, isYogaOrPt]);
 
   const groupedSquads = useMemo(() => {
-    const groups: Record<string, any[]> = { 'U14': [], 'U17': [], 'Senior': [], 'Age Pending': [] };
-    
-    playersInSport.forEach((p: any) => {
-      const lookupKey = p.id + "_" + drillKey;
-      const isMastered = !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
-      
-      if (!isMastered) {
-        const ageVal = getAgeValidation(p.dob);
-        const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
-        let cat = 'Senior';
-        if (!age || age <= 0 || isNaN(age)) cat = 'Age Pending';
-        else if (age < 14) cat = 'U14';
-        else if (age < 17) cat = 'U17';
-        groups[cat].push(p);
-      }
-    });
-    
-    return groups;
-  }, [playersInSport, store.data.drillCompletions, drillKey]);
+    if (isYogaOrPt) {
+      // Group by Class for Yoga & PT Mass
+      const groups: Record<string, any[]> = {
+        'Class 5': [], 'Class 6': [], 'Class 7': [], 'Class 8': [], 'Class 9': [], 'Class 10': [], 'Other Classes': []
+      };
+      playersInSport.forEach((p: any) => {
+        const lookupKey = p.id + "_" + drillKey;
+        const isMastered = !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
+        if (!isMastered) {
+          const std = (p.std || "").toString().trim();
+          if (groups[`Class ${std}`]) groups[`Class ${std}`].push(p);
+          else groups['Other Classes'].push(p);
+        }
+      });
+      return groups;
+    } else {
+      // Group by Age Category for Sport Athletes
+      const groups: Record<string, any[]> = { 'U14': [], 'U17': [], 'Senior': [], 'Age Pending': [] };
+      playersInSport.forEach((p: any) => {
+        const lookupKey = p.id + "_" + drillKey;
+        const isMastered = !!(store.data.drillCompletions && store.data.drillCompletions[lookupKey]);
+        if (!isMastered) {
+          const ageVal = getAgeValidation(p.dob);
+          const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+          let cat = 'Senior';
+          if (!age || age <= 0 || isNaN(age)) cat = 'Age Pending';
+          else if (age < 14) cat = 'U14';
+          else if (age < 17) cat = 'U17';
+          groups[cat].push(p);
+        }
+      });
+      return groups;
+    }
+  }, [playersInSport, store.data.drillCompletions, drillKey, isYogaOrPt]);
 
   const masteredThisDrill = useMemo(() => {
     return playersInSport
@@ -212,9 +232,12 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               <UsersRound className="w-10 h-10 text-accent" /> {activeSport} Rotation
             </h2>
           </div>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3">
             {!preselectedSport && (
-              <Select value={activeSport} onValueChange={setActiveSport}>
+              <Select value={activeSport} onValueChange={(val) => {
+                setActiveSport(val);
+                if (SPORTS_DATA[val]) setActiveDrill(SPORTS_DATA[val].skills[0]);
+              }}>
                 <SelectTrigger className="h-14 md:w-[180px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
@@ -223,6 +246,12 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               <SelectTrigger className="h-14 md:w-[220px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
               <SelectContent>{SPORTS_DATA[activeSport]?.skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
+            <Button
+              onClick={() => setGuideModalName(activeDrill)}
+              className="h-14 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase rounded-2xl px-5 shadow-md flex items-center gap-1.5"
+            >
+              <Info className="w-4 h-4" /> कसे करावे (Guide)
+            </Button>
           </div>
         </div>
       </div>
@@ -311,6 +340,12 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
           </ScrollArea>
         </Card>
       </div>
+
+      <YogaPtGuideModal 
+        guideName={guideModalName} 
+        isOpen={!!guideModalName} 
+        onClose={() => setGuideModalName(null)} 
+      />
     </div>
   );
 }
