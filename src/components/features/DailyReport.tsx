@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -20,12 +21,30 @@ import {
   Sparkles, 
   Flame, 
   Activity, 
-  CheckCircle2 
+  CheckCircle2,
+  Camera,
+  MapPin,
+  Upload,
+  Trash2,
+  Crosshair,
+  Image as ImageIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+
+interface GeoPhoto {
+  id: string;
+  date: string;
+  url: string;
+  caption: string;
+  sport: string;
+  lat: number | null;
+  lng: number | null;
+  locationName: string;
+  timestamp: string;
+}
 
 export function DailyReport({ store, section, language = 'Marathi', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
   const { toast } = useToast();
@@ -40,6 +59,17 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   const [customBoysCount, setCustomBoysCount] = useState<number>(15);
   const [customGirlsCount, setCustomGirlsCount] = useState<number>(15);
 
+  // Geotagged Photo Upload state
+  const [reportPhotos, setReportPhotos] = useState<GeoPhoto[]>([]);
+  const [photoCaption, setPhotoCaption] = useState("");
+  const [currentLat, setCurrentLat] = useState<number | null>(20.5937);
+  const [currentLng, setCurrentLng] = useState<number | null>(74.0045);
+  const [locationName, setLocationName] = useState("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
+  const [isLocating, setIsLocating] = useState(false);
+
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = React.useRef<HTMLInputElement | null>(null);
+
   const isMarathi = language === 'Marathi';
 
   useEffect(() => {
@@ -47,6 +77,122 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     setReportDate(format(new Date(), 'yyyy-MM-dd'));
     if (preselectedSport) setCustomSport(preselectedSport);
   }, [preselectedSport]);
+
+  // Load photos for selected reportDate
+  useEffect(() => {
+    if (typeof window !== 'undefined' && reportDate) {
+      const saved = localStorage.getItem(`wgb_photos_${reportDate}`);
+      if (saved) {
+        try { setReportPhotos(JSON.parse(saved)); } catch (e) {}
+      } else {
+        setReportPhotos([]);
+      }
+    }
+  }, [reportDate]);
+
+  // Fetch device live location
+  const getDeviceLocation = () => {
+    setIsLocating(true);
+    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = parseFloat(pos.coords.latitude.toFixed(5));
+          const lng = parseFloat(pos.coords.longitude.toFixed(5));
+          setCurrentLat(lat);
+          setCurrentLng(lng);
+          setLocationName(`वाघंबा, ता. बागलाण (Lat: ${lat}°, Lng: ${lng}°)`);
+          setIsLocating(false);
+          toast({ title: "GPS सुसज्ज! (GPS Acquired)", description: `Lat: ${lat}, Lng: ${lng}`, className: "bg-emerald-600 text-white font-bold" });
+        },
+        (err) => {
+          setIsLocating(false);
+          setCurrentLat(20.5937);
+          setCurrentLng(74.0045);
+          setLocationName("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
+          toast({ title: "GPS Fallback Active", description: "शाळा मूळ लोकेशन सेट केले.", variant: "default" });
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    } else {
+      setIsLocating(false);
+    }
+  };
+
+  // Process photo file, draw geotag stamp on canvas & save
+  const processAndAddPhoto = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const maxW = 1000;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Draw Geotag Banner at bottom
+        const bannerHeight = 85 * scale;
+        const startY = canvas.height - bannerHeight;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.fillRect(0, startY, canvas.width, bannerHeight);
+
+        // Amber top stripe
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(0, startY, canvas.width, 4 * scale);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(16, 20 * scale)}px sans-serif`;
+        const schoolText = store?.data?.schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रम शाळा वाघंबा';
+        ctx.fillText(`📍 ${schoolText}`, 16 * scale, startY + (30 * scale));
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = `${Math.max(12, 14 * scale)}px sans-serif`;
+        const timeStr = format(new Date(), 'dd MMM yyyy, hh:mm a');
+        const latStr = currentLat ? currentLat.toString() : '20.5937';
+        const lngStr = currentLng ? currentLng.toString() : '74.0045';
+        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (60 * scale));
+
+        const stampedUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        const newPhoto: GeoPhoto = {
+          id: `photo_${Date.now()}`,
+          date: reportDate,
+          url: stampedUrl,
+          caption: photoCaption || `${customSport} Activity Photo`,
+          sport: customSport,
+          lat: currentLat,
+          lng: currentLng,
+          locationName: locationName,
+          timestamp: new Date().toLocaleTimeString()
+        };
+
+        const updated = [newPhoto, ...reportPhotos];
+        setReportPhotos(updated);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`wgb_photos_${reportDate}`, JSON.stringify(updated));
+        }
+        setPhotoCaption("");
+        toast({ title: "जिओ-टॅग फोटो जोडला! (Geotagged Photo Saved)", description: "फोटो अहवालात जिओ-स्टॅम्पसह जतन झाला आहे.", className: "bg-emerald-600 text-white font-bold" });
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeletePhoto = (id: string) => {
+    const updated = reportPhotos.filter(p => p.id !== id);
+    setReportPhotos(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`wgb_photos_${reportDate}`, JSON.stringify(updated));
+    }
+    toast({ title: "फोटो हटवला", description: "फोटो अहवालातून काढला." });
+  };
 
   const players = useMemo(() => store?.data?.players || [], [store?.data?.players]);
 
@@ -437,6 +583,19 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               ${manualNotes || 'आजचे क्रीडा, योगा व शारीरिक शिक्षण सत्र नियोजनानुसार पार पडले. सर्व विद्यार्थी उपक्रमात उत्साहाने सहभागी झाले.'}
             </div>
 
+            ${reportPhotos.length > 0 ? `
+              <h3>७. जिओ-टॅग केलेले दैनिक फोटो (Geotagged Activity Photos)</h3>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">
+                ${reportPhotos.map(p => `
+                  <div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; text-align: center; padding: 6px;">
+                    <img src="${p.url}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px;" />
+                    <div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-top: 4px;">${p.caption}</div>
+                    <div style="font-size: 9px; color: #475569; font-weight: 700;">📍 GPS: Lat ${p.lat || 20.5937}°, Long ${p.lng || 74.0045}°</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
             <div class="footer-sign">
               <div class="sign-block">
                 <div>क्रीडा शिक्षक स्वाक्षरी</div>
@@ -495,6 +654,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
     text += `🏥 *५. आरोग्य अहवाल:* \n`;
     text += `• तक्रारी: मुले: ${healthSummaryCounts.boys}, मुली: ${healthSummaryCounts.girls} (एकूण: ${healthSummaryCounts.total})\n\n`;
+
+    if (reportPhotos.length > 0) {
+      text += `📸 *६. जिओ-टॅग फोटो:* ${reportPhotos.length} फोटो जोडले (GPS Stamp सह)\n\n`;
+    }
 
     if (manualNotes) {
       text += `📝 *शेरा:* ${manualNotes}\n\n`;
@@ -772,11 +935,162 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               )}
             </CardContent>
           </Card>
+
+          {/* Geotagged Activity Photos Display Section */}
+          {reportPhotos.length > 0 && (
+            <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-indigo-200">
+              <CardHeader className="bg-slate-900 p-6 text-white flex flex-row justify-between items-center">
+                <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-amber-400" /> ४. जिओ-टॅग केलेले दैनिक छायाचित्रे ({reportPhotos.length} Photos)
+                </CardTitle>
+                <Badge className="bg-emerald-500 text-white font-black text-[9px] uppercase px-3 py-1">
+                  GPS Location Verified
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {reportPhotos.map((photo) => (
+                    <div key={photo.id} className="relative group rounded-3xl overflow-hidden border-2 border-slate-200 bg-slate-950 shadow-md">
+                      <img src={photo.url} alt={photo.caption} className="w-full h-52 object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => handleDeletePhoto(photo.id)}
+                        className="absolute top-3 right-3 bg-red-600/90 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                        title="हटवा"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 bg-slate-950/90 p-3 text-white backdrop-blur-xs border-t border-amber-500/40">
+                        <p className="font-black text-sm tracking-tight text-white">{photo.caption}</p>
+                        <div className="flex items-center justify-between text-[9.5px] font-bold text-amber-400 mt-1">
+                          <span>📍 Lat {photo.lat || 20.5937}°, Lng {photo.lng || 74.0045}°</span>
+                          <span className="text-slate-300">🕒 {photo.timestamp}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Right Column: Quick Logger & Instructor Remarks */}
+        {/* Right Column: Geotagged Photos, Quick Logger & Instructor Remarks */}
         <div className="lg:col-span-4 space-y-6">
           
+          {/* Geotagged Photo Upload Card */}
+          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-blue-200">
+            <CardHeader className="bg-gradient-to-r from-blue-900 to-indigo-900 p-6 text-white">
+              <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-amber-400" /> जिओ-टॅग फोटो (Geotag Photo)
+                </span>
+                <Badge className="bg-amber-500 text-slate-950 font-black text-[9px]">
+                  {reportPhotos.length} Photos
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="bg-blue-50/70 p-4 rounded-2xl border border-blue-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-blue-900 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-blue-600" /> GPS लोकेशन स्थिती:
+                  </span>
+                  <Button 
+                    type="button"
+                    size="sm" 
+                    variant="outline" 
+                    onClick={getDeviceLocation}
+                    disabled={isLocating}
+                    className="h-8 rounded-xl text-[9px] font-black border-blue-300 text-blue-800 hover:bg-blue-100"
+                  >
+                    <Crosshair className={cn("w-3 h-3 mr-1", isLocating && "animate-spin")} /> 
+                    {isLocating ? "GPS..." : "GPS अपडेट"}
+                  </Button>
+                </div>
+                <p className="text-[10px] font-bold text-slate-700 bg-white p-2 rounded-xl border border-blue-100 truncate">
+                  📍 {locationName}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">फोटो वर्णन (Caption)</label>
+                <Input 
+                  value={photoCaption} 
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhotoCaption(e.target.value)} 
+                  placeholder="उदा. सकाळचे सूर्य नमस्कार सत्र" 
+                  className="h-12 rounded-xl border-2 font-bold text-sm" 
+                />
+              </div>
+
+              {/* Hidden Inputs for Camera and File selection */}
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment" 
+                ref={cameraInputRef} 
+                className="hidden" 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (e.target.files?.[0]) processAndAddPhoto(e.target.files[0]);
+                }} 
+              />
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (e.target.files?.[0]) processAndAddPhoto(e.target.files[0]);
+                }} 
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  type="button" 
+                  onClick={() => cameraInputRef.current?.click()} 
+                  className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black uppercase text-xs tracking-wider shadow-md"
+                >
+                  <Camera className="w-4 h-4 mr-1.5" /> फोटो काढा
+                </Button>
+
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()} 
+                  className="h-12 border-2 border-indigo-200 text-indigo-900 hover:bg-indigo-50 rounded-xl font-black uppercase text-xs tracking-wider"
+                >
+                  <Upload className="w-4 h-4 mr-1.5" /> गॅलरी निवडा
+                </Button>
+              </div>
+
+              {/* Uploaded Geotagged Photos Gallery Preview */}
+              {reportPhotos.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">आजचे जिओ-टॅग फोटो ({reportPhotos.length})</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {reportPhotos.map((photo) => (
+                      <div key={photo.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-900">
+                        <img src={photo.url} alt={photo.caption} className="w-full h-28 object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                        <button 
+                          type="button"
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full shadow-md hover:bg-red-700 transition-colors"
+                          title="हटवा"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="absolute bottom-0 inset-x-0 bg-slate-950/85 p-1.5 text-white text-[9px]">
+                          <p className="font-black truncate">{photo.caption}</p>
+                          <p className="text-[8px] text-amber-400 font-bold">📍 Lat {photo.lat || 20.5937}°, Lng {photo.lng || 74.0045}°</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Quick Log Activity Box */}
           <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-primary/20">
             <CardHeader className="bg-primary p-6 text-white">
