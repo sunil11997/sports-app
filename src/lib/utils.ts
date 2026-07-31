@@ -151,3 +151,59 @@ export function getLocalizedAgeCategory(category: string, isMarathi: boolean): s
   }
   return category;
 }
+
+export interface ParsedMedicalLog {
+  location: string;
+  diagnosis: string;
+  severity: string;
+  daysOff: string;
+  expectedReturn: string;
+  protocol: string;
+  medicine: string;
+  remarks: string;
+}
+
+export function parseMedicalLog(fullLog: string): ParsedMedicalLog {
+  if (!fullLog) {
+    return {
+      location: 'General',
+      diagnosis: 'Medical Audit Log',
+      severity: 'Minor',
+      daysOff: '5 Days',
+      expectedReturn: '-',
+      protocol: 'Standard physical rest',
+      medicine: 'First Aid / Rest',
+      remarks: 'None recorded'
+    };
+  }
+
+  const getField = (key: string) => {
+    const match = fullLog.match(new RegExp(`${key}:\\s*(.+)`, 'i'));
+    return match ? match[1].trim() : '';
+  };
+
+  const location = getField('Location') || 'Body Region';
+  const diagnosis = getField('Diagnosis') || 'Injury Record';
+  const severity = getField('Severity') || (fullLog.toLowerCase().includes('critical') || fullLog.toLowerCase().includes('severe') ? 'Critical' : 'Minor');
+  const daysOff = getField('Recovery') || '7 Days';
+  const expectedReturn = getField('Est. Return') || '-';
+  const protocol = getField('PROTOCOL') || '';
+  const medicine = getField('MEDICINE/FIRST-AID') || getField('MEDICINE') || '';
+  
+  let remarks = getField('COACH REMARKS') || getField('REMARKS') || '';
+  if (!remarks && !fullLog.includes('[INSTITUTIONAL MEDICAL AUDIT]')) {
+    remarks = fullLog;
+  }
+
+  return {
+    location,
+    diagnosis,
+    severity,
+    daysOff,
+    expectedReturn,
+    protocol: protocol || 'Standard recovery protocol',
+    medicine: medicine || 'First aid applied',
+    remarks: remarks || 'No additional remarks'
+  };
+}
+

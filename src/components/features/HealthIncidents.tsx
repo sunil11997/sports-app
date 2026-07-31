@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, parseMedicalLog } from '@/lib/utils';
 
 const INCIDENT_TYPES = [
   { label: 'Sprain (मुरगळणे/लचकणे)', value: 'Sprain' },
@@ -192,16 +192,18 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
         <head>
           <title>Institutional Injury Registry - Waghamba Hub</title>
           <style>
-            body { font-family: Inter, sans-serif; padding: 40px; color: #111; line-height: 1.5; }
-            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px solid #f59e0b; text-align: center; margin-bottom: 5px; }
-            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 30px; text-decoration: underline; }
-            .meta { font-weight: 800; text-transform: uppercase; font-size: 11px; margin-bottom: 30px; opacity: 0.7; }
-            .incident { margin-bottom: 40px; border-bottom: 1px dashed #ccc; padding-bottom: 25px; }
-            .critical { border-left: 6px solid #ef4444; padding-left: 20px; background: #fff5f5; }
-            .name { font-weight: 900; font-size: 18px; color: #1e3a8a; text-transform: uppercase; }
-            .date { color: #666; font-size: 10px; font-weight: 900; }
-            .desc { margin-top: 15px; white-space: pre-wrap; font-size: 13px; font-weight: 500; }
-            .footer { margin-top: 50px; font-size: 10px; opacity: 0.5; text-align: center; }
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap');
+            body { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; padding: 40px; color: #111; line-height: 1.5; background: #fff; }
+            h1 { color: #1e3a8a; text-transform: uppercase; border-bottom: 4px solid #f59e0b; text-align: center; margin-bottom: 5px; font-size: 20px; font-weight: 900; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 20px; color: #b45309; font-size: 14px; }
+            .meta { font-weight: 700; text-transform: uppercase; font-size: 11px; margin-bottom: 20px; opacity: 0.8; text-align: center; background: #f1f5f9; padding: 8px; border-radius: 6px; }
+            .audit-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+            .audit-table th, .audit-table td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+            .audit-table th { background: #1e3a8a; color: white; text-transform: uppercase; font-weight: 800; font-size: 10px; }
+            .audit-table tr:nth-child(even) { background: #f8fafc; }
+            .critical-tag { color: #dc2626; font-weight: 900; }
+            .minor-tag { color: #2563eb; font-weight: 900; }
+            .footer { margin-top: 50px; font-size: 10px; opacity: 0.6; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -215,19 +217,43 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
           </div>
           <h1>${schoolName}</h1>
           <div class="report-type">${reportTitle}</div>
-          <div class="meta">Registry v4.3.0 • Official Instructor: Sunil Deshmukh</div>
-          ${incidentsToPrint.slice().reverse().map((inc: any) => {
-            const p = store.data.players.find((p: any) => p.id === inc.playerId);
-            const displayName = isM ? (p?.nameMarathi || inc.playerName) : inc.playerName;
-            return `
-              <div class="incident ${inc.severity === 'Critical' ? 'critical' : ''}">
-                <div class="name">${displayName}</div>
-                <div class="date">${isM ? 'नोंद तारीख' : 'Archived on'}: ${inc.date}</div>
-                <div class="desc">${inc.description}</div>
-              </div>
-            `;
-          }).join('')}
-          <div class="footer">Confidential Institutional Document • Ashram Shala Waghamba</div>
+          <div class="meta">Institutional Medical Registry Audit • Instructor: Sunil Deshmukh • Total Records: ${incidentsToPrint.length}</div>
+          
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>अनु.क्र.</th>
+                <th>विद्यार्थ्यांचे नाव (Athlete)</th>
+                <th>दिनांक</th>
+                <th>ठिकाण (Body Part)</th>
+                <th>दुखापत / निदान</th>
+                <th>तीव्रता</th>
+                <th>प्रथमोपचार व औषधोपचार</th>
+                <th>परत येण्याची तारीख</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${incidentsToPrint.slice().reverse().map((inc: any, index: number) => {
+                const p = store.data.players.find((pl: any) => pl.id === inc.playerId);
+                const displayName = isM ? (p?.nameMarathi || inc.playerName) : inc.playerName;
+                const parsed = parseMedicalLog(inc.description);
+                const isCrit = inc.severity === 'Critical' || parsed.severity.includes('Severe');
+                return `
+                  <tr>
+                    <td style="text-align: center; font-weight: 800;">${index + 1}</td>
+                    <td><strong>${displayName}</strong> ${p?.std ? `(Std ${p.std})` : ''}</td>
+                    <td>${inc.date}</td>
+                    <td>${parsed.location}</td>
+                    <td>${parsed.diagnosis}</td>
+                    <td><span class="${isCrit ? 'critical-tag' : 'minor-tag'}">${parsed.severity}</span></td>
+                    <td>${parsed.medicine || parsed.protocol}</td>
+                    <td><strong>${parsed.expectedReturn}</strong></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+          <div class="footer">Confidential Medical Audit Registry Document • Ashram Shala Waghamba</div>
         </body>
       </html>
     `;
@@ -424,38 +450,72 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
               [...filteredIncidents].slice().reverse().map((inc: any) => {
                 const player = store.data.players.find((p: any) => p.id === inc.playerId);
                 const displayName = isMarathi ? (player?.nameMarathi || inc.playerName) : inc.playerName;
+                const parsed = parseMedicalLog(inc.description);
+                const isCrit = inc.severity === 'Critical' || parsed.severity.includes('Severe');
                 return (
-                  <Card key={inc.id} className={cn("border-2 rounded-[2.5rem] shadow-sm bg-white overflow-hidden group transition-all hover:border-primary/30", inc.severity === 'Critical' ? "border-destructive/20" : "border-primary/5")}>
-                    <div className="p-8">
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="flex items-center gap-6">
+                  <Card key={inc.id} className={cn("border-2 rounded-[2.5rem] shadow-sm bg-white overflow-hidden group transition-all hover:border-primary/30", isCrit ? "border-red-200 shadow-red-500/5" : "border-primary/10")}>
+                    <div className="p-7">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-4">
                           <div className={cn(
-                            "w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-inner transition-transform group-hover:scale-110", 
-                            inc.severity === 'Critical' ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                            "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner transition-transform group-hover:scale-105", 
+                            isCrit ? "bg-red-50 text-red-600 border border-red-200" : "bg-blue-50 text-blue-800 border border-blue-200"
                           )}>
                             {displayName[0]}
                           </div>
                           <div>
-                            <h4 className="font-black text-primary uppercase text-lg leading-tight group-hover:text-accent transition-colors">{displayName}</h4>
-                            <div className="flex items-center gap-3 mt-1.5">
-                              <Badge className="font-black text-[8px] uppercase px-3 bg-muted text-muted-foreground border-0">{inc.date}</Badge>
-                              {inc.severity === 'Critical' && <Badge className="bg-destructive text-white text-[8px] font-black uppercase px-3 shadow-sm animate-pulse border-0">CRITICAL</Badge>}
+                            <h4 className="font-black text-primary uppercase text-base leading-tight group-hover:text-accent transition-colors">{displayName}</h4>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <Badge className="font-black text-[9px] uppercase px-2.5 bg-slate-100 text-slate-700 border-0">{inc.date}</Badge>
+                              <Badge className={cn("text-[9px] font-black uppercase px-2.5 border-0", isCrit ? "bg-red-600 text-white animate-pulse" : "bg-blue-600 text-white")}>
+                                {parsed.severity}
+                              </Badge>
                             </div>
                           </div>
                         </div>
-                        <Badge variant="outline" className="border-primary/10 text-primary/40 font-black text-[8px] uppercase">Registry Entry</Badge>
+                        <Badge variant="outline" className="border-primary/20 text-primary font-black text-[9px] uppercase">
+                          📍 {parsed.location}
+                        </Badge>
                       </div>
-                      <div className="bg-muted/10 p-6 rounded-3xl border-2 border-transparent group-hover:border-primary/5 transition-all">
-                         <p className="text-xs font-medium text-foreground/80 leading-relaxed whitespace-pre-wrap italic">
-                           &quot;{inc.description}&quot;
-                         </p>
+
+                      {/* Structured Medical Summary Grid */}
+                      <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-3 text-xs">
+                        <div>
+                          <span className="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Injury / Diagnosis</span>
+                          <span className="font-extrabold text-slate-900">{parsed.diagnosis}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Est. Return</span>
+                          <span className="font-extrabold text-emerald-700">{parsed.expectedReturn} ({parsed.daysOff})</span>
+                        </div>
                       </div>
-                      <div className="mt-6 pt-6 border-t border-dashed flex items-center justify-between">
+
+                      <div className="space-y-2 text-xs">
+                        {parsed.medicine && (
+                          <div className="bg-amber-50/80 p-3 rounded-xl border border-amber-150">
+                            <span className="text-[9px] font-black uppercase text-amber-800 block mb-0.5">💊 First Aid / Suggested Medicine:</span>
+                            <p className="font-semibold text-amber-950 leading-relaxed">{parsed.medicine}</p>
+                          </div>
+                        )}
+                        {parsed.protocol && (
+                          <div className="bg-blue-50/80 p-3 rounded-xl border border-blue-150">
+                            <span className="text-[9px] font-black uppercase text-blue-800 block mb-0.5">📋 Activity & Rest Protocol:</span>
+                            <p className="font-semibold text-blue-950 leading-relaxed">{parsed.protocol}</p>
+                          </div>
+                        )}
+                        {parsed.remarks && (
+                          <p className="text-[11px] text-slate-600 italic px-1 pt-1">
+                            &quot;{parsed.remarks}&quot;
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-5 pt-4 border-t border-dashed flex items-center justify-between">
                          <div className="flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Protocol Synchronized</span>
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Medical Protocol Synchronized</span>
                          </div>
-                         <Button variant="ghost" size="icon" onClick={() => store.deleteHealthIncident(inc.id)} className="h-9 w-9 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10">
+                         <Button variant="ghost" size="icon" onClick={() => store.deleteHealthIncident(inc.id)} className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10">
                             <AlertCircle className="w-4 h-4" />
                          </Button>
                       </div>

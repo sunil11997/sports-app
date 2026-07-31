@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, parseMedicalLog } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 interface GeoPhoto {
@@ -40,6 +40,7 @@ interface GeoPhoto {
   url: string;
   caption: string;
   sport: string;
+  drill?: string;
   lat: number | null;
   lng: number | null;
   locationName: string;
@@ -62,6 +63,8 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   // Geotagged Photo Upload state
   const [reportPhotos, setReportPhotos] = useState<GeoPhoto[]>([]);
   const [photoCaption, setPhotoCaption] = useState("");
+  const [photoSport, setPhotoSport] = useState(preselectedSport || "Volleyball");
+  const [photoDrill, setPhotoDrill] = useState("Spike & Serve Practice");
   const [currentLat, setCurrentLat] = useState<number | null>(20.5937);
   const [currentLng, setCurrentLng] = useState<number | null>(74.0045);
   const [locationName, setLocationName] = useState("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
@@ -75,7 +78,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   useEffect(() => {
     setIsMounted(true);
     setReportDate(format(new Date(), 'yyyy-MM-dd'));
-    if (preselectedSport) setCustomSport(preselectedSport);
+    if (preselectedSport) {
+      setCustomSport(preselectedSport);
+      setPhotoSport(preselectedSport);
+    }
   }, [preselectedSport]);
 
   // Load photos for selected reportDate
@@ -100,7 +106,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           const lng = parseFloat(pos.coords.longitude.toFixed(5));
           setCurrentLat(lat);
           setCurrentLng(lng);
-          setLocationName(`वाघंबा, ता. बागलाण (Lat: ${lat}°, Lng: ${lng}°)`);
+          setLocationName(`वाघंबा, ता. बागलाण, जि. नाशिक (Lat: ${lat}°, Lng: ${lng}°)`);
           setIsLocating(false);
           toast({ title: "GPS सुसज्ज! (GPS Acquired)", description: `Lat: ${lat}, Lng: ${lng}`, className: "bg-emerald-600 text-white font-bold" });
         },
@@ -135,28 +141,38 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Draw Geotag Banner at bottom
-        const bannerHeight = 85 * scale;
+        // Draw Geotag Banner at bottom with full details
+        const bannerHeight = 115 * scale;
         const startY = canvas.height - bannerHeight;
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
         ctx.fillRect(0, startY, canvas.width, bannerHeight);
 
         // Amber top stripe
         ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(0, startY, canvas.width, 4 * scale);
+        ctx.fillRect(0, startY, canvas.width, 5 * scale);
 
-        ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${Math.max(16, 20 * scale)}px sans-serif`;
         const schoolText = store?.data?.schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रम शाळा वाघंबा';
-        ctx.fillText(`📍 ${schoolText}`, 16 * scale, startY + (30 * scale));
+        
+        // Line 1: School & Location Name
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(14, 17 * scale)}px sans-serif`;
+        ctx.fillText(`📍 ${schoolText} | ${locationName}`, 16 * scale, startY + (28 * scale));
 
+        // Line 2: Selected Sport & Drill Name
+        ctx.fillStyle = '#fde047'; // Amber yellow text
+        ctx.font = `bold ${Math.max(13, 16 * scale)}px sans-serif`;
+        const activeSport = photoSport || customSport;
+        const activeDrill = photoDrill || customDrill;
+        ctx.fillText(`🏆 खेळ: ${activeSport}  |  प्रकार: ${activeDrill}`, 16 * scale, startY + (58 * scale));
+
+        // Line 3: GPS Coordinates & Time
         ctx.fillStyle = '#cbd5e1';
-        ctx.font = `${Math.max(12, 14 * scale)}px sans-serif`;
+        ctx.font = `${Math.max(11, 13 * scale)}px sans-serif`;
         const timeStr = format(new Date(), 'dd MMM yyyy, hh:mm a');
         const latStr = currentLat ? currentLat.toString() : '20.5937';
         const lngStr = currentLng ? currentLng.toString() : '74.0045';
-        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (60 * scale));
+        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (88 * scale));
 
         const stampedUrl = canvas.toDataURL('image/jpeg', 0.85);
 
@@ -164,8 +180,9 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           id: `photo_${Date.now()}`,
           date: reportDate,
           url: stampedUrl,
-          caption: photoCaption || `${customSport} Activity Photo`,
-          sport: customSport,
+          caption: photoCaption || `${activeSport} - ${activeDrill}`,
+          sport: activeSport,
+          drill: activeDrill,
           lat: currentLat,
           lng: currentLng,
           locationName: locationName,
@@ -178,7 +195,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           localStorage.setItem(`wgb_photos_${reportDate}`, JSON.stringify(updated));
         }
         setPhotoCaption("");
-        toast({ title: "जिओ-टॅग फोटो जोडला! (Geotagged Photo Saved)", description: "फोटो अहवालात जिओ-स्टॅम्पसह जतन झाला आहे.", className: "bg-emerald-600 text-white font-bold" });
+        toast({ title: "जिओ-टॅग फोटो जोडला! (Geotagged Photo Saved)", description: `${activeSport} photo saved with full geotag stamp.`, className: "bg-emerald-600 text-white font-bold" });
       };
       img.src = e.target?.result as string;
     };
@@ -240,7 +257,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
   // Drills / Activities completed today grouped by Sport/Category
   const drillGroupedSummary = useMemo(() => {
-    if (!isMounted || !reportDate) return { yoga: [], ptMass: [], kabaddi: [], other: [] };
+    if (!isMounted || !reportDate) return { yoga: [], ptMass: [], volleyball: [], khoKho: [], kabaddi: [], other: [], totalConductededCount: 0 };
 
     const rawCompletions = (store?.data?.drillCompletionsRaw || []).filter((d: any) => 
       d.timestamp?.startsWith(reportDate)
@@ -299,6 +316,8 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
     const yoga: any[] = [];
     const ptMass: any[] = [];
+    const volleyball: any[] = [];
+    const khoKho: any[] = [];
     const kabaddi: any[] = [];
     const other: any[] = [];
 
@@ -306,11 +325,15 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       const lower = item.sport.toLowerCase();
       if (lower.includes('yoga')) yoga.push(item);
       else if (lower.includes('pt') || lower.includes('mass')) ptMass.push(item);
+      else if (lower.includes('volleyball')) volleyball.push(item);
+      else if (lower.includes('kho')) khoKho.push(item);
       else if (lower.includes('kabaddi')) kabaddi.push(item);
       else other.push(item);
     });
 
-    return { yoga, ptMass, kabaddi, other };
+    const totalConductededCount = yoga.length + ptMass.length + volleyball.length + khoKho.length + kabaddi.length + other.length;
+
+    return { yoga, ptMass, volleyball, khoKho, kabaddi, other, totalConductededCount };
   }, [store?.data?.drillCompletionsRaw, store?.data?.activities, players, reportDate, isMounted, preselectedSport]);
 
   // Health summary count (NO student names)
@@ -394,222 +417,201 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
     const formatActivityTable = (items: any[], titleMarathi: string, titleEnglish: string) => {
       if (!items || items.length === 0) {
-        return `<div class="empty-msg">आज ${titleMarathi} प्रकार आयोजित केले नाहीत / नोंदवलेले नाहीत.</div>`;
+        return '<div class="empty-msg">आज ' + titleMarathi + ' प्रकार आयोजित केले नाहीत / नोंदवलेले नाहीत.</div>';
       }
-      let html = `
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th>अनु.क्र. (Sr)</th>
-              <th>प्रकार / प्रकाराचे नाव (Activity / Asana)</th>
-              <th>मुले (Boys)</th>
-              <th>मुली (Girls)</th>
-              <th>एकूण (Total)</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+      let html = '<table class="report-table"><thead><tr><th>अनु.क्र. (Sr)</th><th>प्रकार / प्रकाराचे नाव (Activity / Asana)</th><th>मुले (Boys)</th><th>मुली (Girls)</th><th>एकूण (Total)</th></tr></thead><tbody>';
       items.forEach((item, index) => {
         const total = item.boys + item.girls;
-        html += `
-          <tr>
-            <td style="text-align: center;">${index + 1}</td>
-            <td><strong>${item.drill}</strong></td>
-            <td style="text-align: center; color: #1e3a8a; font-weight: 800;">${item.boys}</td>
-            <td style="text-align: center; color: #ec4899; font-weight: 800;">${item.girls}</td>
-            <td style="text-align: center; color: #111827; font-weight: 900;">${total}</td>
-          </tr>
-        `;
+        html += '<tr><td style="text-align: center;">' + (index + 1) + '</td><td><strong>' + item.drill + '</strong></td><td style="text-align: center; color: #1e3a8a; font-weight: 800;">' + item.boys + '</td><td style="text-align: center; color: #ec4899; font-weight: 800;">' + item.girls + '</td><td style="text-align: center; color: #111827; font-weight: 900;">' + total + '</td></tr>';
       });
-      html += `</tbody></table>`;
+      html += '</tbody></table>';
       return html;
     };
 
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Daily Report - ${reportDate}</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap');
-            
-            @media print { 
-              @page { size: A4; margin: 1.2cm; } 
-              .no-print { display: none !important; } 
-              body { padding-top: 0 !important; background: #fff !important; }
-            }
-            
-            body { 
-              font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; 
-              padding: 24px; 
-              line-height: 1.5; 
-              color: #1f2937; 
-              background: #f8fafc;
-            }
-            .paper {
-              max-width: 800px;
-              margin: 0 auto;
-              background: #fff;
-              padding: 32px;
-              border-radius: 12px;
-              box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-              border: 1px solid #e2e8f0;
-            }
-            .header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 14px; margin-bottom: 20px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 4px; }
-            .report-title { font-size: 16px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; }
-            .sub-header { font-size: 12px; font-weight: 700; color: #4b5563; margin-top: 4px; }
-            
-            .meta-grid { 
-              display: grid; 
-              grid-template-columns: repeat(3, 1fr); 
-              gap: 10px; 
-              background: #f1f5f9; 
-              padding: 12px 16px; 
-              border-radius: 8px; 
-              margin-bottom: 24px;
-              font-size: 12px;
-              font-weight: 700;
-            }
-            
-            h3 { 
-              color: #1e3a8a; 
-              font-size: 14px; 
-              font-weight: 900; 
-              border-left: 4px solid #1e3a8a; 
-              padding-left: 10px; 
-              margin-top: 24px; 
-              margin-bottom: 12px;
-              text-transform: uppercase;
-            }
-            
-            .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 10px; }
-            .card-box { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; }
-            .card-title { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
-            .card-numbers { display: flex; justify-content: space-around; text-align: center; }
-            .num-item { font-size: 12px; font-weight: 700; }
-            .num-val { font-size: 18px; font-weight: 900; }
-            
-            .report-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
-            .report-table th, .report-table td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
-            .report-table th { background: #1e3a8a; color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 11px; }
-            .report-table tr:nth-child(even) { background: #f8fafc; }
-            
-            .empty-msg { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 12px; text-align: center; border-radius: 8px; font-size: 12px; color: #64748b; font-style: italic; }
-            .notes-box { background: #fffdf5; border: 1px solid #fef08a; padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; min-height: 70px; }
-            
-            .footer-sign { margin-top: 48px; display: flex; justify-content: space-between; padding: 0 20px; }
-            .sign-block { text-align: center; border-top: 1.5px dashed #334155; width: 220px; padding-top: 6px; font-size: 12px; font-weight: 800; }
-            
-            .print-bar { 
-              position: fixed; top: 0; left: 0; right: 0; 
-              background: #1e3a8a; color: #fff; padding: 12px 24px; 
-              display: flex; justify-content: space-between; align-items: center; 
-              z-index: 9999; box-shadow: 0 4px 14px rgba(0,0,0,0.15); 
-            }
-            .btn { 
-              cursor: pointer; padding: 10px 20px; border-radius: 8px; 
-              font-weight: 800; font-size: 12px; border: none; transition: all 0.2s; 
-            }
-            .btn-back { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
-            .btn-print { background: #f59e0b; color: #fff; font-weight: 900; }
-          </style>
-        </head>
-        <body style="padding-top: 70px;">
-          <div class="no-print print-bar">
-            <button onclick="window.close()" class="btn btn-back">← मागे जा (Go Back)</button>
-            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (PRINT PDF)</button>
-          </div>
+    let secNum = 2;
+    let activitiesSectionsHtml = '';
 
-          <div class="paper">
-            <div class="header">
-              <div class="school-name">${schoolNameMarathi}</div>
-              <div class="report-title">दैनिक क्रीडा, योगा व शारीरिक शिक्षण अहवाल</div>
-              <div class="sub-header">(DAILY ACTIVITY & PHYSICAL EDUCATION REPORT)</div>
-            </div>
+    if (drillGroupedSummary.yoga.length > 0) {
+      activitiesSectionsHtml += '<h3>' + secNum + '. योगासन व प्राणायाम सत्र (Yoga & Pranayama Session)</h3>';
+      secNum++;
+      activitiesSectionsHtml += formatActivityTable(drillGroupedSummary.yoga, 'योगासन', 'Yoga');
+    }
+    if (drillGroupedSummary.ptMass.length > 0) {
+      activitiesSectionsHtml += '<h3>' + secNum + '. पी. टी. मास व कवायत प्रकार (PT Mass Exercises)</h3>';
+      secNum++;
+      activitiesSectionsHtml += formatActivityTable(drillGroupedSummary.ptMass, 'पी.टी. मास', 'PT Mass');
+    }
+    if (drillGroupedSummary.volleyball.length > 0) {
+      activitiesSectionsHtml += '<h3>' + secNum + '. वॉलीबॉल क्रीडा व ड्रिल्स (Volleyball Session & Drills)</h3>';
+      secNum++;
+      activitiesSectionsHtml += formatActivityTable(drillGroupedSummary.volleyball, 'वॉलीबॉल', 'Volleyball');
+    }
+    if (drillGroupedSummary.khoKho.length > 0) {
+      activitiesSectionsHtml += '<h3>' + secNum + '. खो-खो क्रीडा व ड्रिल्स (Kho Kho Session & Drills)</h3>';
+      secNum++;
+      activitiesSectionsHtml += formatActivityTable(drillGroupedSummary.khoKho, 'खो-खो', 'Kho Kho');
+    }
+    if (drillGroupedSummary.kabaddi.length > 0) {
+      activitiesSectionsHtml += '<h3>' + secNum + '. कबड्डी क्रीडा व ड्रिल्स (Kabaddi Session & Drills)</h3>';
+      secNum++;
+      activitiesSectionsHtml += formatActivityTable(drillGroupedSummary.kabaddi, 'कबड्डी', 'Kabaddi');
+    }
+    if (drillGroupedSummary.other.length > 0) {
+      activitiesSectionsHtml += '<h3>' + secNum + '. इतर आयोजित खेळ ड्रिल्स (Other Conducted Sports & Drills)</h3>';
+      secNum++;
+      activitiesSectionsHtml += formatActivityTable(drillGroupedSummary.other, 'खेळ ड्रिल्स', 'Sports Drills');
+    }
 
-            <div class="meta-grid">
-              <div>📅 तारीख (Date): <strong>${reportDate ? format(new Date(reportDate), 'dd-MM-yyyy') : '---'}</strong></div>
-              <div>🌤️ हवामान (Weather): <strong>${weather}</strong></div>
-              <div>👨‍🏫 क्रीडा मार्गदर्शक: <strong>${teacherName}</strong></div>
-            </div>
+    if (activitiesSectionsHtml === '') {
+      activitiesSectionsHtml = '<h3>' + secNum + '. आयोजित खेळ व उपक्रम (Conducted Activities)</h3><div class="empty-msg">आज कोणतेही खेळ किंवा योगा उपक्रम नोंदवलेले नाहीत.</div>';
+      secNum++;
+    }
 
-            <h3>१. संस्थात्मक उपस्थिती अहवाल (Attendance Summary)</h3>
-            <div class="stat-cards">
-              <div class="card-box">
-                <div class="card-title">☀️ सकाळ सत्र (Morning Session)</div>
-                <div class="card-numbers">
-                  <div class="num-item"><span style="color: #1e3a8a;">मुले:</span> <div class="num-val" style="color: #1e3a8a;">${attendanceCounts.morningBoys}</div></div>
-                  <div class="num-item"><span style="color: #ec4899;">मुली:</span> <div class="num-val" style="color: #ec4899;">${attendanceCounts.morningGirls}</div></div>
-                  <div class="num-item"><span style="color: #111827;">एकूण:</span> <div class="num-val">${attendanceCounts.morningTotal}</div></div>
-                </div>
-              </div>
+    const healthToday = (store?.data?.healthIncidents || []).filter((h: any) => h.date === reportDate);
+    
+    let medicalLogHtml = '<h3>' + secNum + '. आरोग्य व वैद्यकीय स्वास्थ लॉग (Professional Medical Audit Log)</h3>';
+    secNum++;
+    medicalLogHtml += '<div class="card-box">';
+    medicalLogHtml += '<div class="card-numbers" style="margin-bottom: 8px;">';
+    medicalLogHtml += '<div class="num-item"><span style="color: #1e3a8a;">बाधित मुले:</span> <strong style="font-size: 16px;">' + healthSummaryCounts.boys + '</strong></div>';
+    medicalLogHtml += '<div class="num-item"><span style="color: #ec4899;">बाधित मुली:</span> <strong style="font-size: 16px;">' + healthSummaryCounts.girls + '</strong></div>';
+    medicalLogHtml += '<div class="num-item"><span style="color: #b45309;">एकूण तक्रारी:</span> <strong style="font-size: 16px;">' + healthSummaryCounts.total + '</strong></div>';
+    medicalLogHtml += '</div>';
 
-              <div class="card-box">
-                <div class="card-title">🌙 संध्याकाळ सत्र (Evening Session)</div>
-                <div class="card-numbers">
-                  <div class="num-item"><span style="color: #1e3a8a;">मुले:</span> <div class="num-val" style="color: #1e3a8a;">${attendanceCounts.eveningBoys}</div></div>
-                  <div class="num-item"><span style="color: #ec4899;">मुली:</span> <div class="num-val" style="color: #ec4899;">${attendanceCounts.eveningGirls}</div></div>
-                  <div class="num-item"><span style="color: #111827;">एकूण:</span> <div class="num-val">${attendanceCounts.eveningTotal}</div></div>
-                </div>
-              </div>
-            </div>
+    if (healthToday.length === 0) {
+      medicalLogHtml += '<div class="empty-msg" style="padding: 6px;">आज कोणतीही वैद्यकीय तक्रार किंवा आरोग्य अडचण नोंदवली गेली नाही. (All Healthy)</div>';
+    } else {
+      medicalLogHtml += '<table class="report-table" style="margin-top: 8px;">';
+      medicalLogHtml += '<thead><tr><th>अनु.क्र.</th><th>विद्यार्थ्याचे नाव</th><th>ठिकाण (Location)</th><th>दुखापत (Diagnosis)</th><th>तीव्रता</th><th>प्रथमोपचार व औषधोपचार (First Aid / Protocol)</th></tr></thead><tbody>';
+      healthToday.forEach((inc: any, i: number) => {
+        const p = players.find((pl: any) => pl.id === inc.playerId);
+        const pName = p ? (p.nameMarathi || p.name) : (inc.playerName || 'Student');
+        const parsed = parseMedicalLog(inc.description);
+        const isCrit = inc.severity === 'Critical' || parsed.severity.includes('Severe');
+        const sevColor = isCrit ? '#dc2626' : '#2563eb';
+        medicalLogHtml += '<tr>';
+        medicalLogHtml += '<td style="text-align: center; font-weight: 800;">' + (i + 1) + '</td>';
+        medicalLogHtml += '<td><strong>' + pName + '</strong></td>';
+        medicalLogHtml += '<td>' + parsed.location + '</td>';
+        medicalLogHtml += '<td>' + parsed.diagnosis + '</td>';
+        medicalLogHtml += '<td><span style="color: ' + sevColor + '; font-weight: 800;">' + parsed.severity + '</span></td>';
+        medicalLogHtml += '<td style="font-size: 11px;">' + (parsed.medicine || parsed.protocol) + '</td>';
+        medicalLogHtml += '</tr>';
+      });
+      medicalLogHtml += '</tbody></table>';
+    }
+    medicalLogHtml += '</div>';
 
-            <h3>२. योगासन व प्राणायाम सत्र (Yoga & Pranayama Session)</h3>
-            ${formatActivityTable(drillGroupedSummary.yoga, 'योगासन', 'Yoga')}
+    const remarksHeader = '<h3>' + secNum + '. मार्गदर्शक / शिक्षकांचे निरीक्षण व शेरा (Instructor Remarks)</h3>';
+    secNum++;
 
-            <h3>३. पी. टी. मास व कवायत प्रकार (PT Mass Exercises)</h3>
-            ${formatActivityTable(drillGroupedSummary.ptMass, 'पी.टी. मास', 'PT Mass')}
+    let photosHtml = '';
+    if (reportPhotos.length > 0) {
+      photosHtml += '<h3>' + secNum + '. जिओ-टॅग केलेले दैनिक फोटो (Geotagged Activity Photos)</h3>';
+      secNum++;
+      photosHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">';
+      reportPhotos.forEach(p => {
+        const sportLabel = p.sport || 'Sports';
+        const drillLabel = p.drill ? ('- ' + p.drill) : '';
+        const latVal = p.lat || 20.5937;
+        const lngVal = p.lng || 74.0045;
+        photosHtml += '<div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; text-align: center; padding: 6px;">';
+        photosHtml += '<img src="' + p.url + '" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px;" />';
+        photosHtml += '<div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-top: 4px;">' + p.caption + '</div>';
+        photosHtml += '<div style="font-size: 9.5px; color: #d97706; font-weight: 800;">🏆 ' + sportLabel + ' ' + drillLabel + '</div>';
+        photosHtml += '<div style="font-size: 9px; color: #475569; font-weight: 700;">📍 GPS: Lat ' + latVal + '°, Long ' + lngVal + '°</div>';
+        photosHtml += '</div>';
+      });
+      photosHtml += '</div>';
+    }
 
-            <h3>४. कबड्डी व इतर खेळ ड्रिल्स (Kabaddi & Sports Drills)</h3>
-            ${formatActivityTable(drillGroupedSummary.kabaddi.concat(drillGroupedSummary.other), 'खेळ ड्रिल्स', 'Sports Drills')}
+    const notesContent = manualNotes || 'आजचे क्रीडा, योगा व शारीरिक शिक्षण सत्र नियोजनानुसार पार पडले. सर्व विद्यार्थी उपक्रमात उत्साहाने सहभागी झाले.';
+    const formattedReportDate = reportDate ? format(new Date(reportDate), 'dd-MM-yyyy') : '---';
 
-            <h3>५. आरोग्य व वैद्यकीय स्वास्थ लॉग (Health & Medical Log)</h3>
-            <div class="card-box">
-              <div class="card-numbers" style="margin-bottom: 8px;">
-                <div class="num-item"><span style="color: #1e3a8a;">बाधित मुले (Boys):</span> <strong style="font-size: 16px;">${healthSummaryCounts.boys}</strong></div>
-                <div class="num-item"><span style="color: #ec4899;">बाधित मुली (Girls):</span> <strong style="font-size: 16px;">${healthSummaryCounts.girls}</strong></div>
-                <div class="num-item"><span style="color: #b45309;">एकूण तक्रारी (Total Alerts):</span> <strong style="font-size: 16px;">${healthSummaryCounts.total}</strong></div>
-              </div>
-              ${healthSummaryCounts.total === 0 
-                ? '<div class="empty-msg" style="padding: 6px;">आज कोणतीही वैद्यकीय तक्रार किंवा आरोग्य अडचण नोंदवली गेली नाही. (All Healthy)</div>' 
-                : `<div style="font-size: 11px; color: #dc2626; font-weight: 700; border-top: 1px solid #fee2e2; padding-top: 6px;">लॉग नोंद: ${healthSummaryCounts.descriptions.join(' | ')}</div>`
-              }
-            </div>
-
-            <h3>६. मार्गदर्शक / शिक्षकांचे निरीक्षण व शेरा (Instructor Remarks)</h3>
-            <div class="notes-box">
-              ${manualNotes || 'आजचे क्रीडा, योगा व शारीरिक शिक्षण सत्र नियोजनानुसार पार पडले. सर्व विद्यार्थी उपक्रमात उत्साहाने सहभागी झाले.'}
-            </div>
-
-            ${reportPhotos.length > 0 ? `
-              <h3>७. जिओ-टॅग केलेले दैनिक फोटो (Geotagged Activity Photos)</h3>
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">
-                ${reportPhotos.map(p => `
-                  <div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; text-align: center; padding: 6px;">
-                    <img src="${p.url}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px;" />
-                    <div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-top: 4px;">${p.caption}</div>
-                    <div style="font-size: 9px; color: #475569; font-weight: 700;">📍 GPS: Lat ${p.lat || 20.5937}°, Long ${p.lng || 74.0045}°</div>
-                  </div>
-                `).join('')}
-              </div>
-            ` : ''}
-
-            <div class="footer-sign">
-              <div class="sign-block">
-                <div>क्रीडा शिक्षक स्वाक्षरी</div>
-                <div style="font-size: 10px; color: #64748b; margin-top: 2px;">(${teacherName})</div>
-              </div>
-              <div class="sign-block">
-                <div>मुख्याध्यापक स्वाक्षरी</div>
-                <div style="font-size: 10px; color: #64748b; margin-top: 2px;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div>
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const printContent = [
+      '<html>',
+      '<head>',
+      '<meta charset="utf-8" />',
+      '<title>Daily Report - ' + reportDate + '</title>',
+      '<style>',
+      '@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap");',
+      '@media print { @page { size: A4; margin: 1.2cm; } .no-print { display: none !important; } body { padding-top: 0 !important; background: #fff !important; } }',
+      'body { font-family: "Noto Sans Devanagari", "Inter", sans-serif; padding: 24px; line-height: 1.5; color: #1f2937; background: #f8fafc; }',
+      '.paper { max-width: 800px; margin: 0 auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }',
+      '.header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 14px; margin-bottom: 20px; }',
+      '.school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 4px; }',
+      '.report-title { font-size: 16px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; }',
+      '.sub-header { font-size: 12px; font-weight: 700; color: #4b5563; margin-top: 4px; }',
+      '.meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f1f5f9; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 12px; font-weight: 700; }',
+      'h3 { color: #1e3a8a; font-size: 14px; font-weight: 900; border-left: 4px solid #1e3a8a; padding-left: 10px; margin-top: 24px; margin-bottom: 12px; text-transform: uppercase; }',
+      '.stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 10px; }',
+      '.card-box { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; }',
+      '.card-title { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }',
+      '.card-numbers { display: flex; justify-content: space-around; text-align: center; }',
+      '.num-item { font-size: 12px; font-weight: 700; }',
+      '.num-val { font-size: 18px; font-weight: 900; }',
+      '.report-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }',
+      '.report-table th, .report-table td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }',
+      '.report-table th { background: #1e3a8a; color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 11px; }',
+      '.report-table tr:nth-child(even) { background: #f8fafc; }',
+      '.empty-msg { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 12px; text-align: center; border-radius: 8px; font-size: 12px; color: #64748b; font-style: italic; }',
+      '.notes-box { background: #fffdf5; border: 1px solid #fef08a; padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; min-height: 70px; }',
+      '.footer-sign { margin-top: 48px; display: flex; justify-content: space-between; padding: 0 20px; }',
+      '.sign-block { text-align: center; border-top: 1.5px dashed #334155; width: 220px; padding-top: 6px; font-size: 12px; font-weight: 800; }',
+      '.print-bar { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }',
+      '.btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 12px; border: none; transition: all 0.2s; }',
+      '.btn-back { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }',
+      '.btn-print { background: #f59e0b; color: #fff; font-weight: 900; }',
+      '</style>',
+      '</head>',
+      '<body style="padding-top: 70px;">',
+      '<div class="no-print print-bar">',
+      '<button onclick="window.close()" class="btn btn-back">← मागे जा (Go Back)</button>',
+      '<button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (PRINT PDF)</button>',
+      '</div>',
+      '<div class="paper">',
+      '<div class="header">',
+      '<div class="school-name">' + schoolNameMarathi + '</div>',
+      '<div class="report-title">दैनिक क्रीडा, योगा व शारीरिक शिक्षण अहवाल</div>',
+      '<div class="sub-header">(DAILY ACTIVITY & PHYSICAL EDUCATION REPORT)</div>',
+      '</div>',
+      '<div class="meta-grid">',
+      '<div>📅 तारीख (Date): <strong>' + formattedReportDate + '</strong></div>',
+      '<div>🌤️ हवामान (Weather): <strong>' + weather + '</strong></div>',
+      '<div>👨‍🏫 क्रीडा मार्गदर्शक: <strong>' + teacherName + '</strong></div>',
+      '</div>',
+      '<h3>१. संस्थात्मक उपस्थिती अहवाल (Attendance Summary)</h3>',
+      '<div class="stat-cards">',
+      '<div class="card-box">',
+      '<div class="card-title">☀️ सकाळ सत्र (Morning Session)</div>',
+      '<div class="card-numbers">',
+      '<div class="num-item"><span style="color: #1e3a8a;">मुले:</span> <div class="num-val" style="color: #1e3a8a;">' + attendanceCounts.morningBoys + '</div></div>',
+      '<div class="num-item"><span style="color: #ec4899;">मुली:</span> <div class="num-val" style="color: #ec4899;">' + attendanceCounts.morningGirls + '</div></div>',
+      '<div class="num-item"><span style="color: #111827;">एकूण:</span> <div class="num-val">' + attendanceCounts.morningTotal + '</div></div>',
+      '</div>',
+      '</div>',
+      '<div class="card-box">',
+      '<div class="card-title">🌙 संध्याकाळ सत्र (Evening Session)</div>',
+      '<div class="card-numbers">',
+      '<div class="num-item"><span style="color: #1e3a8a;">मुले:</span> <div class="num-val" style="color: #1e3a8a;">' + attendanceCounts.eveningBoys + '</div></div>',
+      '<div class="num-item"><span style="color: #ec4899;">मुली:</span> <div class="num-val" style="color: #ec4899;">' + attendanceCounts.eveningGirls + '</div></div>',
+      '<div class="num-item"><span style="color: #111827;">एकूण:</span> <div class="num-val">' + attendanceCounts.eveningTotal + '</div></div>',
+      '</div>',
+      '</div>',
+      '</div>',
+      activitiesSectionsHtml,
+      medicalLogHtml,
+      remarksHeader,
+      '<div class="notes-box">' + notesContent + '</div>',
+      photosHtml,
+      '<div class="footer-sign">',
+      '<div class="sign-block"><div>क्रीडा शिक्षक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(' + teacherName + ')</div></div>',
+      '<div class="sign-block"><div>मुख्याध्यापक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div></div>',
+      '</div>',
+      '</div>',
+      '</body>',
+      '</html>'
+    ].join('\n');
     const win = window.open('', '_blank');
     win?.document.write(printContent);
     win?.document.close();
@@ -620,52 +622,89 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     const schoolName = store?.data?.schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक';
     const formattedDate = reportDate ? format(new Date(reportDate), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy');
 
-    let text = `🚩 *${schoolName}* 🚩\n`;
-    text += `📋 *दैनिक क्रीडा, योगा व पी.टी. अहवाल*\n`;
-    text += `📅 तारीख: *${formattedDate}*\n\n`;
+    const lines: string[] = [];
+    lines.push("🚩 *" + schoolName + "* 🚩");
+    lines.push("📋 *दैनिक क्रीडा, योगा व पी.टी. अहवाल*");
+    lines.push("📅 तारीख: *" + formattedDate + "*\n");
 
-    text += `👥 *१. संस्थात्मक उपस्थिती:* \n`;
-    text += `• सकाळ सत्र: मुले: ${attendanceCounts.morningBoys}, मुली: ${attendanceCounts.morningGirls} (एकूण: ${attendanceCounts.morningTotal})\n`;
-    text += `• संध्याकाळ सत्र: मुले: ${attendanceCounts.eveningBoys}, मुली: ${attendanceCounts.eveningGirls} (एकूण: ${attendanceCounts.eveningTotal})\n\n`;
+    lines.push("👥 *१. संस्थात्मक उपस्थिती:*");
+    lines.push("• सकाळ सत्र: मुले: " + attendanceCounts.morningBoys + ", मुली: " + attendanceCounts.morningGirls + " (एकूण: " + attendanceCounts.morningTotal + ")");
+    lines.push("• संध्याकाळ सत्र: मुले: " + attendanceCounts.eveningBoys + ", मुली: " + attendanceCounts.eveningGirls + " (एकूण: " + attendanceCounts.eveningTotal + ")\n");
+
+    let itemNo = 2;
 
     if (drillGroupedSummary.yoga.length > 0) {
-      text += `🧘 *२. योगासन सत्र:* \n`;
-      drillGroupedSummary.yoga.forEach((item) => {
-        text += `• ${item.drill}: मुले: ${item.boys}, मुली: ${item.girls} (एकूण: ${item.boys + item.girls})\n`;
+      lines.push("🧘 *" + itemNo + ". योगासन सत्र:*");
+      itemNo++;
+      drillGroupedSummary.yoga.forEach((item: any) => {
+        lines.push("• " + item.drill + ": मुले: " + item.boys + ", मुली: " + item.girls + " (एकूण: " + (item.boys + item.girls) + ")");
       });
-      text += `\n`;
+      lines.push("");
     }
 
     if (drillGroupedSummary.ptMass.length > 0) {
-      text += `🏃 *३. पी.टी. मास कवायत:* \n`;
-      drillGroupedSummary.ptMass.forEach((item) => {
-        text += `• ${item.drill}: मुले: ${item.boys}, मुली: ${item.girls} (एकूण: ${item.boys + item.girls})\n`;
+      lines.push("🏃 *" + itemNo + ". पी.टी. मास कवायत:*");
+      itemNo++;
+      drillGroupedSummary.ptMass.forEach((item: any) => {
+        lines.push("• " + item.drill + ": मुले: " + item.boys + ", मुली: " + item.girls + " (एकूण: " + (item.boys + item.girls) + ")");
       });
-      text += `\n`;
+      lines.push("");
     }
 
-    if (drillGroupedSummary.kabaddi.length > 0 || drillGroupedSummary.other.length > 0) {
-      text += `🤼 *४. कबड्डी व ड्रिल्स:* \n`;
-      [...drillGroupedSummary.kabaddi, ...drillGroupedSummary.other].forEach((item) => {
-        text += `• ${item.drill}: मुले: ${item.boys}, मुली: ${item.girls} (एकूण: ${item.boys + item.girls})\n`;
+    if (drillGroupedSummary.volleyball.length > 0) {
+      lines.push("🏐 *" + itemNo + ". वॉलीबॉल सत्र:*");
+      itemNo++;
+      drillGroupedSummary.volleyball.forEach((item: any) => {
+        lines.push("• " + item.drill + ": मुले: " + item.boys + ", मुली: " + item.girls + " (एकूण: " + (item.boys + item.girls) + ")");
       });
-      text += `\n`;
+      lines.push("");
     }
 
-    text += `🏥 *५. आरोग्य अहवाल:* \n`;
-    text += `• तक्रारी: मुले: ${healthSummaryCounts.boys}, मुली: ${healthSummaryCounts.girls} (एकूण: ${healthSummaryCounts.total})\n\n`;
+    if (drillGroupedSummary.khoKho.length > 0) {
+      lines.push("🏃 *" + itemNo + ". खो-खो सत्र:*");
+      itemNo++;
+      drillGroupedSummary.khoKho.forEach((item: any) => {
+        lines.push("• " + item.drill + ": मुले: " + item.boys + ", मुली: " + item.girls + " (एकूण: " + (item.boys + item.girls) + ")");
+      });
+      lines.push("");
+    }
+
+    if (drillGroupedSummary.kabaddi.length > 0) {
+      lines.push("🤼 *" + itemNo + ". कबड्डी सत्र:*");
+      itemNo++;
+      drillGroupedSummary.kabaddi.forEach((item: any) => {
+        lines.push("• " + item.drill + ": मुले: " + item.boys + ", मुली: " + item.girls + " (एकूण: " + (item.boys + item.girls) + ")");
+      });
+      lines.push("");
+    }
+
+    if (drillGroupedSummary.other.length > 0) {
+      lines.push("🏆 *" + itemNo + ". इतर खेळ ड्रिल्स:*");
+      itemNo++;
+      drillGroupedSummary.other.forEach((item: any) => {
+        lines.push("• " + item.drill + ": मुले: " + item.boys + ", मुली: " + item.girls + " (एकूण: " + (item.boys + item.girls) + ")");
+      });
+      lines.push("");
+    }
+
+    lines.push("🏥 *" + itemNo + ". आरोग्य अहवाल:*");
+    itemNo++;
+    lines.push("• तक्रारी: मुले: " + healthSummaryCounts.boys + ", मुली: " + healthSummaryCounts.girls + " (एकूण: " + healthSummaryCounts.total + ")\n");
 
     if (reportPhotos.length > 0) {
-      text += `📸 *६. जिओ-टॅग फोटो:* ${reportPhotos.length} फोटो जोडले (GPS Stamp सह)\n\n`;
+      lines.push("📸 *" + itemNo + ". जिओ-टॅग फोटो:* " + reportPhotos.length + " फोटो जोडले (GPS Stamp सह)\n");
+      itemNo++;
     }
 
     if (manualNotes) {
-      text += `📝 *शेरा:* ${manualNotes}\n\n`;
+      lines.push("📝 *शेरा:* " + manualNotes + "\n");
     }
 
-    text += `✍️ *क्रीडा मार्गदर्शक:* ${store?.data?.schoolProfile?.teacherName || 'Sunil Deshmukh'}`;
+    const teacher = store?.data?.schoolProfile?.teacherName || 'Sunil Deshmukh';
+    lines.push("✍️ *क्रीडा मार्गदर्शक:* " + teacher);
 
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    const text = lines.join('\n');
+    const url = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(text);
     window.open(url, '_blank');
   };
 
@@ -804,144 +843,252 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         {/* Left Column: Recorded Activities Breakdown */}
         <div className="lg:col-span-8 space-y-8">
           
-          {/* Yoga Activities Section */}
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-            <CardHeader className="bg-indigo-50/60 border-b p-6 flex flex-row justify-between items-center">
-              <CardTitle className="text-sm font-black uppercase tracking-wider text-indigo-900 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-indigo-600" /> १. योगासन व प्राणायाम सत्र (Yoga & Pranayama)
-              </CardTitle>
-              <Badge variant="outline" className="font-bold border-indigo-200 text-indigo-700 bg-white">
-                {drillGroupedSummary.yoga.length} उपक्रम प्रकार
-              </Badge>
-            </CardHeader>
-            <CardContent className="p-6">
-              {drillGroupedSummary.yoga.length === 0 ? (
-                <p className="text-xs font-bold text-muted-foreground italic text-center py-6">
-                  आज योगासन उपक्रम नोंदवलेले नाहीत. खालील &quot;त्वरित उपक्रम नोंद&quot; बॉक्समधून नोंदवा.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {drillGroupedSummary.yoga.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100">
-                      <div>
-                        <p className="font-black text-sm text-indigo-950 uppercase">{item.drill}</p>
-                        <p className="text-[10px] font-bold text-indigo-600 uppercase mt-0.5">{item.sport}</p>
+          {drillGroupedSummary.totalConductededCount === 0 ? (
+            <Card className="border-2 border-dashed rounded-[2.5rem] bg-slate-50/50 p-10 text-center space-y-3">
+              <Trophy className="w-12 h-12 text-amber-500 mx-auto opacity-50" />
+              <h3 className="font-black text-slate-800 text-base uppercase">आज कोणतेही खेळ किंवा योगा उपक्रम नोंदवलेले नाहीत</h3>
+              <p className="text-xs font-semibold text-slate-500 max-w-md mx-auto">
+                (No Conducted Activities Recorded Today) - उजवीकडील &quot;त्वरित उपक्रम नोंदवा&quot; कार्डवरून वॉलीबॉल, खो-खो, योगा, किंवा पी.टी. मास नोंदवा.
+              </p>
+            </Card>
+          ) : (
+            <>
+              {/* Yoga Activities Section */}
+              {drillGroupedSummary.yoga.length > 0 && (
+                <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+                  <CardHeader className="bg-indigo-50/60 border-b p-6 flex flex-row justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase tracking-wider text-indigo-900 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-indigo-600" /> योगासन व प्राणायाम सत्र (Yoga & Pranayama)
+                    </CardTitle>
+                    <Badge variant="outline" className="font-bold border-indigo-200 text-indigo-700 bg-white">
+                      {drillGroupedSummary.yoga.length} उपक्रम प्रकार
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {drillGroupedSummary.yoga.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100">
+                        <div>
+                          <p className="font-black text-sm text-indigo-950 uppercase">{item.drill}</p>
+                          <p className="text-[10px] font-bold text-indigo-600 uppercase mt-0.5">{item.sport}</p>
+                        </div>
+                        <div className="flex gap-3 text-center">
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
+                            <span className="text-blue-900 font-black">{item.boys}</span>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
+                            <span className="text-pink-900 font-black">{item.girls}</span>
+                          </div>
+                          <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
+                            <span className="text-[9px] block uppercase opacity-80">एकूण</span>
+                            <span className="font-black">{item.boys + item.girls}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-3 text-center">
-                        <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
-                          <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
-                          <span className="text-blue-900 font-black">{item.boys}</span>
-                        </div>
-                        <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
-                          <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
-                          <span className="text-pink-900 font-black">{item.girls}</span>
-                        </div>
-                        <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
-                          <span className="text-[9px] block uppercase opacity-80">एकूण</span>
-                          <span className="font-black">{item.boys + item.girls}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
 
-          {/* PT Mass Exercises Section */}
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-            <CardHeader className="bg-teal-50/60 border-b p-6 flex flex-row justify-between items-center">
-              <CardTitle className="text-sm font-black uppercase tracking-wider text-teal-900 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-teal-600" /> २. पी. टी. मास व कवायत (PT Mass Exercises)
-              </CardTitle>
-              <Badge variant="outline" className="font-bold border-teal-200 text-teal-700 bg-white">
-                {drillGroupedSummary.ptMass.length} कवायत प्रकार
-              </Badge>
-            </CardHeader>
-            <CardContent className="p-6">
-              {drillGroupedSummary.ptMass.length === 0 ? (
-                <p className="text-xs font-bold text-muted-foreground italic text-center py-6">
-                  आज पी.टी. मास किंवा कवायत प्रकार नोंदवलेले नाहीत.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {drillGroupedSummary.ptMass.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-teal-50/30 rounded-2xl border border-teal-100">
-                      <div>
-                        <p className="font-black text-sm text-teal-950 uppercase">{item.drill}</p>
-                        <p className="text-[10px] font-bold text-teal-600 uppercase mt-0.5">{item.sport}</p>
-                      </div>
-                      <div className="flex gap-3 text-center">
-                        <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
-                          <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
-                          <span className="text-blue-900 font-black">{item.boys}</span>
+              {/* PT Mass Exercises Section */}
+              {drillGroupedSummary.ptMass.length > 0 && (
+                <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
+                  <CardHeader className="bg-teal-50/60 border-b p-6 flex flex-row justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase tracking-wider text-teal-900 flex items-center gap-2">
+                      <Activity className="w-5 h-5 text-teal-600" /> पी. टी. मास व कवायत (PT Mass Exercises)
+                    </CardTitle>
+                    <Badge variant="outline" className="font-bold border-teal-200 text-teal-700 bg-white">
+                      {drillGroupedSummary.ptMass.length} कवायत प्रकार
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {drillGroupedSummary.ptMass.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-teal-50/30 rounded-2xl border border-teal-100">
+                        <div>
+                          <p className="font-black text-sm text-teal-950 uppercase">{item.drill}</p>
+                          <p className="text-[10px] font-bold text-teal-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
-                          <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
-                          <span className="text-pink-900 font-black">{item.girls}</span>
-                        </div>
-                        <div className="bg-teal-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
-                          <span className="text-[9px] block uppercase opacity-80">एकूण</span>
-                          <span className="font-black">{item.boys + item.girls}</span>
+                        <div className="flex gap-3 text-center">
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
+                            <span className="text-blue-900 font-black">{item.boys}</span>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
+                            <span className="text-pink-900 font-black">{item.girls}</span>
+                          </div>
+                          <div className="bg-teal-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
+                            <span className="text-[9px] block uppercase opacity-80">एकूण</span>
+                            <span className="font-black">{item.boys + item.girls}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
 
-          {/* Kabaddi & Sports Drills Section */}
-          <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden">
-            <CardHeader className="bg-amber-50/60 border-b p-6 flex flex-row justify-between items-center">
-              <CardTitle className="text-sm font-black uppercase tracking-wider text-amber-900 flex items-center gap-2">
-                <Flame className="w-5 h-5 text-amber-600" /> ३. कबड्डी व इतर खेळ ड्रिल्स (Kabaddi & Drills)
-              </CardTitle>
-              <Badge variant="outline" className="font-bold border-amber-200 text-amber-700 bg-white">
-                {drillGroupedSummary.kabaddi.length + drillGroupedSummary.other.length} ड्रिल्स
-              </Badge>
-            </CardHeader>
-            <CardContent className="p-6">
-              {[...drillGroupedSummary.kabaddi, ...drillGroupedSummary.other].length === 0 ? (
-                <p className="text-xs font-bold text-muted-foreground italic text-center py-6">
-                  आज कबड्डी किंवा इतर खेळाचे ड्रिल्स नोंदवलेले नाहीत.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {[...drillGroupedSummary.kabaddi, ...drillGroupedSummary.other].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-amber-50/30 rounded-2xl border border-amber-100">
-                      <div>
-                        <p className="font-black text-sm text-amber-950 uppercase">{item.drill}</p>
-                        <p className="text-[10px] font-bold text-amber-600 uppercase mt-0.5">{item.sport}</p>
-                      </div>
-                      <div className="flex gap-3 text-center">
-                        <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
-                          <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
-                          <span className="text-blue-900 font-black">{item.boys}</span>
+              {/* Volleyball Section */}
+              {drillGroupedSummary.volleyball.length > 0 && (
+                <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-sky-100">
+                  <CardHeader className="bg-sky-50/60 border-b p-6 flex flex-row justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase tracking-wider text-sky-900 flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-sky-600" /> वॉलीबॉल सत्र व ड्रिल्स (Volleyball)
+                    </CardTitle>
+                    <Badge variant="outline" className="font-bold border-sky-200 text-sky-700 bg-white">
+                      {drillGroupedSummary.volleyball.length} ड्रिल्स
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {drillGroupedSummary.volleyball.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-sky-50/30 rounded-2xl border border-sky-100">
+                        <div>
+                          <p className="font-black text-sm text-sky-950 uppercase">{item.drill}</p>
+                          <p className="text-[10px] font-bold text-sky-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
-                          <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
-                          <span className="text-pink-900 font-black">{item.girls}</span>
-                        </div>
-                        <div className="bg-amber-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
-                          <span className="text-[9px] block uppercase opacity-80">एकूण</span>
-                          <span className="font-black">{item.boys + item.girls}</span>
+                        <div className="flex gap-3 text-center">
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
+                            <span className="text-blue-900 font-black">{item.boys}</span>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
+                            <span className="text-pink-900 font-black">{item.girls}</span>
+                          </div>
+                          <div className="bg-sky-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
+                            <span className="text-[9px] block uppercase opacity-80">एकूण</span>
+                            <span className="font-black">{item.boys + item.girls}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+
+              {/* Kho Kho Section */}
+              {drillGroupedSummary.khoKho.length > 0 && (
+                <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-orange-100">
+                  <CardHeader className="bg-orange-50/60 border-b p-6 flex flex-row justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase tracking-wider text-orange-900 flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-orange-600" /> खो-खो सत्र व ड्रिल्स (Kho Kho)
+                    </CardTitle>
+                    <Badge variant="outline" className="font-bold border-orange-200 text-orange-700 bg-white">
+                      {drillGroupedSummary.khoKho.length} ड्रिल्स
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {drillGroupedSummary.khoKho.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-orange-50/30 rounded-2xl border border-orange-100">
+                        <div>
+                          <p className="font-black text-sm text-orange-950 uppercase">{item.drill}</p>
+                          <p className="text-[10px] font-bold text-orange-600 uppercase mt-0.5">{item.sport}</p>
+                        </div>
+                        <div className="flex gap-3 text-center">
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
+                            <span className="text-blue-900 font-black">{item.boys}</span>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
+                            <span className="text-pink-900 font-black">{item.girls}</span>
+                          </div>
+                          <div className="bg-orange-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
+                            <span className="text-[9px] block uppercase opacity-80">एकूण</span>
+                            <span className="font-black">{item.boys + item.girls}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Kabaddi Section */}
+              {drillGroupedSummary.kabaddi.length > 0 && (
+                <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-amber-100">
+                  <CardHeader className="bg-amber-50/60 border-b p-6 flex flex-row justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                      <Flame className="w-5 h-5 text-amber-600" /> कबड्डी सत्र व ड्रिल्स (Kabaddi)
+                    </CardTitle>
+                    <Badge variant="outline" className="font-bold border-amber-200 text-amber-700 bg-white">
+                      {drillGroupedSummary.kabaddi.length} ड्रिल्स
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {drillGroupedSummary.kabaddi.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-amber-50/30 rounded-2xl border border-amber-100">
+                        <div>
+                          <p className="font-black text-sm text-amber-950 uppercase">{item.drill}</p>
+                          <p className="text-[10px] font-bold text-amber-600 uppercase mt-0.5">{item.sport}</p>
+                        </div>
+                        <div className="flex gap-3 text-center">
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
+                            <span className="text-blue-900 font-black">{item.boys}</span>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
+                            <span className="text-pink-900 font-black">{item.girls}</span>
+                          </div>
+                          <div className="bg-amber-600 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
+                            <span className="text-[9px] block uppercase opacity-80">एकूण</span>
+                            <span className="font-black">{item.boys + item.girls}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Other Sports Section */}
+              {drillGroupedSummary.other.length > 0 && (
+                <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-slate-200">
+                  <CardHeader className="bg-slate-50/60 border-b p-6 flex flex-row justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-slate-600" /> इतर खेळ व ड्रिल्स (Other Conducted Games)
+                    </CardTitle>
+                    <Badge variant="outline" className="font-bold border-slate-300 text-slate-700 bg-white">
+                      {drillGroupedSummary.other.length} ड्रिल्स
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    {drillGroupedSummary.other.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-200">
+                        <div>
+                          <p className="font-black text-sm text-slate-950 uppercase">{item.drill}</p>
+                          <p className="text-[10px] font-bold text-slate-600 uppercase mt-0.5">{item.sport}</p>
+                        </div>
+                        <div className="flex gap-3 text-center">
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
+                            <span className="text-blue-900 font-black">{item.boys}</span>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
+                            <span className="text-pink-600 text-[10px] block font-black uppercase">मुली</span>
+                            <span className="text-pink-900 font-black">{item.girls}</span>
+                          </div>
+                          <div className="bg-slate-800 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex flex-col justify-center">
+                            <span className="text-[9px] block uppercase opacity-80">एकूण</span>
+                            <span className="font-black">{item.boys + item.girls}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
 
           {/* Geotagged Activity Photos Display Section */}
           {reportPhotos.length > 0 && (
             <Card className="border-2 rounded-[2.5rem] bg-white shadow-xl overflow-hidden border-indigo-200">
               <CardHeader className="bg-slate-900 p-6 text-white flex flex-row justify-between items-center">
                 <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-amber-400" /> ४. जिओ-टॅग केलेले दैनिक छायाचित्रे ({reportPhotos.length} Photos)
+                  <ImageIcon className="w-5 h-5 text-amber-400" /> जिओ-टॅग केलेले दैनिक छायाचित्रे ({reportPhotos.length} Photos)
                 </CardTitle>
                 <Badge className="bg-emerald-500 text-white font-black text-[9px] uppercase px-3 py-1">
                   GPS Location Verified
@@ -962,9 +1109,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                       </button>
                       <div className="absolute bottom-0 inset-x-0 bg-slate-950/90 p-3 text-white backdrop-blur-xs border-t border-amber-500/40">
                         <p className="font-black text-sm tracking-tight text-white">{photo.caption}</p>
-                        <div className="flex items-center justify-between text-[9.5px] font-bold text-amber-400 mt-1">
-                          <span>📍 Lat {photo.lat || 20.5937}°, Lng {photo.lng || 74.0045}°</span>
-                          <span className="text-slate-300">🕒 {photo.timestamp}</span>
+                        <p className="text-[10px] font-bold text-amber-400">🏆 {photo.sport || 'Sports'} {photo.drill ? ('- ' + photo.drill) : ''}</p>
+                        <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-300 mt-1">
+                          <span className="truncate max-w-[200px]">📍 {photo.locationName}</span>
+                          <span>🕒 {photo.timestamp}</span>
                         </div>
                       </div>
                     </div>
@@ -1013,12 +1161,49 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                 </p>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">खेळ (Sport)</label>
+                  <Select value={photoSport} onValueChange={(val) => {
+                    setPhotoSport(val);
+                    if (val === 'Volleyball') setPhotoDrill("Spike & Serve Practice");
+                    else if (val === 'Kho Kho') setPhotoDrill("Pole Dive & Chasing Drill");
+                    else if (val === 'Kabaddi') setPhotoDrill("Raid Touch & Toe Touch Drill");
+                    else if (val === 'Yoga') setPhotoDrill("Surya Namaskar & Asana");
+                    else if (val === 'PT Mass') setPhotoDrill("Mass PT Exercise No 1");
+                    else setPhotoDrill("Physical Activity & Training");
+                  }}>
+                    <SelectTrigger className="h-10 rounded-xl border-2 font-bold text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Volleyball">Volleyball</SelectItem>
+                      <SelectItem value="Kho Kho">Kho Kho</SelectItem>
+                      <SelectItem value="Kabaddi">Kabaddi</SelectItem>
+                      <SelectItem value="Yoga">Yoga & Pranayama</SelectItem>
+                      <SelectItem value="PT Mass">PT Mass Exercises</SelectItem>
+                      <SelectItem value="Athletics">Athletics / Running</SelectItem>
+                      <SelectItem value="Cricket">Cricket</SelectItem>
+                      <SelectItem value="Football">Football</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">ड्रिल (Drill)</label>
+                  <Input 
+                    value={photoDrill} 
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhotoDrill(e.target.value)} 
+                    placeholder="उदा. Spike & Serve" 
+                    className="h-10 rounded-xl border-2 font-bold text-xs" 
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">फोटो वर्णन (Caption)</label>
                 <Input 
                   value={photoCaption} 
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhotoCaption(e.target.value)} 
-                  placeholder="उदा. सकाळचे सूर्य नमस्कार सत्र" 
+                  placeholder="उदा. सकाळचे वॉलीबॉल सर्व्हिस सत्र" 
                   className="h-12 rounded-xl border-2 font-bold text-sm" 
                 />
               </div>
