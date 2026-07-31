@@ -273,7 +273,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     // Process raw drill completions
     rawCompletions.forEach((d: any) => {
       const sport = d.sportName || d.drillId?.split('_')[0] || 'Sports';
-      if (preselectedSport && sport.toLowerCase() !== preselectedSport.toLowerCase()) return;
+      const lowerSport = sport.toLowerCase();
+      // Skip auto completions for Yoga and PT/Mass to avoid total student counts
+      if (lowerSport.includes('yoga') || lowerSport.includes('pt') || lowerSport.includes('mass')) return;
+      if (preselectedSport && lowerSport !== preselectedSport.toLowerCase()) return;
 
       const drill = d.drillName || d.drillId?.split('_')[1] || 'Drill';
       const key = `${sport}___${drill}`;

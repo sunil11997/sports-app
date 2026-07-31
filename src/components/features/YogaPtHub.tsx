@@ -152,30 +152,15 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
       store.data.activities = store.data.activities.filter((a: any) => a.id !== editingId);
     }
 
-    // 1. Add to store activities (Auto-Archived into Daily Report)
+    // 1. Add to store activities (Auto-Archived into Daily Report with manually entered counts ONLY)
     store.addActivity(newActivity);
-
-    // 2. Auto-Archive completion for players in selected classes
-    const playersInClasses = (store.data.players || []).filter((p: any) => 
-      selectedClasses.includes((p.std || "").toString().trim())
-    );
-
-    const drillKey = `${gameType}_${selectedSkill}`;
-    playersInClasses.forEach((player: any) => {
-      store.setDrillCompletion(drillKey, player.id, true, {
-        sportName: gameType,
-        drillName: selectedSkill,
-        gender: player.gender || 'Male',
-        std: player.std || ''
-      });
-    });
 
     setIsArchiving(false);
     setEditingId(null);
 
     toast({
       title: editingId ? "माहिती अद्ययावत झाली! (Updated)" : "ऑटो-अर्काईव्ह पूर्ण! (Automatic Archive Successful)",
-      description: `${gameType} - ${selectedSkill} सत्र इयत्ता ${selectedClasses.join(', ')} साठी दैनिक अहवालात ऑटो-अर्काईव्ह केले गेले. (एकूण: ${b + g} विद्यार्थी)`,
+      description: `${gameType} - ${selectedSkill} सत्र इयत्ता ${selectedClasses.join(', ')} साठी दैनिक अहवालात ऑटो-अर्काईव्ह केले गेले. (मुले: ${b}, मुली: ${g})`,
       className: "bg-emerald-600 text-white font-bold"
     });
 
