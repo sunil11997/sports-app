@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -608,7 +609,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       '<div class="notes-box">' + notesContent + '</div>',
       photosHtml,
       '<div class="footer-sign">',
-      '<div class="sign-block"><div>क्रीडा शिक्षक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(' + teacherName + ')</div></div>',
+      '<div class="sign-block"><img src="' + TEACHER_SIGN_B64 + '" alt="Teacher Signature" style="height:48px;max-width:180px;object-fit:contain;margin-bottom:4px;" /><div>क्रीडा शिक्षक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(' + teacherName + ')</div></div>',
       '<div class="sign-block"><div>मुख्याध्यापक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div></div>',
       '</div>',
       '</div>',
