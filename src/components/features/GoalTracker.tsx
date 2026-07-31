@@ -27,9 +27,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 const METRICS: Record<string, string[]> = {
   'Athletics': ['100m Sprint (sec)', '200m Sprint (sec)', '400m Sprint (sec)', 'Long Jump (mtr)', 'High Jump (mtr)', 'Shot Put (mtr)', 'Javelin (mtr)'],
-  'Kabaddi': ['Successful Raids', 'Tackle Points', 'Bonus Points', 'Super Tackles'],
-  'Volleyball': ['Successful Serves', 'Spike Points', 'Block Points', 'Aces'],
-  'Kho Kho': ['Chasing Points', 'Running Time (min)', 'Pole Dives'],
+  'Running': ['100m Sprint (sec)', '200m Sprint (sec)', '400m Sprint (sec)', '800m Pacing (min)', '1500m Endurance (min)'],
+  'Shot Put': ['Distance Thrown (mtr)', 'Glide Speed (sec)', 'Power Position Thrust'],
+  'Javelin Throw': ['Distance Thrown (mtr)', 'Approach Speed', 'Release Angle (deg)'],
+  'Disc Throw': ['Distance Thrown (mtr)', 'Spin Rhythm (sec)', 'Release Speed'],
+  'Long Jump': ['Distance Jumped (mtr)', 'Takeoff Velocity', 'Flight Hold (sec)'],
+  'High Jump': ['Height Cleared (mtr)', 'Takeoff Arch', 'Bar Clearance'],
+  'Kabaddi': ['Successful Raids', 'Tackle Points', 'Bonus Points', 'Super Tackles', 'Escape Moves'],
+  'Volleyball': ['Successful Serves', 'Spike Points', 'Block Points', 'Aces', 'Digs Received'],
+  'Kho Kho': ['Chasing Points', 'Running Time (min)', 'Pole Dives', 'Dodging Moves'],
+  'Handball': ['Goals Scored', 'Jump Shots', 'Assists', 'Goalkeeper Saves'],
+  'Yoga': ['Surya Namaskar Rounds', 'Hold Duration (sec)', 'Flexibility Index (1-10)'],
+  'PT Mass': ['Drill Precision (1-10)', 'Marching Rhythm (1-10)', 'Stamina Score (1-10)'],
   'General': ['Push-ups Count', 'Chin-ups Count', 'Plank Duration (sec)']
 };
 
@@ -49,7 +58,7 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
 
   const players = useMemo(() => 
     (store.data.players || [])
-      .filter((p: any) => p.category === 'athlete' && (!activeSport || p.sports?.includes(activeSport)))
+      .filter((p: any) => p.category === 'athlete' && (!activeSport || !p.sports?.length || p.sports.includes(activeSport)))
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
     [store.data.players, activeSport]
   );

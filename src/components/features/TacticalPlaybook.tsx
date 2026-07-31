@@ -37,22 +37,39 @@ const STANDARD_STRATEGIES: Record<string, any[]> = {
   'Kabaddi': [
     { title: '५-१-१ डिफेन्स सेटअप', type: 'Defense', intensity: 'High', desc: 'डिफेंडरची साखळी आणि कोपरं सांभाळण्याची रणनीती. जेव्हा बोनस ऑन असतो तेव्हा ही वापरतात.', howTo: '१. दोन्ही कोपरे (Corners) लाइनच्या आत खोलवर राहातात.\n२. मधले कव्हर्स रेडरच्या हालचालीवर लक्ष ठेवतात आणि त्याला बोनस घेण्यास प्रवृत्त करतात.\n३. जसा रेडर बोनससाठी पाय टाकतो, तसे कोपरे आणि कव्हर्स मिळून त्याला घेतात.', img: 'https://picsum.photos/seed/kdef1/600/400' },
     { title: '३-२-२ कव्वर पॅटर्न', type: 'Defense', intensity: 'Extreme', desc: 'मधल्या डिफेंडर्सनी रेडरला घेरण्याची रणनीती. अत्यंत वेगवान हालचाल आवश्यक.', howTo: '१. ही रणनीती प्रामुख्याने ७ खेळाडू मैदानात असताना वापरली जाते.\n२. मधले दोन खेळाडू (In-Covers) रेडरला कोपऱ्याकडे ढकलतात.\n३. रेडर कोपऱ्यात अडकला की संपूर्ण टीम साखळीने त्याला डॅश करते.', img: 'https://picsum.photos/seed/kdef2/600/400' },
-    { title: 'बोनस एस्केप अटॅक', type: 'Offense', intensity: 'Moderate', desc: 'रेडरने बोनस घेताना कोपऱ्यातून पळून जाण्याचे तंत्र.', howTo: '१. रेडर कोपऱ्यातील डिफेंडरला फसवून पाय बोनस लाईनच्या पलीकडे टाकतो.\n२. पाय पडताच कंबर फिरवून मध्यरेषेकडे झेप घेतो.\n३. हे करताना डिफेंडरचा डॅश चुकवणे महत्त्वाचे असते.', img: 'https://picsum.photos/seed/koff1/600/400' },
-    { title: 'साखळी पकड (Chain Tackle)', type: 'Defense', intensity: 'High', desc: 'दोन खेळाडूंनी हात धरून रेडरला घेरण्याची आणि डॅश करण्याची पद्धत.', howTo: '१. दोन डिफेंडर्स एकमेकांचे हात घट्ट धरतात.\n२. रेडर जेव्हा कोपऱ्यात जातो, तेव्हा हे दोघे वर्तुळाकार फिरून त्याचा रस्ता रोखतात.\n३. साखळीचा वापर करून रेडरला उचलून बाहेर ढकलले जाते.', img: 'https://picsum.photos/seed/k4/600/400' },
-    { title: 'डॅश डिफेन्स (Dash)', type: 'Defense', intensity: 'High', desc: 'रेडरला मध्यरेषेकडे जाण्यापासून जोरात धक्का देऊन बाहेर काढणे.', howTo: '१. कव्वर डिफेन्स रेडरच्या हालचालीचा अंदाज घेतात.\n२. जसा रेडर कोपऱ्यात जातो, कव्हर खेळाडू जोरात धावत येऊन त्याला खांद्याने धक्का देतो.', img: 'https://picsum.photos/seed/k5/600/400' },
-    { title: 'थाय होल्ड (Thigh Hold)', type: 'Defense', intensity: 'Moderate', desc: 'रेडरचे पाय पकडून त्याला जागीच रोखण्याची पद्धत.', howTo: '१. डिफेंडर रेडरच्या एका पायावर लक्ष केंद्रित करतो.\n२. जसा पाय जवळ येतो, डिफेंडर दोन्ही हातांनी मांडी धरून त्याला खाली पाडतो.', img: 'https://picsum.photos/seed/k6/600/400' }
+    { title: 'बोनस एस्केप अटॅक', type: 'Offense', intensity: 'Moderate', desc: 'रेडरने बोनस घेताना कोपऱ्यातून पळून जाण्याचे तंत्र.', howTo: '१. रेडर कोपऱ्यातील डिफेंडरला फसवून पाय बोनस लाईनच्या पलीकडे टाकतो.\n२. पाय पडताच कंबर फिरवून मध्यरेषेकडे झेप घेतो.\n३. हे करताना डिफेंडरचा डॅश चुकवणे महत्त्वाचे असते.', img: 'https://picsum.photos/seed/koff1/600/400' }
   ],
   'Volleyball': [
     { title: '६-२ रोटेशन पॅटर्न', type: 'Rotation', intensity: 'Moderate', desc: 'दोन सेटर वापरून आक्रमणाची धार वाढवण्याची पद्धत.', howTo: '१. दोन सेटर विरुद्ध दिशेला उभे राहतात.\n२. मागच्या रांगेतील सेटर सेट करण्यासाठी पुढे येतो.\n३. यामुळे समोरच्या रांगेत नेहमी ३ अटॅकर्स उपलब्ध असतात.', img: 'https://picsum.photos/seed/v1/600/400' },
-    { title: 'ट्रिपल ब्लॉक कव्हरेज', type: 'Defense', intensity: 'High', desc: 'प्रतिस्पर्धी स्पायकरला रोखण्यासाठी तीन खेळाडूंनी एकत्र उडी मारणे.', howTo: '१. समोरच्या रांगेतील तिन्ही खेळाडू स्पायकरच्या समोर एकत्र येतात.\n२. एकाच वेळी उडी मारून हातांची भिंत उभी करतात.\n३. यामुळे बॉल परत जाण्याची शक्यता ९०% वाढते.', img: 'https://picsum.photos/seed/v2/600/400' },
-    { title: 'लिबेरो डिफेन्स (Libero)', type: 'Defense', intensity: 'High', desc: 'विशेष संरक्षण खेळाडू जो फक्त मागच्या रांगेत खेळतो.', howTo: '१. लिबेरोचा गणवेश वेगळ्या रंगाचा असतो.\n२. तो बॉल रिसीव्ह करण्यात आणि डिगिंग करण्यात तज्ज्ञ असतो.', img: 'https://picsum.photos/seed/v3/600/400' },
-    { title: 'फ्लोट सर्व्हिस (Float)', type: 'Offense', intensity: 'Low', desc: 'बॉल न फिरवता मारणे जेणेकरून तो हवेत डोलत जाईल.', howTo: '१. बॉलच्या मध्यभागी सरळ हाताने मारा.\n२. बॉलला स्पिन देऊ नका.', img: 'https://picsum.photos/seed/v4/600/400' }
+    { title: 'ट्रिपल ब्लॉक कव्हरेज', type: 'Defense', intensity: 'High', desc: 'प्रतिस्पर्धी स्पायकरला रोखण्यासाठी तीन खेळाडूंनी एकत्र उडी मारणे.', howTo: '१. समोरच्या रांगेतील तिन्ही खेळाडू स्पायकरच्या समोर एकत्र येतात.\n२. एकाच वेळी उडी मारून हातांची भिंत उभी करतात.\n३. यामुळे बॉल परत जाण्याची शक्यता ९०% वाढते.', img: 'https://picsum.photos/seed/v2/600/400' }
+  ],
+  'Kho Kho': [
+    { title: '३-३ सिंगल साखळी', type: 'Defense', intensity: 'High', desc: 'रनरने पोलजवळ ३-३ खेळाडूंच्या साखळीत फिरून वेळ काढण्याची पद्धत.', howTo: '१. धावपटू पोलजवळ गोल चक्राकार फिरतो.\n२. पाठ दाखवून चकवा देतो आणि विरुद्ध दिशेला सरकतो.', img: 'https://picsum.photos/seed/kk1/600/400' },
+    { title: 'पोल डायव्ह अटॅक (Pole Dive)', type: 'Offense', intensity: 'Extreme', desc: 'चेझरने पोलचा आधार घेऊन धावपटूला तत्काळ बाद करण्याची आक्रमक पद्धत.', howTo: '१. पोलजवळ पोहोचताच हाताने पोल घट्ट पकडा.\n२. हवेत झेप घेऊन दुसऱ्या हाताने धावपटूला स्पर्श करा.', img: 'https://picsum.photos/seed/kk2/600/400' }
+  ],
+  'Handball': [
+    { title: '६-० झोन डिफेन्स', type: 'Defense', intensity: 'High', desc: 'सर्व ६ बचावपटूंनी ६-मीटर लाईनवर भिंत उभी करणे.', howTo: '१. सर्व खेळाडू गोललाईनच्या सीमेवर एकत्र उभे राहतात.\n२. चेंडू ज्या बाजूला जाईल त्या बाजूला सरकतात.', img: 'https://picsum.photos/seed/hb1/600/400' },
+    { title: 'फास्ट ब्रेक अटॅक', type: 'Offense', intensity: 'Extreme', desc: 'विरोधी टीमच्या चुकीनंतर लगेच जलद प्रतिहल्ला करणे.', howTo: '१. गोलकीपरने चेंडू मिळताच पुढच्या विंग खेळाडूला लांब पास द्यावा.', img: 'https://picsum.photos/seed/hb2/600/400' }
   ],
   'Running': [
     { title: '१००मी स्टार्ट (Start)', type: 'Technique', intensity: 'Extreme', desc: 'सुरुवातीच्या सेकंदात जास्तीत जास्त वेग पकडण्याची पद्धत.', howTo: '१. ब्लॉक्सवर योग्य स्थितीत बसा.\n२. गोळी सुटताच हातांच्या वेगाने पुढे झेपावा.', img: 'https://picsum.photos/seed/r1/600/400' },
     { title: 'बॅटन एक्सचेंज (Relay)', type: 'Teamwork', intensity: 'High', desc: 'रिले रेसमध्ये बॅटन न पाहता यशस्वीपणे दुसऱ्या खेळाडूकडे सोपवणे.', howTo: '१. एक्सचेंज झोनमध्ये येताच बॅटन देणाऱ्याने ओरडावे.\n२. घेणाऱ्याने हात मागे करून बॅटन घट्ट पकडावे.', img: 'https://picsum.photos/seed/r2/600/400' }
+  ],
+  'Athletics': [
+    { title: '१००मी स्टार्ट (Sprint Start)', type: 'Technique', intensity: 'High', desc: 'स्टार्टिंग ब्लॉकवरून कमाल त्वरण प्राप्त करण्याचे तंत्र.', howTo: '१. रेडी पोझिशनमध्ये कंबर उंच करा.\n२. विसल वाजताच दोन्ही पायांनी ब्लॉक ढकला.', img: 'https://picsum.photos/seed/ath1/600/400' }
+  ],
+  'Yoga': [
+    { title: 'सूर्य नमस्कार १२ आसने क्रम', type: 'Routine', intensity: 'Moderate', desc: 'श्वास आणि हालचालींचा सुसंगत मेळ घालणारे १२ आसनांचे चक्र.', howTo: '१. प्रणामासन ते भुजंगासन श्वासाच्या तालावर करा.', img: 'https://picsum.photos/seed/yg1/600/400' }
+  ],
+  'PT Mass': [
+    { title: 'सामूहिक कवायत १ ते ५ ताल पद्धत', type: 'Rhythm', intensity: 'Moderate', desc: '१६ अंकी तालावर संपूर्ण शाळेने एकाच वेळी कवायत करणे.', howTo: '१. १ ते ४ अंकांवर विश्राम, ५ ते ८ अंकांवर सावधान स्थितीत व्यायाम करा.', img: 'https://picsum.photos/seed/pt1/600/400' }
   ]
 };
+
+const DEFAULT_FALLBACK_STRATEGIES = [
+  { title: 'मूलभूत तंत्र व हालचाल (Basic Technique)', type: 'Technique', intensity: 'Moderate', desc: 'खेळाच्या मूलभूत हालचाली आणि अचूक तंत्राचा सराव.', howTo: '१. शरीराचा समतोल साधा.\n२. योग्य कौशल्याची पुनरावृत्ती करा.', img: 'https://picsum.photos/seed/gen1/600/400' },
+  { title: 'सामना रणनीती व वेग (Match Pace)', type: 'Strategy', intensity: 'High', desc: 'सामन्याच्या परिस्थितीनुसार वेग आणि रणनीती बदलणे.', howTo: '१. सुरुवातीला संयम ठेवा.\n२. शेवटी कमाल ताकदीने आक्रमक व्हा.', img: 'https://picsum.photos/seed/gen2/600/400' }
+];
 
 export function TacticalPlaybook({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const { toast } = useToast();
@@ -64,7 +81,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
   const [planDesc, setPlanDesc] = useState("");
   const [customPlans, setCustomPlans] = useState<any[]>([]);
 
-  const strategies = useMemo(() => STANDARD_STRATEGIES[activeSport] || [], [activeSport]);
+  const strategies = useMemo(() => STANDARD_STRATEGIES[activeSport] || DEFAULT_FALLBACK_STRATEGIES, [activeSport]);
 
   const handleSavePlan = () => {
     if (!planTitle || !planDesc) return;

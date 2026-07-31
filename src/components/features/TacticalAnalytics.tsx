@@ -44,7 +44,18 @@ const TACTICAL_SITUATIONS: Record<string, string[]> = {
     'Direction Fake (दिशाभूल)',
     'Giving Kho Timing (खो देण्याची वेळ)',
     'Late Entry Running (उशिरा प्रवेश धावणे)',
-    'Sudden Sudden Turn (अचानक वळण)'
+    'Sudden Turn (अचानक वळण)'
+  ],
+  'Handball': [
+    'Fast Break Shot (जलद गोल)',
+    'Jump Shot Decision',
+    'Wing Pass Timing',
+    'Penalty Throw Precision'
+  ],
+  'Running': [
+    'Pacing Strategy',
+    'Sprint Finish Kick',
+    'Baton Pass Timing'
   ],
   'General': [
     'Quick Reflex Response',
@@ -70,7 +81,7 @@ export function TacticalAnalytics({ store, preselectedSport }: { store: any, pre
 
   const players = useMemo(() => 
     (store.data.players || [])
-      .filter((p: any) => p.category === 'athlete' && (!selectedSport || p.sports?.includes(selectedSport)))
+      .filter((p: any) => p.category === 'athlete' && (!selectedSport || !p.sports?.length || p.sports.includes(selectedSport)))
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
     [store.data.players, selectedSport]
   );

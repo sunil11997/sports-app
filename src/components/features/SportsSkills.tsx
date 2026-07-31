@@ -386,45 +386,42 @@ export function SportsSkills({ store, section = 'sports', preselectedSport }: { 
             <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl opacity-50" />
           </DialogHeader>
 
-          {/* Scrollable Evaluation List */}
-          <ScrollArea className="flex-1 max-h-[55vh]">
-            <div className="p-8 space-y-6">
-               <div className="grid grid-cols-1 gap-5">
-                  {(DETAILED_SKILLS[editingDetailedPlayer?.sport || ''] || []).map(skill => (
-                    <div key={skill} className="space-y-3 bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all">
-                      <div className="flex justify-between items-center px-1">
-                        <Label className="text-[11px] font-black uppercase text-primary tracking-wider">{skill}</Label>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setGuideModalName(skill)}
-                            className="h-7 text-[9px] font-black uppercase text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg px-2.5"
-                          >
-                            <Info className="w-3 h-3 mr-1" /> कसे करावे (Guide)
-                          </Button>
-                          <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 10</span>
-                        </div>
+          {/* 100% Scrollable Evaluation List */}
+          <div className="flex-1 overflow-y-auto max-h-[60vh] p-8 space-y-6">
+             <div className="grid grid-cols-1 gap-5">
+                {(DETAILED_SKILLS[editingDetailedPlayer?.sport || ''] || []).map(skill => (
+                  <div key={skill} className="space-y-3 bg-muted/20 p-4 rounded-2xl border-2 border-transparent hover:border-primary/10 transition-all">
+                    <div className="flex justify-between items-center px-1">
+                      <Label className="text-[11px] font-black uppercase text-primary tracking-wider">{skill}</Label>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setGuideModalName(skill)}
+                          className="h-7 text-[9px] font-black uppercase text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg px-2.5"
+                        >
+                          <Info className="w-3 h-3 mr-1" /> कसे करावे (Guide)
+                        </Button>
+                        <span className="text-[10px] font-black text-accent">{localDetailedSkills[skill] || '0'} / 10</span>
                       </div>
-                      <Input 
-                        type="number" 
-                        min="0"
-                        max="10"
-                        step="0.1"
-                        value={localDetailedSkills[skill] || ''} 
-                        placeholder="0-10 (उदा. 8.5)"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const val = e.target.value;
-                          setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
-                        }} 
-                        className="h-12 text-center text-lg font-black rounded-xl border-2 shadow-inner focus:ring-accent" 
-                      />
                     </div>
-                  ))}
-               </div>
-            </div>
-            <ScrollBar orientation="vertical" />
-          </ScrollArea>
+                    <Input 
+                      type="number" 
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      value={localDetailedSkills[skill] || ''} 
+                      placeholder="0-10 (उदा. 8.5)"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const val = e.target.value;
+                        setLocalDetailedSkills(prev => ({ ...prev, [skill]: val }));
+                      }} 
+                      className="h-12 text-center text-lg font-black rounded-xl border-2 shadow-inner focus:ring-accent" 
+                    />
+                  </div>
+                ))}
+             </div>
+          </div>
 
           <DialogFooter className="p-8 bg-slate-50 border-t shrink-0">
             <Button onClick={handleSave} className="w-full bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl active-scale text-xs">
