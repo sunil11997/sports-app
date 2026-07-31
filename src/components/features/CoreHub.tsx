@@ -60,9 +60,11 @@ const ListOrdered = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
+const SPORTS_LIST = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javline', 'Long Jump', 'High Jump'];
 
 const SPORT_VIDEOS: Record<string, string> = {
+  'Yoga': 'https://www.youtube.com/watch?v=sTANio_2E0Q',
+  'PT Mass': 'https://www.youtube.com/watch?v=cbKybXVi9C0',
   'Kabaddi': 'https://www.youtube.com/watch?v=S8XWf8p0Urc',
   'Volleyball': 'https://www.youtube.com/watch?v=qf-1h-K2qRk',
   'Handball': 'https://www.youtube.com/watch?v=_vC-T7qZ6_w',
@@ -75,6 +77,10 @@ const SPORT_VIDEOS: Record<string, string> = {
 };
 
 const DRILL_LIBRARY = [
+  { id: 'yg1', category: 'Yoga', name: 'Surya Namaskar (सूर्य नमस्कार)', duration: '15m', level: 'Basic', description: '12-step sun salutation posture sequence.', video: 'https://www.youtube.com/watch?v=sTANio_2E0Q' },
+  { id: 'yg2', category: 'Yoga', name: 'Anulom Vilom Pranayama (अनुलोम विलोम)', duration: '10m', level: 'Basic', description: 'Alternate nostril deep breathing for mental clarity.', video: 'https://www.youtube.com/watch?v=sTANio_2E0Q' },
+  { id: 'pt1', category: 'PT Mass', name: 'Mass PT Exercise No 1-5', duration: '20m', level: 'Basic', description: 'Institutional mass physical exercise routine.', video: 'https://www.youtube.com/watch?v=cbKybXVi9C0' },
+  { id: 'pt2', category: 'PT Mass', name: 'Freehand Warm-up & Marching', duration: '15m', level: 'Basic', description: 'Full body mobility and rhythmic march drill.', video: 'https://www.youtube.com/watch?v=cbKybXVi9C0' },
   { id: 'k1', category: 'Kabaddi', name: 'Dubki Mastery', duration: '15m', level: 'Advanced', description: 'Technique for diving under a defender chain.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   { id: 'k2', category: 'Kabaddi', name: 'Toe Touch Speed', duration: '10m', level: 'Intermediate', description: 'Extending leg to touch defender and retreating.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },
   { id: 'k3', category: 'Kabaddi', name: 'Ankle Hold Grip', duration: '20m', level: 'Intermediate', description: 'Grip strength and timing for ankle defense.', video: 'https://www.youtube.com/watch?v=S8XWf8p0Urc' },

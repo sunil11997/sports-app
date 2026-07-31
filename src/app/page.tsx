@@ -58,6 +58,7 @@ const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m =
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
+const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
@@ -249,9 +250,10 @@ export default function WaghambaApp() {
   const sportsTabs = useMemo(() => [
     { id: "home", label: t.home, icon: Home },
     { id: "sport", label: t.sport, icon: Trophy },
+    { id: "daily-report", label: language === 'Marathi' ? "दैनिक अहवाल" : "Daily Report", icon: FileText },
     { id: "students", label: t.students, icon: UsersRound },
     { id: "profile", label: t.profile, icon: UserCircle },
-  ], [t]);
+  ], [t, language]);
 
   const birthdaysToday = useMemo(() => {
     if (!isMounted || !schoolData.data.players) return [];
@@ -416,10 +418,15 @@ export default function WaghambaApp() {
               <GameHub store={schoolData} />
             </TabsContent>
 
+            <TabsContent value="daily-report" className="mt-0 h-full">
+              <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />
+            </TabsContent>
+
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700 h-full">
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
+                      { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
                       { id: "classes", label: "Students Registry", desc: "Std-wise Profiles", icon: ClipboardList, color: "bg-blue-600" },
                       { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
                       { id: "leaderboard", label: "Monthly Medals", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
@@ -451,6 +458,7 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "daily-report" && <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />}
                     {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
                     {subTab === "hall-of-fame" && <HallOfFame store={schoolData} />}
                     {subTab === "leaderboard" && <Gamification store={schoolData} />}

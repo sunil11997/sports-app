@@ -43,6 +43,8 @@ const DailyPracticePlanner = dynamic(() => import('./DailyPracticePlanner').then
 const AutoPracticePlanner = dynamic(() => import('./AutoPracticePlanner').then(m => m.AutoPracticePlanner), { ssr: false });
 
 const GAMES = [
+  { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { id: 'PT Mass', label: 'PT Mass & Exercises', icon: Activity, color: 'text-teal-600', bg: 'bg-teal-50' },
   { id: 'Kabaddi', label: 'Kabaddi', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50' },
   { id: 'Volleyball', label: 'Volleyball', icon: Trophy, color: 'text-blue-600', bg: 'bg-blue-50' },
   { id: 'Handball', label: 'Handball', icon: Target, color: 'text-emerald-600', bg: 'bg-emerald-50' },

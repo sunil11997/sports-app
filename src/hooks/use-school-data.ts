@@ -148,6 +148,7 @@ export function useSchoolData(isActive: boolean = true) {
   const [goals, setGoalsData] = useState<GoalRecord[]>([]);
   const [drillCompletions, setDrillCompletionsData] = useState<Record<string, boolean>>({});
   const [teamPlans, setTeamPlans] = useState<Record<string, any>>({});
+  const [drillCompletionsRaw, setDrillCompletionsRaw] = useState<any[]>([]);
 
   // Memoized Firebase References
   const schoolDocRef = useMemoFirebase(() => (user && db && isActive) ? doc(db, 'schools', user.uid) : null, [db, user, isActive]);
@@ -283,15 +284,17 @@ export function useSchoolData(isActive: boolean = true) {
         const events: TacticalEvent[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TacticalEvent));
         setTacticalEventsData(events.sort((a, b) => (b.date || "").localeCompare(a.date || "")));
       }),
-      onSnapshot(query(collection(db, 'goal_registry'), where('schoolId', '==', user.uid), where('academicYear', '==', selectedYear)), (snapshot) => {
-        const list: GoalRecord[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as GoalRecord));
-        setGoalsData(list.sort((a, b) => (b.month || "").localeCompare(a.month || "")));
-      }),
       onSnapshot(query(collection(db, 'drill_completions'), where('schoolId', '==', user.uid)), (snapshot) => {
         const map: Record<string, boolean> = {};
-        snapshot.docs.forEach(doc => map[doc.id] = true);
+        const rawList: any[] = [];
+        snapshot.docs.forEach(doc => {
+          map[doc.id] = true;
+          rawList.push(doc.data());
+        });
         setDrillCompletionsData(map);
+        setDrillCompletionsRaw(rawList);
       }),
+
       onSnapshot(query(collection(db, 'game_rules_registry'), where('schoolId', '==', user.uid)), (snapshot) => {
         const rulesMap: Record<string, any> = {};
         snapshot.docs.forEach(doc => rulesMap[doc.id] = doc.data());
@@ -335,6 +338,7 @@ export function useSchoolData(isActive: boolean = true) {
       sportSkills,
       skillsHistory,
       drillCompletions,
+      drillCompletionsRaw,
       gameRules,
       examConfigs,
       performanceConfigs,
@@ -355,7 +359,7 @@ export function useSchoolData(isActive: boolean = true) {
         updatedAt: "2024-01-01T00:00:00.000Z"
       }
     };
-  }, [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, schoolActivities, teamPlans]);
+  }, [allPlayers, healthIncidents, attendance, fitness, fitnessHistory, sportSkills, skillsHistory, gameRules, examConfigs, performanceConfigs, schoolProfile, dailyReadiness, tacticalEvents, goals, drillCompletions, drillCompletionsRaw, schoolActivities, teamPlans]);
 
   return {
     data: aggregatedData,
@@ -412,7 +416,25 @@ export function useSchoolData(isActive: boolean = true) {
     setExamLabels: (std: string, term: string, labels: ExamLabels) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'exam_configs', `${std}_${term}`), { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     setPerformanceLabels: (std: string, month: string, labels: PerformanceLabels) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'performance_configs', `${std}_${month}`), { labels, std, month, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     setSportSkill: (pId: string, sport: string, skill: SportSkill) => { if (!user || !db) return; const timeId = new Date().getTime().toString(); setDocumentNonBlocking(doc(db, 'skills_registry', `${pId}_${sport}_${timeId}`), { ...skill, playerId: pId, sportName: sport, schoolId: user.uid, lastUpdated: new Date().toISOString(), academicYear: selectedYear }, { merge: true }); },
-    setDrillCompletion: (dId: string, pId: string, comp: boolean) => { if (!user || !db) return; const refId = `${pId}_${dId}`; if (comp) setDocumentNonBlocking(doc(db, 'drill_completions', refId), { id: refId, schoolId: user.uid, playerId: pId, drillId: dId, timestamp: new Date().toISOString() }, { merge: true }); else deleteDocumentNonBlocking(doc(db, 'drill_completions', refId)); },
+    setDrillCompletion: (dId: string, pId: string, comp: boolean, meta?: { sportName?: string; drillName?: string; gender?: string; std?: string }) => {
+      if (!user || !db) return;
+      const refId = `${pId}_${dId}`;
+      if (comp) {
+        setDocumentNonBlocking(doc(db, 'drill_completions', refId), {
+          id: refId,
+          schoolId: user.uid,
+          playerId: pId,
+          drillId: dId,
+          sportName: meta?.sportName || dId.split('_')[0] || '',
+          drillName: meta?.drillName || dId.split('_')[1] || '',
+          gender: meta?.gender || '',
+          std: meta?.std || '',
+          timestamp: new Date().toISOString()
+        }, { merge: true });
+      } else {
+        deleteDocumentNonBlocking(doc(db, 'drill_completions', refId));
+      }
+    },
     setGameRule: (s: string, pdf: string | null) => { if (!user || !db) return; if (!pdf) deleteDocumentNonBlocking(doc(db, 'game_rules_registry', s)); else setDocumentNonBlocking(doc(db, 'game_rules_registry', s), { sportName: s, pdfData: pdf, schoolId: user.uid, updatedAt: new Date().toISOString() }, { merge: true }); },
     addHealthIncident: (i: HealthIncident) => { if (!user || !db) return; setDocumentNonBlocking(doc(db, 'all_health_incidents', i.id), { ...i, schoolId: user.uid, academicYear: selectedYear }, { merge: true }); },
     deleteHealthIncident: (id: string) => { if (!db) return; deleteDocumentNonBlocking(doc(db, 'all_health_incidents', id)); },

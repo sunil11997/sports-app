@@ -25,6 +25,38 @@ import { cn, getAgeValidation } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 const SPORTS_DATA: Record<string, { skills: string[] }> = {
+  'Yoga': {
+    skills: [
+      "Surya Namaskar (सूर्य नमस्कार)",
+      "Tadasana (ताडासन)",
+      "Vrikshasana (वृक्षासन)",
+      "Bhujangasana (भुजंगासन)",
+      "Padmasana (पद्मासन)",
+      "Anulom Vilom Pranayama (अनुलोम विलोम)",
+      "Kapalbhati Pranayama (कपालभाती)",
+      "Shavasana (शवासन)",
+      "Trikonasana (त्रिकोणासन)",
+      "Dhanurasana (धनुरासन)",
+      "Paschimottanasana (पश्चिमोत्तानासन)",
+      "Vajrasana (वज्रासन)"
+    ]
+  },
+  'PT Mass': {
+    skills: [
+      "Mass PT Exercise No 1",
+      "Mass PT Exercise No 2",
+      "Mass PT Exercise No 3",
+      "Mass PT Exercise No 4",
+      "Mass PT Exercise No 5",
+      "Freehand Warm-up",
+      "Jumping Jacks & Hopping",
+      "Arm Swings & Shoulder Rotation",
+      "Trunk Bending & Twisting",
+      "Marching in Place",
+      "Deep Breathing PT",
+      "Cool-down Stretch Routine"
+    ]
+  },
   'Kabaddi': {
     skills: [
       "Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill",
@@ -153,8 +185,13 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     const player = store.data.players.find((p: any) => p.id === playerId);
 
     if (mastered) {
-      store.setDrillCompletion(drillKey, playerId, true);
-      toast({ title: "Mastery Logged", description: `${player?.name} archived to registry.`, className: "bg-emerald-500 text-white" });
+      store.setDrillCompletion(drillKey, playerId, true, {
+        sportName: activeSport,
+        drillName: activeDrill,
+        gender: player?.gender || 'Male',
+        std: player?.std || ''
+      });
+      toast({ title: "Mastery Logged", description: `Log saved to Daily Report.`, className: "bg-emerald-500 text-white" });
     } else {
       toast({ title: "Keep Practicing", description: `${player?.name} needs more volume.`, variant: "destructive" });
     }
