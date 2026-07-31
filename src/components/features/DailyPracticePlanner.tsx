@@ -63,11 +63,16 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
   }
 };
 
-export function DailyPracticePlanner({ store }: { store: any }) {
+export function DailyPracticePlanner({ store, preselectedSport }: { store: any; preselectedSport?: string }) {
   const { toast } = useToast();
   const db = useFirestore();
   
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<'U14' | 'U17' | 'U19'>('U14');
+  const [selectedSport, setSelectedSport] = useState(preselectedSport || 'Kabaddi');
+
+  useEffect(() => {
+    if (preselectedSport) setSelectedSport(preselectedSport);
+  }, [preselectedSport]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     const yyyy = today.getFullYear();

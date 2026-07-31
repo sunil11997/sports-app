@@ -49,7 +49,7 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
 
   const players = useMemo(() => 
     (store.data.players || [])
-      .filter((p: any) => p.category === 'athlete' && (!activeSport || p.sports?.includes(activeSport) || activeSport === 'Athletics'))
+      .filter((p: any) => p.category === 'athlete' && (!activeSport || p.sports?.includes(activeSport)))
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
     [store.data.players, activeSport]
   );

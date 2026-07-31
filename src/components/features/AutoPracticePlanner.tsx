@@ -55,7 +55,7 @@ interface PlayerPlanEntry {
   drill2_2?: string;
 }
 
-export function AutoPracticePlanner({ store }: { store: any }) {
+export function AutoPracticePlanner({ store, preselectedSport }: { store: any; preselectedSport?: string }) {
   const { toast } = useToast();
   const db = useFirestore();
 

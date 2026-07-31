@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Printer, Medal } from 'lucide-react';
 import { getAgeValidation } from '@/lib/utils';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
+const SPORTS_LIST = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
 export function TournamentRosters({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const [selectedSport, setSelectedSport] = useState(preselectedSport || SPORTS_LIST[0]);

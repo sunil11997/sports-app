@@ -213,10 +213,12 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             </h2>
           </div>
           <div className="flex flex-col md:flex-row gap-4">
-            <Select value={activeSport} onValueChange={setActiveSport}>
-              <SelectTrigger className="h-14 md:w-[180px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
+            {!preselectedSport && (
+              <Select value={activeSport} onValueChange={setActiveSport}>
+                <SelectTrigger className="h-14 md:w-[180px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{Object.keys(SPORTS_DATA).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            )}
             <Select value={activeDrill} onValueChange={setActiveDrill}>
               <SelectTrigger className="h-14 md:w-[220px] rounded-2xl border-2 font-black uppercase text-[11px] bg-white shadow-sm"><SelectValue /></SelectTrigger>
               <SelectContent>{SPORTS_DATA[activeSport]?.skills.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>

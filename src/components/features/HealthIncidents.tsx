@@ -92,7 +92,7 @@ class InjuryRecoverySystem {
   }
 }
 
-export function HealthIncidents({ store, section, language = 'English' }: { store: any, section: 'sports' | 'general', language?: string }) {
+export function HealthIncidents({ store, section, language = 'English', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
   const { toast } = useToast();
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [date, setDate] = useState("");
@@ -112,10 +112,19 @@ export function HealthIncidents({ store, section, language = 'English' }: { stor
   
   const filteredPlayers = useMemo(() => 
     (store.data.players || [])
-      .filter((p: any) => isGeneral ? true : p.category === 'athlete')
+      .filter((p: any) => isGeneral ? true : (p.category === 'athlete' && (!preselectedSport || p.sports?.includes(preselectedSport))))
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "")),
-    [store.data.players, isGeneral]
+    [store.data.players, isGeneral, preselectedSport]
   );
+
+  const filteredIncidents = useMemo(() => {
+    return (store.data.healthIncidents || []).filter((h: any) => {
+      const p = (store.data.players || []).find((pl: any) => pl.id === h.playerId);
+      if (!isGeneral && h.category !== 'athlete') return false;
+      if (preselectedSport && p && (!p.sports || !p.sports.includes(preselectedSport))) return false;
+      return true;
+    });
+  }, [store.data.healthIncidents, store.data.players, isGeneral, preselectedSport]);
 
   const recoveryInfo = useMemo(() => {
     if (!selectedType || !selectedBodyPart || !isMounted) return null;
@@ -406,13 +415,13 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
         
         <ScrollArea className="flex-1 min-h-[600px]">
           <div className="space-y-4 pr-4">
-            {store.data.healthIncidents.length === 0 ? (
+            {filteredIncidents.length === 0 ? (
               <Card className="border-dashed border-4 p-24 text-center text-muted-foreground rounded-[3.5rem] opacity-30 bg-white/50">
                 <HeartPulse className="w-20 h-20 mx-auto mb-6" />
                 <p className="font-black uppercase tracking-widest text-sm">No Health Logs Archived</p>
               </Card>
             ) : (
-              [...store.data.healthIncidents].slice().reverse().map((inc: any) => {
+              [...filteredIncidents].slice().reverse().map((inc: any) => {
                 const player = store.data.players.find((p: any) => p.id === inc.playerId);
                 const displayName = isMarathi ? (player?.nameMarathi || inc.playerName) : inc.playerName;
                 return (

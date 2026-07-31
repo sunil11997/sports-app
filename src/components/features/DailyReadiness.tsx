@@ -159,7 +159,7 @@ function SquadItem({ data }: { data: any }) {
   );
 }
 
-export function DailyReadiness({ store }: { store: any }) {
+export function DailyReadiness({ store, preselectedSport }: { store: any; preselectedSport?: string }) {
   const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [sleepHours, setSleepHours] = useState(8);
@@ -176,9 +176,9 @@ export function DailyReadiness({ store }: { store: any }) {
   const players = useMemo(() => {
     if (!store?.data?.players) return [];
     return [...store.data.players]
-      .filter((p: any) => p && p.category === 'athlete')
+      .filter((p: any) => p && p.category === 'athlete' && (!preselectedSport || p.sports?.includes(preselectedSport)))
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
-  }, [store?.data?.players]);
+  }, [store?.data?.players, preselectedSport]);
 
   const teamReadiness = useMemo(() => {
     if (!isMounted || !players) return [];

@@ -13,9 +13,17 @@ import { cn, shareToWhatsApp } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-const sportsList = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
+const sportsList = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 
 const DETAILED_SKILLS: Record<string, string[]> = {
+  'Yoga': [
+    'Surya Namaskar', 'Tadasana', 'Vrikshasana', 'Bhujangasana', 'Padmasana', 
+    'Anulom Vilom', 'Kapalbhati', 'Shavasana', 'Trikonasana', 'Paschimottanasana'
+  ],
+  'PT Mass': [
+    'Mass PT Ex 1', 'Mass PT Ex 2', 'Mass PT Ex 3', 'Mass PT Ex 4', 'Mass PT Ex 5', 
+    'Freehand Warm-up', 'Jumping Jacks', 'Arm Swings', 'Trunk Bending', 'Marching in Place'
+  ],
   'Volleyball': [
     'Serving', 'Passing', 'Setting', 'Spiking', 'Blocking', 
     'Digging', 'Footwork', 'Rolling', 'Communication', 'Court positioning'

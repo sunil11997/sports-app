@@ -129,16 +129,16 @@ export function GameHub({ store }: { store: any }) {
           </div>
 
           <TabsContent value="readiness" className="mt-0">
-            <DailyReadiness store={store} />
+            <DailyReadiness store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="planner" className="mt-0">
             <TeamPlanner store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="auto-planner" className="mt-0">
-            <AutoPracticePlanner store={store} />
+            <AutoPracticePlanner store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="daily-planner" className="mt-0">
-            <DailyPracticePlanner store={store} />
+            <DailyPracticePlanner store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="goals" className="mt-0">
             <GoalTracker store={store} preselectedSport={selectedGame || undefined} />
@@ -150,7 +150,7 @@ export function GameHub({ store }: { store: any }) {
             <TacticalAnalytics store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="injury" className="mt-0">
-            <HealthIncidents store={store} section="sports" />
+            <HealthIncidents store={store} section="sports" preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="skills" className="mt-0">
             <SportsSkills store={store} section="sports" preselectedSport={selectedGame || undefined} />
@@ -165,7 +165,7 @@ export function GameHub({ store }: { store: any }) {
             <TournamentRosters store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="reports" className="mt-0">
-            <DailyReport store={store} section="sports" />
+            <DailyReport store={store} section="sports" preselectedSport={selectedGame || undefined} />
           </TabsContent>
         </Tabs>
       </div>

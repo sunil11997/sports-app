@@ -24,6 +24,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 
 const SPORTS_DATA: Record<string, { skills: string[] }> = {
+  'Yoga': {
+    skills: ["Surya Namaskar (सूर्य नमस्कार)", "Tadasana (ताडासन)", "Vrikshasana (वृक्षासन)", "Bhujangasana (भुजंगासन)", "Padmasana (पद्मासन)", "Anulom Vilom", "Kapalbhati", "Shavasana", "Trikonasana", "Paschimottanasana", "Vajrasana"]
+  },
+  'PT Mass': {
+    skills: ["Mass PT Exercise No 1", "Mass PT Exercise No 2", "Mass PT Exercise No 3", "Mass PT Exercise No 4", "Mass PT Exercise No 5", "Freehand Warm-up", "Jumping Jacks & Hopping", "Arm Swings & Shoulder Rotation", "Trunk Bending & Twisting", "Marching in Place"]
+  },
   'Kabaddi': {
     skills: [
       "Cant practice drill", "Toe touch drill", "Hand touch drill", "Dubki practice drill",

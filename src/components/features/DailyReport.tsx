@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-export function DailyReport({ store, section, language = 'Marathi' }: { store: any, section: 'sports' | 'general', language?: string }) {
+export function DailyReport({ store, section, language = 'Marathi', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
   const [reportDate, setReportDate] = useState("");
@@ -35,7 +35,7 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
   const [weather, setWeather] = useState("Sunny");
 
   // Custom Quick Log state
-  const [customSport, setCustomSport] = useState("Yoga");
+  const [customSport, setCustomSport] = useState(preselectedSport || "Yoga");
   const [customDrill, setCustomDrill] = useState("Surya Namaskar (सूर्य नमस्कार)");
   const [customBoysCount, setCustomBoysCount] = useState<number>(15);
   const [customGirlsCount, setCustomGirlsCount] = useState<number>(15);
@@ -45,7 +45,8 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
   useEffect(() => {
     setIsMounted(true);
     setReportDate(format(new Date(), 'yyyy-MM-dd'));
-  }, []);
+    if (preselectedSport) setCustomSport(preselectedSport);
+  }, [preselectedSport]);
 
   const players = useMemo(() => store?.data?.players || [], [store?.data?.players]);
 
@@ -62,6 +63,12 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
       if (status === 'P' && key.includes(reportDate)) {
         const playerId = key.split('_')[0];
         const player = players.find((p: any) => p.id === playerId);
+        
+        // Filter attendance for players matching preselectedSport if set
+        if (preselectedSport && (!player?.sports || !player.sports.includes(preselectedSport))) {
+          return;
+        }
+
         const gender = player?.gender || 'Male';
 
         if (key.endsWith('_Morning')) {
@@ -83,7 +90,7 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
       eveningGirls: eGirls,
       eveningTotal: eBoys + eGirls
     };
-  }, [store?.data?.attendance, players, reportDate, isMounted]);
+  }, [store?.data?.attendance, players, reportDate, isMounted, preselectedSport]);
 
   // Drills / Activities completed today grouped by Sport/Category
   const drillGroupedSummary = useMemo(() => {
@@ -103,6 +110,8 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
     // Process raw drill completions
     rawCompletions.forEach((d: any) => {
       const sport = d.sportName || d.drillId?.split('_')[0] || 'Sports';
+      if (preselectedSport && sport.toLowerCase() !== preselectedSport.toLowerCase()) return;
+
       const drill = d.drillName || d.drillId?.split('_')[1] || 'Drill';
       const key = `${sport}___${drill}`;
 
@@ -124,6 +133,8 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
     // Process logged activities
     activitiesToday.forEach((a: any) => {
       const sport = a.type || 'Activity';
+      if (preselectedSport && sport.toLowerCase() !== preselectedSport.toLowerCase()) return;
+
       const drill = a.summary || a.type;
       const key = `${sport}___${drill}`;
 
@@ -154,12 +165,17 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
     });
 
     return { yoga, ptMass, kabaddi, other };
-  }, [store?.data?.drillCompletionsRaw, store?.data?.activities, players, reportDate, isMounted]);
+  }, [store?.data?.drillCompletionsRaw, store?.data?.activities, players, reportDate, isMounted, preselectedSport]);
 
   // Health summary count (NO student names)
   const healthSummaryCounts = useMemo(() => {
     if (!isMounted || !reportDate || !store?.data?.healthIncidents) return { boys: 0, girls: 0, total: 0, descriptions: [] };
-    const healthToday = store.data.healthIncidents.filter((h: any) => h.date === reportDate);
+    const healthToday = store.data.healthIncidents.filter((h: any) => {
+      if (h.date !== reportDate) return false;
+      const p = players.find((player: any) => player.id === h.playerId);
+      if (preselectedSport && (!p?.sports || !p.sports.includes(preselectedSport))) return false;
+      return true;
+    });
 
     let boys = 0, girls = 0;
     const descriptions: string[] = [];
@@ -173,12 +189,17 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
     });
 
     return { boys, girls, total: healthToday.length, descriptions };
-  }, [store?.data?.healthIncidents, players, reportDate, isMounted]);
+  }, [store?.data?.healthIncidents, players, reportDate, isMounted, preselectedSport]);
 
   // Fitness evaluation counts today
   const fitnessCounts = useMemo(() => {
     if (!isMounted || !reportDate || !store?.data?.fitness) return { boys: 0, girls: 0, total: 0 };
-    const fitnessToday = Object.values(store.data.fitness).filter((f: any) => f.date === reportDate);
+    const fitnessToday = Object.values(store.data.fitness).filter((f: any) => {
+      if (f.date !== reportDate) return false;
+      const p = players.find((player: any) => player.id === f.playerId);
+      if (preselectedSport && (!p?.sports || !p.sports.includes(preselectedSport))) return false;
+      return true;
+    });
     let boys = 0, girls = 0;
     fitnessToday.forEach((f: any) => {
       const p = players.find((player: any) => player.id === f.playerId);
@@ -186,7 +207,7 @@ export function DailyReport({ store, section, language = 'Marathi' }: { store: a
       else boys++;
     });
     return { boys, girls, total: fitnessToday.length };
-  }, [store?.data?.fitness, players, reportDate, isMounted]);
+  }, [store?.data?.fitness, players, reportDate, isMounted, preselectedSport]);
 
   // Handle Quick Add Activity Log
   const handleAddQuickActivity = () => {
