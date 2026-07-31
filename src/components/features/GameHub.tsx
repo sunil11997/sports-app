@@ -41,6 +41,7 @@ const GoalTracker = dynamic(() => import('./GoalTracker').then(m => m.GoalTracke
 const TeamPlanner = dynamic(() => import('./TeamPlanner').then(m => m.TeamPlanner), { ssr: false });
 const DailyPracticePlanner = dynamic(() => import('./DailyPracticePlanner').then(m => m.DailyPracticePlanner), { ssr: false });
 const AutoPracticePlanner = dynamic(() => import('./AutoPracticePlanner').then(m => m.AutoPracticePlanner), { ssr: false });
+const YogaPtHub = dynamic(() => import('./YogaPtHub').then(m => m.YogaPtHub), { ssr: false });
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -67,6 +68,21 @@ export function GameHub({ store }: { store: any }) {
   }, []);
 
   if (!isMounted) return null;
+
+  // Dedicated Redesigned Hub for Yoga & Mass PT
+  if (selectedGame === 'Yoga' || selectedGame === 'PT Mass') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+        <button 
+          onClick={() => setSelectedGame(null)} 
+          className="flex items-center gap-2 font-black text-xs uppercase text-primary hover:bg-primary/10 px-5 py-2.5 rounded-xl border-2 transition-all w-fit bg-white shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4" /> मुख्य क्रीडा सूची (Back to All Games)
+        </button>
+        <YogaPtHub store={store} gameType={selectedGame} onBack={() => setSelectedGame(null)} />
+      </div>
+    );
+  }
 
   if (selectedGame) {
     return (
