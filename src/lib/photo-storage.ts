@@ -4,11 +4,11 @@ export interface GeoPhoto {
   url: string;
   caption: string;
   sport: string;
-  drill: string;
-  lat: number;
-  lng: number;
-  locationName: string;
-  timestamp: string;
+  drill?: string;
+  lat?: number | null;
+  lng?: number | null;
+  locationName?: string;
+  timestamp?: string;
 }
 
 const DB_NAME = 'WGB_ReportPhotos_DB';

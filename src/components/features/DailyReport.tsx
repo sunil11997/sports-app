@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
-import { savePhotoToIDB, getPhotosByDateFromIDB, deletePhotoFromIDB } from '@/lib/photo-storage';
+import { savePhotoToIDB, getPhotosByDateFromIDB, deletePhotoFromIDB, GeoPhoto } from '@/lib/photo-storage';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,19 +35,6 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn, parseMedicalLog } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-
-interface GeoPhoto {
-  id: string;
-  date: string;
-  url: string;
-  caption: string;
-  sport: string;
-  drill?: string;
-  lat: number | null;
-  lng: number | null;
-  locationName: string;
-  timestamp: string;
-}
 
 export function DailyReport({ store, section, language = 'Marathi', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
   const { toast } = useToast();
