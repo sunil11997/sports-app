@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Printer, X, FileText, CheckCircle2, User, Camera, ShieldCheck, Edit3 } from 'lucide-react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 import type { Player } from '@/lib/types';
 
 interface PlayerIdentityModalProps {
@@ -291,17 +292,34 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
         </div>
 
         <div class="paper">
-          <!-- LETTERHEAD -->
+          <!-- LETTERHEAD WITH LOGOS -->
           <div class="letterhead">
-            <div class="govt-title">महाराष्ट्र शासन</div>
-            <div class="school-title">शासकीय माध्यमिक आश्रमशाळा वाघंबा ता.बागलाण जि.नाशिक</div>
-            <div class="meta-row">
-              <span>SSC Index No – 13.12.058</span>
-              <span>Udise No.- 27200116503</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <!-- LEFT LOGO (Adivasi Vikas Vibhag) -->
+              <div style="width: 85px; text-align: left; shrink: 0;">
+                <img src="${TRIBAL_DEV_LOGO_B64}" alt="Adivasi Vikas Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+              </div>
+
+              <!-- CENTER SCHOOL HEADER INFO -->
+              <div style="flex: 1; text-align: center;">
+                <div class="govt-title">महाराष्ट्र शासन</div>
+                <div class="school-title">शासकीय माध्यमिक आश्रमशाळा वाघंबा ता.बागलाण जि.नाशिक</div>
+                <div class="meta-row" style="justify-content: center; gap: 24px; margin-top: 2px;">
+                  <span>SSC Index No – 13.12.058</span>
+                  <span>Udise No.- 27200116503</span>
+                </div>
+                <div style="font-size: 11px; font-weight: 800; color: #475569; margin-top: 2px;">
+                  Email id – govt.waghamba2020@gmail.com
+                </div>
+              </div>
+
+              <!-- RIGHT LOGO (Amrit Mahotsav) -->
+              <div style="width: 85px; text-align: right; shrink: 0;">
+                <img src="${AMRIT_MAHOTSAV_LOGO_B64}" alt="Amrit Mahotsav Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+              </div>
             </div>
-            <div style="font-size: 11px; font-weight: 800; color: #475569; margin-top: 2px;">
-              Email id – govt.waghamba2020@gmail.com
-            </div>
+
+            <!-- DISPATCH NO & DATE BELOW HEADER LOGOS -->
             <div class="dispatch-row">
               <span>जा.क्र. ________ /२०२६ वाघंबा</span>
               <span>दिनांक: ____/____/२०२६</span>
@@ -523,14 +541,35 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
           {/* FORM PREVIEW CARD */}
           <div className="border-2 border-primary/30 rounded-3xl p-6 bg-white space-y-4 shadow-md font-sans text-xs">
             {/* LETTERHEAD PREVIEW */}
-            <div className="text-center border-b-2 border-primary pb-3 space-y-1">
-              <p className="text-xs font-bold text-primary uppercase tracking-widest">महाराष्ट्र शासन</p>
-              <h3 className="text-lg font-black text-primary uppercase">{schoolName} ता.बागलाण जि.नाशिक</h3>
-              <div className="flex justify-between text-[10px] font-bold text-slate-600">
-                <span>SSC Index No – 13.12.058</span>
-                <span>Udise No.- 27200116503</span>
+            <div className="border-b-2 border-primary pb-3 space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                {/* LEFT LOGO */}
+                <div className="w-16 h-16 shrink-0">
+                  <img src={TRIBAL_DEV_LOGO_B64} alt="Adivasi Vikas Logo" className="w-full h-full object-contain" />
+                </div>
+
+                {/* CENTER TEXT */}
+                <div className="text-center flex-1 space-y-0.5">
+                  <p className="text-xs font-bold text-primary uppercase tracking-widest">महाराष्ट्र शासन</p>
+                  <h3 className="text-base md:text-lg font-black text-primary uppercase">{schoolName} ता.बागलाण जि.नाशिक</h3>
+                  <div className="flex justify-center gap-4 text-[10px] font-bold text-slate-600">
+                    <span>SSC Index No – 13.12.058</span>
+                    <span>Udise No.- 27200116503</span>
+                  </div>
+                  <p className="text-[10px] font-semibold text-slate-500">Email id – govt.waghamba2020@gmail.com</p>
+                </div>
+
+                {/* RIGHT LOGO */}
+                <div className="w-16 h-16 shrink-0">
+                  <img src={AMRIT_MAHOTSAV_LOGO_B64} alt="Amrit Mahotsav Logo" className="w-full h-full object-contain" />
+                </div>
               </div>
-              <p className="text-[10px] font-semibold text-slate-500">Email id – govt.waghamba2020@gmail.com</p>
+
+              {/* DISPATCH ROW BELOW HEADER */}
+              <div className="flex justify-between text-[11px] font-extrabold text-slate-800 border-t border-dashed border-slate-200 pt-2 px-1">
+                <span>जा.क्र. ________ /२०२६ वाघंबा</span>
+                <span>दिनांक: ____/____/२०२६</span>
+              </div>
             </div>
 
             {/* BOLD INFO */}
