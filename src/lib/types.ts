@@ -27,6 +27,11 @@ export interface Player {
   academicYear?: string;
   ageCategory?: string;
   ageDetailed?: string;
+  motherName?: string;
+  fatherName?: string;
+  saralId?: string;
+  admissionDate?: string;
+  identificationMark?: string;
 }
 
 export interface SchoolProfile {

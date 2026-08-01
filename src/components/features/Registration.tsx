@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { 
   UserPlus, 
@@ -32,13 +33,17 @@ import {
   Type,
   Loader2,
   Weight,
-  Ruler
+  Ruler,
+  FileText
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn, getAgeValidation } from '@/lib/utils';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
+import type { Player } from '@/lib/types';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
@@ -79,6 +84,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [registrySearch, setRegistrySearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedIdentityPlayer, setSelectedIdentityPlayer] = useState<Player | null>(null);
+  const [isIdentitySelectorOpen, setIsIdentitySelectorOpen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -245,10 +252,19 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-700">
       <Card className="border-2 rounded-[3rem] bg-accent/5 p-8 shadow-lg">
-           <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shrink-0 shadow-lg text-white"><Search className="w-7 h-7" /></div>
               <div className="flex-1 w-full space-y-2">
-                <label className="text-[10px] font-black uppercase text-accent tracking-widest ml-1">Registry Auto-Fill</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black uppercase text-accent tracking-widest ml-1">Registry Search & ID Card</label>
+                  <Button
+                    type="button"
+                    onClick={() => setIsIdentitySelectorOpen(true)}
+                    className="h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md active-scale flex items-center gap-1.5"
+                  >
+                    <FileText className="w-4 h-4" /> 🆔 खेळाडू ओळखपत्र (Print Player ID Card)
+                  </Button>
+                </div>
                 <div className="relative">
                   <Input 
                     value={registrySearch} 
@@ -261,13 +277,21 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                 {suggestedStudents.length > 0 && (
                   <div className="mt-2 p-2 bg-white rounded-2xl border-2 border-accent/20 shadow-xl space-y-1 animate-in slide-in-from-top-2 duration-300 relative z-50">
                     {suggestedStudents.map((s: any) => (
-                      <button key={s.id} type="button" onClick={() => handleAutoFill(s)} className="w-full text-left p-4 hover:bg-accent/5 rounded-xl flex items-center justify-between group transition-colors">
-                        <div>
+                      <div key={s.id} className="w-full text-left p-3 hover:bg-accent/5 rounded-xl flex items-center justify-between group transition-colors">
+                        <button type="button" onClick={() => handleAutoFill(s)} className="flex-1 text-left">
                           <p className="font-black text-primary uppercase text-sm">{s.name}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase">Std {s.std} &bull; GR: {s.generalRegisterNumber || '---'}</p>
-                        </div>
-                        <CheckCircle2 className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
+                        </button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedIdentityPlayer(s)}
+                          className="h-8 px-3 rounded-lg border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-black text-[9px] uppercase flex items-center gap-1"
+                        >
+                          <FileText className="w-3 h-3 text-amber-600" /> 🆔 ओळखपत्र
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -580,6 +604,56 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           </Form>
         </CardContent>
       </Card>
+
+      {/* PLAYER SELECTION DIALOG FOR ID CARD */}
+      <Dialog open={isIdentitySelectorOpen} onOpenChange={setIsIdentitySelectorOpen}>
+        <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] p-6 bg-white border-2 border-primary/20 shadow-2xl">
+          <DialogHeader className="border-b pb-4">
+            <DialogTitle className="text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2">
+              <FileText className="w-5 h-5 text-amber-500" /> खेळाडू निवडा (SELECT PLAYER FOR ID CARD)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-xs text-muted-foreground font-semibold">
+              शासकीय आश्रमशाळा वाघंबा क्रीडा ओळखपत्र तयार करण्यासाठी खालील यादीतून खेळाडू निवडा:
+            </p>
+            <ScrollArea className="h-[320px] rounded-2xl border-2 p-2">
+              <div className="space-y-1">
+                {(store?.data?.players || []).map((p: any) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedIdentityPlayer(p);
+                      setIsIdentitySelectorOpen(false);
+                    }}
+                    className="w-full text-left p-3.5 hover:bg-amber-50/80 rounded-xl flex items-center justify-between group border border-slate-100 transition-colors"
+                  >
+                    <div>
+                      <p className="font-black text-slate-900 text-xs uppercase">{p.nameMarathi || p.name}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                        इयत्ता {p.std} वी &bull; GR: {p.generalRegisterNumber || '---'} &bull; लिंग: {p.gender === 'Male' ? 'मुलगा' : 'मुलगी'}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-900 font-black text-[9px] uppercase">
+                      निवडा (ID CARD)
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PLAYER IDENTITY MODAL */}
+      {selectedIdentityPlayer && (
+        <PlayerIdentityModal
+          player={selectedIdentityPlayer}
+          schoolProfile={store?.data?.schoolProfile}
+          onClose={() => setSelectedIdentityPlayer(null)}
+        />
+      )}
     </div>
   );
 }

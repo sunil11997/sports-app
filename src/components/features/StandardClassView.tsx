@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getAgeValidation, getLocalizedAgeCategory } from '@/lib/utils';
 import type { Player } from '@/lib/types';
+import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
@@ -53,6 +54,7 @@ const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 
 export function StandardClassView({ store, std, language = 'English' }: { store: any, std: string, language?: string }) {
   const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [selectedIdentityPlayer, setSelectedIdentityPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -387,11 +389,22 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="rounded-full text-primary" onClick={() => setEditingPlayer(student)}>
+                      <div className="flex justify-end items-center gap-2">
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setSelectedIdentityPlayer(student)}
+                          className="h-9 px-3 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-black text-[9.5px] uppercase flex items-center gap-1.5 shadow-sm active-scale"
+                          title="खेळाडू ओळखपत्र (Official Player Identity Card)"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-amber-600" />
+                          {isMarathiView ? "ओळखपत्र" : "ID Card"}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="rounded-full text-primary h-9 w-9" onClick={() => setEditingPlayer(student)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="rounded-full text-destructive" onClick={() => handleDeletePlayer(student.id)}>
+                        <Button variant="ghost" size="icon" className="rounded-full text-destructive h-9 w-9" onClick={() => handleDeletePlayer(student.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -740,6 +753,14 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         </DialogContent>
       </Dialog>
       <canvas ref={canvasRef} className="hidden" />
+
+      {selectedIdentityPlayer && (
+        <PlayerIdentityModal
+          player={selectedIdentityPlayer}
+          schoolProfile={store?.data?.schoolProfile}
+          onClose={() => setSelectedIdentityPlayer(null)}
+        />
+      )}
     </div>
   );
 }
