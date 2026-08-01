@@ -29,7 +29,9 @@ import {
   Upload,
   Trash2,
   Crosshair,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Pencil,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +50,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   const [customDrill, setCustomDrill] = useState("Surya Namaskar (सूर्य नमस्कार)");
   const [customBoysCount, setCustomBoysCount] = useState<number>(15);
   const [customGirlsCount, setCustomGirlsCount] = useState<number>(15);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
 
   // Geotagged Photo Upload state
   const [reportPhotos, setReportPhotos] = useState<GeoPhoto[]>([]);
@@ -367,14 +370,14 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     return { boys, girls, total: fitnessToday.length };
   }, [store?.data?.fitness, players, reportDate, isMounted, preselectedSport]);
 
-  // Handle Quick Add Activity Log
+  // Handle Quick Add / Edit Activity Log
   const handleAddQuickActivity = () => {
     if (!customDrill || (customBoysCount <= 0 && customGirlsCount <= 0)) {
       toast({ title: "तपशील भरा (Fill Details)", description: "कृपया मुले/मुली संख्या टाका.", variant: "destructive" });
       return;
     }
 
-    const activityId = `act_${Date.now()}`;
+    const activityId = editingActivityId || `act_${Date.now()}`;
     const activityObj = {
       id: activityId,
       date: reportDate,
@@ -390,10 +393,11 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     if (store?.addActivity) {
       store.addActivity(activityObj);
       toast({ 
-        title: "दैनिक उपक्रम नोंदवले! (Activity Saved)", 
+        title: editingActivityId ? "उपक्रम संपादीत केले! (Log Updated)" : "दैनिक उपक्रम नोंदवले! (Activity Saved)", 
         description: `${customSport}: ${customDrill} (मुले: ${customBoysCount}, मुली: ${customGirlsCount})`, 
         className: "bg-emerald-600 text-white font-bold" 
       });
+      setEditingActivityId(null);
     }
   };
 

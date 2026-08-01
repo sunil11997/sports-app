@@ -18,7 +18,8 @@ import {
   ArrowRight,
   Flame,
   Star,
-  Printer
+  Printer,
+  Pencil
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';

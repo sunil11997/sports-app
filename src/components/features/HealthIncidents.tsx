@@ -21,7 +21,8 @@ import {
   Thermometer,
   ShieldCheck,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Pencil
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
@@ -512,12 +513,25 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
 
                       <div className="mt-5 pt-4 border-t border-dashed flex items-center justify-between">
                          <div className="flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Medical Protocol Synchronized</span>
+                           <Button 
+                             variant="outline" 
+                             size="sm" 
+                             onClick={() => {
+                               setSelectedPlayer(inc.playerId);
+                               if (parsed.diagnosis) setSelectedType(parsed.diagnosis);
+                               if (parsed.location) setSelectedBodyPart(parsed.location.toLowerCase());
+                               if (parsed.severity) setSeverity(parsed.severity);
+                               if (parsed.remarks) setDescription(parsed.remarks);
+                               toast({ title: "संपादन मोड", description: `${displayName} ची वैद्यकीय नोंद एडिट करण्यासाठी लोड केली.`, className: "bg-blue-600 text-white font-bold" });
+                             }} 
+                             className="h-8 px-3 text-[10px] font-black border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl"
+                           >
+                             <Pencil className="w-3 h-3 mr-1" /> एडिट
+                           </Button>
+                           <Button variant="ghost" size="icon" onClick={() => store.deleteHealthIncident(inc.id)} className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10">
+                              <AlertCircle className="w-4 h-4" />
+                           </Button>
                          </div>
-                         <Button variant="ghost" size="icon" onClick={() => store.deleteHealthIncident(inc.id)} className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10">
-                            <AlertCircle className="w-4 h-4" />
-                         </Button>
                       </div>
                     </div>
                   </Card>

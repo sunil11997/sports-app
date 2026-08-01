@@ -512,11 +512,11 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
           {isEditing && (
             <div className="p-5 rounded-2xl bg-amber-50/60 border-2 border-amber-200/80 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top duration-300">
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-amber-900">आईचे नाव (Mother's Name)</label>
+                <label className="text-[10px] font-black uppercase text-amber-900">आईचे नाव (Mother&apos;s Name)</label>
                 <Input value={motherName} onChange={(e) => setMotherName(e.target.value)} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-amber-900">वडिलांचे नाव (Father's Name)</label>
+                <label className="text-[10px] font-black uppercase text-amber-900">वडिलांचे नाव (Father&apos;s Name)</label>
                 <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold" />
               </div>
               <div className="space-y-1">
@@ -604,7 +604,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             {/* MEDICAL CERTIFICATE PREVIEW */}
             <div className="border-2 border-amber-500/40 bg-amber-50/50 p-3 rounded-2xl text-[11px] font-bold space-y-1">
               <p className="text-amber-900 font-black uppercase text-center">• वैद्यकीय अधिकाऱ्याने दिलेला दाखला (MEDICAL CERTIFICATE) •</p>
-              <p className="text-slate-800">"उपरोक्त विद्यार्थी खेळाडूची तपासणी केली असून त्याचे वर नमूद केलेले वय बरोबर असून तो शारीरिकदृष्ट्या पूर्णपणे तंदुरुस्त आहे."</p>
+              <p className="text-slate-800">&quot;उपरोक्त विद्यार्थी खेळाडूची तपासणी केली असून त्याचे वर नमूद केलेले वय बरोबर असून तो शारीरिकदृष्ट्या पूर्णपणे तंदुरुस्त आहे.&quot;</p>
             </div>
           </div>
 
