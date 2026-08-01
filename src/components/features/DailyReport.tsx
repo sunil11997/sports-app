@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+import { savePhotoToIDB, getPhotosByDateFromIDB, deletePhotoFromIDB } from '@/lib/photo-storage';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,15 +86,14 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     }
   }, [preselectedSport]);
 
-  // Load photos for selected reportDate
+  // Load photos for selected reportDate from persistent IndexedDB
   useEffect(() => {
     if (typeof window !== 'undefined' && reportDate) {
-      const saved = localStorage.getItem(`wgb_photos_${reportDate}`);
-      if (saved) {
-        try { setReportPhotos(JSON.parse(saved)); } catch (e) {}
-      } else {
-        setReportPhotos([]);
-      }
+      getPhotosByDateFromIDB(reportDate).then((photos) => {
+        setReportPhotos(photos);
+      }).catch(err => {
+        console.error('Error loading photos:', err);
+      });
     }
   }, [reportDate]);
 
@@ -125,25 +125,26 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     }
   };
 
-  // Process photo file, draw geotag stamp on canvas & save
+  // Process photo file, draw geotag stamp on canvas & save to IndexedDB
   const processAndAddPhoto = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const maxW = 1000;
-        const scale = Math.min(1, maxW / img.width);
+        // Resize image to max 900px for optimal quality and small storage footprint
+        const maxW = 900;
+        const scale = Math.min(1, maxW / Math.max(img.width, img.height));
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         // Draw Geotag Banner at bottom with full details
-        const bannerHeight = 115 * scale;
+        const bannerHeight = 110 * scale;
         const startY = canvas.height - bannerHeight;
 
         ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
@@ -157,28 +158,28 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         
         // Line 1: School & Location Name
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${Math.max(14, 17 * scale)}px sans-serif`;
+        ctx.font = `bold ${Math.max(13, 16 * scale)}px sans-serif`;
         ctx.fillText(`📍 ${schoolText} | ${locationName}`, 16 * scale, startY + (28 * scale));
 
         // Line 2: Selected Sport & Drill Name
         ctx.fillStyle = '#fde047'; // Amber yellow text
-        ctx.font = `bold ${Math.max(13, 16 * scale)}px sans-serif`;
+        ctx.font = `bold ${Math.max(12, 15 * scale)}px sans-serif`;
         const activeSport = photoSport || customSport;
         const activeDrill = photoDrill || customDrill;
-        ctx.fillText(`🏆 खेळ: ${activeSport}  |  प्रकार: ${activeDrill}`, 16 * scale, startY + (58 * scale));
+        ctx.fillText(`🏆 खेळ: ${activeSport}  |  प्रकार: ${activeDrill}`, 16 * scale, startY + (56 * scale));
 
         // Line 3: GPS Coordinates & Time
         ctx.fillStyle = '#cbd5e1';
-        ctx.font = `${Math.max(11, 13 * scale)}px sans-serif`;
+        ctx.font = `${Math.max(10, 12 * scale)}px sans-serif`;
         const timeStr = format(new Date(), 'dd MMM yyyy, hh:mm a');
         const latStr = currentLat ? currentLat.toString() : '20.5937';
         const lngStr = currentLng ? currentLng.toString() : '74.0045';
-        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (88 * scale));
+        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (84 * scale));
 
-        const stampedUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const stampedUrl = canvas.toDataURL('image/jpeg', 0.80);
 
         const newPhoto: GeoPhoto = {
-          id: `photo_${Date.now()}`,
+          id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           date: reportDate,
           url: stampedUrl,
           caption: photoCaption || `${activeSport} - ${activeDrill}`,
@@ -190,25 +191,22 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           timestamp: new Date().toLocaleTimeString()
         };
 
-        const updated = [newPhoto, ...reportPhotos];
-        setReportPhotos(updated);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(`wgb_photos_${reportDate}`, JSON.stringify(updated));
-        }
+        // Save persistently to IndexedDB
+        await savePhotoToIDB(newPhoto);
+
+        // Update UI state
+        setReportPhotos(prev => [newPhoto, ...prev.filter(p => p.id !== newPhoto.id)]);
         setPhotoCaption("");
-        toast({ title: "जिओ-टॅग फोटो जोडला! (Geotagged Photo Saved)", description: `${activeSport} photo saved with full geotag stamp.`, className: "bg-emerald-600 text-white font-bold" });
+        toast({ title: "जिओ-टॅग फोटो जतन झाला! (Geotagged Photo Saved)", description: `${activeSport} photo saved permanently.`, className: "bg-emerald-600 text-white font-bold" });
       };
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDeletePhoto = (id: string) => {
-    const updated = reportPhotos.filter(p => p.id !== id);
-    setReportPhotos(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`wgb_photos_${reportDate}`, JSON.stringify(updated));
-    }
+  const handleDeletePhoto = async (id: string) => {
+    await deletePhotoFromIDB(id, reportDate);
+    setReportPhotos(prev => prev.filter(p => p.id !== id));
     toast({ title: "फोटो हटवला", description: "फोटो अहवालातून काढला." });
   };
 
@@ -1220,7 +1218,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                 ref={cameraInputRef} 
                 className="hidden" 
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  if (e.target.files?.[0]) processAndAddPhoto(e.target.files[0]);
+                  if (e.target.files?.[0]) {
+                    processAndAddPhoto(e.target.files[0]);
+                    e.target.value = '';
+                  }
                 }} 
               />
               <input 
@@ -1229,7 +1230,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                 ref={fileInputRef} 
                 className="hidden" 
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  if (e.target.files?.[0]) processAndAddPhoto(e.target.files[0]);
+                  if (e.target.files?.[0]) {
+                    processAndAddPhoto(e.target.files[0]);
+                    e.target.value = '';
+                  }
                 }} 
               />
 
