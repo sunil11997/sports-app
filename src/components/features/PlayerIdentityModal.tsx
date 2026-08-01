@@ -65,6 +65,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
   const [admissionDate, setAdmissionDate] = useState(player.admissionDate || '15/06/2021');
   const [identificationMark, setIdentificationMark] = useState(player.identificationMark || 'डाव्या गालावर तीळ / हातावर ओळख खूण');
   const [selectedSport, setSelectedSport] = useState(player.sports?.join(', ') || 'Kabaddi (कबड्डी)');
+  const [photoUrl, setPhotoUrl] = useState(player.photoUrl || player.aadharPhotoUrl || '');
   const [isEditing, setIsEditing] = useState(false);
 
   const schoolName = schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रमशाळा वाघंबा';
@@ -72,6 +73,17 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
   const fullAddress = player.address || 'मु.पो. वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक';
   const dobWords = convertDobToMarathiWords(player.dob);
   const age31Dec = calculateAgeOn31Dec2025(player.dob);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handlePrint = () => {
     const printContent = `
@@ -83,103 +95,107 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
           @media print {
-            @page { size: A4 portrait; margin: 1cm; }
+            @page { size: A4 portrait; margin: 0.4cm; }
             .no-print { display: none !important; }
-            body { padding: 0 !important; background: #fff !important; }
+            html, body { height: 100%; overflow: hidden; padding: 0 !important; margin: 0 !important; background: #fff !important; }
+            .paper { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
           }
+          * { box-sizing: border-box; }
           body {
             font-family: 'Noto Sans Devanagari', sans-serif;
             background: #f8fafc;
             color: #0f172a;
-            padding: 20px;
+            padding: 12px;
             margin: 0;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 11px;
+            line-height: 1.35;
           }
           .paper {
-            max-width: 800px;
+            max-width: 780px;
             margin: 0 auto;
             background: #ffffff;
             border: 2px solid #1e3a8a;
-            border-radius: 8px;
-            padding: 24px 28px;
+            border-radius: 6px;
+            padding: 14px 18px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            page-break-inside: avoid;
           }
           .letterhead {
             text-align: center;
             border-bottom: 2px solid #1e3a8a;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
           }
           .govt-title {
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 800;
             color: #1e3a8a;
             text-transform: uppercase;
           }
           .school-title {
-            font-size: 20px;
+            font-size: 17px;
             font-weight: 900;
             color: #1e3a8a;
-            margin: 2px 0;
+            margin: 1px 0;
           }
           .meta-row {
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             color: #334155;
-            margin-top: 4px;
+            margin-top: 2px;
           }
           .dispatch-row {
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             color: #0f172a;
-            margin-top: 6px;
-            padding-top: 4px;
+            margin-top: 4px;
+            padding-top: 3px;
             border-top: 1px dashed #cbd5e1;
           }
           .bold-info-box {
             background: #f1f5f9;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin-bottom: 8px;
+            font-size: 10.5px;
             font-weight: 800;
-            line-height: 1.6;
+            line-height: 1.45;
           }
           .form-heading {
             text-align: center;
-            font-size: 16px;
+            font-size: 13.5px;
             font-weight: 900;
             color: #ffffff;
             background: #1e3a8a;
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 4px;
-            margin: 12px 0;
+            margin: 6px 0 8px 0;
             letter-spacing: 0.5px;
           }
           .identity-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 14px;
+            margin-bottom: 8px;
           }
           .identity-table th, .identity-table td {
             border: 1px solid #94a3b8;
-            padding: 6px 10px;
+            padding: 3.5px 8px;
             vertical-align: middle;
+            font-size: 10.5px;
           }
           .identity-table td.sr {
-            width: 38px;
+            width: 32px;
             text-align: center;
             font-weight: 800;
             background: #f8fafc;
           }
           .identity-table td.label {
-            width: 250px;
+            width: 220px;
             font-weight: 800;
             color: #1e293b;
             background: #f1f5f9;
@@ -189,8 +205,8 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             color: #0f172a;
           }
           .photo-box {
-            width: 130px;
-            height: 155px;
+            width: 115px;
+            height: 140px;
             border: 2px dashed #1e3a8a;
             border-radius: 6px;
             text-align: center;
@@ -198,12 +214,13 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 800;
             color: #475569;
             background: #fafafa;
             padding: 4px;
             box-sizing: border-box;
+            shrink: 0;
           }
           .photo-box img {
             width: 100%;
@@ -212,9 +229,9 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             border-radius: 4px;
           }
           .declaration-text {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 800;
-            margin: 12px 0 20px 0;
+            margin: 6px 0 10px 0;
             text-align: center;
             color: #1e293b;
           }
@@ -222,42 +239,44 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-top: 24px;
-            padding: 0 10px;
+            margin-top: 10px;
+            padding: 0 8px;
           }
           .sign-block {
             text-align: center;
-            width: 220px;
-            font-size: 11px;
+            width: 200px;
+            font-size: 10px;
             font-weight: 800;
           }
           .sign-block img {
-            height: 42px;
-            max-width: 160px;
+            height: 34px;
+            max-width: 140px;
             object-fit: contain;
             margin-bottom: 2px;
           }
           .medical-certificate-box {
-            border: 2px solid #0f172a;
+            border: 1.5px solid #0f172a;
             border-radius: 6px;
-            padding: 10px 14px;
-            margin-top: 18px;
+            padding: 6px 10px;
+            margin-top: 10px;
             background: #fffdf5;
           }
           .medical-title {
-            font-size: 13px;
+            font-size: 11.5px;
             font-weight: 900;
             color: #b45309;
             text-transform: uppercase;
             text-align: center;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             border-bottom: 1px solid #fde047;
-            padding-bottom: 4px;
+            padding-bottom: 2px;
           }
           .medical-body {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 800;
             color: #1e293b;
+            line-height: 1.4;
+          }
             line-height: 1.5;
           }
           .btn-bar {
@@ -415,9 +434,9 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
 
             <!-- PHOTO FRAME -->
             <div class="photo-box">
-              ${player.photoUrl ? `<img src="${player.photoUrl}" alt="Player Photo" />` : `
-                <div style="margin-top: 30px;">📸</div>
-                <div style="margin-top: 10px;">खेळाडूचा पासपोर्ट फोटो व मुख्याध्यापकांचा शिक्का</div>
+              ${photoUrl ? `<img src="${photoUrl}" alt="Player Photo" />` : `
+                <div style="margin-top: 15px;">📸</div>
+                <div style="margin-top: 6px; font-size: 8.5px; padding: 0 4px;">खेळाडूचा पासपोर्ट फोटो व मुख्याध्यापकांचा शिक्का</div>
               `}
             </div>
           </div>
@@ -534,6 +553,10 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-amber-900">ओळख खूण (Identification Mark)</label>
                 <Input value={identificationMark} onChange={(e) => setIdentificationMark(e.target.value)} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold" />
+              </div>
+              <div className="space-y-1 col-span-1 md:col-span-2">
+                <label className="text-[10px] font-black uppercase text-amber-900">खेळाडूचा फोटो अपडेट करा (Upload Student Photo)</label>
+                <Input type="file" accept="image/*" onChange={handlePhotoUpload} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-900 hover:file:bg-amber-200" />
               </div>
             </div>
           )}

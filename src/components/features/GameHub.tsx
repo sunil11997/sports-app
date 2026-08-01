@@ -23,11 +23,14 @@ import {
   Star,
   Users,
   CalendarDays,
-  Sparkles
+  Sparkles,
+  Contact,
+  FileBadge
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 
+const PlayerIDCardManager = dynamic(() => import('./PlayerIDCardManager').then(m => m.PlayerIDCardManager), { ssr: false });
 const SportsSkills = dynamic(() => import('./SportsSkills').then(m => m.SportsSkills), { ssr: false });
 const SportsDrills = dynamic(() => import('./SportsDrills').then(m => m.SportsDrills), { ssr: false });
 const TournamentRosters = dynamic(() => import('./TournamentRosters').then(m => m.TournamentRosters), { ssr: false });
@@ -110,6 +113,9 @@ export function GameHub({ store }: { store: any }) {
         <Tabs defaultValue="readiness" className="space-y-8">
           <div className="w-full overflow-x-auto scrollbar-hide pb-2">
             <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-2 w-max min-w-full">
+              <TabsTrigger value="id-cards" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-blue-900 data-[state=active]:text-amber-400 whitespace-nowrap flex items-center gap-2 border-2 border-amber-400/30">
+                <FileBadge className="w-4 h-4 text-amber-400" /> ID Cards (ओळखपत्रे)
+              </TabsTrigger>
               <TabsTrigger value="readiness" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
@@ -144,6 +150,9 @@ export function GameHub({ store }: { store: any }) {
             </TabsList>
           </div>
 
+          <TabsContent value="id-cards" className="mt-0">
+            <PlayerIDCardManager store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
           <TabsContent value="readiness" className="mt-0">
             <DailyReadiness store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
