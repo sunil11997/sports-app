@@ -5,6 +5,10 @@ const nextConfig = {
     unoptimized: true,
   },
   trailingSlash: false,
+  experimental: {
+    webpackBuildWorker: false,
+    cpus: 1,
+  },
   serverExternalPackages: [
     'genkit'
   ],

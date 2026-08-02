@@ -613,13 +613,13 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                              <FormField control={form.control} name="motherName" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mother's Name</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mother&apos;s Name</FormLabel>
                                 <FormControl><Input placeholder="Mother name" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
                             <FormField control={form.control} name="fatherName" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Father's Name</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Father&apos;s Name</FormLabel>
                                 <FormControl><Input placeholder="Father name" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
