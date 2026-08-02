@@ -18,6 +18,7 @@ import {
   FileBadge
 } from 'lucide-react';
 import type { Player } from '@/lib/types';
+import { getDisplayNameForLocale } from '@/lib/utils';
 import { PlayerIdentityModal } from './PlayerIdentityModal';
 
 interface PlayerIDCardManagerProps {
@@ -246,7 +247,7 @@ export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardMan
                       </div>
 
                       <h3 className="font-extrabold text-sm text-slate-900 leading-snug truncate group-hover:text-blue-700 transition-colors">
-                        {player.nameMarathi || player.name}
+                        {getDisplayNameForLocale(player.name, player.nameMarathi, 'mr')}
                       </h3>
                       
                       <p className="text-[11px] font-semibold text-slate-500 truncate">
@@ -256,6 +257,8 @@ export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardMan
                       <div className="text-[10px] font-bold text-slate-600 pt-1 space-y-0.5">
                         <div>G.R. No: <span className="font-mono text-slate-900">{player.generalRegisterNumber || '---'}</span></div>
                         <div>सरल ID: <span className="font-mono text-slate-900">{player.saralId || '---'}</span></div>
+                        <div>आई: <span className="font-sans text-slate-900">{player.motherName || '---'}</span></div>
+                        <div>प्रवेश: <span className="font-sans text-slate-900">{player.admissionDate || '---'}</span></div>
                       </div>
                     </div>
                   </div>

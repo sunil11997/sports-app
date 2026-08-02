@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Printer, Medal } from 'lucide-react';
-import { getAgeValidation } from '@/lib/utils';
+import { getAgeValidation, getDisplayNameForLocale } from '@/lib/utils';
 
 const SPORTS_LIST = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
@@ -68,6 +68,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.3; font-size: 12px; }
             .header { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 10px; margin-bottom: 25px; }
             .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
+            .school-subtitle { font-size: 12px; font-weight: 700; color: #475569; margin-top: 4px; }
             .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 10px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
             th, td { border: 1px solid #000; padding: 8px; text-align: left; }
@@ -86,6 +87,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           </div>
           <div class="header">
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
+            <div class="school-subtitle">क्रीडा विभाग • विद्यार्थी प्रवेश / संघ यादी • SSC Index No. 13.12.058</div>
             <div class="report-type">TOURNAMENT ENTRY FORM: ${selectedSport.toUpperCase()}</div>
             <div style="font-size: 14px; font-weight: 700; text-align:center; margin-top: 5px;">Category: ${category.toUpperCase()}</div>
           </div>
@@ -99,7 +101,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 <tr>
                   <td>${i + 1}</td>
                   <td>${p.generalRegisterNumber || '-'}</td>
-                  <td><strong>${p.name.toUpperCase()}</strong></td>
+                  <td><strong>${(getDisplayNameForLocale(p.name, p.nameMarathi, 'mr') || p.name).toUpperCase()}</strong></td>
                   <td>${p.std}</td>
                   <td>${getAgeValidation(p.dob)?.ageYears || p.age || '-'}</td>
                   <td>${p.aadharNumber || '-'}</td>

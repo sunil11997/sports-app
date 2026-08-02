@@ -48,6 +48,32 @@ import type { Player } from '@/lib/types';
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
+const normalizeDobValue = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+
+  if (digits.length <= 4) return digits;
+  if (digits.length === 8) {
+    const first4 = digits.slice(0, 4);
+    const mid2 = digits.slice(4, 6);
+    const last2 = digits.slice(6, 8);
+    const year = Number(first4);
+    const month = Number(mid2);
+    const day = Number(last2);
+
+    if (year >= 1900 && year <= 2100 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${first4}-${mid2}-${last2}`;
+    }
+
+    const dd = digits.slice(0, 2);
+    const mm = digits.slice(2, 4);
+    const yyyy = digits.slice(4, 8);
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+};
+
 const formSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "Name is required"),
@@ -56,6 +82,11 @@ const formSchema = z.object({
   category: z.enum(["athlete", "student"]),
   gender: z.enum(["Male", "Female"]),
   serialNumber: z.string().optional().default(""),
+  motherName: z.string().optional().default(""),
+  fatherName: z.string().optional().default(""),
+  saralId: z.string().optional().default(""),
+  admissionDate: z.string().optional().default(""),
+  identificationMark: z.string().optional().default(""),
   dob: z.string().optional().default(""),
   height: z.string().optional().default(""),
   sittingHeight: z.string().optional().default(""),
@@ -100,6 +131,11 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student",
     gender: "Male", 
     serialNumber: "", 
+    motherName: "",
+    fatherName: "",
+    saralId: "",
+    admissionDate: "",
+    identificationMark: "",
     dob: "", 
     height: "", 
     sittingHeight: "",
@@ -118,6 +154,16 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   }), [section]);
 
   const form = useForm<FormValues>({ resolver: zodResolver(formSchema), defaultValues });
+
+  const existingPlayers = useMemo(() => (store.data.players || []) as Player[], [store.data.players]);
+  const nextSerialNumber = useMemo(() => {
+    const serials = existingPlayers
+      .map((player) => Number.parseInt(player.serialNumber || '', 10))
+      .filter((value): value is number => Number.isFinite(value) && value > 0);
+
+    const next = serials.length > 0 ? Math.max(...serials) + 1 : 1;
+    return String(next);
+  }, [existingPlayers]);
 
   const dobValue = form.watch('dob');
   const ageValidation = useMemo(() => getAgeValidation(dobValue), [dobValue]);
@@ -248,6 +294,15 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   useEffect(() => {
     if (videoRef.current && stream && activeCam) { videoRef.current.srcObject = stream; }
   }, [stream, activeCam]);
+
+  useEffect(() => {
+    if (!form.getValues('serialNumber')) {
+      form.setValue('serialNumber', nextSerialNumber, { shouldDirty: false, shouldValidate: false });
+    }
+    if (!form.getValues('saralId')) {
+      form.setValue('saralId', nextSerialNumber, { shouldDirty: false, shouldValidate: false });
+    }
+  }, [form, nextSerialNumber]);
 
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-700">
@@ -441,7 +496,17 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                             <FormField control={form.control} name="dob" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Birth Date</FormLabel>
-                                <FormControl><Input type="date" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                                <FormControl>
+                                  <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={10}
+                                    placeholder="YYYY-MM-DD"
+                                    className="h-12 font-bold border-2 rounded-xl"
+                                    value={field.value || ''}
+                                    onChange={(e) => field.onChange(normalizeDobValue(e.target.value))}
+                                  />
+                                </FormControl>
                               </FormItem>
                             )} />
                             <FormField control={form.control} name="height" render={({ field }) => (
@@ -512,7 +577,15 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                             <FormField control={form.control} name="serialNumber" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Roll Number</FormLabel>
-                                <FormControl><Input placeholder="Class SR" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                                <FormControl>
+                                  <Input
+                                    readOnly
+                                    placeholder="Auto-generated"
+                                    className="h-12 font-bold border-2 rounded-xl bg-slate-50"
+                                    value={field.value || nextSerialNumber}
+                                    onChange={(e) => field.onChange(e.target.value)}
+                                  />
+                                </FormControl>
                               </FormItem>
                             )} />
                           </div>
@@ -534,6 +607,42 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar ID</FormLabel>
                                 <FormControl><Input placeholder="12-digit number" maxLength={12} className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                             <FormField control={form.control} name="motherName" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mother's Name</FormLabel>
+                                <FormControl><Input placeholder="Mother name" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                            <FormField control={form.control} name="fatherName" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Father's Name</FormLabel>
+                                <FormControl><Input placeholder="Father name" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                             <FormField control={form.control} name="saralId" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Saral ID</FormLabel>
+                                <FormControl><Input placeholder="Auto-filled from roll" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                            <FormField control={form.control} name="admissionDate" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Admission Date</FormLabel>
+                                <FormControl><Input placeholder="DD/MM/YYYY" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 gap-8">
+                            <FormField control={form.control} name="identificationMark" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Identification Mark</FormLabel>
+                                <FormControl><Input placeholder="Birth mark / identity mark" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
                           </div>

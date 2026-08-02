@@ -22,6 +22,7 @@ import {
   CalendarDays,
   ChevronRight,
   FileText,
+  FileBadge,
   CircleArrowUp,
   Cake,
   TrendingUp,
@@ -54,6 +55,7 @@ const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => 
 const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings), { ssr: false });
 const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier), { ssr: false });
 const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification), { ssr: false });
+const PlayerIDCardManager = dynamic(() => import('@/components/features/PlayerIDCardManager').then(m => m.PlayerIDCardManager), { ssr: false });
 const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
 const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
@@ -252,6 +254,7 @@ export default function WaghambaApp() {
     { id: "sport", label: t.sport, icon: Trophy },
     { id: "daily-report", label: language === 'Marathi' ? "दैनिक अहवाल" : "Daily Report", icon: FileText },
     { id: "students", label: t.students, icon: UsersRound },
+    { id: "i-card", label: language === 'Marathi' ? "आय कार्ड" : "I Card", icon: FileBadge },
     { id: "profile", label: t.profile, icon: UserCircle },
   ], [t, language]);
 
@@ -472,6 +475,10 @@ export default function WaghambaApp() {
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="i-card" className="mt-0 h-full">
+              <PlayerIDCardManager store={schoolData} />
             </TabsContent>
 
             <TabsContent value="profile" className="mt-0 h-full">
