@@ -246,12 +246,8 @@ export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardMan
                       </div>
 
                       <h3 className="font-extrabold text-sm text-slate-900 leading-snug truncate group-hover:text-blue-700 transition-colors">
-                        {player.nameMarathi || player.name}
+                        {player.nameMarathi && player.nameMarathi.trim() ? player.nameMarathi.trim() : player.name}
                       </h3>
-                      
-                      <p className="text-[11px] font-semibold text-slate-500 truncate">
-                        {player.name}
-                      </p>
 
                       <div className="text-[10px] font-bold text-slate-600 pt-1 space-y-0.5">
                         <div>G.R. No: <span className="font-mono text-slate-900">{player.generalRegisterNumber || '---'}</span></div>

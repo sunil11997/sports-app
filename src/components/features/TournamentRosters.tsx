@@ -198,17 +198,20 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 </tr>
               </thead>
               <tbody>
-                ${topTwelve.map((p, i) => `
+                ${topTwelve.map((p, i) => {
+                  const displayName = p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name;
+                  return `
                   <tr>
                     <td class="center"><strong>${i + 1}</strong></td>
                     <td class="center"><strong>${p.generalRegisterNumber || '---'}</strong></td>
-                    <td><strong>${p.nameMarathi || p.name}</strong> <br/><span style="font-size: 9.5px; color: #475569;">(${p.name})</span></td>
+                    <td><strong>${displayName}</strong></td>
                     <td class="center"><strong>${p.std} वी</strong></td>
                     <td class="center">${p.dob || (getAgeValidation(p.dob)?.ageYears || p.age || '---')}</td>
                     <td class="center">${p.aadharNumber || '---'}</td>
                     <td></td>
                   </tr>
-                `).join('')}
+                `;
+                }).join('')}
               </tbody>
             </table>
 
@@ -280,7 +283,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                     const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
                     return (
                       <TableRow key={p.id} className={i < 12 ? 'bg-emerald-50/30' : ''}>
-                        <TableCell className="text-xs font-bold truncate max-w-[150px]">{p.name.toUpperCase()}</TableCell>
+                        <TableCell className="text-xs font-bold truncate max-w-[150px]">{(p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name).toUpperCase()}</TableCell>
                         <TableCell className="text-xs font-bold text-center">{age <= 0 ? "Pending" : age}</TableCell>
                         <TableCell className="text-center font-black text-primary">{p.competencyRating}</TableCell>
                       </TableRow>

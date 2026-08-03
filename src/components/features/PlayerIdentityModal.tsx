@@ -68,6 +68,17 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
   const [photoUrl, setPhotoUrl] = useState(player.photoUrl || player.aadharPhotoUrl || '');
   const [isEditing, setIsEditing] = useState(false);
 
+  React.useEffect(() => {
+    setMotherName(player.motherName || '');
+    setFatherName(player.fatherName || '');
+    setSaralId(player.saralId || player.serialNumber || '');
+    setAdmissionDate(player.admissionDate || '');
+    setIdentificationMark(player.identificationMark || '');
+    setSelectedSport(player.sports && player.sports.length > 0 ? player.sports.join(', ') : '');
+    setPhotoUrl(player.photoUrl || player.aadharPhotoUrl || '');
+  }, [player]);
+
+  const displayName = player.nameMarathi && player.nameMarathi.trim() ? player.nameMarathi.trim() : player.name;
   const schoolName = schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रमशाळा वाघंबा';
   const teacherName = schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
   const fullAddress = player.address || 'मु.पो. वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक';
@@ -90,7 +101,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
       <!DOCTYPE html>
       <html>
       <head>
-        <title>खेळाडू ओळखपत्र - ${player.name}</title>
+        <title>खेळाडू ओळखपत्र - ${displayName}</title>
         <meta charset="utf-8" />
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
@@ -361,7 +372,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <tr>
                 <td class="sr">१</td>
                 <td class="label">खेळाडूचे पूर्ण नाव</td>
-                <td class="value"><strong>${player.nameMarathi || player.name}</strong></td>
+                <td class="value"><strong>${displayName}</strong></td>
               </tr>
               <tr>
                 <td class="sr">२</td>
@@ -464,7 +475,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
           <div class="medical-certificate-box">
             <div class="medical-title">• वैद्यकीय अधिकाऱ्याने दिलेला दाखला (MEDICAL FITNESS CERTIFICATE) •</div>
             <div class="medical-body">
-              "उपरोक्त विद्यार्थी खेळाडू <strong>${player.nameMarathi || player.name}</strong> (इयत्ता ${player.std} वी) याची वैद्यकीय तपासणी केली असून त्याचे वर नमूद केलेले वय बरोबर असून तो शारीरिकदृष्ट्या क्रीडा स्पर्धेत भाग घेण्यासाठी पूर्णपणे तंदुरुस्त आहे."
+              "उपरोक्त विद्यार्थी खेळाडू <strong>${displayName}</strong> (इयत्ता ${player.std} वी) याची वैद्यकीय तपासणी केली असून त्याचे वर नमूद केलेले वय बरोबर असून तो शारीरिकदृष्ट्या क्रीडा स्पर्धेत भाग घेण्यासाठी पूर्णपणे तंदुरुस्त आहे."
             </div>
             <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
               <div class="sign-block">
@@ -514,7 +525,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
           <div className="flex flex-wrap items-center justify-between bg-slate-100 p-4 rounded-2xl gap-3 border border-slate-200">
             <div className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>ऑटो-फील माहिती: <strong>{player.nameMarathi || player.name}</strong> (इयत्ता {player.std} वी)</span>
+              <span>ऑटो-फील माहिती: <strong>{displayName}</strong> (इयत्ता {player.std} वी)</span>
             </div>
             <Button
               type="button"
@@ -609,7 +620,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
 
             {/* SUMMARY PREVIEW TABLE */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>१. नाव:</strong> {player.nameMarathi || player.name}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>१. नाव:</strong> {displayName}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>२. पत्ता:</strong> {fullAddress}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>३. आईचे नाव:</strong> {motherName || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>४. वडिलांचे नाव:</strong> {fatherName || '---'}</div>
