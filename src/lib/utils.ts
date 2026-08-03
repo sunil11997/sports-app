@@ -5,6 +5,102 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function transliterateEnglishToMarathi(name: string | undefined | null): string {
+  if (!name) return '';
+
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) return '';
+
+  const commonPairs: Array<[string, string]> = [
+    ['sh', 'श'], ['ch', 'च'], ['kh', 'ख'], ['gh', 'घ'], ['dh', 'ध'], ['th', 'थ'], ['ph', 'फ'], ['bh', 'भ'], ['jh', 'झ'], ['ny', 'ञ'], ['rr', 'ऱ'], ['ll', 'ळ'], ['tt', 'ट'], ['dd', 'ड'], ['nn', 'ण'], ['aa', 'ा'], ['ee', 'ी'], ['ii', 'ी'], ['oo', 'ू'], ['ou', 'ौ'], ['au', 'ौ']
+  ];
+
+  const singleMap: Record<string, string> = {
+    a: 'अ', b: 'ब', c: 'क', d: 'ड', e: 'ए', f: 'फ', g: 'ग', h: 'ह', i: 'इ', j: 'ज', k: 'क', l: 'ल', m: 'म', n: 'न', o: 'ओ', p: 'प', r: 'र', s: 'स', t: ' ट', u: 'उ', v: 'व', w: 'व', x: 'क्स', y: 'य', z: 'झ'
+  };
+
+  let result = '';
+  let index = 0;
+
+  while (index < normalized.length) {
+    let matched = false;
+
+    for (const [pair, replacement] of commonPairs) {
+      if (normalized.startsWith(pair, index)) {
+        result += replacement;
+        index += pair.length;
+        matched = true;
+        break;
+      }
+    }
+
+    if (matched) continue;
+
+    const char = normalized[index];
+    const nextChar = normalized[index + 1];
+
+    if (char === 'a' && index > 0 && normalized[index - 1] !== ' ') {
+      result += '';
+      index += 1;
+      continue;
+    }
+
+    if (char === 'i' && index > 0 && normalized[index - 1] !== ' ') {
+      result += 'ि';
+      index += 1;
+      continue;
+    }
+
+    if (char === 'u' && index > 0 && normalized[index - 1] !== ' ') {
+      result += 'ु';
+      index += 1;
+      continue;
+    }
+
+    if (char === 'e' && index > 0 && normalized[index - 1] !== ' ') {
+      result += 'े';
+      index += 1;
+      continue;
+    }
+
+    if (char === 'o' && index > 0 && normalized[index - 1] !== ' ') {
+      result += 'ो';
+      index += 1;
+      continue;
+    }
+
+    if (char === ' ' || char === '-' || char === '_') {
+      result += ' ';
+      index += 1;
+      continue;
+    }
+
+    if (char && nextChar && `${char}${nextChar}` in singleMap) {
+      result += singleMap[`${char}${nextChar}`] || '';
+      index += 2;
+      continue;
+    }
+
+    if (char && char in singleMap) {
+      result += singleMap[char] || '';
+      index += 1;
+      continue;
+    }
+
+    result += char;
+    index += 1;
+  }
+
+  return result.replace(/\s+/g, ' ').trim();
+}
+
+export function getDisplayNameForLocale(name: string | undefined | null, nameMarathi: string | undefined | null, locale: 'en' | 'mr' = 'mr') {
+  if (locale === 'mr') {
+    return (nameMarathi || transliterateEnglishToMarathi(name || '') || name || '').trim();
+  }
+  return (name || '').trim();
+}
+
 /**
  * shareToWhatsApp - Institutional Reporting Engine
  * Constructs a formatted Marathi message for parents and students.

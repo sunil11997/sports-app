@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Printer, X, FileText, CheckCircle2, User, Camera, ShieldCheck, Edit3 } from 'lucide-react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+import { getDisplayNameForLocale } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 
 interface PlayerIdentityModalProps {
@@ -84,6 +85,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
   const fullAddress = player.address || 'मु.पो. वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक';
   const dobWords = convertDobToMarathiWords(player.dob);
   const age31Dec = calculateAgeOn31Dec2025(player.dob);
+  const displayName = getDisplayNameForLocale(player.name, player.nameMarathi, 'mr');
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
