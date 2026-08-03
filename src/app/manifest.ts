@@ -3,12 +3,12 @@ import { MetadataRoute } from 'next'
 
 /**
  * Waghamba Sports Hub - PWA Manifest
- * v5.2.0: Added Shot Put Throw Girls cohort and updated Auto Planner.
+ * v5.3.0: Added Official I-Card Manager, Letterhead & Tournaments Integration.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Waghamba Institutional Sports & Health Hub',
-    short_name: 'WGB Hub v5.2',
+    short_name: 'WGB Hub v5.3',
     description: 'Professional Physical Education & Sports Management System',
     start_url: '/',
     display: 'standalone',
