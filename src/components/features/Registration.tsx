@@ -52,10 +52,15 @@ const formSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "Name is required"),
   nameMarathi: z.string().optional().default(""),
+  motherName: z.string().optional().default(""),
+  fatherName: z.string().optional().default(""),
   std: z.string().min(1, "Standard is required"),
   category: z.enum(["athlete", "student"]),
   gender: z.enum(["Male", "Female"]),
   serialNumber: z.string().optional().default(""),
+  saralId: z.string().optional().default(""),
+  admissionDate: z.string().optional().default(""),
+  identificationMark: z.string().optional().default(""),
   dob: z.string().optional().default(""),
   height: z.string().optional().default(""),
   sittingHeight: z.string().optional().default(""),
@@ -96,10 +101,15 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     id: "",
     name: "", 
     nameMarathi: "",
+    motherName: "",
+    fatherName: "",
     std: "1", 
     category: (section === 'sports' ? 'athlete' : 'student') as "athlete" | "student",
     gender: "Male", 
     serialNumber: "", 
+    saralId: "",
+    admissionDate: "",
+    identificationMark: "",
     dob: "", 
     height: "", 
     sittingHeight: "",
@@ -376,7 +386,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <UserCircle2 className="w-5 h-5" />
-                            <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity</h3>
+                            <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity & Parents Info</h3>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <FormField control={form.control} name="name" render={({ field }) => (
@@ -391,6 +401,20 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</FormLabel>
                                 <FormControl><Input placeholder="पूर्ण नाव मराठीत" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
                                 <FormMessage />
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField control={form.control} name="fatherName" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Father&apos;s Name (वडिलांचे नाव)</FormLabel>
+                                <FormControl><Input placeholder="Father's full name" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                            <FormField control={form.control} name="motherName" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mother&apos;s Name (आईचे नाव)</FormLabel>
+                                <FormControl><Input placeholder="Mother's name" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
                           </div>
@@ -521,33 +545,55 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <MapPin className="w-5 h-5" />
-                            <h3 className="font-black uppercase text-xs tracking-widest">Administrative Contact</h3>
+                            <h3 className="font-black uppercase text-xs tracking-widest">Administrative & Official ID Card Details</h3>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                              <FormField control={form.control} name="generalRegisterNumber" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">GR Number</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">GR Number (जनरल रजिस्टर नं.)</FormLabel>
                                 <FormControl><Input placeholder="School register serial" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
-                            <FormField control={form.control} name="aadharNumber" render={({ field }) => (
+                            <FormField control={form.control} name="saralId" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar ID</FormLabel>
-                                <FormControl><Input placeholder="12-digit number" maxLength={12} className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Saral ID (विद्यार्थी सरल क्रमांक)</FormLabel>
+                                <FormControl><Input placeholder="19-digit Saral ID" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField control={form.control} name="aadharNumber" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar ID (आधार क्रमांक)</FormLabel>
+                                <FormControl><Input placeholder="12-digit number" maxLength={12} className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
                              <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Parent Mobile</FormLabel>
                                 <FormControl><Input placeholder="For WhatsApp reports" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField control={form.control} name="admissionDate" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Admission Date (प्रवेश तारीख)</FormLabel>
+                                <FormControl><Input placeholder="e.g. 15/06/2021" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                            <FormField control={form.control} name="identificationMark" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Identification Mark (शरीरावर कायमस्वरूपी ओळख खूण)</FormLabel>
+                                <FormControl><Input placeholder="Body mark e.g. Mole on left cheek" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                              </FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 gap-8">
                             <FormField control={form.control} name="address" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Residential Address</FormLabel>
-                                <FormControl><Input placeholder="Village/Taluka" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Residential Address (घराचा पत्ता)</FormLabel>
+                                <FormControl><Input placeholder="Village/Taluka/District" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
                           </div>

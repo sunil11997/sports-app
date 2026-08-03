@@ -59,12 +59,12 @@ export function calculateAgeOn31Dec2025(dobStr: string): string {
 }
 
 export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerIdentityModalProps) {
-  const [motherName, setMotherName] = useState(player.motherName || 'संगिता');
-  const [fatherName, setFatherName] = useState(player.fatherName || player.name.split(' ').slice(1).join(' ') || '---');
-  const [saralId, setSaralId] = useState(player.saralId || player.serialNumber || '2020272001165030045');
-  const [admissionDate, setAdmissionDate] = useState(player.admissionDate || '15/06/2021');
-  const [identificationMark, setIdentificationMark] = useState(player.identificationMark || 'डाव्या गालावर तीळ / हातावर ओळख खूण');
-  const [selectedSport, setSelectedSport] = useState(player.sports?.join(', ') || 'Kabaddi (कबड्डी)');
+  const [motherName, setMotherName] = useState(player.motherName || '');
+  const [fatherName, setFatherName] = useState(player.fatherName || '');
+  const [saralId, setSaralId] = useState(player.saralId || player.serialNumber || '');
+  const [admissionDate, setAdmissionDate] = useState(player.admissionDate || '');
+  const [identificationMark, setIdentificationMark] = useState(player.identificationMark || '');
+  const [selectedSport, setSelectedSport] = useState(player.sports && player.sports.length > 0 ? player.sports.join(', ') : '');
   const [photoUrl, setPhotoUrl] = useState(player.photoUrl || player.aadharPhotoUrl || '');
   const [isEditing, setIsEditing] = useState(false);
 
@@ -371,12 +371,12 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <tr>
                 <td class="sr">३</td>
                 <td class="label">विद्यार्थ्याची आईचे नाव</td>
-                <td class="value">${motherName}</td>
+                <td class="value">${motherName || '---'}</td>
               </tr>
               <tr>
                 <td class="sr">४</td>
                 <td class="label">विद्यार्थ्याच्या वडिलांचे नाव</td>
-                <td class="value">${fatherName}</td>
+                <td class="value">${fatherName || '---'}</td>
               </tr>
               <tr>
                 <td class="sr">५</td>
@@ -391,7 +391,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <tr>
                 <td class="sr">७</td>
                 <td class="label">विद्यार्थ्याचा सरल क्रमांक (Saral ID)</td>
-                <td class="value">${saralId}</td>
+                <td class="value">${saralId || '---'}</td>
               </tr>
               <tr>
                 <td class="sr">८</td>
@@ -401,7 +401,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <tr>
                 <td class="sr">९</td>
                 <td class="label">निवड झालेल्या खेळाचा प्रकार</td>
-                <td class="value"><strong>${selectedSport}</strong></td>
+                <td class="value"><strong>${selectedSport || '---'}</strong></td>
               </tr>
               <tr>
                 <td class="sr">१०</td>
@@ -411,7 +411,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <tr>
                 <td class="sr">११</td>
                 <td class="label">खेळाडू शाळेत प्रवेश तारीख व वर्ष</td>
-                <td class="value">${admissionDate}</td>
+                <td class="value">${admissionDate || '---'}</td>
               </tr>
               <tr>
                 <td class="sr">१२</td>
@@ -421,7 +421,7 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               <tr>
                 <td class="sr">१३</td>
                 <td class="label">शरीरावर कायमस्वरूपी ओळख खूण</td>
-                <td class="value">${identificationMark}</td>
+                <td class="value">${identificationMark || '---'}</td>
               </tr>
               <tr>
                 <td class="sr">१४</td>
@@ -611,17 +611,17 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>१. नाव:</strong> {player.nameMarathi || player.name}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>२. पत्ता:</strong> {fullAddress}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>३. आईचे नाव:</strong> {motherName}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>४. वडिलांचे नाव:</strong> {fatherName}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>३. आईचे नाव:</strong> {motherName || '---'}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>४. वडिलांचे नाव:</strong> {fatherName || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>५. जन्म तारीख:</strong> {dobWords}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>६. आधार नं:</strong> {player.aadharNumber || '---'}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>७. सरल नं:</strong> {saralId}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>७. सरल नं:</strong> {saralId || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>८. ३१ डिसे. २०२५ रोजी वय:</strong> {age31Dec}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>९. निवडलेला खेळ:</strong> {selectedSport}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>९. निवडलेला खेळ:</strong> {selectedSport || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>१०. G.R. No.:</strong> {player.generalRegisterNumber || '---'}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>११. प्रवेश तारीख:</strong> {admissionDate}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>११. प्रवेश तारीख:</strong> {admissionDate || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>१२. इयत्ता:</strong> इयत्ता {player.std} वी</div>
-              <div className="p-2 bg-slate-50 border rounded-xl col-span-1 md:col-span-2"><strong>१३. ओळख खूण:</strong> {identificationMark}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl col-span-1 md:col-span-2"><strong>१३. ओळख खूण:</strong> {identificationMark || '---'}</div>
             </div>
 
             {/* MEDICAL CERTIFICATE PREVIEW */}

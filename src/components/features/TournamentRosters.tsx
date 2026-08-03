@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Printer, Medal } from 'lucide-react';
 import { getAgeValidation } from '@/lib/utils';
 
+import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+
 const SPORTS_LIST = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
 
 export function TournamentRosters({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
@@ -54,59 +57,175 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category];
     const topTwelve = groupPlayers.slice(0, 12);
+    const teacherName = store?.schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
 
     const printContent = `
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Tournament Entry - ${selectedSport} - ${category}</title>
+          <meta charset="utf-8" />
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
             @media print { 
-              @page { size: A4; margin: 1cm; } 
+              @page { size: A4 portrait; margin: 0.8cm; } 
               .no-print { display: none !important; }
-              body { padding-top: 0 !important; }
+              body { padding-top: 0 !important; background: #fff !important; }
+              .paper { border: none !important; box-shadow: none !important; padding: 0 !important; }
             }
-            body { font-family: 'Inter', sans-serif; padding: 20px; color: #111; line-height: 1.3; font-size: 12px; }
-            .header { text-align: center; border-bottom: 4px double #235C36; padding-bottom: 10px; margin-bottom: 25px; }
-            .school-name { font-size: 22px; font-weight: 900; color: #235C36; text-transform: uppercase; }
-            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 10px; text-decoration: underline; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; font-weight: 900; text-transform: uppercase; font-size: 10px; }
+            * { box-sizing: border-box; }
+            body { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; padding: 15px; color: #0f172a; line-height: 1.35; font-size: 11px; background: #f8fafc; }
+            .paper { max-width: 800px; margin: 0 auto; background: #ffffff; border: 2px solid #1e3a8a; border-radius: 6px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
             
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #235C36; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-            .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
-            .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+            .letterhead {
+              text-align: center;
+              border-bottom: 2px solid #1e3a8a;
+              padding-bottom: 8px;
+              margin-bottom: 12px;
+            }
+            .govt-title { font-size: 13px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; }
+            .school-title { font-size: 18px; font-weight: 900; color: #1e3a8a; margin: 2px 0; }
+            .meta-row { display: flex; justify-content: center; gap: 24px; font-size: 10.5px; font-weight: 800; color: #334155; margin-top: 2px; }
+            .dispatch-row { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 800; color: #0f172a; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
+            
+            .form-heading {
+              text-align: center;
+              font-size: 14px;
+              font-weight: 900;
+              color: #ffffff;
+              background: #1e3a8a;
+              padding: 6px 12px;
+              border-radius: 4px;
+              margin: 10px 0;
+              letter-spacing: 0.5px;
+            }
+
+            .info-bar {
+              display: flex;
+              justify-content: space-between;
+              background: #f1f5f9;
+              border: 1px solid #cbd5e1;
+              padding: 6px 12px;
+              border-radius: 5px;
+              font-weight: 800;
+              font-size: 11px;
+              margin-bottom: 12px;
+            }
+
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 20px; }
+            th, td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; vertical-align: middle; }
+            th { background-color: #f1f5f9; font-weight: 900; text-transform: uppercase; font-size: 10px; color: #1e293b; text-align: center; }
+            td.center { text-align: center; }
+
+            .sign-grid {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              margin-top: 30px;
+              padding: 0 10px;
+            }
+            .sign-block { text-align: center; width: 220px; font-size: 10.5px; font-weight: 800; }
+            .sign-block img { height: 38px; max-width: 150px; object-fit: contain; margin-bottom: 2px; }
+
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; }
+            .btn { cursor: pointer; padding: 8px 18px; border-radius: 6px; font-weight: 800; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.2); color: white; }
             .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body style="padding-top: 80px;">
+        <body style="padding-top: 70px;">
           <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">&larr; GO BACK</button>
-            <button onclick="window.print()" class="btn btn-print">CONFIRM PRINT</button>
-          </div>
-          <div class="header">
-            <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
-            <div class="report-type">TOURNAMENT ENTRY FORM: ${selectedSport.toUpperCase()}</div>
-            <div style="font-size: 14px; font-weight: 700; text-align:center; margin-top: 5px;">Category: ${category.toUpperCase()}</div>
+            <button onclick="window.close()" class="btn btn-back">&larr; मागे जा (CLOSE)</button>
+            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (PRINT TOURNAMENT SHEET)</button>
           </div>
 
-          <table>
-            <thead>
-              <tr><th>SR</th><th>GR NO.</th><th>PLAYER NAME</th><th>STD</th><th>AGE</th><th>AADHAR</th></tr>
-            </thead>
-            <tbody>
-              ${topTwelve.map((p, i) => `
+          <div class="paper">
+            <!-- OFFICIAL LETTERHEAD -->
+            <div class="letterhead">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div style="width: 80px; text-align: left;">
+                  <img src="${TRIBAL_DEV_LOGO_B64}" alt="Adivasi Vikas Logo" style="width: 75px; height: 75px; object-fit: contain;" />
+                </div>
+                <div style="flex: 1; text-align: center;">
+                  <div class="govt-title">महाराष्ट्र शासन</div>
+                  <div class="school-title">शासकीय माध्यमिक आश्रमशाळा वाघंबा ता.बागलाण जि.नाशिक</div>
+                  <div class="meta-row">
+                    <span>SSC Index No – 13.12.058</span>
+                    <span>Udise No.- 27200116503</span>
+                  </div>
+                  <div style="font-size: 10px; font-weight: 700; color: #475569; margin-top: 2px;">
+                    Email id – govt.waghamba2020@gmail.com
+                  </div>
+                </div>
+                <div style="width: 80px; text-align: right;">
+                  <img src="${AMRIT_MAHOTSAV_LOGO_B64}" alt="Amrit Mahotsav Logo" style="width: 75px; height: 75px; object-fit: contain;" />
+                </div>
+              </div>
+              <div class="dispatch-row">
+                <span>जा.क्र. ________ /२०२६ वाघंबा</span>
+                <span>दिनांक: ____/____/२०२६</span>
+              </div>
+            </div>
+
+            <!-- PROJECT & SCHOOL INFO IN BOLD -->
+            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 5px; padding: 5px 10px; margin-bottom: 8px; font-size: 10.5px; font-weight: 800; line-height: 1.45;">
+              <div>• <strong>प्रकल्पाचे नाव:</strong> एकात्मिक आदिवासी विकास प्रकल्प कळवण, ता. कळवण, जि. नाशिक</div>
+              <div>• <strong>शाळेचे पूर्ण नाव व पत्ता:</strong> शासकीय माध्यमिक आश्रमशाळा वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक</div>
+              <div>• <strong>दूरध्वनी क्रमांक:</strong> ०२५५५-२९९०१५ / ९४२०४५८२४६</div>
+            </div>
+
+            <!-- FORM HEADING -->
+            <div class="form-heading">
+              शालेय क्रीडा स्पर्धा संघ प्रवेश पत्र (OFFICIAL TOURNAMENT SQUAD ENTRY FORM)
+            </div>
+
+            <div class="info-bar">
+              <span>🏆 खेळाचा प्रकार: <strong>${selectedSport.toUpperCase()}</strong></span>
+              <span>🎯 वयोगट: <strong>${category.toUpperCase()}</strong></span>
+              <span>👥 खेळाडू संख्या: <strong>${topTwelve.length} Athletes</strong></span>
+            </div>
+
+            <table>
+              <thead>
                 <tr>
-                  <td>${i + 1}</td>
-                  <td>${p.generalRegisterNumber || '-'}</td>
-                  <td><strong>${p.name.toUpperCase()}</strong></td>
-                  <td>${p.std}</td>
-                  <td>${getAgeValidation(p.dob)?.ageYears || p.age || '-'}</td>
-                  <td>${p.aadharNumber || '-'}</td>
+                  <th style="width: 32px;">अ.क्र</th>
+                  <th style="width: 75px;">G.R. NO.</th>
+                  <th>खेळाडूचे नाव (PLAYER NAME)</th>
+                  <th style="width: 50px;">इयत्ता</th>
+                  <th style="width: 85px;">जन्म तारीख / वय</th>
+                  <th style="width: 110px;">आधार क्रमांक</th>
+                  <th style="width: 100px;">खेळाडूची सही</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${topTwelve.map((p, i) => `
+                  <tr>
+                    <td class="center"><strong>${i + 1}</strong></td>
+                    <td class="center"><strong>${p.generalRegisterNumber || '---'}</strong></td>
+                    <td><strong>${p.nameMarathi || p.name}</strong> <br/><span style="font-size: 9.5px; color: #475569;">(${p.name})</span></td>
+                    <td class="center"><strong>${p.std} वी</strong></td>
+                    <td class="center">${p.dob || (getAgeValidation(p.dob)?.ageYears || p.age || '---')}</td>
+                    <td class="center">${p.aadharNumber || '---'}</td>
+                    <td></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <!-- SIGNATURE BLOCKS -->
+            <div class="sign-grid">
+              <div class="sign-block">
+                <img src="${TEACHER_SIGN_B64}" alt="Teacher Signature" />
+                <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">क्रीडा शिक्षक स्वाक्षरी</div>
+                <div style="font-size: 9.5px; color: #64748b;">(${teacherName})</div>
+              </div>
+              <div class="sign-block">
+                <div style="height: 38px;"></div>
+                <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">मुख्याध्यापक सही व शिक्का</div>
+                <div style="font-size: 9.5px; color: #64748b;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div>
+              </div>
+            </div>
+          </div>
         </body>
       </html>
     `;

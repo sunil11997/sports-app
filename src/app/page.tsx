@@ -30,7 +30,8 @@ import {
   BrainCircuit,
   ClipboardList,
   Crown,
-  RotateCw
+  RotateCw,
+  IdCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -59,6 +60,7 @@ const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHu
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
+const PlayerIDCardManager = dynamic(() => import('@/components/features/PlayerIDCardManager').then(m => m.PlayerIDCardManager), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
@@ -250,6 +252,7 @@ export default function WaghambaApp() {
   const sportsTabs = useMemo(() => [
     { id: "home", label: t.home, icon: Home },
     { id: "sport", label: t.sport, icon: Trophy },
+    { id: "icard", label: language === 'Marathi' ? "आयडी कार्ड" : "ID Cards", icon: IdCard },
     { id: "daily-report", label: language === 'Marathi' ? "दैनिक अहवाल" : "Daily Report", icon: FileText },
     { id: "students", label: t.students, icon: UsersRound },
     { id: "profile", label: t.profile, icon: UserCircle },
@@ -418,6 +421,10 @@ export default function WaghambaApp() {
               <GameHub store={schoolData} />
             </TabsContent>
 
+            <TabsContent value="icard" className="mt-0 h-full">
+              <PlayerIDCardManager store={schoolData} />
+            </TabsContent>
+
             <TabsContent value="daily-report" className="mt-0 h-full">
               <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />
             </TabsContent>
@@ -426,6 +433,7 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
+                      { id: "icard-module", label: "Official ID Cards", desc: "Player Identity & Printable Forms", icon: IdCard, color: "bg-blue-900" },
                       { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
                       { id: "classes", label: "Students Registry", desc: "Std-wise Profiles", icon: ClipboardList, color: "bg-blue-600" },
                       { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
@@ -438,7 +446,10 @@ export default function WaghambaApp() {
                       { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
                       { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
                     ].map(item => (
-                      <Card key={item.id} onClick={() => setSubTab(item.id)} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
+                      <Card key={item.id} onClick={() => {
+                        if (item.id === "icard-module") setActiveTab("icard");
+                        else setSubTab(item.id);
+                      }} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
                         <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
                           <item.icon className="w-7 h-7" />
                         </div>

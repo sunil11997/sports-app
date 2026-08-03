@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Printer } from 'lucide-react';
 import { cn, getAgeValidation } from '@/lib/utils';
 
+import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+
 export function Teams({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const players = store.data.players;
   
@@ -33,43 +36,151 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
   }, [players, preselectedSport, categories, getCategory]);
 
   const handlePrint = () => {
+    const teacherName = store?.schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
+
     const printContent = `
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Waghamba Hub - Team Lists</title>
+          <title>Squad Rosters - ${preselectedSport || 'All Games'}</title>
+          <meta charset="utf-8" />
           <style>
-            body { font-family: Inter, sans-serif; padding: 40px; color: #111; line-height: 1.5; }
-            h1 { color: #1e3a8a; border-bottom: 2px solid #333; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
-            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 30px; text-decoration: underline; }
-            h2 { margin-top: 30px; color: #1e3a8a; border-left: 5px solid #f59e0b; padding-left: 10px; text-transform: uppercase; font-size: 16px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f8f8f8; font-weight: 900; }
-            .footer { margin-top: 50px; font-size: 10px; opacity: 0.5; text-align: center; }
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
+            @media print { 
+              @page { size: A4 portrait; margin: 0.8cm; } 
+              .no-print { display: none !important; }
+              body { padding-top: 0 !important; background: #fff !important; }
+              .paper { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            }
+            * { box-sizing: border-box; }
+            body { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; padding: 15px; color: #0f172a; line-height: 1.35; font-size: 11px; background: #f8fafc; }
+            .paper { max-width: 800px; margin: 0 auto; background: #ffffff; border: 2px solid #1e3a8a; border-radius: 6px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+            
+            .letterhead {
+              text-align: center;
+              border-bottom: 2px solid #1e3a8a;
+              padding-bottom: 8px;
+              margin-bottom: 12px;
+            }
+            .govt-title { font-size: 13px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; }
+            .school-title { font-size: 18px; font-weight: 900; color: #1e3a8a; margin: 2px 0; }
+            .meta-row { display: flex; justify-content: center; gap: 24px; font-size: 10.5px; font-weight: 800; color: #334155; margin-top: 2px; }
+            .dispatch-row { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 800; color: #0f172a; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
+            
+            .form-heading {
+              text-align: center;
+              font-size: 14px;
+              font-weight: 900;
+              color: #ffffff;
+              background: #1e3a8a;
+              padding: 6px 12px;
+              border-radius: 4px;
+              margin: 10px 0;
+              letter-spacing: 0.5px;
+            }
+
+            h2 { margin-top: 20px; color: #1e3a8a; border-left: 4px solid #f59e0b; padding-left: 8px; text-transform: uppercase; font-size: 13px; font-weight: 900; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
+            th, td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; vertical-align: middle; }
+            th { background-color: #f1f5f9; font-weight: 900; text-transform: uppercase; font-size: 10px; color: #1e293b; }
+
+            .sign-grid {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              margin-top: 30px;
+              padding: 0 10px;
+            }
+            .sign-block { text-align: center; width: 220px; font-size: 10.5px; font-weight: 800; }
+            .sign-block img { height: 38px; max-width: 150px; object-fit: contain; margin-bottom: 2px; }
+
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; }
+            .btn { cursor: pointer; padding: 8px 18px; border-radius: 6px; font-weight: 800; font-size: 12px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.2); color: white; }
+            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body>
-          <h1>शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</h1>
-          <div class="report-type">${preselectedSport?.toUpperCase() || 'GENERAL'} SQUAD ROSTERS</div>
-          ${categories.map(cat => groups[cat].length > 0 ? `
-            <h2>${cat} (${groups[cat].length} Players)</h2>
-            <table>
-              <thead>
-                <tr><th>Name</th><th>Std</th><th>Age</th><th>Sports</th></tr>
-              </thead>
-              <tbody>
-                ${groups[cat].map(p => `
+        <body style="padding-top: 70px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; मागे जा (CLOSE)</button>
+            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (PRINT TOURNAMENT SQUAD)</button>
+          </div>
+
+          <div class="paper">
+            <!-- OFFICIAL LETTERHEAD -->
+            <div class="letterhead">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div style="width: 80px; text-align: left;">
+                  <img src="${TRIBAL_DEV_LOGO_B64}" alt="Adivasi Vikas Logo" style="width: 75px; height: 75px; object-fit: contain;" />
+                </div>
+                <div style="flex: 1; text-align: center;">
+                  <div class="govt-title">महाराष्ट्र शासन</div>
+                  <div class="school-title">शासकीय माध्यमिक आश्रमशाळा वाघंबा ता.बागलाण जि.नाशिक</div>
+                  <div class="meta-row">
+                    <span>SSC Index No – 13.12.058</span>
+                    <span>Udise No.- 27200116503</span>
+                  </div>
+                  <div style="font-size: 10px; font-weight: 700; color: #475569; margin-top: 2px;">
+                    Email id – govt.waghamba2020@gmail.com
+                  </div>
+                </div>
+                <div style="width: 80px; text-align: right;">
+                  <img src="${AMRIT_MAHOTSAV_LOGO_B64}" alt="Amrit Mahotsav Logo" style="width: 75px; height: 75px; object-fit: contain;" />
+                </div>
+              </div>
+              <div class="dispatch-row">
+                <span>जा.क्र. ________ /२०२६ वाघंबा</span>
+                <span>दिनांक: ____/____/२०२६</span>
+              </div>
+            </div>
+
+            <!-- FORM HEADING -->
+            <div class="form-heading">
+              खेळाडू संघ यादी (OFFICIAL TOURNAMENT SQUAD ROSTER - ${preselectedSport?.toUpperCase() || 'ALL SPORTS'})
+            </div>
+
+            ${categories.map(cat => groups[cat].length > 0 ? `
+              <h2>${cat} (${groups[cat].length} Players)</h2>
+              <table>
+                <thead>
                   <tr>
-                    <td><strong>${p.name.toUpperCase()}</strong></td>
-                    <td>${p.std}</td>
-                    <td>${p.age}</td>
-                    <td>${(p.sports || []).join(', ')}</td>
+                    <th style="width: 32px;">SR</th>
+                    <th style="width: 75px;">G.R. NO.</th>
+                    <th>PLAYER NAME</th>
+                    <th style="width: 50px;">STD</th>
+                    <th style="width: 60px;">AGE</th>
+                    <th>SPORTS</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          ` : '').join('')}
-          <div class="footer">Confidential Institutional Document • WGB Hub v4.3.0</div>
+                </thead>
+                <tbody>
+                  ${groups[cat].map((p, idx) => `
+                    <tr>
+                      <td style="text-align: center;"><strong>${idx + 1}</strong></td>
+                      <td style="text-align: center;"><strong>${p.generalRegisterNumber || '---'}</strong></td>
+                      <td><strong>${p.nameMarathi || p.name}</strong> (${p.name})</td>
+                      <td style="text-align: center;">${p.std} वी</td>
+                      <td style="text-align: center;">${p.age}</td>
+                      <td>${(p.sports || []).join(', ')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : '').join('')}
+
+            <!-- SIGNATURE BLOCKS -->
+            <div class="sign-grid">
+              <div class="sign-block">
+                <img src="${TEACHER_SIGN_B64}" alt="Teacher Signature" />
+                <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">क्रीडा शिक्षक स्वाक्षरी</div>
+                <div style="font-size: 9.5px; color: #64748b;">(${teacherName})</div>
+              </div>
+              <div class="sign-block">
+                <div style="height: 38px;"></div>
+                <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">मुख्याध्यापक सही व शिक्का</div>
+                <div style="font-size: 9.5px; color: #64748b;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div>
+              </div>
+            </div>
+          </div>
         </body>
       </html>
     `;
