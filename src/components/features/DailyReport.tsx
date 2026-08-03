@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { 
   Printer, 
   FileText, 
@@ -61,6 +62,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   const [currentLng, setCurrentLng] = useState<number | null>(74.0045);
   const [locationName, setLocationName] = useState("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
   const [isLocating, setIsLocating] = useState(false);
+  const [previewGeoPhoto, setPreviewGeoPhoto] = useState<GeoPhoto | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const cameraInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -509,7 +511,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         const latVal = p.lat || 20.5937;
         const lngVal = p.lng || 74.0045;
         photosHtml += '<div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; text-align: center; padding: 6px;">';
-        photosHtml += '<img src="' + p.url + '" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px;" />';
+        photosHtml += '<img src="' + p.url + '" style="width: 100%; height: 200px; object-fit: contain; background: #0f172a; border-radius: 6px;" />';
         photosHtml += '<div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-top: 4px;">' + p.caption + '</div>';
         photosHtml += '<div style="font-size: 9.5px; color: #d97706; font-weight: 800;">🏆 ' + sportLabel + ' ' + drillLabel + '</div>';
         photosHtml += '<div style="font-size: 9px; color: #475569; font-weight: 700;">📍 GPS: Lat ' + latVal + '°, Long ' + lngVal + '°</div>';
@@ -1253,12 +1255,24 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                   <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">आजचे जिओ-टॅग फोटो ({reportPhotos.length})</p>
                   <div className="grid grid-cols-2 gap-3">
                     {reportPhotos.map((photo) => (
-                      <div key={photo.id} className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-900">
-                        <img src={photo.url} alt={photo.caption} className="w-full h-28 object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                      <div 
+                        key={photo.id} 
+                        onClick={() => setPreviewGeoPhoto(photo)}
+                        className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-950 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all flex items-center justify-center min-h-[120px]"
+                        title="संपूर्ण फोटो पाहण्यासाठी क्लिक करा (Click to view full photo)"
+                      >
+                        <img 
+                          src={photo.url} 
+                          alt={photo.caption} 
+                          className="w-full h-32 object-contain group-hover:scale-105 transition-transform" 
+                        />
                         <button 
                           type="button"
-                          onClick={() => handleDeletePhoto(photo.id)}
-                          className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full shadow-md hover:bg-red-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePhoto(photo.id);
+                          }}
+                          className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full shadow-md hover:bg-red-700 transition-colors z-10"
                           title="हटवा"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1309,6 +1323,42 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
         </div>
       </div>
+
+      {/* GEOTAG PHOTO LIGHTBOX DIALOG */}
+      <Dialog open={!!previewGeoPhoto} onOpenChange={() => setPreviewGeoPhoto(null)}>
+        <DialogContent className="sm:max-w-[650px] p-4 bg-slate-950 text-white border-2 border-amber-400/40 rounded-3xl shadow-2xl">
+          <DialogHeader className="pb-2 border-b border-slate-800">
+            <DialogTitle className="text-sm font-black text-amber-400 uppercase tracking-wide flex items-center justify-between">
+              <span>📍 {previewGeoPhoto?.caption || "जिओ-टॅग फोटो"}</span>
+              <Badge variant="outline" className="border-amber-400/50 text-amber-300 bg-amber-950/40 text-[9px]">
+                {previewGeoPhoto?.sport || 'Sports'} {previewGeoPhoto?.drill ? `• ${previewGeoPhoto.drill}` : ''}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-2 max-h-[70vh] overflow-hidden bg-black rounded-2xl border border-slate-800">
+            {previewGeoPhoto?.url && (
+              <img 
+                src={previewGeoPhoto.url} 
+                alt={previewGeoPhoto.caption} 
+                className="max-h-[65vh] w-auto object-contain rounded-xl shadow-2xl"
+              />
+            )}
+          </div>
+          <div className="text-[11px] font-bold text-slate-300 bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+            <span>📍 स्थान GPS Coordinates:</span>
+            <span className="text-amber-400 font-mono">Lat {previewGeoPhoto?.lat || 20.5937}°, Lng {previewGeoPhoto?.lng || 74.0045}°</span>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              onClick={() => setPreviewGeoPhoto(null)}
+              className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs rounded-xl"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

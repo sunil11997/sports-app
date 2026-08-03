@@ -19,23 +19,35 @@ import {
 } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from './PlayerIdentityModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface PlayerIDCardManagerProps {
   store: any;
   preselectedSport?: string;
+  section?: 'sports' | 'general';
 }
 
-export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardManagerProps) {
+export function PlayerIDCardManager({ store, preselectedSport, section }: PlayerIDCardManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStd, setSelectedStd] = useState<string>('all');
   const [selectedGender, setSelectedGender] = useState<string>('all');
   const [selectedSport, setSelectedSport] = useState<string>(preselectedSport || 'all');
   const [selectedPlayerForModal, setSelectedPlayerForModal] = useState<Player | null>(null);
+  const [fullPhotoPreview, setFullPhotoPreview] = useState<{ url: string; title: string } | null>(null);
 
-  const allPlayers: Player[] = useMemo(() => store?.players || [], [store?.players]);
+  const allPlayers: Player[] = useMemo(() => store?.data?.players || store?.players || [], [store?.data?.players, store?.players]);
 
   const filteredPlayers = useMemo(() => {
     return allPlayers.filter((player) => {
+      // Section filter: sports vs general student
+      if (section === 'sports') {
+        const isAthlete = player.category === 'athlete' || (player.sports && player.sports.length > 0);
+        if (!isAthlete) return false;
+      } else if (section === 'general') {
+        const isStudent = player.category === 'student' || (!player.category && (!player.sports || player.sports.length === 0));
+        if (!isStudent) return false;
+      }
+
       // Search term matching (name, Marathi name, G.R. No, Saral ID, sports)
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase().trim();
@@ -68,7 +80,7 @@ export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardMan
 
       return true;
     });
-  }, [allPlayers, searchTerm, selectedStd, selectedGender, selectedSport]);
+  }, [allPlayers, section, searchTerm, selectedStd, selectedGender, selectedSport]);
 
   const stdList = ['5', '6', '7', '8', '9', '10'];
 
@@ -219,12 +231,21 @@ export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardMan
                   {/* CARD TOP INFO & PHOTO */}
                   <div className="flex items-start gap-4">
                     {/* PHOTO FRAME */}
-                    <div className="w-16 h-20 rounded-2xl border-2 border-blue-900/30 overflow-hidden bg-slate-100 shrink-0 shadow-inner relative flex items-center justify-center text-slate-400">
+                    <div 
+                      onClick={() => {
+                        if (displayPhoto) {
+                          const nameToUse = player.nameMarathi && player.nameMarathi.trim() ? player.nameMarathi.trim() : player.name;
+                          setFullPhotoPreview({ url: displayPhoto, title: nameToUse });
+                        }
+                      }}
+                      className="w-16 h-20 rounded-2xl border-2 border-blue-900/30 overflow-hidden bg-slate-900 shrink-0 shadow-inner relative flex items-center justify-center text-slate-400 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all group/photo"
+                      title="फोटो मोठा पाहण्यासाठी क्लिक करा (Click to view full photo)"
+                    >
                       {hasPhoto ? (
                         <img 
                           src={displayPhoto} 
                           alt={player.name} 
-                          className="w-full h-full object-cover" 
+                          className="w-full h-full object-contain group-hover/photo:scale-105 transition-transform" 
                         />
                       ) : (
                         <div className="text-center p-1">
@@ -293,6 +314,35 @@ export function PlayerIDCardManager({ store, preselectedSport }: PlayerIDCardMan
           onClose={() => setSelectedPlayerForModal(null)}
         />
       )}
+
+      {/* FULL PHOTO LIGHTBOX DIALOG */}
+      <Dialog open={!!fullPhotoPreview} onOpenChange={() => setFullPhotoPreview(null)}>
+        <DialogContent className="sm:max-w-[550px] p-4 bg-slate-950 text-white border-2 border-amber-400/40 rounded-3xl shadow-2xl">
+          <DialogHeader className="pb-2 border-b border-slate-800">
+            <DialogTitle className="text-sm font-black text-amber-400 uppercase tracking-wide">
+              🖼️ {fullPhotoPreview?.title || "खेळाडूचा संपूर्ण फोटो"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-2 max-h-[70vh] overflow-hidden bg-black/60 rounded-2xl">
+            {fullPhotoPreview?.url && (
+              <img 
+                src={fullPhotoPreview.url} 
+                alt={fullPhotoPreview.title} 
+                className="max-h-[65vh] w-auto object-contain rounded-xl shadow-lg"
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              onClick={() => setFullPhotoPreview(null)}
+              className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs rounded-xl"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

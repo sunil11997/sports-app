@@ -253,10 +253,8 @@ export default function WaghambaApp() {
   const sportsTabs = useMemo(() => [
     { id: "home", label: t.home, icon: Home },
     { id: "sport", label: t.sport, icon: Trophy },
-    { id: "icard", label: language === 'Marathi' ? "आयडी कार्ड" : "ID Cards", icon: IdCard },
     { id: "daily-report", label: language === 'Marathi' ? "दैनिक अहवाल" : "Daily Report", icon: FileText },
     { id: "students", label: t.students, icon: UsersRound },
-    { id: "i-card", label: language === 'Marathi' ? "आय कार्ड" : "I Card", icon: FileBadge },
     { id: "profile", label: t.profile, icon: UserCircle },
   ], [t, language]);
 
@@ -424,7 +422,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="icard" className="mt-0 h-full">
-              <PlayerIDCardManager store={schoolData} />
+              <PlayerIDCardManager store={schoolData} section={selectedSection || 'sports'} />
             </TabsContent>
 
             <TabsContent value="daily-report" className="mt-0 h-full">
@@ -471,6 +469,7 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "icard-module" && <PlayerIDCardManager store={schoolData} section={selectedSection || 'general'} />}
                     {subTab === "daily-report" && <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />}
                     {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
                     {subTab === "hall-of-fame" && <HallOfFame store={schoolData} />}
