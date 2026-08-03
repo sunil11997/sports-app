@@ -85,7 +85,6 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
   const fullAddress = player.address || 'मु.पो. वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक';
   const dobWords = convertDobToMarathiWords(player.dob);
   const age31Dec = calculateAgeOn31Dec2025(player.dob);
-  const displayName = getDisplayNameForLocale(player.name, player.nameMarathi, 'mr');
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

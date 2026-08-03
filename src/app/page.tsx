@@ -62,7 +62,6 @@ const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHu
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
-const PlayerIDCardManager = dynamic(() => import('@/components/features/PlayerIDCardManager').then(m => m.PlayerIDCardManager), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
