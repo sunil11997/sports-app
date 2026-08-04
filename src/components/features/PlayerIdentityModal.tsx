@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Printer, X, FileText, CheckCircle2, User, Camera, ShieldCheck, Edit3 } from 'lucide-react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
-import { getDisplayNameForLocale } from '@/lib/utils';
+import { getDisplayNameForLocale, calculateBMI } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 
 interface PlayerIdentityModalProps {
@@ -432,11 +432,16 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
               </tr>
               <tr>
                 <td class="sr">१३</td>
+                <td class="label">उंची / वजन / बी.एम.आय. (Height/Weight/BMI)</td>
+                <td class="value"><strong>उंची: ${player.height || '---'} cm &nbsp;|&nbsp; वजन: ${player.weight || '---'} kg &nbsp;|&nbsp; BMI: ${calculateBMI(player.height, player.weight, player.bmi)}</strong></td>
+              </tr>
+              <tr>
+                <td class="sr">१४</td>
                 <td class="label">शरीरावर कायमस्वरूपी ओळख खूण</td>
                 <td class="value">${identificationMark || '---'}</td>
               </tr>
               <tr>
-                <td class="sr">१४</td>
+                <td class="sr">१५</td>
                 <td class="label">खेळाडूची स्वाक्षरी</td>
                 <td class="value" style="height: 36px; vertical-align: bottom;">
                   <div style="border-bottom: 1.5px dashed #64748b; width: 180px; margin-top: 15px;"></div>

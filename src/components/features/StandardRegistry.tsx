@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, Save, Loader2, ClipboardList, Settings2, Search, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { cn, shareToWhatsApp } from '@/lib/utils';
+import { cn, shareToWhatsApp, calculateBMI } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -192,6 +192,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
                 <th>GEN</th>
                 <th>HT</th>
                 <th>WT</th>
+                <th>BMI</th>
                 <th>${labels.nirikshan}</th>
                 <th>${labels.tondikam}</th>
                 <th>${labels.pratyashike}</th>
@@ -208,13 +209,17 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
                 const total = calculateTotal(p.id);
                 const r = termRecords[p.id] || {};
                 const dName = isM ? (p.nameMarathi || p.name) : p.name;
+                const heightVal = r.height || p.height || '-';
+                const weightVal = r.weight || p.weight || '-';
+                const bmiVal = calculateBMI(heightVal !== '-' ? heightVal : null, weightVal !== '-' ? weightVal : null, p.bmi);
                 return `
                   <tr>
                     <td>${p.serialNumber || i+1}</td>
                     <td class="name-cell">${dName.toUpperCase()}</td>
                     <td>${p.gender[0]}</td>
-                    <td>${r.height || '-'}</td>
-                    <td>${r.weight || '-'}</td>
+                    <td>${heightVal}</td>
+                    <td>${weightVal}</td>
+                    <td><strong>${bmiVal}</strong></td>
                     <td>${r.nirikshan || '-'}</td>
                     <td>${r.tondikam || '-'}</td>
                     <td>${r.pratyashike || '-'}</td>

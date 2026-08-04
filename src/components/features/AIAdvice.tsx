@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
 import { coachChat } from '@/ai/flows/coach-chat';
 import { usePWA } from '@/components/providers/pwa-provider';
-import { cn } from '@/lib/utils';
+import { cn, calculateBMI } from '@/lib/utils';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -104,9 +104,10 @@ export function AIAdvice({ store }: { store: any }) {
     try {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
       const fit = store.data.fitness[selectedPlayerId] || {};
+      const computedBmi = calculateBMI(p.height, p.weight, p.bmi);
       
       const input = {
-        id: p.id, name: p.name, gender: p.gender, std: p.std, age: p.age.toString(), height: p.height, weight: p.weight, bmi: p.bmi,
+        id: p.id, name: p.name, gender: p.gender, std: p.std, age: p.age.toString(), height: p.height, weight: p.weight, bmi: computedBmi,
         sports: p.sports || [], history: p.history, medical: p.medical || "None", language: language, engine: (aiEngine === 'Gemini Pro' ? 'Gemini' : 'Genkit') as any,
         fitnessScore: fit.score || "N/A", fitnessStatus: fit.status || "N/A"
       };
@@ -125,13 +126,14 @@ export function AIAdvice({ store }: { store: any }) {
     const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
     const fit = store.data.fitness[selectedPlayerId] || {};
     const skills = store.data.sportSkills[`${selectedPlayerId}_Kabaddi`] || {};
+    const computedBmi = calculateBMI(p.height, p.weight, p.bmi);
 
     const contextString = `
 Athlete Profile Analysis - Ashram Shala Waghamba
 ------------------------------------------------
 Name: ${p.name} (Std ${p.std})
 Gender: ${p.gender} | Age: ${p.age}
-Height: ${p.height}cm | Weight: ${p.weight}kg | BMI: ${p.bmi}
+Height: ${p.height || '-'}cm | Weight: ${p.weight || '-'}kg | BMI: ${computedBmi}
 Primary Sports: ${(p.sports || []).join(', ')}
 Institutional Fitness Score: ${fit.score || 'N/A'}%
 Category: ${fit.status || 'Pending Assessment'}
@@ -154,6 +156,7 @@ PROMPT: Please act as an elite sports scientist and head coach. Based on the dat
   const handlePrint = () => {
     if (!advice) return;
     const player = store.data.players.find((p: any) => p.id === selectedPlayerId);
+    const computedBmi = calculateBMI(player?.height, player?.weight, player?.bmi);
     
     const printContent = `
       <html>
@@ -163,14 +166,15 @@ PROMPT: Please act as an elite sports scientist and head coach. Based on the dat
             @media print { 
               @page { size: A4; margin: 1cm; } 
               .no-print { display: none !important; }
-              body { padding-top: 0 !important; }
+              body { padding-top: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
             body { font-family: Inter, sans-serif; padding: 20px; color: #333; line-height: 1.6; }
-            .inst-header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 30px; }
+            .inst-header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 18px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
-            h1 { color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-size: 20px; border-bottom: 4px solid #f59e0b; padding-bottom: 5px; }
-            h2 { color: #1e3a8a; margin-top: 30px; border-left: 5px solid #f59e0b; padding-left: 15px; text-transform: uppercase; font-size: 14px; }
-            section { margin-bottom: 30px; }
+            .profile-box { background: #f8fafc; border: 1.5px solid #1e3a8a; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 11px; font-weight: 700; }
+            h1 { color: #1e3a8a; margin-bottom: 15px; text-transform: uppercase; font-size: 18px; border-bottom: 3px solid #f59e0b; padding-bottom: 5px; }
+            h2 { color: #1e3a8a; margin-top: 25px; border-left: 5px solid #f59e0b; padding-left: 12px; text-transform: uppercase; font-size: 13px; }
+            section { margin-bottom: 25px; }
             
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
@@ -187,6 +191,13 @@ PROMPT: Please act as an elite sports scientist and head coach. Based on the dat
             <div class="school-name">शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक</div>
           </div>
           <h1>Performance Strategy: ${player?.name}</h1>
+          <div class="profile-box">
+            <span><strong>इयत्ता (Std):</strong> ${player?.std || '-'} &nbsp;|&nbsp;</span>
+            <span><strong>वय (Age):</strong> ${player?.age || '-'} &nbsp;|&nbsp;</span>
+            <span><strong>उंची (Height):</strong> ${player?.height || '-'} cm &nbsp;|&nbsp;</span>
+            <span><strong>वजन (Weight):</strong> ${player?.weight || '-'} kg &nbsp;|&nbsp;</span>
+            <span><strong>BMI:</strong> ${computedBmi}</span>
+          </div>
           <section><h2>Executive Summary</h2><p>${advice.summary}</p></section>
           <section><h2>Training Blueprint</h2><div style="white-space: pre-wrap;">${advice.trainingPlan}</div></section>
           <section><h2>Dietary Plan</h2><div style="white-space: pre-wrap;">${advice.dietPlan}</div></section>

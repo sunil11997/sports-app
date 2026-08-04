@@ -404,6 +404,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   };
 
   // Printable HTML Generator with Devanagari Marathi Header & NO Student Names
+  // Printable HTML Generator with Formal Letterhead Double Border Box & Devanagari Marathi Layout
   const handlePrint = () => {
     if (!reportDate) return;
     
@@ -417,7 +418,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       let html = '<table class="report-table"><thead><tr><th>अनु.क्र. (Sr)</th><th>प्रकार / प्रकाराचे नाव (Activity / Asana)</th><th>मुले (Boys)</th><th>मुली (Girls)</th><th>एकूण (Total)</th></tr></thead><tbody>';
       items.forEach((item, index) => {
         const total = item.boys + item.girls;
-        html += '<tr><td style="text-align: center;">' + (index + 1) + '</td><td><strong>' + item.drill + '</strong></td><td style="text-align: center; color: #1e3a8a; font-weight: 800;">' + item.boys + '</td><td style="text-align: center; color: #ec4899; font-weight: 800;">' + item.girls + '</td><td style="text-align: center; color: #111827; font-weight: 900;">' + total + '</td></tr>';
+        html += '<tr><td style="text-align: center; font-weight: 800;">' + (index + 1) + '</td><td><strong>' + item.drill + '</strong></td><td style="text-align: center; color: #1e3a8a; font-weight: 800;">' + item.boys + '</td><td style="text-align: center; color: #ec4899; font-weight: 800;">' + item.girls + '</td><td style="text-align: center; color: #0f172a; font-weight: 900;">' + total + '</td></tr>';
       });
       html += '</tbody></table>';
       return html;
@@ -466,11 +467,11 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     
     let medicalLogHtml = '<h3>' + secNum + '. आरोग्य व वैद्यकीय स्वास्थ लॉग (Professional Medical Audit Log)</h3>';
     secNum++;
-    medicalLogHtml += '<div class="card-box">';
+    medicalLogHtml += '<div class="medical-box">';
     medicalLogHtml += '<div class="card-numbers" style="margin-bottom: 8px;">';
-    medicalLogHtml += '<div class="num-item"><span style="color: #1e3a8a;">बाधित मुले:</span> <strong style="font-size: 16px;">' + healthSummaryCounts.boys + '</strong></div>';
-    medicalLogHtml += '<div class="num-item"><span style="color: #ec4899;">बाधित मुली:</span> <strong style="font-size: 16px;">' + healthSummaryCounts.girls + '</strong></div>';
-    medicalLogHtml += '<div class="num-item"><span style="color: #b45309;">एकूण तक्रारी:</span> <strong style="font-size: 16px;">' + healthSummaryCounts.total + '</strong></div>';
+    medicalLogHtml += '<div class="num-item"><span style="color: #1e3a8a;">बाधित मुले:</span> <strong style="font-size: 15px; color: #1e3a8a;">' + healthSummaryCounts.boys + '</strong></div>';
+    medicalLogHtml += '<div class="num-item"><span style="color: #ec4899;">बाधित मुली:</span> <strong style="font-size: 15px; color: #ec4899;">' + healthSummaryCounts.girls + '</strong></div>';
+    medicalLogHtml += '<div class="num-item"><span style="color: #b45309;">एकूण तक्रारी:</span> <strong style="font-size: 15px; color: #b45309;">' + healthSummaryCounts.total + '</strong></div>';
     medicalLogHtml += '</div>';
 
     if (healthToday.length === 0) {
@@ -504,14 +505,14 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     if (reportPhotos.length > 0) {
       photosHtml += '<h3>' + secNum + '. जिओ-टॅग केलेले दैनिक फोटो (Geotagged Activity Photos)</h3>';
       secNum++;
-      photosHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">';
+      photosHtml += '<div class="photo-grid">';
       reportPhotos.forEach(p => {
         const sportLabel = p.sport || 'Sports';
         const drillLabel = p.drill ? ('- ' + p.drill) : '';
         const latVal = p.lat || 20.5937;
         const lngVal = p.lng || 74.0045;
-        photosHtml += '<div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; text-align: center; padding: 6px;">';
-        photosHtml += '<img src="' + p.url + '" style="width: 100%; height: 200px; object-fit: contain; background: #0f172a; border-radius: 6px;" />';
+        photosHtml += '<div class="photo-card">';
+        photosHtml += '<img src="' + p.url + '" />';
         photosHtml += '<div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-top: 4px;">' + p.caption + '</div>';
         photosHtml += '<div style="font-size: 9.5px; color: #d97706; font-weight: 800;">🏆 ' + sportLabel + ' ' + drillLabel + '</div>';
         photosHtml += '<div style="font-size: 9px; color: #475569; font-weight: 700;">📍 GPS: Lat ' + latVal + '°, Long ' + lngVal + '°</div>';
@@ -524,35 +525,62 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     const formattedReportDate = reportDate ? format(new Date(reportDate), 'dd-MM-yyyy') : '---';
 
     const printContent = [
+      '<!DOCTYPE html>',
       '<html>',
       '<head>',
       '<meta charset="utf-8" />',
       '<title>Daily Report - ' + reportDate + '</title>',
       '<style>',
       '@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap");',
-      '@media print { @page { size: A4; margin: 1.2cm; } .no-print { display: none !important; } body { padding-top: 0 !important; background: #fff !important; } }',
-      'body { font-family: "Noto Sans Devanagari", "Inter", sans-serif; padding: 24px; line-height: 1.5; color: #1f2937; background: #f8fafc; }',
-      '.paper { max-width: 800px; margin: 0 auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }',
-      '.header { text-align: center; border-bottom: 3px double #1e3a8a; padding-bottom: 14px; margin-bottom: 20px; }',
-      '.school-name { font-size: 22px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 4px; }',
-      '.report-title { font-size: 16px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; }',
-      '.sub-header { font-size: 12px; font-weight: 700; color: #4b5563; margin-top: 4px; }',
-      '.meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f1f5f9; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 12px; font-weight: 700; }',
-      'h3 { color: #1e3a8a; font-size: 14px; font-weight: 900; border-left: 4px solid #1e3a8a; padding-left: 10px; margin-top: 24px; margin-bottom: 12px; text-transform: uppercase; }',
-      '.stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 10px; }',
-      '.card-box { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; }',
-      '.card-title { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }',
+      '* { box-sizing: border-box; }',
+      '@media print {',
+      '  @page { size: A4 portrait; margin: 8mm; }',
+      '  .no-print { display: none !important; }',
+      '  html, body { background: #ffffff !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }',
+      '  .paper {',
+      '    width: 100% !important;',
+      '    max-width: 100% !important;',
+      '    border: 3.5px double #1e3a8a !important;',
+      '    box-shadow: none !important;',
+      '    padding: 16px !important;',
+      '    margin: 0 !important;',
+      '    background: #ffffff !important;',
+      '    -webkit-print-color-adjust: exact !important;',
+      '    print-color-adjust: exact !important;',
+      '  }',
+      '  .letter-inner-frame { border: 1px solid #1e3a8a !important; padding: 14px !important; }',
+      '  h3, .meta-grid, .stat-cards, .card-box, .report-table, .notes-box, .photo-card, .footer-sign, .medical-box { page-break-inside: avoid !important; break-inside: avoid !important; }',
+      '}',
+      'body { font-family: "Noto Sans Devanagari", "Inter", sans-serif; padding: 24px; line-height: 1.5; color: #0f172a; background: #f1f5f9; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
+      '.paper { max-width: 840px; margin: 0 auto; background: #ffffff; padding: 24px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 4px double #1e3a8a; position: relative; }',
+      '.letter-inner-frame { border: 1px solid #1e3a8a; padding: 18px; border-radius: 2px; }',
+      '.ref-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #1e3a8a; border-bottom: 1.5px solid #1e3a8a; padding-bottom: 6px; margin-bottom: 14px; text-transform: uppercase; }',
+      '.header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 18px; }',
+      '.govt-sub { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }',
+      '.school-name { font-size: 20px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }',
+      '.report-title { font-size: 14px; font-weight: 900; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; background: #fef3c7; border: 1.5px solid #f59e0b; padding: 5px 16px; display: inline-block; border-radius: 4px; }',
+      '.sub-header { font-size: 10.5px; font-weight: 700; color: #475569; margin-top: 6px; }',
+      '.meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f8fafc; border: 1.5px solid #1e3a8a; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11.5px; font-weight: 700; }',
+      'h3 { color: #1e3a8a !important; font-size: 12.5px !important; font-weight: 900 !important; background: #eff6ff !important; border: 1.5px solid #bfdbfe !important; border-left: 5px solid #1e3a8a !important; padding: 6px 12px !important; margin-top: 20px !important; margin-bottom: 10px !important; text-transform: uppercase !important; border-radius: 4px !important; }',
+      '.stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; }',
+      '.card-box { background: #ffffff; border: 1.5px solid #1e3a8a; border-radius: 6px; padding: 12px; margin-bottom: 10px; }',
+      '.card-title { font-size: 11px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; text-align: center; }',
       '.card-numbers { display: flex; justify-content: space-around; text-align: center; }',
-      '.num-item { font-size: 12px; font-weight: 700; }',
-      '.num-val { font-size: 18px; font-weight: 900; }',
-      '.report-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }',
-      '.report-table th, .report-table td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }',
-      '.report-table th { background: #1e3a8a; color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 11px; }',
+      '.num-item { font-size: 11.5px; font-weight: 800; border: 1px solid #64748b; padding: 4px 10px; border-radius: 4px; background: #f8fafc; min-width: 65px; }',
+      '.num-val { font-size: 17px; font-weight: 900; }',
+      '.report-table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 14px; font-size: 11.5px; }',
+      '.report-table th, .report-table td { border: 1.5px solid #1e3a8a !important; padding: 7px 10px; text-align: left; }',
+      '.report-table th { background: #1e3a8a !important; color: #ffffff !important; font-weight: 800; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.3px; }',
       '.report-table tr:nth-child(even) { background: #f8fafc; }',
-      '.empty-msg { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 12px; text-align: center; border-radius: 8px; font-size: 12px; color: #64748b; font-style: italic; }',
-      '.notes-box { background: #fffdf5; border: 1px solid #fef08a; padding: 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; min-height: 70px; }',
-      '.footer-sign { margin-top: 48px; display: flex; justify-content: space-between; padding: 0 20px; }',
-      '.sign-block { text-align: center; border-top: 1.5px dashed #334155; width: 220px; padding-top: 6px; font-size: 12px; font-weight: 800; }',
+      '.empty-msg { background: #f8fafc; border: 1.5px dashed #64748b; padding: 10px; text-align: center; border-radius: 6px; font-size: 11.5px; color: #475569; font-style: italic; font-weight: 700; }',
+      '.medical-box { background: #fff5f5; border: 1.5px solid #dc2626; border-radius: 6px; padding: 12px; margin-bottom: 12px; }',
+      '.notes-box { background: #fffdf5; border: 1.5px solid #b45309; padding: 12px 14px; border-radius: 6px; font-size: 11.5px; line-height: 1.6; min-height: 60px; margin-bottom: 16px; font-weight: 600; color: #1e293b; }',
+      '.photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }',
+      '.photo-card { border: 1.5px solid #1e3a8a; border-radius: 6px; overflow: hidden; background: #ffffff; text-align: center; padding: 6px; }',
+      '.photo-card img { width: 100%; height: 180px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #cbd5e1; }',
+      '.footer-sign { margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px; page-break-inside: avoid; break-inside: avoid; }',
+      '.sign-block { text-align: center; border: 1.5px dashed #1e3a8a; background: #f8fafc; border-radius: 6px; width: 230px; padding: 10px; font-size: 11px; font-weight: 800; }',
+      '.stamp-box { border: 1px dashed #94a3b8; width: 54px; height: 54px; border-radius: 50%; margin: 6px auto; line-height: 54px; font-size: 8px; color: #94a3b8; text-transform: uppercase; }',
       '.print-bar { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }',
       '.btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 12px; border: none; transition: all 0.2s; }',
       '.btn-back { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }',
@@ -565,10 +593,16 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       '<button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (PRINT PDF)</button>',
       '</div>',
       '<div class="paper">',
+      '<div class="letter-inner-frame">',
+      '<div class="ref-row">',
+      '<div>जावक क्र. (OUTWARD REF NO): शामाआशा/वाघंबा/२०२६/_______</div>',
+      '<div>दिनांक (DATE): ' + formattedReportDate + '</div>',
+      '</div>',
       '<div class="header">',
+      '<div class="govt-sub">महाराष्ट्र शासन • आदिवासी विकास विभाग</div>',
       '<div class="school-name">' + schoolNameMarathi + '</div>',
       '<div class="report-title">दैनिक क्रीडा, योगा व शारीरिक शिक्षण अहवाल</div>',
-      '<div class="sub-header">(DAILY ACTIVITY & PHYSICAL EDUCATION REPORT)</div>',
+      '<div class="sub-header">(DAILY ACTIVITY & PHYSICAL EDUCATION OFFICIAL REPORT)</div>',
       '</div>',
       '<div class="meta-grid">',
       '<div>📅 तारीख (Date): <strong>' + formattedReportDate + '</strong></div>',
@@ -582,7 +616,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       '<div class="card-numbers">',
       '<div class="num-item"><span style="color: #1e3a8a;">मुले:</span> <div class="num-val" style="color: #1e3a8a;">' + attendanceCounts.morningBoys + '</div></div>',
       '<div class="num-item"><span style="color: #ec4899;">मुली:</span> <div class="num-val" style="color: #ec4899;">' + attendanceCounts.morningGirls + '</div></div>',
-      '<div class="num-item"><span style="color: #111827;">एकूण:</span> <div class="num-val">' + attendanceCounts.morningTotal + '</div></div>',
+      '<div class="num-item"><span style="color: #0f172a;">एकूण:</span> <div class="num-val">' + attendanceCounts.morningTotal + '</div></div>',
       '</div>',
       '</div>',
       '<div class="card-box">',
@@ -590,7 +624,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       '<div class="card-numbers">',
       '<div class="num-item"><span style="color: #1e3a8a;">मुले:</span> <div class="num-val" style="color: #1e3a8a;">' + attendanceCounts.eveningBoys + '</div></div>',
       '<div class="num-item"><span style="color: #ec4899;">मुली:</span> <div class="num-val" style="color: #ec4899;">' + attendanceCounts.eveningGirls + '</div></div>',
-      '<div class="num-item"><span style="color: #111827;">एकूण:</span> <div class="num-val">' + attendanceCounts.eveningTotal + '</div></div>',
+      '<div class="num-item"><span style="color: #0f172a;">एकूण:</span> <div class="num-val">' + attendanceCounts.eveningTotal + '</div></div>',
       '</div>',
       '</div>',
       '</div>',
@@ -600,8 +634,9 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       '<div class="notes-box">' + notesContent + '</div>',
       photosHtml,
       '<div class="footer-sign">',
-      '<div class="sign-block"><img src="' + TEACHER_SIGN_B64 + '" alt="Teacher Signature" style="height:48px;max-width:180px;object-fit:contain;margin-bottom:4px;" /><div>क्रीडा शिक्षक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(' + teacherName + ')</div></div>',
-      '<div class="sign-block"><div>मुख्याध्यापक स्वाक्षरी</div><div style="font-size: 10px; color: #64748b; margin-top: 2px;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div></div>',
+      '<div class="sign-block"><img src="' + TEACHER_SIGN_B64 + '" alt="Teacher Signature" style="height:48px;max-width:180px;object-fit:contain;margin-bottom:4px;" /><div>क्रीडा शिक्षक स्वाक्षरी</div><div style="font-size: 10px; color: #475569; margin-top: 2px;">(' + teacherName + ')</div></div>',
+      '<div class="sign-block"><div class="stamp-box">शिक्का</div><div>मुख्याध्यापक स्वाक्षरी</div><div style="font-size: 10px; color: #475569; margin-top: 2px;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div></div>',
+      '</div>',
       '</div>',
       '</div>',
       '</body>',

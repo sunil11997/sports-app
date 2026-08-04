@@ -23,7 +23,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn, shareToWhatsApp, getAgeValidation } from '@/lib/utils';
+import { cn, shareToWhatsApp, getAgeValidation, calculateBMI } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -114,8 +114,8 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
       : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
     const reportTitle = isM 
-      ? `विद्यार्थी शारीरिक क्षमता चाचणी अहवाल - ${activeCategory === 'all' ? 'सर्व इयत्ता' : 'इयत्ता ' + activeCategory}`
-      : `Student Physical Fitness Registry - ${activeCategory === 'all' ? 'All Classes' : 'Standard ' + activeCategory}`;
+      ? `विद्यार्थी शारीरिक क्षमता व बी.एम.आय. चाचणी अहवाल - ${activeCategory === 'all' ? 'सर्व इयत्ता' : 'इयत्ता ' + activeCategory}`
+      : `Student Physical Fitness & BMI Registry - ${activeCategory === 'all' ? 'All Classes' : 'Standard ' + activeCategory}`;
 
     const printContent = `
       <html>
@@ -126,15 +126,15 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
             @media print { 
               @page { size: landscape; margin: 1cm; } 
               .no-print { display: none !important; } 
-              body { padding-top: 0 !important; }
+              body { padding-top: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
             body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
             .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
             .school-name { font-size: 18px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
             .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
             table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #000; padding: 6px; text-align: center; }
-            th { background-color: #f2f2f2; font-weight: 900; text-transform: uppercase; font-size: 8px; }
+            th, td { border: 1.5px solid #1e3a8a !important; padding: 6px; text-align: center; }
+            th { background-color: #1e3a8a !important; color: #ffffff !important; font-weight: 900; text-transform: uppercase; font-size: 8.5px; }
             .name-cell { text-align: left; font-weight: 900; min-width: 150px; text-transform: uppercase; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
             .btn { cursor: pointer; padding: 12px 25px; border-radius: 12px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; transition: all 0.2s; }
@@ -151,7 +151,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           <div class="header">
             <div class="school-name">${schoolName}</div>
             <div class="report-type">${reportTitle}</div>
-            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Registry v5.2 Stable</div>
+            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Fitness & BMI Audit Registry</div>
           </div>
           <table>
             <thead>
@@ -159,6 +159,9 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                 <th>SNR</th>
                 <th>STUDENT NAME</th>
                 <th>STD</th>
+                <th>HT (cm)</th>
+                <th>WT (kg)</th>
+                <th>BMI</th>
                 <th>10x6 SHUTTLE</th>
                 <th>BOARD JUMP</th>
                 <th>50m RUN</th>
@@ -173,11 +176,17 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
               ${filteredPlayers.map((p: any, i: number) => {
                 const fit = store.data.fitness?.[p.id] || {};
                 const dName = isM ? (p.nameMarathi || p.name) : p.name;
+                const heightVal = p.height || fit.height || '-';
+                const weightVal = p.weight || fit.weight || '-';
+                const bmiVal = calculateBMI(heightVal !== '-' ? heightVal : null, weightVal !== '-' ? weightVal : null, p.bmi || fit.bmi);
                 return `
                   <tr>
                     <td>${p.serialNumber || i+1}</td>
                     <td class="name-cell">${dName}</td>
                     <td>${p.std}</td>
+                    <td>${heightVal}</td>
+                    <td>${weightVal}</td>
+                    <td><strong>${bmiVal}</strong></td>
                     <td>${fit.shuttleRun || '-'}</td>
                     <td>${fit.boardJump || '-'}</td>
                     <td>${fit.run50m || '-'}</td>

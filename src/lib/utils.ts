@@ -303,3 +303,25 @@ export function parseMedicalLog(fullLog: string): ParsedMedicalLog {
   };
 }
 
+export function calculateBMI(height?: string | number | null, weight?: string | number | null, existingBmi?: string | number | null): string {
+  if (existingBmi && existingBmi !== '---' && existingBmi !== '-' && !isNaN(Number(existingBmi)) && Number(existingBmi) > 0) {
+    return Number(existingBmi).toFixed(1);
+  }
+  const h = parseFloat(String(height || 0)) / 100;
+  const w = parseFloat(String(weight || 0));
+  if (h > 0 && w > 0) {
+    return (w / (h * h)).toFixed(1);
+  }
+  return '---';
+}
+
+export function getBmiCategory(bmiVal: string | number | null): { en: string; mr: string; color: string } {
+  const num = parseFloat(String(bmiVal || 0));
+  if (num === 0 || isNaN(num)) return { en: 'Unknown', mr: 'अज्ञात', color: 'text-slate-500' };
+  if (num < 18.5) return { en: 'Underweight', mr: 'कमी वजन', color: 'text-amber-600' };
+  if (num < 25) return { en: 'Normal Weight', mr: 'योग्य वजन', color: 'text-emerald-600' };
+  if (num < 30) return { en: 'Overweight', mr: 'जास्त वजन', color: 'text-amber-700' };
+  return { en: 'Obese', mr: 'स्थूल / अतिवजन', color: 'text-rose-600' };
+}
+
+

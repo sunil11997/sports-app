@@ -41,7 +41,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -247,7 +247,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             </thead>
             <tbody>
               ${students.map((p: any, i: number) => {
-                const bmiNum = parseFloat(p.bmi) || 0;
+                const bmiVal = calculateBMI(p.height, p.weight, p.bmi);
+                const bmiNum = parseFloat(bmiVal) || 0;
                 const status = getBmiStatus(bmiNum);
                 const statusClass = bmiNum >= 25 ? 'status-danger' : (bmiNum < 18.5 ? 'status-warning' : 'status-normal');
                 const displayName = isM ? (p.nameMarathi || p.name) : p.name;
@@ -260,7 +261,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     <td>${p.height || '-'}</td>
                     <td>${p.sittingHeight || '-'}</td>
                     <td>${p.weight || '-'}</td>
-                    <td><strong>${p.bmi || '-'}</strong></td>
+                    <td><strong>${bmiVal}</strong></td>
                     <td class="${statusClass}"><strong>${status.en} / ${status.mr}</strong></td>
                     <td>${p.generalRegisterNumber || '-'}</td>
                     <td>${p.bloodGroup || '-'}</td>
