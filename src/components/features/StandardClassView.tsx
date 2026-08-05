@@ -32,7 +32,10 @@ import {
   Download,
   FolderOpen,
   FileImage,
-  FileText
+  FileText,
+  UserPlus,
+  Plus,
+  Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -58,7 +61,30 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Direct Add & Quick Entry Modal States
+  const [isDirectAddOpen, setIsDirectAddOpen] = useState(false);
+  const [isBatchWeightOpen, setIsBatchWeightOpen] = useState(false);
+  const [quickWeightPlayer, setQuickWeightPlayer] = useState<Player | null>(null);
+
+  const [newStudentData, setNewStudentData] = useState({
+    name: '',
+    nameMarathi: '',
+    gender: 'Male' as 'Male' | 'Female',
+    dob: '',
+    weight: '',
+    height: '',
+    sittingHeight: '',
+    serialNumber: '',
+    generalRegisterNumber: '',
+    category: 'student' as 'student' | 'athlete',
+    sports: [] as string[],
+    bloodGroup: 'None'
+  });
+
+  const [batchWeightMap, setBatchWeightMap] = useState<Record<string, { weight: string; height: string }>>({});
+
   const editingAgeValidation = useMemo(() => getAgeValidation(editingPlayer?.dob), [editingPlayer?.dob]);
+  const newStudentAgeValidation = useMemo(() => getAgeValidation(newStudentData.dob), [newStudentData.dob]);
 
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
@@ -165,6 +191,98 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     if (confirm("Are you sure you want to PERMANENTLY DELETE this student from the institutional registry?")) {
       store.deletePlayer(playerId);
       toast({ title: "Registry Purged", variant: "destructive" });
+    }
+  };
+
+  const handleDirectAddStudent = async () => {
+    if (!newStudentData.name && !newStudentData.nameMarathi) {
+      toast({ title: isMarathiView ? "नाव टाका" : "Name Required", description: "कृपया विद्यार्थ्यांचे नाव टाका.", variant: "destructive" });
+      return;
+    }
+    const ageVal = getAgeValidation(newStudentData.dob);
+    const calculatedAge = ageVal ? ageVal.ageYears : 0;
+    const ageCategory = ageVal ? ageVal.category : "None";
+    const ageDetailed = ageVal ? ageVal.ageString : "";
+
+    let bmi = "---";
+    if (newStudentData.height && newStudentData.weight) {
+      const h = parseFloat(newStudentData.height) / 100;
+      const w = parseFloat(newStudentData.weight);
+      if (h > 0) bmi = (w / (h * h)).toFixed(1);
+    }
+
+    const id = `std${std}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    await store.addPlayer({
+      ...newStudentData,
+      id,
+      std,
+      age: calculatedAge,
+      ageCategory,
+      ageDetailed,
+      bmi,
+      name: newStudentData.name || newStudentData.nameMarathi,
+      nameMarathi: newStudentData.nameMarathi || newStudentData.name
+    });
+
+    toast({
+      title: isMarathiView ? "विद्यार्थी नोंदवला!" : "Student Added!",
+      description: `${newStudentData.name || newStudentData.nameMarathi} registered to Standard ${std}.`,
+      className: "bg-emerald-600 text-white font-bold"
+    });
+    setIsDirectAddOpen(false);
+    setNewStudentData({
+      name: '', nameMarathi: '', gender: 'Male', dob: '', weight: '', height: '', sittingHeight: '', serialNumber: '', generalRegisterNumber: '', category: 'student', sports: [], bloodGroup: 'None'
+    });
+  };
+
+  const handleBatchWeightSave = () => {
+    let count = 0;
+    Object.entries(batchWeightMap).forEach(([playerId, data]) => {
+      const player = students.find((p: any) => p.id === playerId);
+      if (player && (data.weight !== undefined || data.height !== undefined)) {
+        const hStr = data.height !== undefined ? data.height : (player.height || '');
+        const wStr = data.weight !== undefined ? data.weight : (player.weight || '');
+        let bmi = "---";
+        if (hStr && wStr) {
+          const h = parseFloat(hStr) / 100;
+          const w = parseFloat(wStr);
+          if (h > 0) bmi = (w / (h * h)).toFixed(1);
+        }
+        store.updatePlayer({
+          ...player,
+          weight: wStr,
+          height: hStr,
+          bmi
+        });
+        count++;
+      }
+    });
+    toast({
+      title: isMarathiView ? "माहिती अद्ययावत केली!" : "Batch Update Saved!",
+      description: `Updated weight/height records for ${count} students.`,
+      className: "bg-emerald-600 text-white font-bold"
+    });
+    setIsBatchWeightOpen(false);
+  };
+
+  const handleQuickWeightSave = () => {
+    if (quickWeightPlayer) {
+      let bmi = "---";
+      if (quickWeightPlayer.height && quickWeightPlayer.weight) {
+        const h = parseFloat(quickWeightPlayer.height) / 100;
+        const w = parseFloat(quickWeightPlayer.weight);
+        if (h > 0) bmi = (w / (h * h)).toFixed(1);
+      }
+      store.updatePlayer({
+        ...quickWeightPlayer,
+        bmi
+      });
+      toast({
+        title: isMarathiView ? "वजन व माहिती अद्ययावत झाली!" : "Measurements Saved!",
+        description: `${quickWeightPlayer.name} updated successfully.`,
+        className: "bg-emerald-600 text-white font-bold"
+      });
+      setQuickWeightPlayer(null);
     }
   };
 
@@ -302,18 +420,29 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-           <div className="relative flex-1 md:w-64">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+           <div className="relative flex-1 md:w-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder={isMarathiView ? "नाव किंवा GR ने शोधा..." : "Find by Name/GR..."} 
-                className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner"
+                className="pl-9 h-11 rounded-full bg-muted/30 border-none shadow-inner text-xs"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
            </div>
-           <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-6 font-black uppercase text-xs shadow-lg active-scale">
-             <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'रिपोर्ट प्रिंट करा' : 'Print Health Roster'}
+           <Button onClick={() => setIsDirectAddOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-11 px-4 font-black uppercase text-[11px] shadow-lg active-scale flex items-center gap-1.5">
+             <UserPlus className="w-4 h-4" /> {isMarathiView ? 'थेट नाव नोंदवा' : 'Direct Add Student'}
+           </Button>
+           <Button onClick={() => {
+             const initialMap: Record<string, { weight: string; height: string }> = {};
+             students.forEach((s: any) => initialMap[s.id] = { weight: s.weight || '', height: s.height || '' });
+             setBatchWeightMap(initialMap);
+             setIsBatchWeightOpen(true);
+           }} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-11 px-4 font-black uppercase text-[11px] shadow-lg active-scale flex items-center gap-1.5">
+             <Weight className="w-4 h-4" /> {isMarathiView ? 'वर्गाचे वजन भरणा' : 'Batch Weight Entry'}
+           </Button>
+           <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-5 font-black uppercase text-[11px] shadow-lg active-scale flex items-center gap-1.5">
+             <Printer className="w-4 h-4" /> {isMarathiView ? 'प्रिंट' : 'Print Roster'}
            </Button>
         </div>
       </div>
@@ -391,6 +520,17 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     </TableCell>
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end items-center gap-2">
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setQuickWeightPlayer(student)}
+                          className="h-9 px-3 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-black text-[9.5px] uppercase flex items-center gap-1 shadow-sm active-scale"
+                          title="वजन व शारीरिक माहिती जलद बदला"
+                        >
+                          <Weight className="w-3.5 h-3.5 text-emerald-600" />
+                          {isMarathiView ? "वजन/उंची" : "Weight/Ht"}
+                        </Button>
                         <Button 
                           type="button"
                           variant="outline" 
@@ -754,6 +894,333 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         </DialogContent>
       </Dialog>
       <canvas ref={canvasRef} className="hidden" />
+
+      {/* 1. DIRECT ADD STUDENT DIALOG */}
+      <Dialog open={isDirectAddOpen} onOpenChange={setIsDirectAddOpen}>
+        <DialogContent className="sm:max-w-[700px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[90vh]">
+          <DialogHeader className="bg-emerald-700 p-6 text-white shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                <UserPlus className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                  {isMarathiView ? `इयत्ता ${std} वी - थेट नवीन विद्यार्थी नोंदणी` : `Standard ${std} - Direct Student Add`}
+                </DialogTitle>
+                <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-0.5">
+                  {isMarathiView ? "नवीन विद्यार्थी थेट वर्गात जोडा" : "Register new student directly into this standard"}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 p-6">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary">विद्यार्थ्याचे नाव (English Name)</Label>
+                  <Input 
+                    placeholder="e.g. Rahul Ramesh Pawar"
+                    value={newStudentData.name} 
+                    onChange={e => setNewStudentData({...newStudentData, name: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary">विद्यार्थ्याचे नाव (मराठी)</Label>
+                  <Input 
+                    placeholder="उदा. राहुल रमेश पवार"
+                    value={newStudentData.nameMarathi} 
+                    onChange={e => setNewStudentData({...newStudentData, nameMarathi: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary">लिंग (Gender)</Label>
+                  <Select value={newStudentData.gender} onValueChange={(val: any) => setNewStudentData({...newStudentData, gender: val})}>
+                    <SelectTrigger className="h-11 border-2 rounded-xl font-bold text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">मुलगा (Male)</SelectItem>
+                      <SelectItem value="Female">मुलगी (Female)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary">जन्म तारीख (Date of Birth)</Label>
+                  <Input 
+                    type="date" 
+                    value={newStudentData.dob} 
+                    onChange={e => setNewStudentData({...newStudentData, dob: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                  />
+                </div>
+              </div>
+
+              {newStudentAgeValidation && (
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs flex justify-between items-center">
+                  <div>
+                    <span className="font-bold text-emerald-900">वय / Age: </span>
+                    <span className="font-black text-emerald-800">{newStudentAgeValidation.ageString}</span>
+                  </div>
+                  <Badge className="bg-emerald-600 text-white font-black">
+                    {getLocalizedAgeCategory(newStudentAgeValidation.category, isMarathiView)}
+                  </Badge>
+                </div>
+              )}
+
+              <div className="p-4 bg-muted/20 rounded-2xl border-2 space-y-3">
+                <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-1.5">
+                  <Weight className="w-4 h-4 text-emerald-600" /> शारीरिक वजने व उंची (Physical Parameters)
+                </Label>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-[9px] font-black text-muted-foreground">वजन / Weight (kg)</Label>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 42" 
+                      value={newStudentData.weight} 
+                      onChange={e => setNewStudentData({...newStudentData, weight: e.target.value})} 
+                      className="h-11 border-2 rounded-xl font-black text-xs text-center" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[9px] font-black text-muted-foreground">उंची / Height (cm)</Label>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 152" 
+                      value={newStudentData.height} 
+                      onChange={e => setNewStudentData({...newStudentData, height: e.target.value})} 
+                      className="h-11 border-2 rounded-xl font-black text-xs text-center" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[9px] font-black text-muted-foreground">बसून उंची / Sit Ht</Label>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 75" 
+                      value={newStudentData.sittingHeight} 
+                      onChange={e => setNewStudentData({...newStudentData, sittingHeight: e.target.value})} 
+                      className="h-11 border-2 rounded-xl font-black text-xs text-center" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary">रोल नंबर / Roll No</Label>
+                  <Input 
+                    placeholder="e.g. 15"
+                    value={newStudentData.serialNumber} 
+                    onChange={e => setNewStudentData({...newStudentData, serialNumber: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary">जी.आर. नंबर / GR No</Label>
+                  <Input 
+                    placeholder="e.g. 1048"
+                    value={newStudentData.generalRegisterNumber} 
+                    onChange={e => setNewStudentData({...newStudentData, generalRegisterNumber: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-primary">खेळ / Sports Selection</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-muted/10 p-3 rounded-2xl border">
+                  {SPORTS_LIST.map(sport => (
+                    <div key={sport} className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={newStudentData.sports.includes(sport)} 
+                        onCheckedChange={(checked) => {
+                          const curr = newStudentData.sports;
+                          const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                          setNewStudentData({...newStudentData, sports: next});
+                        }}
+                        className="w-4 h-4 rounded"
+                      />
+                      <span className="text-[10px] font-bold text-foreground/80">{sport}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="p-4 border-t bg-muted/10 shrink-0">
+            <Button onClick={handleDirectAddStudent} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black uppercase tracking-wider text-xs shadow-lg active-scale">
+              <Save className="w-4 h-4 mr-2" /> {isMarathiView ? `इयत्ता ${std} वी मध्ये विद्यार्थी जोडा` : `Add Student to Class ${std}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. BATCH WEIGHT ENTRY DIALOG */}
+      <Dialog open={isBatchWeightOpen} onOpenChange={setIsBatchWeightOpen}>
+        <DialogContent className="sm:max-w-[750px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col h-[85vh]">
+          <DialogHeader className="bg-amber-600 p-6 text-white shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                <Weight className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                  {isMarathiView ? `इयत्ता ${std} वी - वर्गाचे वजन व उंची जलद भरणा` : `Standard ${std} - Batch Weight & Height Entry`}
+                </DialogTitle>
+                <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-0.5">
+                  {isMarathiView ? `एकाच वेळी सर्व ${students.length} विद्यार्थ्यांचे वजन नोंदवा` : `Quickly update physical parameters for all ${students.length} students`}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px] font-black text-xs">Roll</TableHead>
+                  <TableHead className="font-black text-xs">Student Name / नाव</TableHead>
+                  <TableHead className="w-[140px] text-center font-black text-xs">Weight (kg)</TableHead>
+                  <TableHead className="w-[140px] text-center font-black text-xs">Height (cm)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {students.map((student: any) => {
+                  const currentVals = batchWeightMap[student.id] || { weight: student.weight || '', height: student.height || '' };
+                  return (
+                    <TableRow key={student.id}>
+                      <TableCell className="font-bold text-xs">{student.serialNumber || '-'}</TableCell>
+                      <TableCell>
+                        <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || student.name) : student.name}</p>
+                        <p className="text-[9px] text-muted-foreground font-bold">GR: {student.generalRegisterNumber || '---'}</p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Input 
+                          type="number"
+                          placeholder="e.g. 42"
+                          value={currentVals.weight}
+                          onChange={(e) => setBatchWeightMap({
+                            ...batchWeightMap,
+                            [student.id]: { ...currentVals, weight: e.target.value }
+                          })}
+                          className="h-10 text-center font-black text-xs rounded-lg border-2 border-amber-300 focus:border-amber-500"
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Input 
+                          type="number"
+                          placeholder="e.g. 150"
+                          value={currentVals.height}
+                          onChange={(e) => setBatchWeightMap({
+                            ...batchWeightMap,
+                            [student.id]: { ...currentVals, height: e.target.value }
+                          })}
+                          className="h-10 text-center font-black text-xs rounded-lg border-2 border-primary/20"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+
+          <DialogFooter className="p-4 border-t bg-muted/10 shrink-0">
+            <Button onClick={handleBatchWeightSave} className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-black uppercase tracking-wider text-xs shadow-lg active-scale">
+              <Save className="w-4 h-4 mr-2" /> {isMarathiView ? "सर्व विद्यार्थ्यांचे वजन अद्ययावत करा" : "Save All Weights & Heights"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 3. QUICK WEIGHT EDIT DIALOG */}
+      <Dialog open={!!quickWeightPlayer} onOpenChange={() => setQuickWeightPlayer(null)}>
+        <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-6 space-y-6">
+          {quickWeightPlayer && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-lg font-black uppercase text-primary flex items-center gap-2">
+                  <Weight className="w-5 h-5 text-emerald-600" />
+                  {isMarathiView ? "वजन व माहिती बदला" : "Update Weight & Physical Params"}
+                </DialogTitle>
+                <p className="text-xs font-bold text-muted-foreground uppercase">
+                  {isMarathiView ? (quickWeightPlayer.nameMarathi || quickWeightPlayer.name) : quickWeightPlayer.name} (Std {std})
+                </p>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">वजन (kg)</Label>
+                    <Input 
+                      type="number"
+                      value={quickWeightPlayer.weight || ''} 
+                      onChange={e => setQuickWeightPlayer({...quickWeightPlayer, weight: e.target.value})} 
+                      className="h-12 border-2 rounded-xl font-black text-sm text-center border-emerald-400" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">उंची (cm)</Label>
+                    <Input 
+                      type="number"
+                      value={quickWeightPlayer.height || ''} 
+                      onChange={e => setQuickWeightPlayer({...quickWeightPlayer, height: e.target.value})} 
+                      className="h-12 border-2 rounded-xl font-black text-sm text-center" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">बसून उंची (Sit Ht)</Label>
+                    <Input 
+                      type="number"
+                      value={quickWeightPlayer.sittingHeight || ''} 
+                      onChange={e => setQuickWeightPlayer({...quickWeightPlayer, sittingHeight: e.target.value})} 
+                      className="h-12 border-2 rounded-xl font-bold text-xs" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">रक्तगट (Blood Group)</Label>
+                    <Select value={quickWeightPlayer.bloodGroup || 'None'} onValueChange={val => setQuickWeightPlayer({...quickWeightPlayer, bloodGroup: val})}>
+                      <SelectTrigger className="h-12 border-2 rounded-xl font-bold text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary">खेळ / Sports Selection</Label>
+                  <div className="grid grid-cols-2 gap-2 bg-muted/10 p-3 rounded-2xl border">
+                    {SPORTS_LIST.map(sport => (
+                      <div key={sport} className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={quickWeightPlayer.sports?.includes(sport)} 
+                          onCheckedChange={(checked) => {
+                            const curr = quickWeightPlayer.sports || [];
+                            const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
+                            setQuickWeightPlayer({...quickWeightPlayer, sports: next});
+                          }}
+                          className="w-4 h-4 rounded"
+                        />
+                        <span className="text-[10px] font-bold text-foreground/80">{sport}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button onClick={handleQuickWeightSave} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black uppercase tracking-wider text-xs shadow-lg active-scale">
+                  <Save className="w-4 h-4 mr-2" /> {isMarathiView ? "अद्ययावत माहिती जतन करा" : "Save Physical Updates"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {selectedIdentityPlayer && (
         <PlayerIdentityModal
