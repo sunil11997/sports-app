@@ -42,7 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 export function DailyReport({ store, section, language = 'Marathi', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
-  const [reportDate, setReportDate] = useState("");
+  const [reportDate, setReportDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
 
@@ -71,35 +71,40 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
   useEffect(() => {
     setIsMounted(true);
-    setReportDate(format(new Date(), 'yyyy-MM-dd'));
+    if (!reportDate) {
+      setReportDate(format(new Date(), 'yyyy-MM-dd'));
+    }
     if (preselectedSport) {
       setCustomSport(preselectedSport);
       setPhotoSport(preselectedSport);
     }
-  }, [preselectedSport]);
+  }, [preselectedSport, reportDate]);
 
-  // Load photos for selected reportDate from cloud Firestore + IndexedDB
+  // Load photos for selected reportDate from local persistence + cloud Firestore
   useEffect(() => {
     let active = true;
-    if (typeof window !== 'undefined' && reportDate) {
-      getPhotosByDateFromIDB(reportDate).then((idbPhotos) => {
-        if (!active) return;
-        const cloudPhotos = store?.data?.reportPhotos?.[reportDate] || [];
-        const mergedMap = new Map<string, GeoPhoto>();
-        cloudPhotos.forEach((p: GeoPhoto) => mergedMap.set(p.id, p));
-        idbPhotos.forEach((p: GeoPhoto) => { if (!mergedMap.has(p.id)) mergedMap.set(p.id, p); });
-        setReportPhotos(Array.from(mergedMap.values()));
-      }).catch(err => {
-        console.error('Error loading photos:', err);
-        const cloudPhotos = store?.data?.reportPhotos?.[reportDate] || [];
-        setReportPhotos(cloudPhotos);
-      });
+    const targetDate = reportDate || format(new Date(), 'yyyy-MM-dd');
+    
+    // Fast synchronous read from localStorage + IndexedDB
+    getPhotosByDateFromIDB(targetDate).then((idbPhotos) => {
+      if (!active) return;
+      const cloudPhotos = store?.data?.reportPhotos?.[targetDate] || [];
+      const mergedMap = new Map<string, GeoPhoto>();
+      cloudPhotos.forEach((p: GeoPhoto) => mergedMap.set(p.id, p));
+      idbPhotos.forEach((p: GeoPhoto) => { if (!mergedMap.has(p.id)) mergedMap.set(p.id, p); });
+      const mergedList = Array.from(mergedMap.values());
+      mergedList.sort((a, b) => b.id.localeCompare(a.id));
+      setReportPhotos(mergedList);
+    }).catch(err => {
+      console.error('Error loading photos:', err);
+      const cloudPhotos = store?.data?.reportPhotos?.[targetDate] || [];
+      setReportPhotos(cloudPhotos);
+    });
 
-      const cloudSummary = store?.data?.dailySummaries?.[reportDate];
-      if (cloudSummary) {
-        setManualSummary(cloudSummary.summary || "");
-        setWeather(cloudSummary.weather || "Sunny");
-      }
+    const cloudSummary = store?.data?.dailySummaries?.[targetDate];
+    if (cloudSummary) {
+      if (cloudSummary.summary) setManualSummary(cloudSummary.summary);
+      if (cloudSummary.weather) setWeather(cloudSummary.weather);
     }
     return () => { active = false; };
   }, [reportDate, store?.data?.reportPhotos, store?.data?.dailySummaries]);
@@ -142,8 +147,8 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Resize image to max 900px for optimal quality and small storage footprint
-        const maxW = 900;
+        // Resize image to max 600px for high clarity and small storage footprint (~70KB)
+        const maxW = 600;
         const scale = Math.min(1, maxW / Math.max(img.width, img.height));
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
@@ -183,11 +188,12 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         const lngStr = currentLng ? currentLng.toString() : '74.0045';
         ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (84 * scale));
 
-        const stampedUrl = canvas.toDataURL('image/jpeg', 0.80);
+        const stampedUrl = canvas.toDataURL('image/jpeg', 0.70);
+        const photoDate = reportDate || format(new Date(), 'yyyy-MM-dd');
 
         const newPhoto: GeoPhoto = {
           id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          date: reportDate,
+          date: photoDate,
           url: stampedUrl,
           caption: photoCaption || `${activeSport} - ${activeDrill}`,
           sport: activeSport,
@@ -581,21 +587,21 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       '.school-name { font-size: 20px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }',
       '.report-title { font-size: 14px; font-weight: 900; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; background: #fef3c7; border: 1.5px solid #f59e0b; padding: 5px 16px; display: inline-block; border-radius: 4px; }',
       '.sub-header { font-size: 10.5px; font-weight: 700; color: #475569; margin-top: 6px; }',
-      '.meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f8fafc; border: 1.5px solid #1e3a8a; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 11.5px; font-weight: 700; }',
-      'h3 { color: #1e3a8a !important; font-size: 12.5px !important; font-weight: 900 !important; background: #eff6ff !important; border: 1.5px solid #bfdbfe !important; border-left: 5px solid #1e3a8a !important; padding: 6px 12px !important; margin-top: 20px !important; margin-bottom: 10px !important; text-transform: uppercase !important; border-radius: 4px !important; }',
+      '.meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: transparent; border: none; border-bottom: 1.5px solid #1e3a8a; padding: 6px 0; margin-bottom: 16px; font-size: 11.5px; font-weight: 700; }',
+      'h3 { color: #1e3a8a !important; font-size: 12.5px !important; font-weight: 900 !important; background: transparent !important; border: none !important; border-bottom: 2px solid #1e3a8a !important; padding: 4px 0 !important; margin-top: 18px !important; margin-bottom: 8px !important; text-transform: uppercase !important; border-radius: 0 !important; }',
       '.stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; }',
-      '.card-box { background: #ffffff; border: 1.5px solid #1e3a8a; border-radius: 6px; padding: 12px; margin-bottom: 10px; }',
+      '.card-box { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-bottom: 8px; }',
       '.card-title { font-size: 11px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; text-align: center; }',
       '.card-numbers { display: flex; justify-content: space-around; text-align: center; }',
       '.num-item { font-size: 11.5px; font-weight: 800; border: 1px solid #64748b; padding: 4px 10px; border-radius: 4px; background: #f8fafc; min-width: 65px; }',
       '.num-val { font-size: 17px; font-weight: 900; }',
       '.report-table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 14px; font-size: 11.5px; }',
-      '.report-table th, .report-table td { border: 1.5px solid #1e3a8a !important; padding: 7px 10px; text-align: left; }',
+      '.report-table th, .report-table td { border: 1px solid #cbd5e1 !important; padding: 6px 8px; text-align: left; }',
       '.report-table th { background: #1e3a8a !important; color: #ffffff !important; font-weight: 800; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.3px; }',
       '.report-table tr:nth-child(even) { background: #f8fafc; }',
-      '.empty-msg { background: #f8fafc; border: 1.5px dashed #64748b; padding: 10px; text-align: center; border-radius: 6px; font-size: 11.5px; color: #475569; font-style: italic; font-weight: 700; }',
-      '.medical-box { background: #fff5f5; border: 1.5px solid #dc2626; border-radius: 6px; padding: 12px; margin-bottom: 12px; }',
-      '.notes-box { background: #fffdf5; border: 1.5px solid #b45309; padding: 12px 14px; border-radius: 6px; font-size: 11.5px; line-height: 1.6; min-height: 60px; margin-bottom: 16px; font-weight: 600; color: #1e293b; }',
+      '.empty-msg { background: transparent; border: none; padding: 6px 0; text-align: left; font-size: 11.5px; color: #475569; font-style: italic; font-weight: 700; }',
+      '.medical-box { background: transparent; border: none; padding: 6px 0; margin-bottom: 10px; }',
+      '.notes-box { background: transparent; border: none; padding: 4px 0; font-size: 11.5px; line-height: 1.6; margin-bottom: 16px; font-weight: 600; color: #1e293b; }',
       '.photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }',
       '.photo-card { border: 1.5px solid #1e3a8a; border-radius: 6px; overflow: hidden; background: #ffffff; text-align: center; padding: 6px; }',
       '.photo-card img { width: 100%; height: 180px; object-fit: contain; background: #0f172a; border-radius: 4px; border: 1px solid #cbd5e1; }',

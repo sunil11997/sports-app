@@ -35,6 +35,17 @@ function openDB(): Promise<IDBDatabase> {
 }
 
 export async function savePhotoToIDB(photo: GeoPhoto): Promise<void> {
+  // Always save to localStorage immediately for instant synchronous persistence
+  try {
+    const key = `wgb_photos_${photo.date}`;
+    const saved = localStorage.getItem(key);
+    const existing: GeoPhoto[] = saved ? JSON.parse(saved) : [];
+    const updated = [photo, ...existing.filter(p => p.id !== photo.id)];
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (e) {
+    console.error('LocalStorage save failed:', e);
+  }
+
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -46,48 +57,57 @@ export async function savePhotoToIDB(photo: GeoPhoto): Promise<void> {
     });
   } catch (err) {
     console.error('Failed to save photo to IndexedDB:', err);
-    // Fallback to localStorage
-    try {
-      const key = `wgb_photos_${photo.date}`;
-      const saved = localStorage.getItem(key);
-      const existing: GeoPhoto[] = saved ? JSON.parse(saved) : [];
-      const updated = [photo, ...existing.filter(p => p.id !== photo.id)];
-      localStorage.setItem(key, JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage fallback also failed:', e);
-    }
   }
 }
 
 export async function getPhotosByDateFromIDB(date: string): Promise<GeoPhoto[]> {
+  const photosMap = new Map<string, GeoPhoto>();
+
+  // 1. Get from localStorage
+  try {
+    const key = `wgb_photos_${date}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const lsPhotos: GeoPhoto[] = JSON.parse(saved);
+      lsPhotos.forEach(p => photosMap.set(p.id, p));
+    }
+  } catch (e) {}
+
+  // 2. Get from IndexedDB & merge
   try {
     const db = await openDB();
-    return new Promise((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const index = store.index('date');
       const req = index.getAll(date);
       req.onsuccess = () => {
-        const photos = (req.result || []) as GeoPhoto[];
-        // Sort descending by id/timestamp
-        photos.sort((a, b) => b.id.localeCompare(a.id));
-        resolve(photos);
+        const idbPhotos = (req.result || []) as GeoPhoto[];
+        idbPhotos.forEach(p => photosMap.set(p.id, p));
+        resolve();
       };
-      req.onerror = () => reject(req.error);
+      req.onerror = () => resolve();
     });
   } catch (err) {
     console.error('Failed to load photos from IndexedDB:', err);
-    // Fallback to localStorage
-    try {
-      const saved = localStorage.getItem(`wgb_photos_${date}`);
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
   }
+
+  const result = Array.from(photosMap.values());
+  result.sort((a, b) => b.id.localeCompare(a.id));
+  return result;
 }
 
 export async function deletePhotoFromIDB(id: string, date: string): Promise<void> {
+  // Always clean up localStorage
+  try {
+    const key = `wgb_photos_${date}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const filtered = JSON.parse(saved).filter((p: GeoPhoto) => p.id !== id);
+      localStorage.setItem(key, JSON.stringify(filtered));
+    }
+  } catch (e) {}
+
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -100,13 +120,4 @@ export async function deletePhotoFromIDB(id: string, date: string): Promise<void
   } catch (err) {
     console.error('Failed to delete photo from IndexedDB:', err);
   }
-  // Cleanup localStorage fallback if present
-  try {
-    const key = `wgb_photos_${date}`;
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      const filtered = JSON.parse(saved).filter((p: GeoPhoto) => p.id !== id);
-      localStorage.setItem(key, JSON.stringify(filtered));
-    }
-  } catch (e) {}
 }
