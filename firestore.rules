@@ -57,6 +57,18 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    match /goal_registry/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /report_photos/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /daily_summaries/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
     // Catch-all for development
     match /{document=**} {
       allow read, write: if isSignedIn();

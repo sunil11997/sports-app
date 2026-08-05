@@ -78,16 +78,31 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     }
   }, [preselectedSport]);
 
-  // Load photos for selected reportDate from persistent IndexedDB
+  // Load photos for selected reportDate from cloud Firestore + IndexedDB
   useEffect(() => {
+    let active = true;
     if (typeof window !== 'undefined' && reportDate) {
-      getPhotosByDateFromIDB(reportDate).then((photos) => {
-        setReportPhotos(photos);
+      getPhotosByDateFromIDB(reportDate).then((idbPhotos) => {
+        if (!active) return;
+        const cloudPhotos = store?.data?.reportPhotos?.[reportDate] || [];
+        const mergedMap = new Map<string, GeoPhoto>();
+        cloudPhotos.forEach((p: GeoPhoto) => mergedMap.set(p.id, p));
+        idbPhotos.forEach((p: GeoPhoto) => { if (!mergedMap.has(p.id)) mergedMap.set(p.id, p); });
+        setReportPhotos(Array.from(mergedMap.values()));
       }).catch(err => {
         console.error('Error loading photos:', err);
+        const cloudPhotos = store?.data?.reportPhotos?.[reportDate] || [];
+        setReportPhotos(cloudPhotos);
       });
+
+      const cloudSummary = store?.data?.dailySummaries?.[reportDate];
+      if (cloudSummary) {
+        setManualSummary(cloudSummary.summary || "");
+        setWeather(cloudSummary.weather || "Sunny");
+      }
     }
-  }, [reportDate]);
+    return () => { active = false; };
+  }, [reportDate, store?.data?.reportPhotos, store?.data?.dailySummaries]);
 
   // Fetch device live location
   const getDeviceLocation = () => {
@@ -183,8 +198,11 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           timestamp: new Date().toLocaleTimeString()
         };
 
-        // Save persistently to IndexedDB
+        // Save persistently to IndexedDB & Cloud Firestore
         await savePhotoToIDB(newPhoto);
+        if (store?.saveReportPhoto) {
+          store.saveReportPhoto(newPhoto);
+        }
 
         // Update UI state
         setReportPhotos(prev => [newPhoto, ...prev.filter(p => p.id !== newPhoto.id)]);
@@ -198,6 +216,9 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
   const handleDeletePhoto = async (id: string) => {
     await deletePhotoFromIDB(id, reportDate);
+    if (store?.deleteReportPhoto) {
+      store.deleteReportPhoto(id);
+    }
     setReportPhotos(prev => prev.filter(p => p.id !== id));
     toast({ title: "फोटो हटवला", description: "फोटो अहवालातून काढला." });
   };
@@ -1334,7 +1355,12 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
             <CardContent className="p-6 space-y-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">हवामान (Weather Context)</label>
-                <Select value={weather} onValueChange={setWeather}>
+                <Select value={weather} onValueChange={(val: string) => {
+                  setWeather(val);
+                  if (store?.saveDailySummary && reportDate) {
+                    store.saveDailySummary(reportDate, manualNotes, val);
+                  }
+                }}>
                   <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Sunny">Sunny (लख्ख ऊन) ☀️</SelectItem>
@@ -1348,7 +1374,13 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                 <label className="text-[9px] font-black uppercase text-muted-foreground ml-1">क्रीडा मार्गदर्शक निरीक्षण (Remarks)</label>
                 <Textarea 
                   value={manualNotes} 
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setManualSummary(e.target.value)} 
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                    const val = e.target.value;
+                    setManualSummary(val);
+                    if (store?.saveDailySummary && reportDate) {
+                      store.saveDailySummary(reportDate, val, weather);
+                    }
+                  }} 
                   placeholder="आजच्या उपक्रमाबाबत विशेष निरीक्षण किंवा नोंद येथे लिहा..." 
                   className="min-h-[140px] rounded-2xl border-2 p-4 font-medium text-sm" 
                 />
