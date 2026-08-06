@@ -44,7 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -305,12 +305,12 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
 
   const handlePrint = () => {
     const isM = isMarathiView;
-    const schoolName = isM 
-      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
-      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, isM);
     const reportTitle = isM 
       ? `विद्यार्थी आरोग्य आणि शारीरिक नोंदणी - इयत्ता ${std} वी` 
       : `Student Health & Physical Registry - Standard ${std}`;
+    const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, isM);
 
     const printContent = `
       <html>
@@ -392,11 +392,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
               }).join('')}
             </tbody>
           </table>
-          <div style="margin-top: 30px; display: flex; justify-content: space-between; font-weight: 900; text-transform: uppercase; font-size: 9px;">
-            <span>Class Teacher Signature</span>
-            <span>Sports Director</span>
-            <span>Principal Signature</span>
-          </div>
+          ${signatureBlockHtml}
         </body>
       </html>
     `;
@@ -1151,7 +1147,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     <TableRow key={student.id}>
                       <TableCell className="font-bold text-xs">{student.serialNumber || '-'}</TableCell>
                       <TableCell>
-                        <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || student.name) : student.name}</p>
+                        <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || transliterateEnglishToMarathi(student.name) || student.name) : student.name}</p>
                         <p className="text-[9px] text-muted-foreground font-bold">GR: {student.generalRegisterNumber || '---'}</p>
                       </TableCell>
                       <TableCell className="text-center">
@@ -1204,7 +1200,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                   {isMarathiView ? "वजन व माहिती बदला" : "Update Weight & Physical Params"}
                 </DialogTitle>
                 <p className="text-xs font-bold text-muted-foreground uppercase">
-                  {isMarathiView ? (quickWeightPlayer.nameMarathi || quickWeightPlayer.name) : quickWeightPlayer.name} (Std {std})
+                  {isMarathiView ? (quickWeightPlayer.nameMarathi || transliterateEnglishToMarathi(quickWeightPlayer.name) || quickWeightPlayer.name) : quickWeightPlayer.name} (Std {std})
                 </p>
               </DialogHeader>
 

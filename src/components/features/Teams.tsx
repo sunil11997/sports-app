@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Printer } from 'lucide-react';
-import { cn, getAgeValidation } from '@/lib/utils';
+import { cn, getAgeValidation, getOfficialSchoolName, getTeacherName } from '@/lib/utils';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -36,7 +36,10 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
   }, [players, preselectedSport, categories, getCategory]);
 
   const handlePrint = () => {
-    const teacherName = store?.schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true);
+    const teacherName = getTeacherName(schoolProfile);
+    const signatureSrc = schoolProfile?.teacherSignature || TEACHER_SIGN_B64;
 
     const printContent = `
       <!DOCTYPE html>
@@ -115,7 +118,7 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
                 </div>
                 <div style="flex: 1; text-align: center;">
                   <div class="govt-title">महाराष्ट्र शासन</div>
-                  <div class="school-title">शासकीय माध्यमिक आश्रमशाळा वाघंबा ता.बागलाण जि.नाशिक</div>
+                  <div class="school-title">${schoolName}</div>
                   <div class="meta-row">
                     <span>SSC Index No – 13.12.058</span>
                     <span>Udise No.- 27200116503</span>
@@ -170,7 +173,7 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
             <!-- SIGNATURE BLOCKS -->
             <div class="sign-grid">
               <div class="sign-block">
-                <img src="${TEACHER_SIGN_B64}" alt="Teacher Signature" />
+                <img src="${signatureSrc}" alt="Teacher Signature" />
                 <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">क्रीडा शिक्षक स्वाक्षरी</div>
                 <div style="font-size: 9.5px; color: #64748b;">(${teacherName})</div>
               </div>

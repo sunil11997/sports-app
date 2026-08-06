@@ -233,8 +233,13 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         if (h > 0) bmi = (w / (h * h)).toFixed(1);
       }
 
+      const finalName = (values.name || '').trim();
+      const finalNameMarathi = (values.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+
       await store.addPlayer({ 
         ...values,
+        name: finalName,
+        nameMarathi: finalNameMarathi,
         id: values.id || Math.random().toString(36).substr(2, 9), 
         age: calculatedAge,
         ageCategory,
@@ -389,20 +394,53 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                             <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity & Parents Info</h3>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <FormField control={form.control} name="name" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
-                                <FormControl><Input placeholder="Full legal name" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                            <FormField control={form.control} name="nameMarathi" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</FormLabel>
-                                <FormControl><Input placeholder="पूर्ण नाव मराठीत" className="h-14 font-black border-2 rounded-2xl bg-white text-lg" {...field} /></FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
+                             <FormField control={form.control} name="name" render={({ field }) => (
+                               <FormItem>
+                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
+                                 <FormControl>
+                                   <Input 
+                                     placeholder="Full legal name" 
+                                     className="h-14 font-black border-2 rounded-2xl bg-white text-lg" 
+                                     {...field} 
+                                     onChange={(e) => {
+                                       field.onChange(e);
+                                       const val = e.target.value;
+                                       const currentMarathi = form.getValues('nameMarathi') || '';
+                                       const prevName = form.getValues('name') || '';
+                                       const autoMarathi = transliterateEnglishToMarathi(val);
+                                       if (!currentMarathi || currentMarathi === transliterateEnglishToMarathi(prevName)) {
+                                         form.setValue('nameMarathi', autoMarathi);
+                                       }
+                                     }}
+                                   />
+                                 </FormControl>
+                                 <FormMessage />
+                               </FormItem>
+                             )} />
+                             <FormField control={form.control} name="nameMarathi" render={({ field }) => (
+                               <FormItem>
+                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                   <span className="flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</span>
+                                   {form.watch('name') && (
+                                     <button
+                                       type="button"
+                                       onClick={() => form.setValue('nameMarathi', transliterateEnglishToMarathi(form.getValues('name')))}
+                                       className="text-[10px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
+                                     >
+                                       💡 सुचवलेले: {transliterateEnglishToMarathi(form.watch('name'))}
+                                     </button>
+                                   )}
+                                 </FormLabel>
+                                 <FormControl>
+                                   <Input 
+                                     placeholder={transliterateEnglishToMarathi(form.watch('name')) || "पूर्ण नाव मराठीत"} 
+                                     className="h-14 font-black border-2 rounded-2xl bg-white text-lg" 
+                                     {...field} 
+                                   />
+                                 </FormControl>
+                                 <FormMessage />
+                               </FormItem>
+                             )} />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <FormField control={form.control} name="fatherName" render={({ field }) => (

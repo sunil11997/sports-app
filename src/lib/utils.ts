@@ -328,25 +328,99 @@ export function parseMedicalLog(fullLog: string): ParsedMedicalLog {
   };
 }
 
+export function parseNumericValue(val: any): number {
+  if (val === null || val === undefined) return 0;
+  let str = String(val).trim();
+  if (!str) return 0;
+
+  // Convert Devanagari numerals (०१२३४५६७८९) to ASCII (0123456789)
+  const devanagariMap: Record<string, string> = {
+    '०': '0', '१': '1', '२': '2', '३': '3', '४': '4',
+    '५': '5', '६': '6', '७': '7', '८': '8', '९': '9'
+  };
+  str = str.replace(/[०-९]/g, d => devanagariMap[d] || d);
+
+  // Extract numeric match (optional sign, digits, optional decimal)
+  const match = str.match(/[-+]?\d*\.?\d+/);
+  if (!match) return 0;
+  
+  const num = parseFloat(match[0]);
+  return isNaN(num) ? 0 : num;
+}
+
 export function calculateBMI(height?: string | number | null, weight?: string | number | null, existingBmi?: string | number | null): string {
-  const h = parseFloat(String(height || 0)) / 100;
-  const w = parseFloat(String(weight || 0));
-  if (h > 0 && w > 0) {
-    return (w / (h * h)).toFixed(1);
+  const hNum = parseNumericValue(height);
+  const wNum = parseNumericValue(weight);
+
+  if (hNum > 0 && wNum > 0) {
+    let hMeters = hNum;
+    if (hNum > 3.0) {
+      // Height is given in centimeters
+      hMeters = hNum / 100;
+    }
+    if (hMeters > 0.4 && hMeters < 3.0 && wNum > 2 && wNum < 300) {
+      const calculated = wNum / (hMeters * hMeters);
+      if (calculated >= 5 && calculated <= 100) {
+        return calculated.toFixed(1);
+      }
+    }
   }
-  if (existingBmi && existingBmi !== '---' && existingBmi !== '-' && existingBmi !== '--' && !isNaN(Number(existingBmi)) && Number(existingBmi) > 0) {
-    return Number(existingBmi).toFixed(1);
+
+  const existingNum = parseNumericValue(existingBmi);
+  if (existingNum >= 5 && existingNum <= 100) {
+    return existingNum.toFixed(1);
   }
+
   return '---';
 }
 
 export function getBmiCategory(bmiVal: string | number | null): { en: string; mr: string; color: string } {
-  const num = parseFloat(String(bmiVal || 0));
+  const num = parseNumericValue(bmiVal);
   if (num === 0 || isNaN(num)) return { en: 'Unknown', mr: 'अज्ञात', color: 'text-slate-500' };
   if (num < 18.5) return { en: 'Underweight', mr: 'कमी वजन', color: 'text-amber-600' };
   if (num < 25) return { en: 'Normal Weight', mr: 'योग्य वजन', color: 'text-emerald-600' };
   if (num < 30) return { en: 'Overweight', mr: 'जास्त वजन', color: 'text-amber-700' };
   return { en: 'Obese', mr: 'स्थूल / अतिवजन', color: 'text-rose-600' };
 }
+
+import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+
+export function getOfficialSchoolName(schoolProfile?: any, isMarathi: boolean = true): string {
+  if (schoolProfile?.schoolName && schoolProfile.schoolName.trim()) {
+    return schoolProfile.schoolName.trim();
+  }
+  return isMarathi 
+    ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
+    : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+}
+
+export function getTeacherName(schoolProfile?: any): string {
+  if (schoolProfile?.teacherName && schoolProfile.teacherName.trim()) {
+    return schoolProfile.teacherName.trim();
+  }
+  return 'सुनील देशमुख (B.P.Ed)';
+}
+
+export function getPrintSignatureBlockHtml(schoolProfile?: any, isMarathi: boolean = true): string {
+  const teacherName = getTeacherName(schoolProfile);
+  const schoolName = getOfficialSchoolName(schoolProfile, isMarathi);
+  const signatureSrc = schoolProfile?.teacherSignature || TEACHER_SIGN_B64;
+  
+  return `
+    <div class="no-break-sign" style="margin-top: 35px; page-break-inside: avoid; display: flex; justify-content: space-between; align-items: flex-end; font-family: sans-serif; font-size: 11px; padding: 10px 20px; border-top: 1px dashed #cbd5e1;">
+      <div style="text-align: center;">
+        <img src="${signatureSrc}" alt="Teacher Signature" style="height: 48px; max-width: 180px; object-fit: contain; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto;" />
+        <div style="font-weight: 900; text-transform: uppercase; color: #0f172a;">${isMarathi ? 'क्रीडा शिक्षक स्वाक्षरी' : 'Sports Teacher Signature'}</div>
+        <div style="font-size: 10px; color: #475569; font-weight: 700; margin-top: 2px;">(${teacherName})</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="border: 2px dashed #94a3b8; border-radius: 8px; width: 80px; height: 42px; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px auto; font-size: 10px; color: #94a3b8; font-weight: 800;">${isMarathi ? 'शिक्का' : 'STAMP'}</div>
+        <div style="font-weight: 900; text-transform: uppercase; color: #0f172a;">${isMarathi ? 'मुख्याध्यापक स्वाक्षरी' : 'Principal Signature'}</div>
+        <div style="font-size: 10px; color: #475569; font-weight: 700; margin-top: 2px;">(${schoolName})</div>
+      </div>
+    </div>
+  `;
+}
+
 
 

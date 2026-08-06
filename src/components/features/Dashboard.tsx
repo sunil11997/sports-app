@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory, transliterateEnglishToMarathi } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -79,8 +79,12 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
       const ageValidation = getAgeValidation(editingPlayer.dob);
+      const finalName = (editingPlayer.name || '').trim();
+      const finalNameMarathi = (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
       const updatedPlayer = {
         ...editingPlayer,
+        name: finalName,
+        nameMarathi: finalNameMarathi,
         age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
         ageCategory: ageValidation ? ageValidation.category : "None",
         ageDetailed: ageValidation ? ageValidation.ageString : "",
@@ -88,7 +92,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
       store.updatePlayer(updatedPlayer);
       setEditingPlayer(null);
       stopCamera();
-      toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
+      toast({ title: "Registry Updated", description: `${finalName}'s profile has been modified.` });
     }
   };
 
@@ -214,7 +218,7 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                         <AvatarFallback className="font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-black text-sm uppercase text-primary">{isMarathiView ? (p.nameMarathi || p.name) : p.name}</p>
+                        <p className="font-black text-sm uppercase text-primary">{isMarathiView ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name}</p>
                         {(() => {
                           const ageVal = getAgeValidation(p.dob);
                           const age = ageVal ? ageVal.ageYears : (parseInt(p.age as any) || 0);
@@ -322,11 +326,39 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
-                          <Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                          <Input 
+                            value={editingPlayer.name} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const mar = transliterateEnglishToMarathi(val);
+                              setEditingPlayer(prev => prev ? ({
+                                ...prev,
+                                name: val,
+                                nameMarathi: (!prev.nameMarathi || prev.nameMarathi === transliterateEnglishToMarathi(prev.name)) ? mar : prev.nameMarathi
+                              }) : null);
+                            }} 
+                            className="h-12 border-2 rounded-xl font-bold" 
+                          />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</Label>
-                          <Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
+                          <div className="flex items-center justify-between ml-2">
+                            <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</Label>
+                            {editingPlayer.name && (
+                              <button 
+                                type="button" 
+                                onClick={() => setEditingPlayer(prev => prev ? ({ ...prev, nameMarathi: transliterateEnglishToMarathi(prev.name) }) : null)}
+                                className="text-[9px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                💡 सुचवलेले: {transliterateEnglishToMarathi(editingPlayer.name)}
+                              </button>
+                            )}
+                          </div>
+                          <Input 
+                            placeholder={transliterateEnglishToMarathi(editingPlayer.name) || "पूर्ण नाव मराठीत"}
+                            value={editingPlayer.nameMarathi || ""} 
+                            onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} 
+                            className="h-12 border-2 rounded-xl font-bold" 
+                          />
                         </div>
                       </div>
                       

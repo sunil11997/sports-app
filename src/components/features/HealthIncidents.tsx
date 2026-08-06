@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
-import { cn, parseMedicalLog } from '@/lib/utils';
+import { cn, parseMedicalLog, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 
 const INCIDENT_TYPES = [
   { label: 'Sprain (मुरगळणे/लचकणे)', value: 'Sprain' },
@@ -177,12 +177,12 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
 
   const handlePrint = () => {
     const isM = isMarathi;
-    const schoolName = isM 
-      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
-      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, isM);
     const reportTitle = isM 
       ? 'आरोग्य नोंदणी आणि वैद्यकीय ऑडिट लॉग' 
       : 'HEALTH REGISTRY & MEDICAL AUDIT LOG';
+    const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, isM);
 
     const incidentsToPrint = store.data.healthIncidents.filter((inc: any) => 
       filteredPlayers.some((p: any) => p.id === inc.playerId)
@@ -204,7 +204,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
             .audit-table tr:nth-child(even) { background: #f8fafc; }
             .critical-tag { color: #dc2626; font-weight: 900; }
             .minor-tag { color: #2563eb; font-weight: 900; }
-            .footer { margin-top: 50px; font-size: 10px; opacity: 0.6; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+            .footer { margin-top: 20px; font-size: 10px; opacity: 0.6; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
             .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
             .btn { cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -218,7 +218,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
           </div>
           <h1>${schoolName}</h1>
           <div class="report-type">${reportTitle}</div>
-          <div class="meta">Institutional Medical Registry Audit • Instructor: Sunil Deshmukh • Total Records: ${incidentsToPrint.length}</div>
+          <div class="meta">Institutional Medical Registry Audit • Total Records: ${incidentsToPrint.length}</div>
           
           <table class="audit-table">
             <thead>
@@ -228,15 +228,15 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                 <th>दिनांक</th>
                 <th>ठिकाण (Body Part)</th>
                 <th>दुखापत / निदान</th>
-                <th>तीव्रता</th>
-                <th>प्रथमोपचार व औषधोपचार</th>
-                <th>परत येण्याची तारीख</th>
+                <th>गंभीरता</th>
+                <th>उपचार / प्रथमोपचार</th>
+                <th>पुन्हा मैदानात कधी?</th>
               </tr>
             </thead>
             <tbody>
-              ${incidentsToPrint.slice().reverse().map((inc: any, index: number) => {
-                const p = store.data.players.find((pl: any) => pl.id === inc.playerId);
-                const displayName = isM ? (p?.nameMarathi || inc.playerName) : inc.playerName;
+              ${incidentsToPrint.map((inc: any, index: number) => {
+                const p = store.data.players.find((item: any) => item.id === inc.playerId);
+                const displayName = isM ? (p?.nameMarathi || transliterateEnglishToMarathi(p?.name || inc.playerName) || inc.playerName) : (p?.name || inc.playerName);
                 const parsed = parseMedicalLog(inc.description);
                 const isCrit = inc.severity === 'Critical' || parsed.severity.includes('Severe');
                 return `
@@ -254,7 +254,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
               }).join('')}
             </tbody>
           </table>
-          <div class="footer">Confidential Medical Audit Registry Document • Ashram Shala Waghamba</div>
+          ${signatureBlockHtml}
         </body>
       </html>
     `;
@@ -292,7 +292,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
                     </div>
                     <Select onValueChange={setSelectedPlayer} value={selectedPlayer}>
                       <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-white shadow-sm"><SelectValue placeholder="Identify student..." /></SelectTrigger>
-                      <SelectContent>{filteredPlayers.map((p: any) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || p.name) : p.name} (Std {p.std})</SelectItem>))}</SelectContent>
+                      <SelectContent>{filteredPlayers.map((p: any) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name} (Std {p.std})</SelectItem>))}</SelectContent>
                     </Select>
                   </div>
 
@@ -450,7 +450,7 @@ COACH REMARKS: ${description || 'Standard logging.'}`;
             ) : (
               [...filteredIncidents].slice().reverse().map((inc: any) => {
                 const player = store.data.players.find((p: any) => p.id === inc.playerId);
-                const displayName = isMarathi ? (player?.nameMarathi || inc.playerName) : inc.playerName;
+                const displayName = isMarathi ? (player?.nameMarathi || transliterateEnglishToMarathi(player?.name) || inc.playerName) : inc.playerName;
                 const parsed = parseMedicalLog(inc.description);
                 const isCrit = inc.severity === 'Critical' || parsed.severity.includes('Severe');
                 return (

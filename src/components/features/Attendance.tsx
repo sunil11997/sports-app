@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/loading-skeletons";
-import { cn, getAgeValidation } from "@/lib/utils";
+import { cn, getAgeValidation, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -114,15 +114,15 @@ export function Attendance({ store, section, language = 'English' }: { store: an
   const handlePrint = () => {
     if (!currentDate) return;
     const isM = localMarathiView;
-    const schoolName = isM 
-      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
-      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, isM);
     const reportTitle = isM 
       ? `मासिक उपस्थिती अहवाल - ${format(currentDate, 'MMMM yyyy')}` 
       : `Monthly Attendance Report - ${format(currentDate, 'MMMM yyyy')}`;
     const sessionLabel = isM 
       ? (activeSession === 'Morning' ? 'सकाळ' : 'संध्याकाळ')
       : activeSession;
+    const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, isM);
     
     const printContent = `
       <html>
@@ -172,11 +172,12 @@ export function Attendance({ store, section, language = 'English' }: { store: an
                   if (s === 'P') total++;
                   return `<td>${s || '-'}</td>`;
                 }).join('');
-                const displayName = isM ? (p.nameMarathi || p.name) : p.name;
+                const displayName = isM ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name;
                 return `<tr><td>${p.serialNumber || ''}</td><td class="name-cell">${displayName.toUpperCase()}</td><td>${p.gender === 'Male' ? (isM ? 'मुलगा' : 'Male') : (isM ? 'मुलगी' : 'Female')}</td>${row}<td>${total}</td></tr>`;
               }).join('')}
             </tbody>
           </table>
+          ${signatureBlockHtml}
         </body>
       </html>
     `;
@@ -288,7 +289,7 @@ export function Attendance({ store, section, language = 'English' }: { store: an
                 return (
                   <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
                     <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-20 uppercase border-r group-hover:bg-muted/5">
-                      {localMarathiView ? (player.nameMarathi || player.name) : player.name}
+                      {localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}
                     </TableCell>
                     {days.map(day => {
                       const key = `${player.id}_${format(day, 'yyyy-MM-dd')}_${activeSession}`;

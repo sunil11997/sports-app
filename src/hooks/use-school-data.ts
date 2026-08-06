@@ -491,7 +491,7 @@ export function useSchoolData(isActive: boolean = true) {
       const data = {
         data: aggregatedData,
         exportedAt: new Date().toISOString(),
-        version: "5.2.0"
+        version: "6.0.0"
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);

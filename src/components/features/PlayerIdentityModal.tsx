@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Printer, X, FileText, CheckCircle2, User, Camera, ShieldCheck, Edit3 } from 'lucide-react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
-import { getDisplayNameForLocale, calculateBMI } from '@/lib/utils';
+import { getDisplayNameForLocale, calculateBMI, getOfficialSchoolName, getTeacherName } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 
 interface PlayerIdentityModalProps {
@@ -79,9 +79,10 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
     setPhotoUrl(player.photoUrl || player.aadharPhotoUrl || '');
   }, [player]);
 
-  const displayName = player.nameMarathi && player.nameMarathi.trim() ? player.nameMarathi.trim() : player.name;
-  const schoolName = schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रमशाळा वाघंबा';
-  const teacherName = schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
+  const displayName = getDisplayNameForLocale(player.name, player.nameMarathi, 'mr');
+  const schoolName = getOfficialSchoolName(schoolProfile, true);
+  const teacherName = getTeacherName(schoolProfile);
+  const teacherSignatureSrc = schoolProfile?.teacherSignature || TEACHER_SIGN_B64;
   const fullAddress = player.address || 'मु.पो. वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक';
   const dobWords = convertDobToMarathiWords(player.dob);
   const age31Dec = calculateAgeOn31Dec2025(player.dob);

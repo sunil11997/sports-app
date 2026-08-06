@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { School, User, MapPin, ClipboardList, ArrowRight, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+
 const formSchema = z.object({
   teacherName: z.string().min(2, "Teacher name is required"),
   qualification: z.string().min(2, "Qualification is required"),
@@ -19,28 +21,47 @@ const formSchema = z.object({
   taluka: z.string().min(2, "Taluka is required"),
   district: z.string().min(2, "District is required"),
   importantInfo: z.string().optional(),
+  teacherSignature: z.string().optional(),
 });
 
 export function SchoolRegistration({ store }: { store: any }) {
   const { toast } = useToast();
+  const profile = store?.data?.schoolProfile || {};
+  const [signaturePreview, setSignaturePreview] = React.useState<string>(profile.teacherSignature || TEACHER_SIGN_B64);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      teacherName: "Sunil Deshmukh",
-      qualification: "B.P.Ed / M.P.Ed",
-      role: "Physical Education Director",
-      schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-      taluka: "Satana",
-      district: "Nashik",
-      importantInfo: "",
+      teacherName: profile.teacherName || "Sunil Deshmukh",
+      qualification: profile.qualification || "B.P.Ed / M.P.Ed",
+      role: profile.role || "Physical Education Director",
+      schoolName: profile.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
+      taluka: profile.taluka || "Satana",
+      district: profile.district || "Nashik",
+      importantInfo: profile.importantInfo || "",
+      teacherSignature: profile.teacherSignature || TEACHER_SIGN_B64,
     },
   });
 
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setSignaturePreview(base64);
+        form.setValue('teacherSignature', base64);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    store.saveSchoolProfile(values);
+    store.saveSchoolProfile({ ...values, teacherSignature: signaturePreview });
     toast({
       title: "School Registered",
-      description: "Institutional profile has been initialized successfully.",
+      description: "Institutional profile and signature saved successfully.",
       className: "bg-primary text-white font-black"
     });
   };
@@ -109,6 +130,34 @@ export function SchoolRegistration({ store }: { store: any }) {
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Teacher Official Signature / स्वाक्षरी</FormLabel>
+                    <div className="flex items-center gap-4 p-3 bg-muted/20 border-2 border-dashed rounded-2xl">
+                      <div className="w-32 h-14 bg-white rounded-xl border flex items-center justify-center p-1 overflow-hidden">
+                        {signaturePreview ? (
+                          <img src={signaturePreview} alt="Signature" className="max-h-full max-w-full object-contain" />
+                        ) : (
+                          <span className="text-[9px] font-bold text-muted-foreground">No Signature</span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="rounded-xl font-bold text-xs border-2"
+                      >
+                        Upload Signature Image
+                      </Button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        hidden
+                        accept="image/*"
+                        onChange={handleSignatureUpload}
+                      />
+                    </div>
                   </div>
                 </div>
 

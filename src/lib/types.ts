@@ -45,6 +45,7 @@ export interface SchoolProfile {
   importantInfo?: string;
   updatedAt: string;
   passcode?: string; // Secure PIN for app entry
+  teacherSignature?: string; // Custom Base64 or Image URL for Teacher Signature
 }
 
 export interface AttendanceRecord {

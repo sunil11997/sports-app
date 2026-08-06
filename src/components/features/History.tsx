@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfDay, parseISO, isAfter } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { cn, shareToWhatsApp } from '@/lib/utils';
+import { cn, shareToWhatsApp, transliterateEnglishToMarathi } from '@/lib/utils';
 import { 
   XAxis, 
   YAxis, 
@@ -120,7 +120,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
       phone: currentPlayer.mobileNumber,
       schoolName: profile.schoolName,
       teacherName: profile.teacherName,
-      studentName: isMarathi ? (currentPlayer.nameMarathi || currentPlayer.name) : currentPlayer.name,
+      studentName: isMarathi ? (currentPlayer.nameMarathi || transliterateEnglishToMarathi(currentPlayer.name) || currentPlayer.name) : currentPlayer.name,
       std: currentPlayer.std,
       age: currentPlayer.age,
       dob: currentPlayer.dob,
@@ -157,7 +157,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
           <Select onValueChange={setSelectedPlayerId} value={selectedPlayerId}>
             <SelectTrigger className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"><SelectValue placeholder="Pick student..." /></SelectTrigger>
             <SelectContent>
-              {availablePlayers.map((p: Player) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || p.name) : p.name} (Std {p.std})</SelectItem>))}
+              {availablePlayers.map((p: Player) => (<SelectItem key={p.id} value={p.id}>{isMarathi ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name} (Std {p.std})</SelectItem>))}
             </SelectContent>
           </Select>
         </div>
@@ -177,7 +177,7 @@ export function PerformanceDossier({ store, section, language = 'English' }: { s
                 <AvatarFallback className="bg-primary/5 text-primary text-5xl font-black">{currentPlayer?.name?.[0]}</AvatarFallback>
               </Avatar>
               <div>
-                 <h3 className="text-3xl font-black text-primary uppercase leading-tight">{isMarathi ? (currentPlayer?.nameMarathi || currentPlayer?.name) : currentPlayer?.name}</h3>
+                 <h3 className="text-3xl font-black text-primary uppercase leading-tight">{isMarathi ? (currentPlayer?.nameMarathi || transliterateEnglishToMarathi(currentPlayer?.name) || currentPlayer?.name) : currentPlayer?.name}</h3>
                  <Badge className="bg-primary text-white font-black mt-2">STD {currentPlayer?.std} REGISTER</Badge>
               </div>
               <div className="flex gap-4">

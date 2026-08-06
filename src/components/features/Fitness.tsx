@@ -23,7 +23,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn, shareToWhatsApp, getAgeValidation, calculateBMI } from '@/lib/utils';
+import { cn, shareToWhatsApp, getAgeValidation, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -110,12 +110,12 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
 
   const handlePrint = () => {
     const isM = localMarathiView;
-    const schoolName = isM 
-      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
-      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, isM);
     const reportTitle = isM 
       ? `विद्यार्थी शारीरिक क्षमता व बी.एम.आय. चाचणी अहवाल - ${activeCategory === 'all' ? 'सर्व इयत्ता' : 'इयत्ता ' + activeCategory}`
       : `Student Physical Fitness & BMI Registry - ${activeCategory === 'all' ? 'All Classes' : 'Standard ' + activeCategory}`;
+    const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, isM);
 
     const printContent = `
       <html>
@@ -175,7 +175,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
             <tbody>
               ${filteredPlayers.map((p: any, i: number) => {
                 const fit = store.data.fitness?.[p.id] || {};
-                const dName = isM ? (p.nameMarathi || p.name) : p.name;
+                const dName = isM ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name;
                 const heightVal = p.height || fit.height || '-';
                 const weightVal = p.weight || fit.weight || '-';
                 const bmiVal = calculateBMI(heightVal !== '-' ? heightVal : null, weightVal !== '-' ? weightVal : null, p.bmi || fit.bmi);
@@ -200,6 +200,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
               }).join('')}
             </tbody>
           </table>
+          ${signatureBlockHtml}
         </body>
       </html>
     `;
@@ -216,7 +217,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       phone: player.mobileNumber,
       schoolName: store.data.schoolProfile.schoolName,
       teacherName: store.data.schoolProfile.teacherName,
-      studentName: localMarathiView ? (player.nameMarathi || player.name) : player.name,
+      studentName: localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name,
       std: player.std,
       age: player.age,
       dob: player.dob,
@@ -243,7 +244,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
           </div>
           <div>
             <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v5.2 Stable</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v6.0 Stable</p>
           </div>
         </div>
         <div className="flex items-center gap-4 w-full lg:w-auto">
@@ -330,7 +331,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                   <TableRow key={player.id} className={cn("border-b h-20 transition-all", isPulse && "bg-emerald-50 animate-success-pulse", isSyncing && "bg-muted/50")}>
                     <TableCell className="px-10 font-black sticky left-0 bg-white z-20 uppercase text-xs border-r group-hover:bg-muted/5 transition-colors">
                       <div className="flex flex-col">
-                        <span className="text-primary leading-none truncate max-w-[200px]">{localMarathiView ? (player.nameMarathi || player.name) : player.name}</span>
+                        <span className="text-primary leading-none truncate max-w-[200px]">{localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}</span>
                         <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Roll #{player.serialNumber || '0'} &bull; Std {player.std}</span>
                       </div>
                     </TableCell>

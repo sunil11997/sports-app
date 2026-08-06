@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Printer, Medal } from 'lucide-react';
-import { getAgeValidation } from '@/lib/utils';
+import { getAgeValidation, getOfficialSchoolName, getTeacherName } from '@/lib/utils';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -57,7 +57,10 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category];
     const topTwelve = groupPlayers.slice(0, 12);
-    const teacherName = store?.schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true);
+    const teacherName = getTeacherName(schoolProfile);
+    const signatureSrc = schoolProfile?.teacherSignature || TEACHER_SIGN_B64;
 
     const printContent = `
       <!DOCTYPE html>
@@ -148,7 +151,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 </div>
                 <div style="flex: 1; text-align: center;">
                   <div class="govt-title">महाराष्ट्र शासन</div>
-                  <div class="school-title">शासकीय माध्यमिक आश्रमशाळा वाघंबा ता.बागलाण जि.नाशिक</div>
+                  <div class="school-title">${schoolName}</div>
                   <div class="meta-row">
                     <span>SSC Index No – 13.12.058</span>
                     <span>Udise No.- 27200116503</span>
@@ -170,7 +173,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <!-- PROJECT & SCHOOL INFO IN BOLD -->
             <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 5px; padding: 5px 10px; margin-bottom: 8px; font-size: 10.5px; font-weight: 800; line-height: 1.45;">
               <div>• <strong>प्रकल्पाचे नाव:</strong> एकात्मिक आदिवासी विकास प्रकल्प कळवण, ता. कळवण, जि. नाशिक</div>
-              <div>• <strong>शाळेचे पूर्ण नाव व पत्ता:</strong> शासकीय माध्यमिक आश्रमशाळा वाघंबा, ता. साटाणा (बागलाण), जि. नाशिक</div>
+              <div>• <strong>शाळेचे पूर्ण नाव व पत्ता:</strong> ${schoolName}</div>
               <div>• <strong>दूरध्वनी क्रमांक:</strong> ०२५५५-२९९०१५ / ९४२०४५८२४६</div>
             </div>
 
@@ -218,7 +221,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <!-- SIGNATURE BLOCKS -->
             <div class="sign-grid">
               <div class="sign-block">
-                <img src="${TEACHER_SIGN_B64}" alt="Teacher Signature" />
+                <img src="${signatureSrc}" alt="Teacher Signature" />
                 <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">क्रीडा शिक्षक स्वाक्षरी</div>
                 <div style="font-size: 9.5px; color: #64748b;">(${teacherName})</div>
               </div>

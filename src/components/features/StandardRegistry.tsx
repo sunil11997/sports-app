@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, Save, Loader2, ClipboardList, Settings2, Search, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { cn, shareToWhatsApp, calculateBMI } from '@/lib/utils';
+import { cn, shareToWhatsApp, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
@@ -121,7 +121,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
       phone: player.mobileNumber,
       schoolName: profile.schoolName,
       teacherName: profile.teacherName,
-      studentName: isMarathiView ? (player.nameMarathi || player.name) : player.name,
+      studentName: isMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name,
       std: player.std,
       age: player.age,
       dob: player.dob,
@@ -143,12 +143,12 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
     const isM = isMarathiView;
     const termLabel = activeTerm === 'First' ? (isM ? 'प्रथम सत्र' : 'First Term') : (isM ? 'द्वितीय सत्र' : 'Second Term');
     const labels = currentLabels;
-    const schoolName = isM 
-      ? 'शासकीय माध्यमिक आश्रम शाळा वाघंबा ता. बागलाण जि. नाशिक' 
-      : 'Govt. Secondary Ashram School Waghamba, Tal. Baglan, Dist. Nashik';
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, isM);
     const reportTitle = isM 
       ? `परीक्षा आणि आरोग्य नोंदणी - इयत्ता ${std} वी | ${termLabel}` 
       : `Exam & Health Registry - Std: ${std} | Term: ${termLabel}`;
+    const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, isM);
 
     const printContent = `
       <html>
@@ -208,7 +208,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
               ${playersInStd.map((p: any, i: number) => {
                 const total = calculateTotal(p.id);
                 const r = termRecords[p.id] || {};
-                const dName = isM ? (p.nameMarathi || p.name) : p.name;
+                const dName = isM ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name;
                 const heightVal = r.height || p.height || '-';
                 const weightVal = r.weight || p.weight || '-';
                 const bmiVal = calculateBMI(heightVal !== '-' ? heightVal : null, weightVal !== '-' ? weightVal : null, p.bmi);
@@ -234,6 +234,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
               }).join('')}
             </tbody>
           </table>
+          ${signatureBlockHtml}
         </body>
       </html>
     `;
@@ -316,7 +317,7 @@ export function StandardRegistry({ store, std, language = 'English' }: { store: 
             ) : playersInStd.map((p: any) => {
               const r = termRecords[p.id] || {};
               const total = calculateTotal(p.id);
-              const dName = isMarathiView ? (p.nameMarathi || p.name) : p.name;
+              const dName = isMarathiView ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name;
               return (
                 <TableRow key={p.id} className="border-b h-14 group">
                   <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[220px]">

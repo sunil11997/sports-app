@@ -20,6 +20,7 @@ import {
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from './PlayerIdentityModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { transliterateEnglishToMarathi } from '@/lib/utils';
 
 interface PlayerIDCardManagerProps {
   store: any;
@@ -234,7 +235,7 @@ export function PlayerIDCardManager({ store, preselectedSport, section }: Player
                     <div 
                       onClick={() => {
                         if (displayPhoto) {
-                          const nameToUse = player.nameMarathi && player.nameMarathi.trim() ? player.nameMarathi.trim() : player.name;
+                          const nameToUse = (player.nameMarathi && player.nameMarathi.trim()) ? player.nameMarathi.trim() : (transliterateEnglishToMarathi(player.name) || player.name);
                           setFullPhotoPreview({ url: displayPhoto, title: nameToUse });
                         }
                       }}
@@ -267,7 +268,7 @@ export function PlayerIDCardManager({ store, preselectedSport, section }: Player
                       </div>
 
                       <h3 className="font-extrabold text-sm text-slate-900 leading-snug truncate group-hover:text-blue-700 transition-colors">
-                        {player.nameMarathi && player.nameMarathi.trim() ? player.nameMarathi.trim() : player.name}
+                        {(player.nameMarathi && player.nameMarathi.trim()) ? player.nameMarathi.trim() : (transliterateEnglishToMarathi(player.name) || player.name)}
                       </h3>
 
                       <div className="text-[10px] font-bold text-slate-600 pt-1 space-y-0.5">
@@ -310,7 +311,7 @@ export function PlayerIDCardManager({ store, preselectedSport, section }: Player
       {selectedPlayerForModal && (
         <PlayerIdentityModal
           player={selectedPlayerForModal}
-          schoolProfile={store?.schoolProfile}
+          schoolProfile={store?.data?.schoolProfile || store?.schoolProfile}
           onClose={() => setSelectedPlayerForModal(null)}
         />
       )}

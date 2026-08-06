@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { cn, parseMedicalLog } from '@/lib/utils';
+import { cn, parseMedicalLog, transliterateEnglishToMarathi } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 export function DailyReport({ store, section, language = 'Marathi', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
@@ -508,7 +508,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       medicalLogHtml += '<thead><tr><th>अनु.क्र.</th><th>विद्यार्थ्याचे नाव</th><th>ठिकाण (Location)</th><th>दुखापत (Diagnosis)</th><th>तीव्रता</th><th>प्रथमोपचार व औषधोपचार (First Aid / Protocol)</th></tr></thead><tbody>';
       healthToday.forEach((inc: any, i: number) => {
         const p = players.find((pl: any) => pl.id === inc.playerId);
-        const pName = p ? (p.nameMarathi || p.name) : (inc.playerName || 'Student');
+        const pName = p ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : (inc.playerName || 'Student');
         const parsed = parseMedicalLog(inc.description);
         const isCrit = inc.severity === 'Critical' || parsed.severity.includes('Severe');
         const sevColor = isCrit ? '#dc2626' : '#2563eb';
