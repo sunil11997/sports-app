@@ -5,28 +5,57 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function transliterateEnglishToMarathi(name: string | undefined | null): string {
-  if (!name) return '';
+const COMMON_MARATHI_NAMES: Record<string, string> = {
+  // Common First Names
+  rahul: 'राहुल', ramesh: 'रमेश', suresh: 'सुरेश', ganesh: 'गणेश', mahesh: 'महेश',
+  dinesh: 'दिनेश', vijay: 'विजय', ajay: 'अजय', amit: 'अमित', amol: 'अमोल',
+  aniket: 'अनिकेत', akshay: 'अक्षय', aditya: 'आदित्य', abhishek: 'अभिषेक', rohan: 'रोहन',
+  sachin: 'सचिन', sunil: 'सुनील', anil: 'अनिल', santosh: 'संतोष', samir: 'समीर',
+  sameer: 'समीर', nitin: 'नितीन', pravin: 'प्रवीण', pradeep: 'प्रदीप', prashant: 'प्रशांत',
+  pranam: 'प्रणाम', priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', sneha: 'स्नेहा',
+  swati: 'स्वाती', neha: 'नेहा', nisha: 'निशा', kavita: 'कविता', sunita: 'सुनिता',
+  anita: 'अनिता', sangita: 'संगीता', sangeta: 'संगीता', aarti: 'आरती', arti: 'आरती',
+  shreya: 'श्रेया', sakshi: 'साक्षी', vaishnavi: 'वैष्णवी', tanvi: 'तन्वी', isha: 'ईशा',
+  om: 'ओम', aarav: 'आरव', ananya: 'अनन्या', aryan: 'आर्यन', shivam: 'शिवम',
+  krishna: 'कृष्णा', ram: 'राम', radha: 'राधा', gauri: 'गौरी', tanmay: 'तन्मय',
+  rushikesh: 'ऋषिकेश', hrishikesh: 'ऋषिकेश', sanket: 'संकेत', prathamesh: 'प्रथमेश',
+  swapnil: 'स्वप्निल', omkar: 'ओंकार', sourabh: 'सौरभ', saurabh: 'सौरभ', shubham: 'शुभम',
+  utkarsh: 'उत्कर्ष', chinmay: 'चिन्मय', tushar: 'तुषार', kiran: 'किरण', chetan: 'चेतन',
+  shrikant: 'श्रीकांत', shripad: 'श्रीपाद', harish: 'हरीश', rajesh: 'राजेश', yogesh: 'योगेश',
 
-  const normalized = name.trim().toLowerCase();
-  if (!normalized) return '';
+  // Common Surnames
+  patil: 'पाटील', pawar: 'पवार', shinde: 'शिंदे', deshmukh: 'देशमुख', kulkarni: 'कुलकर्णी',
+  jadhav: 'जाधव', gaikwad: 'गायकवाड', chavan: 'चव्हाण', joshi: 'जोशी', kadam: 'कदम',
+  more: 'मोरे', kale: 'काळे', thorat: 'थोरात', sawant: 'सावंत', bhosale: 'भोसले',
+  salunkhe: 'साळुंखे', jagtap: 'जगताप', ghurde: 'घुरडे', wagh: 'वाघ', kamble: 'कांबळे',
+  mane: 'माने', nikam: 'निकम', ingale: 'इंगळे', ingole: 'इंगोळे', mankar: 'मानकर',
+  kharat: 'खरात', zope: 'झोपे', gore: 'गोरे', auti: 'औटी', shelke: 'शेळके',
+  sutar: 'सुतार', sonawane: 'सोनवणे', landge: 'लांडगे', ghode: 'घोडे'
+};
+
+function transliterateWord(word: string): string {
+  const cleanWord = word.trim().toLowerCase();
+  if (!cleanWord) return '';
+  if (COMMON_MARATHI_NAMES[cleanWord]) {
+    return COMMON_MARATHI_NAMES[cleanWord];
+  }
 
   const commonPairs: Array<[string, string]> = [
     ['sh', 'श'], ['ch', 'च'], ['kh', 'ख'], ['gh', 'घ'], ['dh', 'ध'], ['th', 'थ'], ['ph', 'फ'], ['bh', 'भ'], ['jh', 'झ'], ['ny', 'ञ'], ['rr', 'ऱ'], ['ll', 'ळ'], ['tt', 'ट'], ['dd', 'ड'], ['nn', 'ण'], ['aa', 'ा'], ['ee', 'ी'], ['ii', 'ी'], ['oo', 'ू'], ['ou', 'ौ'], ['au', 'ौ']
   ];
 
   const singleMap: Record<string, string> = {
-    a: 'अ', b: 'ब', c: 'क', d: 'ड', e: 'ए', f: 'फ', g: 'ग', h: 'ह', i: 'इ', j: 'ज', k: 'क', l: 'ल', m: 'म', n: 'न', o: 'ओ', p: 'प', r: 'र', s: 'स', t: ' ट', u: 'उ', v: 'व', w: 'व', x: 'क्स', y: 'य', z: 'झ'
+    a: 'अ', b: 'ब', c: 'क', d: 'ड', e: 'ए', f: 'फ', g: 'ग', h: 'ह', i: 'इ', j: 'ज', k: 'क', l: 'ल', m: 'म', n: 'न', o: 'ओ', p: 'प', r: 'र', s: 'स', t: 'ट', u: 'उ', v: 'व', w: 'व', x: 'क्स', y: 'य', z: 'झ'
   };
 
   let result = '';
   let index = 0;
 
-  while (index < normalized.length) {
+  while (index < cleanWord.length) {
     let matched = false;
 
     for (const [pair, replacement] of commonPairs) {
-      if (normalized.startsWith(pair, index)) {
+      if (cleanWord.startsWith(pair, index)) {
         result += replacement;
         index += pair.length;
         matched = true;
@@ -36,48 +65,35 @@ export function transliterateEnglishToMarathi(name: string | undefined | null): 
 
     if (matched) continue;
 
-    const char = normalized[index];
-    const nextChar = normalized[index + 1];
+    const char = cleanWord[index];
 
-    if (char === 'a' && index > 0 && normalized[index - 1] !== ' ') {
+    if (char === 'a' && index > 0) {
       result += '';
       index += 1;
       continue;
     }
 
-    if (char === 'i' && index > 0 && normalized[index - 1] !== ' ') {
+    if (char === 'i' && index > 0) {
       result += 'ि';
       index += 1;
       continue;
     }
 
-    if (char === 'u' && index > 0 && normalized[index - 1] !== ' ') {
+    if (char === 'u' && index > 0) {
       result += 'ु';
       index += 1;
       continue;
     }
 
-    if (char === 'e' && index > 0 && normalized[index - 1] !== ' ') {
+    if (char === 'e' && index > 0) {
       result += 'े';
       index += 1;
       continue;
     }
 
-    if (char === 'o' && index > 0 && normalized[index - 1] !== ' ') {
+    if (char === 'o' && index > 0) {
       result += 'ो';
       index += 1;
-      continue;
-    }
-
-    if (char === ' ' || char === '-' || char === '_') {
-      result += ' ';
-      index += 1;
-      continue;
-    }
-
-    if (char && nextChar && `${char}${nextChar}` in singleMap) {
-      result += singleMap[`${char}${nextChar}`] || '';
-      index += 2;
       continue;
     }
 
@@ -91,7 +107,16 @@ export function transliterateEnglishToMarathi(name: string | undefined | null): 
     index += 1;
   }
 
-  return result.replace(/\s+/g, ' ').trim();
+  return result;
+}
+
+export function transliterateEnglishToMarathi(name: string | undefined | null): string {
+  if (!name) return '';
+  const trimmed = name.trim();
+  if (!trimmed) return '';
+
+  const words = trimmed.split(/\s+/);
+  return words.map(w => transliterateWord(w)).join(' ').trim();
 }
 
 export function getDisplayNameForLocale(name: string | undefined | null, nameMarathi: string | undefined | null, locale: 'en' | 'mr' = 'mr') {
@@ -304,13 +329,13 @@ export function parseMedicalLog(fullLog: string): ParsedMedicalLog {
 }
 
 export function calculateBMI(height?: string | number | null, weight?: string | number | null, existingBmi?: string | number | null): string {
-  if (existingBmi && existingBmi !== '---' && existingBmi !== '-' && !isNaN(Number(existingBmi)) && Number(existingBmi) > 0) {
-    return Number(existingBmi).toFixed(1);
-  }
   const h = parseFloat(String(height || 0)) / 100;
   const w = parseFloat(String(weight || 0));
   if (h > 0 && w > 0) {
     return (w / (h * h)).toFixed(1);
+  }
+  if (existingBmi && existingBmi !== '---' && existingBmi !== '-' && existingBmi !== '--' && !isNaN(Number(existingBmi)) && Number(existingBmi) > 0) {
+    return Number(existingBmi).toFixed(1);
   }
   return '---';
 }

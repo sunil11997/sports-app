@@ -37,7 +37,7 @@ import {
   FileText
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
-import { cn, getAgeValidation } from '@/lib/utils';
+import { cn, getAgeValidation, transliterateEnglishToMarathi } from '@/lib/utils';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';

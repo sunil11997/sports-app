@@ -44,7 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -174,8 +174,15 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const handleUpdatePlayer = () => {
     if (editingPlayer) {
       const ageValidation = getAgeValidation(editingPlayer.dob);
+      const computedBmi = calculateBMI(editingPlayer.height, editingPlayer.weight, editingPlayer.bmi);
+      const finalName = (editingPlayer.name || '').trim();
+      const finalNameMarathi = (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+
       const updatedPlayer = {
         ...editingPlayer,
+        name: finalName || finalNameMarathi,
+        nameMarathi: finalNameMarathi || finalName,
+        bmi: computedBmi,
         age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
         ageCategory: ageValidation ? ageValidation.category : "None",
         ageDetailed: ageValidation ? ageValidation.ageString : "",
@@ -183,7 +190,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       store.updatePlayer(updatedPlayer);
       setEditingPlayer(null);
       stopCamera();
-      toast({ title: "Registry Updated", description: `${editingPlayer.name}'s profile has been modified.` });
+      toast({ title: "Registry Updated", description: `${updatedPlayer.name}'s profile has been modified.` });
     }
   };
 
@@ -204,12 +211,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     const ageCategory = ageVal ? ageVal.category : "None";
     const ageDetailed = ageVal ? ageVal.ageString : "";
 
-    let bmi = "---";
-    if (newStudentData.height && newStudentData.weight) {
-      const h = parseFloat(newStudentData.height) / 100;
-      const w = parseFloat(newStudentData.weight);
-      if (h > 0) bmi = (w / (h * h)).toFixed(1);
-    }
+    const finalName = (newStudentData.name || '').trim() || (newStudentData.nameMarathi || '').trim();
+    const finalNameMarathi = (newStudentData.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+    const bmi = calculateBMI(newStudentData.height, newStudentData.weight);
 
     const id = `std${std}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     await store.addPlayer({
@@ -220,13 +224,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       ageCategory,
       ageDetailed,
       bmi,
-      name: newStudentData.name || newStudentData.nameMarathi,
-      nameMarathi: newStudentData.nameMarathi || newStudentData.name
+      name: finalName,
+      nameMarathi: finalNameMarathi
     });
 
     toast({
       title: isMarathiView ? "विद्यार्थी नोंदवला!" : "Student Added!",
-      description: `${newStudentData.name || newStudentData.nameMarathi} registered to Standard ${std}.`,
+      description: `${finalNameMarathi || finalName} registered to Standard ${std}.`,
       className: "bg-emerald-600 text-white font-bold"
     });
     setIsDirectAddOpen(false);
@@ -463,8 +467,10 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
               {students.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-20 opacity-20 font-black uppercase">No entries found.</TableCell></TableRow>
               ) : students.map((student: any) => {
-                const bmi = parseFloat(student.bmi) || 0;
+                const bmiVal = calculateBMI(student.height, student.weight, student.bmi);
+                const bmi = parseFloat(bmiVal) || 0;
                 const status = getBmiStatus(bmi);
+                const displayMarathiName = student.nameMarathi || transliterateEnglishToMarathi(student.name) || student.name;
                 return (
                   <TableRow key={student.id} className="hover:bg-primary/5 h-16">
                     <TableCell className="pl-8">
@@ -479,7 +485,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                           <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{(student.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || student.name) : student.name}</p>
+                          <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? displayMarathiName : student.name}</p>
                           {(() => {
                             const ageVal = getAgeValidation(student.dob);
                             const age = ageVal ? ageVal.ageYears : (parseInt(student.age as any) || 0);
@@ -506,7 +512,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex flex-col items-center">
-                        <span className="font-black text-xs text-primary">{student.bmi || '--'}</span>
+                        <span className="font-black text-xs text-primary">{bmiVal}</span>
                         <span className={cn(
                           "text-[8px] font-black uppercase",
                           bmi >= 25 ? "text-destructive" : (bmi < 18.5 ? "text-amber-600" : "text-emerald-600")
@@ -734,8 +740,41 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <h3 className="font-black uppercase text-xs tracking-widest">Identity</h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label><Input value={editingPlayer.name} onChange={(e) => setEditingPlayer({...editingPlayer, name: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2"><Type className="w-3 h-3 mr-2" />नाव (मराठी)</Label><Input value={editingPlayer.nameMarathi || ""} onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
+                          <Input 
+                            value={editingPlayer.name} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const mar = transliterateEnglishToMarathi(val);
+                              setEditingPlayer(prev => prev ? ({
+                                ...prev,
+                                name: val,
+                                nameMarathi: (!prev.nameMarathi || prev.nameMarathi === transliterateEnglishToMarathi(prev.name)) ? mar : prev.nameMarathi
+                              }) : null);
+                            }} 
+                            className="h-12 border-2 rounded-xl font-bold" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between ml-2">
+                            <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><Type className="w-3 h-3" />नाव (मराठी)</Label>
+                            {editingPlayer.name && (
+                              <button 
+                                type="button" 
+                                onClick={() => setEditingPlayer(prev => prev ? ({ ...prev, nameMarathi: transliterateEnglishToMarathi(prev.name) }) : null)}
+                                className="text-[9px] font-extrabold text-accent hover:underline flex items-center gap-1"
+                              >
+                                💡 सुचवलेले: {transliterateEnglishToMarathi(editingPlayer.name)}
+                              </button>
+                            )}
+                          </div>
+                          <Input 
+                            value={editingPlayer.nameMarathi || ""} 
+                            onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} 
+                            className="h-12 border-2 rounded-xl font-bold" 
+                          />
+                        </div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Roll No</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2">
@@ -922,12 +961,31 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                   <Input 
                     placeholder="e.g. Rahul Ramesh Pawar"
                     value={newStudentData.name} 
-                    onChange={e => setNewStudentData({...newStudentData, name: e.target.value})} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      const mar = transliterateEnglishToMarathi(val);
+                      setNewStudentData(prev => ({
+                        ...prev,
+                        name: val,
+                        nameMarathi: (!prev.nameMarathi || prev.nameMarathi === transliterateEnglishToMarathi(prev.name)) ? mar : prev.nameMarathi
+                      }));
+                    }} 
                     className="h-11 border-2 rounded-xl font-bold text-xs" 
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-primary">विद्यार्थ्याचे नाव (मराठी)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase text-primary">विद्यार्थ्याचे नाव (मराठी)</Label>
+                    {newStudentData.name && (
+                      <button 
+                        type="button" 
+                        onClick={() => setNewStudentData(prev => ({ ...prev, nameMarathi: transliterateEnglishToMarathi(prev.name) }))}
+                        className="text-[9px] font-extrabold text-emerald-700 hover:underline flex items-center gap-1"
+                      >
+                        💡 सुचवलेले: {transliterateEnglishToMarathi(newStudentData.name)}
+                      </button>
+                    )}
+                  </div>
                   <Input 
                     placeholder="उदा. राहुल रमेश पवार"
                     value={newStudentData.nameMarathi} 
