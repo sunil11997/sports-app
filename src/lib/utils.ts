@@ -418,8 +418,58 @@ export function getPrintSignatureBlockHtml(schoolProfile?: any, isMarathi: boole
         <div style="font-weight: 900; text-transform: uppercase; color: #0f172a;">${isMarathi ? 'मुख्याध्यापक स्वाक्षरी' : 'Principal Signature'}</div>
         <div style="font-size: 10px; color: #475569; font-weight: 700; margin-top: 2px;">(${schoolName})</div>
       </div>
-    </div>
   `;
+}
+
+export function isBirthdayToday(dobStr?: string): boolean {
+  if (!dobStr || typeof dobStr !== 'string') return false;
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1; // 1 to 12
+  const currentDay = today.getDate(); // 1 to 31
+
+  const clean = dobStr.split('T')[0].trim();
+  
+  // Case 1: YYYY-MM-DD or YYYY-M-D or DD-MM-YYYY
+  const partsDash = clean.split('-');
+  if (partsDash.length === 3) {
+    let m = 0, d = 0;
+    if (partsDash[0].length === 4) {
+      m = parseInt(partsDash[1], 10);
+      d = parseInt(partsDash[2], 10);
+    } else if (partsDash[2].length === 4) {
+      d = parseInt(partsDash[0], 10);
+      m = parseInt(partsDash[1], 10);
+    }
+    if (m === currentMonth && d === currentDay) return true;
+  }
+
+  // Case 2: YYYY/MM/DD or DD/MM/YYYY
+  const partsSlash = clean.split('/');
+  if (partsSlash.length === 3) {
+    let m = 0, d = 0;
+    if (partsSlash[0].length === 4) {
+      m = parseInt(partsSlash[1], 10);
+      d = parseInt(partsSlash[2], 10);
+    } else if (partsSlash[2].length === 4) {
+      d = parseInt(partsSlash[0], 10);
+      m = parseInt(partsSlash[1], 10);
+    }
+    if (m === currentMonth && d === currentDay) return true;
+  }
+
+  // Case 3: Standard JS Date fallback
+  try {
+    const parsed = new Date(clean);
+    if (!isNaN(parsed.getTime())) {
+      if (parsed.getMonth() + 1 === currentMonth && parsed.getDate() === currentDay) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // Ignore
+  }
+
+  return false;
 }
 
 

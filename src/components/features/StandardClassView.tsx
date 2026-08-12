@@ -35,7 +35,8 @@ import {
   FileText,
   UserPlus,
   Plus,
-  Save
+  Save,
+  Cake
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -44,7 +45,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml, isBirthdayToday } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -481,7 +482,14 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                           <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-[10px]">{(student.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? displayMarathiName : student.name}</p>
+                          <p className="font-bold text-xs uppercase text-primary flex items-center gap-1">
+                            <span>{isMarathiView ? displayMarathiName : student.name}</span>
+                            {isBirthdayToday(student.dob) && (
+                              <Badge className="bg-rose-500 text-white font-black text-[8px] px-1.5 py-0.5 rounded-full ml-1 shadow-sm animate-pulse">
+                                🎂 {isMarathiView ? 'वाढदिवस!' : 'Birthday!'}
+                              </Badge>
+                            )}
+                          </p>
                           {(() => {
                             const ageVal = getAgeValidation(student.dob);
                             const age = ageVal ? ageVal.ageYears : (parseInt(student.age as any) || 0);

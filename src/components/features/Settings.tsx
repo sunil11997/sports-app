@@ -273,6 +273,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
              <SettingsItem icon={RotateCcw} color="bg-orange-600" label="Rotate Application View" sublabel="Toggle Landscape/Portrait" onClick={toggleRotation} />
              <SettingsItem icon={Phone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
+             <SettingsItem icon={CheckCircle2} color="bg-primary" label="App Build Version" value="v6.0.0 (Build 6)" sublabel="Waghamba Sports & Health Hub v6" />
           </div>
         </div>
 

@@ -37,7 +37,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { cn } from '@/lib/utils';
+import { cn, isBirthdayToday } from '@/lib/utils';
 import { format, subDays } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
 import { useToast } from '@/hooks/use-toast';
@@ -155,11 +155,11 @@ export default function WaghambaApp() {
     // 1. Birthday Checks (Daily Notification)
     const lastBirthdayNotify = localStorage.getItem('wgb_birthday_notify_date');
     if (lastBirthdayNotify !== todayDate) {
-      const bdays = (schoolData.data.players || []).filter((p: any) => p.dob && p.dob.endsWith(todayBirthdayKey));
+      const bdays = (schoolData.data.players || []).filter((p: any) => isBirthdayToday(p.dob));
       bdays.forEach((p: any) => {
         sendAppAlert(
           "Happy Birthday! 🎂🎉",
-          `Wishing ${p.name.toUpperCase()} (Std ${p.std}) a very happy birthday today!`
+          `Wishing ${p.name.toUpperCase()} (${p.std ? `Std ${p.std}` : p.category || 'Player'}) a very happy birthday today!`
         );
       });
       localStorage.setItem('wgb_birthday_notify_date', todayDate);
@@ -259,10 +259,9 @@ export default function WaghambaApp() {
   ], [t, language]);
 
   const birthdaysToday = useMemo(() => {
-    if (!isMounted || !schoolData.data.players) return [];
-    const today = format(new Date(), 'MM-dd');
-    return (schoolData.data.players || []).filter((p: any) => p.dob && p.dob.endsWith(today));
-  }, [isMounted, schoolData.data.players]);
+    if (!isMounted || !schoolData?.data?.players) return [];
+    return (schoolData.data.players || []).filter((p: any) => isBirthdayToday(p.dob));
+  }, [isMounted, schoolData?.data?.players]);
 
   if (!isMounted) return <div className="min-h-screen bg-[#1e3a8a]" />;
 
@@ -383,17 +382,24 @@ export default function WaghambaApp() {
                       </div>
 
                       <div className="lg:col-span-5 grid grid-cols-1 gap-4">
-                         {selectedSection === 'general' && birthdaysToday.length > 0 && (
-                           <div className="bg-accent rounded-[2.5rem] p-8 border border-white/10 shadow-xl">
+                         {birthdaysToday.length > 0 && (
+                           <div className="bg-gradient-to-r from-amber-500 via-rose-500 to-pink-600 rounded-[2.5rem] p-8 border border-white/20 shadow-2xl animate-in zoom-in-95 duration-500">
                              <div className="flex justify-between items-start mb-6">
-                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Today&apos;s Birthdays</span>
+                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shadow-inner"><Cake className="text-white w-6 h-6 animate-bounce" /></div>
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/20 px-3.5 py-1 rounded-full shadow-sm">
+                                  🎂 Today&apos;s Birthday Celebration!
+                                </span>
                              </div>
                              <div className="space-y-3">
                                {birthdaysToday.map((p: any) => (
-                                 <div key={p.id} className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0">
-                                   <p className="text-sm font-black uppercase text-white">{p.name}</p>
-                                   <Badge className="bg-white text-accent font-black text-[9px]">Std {p.std}</Badge>
+                                 <div key={p.id} className="flex items-center justify-between border-b border-white/20 pb-2.5 last:border-0">
+                                   <div>
+                                     <p className="text-base font-black uppercase text-white tracking-wide">{p.name}</p>
+                                     {p.nameMarathi && <p className="text-xs text-white/80 font-bold">{p.nameMarathi}</p>}
+                                   </div>
+                                   <Badge className="bg-white text-rose-600 font-black text-[10px] px-3 py-1 shadow-md">
+                                     {p.std ? `Std ${p.std}` : p.category || 'Player'}
+                                   </Badge>
                                  </div>
                                ))}
                              </div>

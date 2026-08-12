@@ -26,7 +26,8 @@ import {
   FileDigit,
   Home,
   ScanFace,
-  Upload
+  Upload,
+  Cake
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -34,7 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory, transliterateEnglishToMarathi } from '@/lib/utils';
+import { cn, getAgeValidation, getLocalizedAgeCategory, transliterateEnglishToMarathi, isBirthdayToday } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -171,10 +172,41 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
     if (videoRef.current && stream && activeCam) { videoRef.current.srcObject = stream; }
   }, [stream, activeCam]);
 
+  const birthdaysToday = useMemo(() => {
+    return (store?.data?.players || []).filter((p: any) => isBirthdayToday(p.dob));
+  }, [store?.data?.players]);
+
   if (!store.isLoaded) return <TableSkeleton rows={10} cols={5} />;
 
   return (
     <div className="space-y-6">
+      {birthdaysToday.length > 0 && (
+        <Card className="border-2 border-rose-200 bg-gradient-to-r from-amber-500 via-rose-500 to-pink-600 text-white p-6 rounded-[2.5rem] shadow-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner">
+                <Cake className="w-8 h-8 text-white animate-bounce" />
+              </div>
+              <div>
+                <Badge className="bg-white/20 text-white font-black uppercase text-[10px] px-3 py-1 mb-1">
+                  🎂 Today&apos;s Birthday Celebration (आजचा वाढदिवस)
+                </Badge>
+                <h3 className="text-xl font-black uppercase tracking-tight">
+                  {birthdaysToday.map((b: any) => isMarathiView ? (b.nameMarathi || transliterateEnglishToMarathi(b.name) || b.name) : b.name).join(', ')}
+                </h3>
+                <p className="text-xs font-extrabold text-white/90 mt-0.5">
+                  {isMarathiView 
+                    ? 'क्रीडा विभाग व वाघंबा आश्रमशाळेतर्फे वाढदिवसाच्या हार्दिक शुभेच्छा! 🥳🎉'
+                    : 'Wishing you a fantastic birthday filled with health, joy & athletic success! 🎉'}
+                </p>
+              </div>
+            </div>
+            <Badge className="bg-white text-rose-600 font-black text-sm px-4 py-2 rounded-xl shadow-lg">
+              {birthdaysToday.length} {birthdaysToday.length === 1 ? 'Student' : 'Students'}
+            </Badge>
+          </div>
+        </Card>
+      )}
       <div className="flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border">
         <div className="flex items-center gap-6">
           <div className="flex bg-muted/40 p-1 rounded-xl border">
