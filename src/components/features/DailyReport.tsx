@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Printer, 
   FileText, 
@@ -32,7 +33,10 @@ import {
   Crosshair,
   Image as ImageIcon,
   Pencil,
-  Info
+  Info,
+  UserX,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +49,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   const [reportDate, setReportDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [manualNotes, setManualSummary] = useState("");
   const [weather, setWeather] = useState("Sunny");
+
+  // Absentee Modal State
+  const [showAbsenteeModal, setShowAbsenteeModal] = useState(false);
+  const [absentModalSession, setAbsentModalSession] = useState<'Morning' | 'Evening' | 'Both'>('Both');
 
   // Custom Quick Log state
   const [customSport, setCustomSport] = useState(preselectedSport || "Yoga");
@@ -272,6 +280,36 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       eveningTotal: eBoys + eGirls
     };
   }, [store?.data?.attendance, players, reportDate, isMounted, preselectedSport]);
+
+  const absentStudentsReport = useMemo(() => {
+    if (!isMounted || !reportDate || !store?.data?.players || !store?.data?.attendance) return [];
+    const list: any[] = [];
+    store.data.players.forEach((p: any) => {
+      if (preselectedSport && (!p?.sports || !p.sports.includes(preselectedSport))) return;
+      
+      const mStatus = store.data.attendance[`${p.id}_${reportDate}_Morning`];
+      const eStatus = store.data.attendance[`${p.id}_${reportDate}_Evening`];
+
+      const isAbsentM = mStatus !== 'P';
+      const isAbsentE = eStatus !== 'P';
+
+      let match = false;
+      if (absentModalSession === 'Morning') match = isAbsentM;
+      else if (absentModalSession === 'Evening') match = isAbsentE;
+      else match = isAbsentM || isAbsentE;
+
+      if (match) {
+        list.push({
+          ...p,
+          morningStatus: mStatus,
+          eveningStatus: eStatus,
+          isAbsentM,
+          isAbsentE,
+        });
+      }
+    });
+    return list;
+  }, [store?.data?.players, store?.data?.attendance, reportDate, isMounted, preselectedSport, absentModalSession]);
 
   // Drills / Activities completed today grouped by Sport/Category
   const drillGroupedSummary = useMemo(() => {
@@ -809,46 +847,74 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
 
       {/* Attendance Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-blue-100">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-black uppercase text-blue-700 bg-blue-50 px-3 py-1 rounded-full">सकाळ सत्र (Morning)</span>
-            <Users className="w-5 h-5 text-blue-600" />
+        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-blue-100 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-black uppercase text-blue-700 bg-blue-50 px-3 py-1 rounded-full">सकाळ सत्र (Morning)</span>
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center mt-2">
+              <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
+                <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
+                <p className="text-xl font-black text-blue-800">{attendanceCounts.morningBoys}</p>
+              </div>
+              <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
+                <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
+                <p className="text-xl font-black text-pink-800">{attendanceCounts.morningGirls}</p>
+              </div>
+              <div className="bg-slate-100 p-2 rounded-xl border border-slate-200">
+                <p className="text-[9px] font-bold text-slate-600 uppercase">एकूण</p>
+                <p className="text-xl font-black text-slate-900">{attendanceCounts.morningTotal}</p>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center mt-2">
-            <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
-              <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
-              <p className="text-xl font-black text-blue-800">{attendanceCounts.morningBoys}</p>
-            </div>
-            <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
-              <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
-              <p className="text-xl font-black text-pink-800">{attendanceCounts.morningGirls}</p>
-            </div>
-            <div className="bg-slate-100 p-2 rounded-xl border border-slate-200">
-              <p className="text-[9px] font-bold text-slate-600 uppercase">एकूण</p>
-              <p className="text-xl font-black text-slate-900">{attendanceCounts.morningTotal}</p>
-            </div>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setAbsentModalSession('Morning');
+              setShowAbsenteeModal(true);
+            }}
+            className="w-full mt-3 text-[10px] font-black uppercase border border-amber-200 text-amber-800 hover:bg-amber-50 h-8 rounded-xl flex items-center justify-center gap-1"
+          >
+            <UserX className="w-3.5 h-3.5 text-amber-600" />
+            गैरहजर विद्यार्थी सूची (Morning)
+          </Button>
         </Card>
 
-        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-indigo-100">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">संध्याकाळ सत्र (Evening)</span>
-            <Users className="w-5 h-5 text-indigo-600" />
+        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-indigo-100 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">संध्याकाळ सत्र (Evening)</span>
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center mt-2">
+              <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
+                <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
+                <p className="text-xl font-black text-blue-800">{attendanceCounts.eveningBoys}</p>
+              </div>
+              <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
+                <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
+                <p className="text-xl font-black text-pink-800">{attendanceCounts.eveningGirls}</p>
+              </div>
+              <div className="bg-slate-100 p-2 rounded-xl border border-slate-200">
+                <p className="text-[9px] font-bold text-slate-600 uppercase">एकूण</p>
+                <p className="text-xl font-black text-slate-900">{attendanceCounts.eveningTotal}</p>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center mt-2">
-            <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
-              <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
-              <p className="text-xl font-black text-blue-800">{attendanceCounts.eveningBoys}</p>
-            </div>
-            <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
-              <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
-              <p className="text-xl font-black text-pink-800">{attendanceCounts.eveningGirls}</p>
-            </div>
-            <div className="bg-slate-100 p-2 rounded-xl border border-slate-200">
-              <p className="text-[9px] font-bold text-slate-600 uppercase">एकूण</p>
-              <p className="text-xl font-black text-slate-900">{attendanceCounts.eveningTotal}</p>
-            </div>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setAbsentModalSession('Evening');
+              setShowAbsenteeModal(true);
+            }}
+            className="w-full mt-3 text-[10px] font-black uppercase border border-indigo-200 text-indigo-800 hover:bg-indigo-50 h-8 rounded-xl flex items-center justify-center gap-1"
+          >
+            <UserX className="w-3.5 h-3.5 text-indigo-600" />
+            गैरहजर विद्यार्थी सूची (Evening)
+          </Button>
         </Card>
 
         <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-emerald-100">
@@ -1426,6 +1492,121 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               type="button" 
               onClick={() => setPreviewGeoPhoto(null)}
               className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs rounded-xl"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ABSENTEE LIST DIALOG */}
+      <Dialog open={showAbsenteeModal} onOpenChange={setShowAbsenteeModal}>
+        <DialogContent className="sm:max-w-[700px] p-6 bg-white border-2 border-rose-200 rounded-3xl shadow-2xl">
+          <DialogHeader className="pb-3 border-b">
+            <div className="flex justify-between items-center pr-4">
+              <DialogTitle className="text-lg font-black text-destructive uppercase tracking-wide flex items-center gap-2">
+                <UserX className="w-5 h-5 text-destructive" />
+                <span>गैरहजर विद्यार्थी सूची (Absent Students List)</span>
+              </DialogTitle>
+              <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-extrabold uppercase text-[10px]">
+                {reportDate}
+              </Badge>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2">
+            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border">
+              <div className="flex bg-muted/60 p-1 rounded-xl border">
+                <Button
+                  size="sm"
+                  variant={absentModalSession === 'Morning' ? "default" : "ghost"}
+                  onClick={() => setAbsentModalSession('Morning')}
+                  className="h-8 px-3 text-[10px] font-black uppercase rounded-lg"
+                >
+                  ☀️ Morning
+                </Button>
+                <Button
+                  size="sm"
+                  variant={absentModalSession === 'Evening' ? "default" : "ghost"}
+                  onClick={() => setAbsentModalSession('Evening')}
+                  className="h-8 px-3 text-[10px] font-black uppercase rounded-lg"
+                >
+                  🌙 Evening
+                </Button>
+                <Button
+                  size="sm"
+                  variant={absentModalSession === 'Both' ? "default" : "ghost"}
+                  onClick={() => setAbsentModalSession('Both')}
+                  className="h-8 px-3 text-[10px] font-black uppercase rounded-lg"
+                >
+                  Both
+                </Button>
+              </div>
+
+              <span className="text-xs font-black text-destructive">
+                {absentStudentsReport.length} Absentees
+              </span>
+            </div>
+
+            <div className="max-h-[50vh] overflow-y-auto border rounded-2xl">
+              <Table>
+                <TableHeader className="bg-slate-100 sticky top-0">
+                  <TableRow>
+                    <TableHead className="w-[50px] text-center font-black text-[10px] uppercase">#</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">विद्यार्थ्याचे नाव (Student Name)</TableHead>
+                    <TableHead className="w-[80px] text-center font-black text-[10px] uppercase">Std/Cat</TableHead>
+                    <TableHead className="w-[110px] text-center font-black text-[10px] uppercase">Morning</TableHead>
+                    <TableHead className="w-[110px] text-center font-black text-[10px] uppercase">Evening</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {absentStudentsReport.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-12 text-emerald-700 font-extrabold text-sm">
+                        ✓ सर्व विद्यार्थी या सत्रात उपस्थित आहेत! (All Present)
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    absentStudentsReport.map((p: any, idx: number) => (
+                      <TableRow key={p.id} className="border-b">
+                        <TableCell className="text-center font-black text-xs">{idx + 1}</TableCell>
+                        <TableCell className="font-bold text-xs">
+                          {language === 'Marathi' ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name}
+                        </TableCell>
+                        <TableCell className="text-center font-black text-xs">
+                          {p.std ? `Std ${p.std}` : p.category || '-'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {p.morningStatus === 'P' ? (
+                            <Badge className="bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">P</Badge>
+                          ) : p.morningStatus === 'A' ? (
+                            <Badge className="bg-rose-100 text-rose-800 text-[9px] font-black uppercase">A</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-amber-700 bg-amber-50 text-[9px] font-black uppercase">-</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {p.eveningStatus === 'P' ? (
+                            <Badge className="bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">P</Badge>
+                          ) : p.eveningStatus === 'A' ? (
+                            <Badge className="bg-rose-100 text-rose-800 text-[9px] font-black uppercase">A</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-amber-700 bg-amber-50 text-[9px] font-black uppercase">-</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              type="button" 
+              onClick={() => setShowAbsenteeModal(false)}
+              className="h-10 bg-slate-200 hover:bg-slate-300 text-slate-800 font-black uppercase text-xs rounded-xl"
             >
               बंद करा (Close)
             </Button>
