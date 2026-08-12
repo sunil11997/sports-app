@@ -268,32 +268,16 @@ export default function WaghambaApp() {
   if (showSplash) {
     return (
       <div 
-        className="min-h-screen flex items-center justify-center p-6 z-[9999] fixed inset-0 bg-cover bg-center select-none"
-        style={{ backgroundImage: `url('/splash.jpg')` }}
+        className="min-h-screen flex items-center justify-center p-0 z-[9999] fixed inset-0 bg-[#071d49] select-none overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/65" />
-        
-        <div className="max-w-xs w-full text-center space-y-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
-           <div className="w-24 h-24 mx-auto relative rounded-full overflow-hidden border-2 border-white/20 shadow-2xl bg-white/10 backdrop-blur-md p-3 flex items-center justify-center">
-             <Image src={LOGO_PATH} alt="Logo" width={80} height={80} unoptimized className="object-contain" />
-           </div>
-
-           <div className="space-y-4">
-             <h2 className="text-white text-3xl font-display font-black uppercase tracking-[0.2em] drop-shadow-lg">WGB HUB V5.3</h2>
-             <div className="flex flex-col items-center gap-3">
-               <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
-                 <div className="h-full bg-accent w-1/2 animate-[loader-progress_2s_infinite_ease-in-out]" />
-               </div>
-               <p className="text-white/60 text-[10px] font-display font-black uppercase tracking-[0.5em] drop-shadow-md">Synchronizing Registry</p>
-             </div>
-           </div>
-        </div>
-        <style jsx global>{`
-          @keyframes loader-progress {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(200%); }
-          }
-        `}</style>
+        <Image 
+          src="/splash.jpg" 
+          alt="Waghamba Sports Health Hub Splash Screen" 
+          fill
+          priority
+          unoptimized
+          className="object-contain object-center animate-in fade-in zoom-in-95 duration-700" 
+        />
       </div>
     );
   }
