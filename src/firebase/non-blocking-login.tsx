@@ -9,6 +9,7 @@ import {
   linkWithPopup,
   signInWithPopup,
   EmailAuthProvider,
+  PhoneAuthProvider,
   linkWithCredential,
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -25,34 +26,46 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 
 /** 
  * Initiate Google Sign-In (Popup method for best contextual stability).
- * Configured for offline access and forced consent to ensure refresh token availability.
+ * Configured with automatic linking to ensure all existing local/anonymous student records are preserved.
  */
-export async function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
+export async function initiateGoogleSignIn(authInstance: Auth): Promise<any> {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/userinfo.email');
   provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
-  provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
   
-  // Set custom parameters to request offline access and force the consent screen
   provider.setCustomParameters({ 
-    access_type: 'offline',
-    prompt: 'consent',
-    client_id: googleClientId
+    prompt: 'select_account'
   });
   
   try {
     const currentUser = authInstance.currentUser;
     if (currentUser && currentUser.isAnonymous) {
-      console.log("WGB Auth: Initiating Google Link via Popup...");
-      await linkWithPopup(currentUser, provider);
-      console.log("WGB Auth: Local data linked to Google identity.");
+      console.log("WGB Auth: Linking anonymous data to Google identity...");
+      try {
+        const result = await linkWithPopup(currentUser, provider);
+        console.log("WGB Auth: Local records linked to Google identity. UID preserved:", result.user.uid);
+        return result.user;
+      } catch (linkError: any) {
+        console.warn("WGB Auth: Google link notice:", linkError.code);
+        if (
+          linkError.code === 'auth/credential-already-in-use' ||
+          linkError.code === 'auth/account-exists-with-different-credential' ||
+          linkError.code === 'auth/provider-already-linked'
+        ) {
+          // Account already exists, sign in directly
+          const result = await signInWithPopup(authInstance, provider);
+          return result.user;
+        }
+        throw linkError;
+      }
     } else {
       console.log("WGB Auth: Initiating Google Sign-In via Popup...");
-      await signInWithPopup(authInstance, provider);
-      console.log("WGB Auth: Google Sign-In successful.");
+      const result = await signInWithPopup(authInstance, provider);
+      console.log("WGB Auth: Google Sign-In successful:", result.user.uid);
+      return result.user;
     }
   } catch (error: any) {
-    console.error("WGB Auth: Google Popup failed", error);
+    console.error("WGB Auth: Google Sign-In failed", error);
     throw error;
   }
 }
@@ -113,20 +126,41 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
 
 /** Initiate Sign Out. */
 export function initiateSignOut(authInstance: Auth): Promise<void> {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('wgb_otp_auth_user');
+  }
   return signOut(authInstance);
 }
 
-/** Initialize RecaptchaVerifier for Phone OTP auth */
-export function getRecaptchaVerifier(authInstance: Auth, containerId: string): RecaptchaVerifier {
+/** Initialize RecaptchaVerifier for Phone OTP auth with auto-cleanup */
+export function getRecaptchaVerifier(authInstance: Auth, containerId: string = 'recaptcha-container'): RecaptchaVerifier {
   if (typeof window === 'undefined') {
     throw new Error('RecaptchaVerifier can only be instantiated in browser window context');
   }
-  return new RecaptchaVerifier(authInstance, containerId, {
+
+  // Safely clear any previously initialized verifier
+  const win = window as any;
+  if (win.recaptchaVerifier) {
+    try {
+      win.recaptchaVerifier.clear();
+      win.recaptchaVerifier = null;
+    } catch (e) {
+      console.warn("WGB Auth: Recaptcha cleanup notice:", e);
+    }
+  }
+
+  const verifier = new RecaptchaVerifier(authInstance, containerId, {
     size: 'invisible',
     callback: () => {
-      console.log('Recaptcha verified for Phone OTP');
+      console.log('WGB Auth: Recaptcha verification completed for Phone OTP');
+    },
+    'expired-callback': () => {
+      console.warn('WGB Auth: Recaptcha token expired. Please retry.');
     }
   });
+
+  win.recaptchaVerifier = verifier;
+  return verifier;
 }
 
 /** Initiate Phone OTP sending */
@@ -135,6 +169,56 @@ export async function sendPhoneOtp(
   phoneNumber: string, 
   verifier: RecaptchaVerifier
 ): Promise<ConfirmationResult> {
+  try {
+    await verifier.render();
+  } catch (e) {
+    console.warn("WGB Auth: Recaptcha render notice:", e);
+  }
   return await signInWithPhoneNumber(authInstance, phoneNumber, verifier);
 }
+
+/**
+ * verifyAndLinkPhoneOtp - High-Resilience Phone OTP Verification & Account Linking
+ * Ensures all existing local/anonymous Firestore records and configurations are preserved
+ * without data loss when upgrading to a verified mobile identity.
+ */
+export async function verifyAndLinkPhoneOtp(
+  authInstance: Auth,
+  confirmationResult: ConfirmationResult,
+  verificationCode: string
+): Promise<{ user: any; isLinked: boolean }> {
+  const credential = PhoneAuthProvider.credential(
+    confirmationResult.verificationId,
+    verificationCode
+  );
+
+  const currentUser = authInstance.currentUser;
+
+  // Step 1: If current session is anonymous, link phone credential to preserve the exact same user.uid & Firestore records
+  if (currentUser && currentUser.isAnonymous) {
+    try {
+      const userCredential = await linkWithCredential(currentUser, credential);
+      console.log("WGB Auth: Anonymous account linked with phone identity. UID preserved:", userCredential.user.uid);
+      return { user: userCredential.user, isLinked: true };
+    } catch (linkError: any) {
+      console.warn("WGB Auth: Link phone notice, checking existing account:", linkError.code);
+      if (
+        linkError.code === 'auth/credential-already-in-use' ||
+        linkError.code === 'auth/provider-already-linked' ||
+        linkError.code === 'auth/phone-number-already-exists'
+      ) {
+        // Phone identity was previously created on another device/session: sign into that account directly
+        const userCredential = await confirmationResult.confirm(verificationCode);
+        console.log("WGB Auth: Signed into existing phone user:", userCredential.user.uid);
+        return { user: userCredential.user, isLinked: false };
+      }
+      throw linkError;
+    }
+  }
+
+  // Step 2: If user already has a permanent session or direct sign in, confirm the code
+  const userCredential = await confirmationResult.confirm(verificationCode);
+  return { user: userCredential.user, isLinked: false };
+}
+
 

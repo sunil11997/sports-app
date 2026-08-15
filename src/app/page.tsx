@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { initiateAnonymousSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
 import { cn, isBirthdayToday } from '@/lib/utils';
 import { format, subDays } from 'date-fns';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
@@ -618,10 +618,13 @@ export default function WaghambaApp() {
                   {translations[language].enter} <ArrowRight className="ml-3 w-6 h-6" />
                 </Button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     setOtpUser(null);
                     if (typeof window !== 'undefined') {
                       localStorage.removeItem('wgb_otp_auth_user');
+                    }
+                    if (auth) {
+                      await initiateSignOut(auth);
                     }
                   }}
                   className="text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
@@ -642,15 +645,6 @@ export default function WaghambaApp() {
                   setStage('selector');
                 }} 
               />
-
-              <div className="text-center">
-                <button
-                  onClick={() => setStage('selector')}
-                  className="text-[11px] font-display font-black text-primary/50 hover:text-primary uppercase tracking-widest underline transition-colors"
-                >
-                  Skip to Guest / Offline Hub Access →
-                </button>
-              </div>
             </div>
           )}
         </div>

@@ -289,10 +289,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           <div className="bg-emerald-50 border-2 border-emerald-100 p-6 rounded-[2rem] flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-4">
                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center shadow-lg"><CheckCircle2 className="text-emerald-600 w-6 h-6" /></div>
-               <div>
+                <div>
                   <p className="font-black text-emerald-900 uppercase text-sm">Cloud Identity Linked</p>
-                  <p className="text-[10px] font-bold text-emerald-700/60 uppercase truncate max-w-[150px]">{user?.email}</p>
-               </div>
+                  <p className="text-[10px] font-bold text-emerald-700/80 uppercase truncate max-w-[180px]">
+                    {user?.phoneNumber || user?.email || (typeof window !== 'undefined' && localStorage.getItem('wgb_otp_auth_user')) || "Phone Verified"}
+                  </p>
+                </div>
             </div>
             <button onClick={handleLogout} className="text-emerald-700 hover:text-destructive font-black text-[10px] uppercase">Sign Out</button>
           </div>
