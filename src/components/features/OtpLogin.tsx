@@ -160,8 +160,17 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
     } catch (err: any) {
       console.error("WGB Google Auth Error:", err);
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-        const errorTitle = "Google Verification Notice";
-        const errorMsg = err.message || "Failed to complete Google verification. Please retry.";
+        let errorTitle = "Google Verification Notice";
+        let errorMsg = err.message || "Failed to complete Google verification. Please retry.";
+        const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+
+        if (err.code === 'auth/unauthorized-domain') {
+          errorTitle = language === 'Marathi' ? "डोमेन अधिकृत नाही (Unauthorized Domain)" : "Domain Not Authorized in Firebase";
+          errorMsg = language === 'Marathi'
+            ? `तुमचे सध्याचे डोमेन (${currentHost}) Firebase Authentication मध्ये जोडलेले नाही. कृपया Firebase Console > Authentication > Settings > Authorized domains मध्ये '${currentHost}' (किंवा 'vercel.app') जोडा.`
+            : `Your current domain (${currentHost}) is not in Firebase Auth's Authorized Domains list. Please add '${currentHost}' (or 'vercel.app') in Firebase Console > Authentication > Settings > Authorized domains.`;
+        }
+
         setErrorInfo({ title: errorTitle, message: errorMsg, code: err.code });
         toast({ title: errorTitle, description: errorMsg, variant: "destructive" });
       }
