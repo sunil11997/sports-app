@@ -9,7 +9,10 @@ import {
   linkWithPopup,
   signInWithPopup,
   EmailAuthProvider,
-  linkWithCredential
+  linkWithCredential,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  type ConfirmationResult
 } from 'firebase/auth';
 import { googleClientId } from './config';
 
@@ -112,3 +115,26 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
 export function initiateSignOut(authInstance: Auth): Promise<void> {
   return signOut(authInstance);
 }
+
+/** Initialize RecaptchaVerifier for Phone OTP auth */
+export function getRecaptchaVerifier(authInstance: Auth, containerId: string): RecaptchaVerifier {
+  if (typeof window === 'undefined') {
+    throw new Error('RecaptchaVerifier can only be instantiated in browser window context');
+  }
+  return new RecaptchaVerifier(authInstance, containerId, {
+    size: 'invisible',
+    callback: () => {
+      console.log('Recaptcha verified for Phone OTP');
+    }
+  });
+}
+
+/** Initiate Phone OTP sending */
+export async function sendPhoneOtp(
+  authInstance: Auth, 
+  phoneNumber: string, 
+  verifier: RecaptchaVerifier
+): Promise<ConfirmationResult> {
+  return await signInWithPhoneNumber(authInstance, phoneNumber, verifier);
+}
+

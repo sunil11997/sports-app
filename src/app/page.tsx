@@ -62,6 +62,7 @@ const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHu
 const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
 const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
 const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
+const OtpLogin = dynamic(() => import('@/components/features/OtpLogin').then(m => m.OtpLogin), { ssr: false });
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
@@ -98,6 +99,7 @@ export default function WaghambaApp() {
   const [subTab, setSubTab] = useState<string>("overview");
   const [headerDate, setHeaderDate] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [otpUser, setOtpUser] = useState<string | null>(null);
   
   const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' || showSplash);
   const { user, isUserLoading } = useUser();
@@ -107,6 +109,13 @@ export default function WaghambaApp() {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
     
+    if (typeof window !== 'undefined') {
+      const savedOtpUser = localStorage.getItem('wgb_otp_auth_user');
+      if (savedOtpUser) {
+        setOtpUser(savedOtpUser);
+      }
+    }
+
     fetch(SPLASH_LOTTIE_URL)
       .then(res => res.ok ? res.json() : null)
       .then(data => setSplashData(data))
@@ -536,28 +545,116 @@ export default function WaghambaApp() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <div className="relative z-10 max-w-2xl w-full text-center space-y-12 animate-in fade-in duration-700">
-        <div className="space-y-6">
-          <div className="relative w-64 h-64 mx-auto flex items-center justify-center overflow-hidden bg-white rounded-full shadow-2xl border-4 border-primary/5">
-            <Image src={LOGO_PATH} alt="Logo" width={256} height={256} unoptimized className="object-contain w-full h-full" priority />
+    <div className="min-h-screen bg-gradient-to-b from-white via-muted/20 to-primary/5 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+      {/* Decorative Blur Spheres */}
+      <div className="absolute top-10 left-10 w-72 h-72 bg-accent/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-in fade-in duration-700 my-auto">
+        
+        {/* Left Branding Column */}
+        <div className="lg:col-span-5 text-center lg:text-left space-y-6">
+          <div className="relative w-36 h-36 sm:w-48 sm:h-48 mx-auto lg:mx-0 flex items-center justify-center overflow-hidden bg-white rounded-full shadow-2xl border-4 border-primary/10">
+            <Image src={LOGO_PATH} alt="Logo" width={192} height={192} unoptimized className="object-contain w-full h-full" priority />
           </div>
-          <h1 className="text-4xl md:text-6xl font-display font-black text-primary tracking-tighter leading-tight uppercase">
-            {language === 'Marathi' ? "शासकीय माध्यमिक" : "WAGHAMBA"}<br/>
-            <span className="text-accent">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "SPORTS HUB"}</span>
-          </h1>
+
+          <div className="space-y-3">
+            <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-full font-display font-black uppercase tracking-[0.2em] text-[10px]">
+              Official Institutional Portal
+            </Badge>
+            <h1 className="text-3xl sm:text-5xl font-display font-black text-primary tracking-tighter leading-tight uppercase">
+              {language === 'Marathi' ? "शासकीय माध्यमिक" : "WAGHAMBA"}<br/>
+              <span className="text-emerald-600">{language === 'Marathi' ? "आश्रम शाळा वाघंबा" : "SPORTS HUB"}</span>
+            </h1>
+            <p className="text-xs font-bold text-muted-foreground max-w-sm mx-auto lg:mx-0 leading-relaxed">
+              {language === 'Marathi'
+                ? "विद्यार्थी विकास, क्रीडा कौशल्ये आणि आरोग्य व्यवस्थापन प्रणाली."
+                : "Comprehensive Student Athletics, Health Assessment & Physical Education Command Center."}
+            </p>
+          </div>
+
+          {/* Action Row */}
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+            <Button 
+              onClick={toggleRotation} 
+              variant="outline" 
+              className="h-11 rounded-2xl border-2 border-primary/10 text-primary font-display font-black text-xs uppercase tracking-widest hover:bg-primary/5 active-scale"
+            >
+              <RotateCw className="mr-2 w-4 h-4" /> Rotate View
+            </Button>
+            <button 
+              onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} 
+              className="h-11 px-4 rounded-2xl bg-white border-2 border-primary/10 font-display font-black text-xs text-primary uppercase tracking-widest hover:bg-primary/5 transition-all flex items-center gap-2 shadow-sm"
+            >
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> {language === 'English' ? 'मराठी' : 'English'}
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
-          <Button onClick={() => setStage('selector')} className="h-20 rounded-[2rem] bg-primary text-white text-lg font-display font-black uppercase tracking-widest shadow-xl active-scale">
-            {translations[language].enter} <ArrowRight className="ml-4 w-6 h-6" />
-          </Button>
-          <Button onClick={toggleRotation} variant="outline" className="h-16 rounded-[2rem] border-2 border-primary/10 text-primary font-display font-black uppercase tracking-widest shadow-sm active-scale">
-            <RotateCw className="mr-3 w-5 h-5" /> Rotate View
-          </Button>
-          <button onClick={() => setLanguage(language === 'English' ? 'Marathi' : 'English')} className="text-[10px] font-display font-black text-primary/40 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-            <Star className="w-4 h-4" /> {language === 'English' ? 'मराठी (Marathi)' : 'English'}
-          </button>
+
+        {/* Right OTP Authentication Column */}
+        <div className="lg:col-span-7 flex flex-col items-center justify-center w-full">
+          {otpUser ? (
+            <Card className="w-full max-w-lg bg-white/95 backdrop-blur-2xl border border-primary/10 rounded-[2.5rem] shadow-2xl p-8 space-y-6 text-center animate-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-md">
+                <UserCircle className="w-12 h-12" />
+              </div>
+              <div className="space-y-2">
+                <Badge className="bg-emerald-600 text-white border-none px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">
+                  OTP Session Active
+                </Badge>
+                <h3 className="text-2xl font-display font-black text-primary uppercase tracking-tight">
+                  Welcome Back
+                </h3>
+                <p className="text-sm font-bold text-muted-foreground">
+                  Logged in as <strong className="text-primary">{otpUser}</strong>
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <Button 
+                  onClick={() => setStage('selector')} 
+                  className="w-full h-16 rounded-2xl bg-primary text-white font-display font-black uppercase tracking-widest shadow-xl text-base active-scale"
+                >
+                  {translations[language].enter} <ArrowRight className="ml-3 w-6 h-6" />
+                </Button>
+                <button
+                  onClick={() => {
+                    setOtpUser(null);
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('wgb_otp_auth_user');
+                    }
+                  }}
+                  className="text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  Switch Account / Sign Out
+                </button>
+              </div>
+            </Card>
+          ) : (
+            <div className="w-full space-y-4">
+              <OtpLogin 
+                language={language}
+                onLoginSuccess={(identifier) => {
+                  setOtpUser(identifier);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('wgb_otp_auth_user', identifier);
+                  }
+                  setStage('selector');
+                }} 
+              />
+
+              <div className="text-center">
+                <button
+                  onClick={() => setStage('selector')}
+                  className="text-[11px] font-display font-black text-primary/50 hover:text-primary uppercase tracking-widest underline transition-colors"
+                >
+                  Skip to Guest / Offline Hub Access →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
       </div>
     </div>
   );
