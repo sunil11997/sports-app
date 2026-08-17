@@ -35,9 +35,11 @@ import {
   Pencil,
   Info,
   UserX,
+  ZoomIn,
   Sun,
   Moon
 } from 'lucide-react';
+import { PracticePhotoViewer } from './PracticePhotoViewer';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn, parseMedicalLog, transliterateEnglishToMarathi } from '@/lib/utils';
@@ -70,7 +72,14 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   const [currentLng, setCurrentLng] = useState<number | null>(74.0045);
   const [locationName, setLocationName] = useState("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
   const [isLocating, setIsLocating] = useState(false);
-  const [previewGeoPhoto, setPreviewGeoPhoto] = useState<GeoPhoto | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+
+  const openPhotoViewer = (photo: GeoPhoto, index?: number) => {
+    const targetIdx = index !== undefined ? index : reportPhotos.findIndex(p => p.id === photo.id);
+    setSelectedPhotoIndex(targetIdx >= 0 ? targetIdx : 0);
+    setViewerOpen(true);
+  };
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const cameraInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -155,48 +164,51 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Resize image to max 600px for high clarity and small storage footprint (~70KB)
-        const maxW = 600;
+        // Resize image to max 1280px for high clarity face inspection and reasonable footprint (~150KB)
+        const maxW = 1280;
         const scale = Math.min(1, maxW / Math.max(img.width, img.height));
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Draw Geotag Banner at bottom with full details
-        const bannerHeight = 110 * scale;
+        // Draw Geotag Banner at bottom with high clarity
+        const bannerHeight = Math.max(75, Math.min(135, Math.round(canvas.height * 0.16)));
         const startY = canvas.height - bannerHeight;
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
         ctx.fillRect(0, startY, canvas.width, bannerHeight);
 
         // Amber top stripe
         ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(0, startY, canvas.width, 5 * scale);
+        ctx.fillRect(0, startY, canvas.width, Math.max(3, Math.round(bannerHeight * 0.04)));
 
         const schoolText = store?.data?.schoolProfile?.schoolName || 'शासकीय माध्यमिक आश्रम शाळा वाघंबा';
-        
+        const fontSize1 = Math.max(12, Math.min(18, Math.round(bannerHeight * 0.18)));
+        const fontSize2 = Math.max(11, Math.min(16, Math.round(bannerHeight * 0.16)));
+        const fontSize3 = Math.max(10, Math.min(14, Math.round(bannerHeight * 0.14)));
+
         // Line 1: School & Location Name
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${Math.max(13, 16 * scale)}px sans-serif`;
-        ctx.fillText(`📍 ${schoolText} | ${locationName}`, 16 * scale, startY + (28 * scale));
+        ctx.font = `bold ${fontSize1}px sans-serif`;
+        ctx.fillText(`📍 ${schoolText} | ${locationName}`, 14, startY + (bannerHeight * 0.28));
 
         // Line 2: Selected Sport & Drill Name
         ctx.fillStyle = '#fde047'; // Amber yellow text
-        ctx.font = `bold ${Math.max(12, 15 * scale)}px sans-serif`;
+        ctx.font = `bold ${fontSize2}px sans-serif`;
         const activeSport = photoSport || customSport;
         const activeDrill = photoDrill || customDrill;
-        ctx.fillText(`🏆 खेळ: ${activeSport}  |  प्रकार: ${activeDrill}`, 16 * scale, startY + (56 * scale));
+        ctx.fillText(`🏆 खेळ: ${activeSport}  |  प्रकार: ${activeDrill}`, 14, startY + (bannerHeight * 0.58));
 
         // Line 3: GPS Coordinates & Time
         ctx.fillStyle = '#cbd5e1';
-        ctx.font = `${Math.max(10, 12 * scale)}px sans-serif`;
+        ctx.font = `${fontSize3}px sans-serif`;
         const timeStr = format(new Date(), 'dd MMM yyyy, hh:mm a');
         const latStr = currentLat ? currentLat.toString() : '20.5937';
         const lngStr = currentLng ? currentLng.toString() : '74.0045';
-        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 16 * scale, startY + (84 * scale));
+        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 14, startY + (bannerHeight * 0.86));
 
-        const stampedUrl = canvas.toDataURL('image/jpeg', 0.70);
+        const stampedUrl = canvas.toDataURL('image/jpeg', 0.85);
         const photoDate = reportDate || format(new Date(), 'yyyy-MM-dd');
 
         const newPhoto: GeoPhoto = {
@@ -1219,19 +1231,42 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {reportPhotos.map((photo) => (
-                    <div key={photo.id} className="relative group rounded-3xl overflow-hidden border-2 border-slate-200 bg-slate-950 shadow-md">
-                      <img src={photo.url} alt={photo.caption} className="w-full h-52 object-cover" />
+                  {reportPhotos.map((photo, idx) => (
+                    <div 
+                      key={photo.id} 
+                      onClick={() => openPhotoViewer(photo, idx)}
+                      className="relative group rounded-3xl overflow-hidden border-2 border-slate-200 bg-slate-950 shadow-md cursor-pointer hover:ring-4 hover:ring-amber-400/60 transition-all hover:scale-[1.01]"
+                      title="सराव करणारे खेळाडू पाहण्यासाठी फोटो मोठा करा (Click to expand and inspect practicing players)"
+                    >
+                      <div className="relative w-full h-56 bg-slate-900 overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={photo.url} 
+                          alt={photo.caption} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
+                        {/* Hover zoom overlay hint */}
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                          <Badge className="bg-amber-500 text-slate-950 font-black text-xs px-3.5 py-1.5 shadow-2xl flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                            <ZoomIn className="w-4 h-4" /> खेळाडू पाहण्यासाठी फोटो मोठा करा
+                          </Badge>
+                        </div>
+                      </div>
                       <button 
                         type="button"
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        className="absolute top-3 right-3 bg-red-600/90 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePhoto(photo.id);
+                        }}
+                        className="absolute top-3 right-3 bg-red-600/90 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-colors z-10"
                         title="हटवा"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <div className="absolute bottom-0 inset-x-0 bg-slate-950/90 p-3 text-white backdrop-blur-xs border-t border-amber-500/40">
-                        <p className="font-black text-sm tracking-tight text-white">{photo.caption}</p>
+                        <p className="font-black text-sm tracking-tight text-white flex items-center justify-between">
+                          <span className="truncate">{photo.caption}</span>
+                          <span className="text-[10px] font-bold text-amber-400 font-mono shrink-0 ml-2">🔍 झूम करा</span>
+                        </p>
                         <p className="text-[10px] font-bold text-amber-400">🏆 {photo.sport || 'Sports'} {photo.drill ? ('- ' + photo.drill) : ''}</p>
                         <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-300 mt-1">
                           <span className="truncate max-w-[200px]">📍 {photo.locationName}</span>
@@ -1382,10 +1417,10 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                 <div className="space-y-3 pt-2">
                   <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">आजचे जिओ-टॅग फोटो ({reportPhotos.length})</p>
                   <div className="grid grid-cols-2 gap-3">
-                    {reportPhotos.map((photo) => (
+                    {reportPhotos.map((photo, idx) => (
                       <div 
                         key={photo.id} 
-                        onClick={() => setPreviewGeoPhoto(photo)}
+                        onClick={() => openPhotoViewer(photo, idx)}
                         className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-950 cursor-pointer hover:ring-2 hover:ring-amber-400 transition-all flex items-center justify-center min-h-[120px]"
                         title="संपूर्ण फोटो पाहण्यासाठी क्लिक करा (Click to view full photo)"
                       >
@@ -1463,41 +1498,13 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         </div>
       </div>
 
-      {/* GEOTAG PHOTO LIGHTBOX DIALOG */}
-      <Dialog open={!!previewGeoPhoto} onOpenChange={() => setPreviewGeoPhoto(null)}>
-        <DialogContent className="sm:max-w-[650px] p-4 bg-slate-950 text-white border-2 border-amber-400/40 rounded-3xl shadow-2xl">
-          <DialogHeader className="pb-2 border-b border-slate-800">
-            <DialogTitle className="text-sm font-black text-amber-400 uppercase tracking-wide flex items-center justify-between">
-              <span>📍 {previewGeoPhoto?.caption || "जिओ-टॅग फोटो"}</span>
-              <Badge variant="outline" className="border-amber-400/50 text-amber-300 bg-amber-950/40 text-[9px]">
-                {previewGeoPhoto?.sport || 'Sports'} {previewGeoPhoto?.drill ? `• ${previewGeoPhoto.drill}` : ''}
-              </Badge>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center justify-center p-2 max-h-[70vh] overflow-hidden bg-black rounded-2xl border border-slate-800">
-            {previewGeoPhoto?.url && (
-              <img 
-                src={previewGeoPhoto.url} 
-                alt={previewGeoPhoto.caption} 
-                className="max-h-[65vh] w-auto object-contain rounded-xl shadow-2xl"
-              />
-            )}
-          </div>
-          <div className="text-[11px] font-bold text-slate-300 bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-            <span>📍 स्थान GPS Coordinates:</span>
-            <span className="text-amber-400 font-mono">Lat {previewGeoPhoto?.lat || 20.5937}°, Lng {previewGeoPhoto?.lng || 74.0045}°</span>
-          </div>
-          <DialogFooter>
-            <Button 
-              type="button" 
-              onClick={() => setPreviewGeoPhoto(null)}
-              className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs rounded-xl"
-            >
-              बंद करा (Close)
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* FULL-FEATURED INTERACTIVE PRACTICE PHOTO VIEWER (EXPAND / ZOOM / INSPECT) */}
+      <PracticePhotoViewer
+        open={viewerOpen}
+        photos={reportPhotos}
+        initialIndex={selectedPhotoIndex}
+        onClose={() => setViewerOpen(false)}
+      />
 
       {/* ABSENTEE LIST DIALOG */}
       <Dialog open={showAbsenteeModal} onOpenChange={setShowAbsenteeModal}>

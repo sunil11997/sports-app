@@ -20,8 +20,12 @@ import {
   Info,
   Users,
   Sparkles,
-  Filter
+  Filter,
+  ZoomIn,
+  Trophy,
+  User
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getAgeValidation } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -137,6 +141,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   const [activeDrill, setActiveDrill] = useState(SPORTS_DATA[activeSport || 'Kabaddi']?.skills[0] || "Standard Drill");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [guideModalName, setGuideModalName] = useState<string | null>(null);
+  const [selectedAthleteForPhoto, setSelectedAthleteForPhoto] = useState<any | null>(null);
 
   useEffect(() => {
     if (preselectedSport && SPORTS_DATA[preselectedSport]) {
@@ -281,14 +286,23 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {squad.map((player: any) => (
                           <div key={player.id} className="flex items-center justify-between bg-white p-4 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-10 h-10 border-2 border-primary/5">
-                                <AvatarImage src={player.photoUrl} className="object-cover" />
-                                <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">{player.name[0]}</AvatarFallback>
-                              </Avatar>
+                            <div 
+                              onClick={() => setSelectedAthleteForPhoto(player)}
+                              className="flex items-center gap-3 cursor-pointer group/athlete hover:opacity-80 transition-opacity"
+                              title="खेळाडूचा फोटो व माहिती पाहण्यासाठी क्लिक करा (Click to inspect athlete)"
+                            >
+                              <div className="relative">
+                                <Avatar className="w-11 h-11 border-2 border-primary/10 shadow-sm group-hover/athlete:ring-2 group-hover/athlete:ring-accent transition-all">
+                                  <AvatarImage src={player.photoUrl} className="object-cover" />
+                                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">{player.name[0]}</AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-1 -right-1 bg-slate-900 text-amber-400 p-0.5 rounded-full shadow-xs">
+                                  <ZoomIn className="w-2.5 h-2.5" />
+                                </div>
+                              </div>
                               <div className="min-w-0">
-                                <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[120px]">{player.name}</p>
-                                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Std {player.std}</span>
+                                <p className="font-black text-xs uppercase text-primary leading-none truncate max-w-[120px] group-hover/athlete:text-accent transition-colors">{player.name}</p>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1 tracking-widest block">Std {player.std}</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -321,9 +335,19 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
             <CardContent className="p-6 space-y-3">
               {masteredThisDrill.map((p: any) => (
                 <div key={p.id} className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100 group animate-in slide-in-from-right-4 duration-300">
-                  <div className="min-w-0">
-                    <p className="font-black text-[10px] text-emerald-800 uppercase truncate">{p.name}</p>
-                    <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Logged Today</span>
+                  <div 
+                    onClick={() => setSelectedAthleteForPhoto(p)}
+                    className="flex items-center gap-2.5 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+                    title="खेळाडूचा फोटो पहा"
+                  >
+                    <Avatar className="w-8 h-8 border border-emerald-300">
+                      <AvatarImage src={p.photoUrl} className="object-cover" />
+                      <AvatarFallback className="bg-emerald-200 text-emerald-900 text-[9px] font-black">{p.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="font-black text-[10px] text-emerald-800 uppercase truncate">{p.name}</p>
+                      <span className="text-[8px] font-bold text-emerald-600/60 uppercase">Logged Today • Std {p.std}</span>
+                    </div>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => handleRestore(p.id)} className="h-8 w-8 text-emerald-600 hover:bg-emerald-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -346,6 +370,66 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
         isOpen={!!guideModalName} 
         onClose={() => setGuideModalName(null)} 
       />
+
+      {/* ATHLETE PHOTO & PROFILE LIGHTBOX */}
+      <Dialog open={!!selectedAthleteForPhoto} onOpenChange={() => setSelectedAthleteForPhoto(null)}>
+        <DialogContent className="sm:max-w-[480px] p-5 bg-slate-950 text-white border-2 border-amber-400/40 rounded-3xl shadow-2xl">
+          <DialogHeader className="pb-3 border-b border-slate-800">
+            <DialogTitle className="text-sm font-black text-amber-400 uppercase tracking-wide flex items-center justify-between">
+              <span>👤 {selectedAthleteForPhoto?.name}</span>
+              <Badge className="bg-amber-500 text-slate-950 font-black text-[9px] uppercase px-2.5">
+                इयत्ता (Std) {selectedAthleteForPhoto?.std || 'N/A'}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Enlarged Photo Container */}
+            <div className="relative w-full h-64 bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+              {selectedAthleteForPhoto?.photoUrl ? (
+                <img 
+                  src={selectedAthleteForPhoto.photoUrl} 
+                  alt={selectedAthleteForPhoto.name}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="text-center p-6 text-slate-500">
+                  <User className="w-16 h-16 mx-auto mb-2 opacity-40 text-slate-400" />
+                  <p className="text-xs font-bold uppercase">फोटो उपलब्ध नाही (No Photo)</p>
+                </div>
+              )}
+            </div>
+
+            {/* Athlete Quick Info */}
+            <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400 font-bold">खेळ (Sports):</span>
+                <span className="font-black text-amber-400">
+                  {Array.isArray(selectedAthleteForPhoto?.sports) ? selectedAthleteForPhoto.sports.join(', ') : (selectedAthleteForPhoto?.sports || activeSport)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400 font-bold">प्रवर्ग (Category):</span>
+                <span className="font-black text-white uppercase">{selectedAthleteForPhoto?.category || 'Athlete'}</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400 font-bold">चालू सराव ड्रिल (Active Drill):</span>
+                <span className="font-black text-emerald-400 truncate max-w-[220px]">{activeDrill}</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button 
+              type="button" 
+              onClick={() => setSelectedAthleteForPhoto(null)}
+              className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs rounded-xl"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

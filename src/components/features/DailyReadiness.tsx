@@ -16,8 +16,11 @@ import {
   ShieldCheck,
   Zap,
   Info,
-  ClipboardCheck
+  ClipboardCheck,
+  ZoomIn,
+  User
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -97,7 +100,7 @@ const calculatePhvOffset = (player: any) => {
   return isNaN(offset) ? 0 : offset;
 };
 
-function SquadItem({ data }: { data: any }) {
+function SquadItem({ data, onPhotoClick }: { data: any; onPhotoClick?: (player: any) => void }) {
   if (!data?.player) return null;
   const { player, analysis, hasData } = data;
 
@@ -108,16 +111,23 @@ function SquadItem({ data }: { data: any }) {
         ? "bg-white border-primary/5 hover:border-primary/20 hover:shadow-md" 
         : "bg-muted/10 border-transparent opacity-40 grayscale"
     )}>
-      <div className="relative">
-        <Avatar className="w-14 h-14 border-2 border-white shadow-md">
+      <div 
+        onClick={() => onPhotoClick?.(player)}
+        className="relative cursor-pointer group/avatar shrink-0"
+        title="खेळाडूचा फोटो मोठा पाहण्यासाठी क्लिक करा (Click to expand photo)"
+      >
+        <Avatar className="w-14 h-14 border-2 border-white shadow-md group-hover/avatar:ring-2 group-hover/avatar:ring-accent transition-all">
           <AvatarImage src={player.photoUrl} className="object-cover" />
           <AvatarFallback className="bg-primary/5 text-primary font-black uppercase text-sm">
             {player.name ? player.name[0] : '?'}
           </AvatarFallback>
         </Avatar>
+        <div className="absolute -bottom-1 -right-1 bg-slate-900 text-amber-400 p-0.5 rounded-full shadow-xs">
+          <ZoomIn className="w-3 h-3" />
+        </div>
         {hasData && analysis && (
           <div className={cn(
-            "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white shadow-sm animate-pulse", 
+            "absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm animate-pulse", 
             analysis.dot
           )} />
         )}
@@ -125,7 +135,10 @@ function SquadItem({ data }: { data: any }) {
       
       <div className="flex-1 min-w-0 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-          <div className="min-w-0">
+          <div 
+            onClick={() => onPhotoClick?.(player)}
+            className="min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <p className="font-black text-primary uppercase text-sm leading-none group-hover:text-accent transition-colors truncate">
               {player.name}
             </p>
@@ -168,6 +181,7 @@ export function DailyReadiness({ store, preselectedSport }: { store: any; presel
   const [injuryStatus, setInjuryStatus] = useState("Fit to Train");
   const [isSaving, setIsSaving] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedAthleteForPhoto, setSelectedAthleteForPhoto] = useState<any | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -366,7 +380,11 @@ export function DailyReadiness({ store, preselectedSport }: { store: any; presel
                 </div>
               ) : (
                 teamReadiness.map((data: any, idx: number) => (
-                  <SquadItem key={data.player?.id || idx} data={data} />
+                  <SquadItem 
+                    key={data.player?.id || idx} 
+                    data={data} 
+                    onPhotoClick={(p) => setSelectedAthleteForPhoto(p)}
+                  />
                 ))
               )}
            </div>
@@ -378,6 +396,70 @@ export function DailyReadiness({ store, preselectedSport }: { store: any; presel
            </div>
         </Card>
       </div>
+
+      {/* ATHLETE PHOTO & READINESS PROFILE LIGHTBOX */}
+      <Dialog open={!!selectedAthleteForPhoto} onOpenChange={() => setSelectedAthleteForPhoto(null)}>
+        <DialogContent className="sm:max-w-[480px] p-5 bg-slate-950 text-white border-2 border-amber-400/40 rounded-3xl shadow-2xl">
+          <DialogHeader className="pb-3 border-b border-slate-800">
+            <DialogTitle className="text-sm font-black text-amber-400 uppercase tracking-wide flex items-center justify-between">
+              <span>👤 {selectedAthleteForPhoto?.name}</span>
+              <Badge className="bg-amber-500 text-slate-950 font-black text-[9px] uppercase px-2.5">
+                इयत्ता (Std) {selectedAthleteForPhoto?.std || 'N/A'}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Enlarged Photo Container */}
+            <div className="relative w-full h-64 bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+              {selectedAthleteForPhoto?.photoUrl ? (
+                <img 
+                  src={selectedAthleteForPhoto.photoUrl} 
+                  alt={selectedAthleteForPhoto.name}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="text-center p-6 text-slate-500">
+                  <User className="w-16 h-16 mx-auto mb-2 opacity-40 text-slate-400" />
+                  <p className="text-xs font-bold uppercase">फोटो उपलब्ध नाही (No Photo)</p>
+                </div>
+              )}
+            </div>
+
+            {/* Athlete Quick Info */}
+            <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400 font-bold">खेळ (Sports):</span>
+                <span className="font-black text-amber-400">
+                  {Array.isArray(selectedAthleteForPhoto?.sports) ? selectedAthleteForPhoto.sports.join(', ') : (selectedAthleteForPhoto?.sports || 'General')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400 font-bold">वय / वर्ग (Age / Std):</span>
+                <span className="font-black text-white">{selectedAthleteForPhoto?.age ? `${selectedAthleteForPhoto.age} वर्षे` : 'N/A'} • Std {selectedAthleteForPhoto?.std || 'N/A'}</span>
+              </div>
+              {store.data.dailyReadiness?.[selectedAthleteForPhoto?.id] && (
+                <div className="flex justify-between items-center text-slate-300 border-t border-slate-800 pt-2 mt-2">
+                  <span className="text-slate-400 font-bold">आजची सज्जता स्थिती (Status):</span>
+                  <Badge className="bg-emerald-500 text-white font-black text-[9px] uppercase px-2 py-0.5">
+                    {store.data.dailyReadiness[selectedAthleteForPhoto.id].readinessStatus || "Active"}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button 
+              type="button" 
+              onClick={() => setSelectedAthleteForPhoto(null)}
+              className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs rounded-xl"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

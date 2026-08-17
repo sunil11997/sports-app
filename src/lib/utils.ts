@@ -6,105 +6,209 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const COMMON_MARATHI_NAMES: Record<string, string> = {
-  // Common First Names
+  // First Names (Male)
   rahul: 'राहुल', ramesh: 'रमेश', suresh: 'सुरेश', ganesh: 'गणेश', mahesh: 'महेश',
   dinesh: 'दिनेश', vijay: 'विजय', ajay: 'अजय', amit: 'अमित', amol: 'अमोल',
   aniket: 'अनिकेत', akshay: 'अक्षय', aditya: 'आदित्य', abhishek: 'अभिषेक', rohan: 'रोहन',
   sachin: 'सचिन', sunil: 'सुनील', anil: 'अनिल', santosh: 'संतोष', samir: 'समीर',
   sameer: 'समीर', nitin: 'नितीन', pravin: 'प्रवीण', pradeep: 'प्रदीप', prashant: 'प्रशांत',
-  pranam: 'प्रणाम', priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', sneha: 'स्नेहा',
-  swati: 'स्वाती', neha: 'नेहा', nisha: 'निशा', kavita: 'कविता', sunita: 'सुनिता',
-  anita: 'अनिता', sangita: 'संगीता', sangeta: 'संगीता', aarti: 'आरती', arti: 'आरती',
-  shreya: 'श्रेया', sakshi: 'साक्षी', vaishnavi: 'वैष्णवी', tanvi: 'तन्वी', isha: 'ईशा',
-  om: 'ओम', aarav: 'आरव', ananya: 'अनन्या', aryan: 'आर्यन', shivam: 'शिवम',
-  krishna: 'कृष्णा', ram: 'राम', radha: 'राधा', gauri: 'गौरी', tanmay: 'तन्मय',
-  rushikesh: 'ऋषिकेश', hrishikesh: 'ऋषिकेश', sanket: 'संकेत', prathamesh: 'प्रथमेश',
-  swapnil: 'स्वप्निल', omkar: 'ओंकार', sourabh: 'सौरभ', saurabh: 'सौरभ', shubham: 'शुभम',
-  utkarsh: 'उत्कर्ष', chinmay: 'चिन्मय', tushar: 'तुषार', kiran: 'किरण', chetan: 'चेतन',
-  shrikant: 'श्रीकांत', shripad: 'श्रीपाद', harish: 'हरीश', rajesh: 'राजेश', yogesh: 'योगेश',
+  pranam: 'प्रणाम', om: 'ओम', aarav: 'आरव', aryan: 'आर्यन', shivam: 'शिवम',
+  krishna: 'कृष्णा', ram: 'राम', tanmay: 'तन्मय', rushikesh: 'ऋषिकेश', hrishikesh: 'ऋषिकेश',
+  sanket: 'संकेत', prathamesh: 'प्रथमेश', swapnil: 'स्वप्निल', omkar: 'ओंकार', sourabh: 'सौरभ',
+  saurabh: 'सौरभ', shubham: 'शुभम', utkarsh: 'उत्कर्ष', chinmay: 'चिन्मय', tushar: 'तुषार',
+  kiran: 'किरण', chetan: 'चेतन', shrikant: 'श्रीकांत', shripad: 'श्रीपाद', harish: 'हरीश',
+  rajesh: 'राजेश', yogesh: 'योगेश', rohit: 'रोहित', vikas: 'विकास', vishal: 'विशाल',
+  vivek: 'विवेक', sandeep: 'संदीप', sandip: 'संदीप', deepak: 'दीपक', dipak: 'दीपक',
+  manoj: 'मनोज', gautam: 'गौतम', ashok: 'अशोक', vinod: 'विनोद', kailas: 'कैलास',
+  kailash: 'कैलास', balu: 'बाळू', bhagwan: 'भगवान', pandurang: 'पांडुरंग', gopal: 'गोपाळ',
+  shankar: 'शंकर', shivaji: 'शिवाजी', sambhaji: 'संभाजी', tanaji: 'तानाजी', anand: 'आनंद',
+  akash: 'आकाश', aakash: 'आकाश', tejas: 'तेजस', vaibhav: 'वैभव', dnyaneshwar: 'ज्ञानेश्वर',
+  siddharth: 'सिद्धार्थ', samadhan: 'समाधान', motiram: 'मोतीराम', devidas: 'देवीदास',
+  hiraman: 'हिरामन', barku: 'बारकू', damu: 'दामू', kisan: 'किसन', tulshiram: 'तुळशीराम',
+  chaitanya: 'चैतन्य', harshad: 'हर्षद', yash: 'यश', atharva: 'अथर्व', vedant: 'वेदांत',
 
-  // Common Surnames
+  // First Names (Female)
+  priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', sneha: 'स्नेहा', swati: 'स्वाती',
+  neha: 'नेहा', nisha: 'निशा', kavita: 'कविता', sunita: 'सुनिता', anita: 'अनिता',
+  sangita: 'संगीता', sangeta: 'संगीता', aarti: 'आरती', arti: 'आरती', shreya: 'श्रेया',
+  sakshi: 'साक्षी', vaishnavi: 'वैष्णवी', tanvi: 'तन्वी', isha: 'ईशा', radha: 'राधा',
+  gauri: 'गौरी', ananya: 'अनन्या', komal: 'कोमल', shital: 'शीतल', sheetal: 'शीतल',
+  shubhangi: 'शुभांगी', rohini: 'रोहिणी', yogita: 'योगिता', ashwini: 'अश्विनी',
+  priyanka: 'प्रियंका', pratiksha: 'प्रतीक्षा', harshada: 'हर्षदा', rutuja: 'ऋतुजा',
+  rutu: 'ऋतू', payal: 'पायल', pallavi: 'पल्लवी', punam: 'पूनम', poonam: 'पूनम',
+  rekha: 'रेखा', meena: 'मीना', mina: 'मीना', seema: 'सीमा', rani: 'राणी',
+  savita: 'सविता', sarita: 'सरिता', manjusha: 'मंजूषा', manisha: 'मनीषा', kalpana: 'कल्पना',
+  durga: 'दुर्गा', sita: 'सीता', geeta: 'गीता', gita: 'गीता', lata: 'लता',
+  mamta: 'ममता', urmila: 'उर्मिला', anjali: 'अंजली', dipali: 'दीपाली', deepali: 'दीपाली',
+  pranali: 'प्रणाली', sonali: 'सोनाली', monali: 'मोनाली', rupali: 'रूपाली',
+
+  // Surnames / Family Names
   patil: 'पाटील', pawar: 'पवार', shinde: 'शिंदे', deshmukh: 'देशमुख', kulkarni: 'कुलकर्णी',
-  jadhav: 'जाधव', gaikwad: 'गायकवाड', chavan: 'चव्हाण', joshi: 'जोशी', kadam: 'कदम',
-  more: 'मोरे', kale: 'काळे', thorat: 'थोरात', sawant: 'सावंत', bhosale: 'भोसले',
-  salunkhe: 'साळुंखे', jagtap: 'जगताप', ghurde: 'घुरडे', wagh: 'वाघ', kamble: 'कांबळे',
-  mane: 'माने', nikam: 'निकम', ingale: 'इंगळे', ingole: 'इंगोळे', mankar: 'मानकर',
-  kharat: 'खरात', zope: 'झोपे', gore: 'गोरे', auti: 'औटी', shelke: 'शेळके',
-  sutar: 'सुतार', sonawane: 'सोनवणे', landge: 'लांडगे', ghode: 'घोडे'
+  jadhav: 'जाधव', gaikwad: 'गायकवाड', gayakwad: 'गायकवाड', chavan: 'चव्हाण', joshi: 'जोशी',
+  kadam: 'कदम', more: 'मोरे', kale: 'काळे', thorat: 'थोरात', sawant: 'सावंत',
+  bhosale: 'भोसले', bhosle: 'भोसले', salunkhe: 'साळुंखे', jagtap: 'जगताप', ghurde: 'घुरडे',
+  wagh: 'वाघ', kamble: 'कांबळे', mane: 'माने', nikam: 'निकम', ingale: 'इंगळे',
+  ingole: 'इंगोळे', mankar: 'मानकर', kharat: 'खरात', zope: 'झोपे', gore: 'गोरे',
+  auti: 'औटी', shelke: 'शेळके', sutar: 'सुतार', sonawane: 'सोनवणे', sonwane: 'सोनवणे',
+  landge: 'लांडगे', ghode: 'घोडे', bagul: 'बागुल', mahale: 'महाले', chaudhari: 'चौधरी',
+  chaudhary: 'चौधरी', borse: 'बोरसे', ahire: 'अहिरे', gangurde: 'गांगुर्डे',
+  bhamare: 'भामरे', hire: 'हिरे', pingle: 'पिंगळे', deore: 'देवरे', kapadnis: 'कापडणीस',
+  khairnar: 'खैरनार', kuwar: 'कुवर', gavit: 'गावीत', valvi: 'वळवी', padvi: 'पाडवी',
+  vasave: 'वसावे', thakre: 'ठाकरे', thakare: 'ठाकरे', malche: 'माळचे', dhangar: 'धनगर',
+  kokani: 'कोकणी', kokane: 'कोकणे', barde: 'बर्डे', bendre: 'बेंद्रे', gavali: 'गवळी',
+  shewale: 'शेवाळे', suryavanshi: 'सूर्यवंशी', rathod: 'राठोड', chothe: 'चोथे',
+
+  // Places / General Terms
+  waghamba: 'वाघंबा', baglan: 'बागलाण', satana: 'सटाणा', nashik: 'नाशिक',
+  ashram: 'आश्रम', shala: 'शाळा', madhyamik: 'माध्यमिक', shaskiya: 'शासकीय',
+  kabaddi: 'कबड्डी', volleyball: 'व्हॉलीबॉल', handball: 'हँडबॉल', khokho: 'खो-खो',
+  running: 'धावणे', athletics: 'ॲथलेटिक्स', yoga: 'योग', pt: 'पीटी'
 };
 
 function transliterateWord(word: string): string {
-  const cleanWord = word.trim().toLowerCase();
-  if (!cleanWord) return '';
-  if (COMMON_MARATHI_NAMES[cleanWord]) {
-    return COMMON_MARATHI_NAMES[cleanWord];
+  const clean = word.trim();
+  if (!clean) return '';
+  
+  // If already contains Devanagari characters, preserve as-is
+  if (/[\u0900-\u097F]/.test(clean)) {
+    return clean;
   }
 
-  const commonPairs: Array<[string, string]> = [
-    ['sh', 'श'], ['ch', 'च'], ['kh', 'ख'], ['gh', 'घ'], ['dh', 'ध'], ['th', 'थ'], ['ph', 'फ'], ['bh', 'भ'], ['jh', 'झ'], ['ny', 'ञ'], ['rr', 'ऱ'], ['ll', 'ळ'], ['tt', 'ट'], ['dd', 'ड'], ['nn', 'ण'], ['aa', 'ा'], ['ee', 'ी'], ['ii', 'ी'], ['oo', 'ू'], ['ou', 'ौ'], ['au', 'ौ']
+  const lower = clean.toLowerCase();
+  if (COMMON_MARATHI_NAMES[lower]) {
+    return COMMON_MARATHI_NAMES[lower];
+  }
+
+  const multiConsonants: Array<[string, string]> = [
+    ['dny', 'ज्ञ'], ['jny', 'ज्ञ'], ['gy', 'ज्ञ'], ['ksh', 'क्ष'], ['x', 'क्स'],
+    ['shr', 'श्र'], ['chhh', 'छ'], ['chh', 'छ'], ['ch', 'च'], ['shh', 'ष'],
+    ['sh', 'श'], ['kh', 'ख'], ['gh', 'घ'], ['th', 'थ'], ['dh', 'ध'],
+    ['ph', 'फ'], ['bh', 'भ'], ['jh', 'झ'], ['rh', 'ऱ्ह'], ['wh', 'व्ह'],
+    ['tt', 'ट'], ['dd', 'ड'], ['nn', 'ण'], ['ll', 'ळ'], ['rr', 'ऱ'],
+    ['ng', 'ंग'], ['nj', 'ंज'], ['nk', 'ंक'], ['nd', 'ंद'], ['mb', 'ंब'], ['mp', 'ंप']
   ];
 
-  const singleMap: Record<string, string> = {
-    a: 'अ', b: 'ब', c: 'क', d: 'ड', e: 'ए', f: 'फ', g: 'ग', h: 'ह', i: 'इ', j: 'ज', k: 'क', l: 'ल', m: 'म', n: 'न', o: 'ओ', p: 'प', r: 'र', s: 'स', t: 'ट', u: 'उ', v: 'व', w: 'व', x: 'क्स', y: 'य', z: 'झ'
+  const singleConsonants: Record<string, string> = {
+    k: 'क', g: 'ग', c: 'क', j: 'ज', z: 'झ',
+    t: 'त', d: 'द', n: 'न', p: 'प', f: 'फ',
+    b: 'ब', m: 'म', y: 'य', r: 'र', l: 'ल',
+    v: 'व', w: 'व', s: 'स', h: 'ह', q: 'क'
   };
 
+  const initialVowels: Array<[string, string]> = [
+    ['aa', 'आ'], ['ee', 'ई'], ['ii', 'ई'], ['oo', 'ऊ'], ['uu', 'ऊ'],
+    ['ai', 'ऐ'], ['au', 'औ'], ['ou', 'औ'], ['ru', 'ऋ'], ['ri', 'ऋ'],
+    ['a', 'अ'], ['i', 'इ'], ['u', 'उ'], ['e', 'ए'], ['o', 'ओ']
+  ];
+
+  const matras: Array<[string, string]> = [
+    ['aa', 'ा'], ['ee', 'ी'], ['ii', 'ी'], ['oo', 'ू'], ['uu', 'ू'],
+    ['ai', 'ै'], ['au', 'ौ'], ['ou', 'ौ'], ['a', ''], ['i', 'ि'],
+    ['u', 'ु'], ['e', 'े'], ['o', 'ो']
+  ];
+
   let result = '';
-  let index = 0;
+  let i = 0;
+  let isStart = true;
+  let lastWasConsonant = false;
 
-  while (index < cleanWord.length) {
-    let matched = false;
+  while (i < lower.length) {
+    if (isStart) {
+      // Check initial vowels
+      let matchedVowel = false;
+      for (const [v, dev] of initialVowels) {
+        if (lower.startsWith(v, i)) {
+          result += dev;
+          i += v.length;
+          matchedVowel = true;
+          isStart = false;
+          lastWasConsonant = false;
+          break;
+        }
+      }
+      if (matchedVowel) continue;
+    }
 
-    for (const [pair, replacement] of commonPairs) {
-      if (cleanWord.startsWith(pair, index)) {
-        result += replacement;
-        index += pair.length;
-        matched = true;
+    // Check Multi-letter Consonants
+    let matchedConsonant = false;
+    for (const [cSeq, dev] of multiConsonants) {
+      if (lower.startsWith(cSeq, i)) {
+        result += dev;
+        i += cSeq.length;
+        matchedConsonant = true;
+        isStart = false;
+        lastWasConsonant = true;
         break;
       }
     }
-
-    if (matched) continue;
-
-    const char = cleanWord[index];
-
-    if (char === 'a' && index > 0) {
-      result += '';
-      index += 1;
+    if (matchedConsonant) {
+      // Check if followed by vowel
+      if (i < lower.length) {
+        let matchedMatra = false;
+        for (const [vSeq, matra] of matras) {
+          if (lower.startsWith(vSeq, i)) {
+            // Special rule: if 'a' is at the very end of a word (e.g. 'Pooja', 'Anita'), it represents 'ा'
+            if (vSeq === 'a' && i === lower.length - 1) {
+              result += 'ा';
+            } else {
+              result += matra;
+            }
+            i += vSeq.length;
+            matchedMatra = true;
+            lastWasConsonant = false;
+            break;
+          }
+        }
+      }
       continue;
     }
 
-    if (char === 'i' && index > 0) {
-      result += 'ि';
-      index += 1;
+    // Check Single Consonant
+    const ch = lower[i];
+    if (ch in singleConsonants) {
+      result += singleConsonants[ch];
+      i += 1;
+      isStart = false;
+      lastWasConsonant = true;
+
+      // Check if followed by vowel / matra
+      if (i < lower.length) {
+        let matchedMatra = false;
+        for (const [vSeq, matra] of matras) {
+          if (lower.startsWith(vSeq, i)) {
+            if (vSeq === 'a' && i === lower.length - 1) {
+              result += 'ा';
+            } else {
+              result += matra;
+            }
+            i += vSeq.length;
+            matchedMatra = true;
+            lastWasConsonant = false;
+            break;
+          }
+        }
+      }
       continue;
     }
 
-    if (char === 'u' && index > 0) {
-      result += 'ु';
-      index += 1;
-      continue;
+    // Standalone vowel inside word (e.g. after another vowel)
+    let matchedInnerVowel = false;
+    for (const [v, dev] of initialVowels) {
+      if (lower.startsWith(v, i)) {
+        result += dev;
+        i += v.length;
+        matchedInnerVowel = true;
+        isStart = false;
+        lastWasConsonant = false;
+        break;
+      }
     }
+    if (matchedInnerVowel) continue;
 
-    if (char === 'e' && index > 0) {
-      result += 'े';
-      index += 1;
-      continue;
-    }
-
-    if (char === 'o' && index > 0) {
-      result += 'ो';
-      index += 1;
-      continue;
-    }
-
-    if (char && char in singleMap) {
-      result += singleMap[char] || '';
-      index += 1;
-      continue;
-    }
-
-    result += char;
-    index += 1;
+    // Default fallback
+    result += lower[i];
+    i += 1;
+    isStart = false;
   }
 
   return result;
