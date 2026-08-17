@@ -37,7 +37,7 @@ const coachChatFlow = ai.defineFlow(
         : "AI Configuration Error: Please add your GOOGLE_GENAI_API_KEY to the .env file.";
     }
 
-    const selectedModel = 'gemini-2.5-flash';
+    const selectedModel = 'gemini-1.5-flash';
     let attempts = 0;
     const maxAttempts = 2;
     

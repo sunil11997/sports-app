@@ -26,7 +26,7 @@ export async function translateNameToMarathi(input: TranslateNameInput): Promise
 
   try {
     const {text} = await ai.generate({
-      model: googleAI.model('gemini-2.5-flash'),
+      model: googleAI.model('gemini-1.5-flash'),
       system: "You are a professional transliterator specializing in Indian names. Convert English names to Marathi (Devanagari script) with high phonetic accuracy. Return ONLY the translated name in Devanagari script, nothing else. Do not provide explanations, variants, or punctuation.",
       prompt: `Translate this name to Marathi: ${input.name}`,
       config: {

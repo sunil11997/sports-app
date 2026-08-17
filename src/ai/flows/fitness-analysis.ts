@@ -26,7 +26,7 @@ export type FitnessAnalysisOutput = z.infer<typeof FitnessAnalysisOutputSchema>;
 
 export async function analyzeFitness(input: FitnessAnalysisInput): Promise<FitnessAnalysisOutput> {
   const {output} = await ai.generate({
-    model: googleAI.model('gemini-2.5-flash'),
+    model: googleAI.model('gemini-1.5-flash'),
     system: `You are an expert AI Sports Scientist and Fitness Coach. Your goal is to analyze fitness test results for school-age students (ages 6-18). 
     IMPORTANT: Respond entirely in ${input.language}.`,
     prompt: `Analyze this result: Age: ${input.age}, Gender: ${input.gender}, Test: ${input.testName}, Score: ${input.score}`,
@@ -42,7 +42,7 @@ const InstructionInputSchema = z.object({
 
 export async function getTestInstructions(input: z.infer<typeof InstructionInputSchema>): Promise<string> {
   const {text} = await ai.generate({
-    model: googleAI.model('gemini-2.5-flash'),
+    model: googleAI.model('gemini-1.5-flash'),
     system: `You are an expert AI Sports Scientist. Provide clear instructions for fitness tests.`,
     prompt: `Explain the ${input.testName} in ${input.language}.`,
   });
