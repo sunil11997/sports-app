@@ -39,7 +39,6 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
 import { cn, isBirthdayToday } from '@/lib/utils';
 import { format, subDays } from 'date-fns';
-import { PasscodeLock } from '@/components/features/PasscodeLock';
 import { useToast } from '@/hooks/use-toast';
 
 /**
@@ -289,10 +288,6 @@ export default function WaghambaApp() {
         />
       </div>
     );
-  }
-
-  if (stage !== 'landing' && schoolData.data.schoolProfile?.passcode && !isUnlocked) {
-    return <PasscodeLock correctPasscode={schoolData.data.schoolProfile.passcode} onSuccess={() => setIsUnlocked(true)} teacherEmail={user?.email} />;
   }
 
   if (stage === 'hub' && selectedSection) {

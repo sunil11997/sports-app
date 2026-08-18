@@ -44,6 +44,7 @@ import { initiateSignOut, syncViaEmail } from '@/firebase/non-blocking-login';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SchoolRegistration } from './SchoolRegistration';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
   const auth = useAuth();
@@ -59,9 +60,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [isSyncing, setIsSyncing] = useState(false);
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
-  
-  const [isPasscodeDialogOpen, setIsPasscodeDialogOpen] = useState(false);
-  const [newPasscode, setNewPasscode] = useState("");
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   
   const LOGO_INAPP = "/icon-512.png";
 
@@ -101,20 +100,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     if (restoreFileRef.current) restoreFileRef.current.value = "";
   };
 
-  const handleSetPasscode = () => {
-    if (newPasscode.length !== 4 || !/^\d+$/.test(newPasscode)) {
-      toast({ title: "Invalid PIN", description: "Passcode must be exactly 4 digits.", variant: "destructive" });
-      return;
-    }
-    schoolData.updatePasscode(newPasscode);
-    setIsPasscodeDialogOpen(false);
-    setNewPasscode("");
-    toast({ 
-      title: "Security Updated", 
-      description: "App passcode has been set successfully.",
-      className: "bg-primary text-white"
-    });
-  };
 
   /**
    * toggleRotation - Hardware-Level Orientation Controller
@@ -244,7 +229,6 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             <SettingsItem icon={School} color="bg-primary" label="Teacher & School Profile" sublabel="Configure Instructor Details" onClick={() => setShowRegistration(true)} />
-            <SettingsItem icon={Lock} color="bg-accent" label="App Passcode (PIN)" sublabel={schoolData.data.schoolProfile?.passcode ? "PIN Protection Active" : "No PIN Set"} value={schoolData.data.schoolProfile?.passcode ? "****" : "OFF"} onClick={() => setIsPasscodeDialogOpen(true)} />
           </div>
         </div>
 
@@ -321,7 +305,16 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary uppercase ml-1">Passcode</label>
+                  <div className="flex items-center justify-between ml-1">
+                    <label className="text-[10px] font-black text-primary uppercase">Password</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPasswordOpen(true)}
+                      className="text-[10px] font-black uppercase text-blue-600 hover:underline tracking-wider"
+                    >
+                      {language === 'Marathi' ? "पासवर्ड विसरलात?" : "Forgot Password?"}
+                    </button>
+                  </div>
                   <div className="relative">
                     <Input 
                       type={showPassword ? "text" : "password"} 
@@ -354,34 +347,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         </div>
       </div>
 
-      <Dialog open={isPasscodeDialogOpen} onOpenChange={setIsPasscodeDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-primary p-8 text-white">
-             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4"><Lock className="w-6 h-6 text-white" /></div>
-             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Registry Passcode</DialogTitle>
-             <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Institutional PIN Protection</p>
-          </DialogHeader>
-          <div className="p-8 space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-primary tracking-widest ml-1">New 4-Digit PIN</label>
-              <Input 
-                type="password" 
-                maxLength={4} 
-                placeholder="0000" 
-                value={newPasscode} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPasscode(e.target.value.replace(/\D/g, ''))} 
-                className="h-16 text-center text-3xl tracking-[0.5em] font-black border-2 rounded-2xl bg-muted/20" 
-              />
-            </div>
-          </div>
-          <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
-             <Button onClick={handleSetPasscode} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest">Save PIN</Button>
-             {schoolData.data.schoolProfile?.passcode && (
-               <Button onClick={() => { schoolData.updatePasscode(""); setIsPasscodeDialogOpen(false); }} variant="ghost" className="w-full text-destructive font-black uppercase text-[10px]">Disable Passcode</Button>
-             )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ForgotPasswordModal 
+        isOpen={isForgotPasswordOpen} 
+        onClose={() => setIsForgotPasswordOpen(false)} 
+        defaultEmail={emailInput}
+        language={language}
+      />
     </div>
   );
 }

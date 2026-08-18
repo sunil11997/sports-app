@@ -4,6 +4,7 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   GoogleAuthProvider,
   linkWithPopup,
@@ -121,6 +122,41 @@ export async function syncViaEmail(authInstance: Auth, email: string, pass: stri
     } else {
       throw signInError;
     }
+  }
+}
+
+/** 
+ * Send Password Recovery Email via Firebase Authentication
+ */
+export async function sendPasswordRecoveryEmail(authInstance: Auth, email: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+    
+    const actionCodeSettings = typeof window !== 'undefined' ? {
+      url: `${window.location.origin}`,
+      handleCodeInApp: true,
+    } : undefined;
+
+    await sendPasswordResetEmail(authInstance, trimmedEmail, actionCodeSettings);
+    return { success: true };
+  } catch (error: any) {
+    console.error('WGB Auth: Password reset error:', error);
+    let message = 'Failed to send password recovery email. Please try again.';
+    if (error.code === 'auth/user-not-found') {
+      message = 'No account found with this email address.';
+    } else if (error.code === 'auth/invalid-email') {
+      message = 'Please enter a valid email address.';
+    } else if (error.code === 'auth/too-many-requests') {
+      message = 'Too many requests. Please wait a moment before trying again.';
+    } else if (error.code === 'auth/unauthorized-continue-uri') {
+      message = 'Domain not authorized in Firebase Console.';
+    } else if (error.message) {
+      message = error.message;
+    }
+    return { success: false, error: message };
   }
 }
 
