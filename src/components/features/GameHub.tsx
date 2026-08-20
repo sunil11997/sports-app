@@ -25,7 +25,8 @@ import {
   CalendarDays,
   Sparkles,
   Contact,
-  FileBadge
+  FileBadge,
+  BookOpen
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,7 @@ const TeamPlanner = dynamic(() => import('./TeamPlanner').then(m => m.TeamPlanne
 const DailyPracticePlanner = dynamic(() => import('./DailyPracticePlanner').then(m => m.DailyPracticePlanner), { ssr: false });
 const AutoPracticePlanner = dynamic(() => import('./AutoPracticePlanner').then(m => m.AutoPracticePlanner), { ssr: false });
 const YogaPtHub = dynamic(() => import('./YogaPtHub').then(m => m.YogaPtHub), { ssr: false });
+const SportsLibrary = dynamic(() => import('./SportsLibrary').then(m => m.SportsLibrary), { ssr: false });
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -144,6 +146,9 @@ export function GameHub({ store }: { store: any }) {
               <TabsTrigger value="drills" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
                 <Zap className="w-3.5 h-3.5 text-amber-400" /> Drills (सराव प्रकार)
               </TabsTrigger>
+              <TabsTrigger value="library" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-indigo-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" /> Library (नियम व PDF)
+              </TabsTrigger>
               <TabsTrigger value="teams" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
               <TabsTrigger value="tournament" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
               <TabsTrigger value="reports" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-slate-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
@@ -184,6 +189,9 @@ export function GameHub({ store }: { store: any }) {
           </TabsContent>
           <TabsContent value="drills" className="mt-0">
             <SportsDrills store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
+          <TabsContent value="library" className="mt-0">
+            <SportsLibrary store={store} type="rules" preselectedSport={selectedGame || undefined} />
           </TabsContent>
           <TabsContent value="teams" className="mt-0">
             <Teams store={store} preselectedSport={selectedGame || undefined} />
