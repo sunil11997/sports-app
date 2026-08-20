@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   title: "Waghamba Sports Hub",
   description: "Institutional Physical Education & Sports Management System",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon-192.png",
+    shortcut: "/icon-192.png",
+    apple: "/icon-512.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
