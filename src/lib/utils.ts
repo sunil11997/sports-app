@@ -6,43 +6,60 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const COMMON_MARATHI_NAMES: Record<string, string> = {
-  // First Names (Male)
-  rahul: 'राहुल', ramesh: 'रमेश', suresh: 'सुरेश', ganesh: 'गणेश', mahesh: 'महेश',
+  // First Names (Male) - Common & Typo Variations
+  rahul: 'राहुल', rahool: 'राहुल', ramesh: 'रमेश', suresh: 'सुरेश', ganesh: 'गणेश', mahesh: 'महेश',
   dinesh: 'दिनेश', vijay: 'विजय', ajay: 'अजय', amit: 'अमित', amol: 'अमोल',
-  aniket: 'अनिकेत', akshay: 'अक्षय', aditya: 'आदित्य', abhishek: 'अभिषेक', rohan: 'रोहन',
-  sachin: 'सचिन', sunil: 'सुनील', anil: 'अनिल', santosh: 'संतोष', samir: 'समीर',
-  sameer: 'समीर', nitin: 'नितीन', pravin: 'प्रवीण', pradeep: 'प्रदीप', prashant: 'प्रशांत',
-  pranam: 'प्रणाम', om: 'ओम', aarav: 'आरव', aryan: 'आर्यन', shivam: 'शिवम',
-  krishna: 'कृष्णा', ram: 'राम', tanmay: 'तन्मय', rushikesh: 'ऋषिकेश', hrishikesh: 'ऋषिकेश',
-  sanket: 'संकेत', prathamesh: 'प्रथमेश', swapnil: 'स्वप्निल', omkar: 'ओंकार', sourabh: 'सौरभ',
-  saurabh: 'सौरभ', shubham: 'शुभम', utkarsh: 'उत्कर्ष', chinmay: 'चिन्मय', tushar: 'तुषार',
-  kiran: 'किरण', chetan: 'चेतन', shrikant: 'श्रीकांत', shripad: 'श्रीपाद', harish: 'हरीश',
-  rajesh: 'राजेश', yogesh: 'योगेश', rohit: 'रोहित', vikas: 'विकास', vishal: 'विशाल',
-  vivek: 'विवेक', sandeep: 'संदीप', sandip: 'संदीप', deepak: 'दीपक', dipak: 'दीपक',
-  manoj: 'मनोज', gautam: 'गौतम', ashok: 'अशोक', vinod: 'विनोद', kailas: 'कैलास',
-  kailash: 'कैलास', balu: 'बाळू', bhagwan: 'भगवान', pandurang: 'पांडुरंग', gopal: 'गोपाळ',
-  shankar: 'शंकर', shivaji: 'शिवाजी', sambhaji: 'संभाजी', tanaji: 'तानाजी', anand: 'आनंद',
-  akash: 'आकाश', aakash: 'आकाश', tejas: 'तेजस', vaibhav: 'वैभव', dnyaneshwar: 'ज्ञानेश्वर',
+  aniket: 'अनिकेत', akshay: 'अक्षय', axay: 'अक्षय', aditya: 'आदित्य', aaditya: 'आदित्य',
+  abhishek: 'अभिषेक', abhishekh: 'अभिषेक', rohan: 'रोहन', sachin: 'सचिन', sunil: 'सुनील',
+  suneel: 'सुनील', anil: 'अनिल', aneel: 'अनिल', santosh: 'संतोष', samir: 'समीर',
+  sameer: 'समीर', nitin: 'नितीन', niteen: 'नितीन', pravin: 'प्रवीण', praveen: 'प्रवीण',
+  pradeep: 'प्रदीप', pradip: 'प्रदीप', prashant: 'प्रशांत', pranam: 'प्रणाम', om: 'ओम',
+  omkar: 'ओंकार', onkar: 'ओंकार', aum: 'ओम', aarav: 'आरव', arav: 'आरव', aryan: 'आर्यन',
+  ariyan: 'आर्यन', shivam: 'शिवम', krishna: 'कृष्णा', krushna: 'कृष्णा', kishna: 'किष्णा',
+  ram: 'राम', rama: 'रामा', tanmay: 'तन्मय', tanmey: 'तन्मय', rushikesh: 'ऋषिकेश',
+  hrishikesh: 'ऋषिकेश', rishikesh: 'ऋषिकेश', sanket: 'संकेत', prathamesh: 'प्रथमेश',
+  prathmesh: 'प्रथमेश', swapnil: 'स्वप्निल', swaphnil: 'स्वप्निल', swpanil: 'स्वप्निल',
+  sourabh: 'सौरभ', saurabh: 'सौरभ', shubham: 'शुभम', subham: 'शुभम', utkarsh: 'उत्कर्ष',
+  chinmay: 'चिन्मय', tushar: 'तुषार', kiran: 'किरण', chetan: 'चेतन', shrikant: 'श्रीकांत',
+  srikant: 'श्रीकांत', shripad: 'श्रीपाद', sripad: 'श्रीपाद', harish: 'हरीश', rajesh: 'राजेश',
+  yogesh: 'योगेश', rohit: 'रोहित', vikas: 'विकास', vishal: 'विशाल', vivek: 'विवेक',
+  sandeep: 'संदीप', sandip: 'संदीप', deepak: 'दीपक', dipak: 'दीपक', manoj: 'मनोज',
+  gautam: 'गौतम', ashok: 'अशोक', vinod: 'विनोद', kailas: 'कैलास', kailash: 'कैलास',
+  balu: 'बाळू', bhagwan: 'भगवान', pandurang: 'पांडुरंग', gopal: 'गोपाळ', shankar: 'शंकर',
+  shivaji: 'शिवाजी', sambhaji: 'संभाजी', tanaji: 'तानाजी', anand: 'आनंद', akash: 'आकाश',
+  aakash: 'आकाश', tejas: 'तेजस', vaibhav: 'वैभव', dnyaneshwar: 'ज्ञानेश्वर', dnyneshwar: 'ज्ञानेश्वर',
+  dhyaneshwar: 'ज्ञानेश्वर', jnyaneshwar: 'ज्ञानेश्वर', dnyandev: 'ज्ञानदेव',
   siddharth: 'सिद्धार्थ', samadhan: 'समाधान', motiram: 'मोतीराम', devidas: 'देवीदास',
   hiraman: 'हिरामन', barku: 'बारकू', damu: 'दामू', kisan: 'किसन', tulshiram: 'तुळशीराम',
-  chaitanya: 'चैतन्य', harshad: 'हर्षद', yash: 'यश', atharva: 'अथर्व', vedant: 'वेदांत',
+  tulshiramji: 'तुळशीराम', chaitanya: 'चैतन्य', harshad: 'हर्षद', yash: 'यश',
+  atharva: 'अथर्व', vedant: 'वेदांत', virat: 'विराट', kapil: 'कपिल', mayur: 'मयूर',
+  siddhesh: 'सिद्धेश', avinash: 'अविनाश', bhushan: 'भूषण', nilesh: 'निलेश',
+  pankaj: 'पंकज', digambar: 'दिगंबर', bhavesh: 'भावेश', kalpesh: 'कल्पेश',
+  chandrakant: 'चंद्रकांत', laxman: 'लक्ष्मण', lakshman: 'लक्ष्मण', bharat: 'भरत',
+  dattatray: 'दत्तात्रय', dattatraya: 'दत्तात्रय', datta: 'दत्ता', kashinath: 'काशिनाथ',
 
-  // First Names (Female)
-  priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', sneha: 'स्नेहा', swati: 'स्वाती',
-  neha: 'नेहा', nisha: 'निशा', kavita: 'कविता', sunita: 'सुनिता', anita: 'अनिता',
-  sangita: 'संगीता', sangeta: 'संगीता', aarti: 'आरती', arti: 'आरती', shreya: 'श्रेया',
-  sakshi: 'साक्षी', vaishnavi: 'वैष्णवी', tanvi: 'तन्वी', isha: 'ईशा', radha: 'राधा',
-  gauri: 'गौरी', ananya: 'अनन्या', komal: 'कोमल', shital: 'शीतल', sheetal: 'शीतल',
-  shubhangi: 'शुभांगी', rohini: 'रोहिणी', yogita: 'योगिता', ashwini: 'अश्विनी',
-  priyanka: 'प्रियंका', pratiksha: 'प्रतीक्षा', harshada: 'हर्षदा', rutuja: 'ऋतुजा',
-  rutu: 'ऋतू', payal: 'पायल', pallavi: 'पल्लवी', punam: 'पूनम', poonam: 'पूनम',
-  rekha: 'रेखा', meena: 'मीना', mina: 'मीना', seema: 'सीमा', rani: 'राणी',
-  savita: 'सविता', sarita: 'सरिता', manjusha: 'मंजूषा', manisha: 'मनीषा', kalpana: 'कल्पना',
-  durga: 'दुर्गा', sita: 'सीता', geeta: 'गीता', gita: 'गीता', lata: 'लता',
-  mamta: 'ममता', urmila: 'उर्मिला', anjali: 'अंजली', dipali: 'दीपाली', deepali: 'दीपाली',
-  pranali: 'प्रणाली', sonali: 'सोनाली', monali: 'मोनाली', rupali: 'रूपाली',
+  // First Names (Female) - Common & Typo Variations
+  priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', pujha: 'पूजा', sneha: 'स्नेहा',
+  swati: 'स्वाती', swatee: 'स्वाती', neha: 'नेहा', nisha: 'निशा', kavita: 'कविता',
+  sunita: 'सुनिता', suneeta: 'सुनिता', anita: 'अनिता', aneeta: 'अनिता', sangita: 'संगीता',
+  sangeeta: 'संगीता', sangeta: 'संगीता', aarti: 'आरती', arti: 'आरती', shreya: 'श्रेया',
+  sakshi: 'साक्षी', saakshi: 'साक्षी', vaishnavi: 'वैष्णवी', tanvi: 'तन्वी', isha: 'ईशा',
+  radha: 'राधा', gauri: 'गौरी', gowri: 'गौरी', ananya: 'अनन्या', komal: 'कोमल',
+  shital: 'शीतल', sheetal: 'शीतल', sital: 'शीतल', shubhangi: 'शुभांगी', subhangi: 'शुभांगी',
+  rohini: 'रोहिणी', yogita: 'योगिता', ashwini: 'अश्विनी', aswini: 'अश्विनी',
+  priyanka: 'प्रियंका', priyaka: 'प्रियंका', pratiksha: 'प्रतीक्षा', harshada: 'हर्षदा',
+  rutuja: 'ऋतुजा', rutu: 'ऋतू', payal: 'पायल', pallavi: 'पल्लवी', punam: 'पूनम',
+  poonam: 'पूनम', rekha: 'रेखा', meena: 'मीना', mina: 'मीना', seema: 'सीमा',
+  sima: 'सीमा', rani: 'राणी', savita: 'सविता', sarita: 'सरिता', manjusha: 'मंजूषा',
+  manisha: 'मनीषा', kalpana: 'कल्पना', durga: 'दुर्गा', sita: 'सीता', geeta: 'गीता',
+  gita: 'गीता', lata: 'लता', mamta: 'ममता', urmila: 'उर्मिला', anjali: 'अंजली',
+  dipali: 'दीपाली', deepali: 'दीपाली', pranali: 'प्रणाली', sonali: 'सोनाली',
+  monali: 'मोनाली', rupali: 'रूपाली', roopali: 'रूपाली', shweta: 'श्वेता', sweta: 'श्वेता',
+  monika: 'मोनिका', snehal: 'स्नेहल', tejaswini: 'तेजस्विनी', divya: 'दिव्या',
+  diya: 'दिया', vaishali: 'वैशाली', kajal: 'काजल', karishma: 'करिश्मा',
+  jyoti: 'ज्योती', bhagyashree: 'भाग्यश्री', bhagyashri: 'भाग्यश्री',
 
-  // Surnames / Family Names
+  // Surnames / Family Names (including Local & Ashram Shala Names)
   patil: 'पाटील', pawar: 'पवार', shinde: 'शिंदे', deshmukh: 'देशमुख', kulkarni: 'कुलकर्णी',
   jadhav: 'जाधव', gaikwad: 'गायकवाड', gayakwad: 'गायकवाड', chavan: 'चव्हाण', joshi: 'जोशी',
   kadam: 'कदम', more: 'मोरे', kale: 'काळे', thorat: 'थोरात', sawant: 'सावंत',
@@ -53,10 +70,13 @@ const COMMON_MARATHI_NAMES: Record<string, string> = {
   landge: 'लांडगे', ghode: 'घोडे', bagul: 'बागुल', mahale: 'महाले', chaudhari: 'चौधरी',
   chaudhary: 'चौधरी', borse: 'बोरसे', ahire: 'अहिरे', gangurde: 'गांगुर्डे',
   bhamare: 'भामरे', hire: 'हिरे', pingle: 'पिंगळे', deore: 'देवरे', kapadnis: 'कापडणीस',
-  khairnar: 'खैरनार', kuwar: 'कुवर', gavit: 'गावीत', valvi: 'वळवी', padvi: 'पाडवी',
-  vasave: 'वसावे', thakre: 'ठाकरे', thakare: 'ठाकरे', malche: 'माळचे', dhangar: 'धनगर',
-  kokani: 'कोकणी', kokane: 'कोकणे', barde: 'बर्डे', bendre: 'बेंद्रे', gavali: 'गवळी',
-  shewale: 'शेवाळे', suryavanshi: 'सूर्यवंशी', rathod: 'राठोड', chothe: 'चोथे',
+  khairnar: 'खैरनार', kuwar: 'कुंवर', kunwar: 'कुंवर', gavit: 'गावीत', valvi: 'वळवी',
+  padvi: 'पाडवी', vasave: 'वसावे', thakre: 'ठाकरे', thakare: 'ठाकरे', malche: 'माळचे',
+  dhangar: 'धनगर', kokani: 'कोकणी', kokane: 'कोकणे', konkani: 'कोकणी', barde: 'बर्डे',
+  bendre: 'बेंद्रे', bendke: 'बेंदके', gavali: 'गवळी', shewale: 'शेवाळे', suryavanshi: 'सूर्यवंशी',
+  rathod: 'राठोड', chothe: 'चोथे', bhavsar: 'भावसार', bhoye: 'भोये', dhum: 'धूम',
+  dhumal: 'धुमाळ', waghmare: 'वाघमारे', gangode: 'गांगोडे', chaure: 'चौरे',
+  tadvi: 'तडवी', raut: 'राऊत', rawat: 'रावत', bhadane: 'भदाणे', sonawaneji: 'सोनवणे',
 
   // Places / General Terms
   waghamba: 'वाघंबा', baglan: 'बागलाण', satana: 'सटाणा', nashik: 'नाशिक',
@@ -79,13 +99,20 @@ function transliterateWord(word: string): string {
     return COMMON_MARATHI_NAMES[lower];
   }
 
+  // Multi-Consonants / Conjuncts (जोडाक्षरे)
   const multiConsonants: Array<[string, string]> = [
-    ['dny', 'ज्ञ'], ['jny', 'ज्ञ'], ['gy', 'ज्ञ'], ['ksh', 'क्ष'], ['x', 'क्स'],
-    ['shr', 'श्र'], ['chhh', 'छ'], ['chh', 'छ'], ['ch', 'च'], ['shh', 'ष'],
-    ['sh', 'श'], ['kh', 'ख'], ['gh', 'घ'], ['th', 'थ'], ['dh', 'ध'],
+    ['dnyan', 'ज्ञान'], ['dny', 'ज्ञ'], ['jny', 'ज्ञ'], ['gy', 'ज्ञ'], ['dhyan', 'ज्ञान'],
+    ['shw', 'श्व'], ['shr', 'श्र'], ['shh', 'ष'], ['sh', 'श'],
+    ['ksh', 'क्ष'], ['x', 'क्स'],
+    ['chhh', 'छ'], ['chh', 'छ'], ['ch', 'च'],
+    ['kh', 'ख'], ['gh', 'घ'], ['th', 'थ'], ['dh', 'ध'],
     ['ph', 'फ'], ['bh', 'भ'], ['jh', 'झ'], ['rh', 'ऱ्ह'], ['wh', 'व्ह'],
     ['tt', 'ट'], ['dd', 'ड'], ['nn', 'ण'], ['ll', 'ळ'], ['rr', 'ऱ'],
-    ['ng', 'ंग'], ['nj', 'ंज'], ['nk', 'ंक'], ['nd', 'ंद'], ['mb', 'ंब'], ['mp', 'ंप']
+    ['sw', 'स्व'], ['pr', 'प्र'], ['tr', 'त्र'], ['kr', 'क्र'], ['gr', 'ग्र'],
+    ['dr', 'द्र'], ['br', 'ब्र'], ['mr', 'म्र'], ['vr', 'व्र'], ['st', 'स्त'],
+    ['sp', 'स्प'], ['sk', 'स्क'], ['sn', 'स्न'], ['sm', 'स्म'], ['sy', 'स्य'],
+    ['kt', 'क्त'], ['pt', 'प्त'], ['nt', 'ंत'], ['nd', 'ंद'], ['mb', 'ंब'],
+    ['mp', 'ंप'], ['nk', 'ंक'], ['ng', 'ंग'], ['nj', 'ंज']
   ];
 
   const singleConsonants: Record<string, string> = {
@@ -96,15 +123,16 @@ function transliterateWord(word: string): string {
   };
 
   const initialVowels: Array<[string, string]> = [
-    ['aa', 'आ'], ['ee', 'ई'], ['ii', 'ई'], ['oo', 'ऊ'], ['uu', 'ऊ'],
-    ['ai', 'ऐ'], ['au', 'औ'], ['ou', 'औ'], ['ru', 'ऋ'], ['ri', 'ऋ'],
+    ['aai', 'आई'], ['aau', 'आऊ'], ['aa', 'आ'], ['ee', 'ई'], ['ii', 'ई'],
+    ['oo', 'ऊ'], ['uu', 'ऊ'], ['ai', 'ऐ'], ['au', 'औ'], ['ou', 'औ'],
+    ['om', 'ओं'], ['ru', 'ऋ'], ['ri', 'ऋ'],
     ['a', 'अ'], ['i', 'इ'], ['u', 'उ'], ['e', 'ए'], ['o', 'ओ']
   ];
 
   const matras: Array<[string, string]> = [
-    ['aa', 'ा'], ['ee', 'ी'], ['ii', 'ी'], ['oo', 'ू'], ['uu', 'ू'],
-    ['ai', 'ै'], ['au', 'ौ'], ['ou', 'ौ'], ['a', ''], ['i', 'ि'],
-    ['u', 'ु'], ['e', 'े'], ['o', 'ो']
+    ['aai', 'ाई'], ['aau', 'ाऊ'], ['aa', 'ा'], ['ee', 'ी'], ['ii', 'ी'],
+    ['oo', 'ू'], ['uu', 'ू'], ['ai', 'ै'], ['au', 'ौ'], ['ou', 'ौ'],
+    ['a', ''], ['i', 'ि'], ['u', 'ु'], ['e', 'े'], ['o', 'ो']
   ];
 
   let result = '';
@@ -147,7 +175,6 @@ function transliterateWord(word: string): string {
         let matchedMatra = false;
         for (const [vSeq, matra] of matras) {
           if (lower.startsWith(vSeq, i)) {
-            // Special rule: if 'a' is at the very end of a word (e.g. 'Pooja', 'Anita'), it represents 'ा'
             if (vSeq === 'a' && i === lower.length - 1) {
               result += 'ा';
             } else {
