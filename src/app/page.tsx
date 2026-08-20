@@ -302,7 +302,7 @@ export default function WaghambaApp() {
         <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
-              <div className="relative w-10 h-10 shrink-0 flex items-center justify-center bg-white rounded-full border shadow-sm overflow-hidden">
+              <div className="relative w-10 h-10 shrink-0 flex items-center justify-center bg-white rounded-xl border shadow-sm p-0.5 overflow-hidden">
                 <Image src={LOGO_PATH} alt="Logo" width={40} height={40} unoptimized className="object-contain w-full h-full" priority />
               </div>
               <h1 className="text-base font-display font-black uppercase text-primary leading-none tracking-tight">
@@ -517,7 +517,7 @@ export default function WaghambaApp() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-12">
           <div className="text-center space-y-6">
-            <div className="relative w-32 h-32 mx-auto mb-4 flex items-center justify-center bg-white rounded-full shadow-2xl border-4 border-primary/10 overflow-hidden">
+            <div className="relative w-32 h-32 mx-auto mb-4 flex items-center justify-center bg-white rounded-[2.5rem] shadow-2xl border-4 border-primary/10 p-2 overflow-hidden">
               <Image src={LOGO_PATH} alt="Logo" width={128} height={128} unoptimized className="object-contain w-full h-full" priority />
             </div>
             <h2 className="text-3xl font-display font-black text-primary tracking-tighter uppercase">{t.schoolName}</h2>
@@ -549,7 +549,7 @@ export default function WaghambaApp() {
         
         {/* Left Branding Column */}
         <div className="lg:col-span-5 text-center lg:text-left space-y-6">
-          <div className="relative w-36 h-36 sm:w-48 sm:h-48 mx-auto lg:mx-0 flex items-center justify-center overflow-hidden bg-white rounded-full shadow-2xl border-4 border-primary/10">
+          <div className="relative w-36 h-36 sm:w-48 sm:h-48 mx-auto lg:mx-0 flex items-center justify-center overflow-hidden bg-white rounded-[2.5rem] shadow-2xl border-4 border-primary/10 p-2 sm:p-3">
             <Image src={LOGO_PATH} alt="Logo" width={192} height={192} unoptimized className="object-contain w-full h-full" priority />
           </div>
 
