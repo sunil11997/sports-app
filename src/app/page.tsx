@@ -71,6 +71,7 @@ import { PerformanceHub } from '@/components/features/PerformanceHub';
 import { HallOfFame } from '@/components/features/HallOfFame';
 import { ClassesSection } from '@/components/features/ClassesSection';
 import { DailyReport } from '@/components/features/DailyReport';
+import { MatchScoreboard } from '@/components/features/MatchScoreboard';
 import { OtpLogin } from '@/components/features/OtpLogin';
 
 const translations = {
@@ -578,6 +579,7 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {[
+                      { id: "scoreboard-module", label: "Live Match Scoreboard", desc: "Digital Kabaddi, Volleyball & Kho-Kho Board", icon: Trophy, color: "bg-amber-500" },
                       { id: "icard-module", label: "Official ID Cards", desc: "Player Identity & Printable Forms", icon: IdCard, color: "bg-blue-900" },
                       { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
                       { id: "classes", label: "Students Registry", desc: "Std-wise Profiles", icon: ClipboardList, color: "bg-blue-600" },
@@ -614,6 +616,7 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "scoreboard-module" && <MatchScoreboard store={schoolData} />}
                     {subTab === "icard-module" && <PlayerIDCardManager store={schoolData} section={selectedSection || 'general'} />}
                     {subTab === "daily-report" && <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />}
                     {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
