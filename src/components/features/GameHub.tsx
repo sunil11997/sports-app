@@ -45,6 +45,7 @@ import { DailyPracticePlanner } from './DailyPracticePlanner';
 import { AutoPracticePlanner } from './AutoPracticePlanner';
 import { YogaPtHub } from './YogaPtHub';
 import { SportsLibrary } from './SportsLibrary';
+import { MatchScoreboard } from './MatchScoreboard';
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -113,6 +114,9 @@ export function GameHub({ store }: { store: any }) {
         <Tabs defaultValue="readiness" className="space-y-8">
           <div className="w-full overflow-x-auto scrollbar-hide pb-2">
             <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-2 w-max min-w-full">
+              <TabsTrigger value="scoreboard" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-2 border-2 border-amber-500/40 shadow-sm">
+                <Trophy className="w-3.5 h-3.5 text-amber-500" /> Scoreboard (लाईव्ह गुणफलक)
+              </TabsTrigger>
               <TabsTrigger value="id-cards" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-blue-900 data-[state=active]:text-amber-400 whitespace-nowrap flex items-center gap-2 border-2 border-amber-400/30">
                 <FileBadge className="w-4 h-4 text-amber-400" /> ID Cards (ओळखपत्रे)
               </TabsTrigger>
@@ -155,6 +159,9 @@ export function GameHub({ store }: { store: any }) {
             </TabsList>
           </div>
 
+          <TabsContent value="scoreboard" className="mt-0">
+            <MatchScoreboard store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
           <TabsContent value="id-cards" className="mt-0">
             <PlayerIDCardManager store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>
