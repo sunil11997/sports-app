@@ -5,13 +5,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 interface PWAContextType {
   isOnline: boolean;
   isInstallable: boolean;
-  installApp: () => void;
+  isStandalone: boolean;
+  installApp: () => Promise<boolean>;
 }
 
 const PWAContext = createContext<PWAContextType>({ 
   isOnline: true, 
   isInstallable: false, 
-  installApp: () => {} 
+  isStandalone: false,
+  installApp: async () => false 
 });
 
 export const usePWA = () => useContext(PWAContext);
@@ -20,9 +22,9 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState(true);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // 1. Connectivity Tracking
     if (typeof window !== 'undefined') {
       setIsOnline(navigator.onLine);
       const handleOnline = () => setIsOnline(true);
@@ -31,23 +33,33 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
 
-      // 2. Capture Install Prompt Event
+      // Check if already running in standalone PWA window
+      const checkStandalone = () => {
+        const isStandaloneMode = 
+          window.matchMedia('(display-mode: standalone)').matches || 
+          (window.navigator as any).standalone === true ||
+          document.referrer.includes('android-app://');
+        setIsStandalone(isStandaloneMode);
+      };
+
+      checkStandalone();
+
+      // Capture native beforeinstallprompt event
       const handleBeforeInstallPrompt = (e: Event) => {
-        // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
-        // Stash the event so it can be triggered later.
         setDeferredPrompt(e);
         setIsInstallable(true);
-        console.log("WGB: App is now installable");
+        console.log("WGB: Native PWA Install Prompt Captured!");
       };
 
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
 
-      // 3. Track successful installation
+      // Track successful app installation
       window.addEventListener('appinstalled', () => {
         setIsInstallable(false);
+        setIsStandalone(true);
         setDeferredPrompt(null);
-        console.log('WGB: App successfully installed');
+        console.log('WGB: App successfully installed to device!');
       });
 
       return () => {
@@ -58,27 +70,30 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const installApp = () => {
+  const installApp = async (): Promise<boolean> => {
     if (!deferredPrompt) {
-      console.warn("WGB: Install prompt not available yet.");
-      return;
+      return false;
     }
-    // Show the install prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
+
+    try {
+      // Show native Google Play / Chrome OS install prompt
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
       if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
+        console.log('User accepted native PWA install prompt');
+        setIsStandalone(true);
       }
       setDeferredPrompt(null);
       setIsInstallable(false);
-    });
+      return true;
+    } catch (err) {
+      console.warn("PWA install prompt error:", err);
+      return false;
+    }
   };
 
   return (
-    <PWAContext.Provider value={{ isOnline, isInstallable, installApp }}>
+    <PWAContext.Provider value={{ isOnline, isInstallable, isStandalone, installApp }}>
       {children}
     </PWAContext.Provider>
   );

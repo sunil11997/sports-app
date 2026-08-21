@@ -82,7 +82,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     bloodGroup: 'None'
   });
 
-  const [batchWeightMap, setBatchWeightMap] = useState<Record<string, { serialNumber: string; weight: string; height: string; dob: string }>>({});
+  const [batchWeightMap, setBatchWeightMap] = useState<Record<string, { serialNumber: string; generalRegisterNumber: string; weight: string; height: string; dob: string }>>({});
 
   const editingAgeValidation = useMemo(() => getAgeValidation(editingPlayer?.dob), [editingPlayer?.dob]);
   const newStudentAgeValidation = useMemo(() => getAgeValidation(newStudentData.dob), [newStudentData.dob]);
@@ -244,10 +244,11 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     let count = 0;
     Object.entries(batchWeightMap).forEach(([playerId, data]) => {
       const player = students.find((p: any) => p.id === playerId);
-      if (player && (data.weight !== undefined || data.height !== undefined || data.serialNumber !== undefined || data.dob !== undefined)) {
+      if (player && (data.weight !== undefined || data.height !== undefined || data.serialNumber !== undefined || data.generalRegisterNumber !== undefined || data.dob !== undefined)) {
         const hStr = data.height !== undefined ? data.height : (player.height || '');
         const wStr = data.weight !== undefined ? data.weight : (player.weight || '');
         const rollStr = data.serialNumber !== undefined ? data.serialNumber : (player.serialNumber || '');
+        const grStr = data.generalRegisterNumber !== undefined ? data.generalRegisterNumber : (player.generalRegisterNumber || '');
         const dobStr = data.dob !== undefined ? data.dob : (player.dob || '');
         
         let bmi = "---";
@@ -265,6 +266,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         store.updatePlayer({
           ...player,
           serialNumber: rollStr,
+          generalRegisterNumber: grStr,
           weight: wStr,
           height: hStr,
           dob: dobStr,
@@ -279,8 +281,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     toast({
       title: isMarathiView ? "माहिती अद्ययावत केली!" : "Batch Update Saved!",
       description: isMarathiView 
-        ? `${count} विद्यार्थ्यांचे हजेरी क्र. (Roll No), जन्मतारीख, वजन व उंची अद्ययावत केले.`
-        : `Updated Roll No, DOB, weight & height records for ${count} students.`,
+        ? `${count} विद्यार्थ्यांचे G.R. No., हजेरी क्र., जन्मतारीख, वजन व उंची अद्ययावत केले.`
+        : `Updated G.R. No, Roll No, DOB, weight & height records for ${count} students.`,
       className: "bg-emerald-600 text-white font-bold"
     });
     setIsBatchWeightOpen(false);
@@ -451,9 +453,10 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
              <UserPlus className="w-4 h-4" /> {isMarathiView ? 'थेट नाव नोंदवा' : 'Direct Add Student'}
            </Button>
            <Button onClick={() => {
-             const initialMap: Record<string, { serialNumber: string; weight: string; height: string; dob: string }> = {};
+             const initialMap: Record<string, { serialNumber: string; generalRegisterNumber: string; weight: string; height: string; dob: string }> = {};
              students.forEach((s: any) => initialMap[s.id] = { 
                serialNumber: s.serialNumber || '', 
+               generalRegisterNumber: s.generalRegisterNumber || '',
                weight: s.weight || '', 
                height: s.height || '',
                dob: s.dob || ''
@@ -1140,9 +1143,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         </DialogContent>
       </Dialog>
 
-      {/* 2. BATCH EDIT (ROLL, DOB, WEIGHT, HEIGHT) DIALOG */}
+      {/* 2. BATCH EDIT (G.R. NO, ROLL, DOB, WEIGHT, HEIGHT) DIALOG */}
       <Dialog open={isBatchWeightOpen} onOpenChange={setIsBatchWeightOpen}>
-        <DialogContent className="sm:max-w-[960px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col h-[85vh]">
+        <DialogContent className="sm:max-w-[1020px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col h-[85vh]">
           <DialogHeader className="bg-amber-600 p-6 text-white shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
@@ -1150,10 +1153,10 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
               </div>
               <div>
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">
-                  {isMarathiView ? `इयत्ता ${std} वी - हजेरी क्र. (Roll No), जन्मतारीख, वजन व उंची जलद बदल` : `Standard ${std} - Batch Roll No, DOB, Weight & Height Edit`}
+                  {isMarathiView ? `इयत्ता ${std} वी - G.R. No., हजेरी क्र., जन्मतारीख, वजन व उंची जलद बदल` : `Standard ${std} - Batch G.R. No, Roll No, DOB, Weight & Height Edit`}
                 </DialogTitle>
                 <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-0.5">
-                  {isMarathiView ? `एकाच वेळी सर्व ${students.length} विद्यार्थ्यांचे हजेरी नंबर, जन्मतारीख, वजन व उंची नोंदवा` : `Quickly update Roll Numbers, Date of Birth, weights and heights for all ${students.length} students`}
+                  {isMarathiView ? `एकाच वेळी सर्व ${students.length} विद्यार्थ्यांचे जनरल रजिस्टर नंबर (G.R.), हजेरी नंबर, जन्मतारीख, वजन व उंची नोंदवा` : `Quickly update G.R. Numbers, Roll Numbers, Date of Birth, weights and heights for all ${students.length} students`}
                 </p>
               </div>
             </div>
@@ -1163,19 +1166,26 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px] font-black text-xs">{isMarathiView ? 'हजेरी क्र. (Roll)' : 'Roll Number'}</TableHead>
+                  <TableHead className="w-[90px] font-black text-xs text-center">{isMarathiView ? 'हजेरी क्र.' : 'Roll No'}</TableHead>
+                  <TableHead className="w-[120px] font-black text-xs text-center">{isMarathiView ? 'G.R. No.' : 'G.R. Number'}</TableHead>
                   <TableHead className="font-black text-xs min-w-[160px]">{isMarathiView ? 'विद्यार्थी नाव' : 'Student Name'}</TableHead>
-                  <TableHead className="w-[160px] text-center font-black text-xs">{isMarathiView ? 'जन्मतारीख (DOB)' : 'Date of Birth (DOB)'}</TableHead>
-                  <TableHead className="w-[110px] text-center font-black text-xs">{isMarathiView ? 'वजन (Weight kg)' : 'Weight (kg)'}</TableHead>
-                  <TableHead className="w-[110px] text-center font-black text-xs">{isMarathiView ? 'उंची (Height cm)' : 'Height (cm)'}</TableHead>
+                  <TableHead className="w-[150px] text-center font-black text-xs">{isMarathiView ? 'जन्मतारीख (DOB)' : 'Date of Birth (DOB)'}</TableHead>
+                  <TableHead className="w-[100px] text-center font-black text-xs">{isMarathiView ? 'वजन (kg)' : 'Weight (kg)'}</TableHead>
+                  <TableHead className="w-[100px] text-center font-black text-xs">{isMarathiView ? 'उंची (cm)' : 'Height (cm)'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {students.map((student: any) => {
-                  const currentVals = batchWeightMap[student.id] || { serialNumber: student.serialNumber || '', weight: student.weight || '', height: student.height || '', dob: student.dob || '' };
+                  const currentVals = batchWeightMap[student.id] || { 
+                    serialNumber: student.serialNumber || '', 
+                    generalRegisterNumber: student.generalRegisterNumber || '',
+                    weight: student.weight || '', 
+                    height: student.height || '', 
+                    dob: student.dob || '' 
+                  };
                   return (
                     <TableRow key={student.id}>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <Input 
                           type="text"
                           placeholder="Roll No"
@@ -1184,12 +1194,24 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                             ...batchWeightMap,
                             [student.id]: { ...currentVals, serialNumber: e.target.value }
                           })}
-                          className="h-10 w-20 font-black text-xs rounded-lg border-2 border-amber-300 focus:border-amber-500 bg-amber-50/50 text-center"
+                          className="h-10 w-16 font-black text-xs rounded-lg border-2 border-amber-300 focus:border-amber-500 bg-amber-50/50 text-center mx-auto"
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Input 
+                          type="text"
+                          placeholder="G.R. No"
+                          value={currentVals.generalRegisterNumber}
+                          onChange={(e) => setBatchWeightMap({
+                            ...batchWeightMap,
+                            [student.id]: { ...currentVals, generalRegisterNumber: e.target.value }
+                          })}
+                          className="h-10 w-24 font-black text-xs rounded-lg border-2 border-indigo-300 focus:border-indigo-500 bg-indigo-50/40 text-center mx-auto"
                         />
                       </TableCell>
                       <TableCell>
-                        <p className="font-bold text-xs uppercase text-primary">{isMarathiView ? (student.nameMarathi || transliterateEnglishToMarathi(student.name) || student.name) : student.name}</p>
-                        <p className="text-[9px] text-muted-foreground font-bold">GR: {student.generalRegisterNumber || '---'}</p>
+                        <p className="font-bold text-xs uppercase text-primary leading-tight">{isMarathiView ? (student.nameMarathi || transliterateEnglishToMarathi(student.name) || student.name) : student.name}</p>
+                        <p className="text-[9px] text-muted-foreground font-semibold">{student.name}</p>
                       </TableCell>
                       <TableCell className="text-center">
                         <Input 
@@ -1205,25 +1227,25 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                       <TableCell className="text-center">
                         <Input 
                           type="number"
-                          placeholder="e.g. 42"
+                          placeholder="42"
                           value={currentVals.weight}
                           onChange={(e) => setBatchWeightMap({
                             ...batchWeightMap,
                             [student.id]: { ...currentVals, weight: e.target.value }
                           })}
-                          className="h-10 text-center font-black text-xs rounded-lg border-2 border-primary/20"
+                          className="h-10 text-center font-black text-xs rounded-lg border-2 border-primary/20 w-20 mx-auto"
                         />
                       </TableCell>
                       <TableCell className="text-center">
                         <Input 
                           type="number"
-                          placeholder="e.g. 150"
+                          placeholder="150"
                           value={currentVals.height}
                           onChange={(e) => setBatchWeightMap({
                             ...batchWeightMap,
                             [student.id]: { ...currentVals, height: e.target.value }
                           })}
-                          className="h-10 text-center font-black text-xs rounded-lg border-2 border-primary/20"
+                          className="h-10 text-center font-black text-xs rounded-lg border-2 border-primary/20 w-20 mx-auto"
                         />
                       </TableCell>
                     </TableRow>
@@ -1235,7 +1257,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
 
           <DialogFooter className="p-4 border-t bg-muted/10 shrink-0">
             <Button onClick={handleBatchWeightSave} className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-black uppercase tracking-wider text-xs shadow-lg active-scale">
-              <Save className="w-4 h-4 mr-2" /> {isMarathiView ? "सर्व हजेरी क्र. (Roll No), जन्मतारीख, वजन व उंची जतन करा" : "Save All Roll Numbers, DOB, Weights & Heights"}
+              <Save className="w-4 h-4 mr-2" /> {isMarathiView ? "सर्व G.R. No., हजेरी क्र., जन्मतारीख, वजन व उंची जतन करा" : "Save All G.R. No, Roll Numbers, DOB, Weights & Heights"}
             </Button>
           </DialogFooter>
         </DialogContent>

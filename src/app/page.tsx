@@ -38,7 +38,10 @@ import {
   Sparkles,
   MessageSquare,
   CheckCircle2,
-  Volume2
+  Volume2,
+  Download,
+  Smartphone,
+  Share2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -47,6 +50,7 @@ import { initiateAnonymousSignIn, initiateSignOut } from '@/firebase/non-blockin
 import { cn, isBirthdayToday, transliterateEnglishToMarathi } from '@/lib/utils';
 import { format, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { usePWA } from '@/components/providers/pwa-provider';
 
 /**
  * Platinum Hub v5.3 Stable
@@ -110,9 +114,26 @@ export default function WaghambaApp() {
   const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' || showSplash);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const { isInstallable, isStandalone, installApp } = usePWA();
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<string>('default');
   const [activeAchievements, setActiveAchievements] = useState<any[]>([]);
+
+  const handleTriggerAppInstall = useCallback(async () => {
+    if (isStandalone) {
+      toast({
+        title: "ॲप आधीच इन्स्टॉल आहे!",
+        description: "तुम्ही ॲप स्टँडअलोन मोडमध्ये वापरत आहात.",
+        className: "bg-emerald-600 text-white font-bold"
+      });
+      return;
+    }
+    const success = await installApp();
+    if (!success) {
+      setIsInstallGuideOpen(true);
+    }
+  }, [isStandalone, installApp, toast]);
 
   // Register Service Worker on mount for mobile push notifications
   useEffect(() => {
@@ -419,7 +440,17 @@ export default function WaghambaApp() {
                 {selectedSection === 'sports' ? "Sports Hub" : "Student Registry"}
               </h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {!isStandalone && (
+                <button 
+                  onClick={handleTriggerAppInstall} 
+                  className="h-8 px-2.5 sm:px-3 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 text-[10px] font-black tracking-wide border border-emerald-500/30 transition-all active-scale"
+                  title="ॲप इन्स्टॉल / डाउनलोड करा"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600 animate-bounce" />
+                  <span className="hidden sm:inline">ॲप इन्स्टॉल करा</span>
+                </button>
+              )}
               <button 
                 onClick={() => setIsNotificationOpen(true)} 
                 className="relative h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all active-scale"
@@ -656,6 +687,17 @@ export default function WaghambaApp() {
               <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest opacity-60">Profiles & Records</p>
             </button>
           </div>
+
+          {!isStandalone && (
+            <div className="flex justify-center pt-2">
+              <button 
+                onClick={handleTriggerAppInstall} 
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex items-center gap-2.5 text-xs font-black uppercase tracking-wider shadow-xl shadow-emerald-600/20 active-scale"
+              >
+                <Download className="w-4 h-4 animate-bounce" /> 📲 मोबाईल ॲप डाऊनलोड / इन्स्टॉल करा (Install App)
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -692,6 +734,14 @@ export default function WaghambaApp() {
 
           {/* Action Row */}
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+            {!isStandalone && (
+              <Button 
+                onClick={handleTriggerAppInstall} 
+                className="h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-600/30 active-scale"
+              >
+                <Download className="mr-2 w-4 h-4 animate-bounce" /> 📲 Install App
+              </Button>
+            )}
             <Button 
               onClick={toggleRotation} 
               variant="outline" 
@@ -806,6 +856,31 @@ export default function WaghambaApp() {
               </div>
             )}
 
+            {/* App Installation Section if not standalone */}
+            {!isStandalone && (
+              <div className="p-4 bg-emerald-50 rounded-2xl border-2 border-emerald-200 flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+                    📲
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-900 uppercase">वाघंबा ॲप डाउनलोड / इन्स्टॉल करा</p>
+                    <p className="text-[10px] font-semibold text-emerald-800">थेट फोनवर ॲप म्हणून चालवा (Standalone App).</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    setIsNotificationOpen(false);
+                    handleTriggerAppInstall();
+                  }}
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase rounded-xl h-9 px-3.5 shadow-md active-scale"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" /> इन्स्टॉल
+                </Button>
+              </div>
+            )}
+
             {/* Birthdays Section */}
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase text-rose-600 flex items-center gap-2 tracking-wider">
@@ -881,6 +956,60 @@ export default function WaghambaApp() {
               className="w-full h-11 rounded-xl bg-primary text-white font-black uppercase text-xs tracking-wider"
             >
               बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 📲 PWA Installation Guide Dialog */}
+      <Dialog open={isInstallGuideOpen} onOpenChange={setIsInstallGuideOpen}>
+        <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl bg-white">
+          <DialogHeader className="bg-gradient-to-br from-emerald-600 to-teal-700 p-6 text-white text-left">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+                <Smartphone className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-black uppercase tracking-tight text-white">
+                  मोबाईल ॲप डाऊनलोड / इन्स्टॉल करा
+                </DialogTitle>
+                <p className="text-[11px] font-bold text-white/80 uppercase tracking-widest mt-0.5">
+                  Install WGB Sports App on your device
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4 text-left bg-white">
+            <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 space-y-2">
+              <div className="flex items-center gap-2 text-emerald-950 font-black text-xs uppercase">
+                <span>🤖</span> Android / Google Chrome मध्ये:
+              </div>
+              <ol className="text-xs text-slate-700 space-y-1.5 list-decimal list-inside font-medium">
+                <li>क्रोम ब्राउझरच्या वरच्या उजव्या कोपऱ्यात <strong>३ डॉट्स (⋮)</strong> वर क्लिक करा.</li>
+                <li>यादीतील <strong>&apos;Install App (ॲप इन्स्टॉल करा)&apos;</strong> किंवा <strong>&apos;Add to Home screen&apos;</strong> निवडा.</li>
+                <li><strong>&apos;Install&apos;</strong> बटणावर क्लिक करा. ॲप थेट फोनच्या ॲप ड्रॉवरमध्ये येईल.</li>
+              </ol>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 space-y-2">
+              <div className="flex items-center gap-2 text-blue-950 font-black text-xs uppercase">
+                <span>🍎</span> iPhone / Safari ब्राउझर मध्ये:
+              </div>
+              <ol className="text-xs text-slate-700 space-y-1.5 list-decimal list-inside font-medium">
+                <li>सफारीच्या तळाशी असलेल्या <strong>Share (📤)</strong> चिन्हावर टॅप करा.</li>
+                <li>खाली स्क्रोल करून <strong>&apos;Add to Home Screen (होम स्क्रीनवर जोडा)&apos;</strong> निवडा.</li>
+                <li>वरच्या उजव्या कोपऱ्यात <strong>&apos;Add&apos;</strong> वर टॅप करा.</li>
+              </ol>
+            </div>
+          </div>
+
+          <DialogFooter className="p-4 bg-slate-50 border-t">
+            <Button 
+              onClick={() => setIsInstallGuideOpen(false)}
+              className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-xs tracking-wider"
+            >
+              समजले (Got it)
             </Button>
           </DialogFooter>
         </DialogContent>
