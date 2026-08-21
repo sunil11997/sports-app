@@ -1,9 +1,9 @@
 /**
- * Waghamba Sports Hub - Network-First Service Worker
- * Ensures Teacher Sunil always has the latest registry data.
+ * Waghamba Sports Hub - Network-First Service Worker with Mobile Push Notifications
+ * Ensures Teacher Sunil always gets birthday & achievement alerts on phone.
  */
 
-const CACHE_NAME = 'wgb-hub-v3.1';
+const CACHE_NAME = 'wgb-hub-v3.2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -16,6 +16,23 @@ self.addEventListener('activate', (event) => {
         cacheNames.filter((name) => name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
+    })
+  );
+});
+
+// Mobile Push / Background Notification Click Handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
     })
   );
 });

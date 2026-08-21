@@ -427,6 +427,162 @@ export function SportsLibrary({
     }
   };
 
+  // Generate Auto 30-Day Master Practice & Official Rules PDF
+  const handleGenerateAutoMasterPdf = (ruleItem: OfficialSportRule) => {
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true);
+    const teacherName = store.data.schoolProfile?.teacherName || 'सुनील देशमुख (B.P.Ed)';
+    const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, true);
+
+    const curriculum30Days = [
+      // Week 1: General & Specific Fitness
+      { day: 1, topic: "आरोग्य व फिटनेस बेसलाईन चाचणी", focus: "वजन, उंची, BMI आणि लवचिकता तपासणी", session: "वॉर्म-अप व १००० मी जॉगिंग", drills: "स्ट्रेचिंग व कोर व्यायाम" },
+      { day: 2, topic: "कार्डिओ स्टॅमिना व एरोबिक क्षमता", focus: "सतत धावणे व दमश्वास वाढवणे", session: "१५ मिनिटे सलग धावणे व पेसिंग", drills: "हाय-नी, बट-किक्स, साइड-स्टेप्स" },
+      { day: 3, topic: "चपळता (Agility) व फुटवर्क", focus: "जलद दिशा बदल आणि तोल", session: "झिग-झॅग कोन्स व लॅडर ड्रिल्स", drills: "शटल रन (१०x४ मी), फास्ट टर्निंग" },
+      { day: 4, topic: "कनिष्ठ शरीराची ताकद व स्फोटकता", focus: "पायांचे स्नायू व जंपिंग क्षमता", session: "बॉडीवेट स्क्वॅट्स व लंजिस", drills: "हॉपिंग, बाउंडिंग व स्क्वॅट जंप्स" },
+      { day: 5, topic: "वरच्या शरीराची ताकद व पोश्चर", focus: "खांदे, छाती व मनगट ताकद", session: "पुश-अप्स व प्लँक होल्ड्स", drills: "मेडिसिन बॉल थ्रो व आर्म ड्राइव्ह" },
+      { day: 6, topic: "रिफ्लेक्स व प्रतिक्रिया वेग (Speed)", focus: "व्हिसल/क्लॅपवर जलद ॲक्शन", session: "२० मी स्प्रिंट्स व स्टार्ट ड्रिल्स", drills: "रिएक्शन टॅप्स व फॉल्स स्टार्ट कंट्रोल" },
+      { day: 7, topic: "सक्रिय विश्रांती व योग स्ट्रेचिंग", focus: "स्नायूंची पुनर्प्राप्ती (Recovery)", session: "सूर्यनमस्कार व शवासन", drills: "प्राणायाम, अनुलोम-विलोम व हायड्रेशन" },
+
+      // Week 2: Fundamental Technical Skills
+      { day: 8, topic: "मूलभूत तंत्र १: मूव्हमेंट व पोझिशन", focus: "योग्य स्टॅन्स व मूळ हालचाली", session: "तांत्रिक पोझिशन ड्रिल (४० मि)", drills: "स्टॅन्स होल्ड व नियंत्रित पावले" },
+      { day: 9, topic: "मूलभूत तंत्र २: आक्रमक कौशल्ये", focus: "स्कोअरिंग व पॉईंट मिळवणे", session: "अटॅकिंग मूव्ह्स व टॅप्स सराव", drills: "हँड टच / स्पाईक / जंप शॉट ड्रिल्स" },
+      { day: 10, topic: "मूलभूत तंत्र ३: बचावात्मक कौशल्ये", focus: "डिफेन्स व प्रतिस्पर्ध्याला रोखणे", session: "डिफेन्सिव्ह ग्रिप / ब्लॉक सराव", drills: "अँकल होल्ड / नेट ब्लॉक / पोल टर्न" },
+      { day: 11, topic: "मूलभूत तंत्र ४: साखळी व जोडी सराव", focus: "दोन खेळाडूंमधील ताळमेळ", session: "पार्टनर ड्रिल्स व कव्हरिंग", drills: "२-प्लेअर चेन टॅकल / पासिंग कॉम्बिनेशन" },
+      { day: 12, topic: "मूलभूत तंत्र ५: जलद सुटका (Escape)", focus: "दडपणातून बाहेर पडणे", session: "काऊंटर-अटॅक व एस्केप ड्रिल्स", drills: "डुबकी / वाईप-ऑफ / फेक मूव्ह" },
+      { day: 13, topic: "तांत्रिक कौशल्यांची वेगवान पुनरावृत्ती", focus: "कौशल्यांमध्ये अचूकता व गती", session: "हाय-स्पीड स्किल सर्किट्स", drills: "सर्व मूलभूत तंत्रांची सलग चाचणी" },
+      { day: 14, topic: "आठवडा २ पुनरावलोकन व प्रात्यक्षिक", focus: "तांत्रिक त्रुटी दुरुस्ती", session: "व्हिडिओ / स्लो-मो फॉर्म करेक्शन", drills: "कोच वन-ऑन-वन सूचना" },
+
+      // Week 3: Tactical Formations & Decision IQ
+      { day: 15, topic: "रणनीती १: कोर्ट पोझिशनिंग", focus: "झोन कव्हरेज व जागा सांभाळणे", session: "कोर्ट फॉर्मेशन सेटअप (५-२ / ६-१)", drills: "रोटेशन व स्पेसिंग ड्रिल्स" },
+      { day: 16, topic: "रणनीती २: शेवटच्या मिनिटांचे संकट नियोजन", focus: "आघाडी टिकवणे / पिछाडी भरून काढणे", session: "डू-ऑर-डाय व क्लच सिच्युएशन", drills: "३०-सेकंद प्रेशर सराव" },
+      { day: 17, topic: "रणनीती ३: सुपर टॅकल / पॉवर प्ले", focus: "कमी खेळाडूंमध्ये जास्तीत जास्त गुण", session: "३ डिफेंडर्स स्ट्रॅटेजी सराव", drills: "कोऑर्डिनेटेड डॅश व ट्रॅप्स" },
+      { day: 18, topic: "रणनीती ४: प्रतिस्पर्ध्याच्या कमकुवत बाजूवर हल्ला", focus: "स्मार्ट गेम प्लॅन अंमलबजावणी", session: "टार्गेटेड सर्व्ह / वीक कॉर्नर अटॅक", drills: "रणनीतिक गेम सिम्युलेशन" },
+      { day: 19, topic: "रणनीती ५: सेट पीस व स्पेशल मूव्ह्स", focus: "नियोजित चाली व कॉलिंग सिस्टीम", session: "सिग्नल आधारित सांघिक चाली", drills: "ब्लाइंड पासेस व फेक कॉल्स" },
+      { day: 20, topic: "मानसिक कणखरता व संयम सराव", focus: "वादग्रस्त निर्णय / दडपणाखाली शांतता", session: "प्रेशर सिनेरिओ मॅच (१० मि)", drills: "श्वास नियंत्रण व फोकस ड्रिल्स" },
+      { day: 21, topic: "विश्रांती, स्ट्रॅटेजी चर्चा व हायड्रेशन", focus: "सामना विश्लेषण व मानसिक तयारी", session: "ब्लॅकबोर्ड टॅक्टिकल चर्चा", drills: "स्ट्रेचिंग व हलका वॉक" },
+
+      // Week 4: Match Play & Competition Polish
+      { day: 22, topic: "इंट्रा-स्कूल मॅच १ (पूर्ण वेळ सामना)", focus: "सामना अनुभव व नियम पालन", session: "अधिकृत रेफ्रीसह सराव सामना", drills: "मॅच कंडिशन व टाईम कीपिंग" },
+      { day: 23, topic: "सामना १ विश्लेषण व दुरुस्ती सराव", focus: "झालेल्या चुकांचे मैदानावर निरसन", session: "फॉऊल्स व टर्नओव्हर ड्रिल्स", drills: "सुधारणात्मक स्किल प्रॅक्टिस" },
+      { day: 24, topic: "इंट्रा-स्कूल मॅच २ (हाय-स्पीड सामना)", focus: "वेगवान निर्णय व फिनिशिंग", session: "वेगवान पेसने सराव सामना", drills: "फास्ट ब्रेक व काऊंटर अटॅक" },
+      { day: 25, topic: "सामना २ विश्लेषण व शारीरिक तयारी", focus: "रिकव्हरी व अंतिम संघ निवड", session: "हलका चेंडू सराव व स्ट्रेचिंग", drills: "मायोफेशियल रीलिझ व आराम" },
+      { day: 26, topic: "स्पर्धा पूर्व अंतिम सराव सामना", focus: "पूर्ण ताकदीने सांघिक प्रात्यक्षिक", session: "डिव्हिजन / डिस्ट्रीक्ट लेव्हल सामना", drills: "सर्व नियमांचे १००% तंतोतंत पालन" },
+      { day: 27, topic: "कॅप्टन व की-प्लेयर्स स्पेशल सेशन", focus: "लीडरशिप व मैदानातील संवाद", session: "कॅप्टन कॉल्स व रणनीती रीव्ह्यू", drills: "क्रिटिकल डिसिजन रिहर्सल" },
+      { day: 28, topic: "अंतिम वॉर्म-अप व किट इन्स्पेक्शन", focus: "जर्सी, शूज व मानसिक सज्जता", session: "लाइट मोबिलिटी व टॅक्टिकल टच", drills: "रिलॅक्सेशन व संघ भावना" },
+
+      // Days 29-30: Evaluation & Grading
+      { day: 29, topic: "अधिकृत तांत्रिक कौशल्य मूल्यमापन (1-10 Grading)", focus: "प्रत्येक विद्यार्थ्याची वैयक्तिक चाचणी", session: "१०-पॉइंट गुणवत्ता स्कोअरिंग", drills: "मास्टर, प्रगत व मध्यम श्रेणी नोंद" },
+      { day: 30, topic: "अंतिम फिटनेस व यश सन्मान सोहळा", focus: "३० दिवसांच्या प्रगतीचा अधिकृत अहवाल", session: "प्रशस्तिपत्रक व संघ घोषणा", drills: "शाळा डिजिटल दस्तऐवजीकरण पूर्ण" }
+    ];
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${ruleItem.sport} - ३० दिवसांचे अधिकृत सराव नियोजन व नियम पुस्तिका</title>
+          <meta charset="utf-8" />
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap');
+            @media print {
+              @page { size: A4 portrait; margin: 0.8cm; }
+              .no-print { display: none !important; }
+              body { padding-top: 0 !important; background: #fff !important; }
+              .page-break { page-break-before: always; }
+            }
+            body { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; padding: 20px; color: #0f172a; line-height: 1.4; background: #fff; font-size: 10.5px; }
+            .header-box { text-align: center; border-bottom: 2.5px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 12px; }
+            .school-name { font-size: 17px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin: 0; }
+            .sub-title { font-size: 12.5px; font-weight: 800; color: #b45309; margin-top: 3px; text-transform: uppercase; }
+            .meta-bar { background: #f1f5f9; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: 800; display: flex; justify-content: space-between; margin-bottom: 14px; border: 1px solid #cbd5e1; }
+            .section-title { background: #1e3a8a; color: white; padding: 5px 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; border-radius: 4px; margin: 12px 0 6px 0; }
+            .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+            .rule-card { border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; background: #f8fafc; }
+            .rule-card strong { color: #1e3a8a; font-size: 10.5px; display: block; margin-bottom: 2px; }
+            .curriculum-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 9.5px; }
+            .curriculum-table th, .curriculum-table td { border: 1px solid #cbd5e1; padding: 4.5px 6px; text-align: left; vertical-align: middle; }
+            .curriculum-table th { background: #1e3a8a; color: white; text-transform: uppercase; font-weight: 800; font-size: 9px; }
+            .curriculum-table tr:nth-child(even) { background: #f8fafc; }
+            .day-badge { background: #dbeafe; color: #1e3a8a; font-weight: 900; padding: 1px 4px; border-radius: 3px; text-align: center; display: inline-block; font-size: 9px; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+            .btn { cursor: pointer; padding: 8px 16px; border-radius: 6px; font-weight: 900; text-transform: uppercase; font-size: 11px; border: none; }
+            .btn-back { background: rgba(255,255,255,0.15); color: white; }
+            .btn-print { background: #f59e0b; color: white; }
+          </style>
+        </head>
+        <body style="padding-top: 55px;">
+          <div class="no-print print-controls">
+            <button onclick="window.close()" class="btn btn-back">&larr; मागे जा (GO BACK)</button>
+            <button onclick="window.print()" class="btn btn-print">🖨️ अधिकृत PDF प्रिंट करा / SAVE AS PDF</button>
+          </div>
+
+          <div class="header-box">
+            <h1 class="school-name">${schoolName}</h1>
+            <div class="sub-title">क्रीडा विभाग: ३० दिवसांचे वार्षिक / मासिक सराव नियोजन व अधिकृत नियम पुस्तिका</div>
+          </div>
+
+          <div class="meta-bar">
+            <span><strong>खेळ:</strong> ${ruleItem.sportMr}</span>
+            <span><strong>कालावधी:</strong> ३० दिवस सराव चक्र (Microcycle)</span>
+            <span><strong>क्रीडा शिक्षक:</strong> ${teacherName}</span>
+            <span><strong>तारीख:</strong> ${format(new Date(), 'dd MMMM yyyy')}</span>
+          </div>
+
+          <!-- Section 1: Ground & Official Rules -->
+          <div class="section-title">भाग १: मैदान मोजमाप व अधिकृत नियम (Court Dimensions & Key Rules)</div>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 10px;">
+            <strong>मैदान मोजमाप:</strong> ${ruleItem.courtDimensions} &bull; 
+            <strong>खेळाडू संख्या:</strong> ${ruleItem.playerCount} &bull; 
+            <strong>सामना वेळ:</strong> ${ruleItem.duration}
+          </div>
+
+          <div class="rules-grid">
+            ${ruleItem.rules.map(r => `
+              <div class="rule-card">
+                <strong>${r.title}</strong>
+                <div>${r.descMr}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Section 2: 30-Day Curriculum -->
+          <div class="section-title">भाग २: ३० दिवसांचे चरणबद्ध सराव वेळापत्रक (30-Day Ground Practice Curriculum)</div>
+          <table class="curriculum-table">
+            <thead>
+              <tr>
+                <th style="width: 7%;">दिवस</th>
+                <th style="width: 25%;">दैनिक घटक (Topic)</th>
+                <th style="width: 28%;">मुख्य उद्दिष्ट (Focus)</th>
+                <th style="width: 20%;">सराव सत्र (Session)</th>
+                <th style="width: 20%;">विशिष्ट ड्रिल्स (Drills)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${curriculum30Days.map(c => `
+                <tr>
+                  <td style="text-align: center;"><span class="day-badge">दिवस ${c.day}</span></td>
+                  <td><strong>${c.topic}</strong></td>
+                  <td>${c.focus}</td>
+                  <td>${c.session}</td>
+                  <td>${c.drills}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="page-break"></div>
+          <div style="margin-top: 20px;">
+            ${signatureBlockHtml}
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    win?.document.write(printContent);
+    win?.document.close();
+  };
+
   // Download PDF Locally
   const handleDownloadPdf = (pdfData: string, sport: string) => {
     const link = document.createElement('a');
@@ -622,6 +778,16 @@ export function SportsLibrary({
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Auto 30-Day Master PDF Generator Button */}
+                <div className="pt-2 border-t">
+                  <Button 
+                    onClick={() => handleGenerateAutoMasterPdf(item)}
+                    className="w-full h-11 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-600 hover:to-amber-600 text-slate-950 font-black uppercase text-[10px] tracking-wider rounded-xl shadow-md active-scale flex items-center justify-center gap-2 border border-amber-600/30"
+                  >
+                    <Sparkles className="w-4 h-4 text-slate-950" /> ३० दिवसांचे सराव व नियम PDF जनरेट करा
+                  </Button>
                 </div>
 
               </CardContent>

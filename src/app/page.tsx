@@ -32,12 +32,19 @@ import {
   ClipboardList,
   Crown,
   RotateCw,
-  IdCard
+  IdCard,
+  Bell,
+  Gift,
+  Sparkles,
+  MessageSquare,
+  CheckCircle2,
+  Volume2
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
-import { cn, isBirthdayToday } from '@/lib/utils';
+import { cn, isBirthdayToday, transliterateEnglishToMarathi } from '@/lib/utils';
 import { format, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -103,7 +110,11 @@ export default function WaghambaApp() {
   const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' || showSplash);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<string>('default');
+  const [activeAchievements, setActiveAchievements] = useState<any[]>([]);
 
+  // Register Service Worker on mount for mobile push notifications
   useEffect(() => {
     setIsMounted(true);
     setHeaderDate(format(new Date(), 'dd MMM yyyy'));
@@ -112,6 +123,19 @@ export default function WaghambaApp() {
       const savedOtpUser = localStorage.getItem('wgb_otp_auth_user');
       if (savedOtpUser) {
         setOtpUser(savedOtpUser);
+      }
+
+      if ('Notification' in window) {
+        setNotificationPermission(Notification.permission);
+      }
+
+      // Register service worker for Android Chrome & mobile PWA
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+          console.log('Service Worker registered for mobile push:', reg.scope);
+        }).catch((err) => {
+          console.warn('SW registration error:', err);
+        });
       }
     }
 
@@ -123,6 +147,85 @@ export default function WaghambaApp() {
     const timer = setTimeout(() => setShowSplash(false), 3500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Request Notification Permission from User (Touch triggered for mobile browser compliance)
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      toast({ title: "असमर्थित", description: "या ब्राउझरमध्ये नोटिफिकेशन्स समर्थित नाहीत." });
+      return;
+    }
+
+    try {
+      const perm = await Notification.requestPermission();
+      setNotificationPermission(perm);
+      if (perm === 'granted') {
+        if ('vibrate' in navigator) {
+          try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+        }
+        toast({
+          title: "🔔 मोबाईल सूचना सुरू झाल्या!",
+          description: "आता खेळाडूंचा वाढदिवस व यशाच्या सूचना थेट तुमच्या फोनवर येतील.",
+          className: "bg-emerald-600 text-white font-bold"
+        });
+
+        // Test push notification
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification("वाघंबा स्पोर्ट्स हब 🏆", {
+              body: "मोबाईल सूचना यशस्वीरित्या सक्रिय केल्या आहेत!",
+              icon: '/icon-512.png',
+              badge: '/icon-192.png'
+            });
+          });
+        }
+      } else {
+        toast({ title: "सूचना नाकारल्या", description: "तुम्ही ब्राउझर सेटिंग्जमधून सूचना सुरू करू शकता.", variant: "destructive" });
+      }
+    } catch (e) {
+      console.warn("Permission request error:", e);
+    }
+  }, [toast]);
+
+  // Robust Mobile & Desktop Notification Dispatcher
+  const sendAppAlert = useCallback(async (title: string, body: string, icon = '/icon-512.png') => {
+    if (typeof window === 'undefined') return;
+
+    // Mobile Vibration
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate([200, 100, 200]); } catch (e) {}
+    }
+
+    // 1. Android / Mobile Service Worker Push
+    if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg) {
+          await (reg as any).showNotification(title, {
+            body,
+            icon,
+            badge: '/icon-192.png',
+            tag: title,
+            vibrate: [200, 100, 200],
+            data: { url: '/' }
+          });
+          return;
+        }
+      } catch (e) {
+        console.warn('SW notification fallback:', e);
+      }
+    }
+
+    // 2. Desktop Notification fallback
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, { body, icon });
+        return;
+      } catch (e) {}
+    }
+
+    // 3. In-App Toast
+    toast({ title, description: body });
+  }, [toast]);
 
   useEffect(() => {
     if (activeTab === 'home') setSubTab('overview');
@@ -140,34 +243,19 @@ export default function WaghambaApp() {
   useEffect(() => {
     if (!schoolData.isLoaded || !schoolData.data.players) return;
 
-    // Request web notifications permission silently if default
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
-    }
-
-    const sendAppAlert = (title: string, body: string) => {
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(title, { body, icon: '/icon-512.png' });
-        } catch (e) {
-          toast({ title, description: body });
-        }
-      } else {
-        toast({ title, description: body });
-      }
-    };
-
     const todayDate = format(new Date(), 'yyyy-MM-dd');
     const todayBirthdayKey = format(new Date(), 'MM-dd');
 
-    // 1. Birthday Checks (Daily Notification)
+    // 1. Birthday Checks (Daily Mobile Push Notification)
+    const bdays = (schoolData.data.players || []).filter((p: any) => isBirthdayToday(p.dob));
     const lastBirthdayNotify = localStorage.getItem('wgb_birthday_notify_date');
-    if (lastBirthdayNotify !== todayDate) {
-      const bdays = (schoolData.data.players || []).filter((p: any) => isBirthdayToday(p.dob));
+
+    if (lastBirthdayNotify !== todayDate && bdays.length > 0) {
       bdays.forEach((p: any) => {
+        const displayName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
         sendAppAlert(
-          "Happy Birthday! 🎂🎉",
-          `Wishing ${p.name.toUpperCase()} (${p.std ? `Std ${p.std}` : p.category || 'Player'}) a very happy birthday today!`
+          "🎂 वाढदिवसाच्या हार्दिक शुभेच्छा! 🎉",
+          `${displayName} (इयत्ता ${p.std || '---'} वी) चा आज वाढदिवस आहे! शुभेच्छा देण्यासाठी टॅप करा.`
         );
       });
       localStorage.setItem('wgb_birthday_notify_date', todayDate);
@@ -183,9 +271,11 @@ export default function WaghambaApp() {
       const notifiedKey = 'wgb_notified_achievements';
       const notifiedMap = JSON.parse(localStorage.getItem(notifiedKey) || '{}');
       let mapChanged = false;
+      const achievementsList: any[] = [];
 
       players.forEach((p: any) => {
         if (p.category !== 'athlete') return;
+        const displayName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
 
         // A. Consistency King: streak >= 15
         let streak = 0;
@@ -198,13 +288,22 @@ export default function WaghambaApp() {
         }
 
         const consistencyKey = `${p.id}_consistency`;
-        if (streak >= 15 && !notifiedMap[consistencyKey]) {
-          sendAppAlert(
-            "New Achievement! 🏆🔥",
-            `${p.name.toUpperCase()} has earned the 'Consistency King' badge with a ${streak}-day practice streak!`
-          );
-          notifiedMap[consistencyKey] = true;
-          mapChanged = true;
+        if (streak >= 15) {
+          achievementsList.push({
+            id: consistencyKey,
+            player: p,
+            title: "🔥 सराव सातत्य विजेता (Consistency King)",
+            desc: `${displayName} ने सलग ${streak} दिवस सरावाला उपस्थित राहून विक्रम केला आहे.`
+          });
+
+          if (!notifiedMap[consistencyKey]) {
+            sendAppAlert(
+              "🏆 नवीन क्रीडा यश प्राप्त!",
+              `${displayName} ने सलग ${streak} दिवसांचा सराव पूर्ण करून 'Consistency King' बॅज मिळवला!`
+            );
+            notifiedMap[consistencyKey] = true;
+            mapChanged = true;
+          }
         }
 
         // B. Recovery Champion
@@ -213,15 +312,26 @@ export default function WaghambaApp() {
         const isRecoveryChampion = hadCriticalInjury && (fitData.status === 'Elite' || fitData.status === 'Optimal');
 
         const recoveryKey = `${p.id}_recovery`;
-        if (isRecoveryChampion && !notifiedMap[recoveryKey]) {
-          sendAppAlert(
-            "New Achievement! 🏆🛡️",
-            `${p.name.toUpperCase()} has earned the 'Recovery Champion' badge after recovering to ${fitData.status} fitness!`
-          );
-          notifiedMap[recoveryKey] = true;
-          mapChanged = true;
+        if (isRecoveryChampion) {
+          achievementsList.push({
+            id: recoveryKey,
+            player: p,
+            title: "🛡️ रिकव्हरी चॅम्पियन (Recovery Champion)",
+            desc: `${displayName} दुखापतीतून पूर्णपणे बरा होऊन ${fitData.status} फिटनेस पातळीवर परतला आहे.`
+          });
+
+          if (!notifiedMap[recoveryKey]) {
+            sendAppAlert(
+              "🛡️ दुखापतीतून यशस्वी पुनरागमन!",
+              `${displayName} ने १००% तंदुरुस्ती मिळवून 'Recovery Champion' बॅज प्राप्त केला!`
+            );
+            notifiedMap[recoveryKey] = true;
+            mapChanged = true;
+          }
         }
       });
+
+      setActiveAchievements(achievementsList);
 
       if (mapChanged) {
         localStorage.setItem(notifiedKey, JSON.stringify(notifiedMap));
@@ -230,7 +340,7 @@ export default function WaghambaApp() {
       console.warn("Failed to check achievements: ", err);
     }
 
-  }, [schoolData.isLoaded, schoolData.data, toast]);
+  }, [schoolData.isLoaded, schoolData.data, sendAppAlert]);
 
   const toggleRotation = useCallback(async () => {
     try {
@@ -310,6 +420,18 @@ export default function WaghambaApp() {
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsNotificationOpen(true)} 
+                className="relative h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all active-scale"
+                title="सूचना व वाढदिवस (Notifications)"
+              >
+                <Bell className="w-4 h-4" />
+                {(birthdaysToday.length > 0 || activeAchievements.length > 0) && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center animate-pulse border border-white shadow-sm">
+                    {birthdaysToday.length + activeAchievements.length}
+                  </span>
+                )}
+              </button>
               <button onClick={toggleRotation} className="h-8 w-8 rounded-full bg-primary/5 text-primary flex items-center justify-center hover:bg-primary/10 transition-colors">
                 <RotateCw className="w-4 h-4" />
               </button>
@@ -645,6 +767,124 @@ export default function WaghambaApp() {
         </div>
 
       </div>
+
+      {/* 🔔 Interactive Notification Center & Birthday Alert Modal */}
+      <Dialog open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+        <DialogContent className="max-w-lg rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl bg-white">
+          <DialogHeader className="bg-gradient-to-r from-slate-900 via-primary to-indigo-950 p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
+                  <Bell className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-black uppercase tracking-tight text-white leading-none">
+                    सूचना केंद्र (Notification Center)
+                  </DialogTitle>
+                  <span className="text-[10px] font-bold text-white/70 uppercase">
+                    वाढदिवस व क्रीडा यशाच्या थेट मोबाईल सूचना
+                  </span>
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
+            {/* Permission request alert banner if not granted */}
+            {notificationPermission !== 'granted' && (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                  <Volume2 className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>मोबाईलवर थेट नोटिफिकेशन अलर्ट मिळवण्यासाठी सूचना सुरू करा.</span>
+                </div>
+                <Button 
+                  onClick={requestNotificationPermission}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase h-10 rounded-xl shadow-sm"
+                >
+                  🔔 मोबाईल सूचना सुरू करा (Enable Notifications)
+                </Button>
+              </div>
+            )}
+
+            {/* Birthdays Section */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase text-rose-600 flex items-center gap-2 tracking-wider">
+                <Cake className="w-4 h-4" /> आजचे वाढदिवस (Today&apos;s Birthdays - {birthdaysToday.length})
+              </h4>
+              {birthdaysToday.length === 0 ? (
+                <div className="p-4 bg-slate-50 rounded-2xl border text-center text-xs text-muted-foreground font-bold">
+                  आज कोणाचाही वाढदिवस नाही.
+                </div>
+              ) : (
+                birthdaysToday.map((p: any) => {
+                  const displayName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
+                  const wishText = encodeURIComponent(`🎉 शासकीय माध्यमिक आश्रम शाळा वाघंबा कडून *${displayName}* (इयत्ता ${p.std || '---'} वी) ला वाढदिवसाच्या हार्दिक क्रीडा शुभेच्छा! 🎂💐🏆`);
+                  const phone = p.mobileNumber ? p.mobileNumber.replace(/\D/g, '') : '';
+                  const wishUrl = phone ? `https://wa.me/91${phone}?text=${wishText}` : `https://wa.me/?text=${wishText}`;
+
+                  return (
+                    <div key={p.id} className="p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border-2 border-rose-200 flex items-center justify-between gap-3 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center font-black text-sm shadow-md">
+                          🎂
+                        </div>
+                        <div>
+                          <p className="font-black text-sm text-slate-900 uppercase leading-none">{displayName}</p>
+                          <span className="text-[10px] font-bold text-rose-700 uppercase mt-0.5 block">
+                            इयत्ता {p.std || '---'} वी &bull; Roll #{p.serialNumber || '0'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <a 
+                        href={wishUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="h-9 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-[10px] uppercase flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> शुभेच्छा द्या
+                      </a>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Achievements Section */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2 tracking-wider">
+                <Crown className="w-4 h-4 text-amber-500" /> अलीकडील यश व सन्मान (Recent Achievements)
+              </h4>
+              {activeAchievements.length === 0 ? (
+                <div className="p-4 bg-slate-50 rounded-2xl border text-center text-xs text-muted-foreground font-bold">
+                  सध्या नवीन यश प्रलंबित आहेत. सराव सुरू ठेवा!
+                </div>
+              ) : (
+                activeAchievements.map((ach: any) => (
+                  <div key={ach.id} className="p-4 rounded-2xl bg-slate-50 border-2 flex items-start gap-3">
+                    <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                      <Medal className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="font-black text-xs text-slate-900 uppercase leading-tight">{ach.title}</p>
+                      <p className="text-[11px] text-slate-600 font-medium mt-1 leading-snug">{ach.desc}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="p-4 bg-slate-50 border-t">
+            <Button 
+              onClick={() => setIsNotificationOpen(false)} 
+              className="w-full h-11 rounded-xl bg-primary text-white font-black uppercase text-xs tracking-wider"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
