@@ -28,25 +28,23 @@ import {
   FileBadge,
   BookOpen
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
-
-const PlayerIDCardManager = dynamic(() => import('./PlayerIDCardManager').then(m => m.PlayerIDCardManager), { ssr: false });
-const SportsSkills = dynamic(() => import('./SportsSkills').then(m => m.SportsSkills), { ssr: false });
-const SportsDrills = dynamic(() => import('./SportsDrills').then(m => m.SportsDrills), { ssr: false });
-const TournamentRosters = dynamic(() => import('./TournamentRosters').then(m => m.TournamentRosters), { ssr: false });
-const Teams = dynamic(() => import('./Teams').then(m => m.Teams), { ssr: false });
-const HealthIncidents = dynamic(() => import('./HealthIncidents').then(m => m.HealthIncidents), { ssr: false });
-const DailyReport = dynamic(() => import('./DailyReport').then(m => m.DailyReport), { ssr: false });
-const DailyReadiness = dynamic(() => import('./DailyReadiness').then(m => m.DailyReadiness), { ssr: false });
-const TacticalAnalytics = dynamic(() => import('./TacticalAnalytics').then(m => m.TacticalAnalytics), { ssr: false });
-const TacticalPlaybook = dynamic(() => import('./TacticalPlaybook').then(m => m.TacticalPlaybook), { ssr: false });
-const GoalTracker = dynamic(() => import('./GoalTracker').then(m => m.GoalTracker), { ssr: false });
-const TeamPlanner = dynamic(() => import('./TeamPlanner').then(m => m.TeamPlanner), { ssr: false });
-const DailyPracticePlanner = dynamic(() => import('./DailyPracticePlanner').then(m => m.DailyPracticePlanner), { ssr: false });
-const AutoPracticePlanner = dynamic(() => import('./AutoPracticePlanner').then(m => m.AutoPracticePlanner), { ssr: false });
-const YogaPtHub = dynamic(() => import('./YogaPtHub').then(m => m.YogaPtHub), { ssr: false });
-const SportsLibrary = dynamic(() => import('./SportsLibrary').then(m => m.SportsLibrary), { ssr: false });
+import { PlayerIDCardManager } from './PlayerIDCardManager';
+import { SportsSkills } from './SportsSkills';
+import { SportsDrills } from './SportsDrills';
+import { TournamentRosters } from './TournamentRosters';
+import { Teams } from './Teams';
+import { HealthIncidents } from './HealthIncidents';
+import { DailyReport } from './DailyReport';
+import { DailyReadiness } from './DailyReadiness';
+import { TacticalAnalytics } from './TacticalAnalytics';
+import { TacticalPlaybook } from './TacticalPlaybook';
+import { GoalTracker } from './GoalTracker';
+import { TeamPlanner } from './TeamPlanner';
+import { DailyPracticePlanner } from './DailyPracticePlanner';
+import { AutoPracticePlanner } from './AutoPracticePlanner';
+import { YogaPtHub } from './YogaPtHub';
+import { SportsLibrary } from './SportsLibrary';
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },

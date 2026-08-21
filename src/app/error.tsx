@@ -17,60 +17,88 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to your institutional monitoring service if available
     console.error('WGB-App-Error:', error);
 
-    // Automatically reload the page if it's a chunk loading failure (usually due to a new Vercel deployment)
     const isChunkError = 
       error.name === 'ChunkLoadError' || 
       (error.message && (
         error.message.toLowerCase().includes('chunk') || 
         error.message.toLowerCase().includes('loading css chunk') ||
-        error.message.toLowerCase().includes('loading chunk')
+        error.message.toLowerCase().includes('loading chunk') ||
+        error.message.toLowerCase().includes('failed to fetch dynamically imported module')
       ));
 
     if (isChunkError) {
       const lastReload = sessionStorage.getItem('chunk_reload_time');
       const now = Date.now();
-      // Only reload if we haven't reloaded due to a chunk error in the last 10 seconds
-      if (!lastReload || now - parseInt(lastReload) > 10000) {
+      if (!lastReload || now - parseInt(lastReload) > 5000) {
         sessionStorage.setItem('chunk_reload_time', now.toString());
-        console.log('Detected chunk loading failure. Reloading page...');
-        window.location.reload();
+        console.log('Detected chunk loading failure. Purging cache and reloading page...');
+        if (typeof window !== 'undefined') {
+          if ('caches' in window && window.caches) {
+            window.caches.keys().then(names => {
+              Promise.all(names.map(name => window.caches.delete(name))).then(() => {
+                window.location.reload();
+              });
+            });
+          } else {
+            window.location.reload();
+          }
+        }
       }
     }
   }, [error]);
 
+  const handleHardRefresh = () => {
+    if (typeof window !== 'undefined') {
+      if ('caches' in window && window.caches) {
+        window.caches.keys().then(names => {
+          Promise.all(names.map(name => window.caches.delete(name))).finally(() => {
+            window.location.href = '/';
+          });
+        });
+      } else {
+        window.location.href = '/';
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-white text-center">
-      <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in-95 duration-500">
-        <div className="w-24 h-24 bg-destructive/10 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
-          <AlertCircle className="w-12 h-12 text-destructive" />
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-center">
+      <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-20 h-20 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mx-auto shadow-inner text-primary">
+          <AlertCircle className="w-10 h-10" />
         </div>
         
-        <div className="space-y-3">
-          <h2 className="text-3xl font-black text-primary uppercase tracking-tight">System Interruption</h2>
-          <p className="text-muted-foreground text-sm font-medium leading-relaxed">
-            The Physical Ed &amp; Sports Hub encountered a temporary issue. This is usually caused by a sync timeout or a missing internet connection.
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-primary uppercase tracking-tight">ॲप अपडेट / सिस्टम रिफ्रेश</h2>
+          <p className="text-muted-foreground text-xs font-semibold leading-relaxed">
+            ॲपचे नवीन व्हर्जन उपलब्ध आहे. कृपया नवीन बदल लोड करण्यासाठी खालील बटण दाबा.
           </p>
-          {error.message && (
-            <div className="mt-4 p-4 bg-muted/50 rounded-2xl text-[10px] font-mono text-muted-foreground break-all border border-dashed border-muted-foreground/20">
-              System Log: {error.message}
-            </div>
-          )}
+          <p className="text-muted-foreground/60 text-[11px] font-medium">
+            (New institutional build available. Tap below to refresh and load latest version.)
+          </p>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-2 space-y-3">
           <Button 
-            onClick={() => reset()}
-            className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-widest shadow-xl active-scale transition-all"
+            onClick={handleHardRefresh}
+            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest shadow-xl active-scale transition-all"
           >
-            <RefreshCcw className="w-5 h-5 mr-2" /> Reload Institutional Registry
+            <RefreshCcw className="w-4 h-4 mr-2 animate-spin" /> अपडेट करा व हब उघडा (Reload Hub)
           </Button>
-          <p className="mt-6 text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">
-            Waghamba Ashram Shala &bull; Error Recovery Hub
-          </p>
+          <Button 
+            variant="outline"
+            onClick={() => reset()}
+            className="w-full h-12 rounded-xl font-bold uppercase text-[11px] text-muted-foreground"
+          >
+            पुन्हा प्रयत्न करा (Retry)
+          </Button>
         </div>
+
+        <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.25em]">
+          शासकीय माध्यमिक आश्रम शाळा वाघंबा &bull; v6.0.0
+        </p>
       </div>
     </div>
   );

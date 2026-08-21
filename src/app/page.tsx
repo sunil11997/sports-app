@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -73,7 +72,6 @@ import { HallOfFame } from '@/components/features/HallOfFame';
 import { ClassesSection } from '@/components/features/ClassesSection';
 import { DailyReport } from '@/components/features/DailyReport';
 import { OtpLogin } from '@/components/features/OtpLogin';
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
   English: {
