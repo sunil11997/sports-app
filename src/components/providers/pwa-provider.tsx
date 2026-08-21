@@ -62,10 +62,44 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         console.log('WGB: App successfully installed to device!');
       });
 
+      // Auto-recover from chunk loading errors (e.g. after deployments or cache mismatch)
+      const handleChunkError = (err: any) => {
+        const message = err?.message || err?.reason?.message || String(err?.reason || err || '');
+        const isChunkError = 
+          message.includes('Loading chunk') || 
+          message.includes('ChunkLoadError') || 
+          message.includes('Failed to fetch dynamically imported module') ||
+          message.includes('loading CSS chunk');
+
+        if (isChunkError) {
+          const lastReload = sessionStorage.getItem('wgb_chunk_reload_time');
+          const now = Date.now();
+          if (!lastReload || now - parseInt(lastReload) > 8000) {
+            sessionStorage.setItem('wgb_chunk_reload_time', now.toString());
+            console.warn('WGB: ChunkLoadError intercepted. Refreshing to load latest bundle...');
+            // Unregister old service worker if needed, then reload
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(r => r.update());
+              });
+            }
+            window.location.reload();
+          }
+        }
+      };
+
+      const onErrorListener = (e: ErrorEvent) => handleChunkError(e.error || e.message);
+      const onRejectionListener = (e: PromiseRejectionEvent) => handleChunkError(e.reason);
+
+      window.addEventListener('error', onErrorListener);
+      window.addEventListener('unhandledrejection', onRejectionListener);
+
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+        window.removeEventListener('error', onErrorListener);
+        window.removeEventListener('unhandledrejection', onRejectionListener);
       };
     }
   }, []);

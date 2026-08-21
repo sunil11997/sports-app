@@ -56,23 +56,23 @@ import { usePWA } from '@/components/providers/pwa-provider';
  * Platinum Hub v5.3 Stable
  * Hardened for Screen Rotation and Nothing Phone (2a) Safe Areas.
  */
-const Dashboard = dynamic(() => import('@/components/features/Dashboard').then(m => m.Dashboard), { ssr: false });
-const Registration = dynamic(() => import('@/components/features/Registration').then(m => m.Registration), { ssr: false });
-const Attendance = dynamic(() => import('@/components/features/Attendance').then(m => m.Attendance), { ssr: false });
-const Fitness = dynamic(() => import('@/components/features/Fitness').then(m => m.Fitness), { ssr: false });
-const ExamsHub = dynamic(() => import('@/components/features/ExamsHub').then(m => m.ExamsHub), { ssr: false });
-const PromotionHub = dynamic(() => import('@/components/features/PromotionHub').then(m => m.PromotionHub), { ssr: false });
-const GameHub = dynamic(() => import('@/components/features/GameHub').then(m => m.GameHub), { ssr: false });
-const Settings = dynamic(() => import('@/components/features/Settings').then(m => m.Settings), { ssr: false });
-const PerformanceDossier = dynamic(() => import('@/components/features/History').then(m => m.PerformanceDossier), { ssr: false });
-const Gamification = dynamic(() => import('@/components/features/Gamification').then(m => m.Gamification), { ssr: false });
-const PlayerIDCardManager = dynamic(() => import('@/components/features/PlayerIDCardManager').then(m => m.PlayerIDCardManager), { ssr: false });
-const AIAdvice = dynamic(() => import('@/components/features/AIAdvice').then(m => m.AIAdvice), { ssr: false });
-const PerformanceHub = dynamic(() => import('@/components/features/PerformanceHub').then(m => m.PerformanceHub), { ssr: false });
-const HallOfFame = dynamic(() => import('@/components/features/HallOfFame').then(m => m.HallOfFame), { ssr: false });
-const ClassesSection = dynamic(() => import('@/components/features/ClassesSection').then(m => m.ClassesSection), { ssr: false });
-const DailyReport = dynamic(() => import('@/components/features/DailyReport').then(m => m.DailyReport), { ssr: false });
-const OtpLogin = dynamic(() => import('@/components/features/OtpLogin').then(m => m.OtpLogin), { ssr: false });
+import { Dashboard } from '@/components/features/Dashboard';
+import { Registration } from '@/components/features/Registration';
+import { Attendance } from '@/components/features/Attendance';
+import { Fitness } from '@/components/features/Fitness';
+import { ExamsHub } from '@/components/features/ExamsHub';
+import { PromotionHub } from '@/components/features/PromotionHub';
+import { GameHub } from '@/components/features/GameHub';
+import { Settings } from '@/components/features/Settings';
+import { PerformanceDossier } from '@/components/features/History';
+import { Gamification } from '@/components/features/Gamification';
+import { PlayerIDCardManager } from '@/components/features/PlayerIDCardManager';
+import { AIAdvice } from '@/components/features/AIAdvice';
+import { PerformanceHub } from '@/components/features/PerformanceHub';
+import { HallOfFame } from '@/components/features/HallOfFame';
+import { ClassesSection } from '@/components/features/ClassesSection';
+import { DailyReport } from '@/components/features/DailyReport';
+import { OtpLogin } from '@/components/features/OtpLogin';
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const translations = {
