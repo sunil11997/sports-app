@@ -191,24 +191,30 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <table>
               <thead>
                 <tr>
-                  <th style="width: 32px;">अ.क्र</th>
-                  <th style="width: 75px;">G.R. NO.</th>
+                  <th style="width: 30px;">अ.क्र</th>
+                  <th style="width: 50px;">जर्सी नं.</th>
+                  <th style="width: 70px;">G.R. NO.</th>
                   <th>खेळाडूचे नाव (PLAYER NAME)</th>
-                  <th style="width: 50px;">इयत्ता</th>
-                  <th style="width: 85px;">जन्म तारीख / वय</th>
-                  <th style="width: 110px;">आधार क्रमांक</th>
-                  <th style="width: 100px;">खेळाडूची सही</th>
+                  <th style="width: 45px;">इयत्ता</th>
+                  <th style="width: 90px;">स्थान / पोझिशन</th>
+                  <th style="width: 80px;">जन्म तारीख / वय</th>
+                  <th style="width: 100px;">आधार क्रमांक</th>
+                  <th style="width: 80px;">खेळाडू सही</th>
                 </tr>
               </thead>
               <tbody>
                 ${topTwelve.map((p, i) => {
                   const displayName = p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name;
+                  const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
+                  const position = p.positions?.[selectedSport] || '-';
                   return `
                   <tr>
                     <td class="center"><strong>${i + 1}</strong></td>
+                    <td class="center" style="font-weight: 900; color: #1e3a8a; background: #f8fafc;">#${jersey}</td>
                     <td class="center"><strong>${p.generalRegisterNumber || '---'}</strong></td>
                     <td><strong>${displayName}</strong></td>
                     <td class="center"><strong>${p.std} वी</strong></td>
+                    <td class="center">${position}</td>
                     <td class="center">${p.dob || (getAgeValidation(p.dob)?.ageYears || p.age || '---')}</td>
                     <td class="center">${p.aadharNumber || '---'}</td>
                     <td></td>

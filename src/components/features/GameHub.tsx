@@ -26,7 +26,9 @@ import {
   Sparkles,
   Contact,
   FileBadge,
-  BookOpen
+  BookOpen,
+  Shirt,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlayerIDCardManager } from './PlayerIDCardManager';
@@ -46,6 +48,9 @@ import { AutoPracticePlanner } from './AutoPracticePlanner';
 import { YogaPtHub } from './YogaPtHub';
 import { SportsLibrary } from './SportsLibrary';
 import { MatchScoreboard } from './MatchScoreboard';
+import { TeamEligibilityRoster } from './TeamEligibilityRoster';
+import { PlayerPositionJerseyManager } from './PlayerPositionJerseyManager';
+import { EquipmentInventoryHub } from './EquipmentInventoryHub';
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -114,6 +119,15 @@ export function GameHub({ store }: { store: any }) {
         <Tabs defaultValue="readiness" className="space-y-8">
           <div className="w-full overflow-x-auto scrollbar-hide pb-2">
             <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-2 w-max min-w-full">
+              <TabsTrigger value="equipment" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2 border-2 border-amber-500/40 shadow-sm">
+                <Package className="w-3.5 h-3.5 text-amber-400" /> Equipment (साहित्य नोंद)
+              </TabsTrigger>
+              <TabsTrigger value="eligibility" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-blue-800 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-2 border-2 border-blue-500/40 shadow-sm">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Eligibility (वय पात्रता तक्ता)
+              </TabsTrigger>
+              <TabsTrigger value="jerseys" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-700 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-2 border-2 border-emerald-500/40 shadow-sm">
+                <Shirt className="w-3.5 h-3.5 text-amber-400" /> Jersey & Positions (जर्सी व पोझिशन)
+              </TabsTrigger>
               <TabsTrigger value="scoreboard" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-2 border-2 border-amber-500/40 shadow-sm">
                 <Trophy className="w-3.5 h-3.5 text-amber-500" /> Scoreboard (लाईव्ह गुणफलक)
               </TabsTrigger>
@@ -159,6 +173,15 @@ export function GameHub({ store }: { store: any }) {
             </TabsList>
           </div>
 
+          <TabsContent value="equipment" className="mt-0">
+            <EquipmentInventoryHub store={store} />
+          </TabsContent>
+          <TabsContent value="eligibility" className="mt-0">
+            <TeamEligibilityRoster store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
+          <TabsContent value="jerseys" className="mt-0">
+            <PlayerPositionJerseyManager store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
           <TabsContent value="scoreboard" className="mt-0">
             <MatchScoreboard store={store} preselectedSport={selectedGame || undefined} />
           </TabsContent>

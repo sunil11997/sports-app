@@ -40,7 +40,11 @@ import {
   Volume2,
   Download,
   Smartphone,
-  Share2
+  Share2,
+  ShieldCheck,
+  Shirt,
+  Package,
+  Sun
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -73,6 +77,10 @@ import { ClassesSection } from '@/components/features/ClassesSection';
 import { DailyReport } from '@/components/features/DailyReport';
 import { MatchScoreboard } from '@/components/features/MatchScoreboard';
 import { OtpLogin } from '@/components/features/OtpLogin';
+import { TeamEligibilityRoster } from '@/components/features/TeamEligibilityRoster';
+import { PlayerPositionJerseyManager } from '@/components/features/PlayerPositionJerseyManager';
+import { EquipmentInventoryHub } from '@/components/features/EquipmentInventoryHub';
+import { ParentProgressShareModal } from '@/components/features/ParentProgressShareModal';
 
 const translations = {
   English: {
@@ -118,6 +126,29 @@ export default function WaghambaApp() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<string>('default');
   const [activeAchievements, setActiveAchievements] = useState<any[]>([]);
+  const [isGroundMode, setIsGroundMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('wgb_ground_mode') === 'true';
+    }
+    return false;
+  });
+  const [isParentShareOpen, setIsParentShareOpen] = useState(false);
+  const [sharePlayerId, setSharePlayerId] = useState<string | undefined>(undefined);
+
+  const toggleGroundMode = useCallback(() => {
+    setIsGroundMode(prev => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('wgb_ground_mode', String(next));
+      }
+      toast({
+        title: next ? "मैदान मोड सुरू झाला! ☀️" : "सामान्य मोड सुरू झाला",
+        description: next ? "कडक उन्हात स्पष्ट दिसण्यासाठी हाय-कॉन्ट्रास्ट व मोठे बटन्स सक्रिय केले आहेत." : "स्टाफ रूम मोड सक्रिय.",
+        className: next ? "bg-amber-500 text-slate-950 font-black" : ""
+      });
+      return next;
+    });
+  }, [toast]);
 
   const handleTriggerAppInstall = useCallback(async () => {
     if (isStandalone) {
@@ -428,8 +459,8 @@ export default function WaghambaApp() {
     const countLabel = selectedSection === 'sports' ? "Total Athletes" : "Registered Students";
     
     return (
-      <div className="min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b py-3 px-6 z-50">
+      <div className={cn("min-h-screen flex flex-col bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]", isGroundMode && "ground-mode")}>
+        <header className="sticky top-0 bg-white/90 backdrop-blur-xl border-b py-3 px-4 sm:px-6 z-50 shadow-sm">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setStage('selector')}>
               <div className="relative w-10 h-10 shrink-0 flex items-center justify-center bg-white rounded-xl border shadow-sm p-0.5 overflow-hidden">
@@ -440,6 +471,21 @@ export default function WaghambaApp() {
               </h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* High Contrast Ground Mode Toggle Button */}
+              <button 
+                onClick={toggleGroundMode}
+                className={cn(
+                  "h-8 px-2.5 sm:px-3 rounded-full flex items-center gap-1.5 text-[10px] font-black tracking-wide border transition-all active-scale",
+                  isGroundMode 
+                    ? "bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-400/50" 
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300"
+                )}
+                title="मैदान मोड (High-Contrast Sunlight Mode)"
+              >
+                <Sun className={cn("w-3.5 h-3.5", isGroundMode ? "text-slate-950 animate-spin" : "text-amber-600")} />
+                <span className="hidden sm:inline">{isGroundMode ? "मैदान मोड चालू" : "मैदान मोड"}</span>
+              </button>
+
               {!isStandalone && (
                 <button 
                   onClick={handleTriggerAppInstall} 
@@ -465,7 +511,7 @@ export default function WaghambaApp() {
               <button onClick={toggleRotation} className="h-8 w-8 rounded-full bg-primary/5 text-primary flex items-center justify-center hover:bg-primary/10 transition-colors">
                 <RotateCw className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
                 <CalendarDays className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">{headerDate}</span>
               </div>
@@ -578,7 +624,11 @@ export default function WaghambaApp() {
             <TabsContent value="students" className="mt-0 space-y-8 animate-in fade-in duration-700 h-full">
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                   {[
+                    {[
+                      { id: "equipment-inventory", label: "Equipment & Kit Inventory", desc: "साहित्य नोंद, वाटप-जमा व वार्षिक मागणी", icon: Package, color: "bg-amber-700" },
+                      { id: "parent-share", label: "Parent WhatsApp Cards", desc: "पालक प्रगती व फिटनेस अहवाल पाठवा", icon: Share2, color: "bg-emerald-600" },
+                      { id: "eligibility-roster", label: "DSO Eligibility Roster", desc: "Age Cut-off & U14/U17/U19 Validator", icon: ShieldCheck, color: "bg-blue-800" },
+                      { id: "position-jersey", label: "Jersey & Position Chart", desc: "Tactical Indian Sports Tracker", icon: Shirt, color: "bg-emerald-700" },
                       { id: "scoreboard-module", label: "Live Match Scoreboard", desc: "Digital Kabaddi, Volleyball & Kho-Kho Board", icon: Trophy, color: "bg-amber-500" },
                       { id: "icard-module", label: "Official ID Cards", desc: "Player Identity & Printable Forms", icon: IdCard, color: "bg-blue-900" },
                       { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
@@ -595,6 +645,7 @@ export default function WaghambaApp() {
                     ].map(item => (
                       <Card key={item.id} onClick={() => {
                         if (item.id === "icard-module") setActiveTab("icard");
+                        else if (item.id === "parent-share") setIsParentShareOpen(true);
                         else setSubTab(item.id);
                       }} className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden">
                         <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg", item.color)}>
@@ -616,6 +667,9 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "equipment-inventory" && <EquipmentInventoryHub store={schoolData} />}
+                    {subTab === "eligibility-roster" && <TeamEligibilityRoster store={schoolData} />}
+                    {subTab === "position-jersey" && <PlayerPositionJerseyManager store={schoolData} />}
                     {subTab === "scoreboard-module" && <MatchScoreboard store={schoolData} />}
                     {subTab === "icard-module" && <PlayerIDCardManager store={schoolData} section={selectedSection || 'general'} />}
                     {subTab === "daily-report" && <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />}
@@ -633,6 +687,13 @@ export default function WaghambaApp() {
                 </div>
               )}
             </TabsContent>
+
+            <ParentProgressShareModal 
+              isOpen={isParentShareOpen} 
+              onClose={() => setIsParentShareOpen(false)} 
+              store={schoolData} 
+              initialPlayerId={sharePlayerId} 
+            />
 
             <TabsContent value="i-card" className="mt-0 h-full">
               <PlayerIDCardManager store={schoolData} />

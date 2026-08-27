@@ -306,9 +306,12 @@ export interface AgeValidation {
   category: string;
   eligible: boolean;
   statusText: string;
+  referenceYear: number;
+  cutoffDateFormatted: string;
+  eligibilityType: 'U14' | 'U17' | 'U19' | 'Overage' | 'Underage' | 'Pending';
 }
 
-export function getAgeValidation(dobString: string | undefined | null): AgeValidation | null {
+export function getAgeValidation(dobString: string | undefined | null, customRefYear?: number): AgeValidation | null {
   if (!dobString) return null;
   
   let birthYear: number;
@@ -328,8 +331,8 @@ export function getAgeValidation(dobString: string | undefined | null): AgeValid
     birthDay = dobDate.getDate();
   }
 
-  // Target Reference Date: 31 December 2026
-  const refYear = 2026;
+  // Reference Date: 31 December of specified or current academic reference year
+  const refYear = customRefYear || 2026;
   const refMonth = 11; // 0-indexed December
   const refDay = 31;
 
@@ -338,7 +341,6 @@ export function getAgeValidation(dobString: string | undefined | null): AgeValid
   let days = refDay - birthDay;
 
   if (days < 0) {
-    // Number of days in the month prior to December 2026 (November has 30 days)
     const prevMonthDays = new Date(refYear, refMonth, 0).getDate();
     days += prevMonthDays;
     months -= 1;
@@ -350,36 +352,61 @@ export function getAgeValidation(dobString: string | undefined | null): AgeValid
   }
 
   const ageString = `${years} Years, ${months} Months, ${days} Days`;
+  const cutoffDateFormatted = `31/12/${refYear}`;
 
-  // Age Categories based on DOB ranges:
-  // - Under 14 (U14): DOB from 01-01-2013 to 31-12-2015 (inclusive)
-  // - Under 17 (U17): DOB from 01-01-2010 to 31-12-2012 (inclusive)
-  // - Under 19 (U19): DOB from 01-01-2008 to 31-12-2009 (inclusive)
+  // Age Categories based on reference year:
+  // - Under 14 (U14): Born from 01-01-(refYear - 13) to 31-12-(refYear - 11) (Age 11 to <14 on 31 Dec)
+  // - Under 17 (U17): Born from 01-01-(refYear - 16) to 31-12-(refYear - 14) (Age 14 to <17 on 31 Dec)
+  // - Under 19 (U19): Born from 01-01-(refYear - 18) to 31-12-(refYear - 17) (Age 17 to <19 on 31 Dec)
   
-  // Compare date components directly to avoid timezone shift errors
-  // We construct a number YYYYMMDD for comparison:
   const dobNum = birthYear * 10000 + (birthMonth + 1) * 100 + birthDay;
   
+  const u14Start = (refYear - 13) * 10000 + 101;
+  const u14End = (refYear - 11) * 10000 + 1231;
+
+  const u17Start = (refYear - 16) * 10000 + 101;
+  const u17End = (refYear - 14) * 10000 + 1231;
+
+  const u19Start = (refYear - 18) * 10000 + 101;
+  const u19End = (refYear - 17) * 10000 + 1231;
+
   let category = "";
   let eligible = false;
   let statusText = "";
+  let eligibilityType: 'U14' | 'U17' | 'U19' | 'Overage' | 'Underage' | 'Pending' = 'Pending';
 
-  if (dobNum >= 20130101 && dobNum <= 20151231) {
+  if (dobNum >= u14Start && dobNum <= u14End) {
     category = "Under 14 (U14)";
     eligible = true;
-    statusText = "Eligible";
-  } else if (dobNum >= 20100101 && dobNum <= 20121231) {
+    statusText = `Eligible for U-14 (Age ${years}y on 31/12/${refYear})`;
+    eligibilityType = 'U14';
+  } else if (dobNum >= u17Start && dobNum <= u17End) {
     category = "Under 17 (U17)";
     eligible = true;
-    statusText = "Eligible";
-  } else if (dobNum >= 20080101 && dobNum <= 20091231) {
+    statusText = `Eligible for U-17 (Age ${years}y on 31/12/${refYear})`;
+    eligibilityType = 'U17';
+  } else if (dobNum >= u19Start && dobNum <= u19End) {
     category = "Under 19 (U19)";
     eligible = true;
-    statusText = "Eligible";
+    statusText = `Eligible for U-19 (Age ${years}y on 31/12/${refYear})`;
+    eligibilityType = 'U19';
+  } else if (dobNum < u19Start) {
+    // Born before U19 start date => Exceeds 19 years on Dec 31st
+    category = "Overage (वयाधिक)";
+    eligible = false;
+    statusText = `Overage: Exceeds 19 yrs on 31/12/${refYear} (${years}y ${months}m)`;
+    eligibilityType = 'Overage';
+  } else if (dobNum > u14End) {
+    // Younger than 11 years
+    category = "Underage (कमी वयाचा)";
+    eligible = false;
+    statusText = `Underage for competitive U-14 (<11 yrs on 31/12/${refYear})`;
+    eligibilityType = 'Underage';
   } else {
     category = "None";
     eligible = false;
     statusText = "Not eligible for available age categories.";
+    eligibilityType = 'Pending';
   }
 
   return {
@@ -389,19 +416,92 @@ export function getAgeValidation(dobString: string | undefined | null): AgeValid
     ageString,
     category,
     eligible,
-    statusText
+    statusText,
+    referenceYear: refYear,
+    cutoffDateFormatted,
+    eligibilityType
   };
 }
 
 export function getLocalizedAgeCategory(category: string, isMarathi: boolean): string {
   if (!category) return "";
   if (isMarathi) {
-    if (category.includes("Under 14")) return "१४ वर्षांखालील (U14)";
-    if (category.includes("Under 17")) return "१७ वर्षांखालील (U17)";
-    if (category.includes("Under 19")) return "१९ वर्षांखालील (U19)";
+    if (category.includes("Under 14") || category.includes("U14")) return "१४ वर्षांखालील (U14)";
+    if (category.includes("Under 17") || category.includes("U17")) return "१७ वर्षांखालील (U17)";
+    if (category.includes("Under 19") || category.includes("U19")) return "१९ वर्षांखालील (U19)";
+    if (category.includes("Overage") || category.includes("वयाधिक")) return "वयाधिक (Overage)";
+    if (category.includes("Underage") || category.includes("कमी वयाचा")) return "कमी वयाचा (Underage)";
     if (category === "None") return "पात्र नाही";
   }
   return category;
+}
+
+export interface SportPositionDef {
+  id: string;
+  nameEn: string;
+  nameMr: string;
+  shortCode: string;
+  category?: 'Attack' | 'Defense' | 'Setter' | 'Field' | 'Track' | 'Specialist';
+}
+
+export const SPORT_POSITIONS_MAP: Record<string, SportPositionDef[]> = {
+  'Kabaddi': [
+    { id: 'right_raider', nameEn: 'Right Raider', nameMr: 'उजवा चढाईपटू (Right Raider)', shortCode: 'RR', category: 'Attack' },
+    { id: 'left_raider', nameEn: 'Left Raider', nameMr: 'डावा चढाईपटू (Left Raider)', shortCode: 'LR', category: 'Attack' },
+    { id: 'right_corner', nameEn: 'Right Corner', nameMr: 'उजवा कोपरा (Right Corner)', shortCode: 'RC', category: 'Defense' },
+    { id: 'left_corner', nameEn: 'Left Corner', nameMr: 'डावा कोपरा (Left Corner)', shortCode: 'LC', category: 'Defense' },
+    { id: 'right_cover', nameEn: 'Right Cover', nameMr: 'उजवा कव्हर / मध्यरक्षक', shortCode: 'RCv', category: 'Defense' },
+    { id: 'left_cover', nameEn: 'Left Cover', nameMr: 'डावा कव्हर / मध्यरक्षक', shortCode: 'LCv', category: 'Defense' },
+    { id: 'all_rounder', nameEn: 'All-Rounder', nameMr: 'सर्वसमावेशक (All-Rounder)', shortCode: 'AR', category: 'Specialist' },
+  ],
+  'Kho Kho': [
+    { id: 'runner_batch1', nameEn: 'Runner (Batch 1)', nameMr: 'धावपटू तुकडी १ (Batch 1)', shortCode: 'R1', category: 'Defense' },
+    { id: 'runner_batch2', nameEn: 'Runner (Batch 2)', nameMr: 'धावपटू तुकडी २ (Batch 2)', shortCode: 'R2', category: 'Defense' },
+    { id: 'runner_batch3', nameEn: 'Runner (Batch 3)', nameMr: 'धावपटू तुकडी ३ (Batch 3)', shortCode: 'R3', category: 'Defense' },
+    { id: 'chaser', nameEn: 'Active Chaser', nameMr: 'पाठलागपटू / आक्रमक (Chaser)', shortCode: 'CH', category: 'Attack' },
+    { id: 'pole_diver', nameEn: 'Pole Diver', nameMr: 'पोल डायव्हर (Pole Diver)', shortCode: 'PD', category: 'Specialist' },
+    { id: 'all_rounder', nameEn: 'All-Rounder', nameMr: 'ऑल-राउंडर (All-Rounder)', shortCode: 'AR', category: 'Specialist' },
+  ],
+  'Volleyball': [
+    { id: 'setter', nameEn: 'Setter (Playmaker)', nameMr: 'सेटर (Setter / पासर)', shortCode: 'SET', category: 'Setter' },
+    { id: 'outside_hitter', nameEn: 'Outside Hitter / Spiker', nameMr: 'आक्रमक / स्मॅशर (Spiker)', shortCode: 'OH', category: 'Attack' },
+    { id: 'opposite_hitter', nameEn: 'Opposite Hitter', nameMr: 'विरुद्ध आक्रमक (Opposite)', shortCode: 'OPP', category: 'Attack' },
+    { id: 'middle_blocker', nameEn: 'Middle Blocker', nameMr: 'मध्यरक्षक / ब्लॉकर', shortCode: 'MB', category: 'Defense' },
+    { id: 'libero', nameEn: 'Libero (Defensive)', nameMr: 'लिबेरो / मुख्य बचावपटू', shortCode: 'LIB', category: 'Defense' },
+    { id: 'universal', nameEn: 'Universal Player', nameMr: 'युनिव्हर्सल खेळाडू', shortCode: 'UNI', category: 'Specialist' },
+  ],
+  'Athletics': [
+    { id: '100m', nameEn: '100m Sprint', nameMr: '१०० मी. धावणे (100m Sprint)', shortCode: '100M', category: 'Track' },
+    { id: '200m', nameEn: '200m Sprint', nameMr: '२०० मी. धावणे (200m Sprint)', shortCode: '200M', category: 'Track' },
+    { id: '400m', nameEn: '400m Run', nameMr: '४०० मी. धावणे (400m Run)', shortCode: '400M', category: 'Track' },
+    { id: 'relay_leg1', nameEn: '4x100m Relay (Leg 1 - Start)', nameMr: '४x१०० रिले (१ली लेग - स्टार्ट)', shortCode: 'R-L1', category: 'Track' },
+    { id: 'relay_leg2', nameEn: '4x100m Relay (Leg 2 - Back)', nameMr: '४x१०० रिले (२री लेग - बॅक)', shortCode: 'R-L2', category: 'Track' },
+    { id: 'relay_leg3', nameEn: '4x100m Relay (Leg 3 - Curve)', nameMr: '४x१०० रिले (३री लेग - वळण)', shortCode: 'R-L3', category: 'Track' },
+    { id: 'relay_leg4', nameEn: '4x100m Relay (Leg 4 - Anchor)', nameMr: '४x१०० रिले (४थी लेग - अँकर)', shortCode: 'R-L4', category: 'Track' },
+    { id: 'long_jump', nameEn: 'Long Jump', nameMr: 'लांब उडी (Long Jump)', shortCode: 'LJ', category: 'Field' },
+    { id: 'high_jump', nameEn: 'High Jump', nameMr: 'उंच उडी (High Jump)', shortCode: 'HJ', category: 'Field' },
+    { id: 'shot_put', nameEn: 'Shot Put', nameMr: 'गोळाफेक (Shot Put)', shortCode: 'SP', category: 'Field' },
+    { id: 'javelin', nameEn: 'Javelin Throw', nameMr: 'भालाफेक (Javelin Throw)', shortCode: 'JT', category: 'Field' },
+    { id: 'disc_throw', nameEn: 'Discus Throw', nameMr: 'थाळीफेक (Discus Throw)', shortCode: 'DT', category: 'Field' },
+  ],
+  'Handball': [
+    { id: 'goalkeeper', nameEn: 'Goalkeeper', nameMr: 'गोलरक्षक (Goalkeeper)', shortCode: 'GK', category: 'Defense' },
+    { id: 'left_wing', nameEn: 'Left Wing', nameMr: 'डावा विंग (Left Wing)', shortCode: 'LW', category: 'Attack' },
+    { id: 'right_wing', nameEn: 'Right Wing', nameMr: 'उजवा विंग (Right Wing)', shortCode: 'RW', category: 'Attack' },
+    { id: 'center_back', nameEn: 'Center Back / Playmaker', nameMr: 'मध्य फळी (Center Back)', shortCode: 'CB', category: 'Setter' },
+    { id: 'pivot', nameEn: 'Pivot / Line Player', nameMr: 'पिव्हट / लाईन खेळाडू', shortCode: 'PV', category: 'Attack' },
+    { id: 'left_back', nameEn: 'Left Back', nameMr: 'डावा बॅक (Left Back)', shortCode: 'LB', category: 'Attack' },
+    { id: 'right_back', nameEn: 'Right Back', nameMr: 'उजवा बॅक (Right Back)', shortCode: 'RB', category: 'Attack' },
+  ]
+};
+
+export function getSportPositions(sportName: string): SportPositionDef[] {
+  return SPORT_POSITIONS_MAP[sportName] || [
+    { id: 'player', nameEn: 'Standard Player', nameMr: 'खेळाडू', shortCode: 'PL', category: 'Specialist' },
+    { id: 'captain', nameEn: 'Captain', nameMr: 'कर्णधार (Captain)', shortCode: 'CPT', category: 'Specialist' },
+    { id: 'vice_captain', nameEn: 'Vice Captain', nameMr: 'उपकर्णधार (Vice Captain)', shortCode: 'VC', category: 'Specialist' },
+    { id: 'substitute', nameEn: 'Substitute', nameMr: 'राखीव खेळाडू (Sub)', shortCode: 'SUB', category: 'Specialist' },
+  ];
 }
 
 export interface ParsedMedicalLog {

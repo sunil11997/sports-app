@@ -32,6 +32,9 @@ export interface Player {
   saralId?: string;
   admissionDate?: string;
   identificationMark?: string;
+  jerseyNumber?: string;
+  jerseyNumbers?: Record<string, string>; // Sport -> Jersey number e.g. { "Kabaddi": "7", "Volleyball": "10" }
+  positions?: Record<string, string>; // Sport -> Tactical position e.g. { "Kabaddi": "Right Corner", "Kho Kho": "Runner (Batch 1)" }
 }
 
 export interface SchoolProfile {
@@ -175,4 +178,47 @@ export interface HealthIncident {
   academicYear?: string;
   severity: 'Minor' | 'Critical';
   category: 'athlete' | 'student';
+}
+
+export interface EquipmentItem {
+  id: string;
+  name: string;
+  nameMarathi: string;
+  category: 'Balls' | 'Nets & Mats' | 'Athletics' | 'Training & PT' | 'First Aid' | 'Other';
+  totalQty: number;
+  availableQty: number;
+  damagedQty: number;
+  unit: string; // e.g. 'Nos', 'Sets', 'Boxes', 'Pairs'
+  condition: 'Good' | 'Needs Repair' | 'Damaged' | 'Expired';
+  notes?: string;
+  lastChecked?: string;
+  sport?: string;
+}
+
+export interface EquipmentIssueRecord {
+  id: string;
+  itemId: string;
+  itemName: string;
+  itemNameMarathi: string;
+  issuedTo: string; // Student / Captain / Class Monitor name
+  roleOrClass: string; // e.g. "Std 9th B Captain", "House Leader", "PE Monitor"
+  quantity: number;
+  issueDate: string; // YYYY-MM-DD HH:mm
+  expectedReturnDate?: string;
+  returnDate?: string;
+  status: 'Issued' | 'Returned' | 'Overdue' | 'Damaged';
+  remarks?: string;
+}
+
+export interface IndentItem {
+  id: string;
+  itemName: string;
+  itemNameMarathi: string;
+  category: string;
+  currentStock: number;
+  requiredQty: number;
+  estimatedRate: number; // in INR
+  totalEstimate: number;
+  justification: string;
+  priority: 'High' | 'Medium' | 'Low';
 }

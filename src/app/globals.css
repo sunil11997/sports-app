@@ -107,6 +107,34 @@
     100% { background-color: transparent; }
   }
 
+  /* Safe Area Utilities for Nothing Phone (2a) and Edge-to-Edge Display */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Playground Ground Mode (High Contrast for Direct Sunlight) */
+  .ground-mode {
+    filter: contrast(115%) brightness(105%);
+  }
+  .ground-mode body,
+  .ground-mode .bg-background {
+    background-color: #f8fafc !important;
+  }
+  .ground-mode button,
+  .ground-mode .btn {
+    min-height: 48px !important;
+    font-weight: 900 !important;
+    border-width: 2px !important;
+  }
+  .ground-mode .card,
+  .ground-mode [class*="rounded-"] {
+    border-color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
   .dossier-print {
     font-family: 'Inter', sans-serif;
   }
