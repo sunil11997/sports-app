@@ -5,86 +5,370 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// ============================================================================
+// COMPREHENSIVE MARATHI NAME DICTIONARY & INTELLIGENT PHONETIC ENGINE
+// Covers 500+ First Names, Middle Names, Surnames, Local Tribal / Ashram Shala Names
+// (Nashik, Baglan, Satana, Kalwan, Surgana, Dindori, Nandurbar, Dhule, Thane, Palghar)
+// ============================================================================
 const COMMON_MARATHI_NAMES: Record<string, string> = {
-  // First Names (Male) - Common & Typo Variations
-  rahul: 'राहुल', rahool: 'राहुल', ramesh: 'रमेश', suresh: 'सुरेश', ganesh: 'गणेश', mahesh: 'महेश',
-  dinesh: 'दिनेश', vijay: 'विजय', ajay: 'अजय', amit: 'अमित', amol: 'अमोल',
-  aniket: 'अनिकेत', akshay: 'अक्षय', axay: 'अक्षय', aditya: 'आदित्य', aaditya: 'आदित्य',
-  abhishek: 'अभिषेक', abhishekh: 'अभिषेक', rohan: 'रोहन', sachin: 'सचिन', sunil: 'सुनील',
-  suneel: 'सुनील', anil: 'अनिल', aneel: 'अनिल', santosh: 'संतोष', samir: 'समीर',
-  sameer: 'समीर', nitin: 'नितीन', niteen: 'नितीन', pravin: 'प्रवीण', praveen: 'प्रवीण',
-  pradeep: 'प्रदीप', pradip: 'प्रदीप', prashant: 'प्रशांत', pranam: 'प्रणाम', om: 'ओम',
-  omkar: 'ओंकार', onkar: 'ओंकार', aum: 'ओम', aarav: 'आरव', arav: 'आरव', aryan: 'आर्यन',
-  ariyan: 'आर्यन', shivam: 'शिवम', krishna: 'कृष्णा', krushna: 'कृष्णा', kishna: 'किष्णा',
-  ram: 'राम', rama: 'रामा', tanmay: 'तन्मय', tanmey: 'तन्मय', rushikesh: 'ऋषिकेश',
-  hrishikesh: 'ऋषिकेश', rishikesh: 'ऋषिकेश', sanket: 'संकेत', prathamesh: 'प्रथमेश',
-  prathmesh: 'प्रथमेश', swapnil: 'स्वप्निल', swaphnil: 'स्वप्निल', swpanil: 'स्वप्निल',
-  sourabh: 'सौरभ', saurabh: 'सौरभ', shubham: 'शुभम', subham: 'शुभम', utkarsh: 'उत्कर्ष',
-  chinmay: 'चिन्मय', tushar: 'तुषार', kiran: 'किरण', chetan: 'चेतन', shrikant: 'श्रीकांत',
-  srikant: 'श्रीकांत', shripad: 'श्रीपाद', sripad: 'श्रीपाद', harish: 'हरीश', rajesh: 'राजेश',
-  yogesh: 'योगेश', rohit: 'रोहित', vikas: 'विकास', vishal: 'विशाल', vivek: 'विवेक',
-  sandeep: 'संदीप', sandip: 'संदीप', deepak: 'दीपक', dipak: 'दीपक', manoj: 'मनोज',
-  gautam: 'गौतम', ashok: 'अशोक', vinod: 'विनोद', kailas: 'कैलास', kailash: 'कैलास',
-  balu: 'बाळू', bhagwan: 'भगवान', pandurang: 'पांडुरंग', gopal: 'गोपाळ', shankar: 'शंकर',
-  shivaji: 'शिवाजी', sambhaji: 'संभाजी', tanaji: 'तानाजी', anand: 'आनंद', akash: 'आकाश',
-  aakash: 'आकाश', tejas: 'तेजस', vaibhav: 'वैभव', dnyaneshwar: 'ज्ञानेश्वर', dnyneshwar: 'ज्ञानेश्वर',
-  dhyaneshwar: 'ज्ञानेश्वर', jnyaneshwar: 'ज्ञानेश्वर', dnyandev: 'ज्ञानदेव',
-  siddharth: 'सिद्धार्थ', samadhan: 'समाधान', motiram: 'मोतीराम', devidas: 'देवीदास',
-  hiraman: 'हिरामन', barku: 'बारकू', damu: 'दामू', kisan: 'किसन', tulshiram: 'तुळशीराम',
-  tulshiramji: 'तुळशीराम', chaitanya: 'चैतन्य', harshad: 'हर्षद', yash: 'यश',
-  atharva: 'अथर्व', vedant: 'वेदांत', virat: 'विराट', kapil: 'कपिल', mayur: 'मयूर',
-  siddhesh: 'सिद्धेश', avinash: 'अविनाश', bhushan: 'भूषण', nilesh: 'निलेश',
-  pankaj: 'पंकज', digambar: 'दिगंबर', bhavesh: 'भावेश', kalpesh: 'कल्पेश',
-  chandrakant: 'चंद्रकांत', laxman: 'लक्ष्मण', lakshman: 'लक्ष्मण', bharat: 'भरत',
-  dattatray: 'दत्तात्रय', dattatraya: 'दत्तात्रय', datta: 'दत्ता', kashinath: 'काशिनाथ',
+  // First Names (Male) - Standard & Common Misspellings / Typo Variations
+  rahul: 'राहुल', rahool: 'राहुल', raahul: 'राहुल', rhaul: 'राहुल',
+  ramesh: 'रमेश', rames: 'रमेश', rameshji: 'रमेश', rameshbhai: 'रमेश',
+  suresh: 'सुरेश', sures: 'सुरेश', sureshji: 'सुरेश', sureshh: 'सुरेश',
+  ganesh: 'गणेश', ganes: 'गणेश', ganeshji: 'गणेश', ganeshh: 'गणेश',
+  mahesh: 'महेश', mahes: 'महेश', maheshji: 'महेश',
+  dinesh: 'दिनेश', dines: 'दिनेश', dineshji: 'दिनेश',
+  vijay: 'विजय', vijey: 'विजय', vjay: 'विजय',
+  ajay: 'अजय', ajey: 'अजय', ajji: 'अजय',
+  amit: 'अमित', amith: 'अमित', ameet: 'अमित',
+  amol: 'अमोल', amolji: 'अमोल',
+  aniket: 'अनिकेत', aneeket: 'अनिकेत', ankush: 'अंकुश', anku: 'अंकू',
+  akshay: 'अक्षय', axay: 'अक्षय', akshaye: 'अक्षय', akshya: 'अक्षय',
+  aditya: 'आदित्य', aaditya: 'आदित्य', adity: 'आदित्य',
+  abhishek: 'अभिषेक', abhishekh: 'अभिषेक', abhi: 'अभि',
+  rohan: 'रोहन', rohon: 'रोहन', rodhan: 'रोधन',
+  sachin: 'सचिन', sacheen: 'सचिन', sachinji: 'सचिन',
+  sunil: 'सुनील', suneel: 'सुनील', sonil: 'सुनील',
+  anil: 'अनिल', aneel: 'अनिल', aneell: 'अनिल',
+  santosh: 'संतोष', santos: 'संतोष', santoshji: 'संतोष',
+  samir: 'समीर', sameer: 'समीर', sammer: 'समीर',
+  nitin: 'नितीन', niteen: 'नितीन', neetin: 'नितीन',
+  pravin: 'प्रवीण', praveen: 'प्रवीण', pravind: 'प्रवीण',
+  pradeep: 'प्रदीप', pradip: 'प्रदीप', pradeeep: 'प्रदीप',
+  prashant: 'प्रशांत', prashanth: 'प्रशांत', prasant: 'प्रशांत',
+  pranam: 'प्रणाम', prasad: 'प्रसाद', prasanna: 'प्रसन्न',
+  om: 'ओम', aum: 'ओम', ohm: 'ओम',
+  omkar: 'ओंकार', onkar: 'ओंकार', omkaar: 'ओंकार',
+  aarav: 'आरव', arav: 'आरव', aryan: 'आर्यन', ariyan: 'आर्यन',
+  shivam: 'शिवम', sivam: 'शिवम', shiv: 'शिव',
+  krishna: 'कृष्णा', krushna: 'कृष्णा', kishna: 'किष्णा', krishnaji: 'कृष्णा',
+  ram: 'राम', rama: 'रामा', ramji: 'राम', ramdas: 'रामदास',
+  tanmay: 'तन्मय', tanmey: 'तन्मय', tanmayi: 'तन्मयी',
+  rushikesh: 'ऋषिकेश', hrishikesh: 'ऋषिकेश', rishikesh: 'ऋषिकेश', rusi: 'ऋषी',
+  sanket: 'संकेत', sanketh: 'संकेत', sonket: 'संकेत',
+  prathamesh: 'प्रथमेश', prathmesh: 'प्रथमेश', prathameshji: 'प्रथमेश',
+  swapnil: 'स्वप्निल', swaphnil: 'स्वप्निल', swpanil: 'स्वप्निल', swapneel: 'स्वप्निल',
+  sourabh: 'सौरभ', saurabh: 'सौरभ', shourabh: 'सौरभ',
+  shubham: 'शुभम', subham: 'शुभम', shubh: 'शुभ',
+  utkarsh: 'उत्कर्ष', utkars: 'उत्कर्ष',
+  chinmay: 'चिन्मय', chinmey: 'चिन्मय',
+  tushar: 'तुषार', tusar: 'तुषार',
+  kiran: 'किरण', keeran: 'किरण', kiranji: 'किरण',
+  chetan: 'चेतन', chaitan: 'चेतन',
+  shrikant: 'श्रीकांत', srikant: 'श्रीकांत', shreekanth: 'श्रीकांत',
+  shripad: 'श्रीपाद', sripad: 'श्रीपाद', shreepad: 'श्रीपाद',
+  harish: 'हरीश', haresh: 'हरेश', haris: 'हरीश',
+  rajesh: 'राजेश', rajes: 'राजेश', rajeshji: 'राजेश',
+  yogesh: 'योगेश', yoges: 'योगेश', yogeshji: 'योगेश',
+  rohit: 'रोहित', rohith: 'रोहित',
+  vikas: 'विकास', vikash: 'विकास', veekas: 'विकास',
+  vishal: 'विशाल', veeshal: 'विशाल', visal: 'विशाल',
+  vivek: 'विवेक', veevek: 'विवेक',
+  sandeep: 'संदीप', sandip: 'संदीप', sandeepji: 'संदीप',
+  deepak: 'दीपक', dipak: 'दीपक', deepakji: 'दीपक',
+  manoj: 'मनोज', manojji: 'मनोज',
+  gautam: 'गौतम', goutham: 'गौतम',
+  ashok: 'अशोक', ashokji: 'अशोक', asok: 'अशोक',
+  vinod: 'विनोद', vinodji: 'विनोद',
+  kailas: 'कैलास', kailash: 'कैलास', kailashji: 'कैलास',
+  balu: 'बाळू', baloo: 'बाळू', bhagwan: 'भगवान', bhagwaan: 'भगवान',
+  pandurang: 'पांडुरंग', pandurangji: 'पांडुरंग', pandu: 'पांडू',
+  gopal: 'गोपाळ', gopalji: 'गोपाळ',
+  shankar: 'शंकर', shanker: 'शंकर', sankar: 'शंकर', shankarji: 'शंकर',
+  shivaji: 'शिवाजी', sambhaji: 'संभाजी', tanaji: 'तानाजी',
+  anand: 'आनंद', aakash: 'आकाश', akash: 'आकाश', aakashji: 'आकाश',
+  tejas: 'तेजस', tejes: 'तेजस',
+  vaibhav: 'वैभव', vaibhev: 'वैभव',
+  dnyaneshwar: 'ज्ञानेश्वर', dnyneshwar: 'ज्ञानेश्वर', dhyaneshwar: 'ज्ञानेश्वर',
+  dnyaneshwer: 'ज्ञानेश्वर', dhyaneshwer: 'ज्ञानेश्वर', jnyaneshwar: 'ज्ञानेश्वर',
+  dnyandev: 'ज्ञानदेव', dnyanesh: 'ज्ञानेश',
+  siddharth: 'सिद्धार्थ', sidharth: 'सिद्धार्थ',
+  samadhan: 'समाधान', samadhanji: 'समाधान',
+  motiram: 'मोतीराम', devidas: 'देवीदास', devidasji: 'देवीदास',
+  hiraman: 'हिरामन', barku: 'बारकू', damu: 'दामू', kisan: 'किसन',
+  tulshiram: 'तुळशीराम', tulshiramji: 'तुळशीराम', tulsiram: 'तुळशीराम',
+  chaitanya: 'चैतन्य', harshad: 'हर्षद', harsh: 'हर्ष', harshal: 'हर्षल',
+  yash: 'यश', atharva: 'अथर्व', atharv: 'अथर्व',
+  vedant: 'वेदांत', virat: 'विराट', kapil: 'कपिल',
+  mayur: 'मयूर', mayoor: 'मयूर',
+  siddhesh: 'सिद्धेश', siddhes: 'सिद्धेश',
+  avinash: 'अविनाश', avinas: 'अविनाश',
+  bhushan: 'भूषण', bhusan: 'भूषण', bhooshan: 'भूषण',
+  nilesh: 'निलेश', niles: 'निलेश',
+  pankaj: 'पंकज', pankej: 'पंकज',
+  digambar: 'दिगंबर', bhavesh: 'भावेश', kalpesh: 'कल्पेश',
+  chandrakant: 'चंद्रकांत', laxman: 'लक्ष्मण', lakshman: 'लक्ष्मण', laximan: 'लक्ष्मण', luxman: 'लक्ष्मण',
+  bharat: 'भरत', bharath: 'भरत',
+  dattatray: 'दत्तात्रय', dattatraya: 'दत्तात्रय', datta: 'दत्ता', dattaji: 'दत्ता',
+  kashinath: 'काशिनाथ', kasinath: 'काशिनाथ', somnath: 'सोमनाथ', somnathji: 'सोमनाथ',
+  jagdish: 'जगदीश', jagadish: 'जगदीश', mukesh: 'मुकेश', naresh: 'नरेश',
+  umesh: 'उमेश', hitesh: 'हितेश', kamlesh: 'कमलेश', mangesh: 'मंगेश',
+  jayesh: 'जयेश', gajendra: 'गजेन्द्र', rajendra: 'राजेन्द्र', mahendra: 'महेंद्र',
+  devendra: 'देवेंद्र', jitendra: 'जितेंद्र', dharmendra: 'धर्मेंद्र', virendra: 'वीरेंद्र',
+  ravindra: 'रवींद्र', raveendra: 'रवींद्र', ravindr: 'रवींद्र',
+  dadaji: 'दादाजी', arjun: 'अर्जुन', arzoon: 'अर्जुन',
+  shravan: 'श्रावण', sravan: 'श्रावण', sravankumar: 'श्रावण',
+  bhavdas: 'भावदास', bhawdas: 'भावदास',
+  haresh: 'हरेश', hareshji: 'हरेश', roshan: 'रोशन', roshon: 'रोशन',
+  ashwin: 'अश्विन', aswin: 'अश्विन', ashvini: 'अश्विन',
+  uniram: 'उणीराम', uniramji: 'उणीराम', parshuram: 'परशुराम', parsaram: 'परशुराम',
+  vishwsh: 'विश्वास', vishwas: 'विश्वास', gangram: 'गंगाराम', gangaram: 'गंगाराम',
+  manohar: 'मनोहर', sanjay: 'संजय', sonjay: 'संजय',
+  bebilal: 'बेबीलाल', raju: 'राजू', rajoo: 'राजू',
+  devram: 'देवराम', dattu: 'दत्तू', kalu: 'काळू',
+  popat: 'पोपट', sitaram: 'सीताराम', shantaram: 'शांताराम',
+  soma: 'सोमा', dhalu: 'ढाळू', valu: 'वाळू', gotu: 'गोटू',
+  madhu: 'मधू', prabhu: 'प्रभू', ragunath: 'रघुनाथ', raghunath: 'रघुनाथ',
+  sajan: 'साजन', bajan: 'भाजन', chotiram: 'छोतीराम', chotiramji: 'छोतीराम',
+  karan: 'करण', ravi: 'रवी', rave: 'रवी', hareshbhai: 'हरेश',
+  sandipkumar: 'संदीप', sunilkumar: 'सुनील', anilkumar: 'अनिल',
 
-  // First Names (Female) - Common & Typo Variations
-  priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', pujha: 'पूजा', sneha: 'स्नेहा',
-  swati: 'स्वाती', swatee: 'स्वाती', neha: 'नेहा', nisha: 'निशा', kavita: 'कविता',
-  sunita: 'सुनिता', suneeta: 'सुनिता', anita: 'अनिता', aneeta: 'अनिता', sangita: 'संगीता',
-  sangeeta: 'संगीता', sangeta: 'संगीता', aarti: 'आरती', arti: 'आरती', shreya: 'श्रेया',
-  sakshi: 'साक्षी', saakshi: 'साक्षी', vaishnavi: 'वैष्णवी', tanvi: 'तन्वी', isha: 'ईशा',
-  radha: 'राधा', gauri: 'गौरी', gowri: 'गौरी', ananya: 'अनन्या', komal: 'कोमल',
-  shital: 'शीतल', sheetal: 'शीतल', sital: 'शीतल', shubhangi: 'शुभांगी', subhangi: 'शुभांगी',
-  rohini: 'रोहिणी', yogita: 'योगिता', ashwini: 'अश्विनी', aswini: 'अश्विनी',
-  priyanka: 'प्रियंका', priyaka: 'प्रियंका', pratiksha: 'प्रतीक्षा', harshada: 'हर्षदा',
-  rutuja: 'ऋतुजा', rutu: 'ऋतू', payal: 'पायल', pallavi: 'पल्लवी', punam: 'पूनम',
-  poonam: 'पूनम', rekha: 'रेखा', meena: 'मीना', mina: 'मीना', seema: 'सीमा',
-  sima: 'सीमा', rani: 'राणी', savita: 'सविता', sarita: 'सरिता', manjusha: 'मंजूषा',
-  manisha: 'मनीषा', kalpana: 'कल्पना', durga: 'दुर्गा', sita: 'सीता', geeta: 'गीता',
-  gita: 'गीता', lata: 'लता', mamta: 'ममता', urmila: 'उर्मिला', anjali: 'अंजली',
-  dipali: 'दीपाली', deepali: 'दीपाली', pranali: 'प्रणाली', sonali: 'सोनाली',
-  monali: 'मोनाली', rupali: 'रूपाली', roopali: 'रूपाली', shweta: 'श्वेता', sweta: 'श्वेता',
-  monika: 'मोनिका', snehal: 'स्नेहल', tejaswini: 'तेजस्विनी', divya: 'दिव्या',
-  diya: 'दिया', vaishali: 'वैशाली', kajal: 'काजल', karishma: 'करिश्मा',
-  jyoti: 'ज्योती', bhagyashree: 'भाग्यश्री', bhagyashri: 'भाग्यश्री',
+  // First Names (Female) - Standard & Common Misspellings / Typo Variations
+  priya: 'प्रिया', preeya: 'प्रिया',
+  pooja: 'पूजा', puja: 'पूजा', pujha: 'पूजा', puza: 'पूजा', poojah: 'पूजा',
+  sneha: 'स्नेहा', snehaji: 'स्नेहा',
+  swati: 'स्वाती', swatee: 'स्वाती', svati: 'स्वाती',
+  neha: 'नेहा', nayha: 'नेहा', nisha: 'निशा', neesha: 'निशा',
+  kavita: 'कविता', kaveeta: 'कविता',
+  sunita: 'सुनिता', suneeta: 'सुनिता', sonita: 'सुनिता',
+  anita: 'अनिता', aneeta: 'अनिता',
+  sangita: 'संगीता', sangeeta: 'संगीता', sangeta: 'संगीता',
+  aarti: 'आरती', arti: 'आरती', aartii: 'आरती',
+  shreya: 'श्रेया', sreya: 'श्रेया',
+  sakshi: 'साक्षी', saakshi: 'साक्षी', sakshii: 'साक्षी',
+  vaishnavi: 'वैष्णवी', vaishnvi: 'वैष्णवी', vaishanavi: 'वैष्णवी',
+  tanvi: 'तन्वी', tanvee: 'तन्वी', isha: 'ईशा', eesha: 'ईशा',
+  radha: 'राधा', radhika: 'राधिका',
+  gauri: 'गौरी', gowri: 'गौरी', gaury: 'गौरी',
+  ananya: 'अनन्या', komal: 'कोमल',
+  shital: 'शीतल', sheetal: 'शीतल', sital: 'शीतल',
+  shubhangi: 'शुभांगी', subhangi: 'शुभांगी', shubhangii: 'शुभांगी',
+  rohini: 'रोहिणी', roheeni: 'रोहिणी',
+  yogita: 'योगिता', yogeeta: 'योगिता',
+  ashwini: 'अश्विनी', aswini: 'अश्विनी', ashvini: 'अश्विनी',
+  priyanka: 'प्रियंका', priyaka: 'प्रियंका',
+  pratiksha: 'प्रतीक्षा', prateeksha: 'प्रतीक्षा', prathiksha: 'प्रतीक्षा',
+  harshada: 'हर्षदा', harshali: 'हर्षाली', harshai: 'हर्षाली',
+  rutuja: 'ऋतुजा', rutu: 'ऋतू', ritu: 'ऋतू', reetu: 'ऋतू',
+  payal: 'पायल', paayal: 'पायल',
+  pallavi: 'पल्लवी', palavi: 'पल्लवी',
+  punam: 'पूनम', poonam: 'पूनम',
+  rekha: 'रेखा', rekhaji: 'रेखा',
+  meena: 'मीना', mina: 'मीना', seema: 'सीमा', sima: 'सीमा',
+  rani: 'राणी', ranee: 'राणी',
+  savita: 'सविता', saveeta: 'सविता', sarita: 'सरिता', sareeta: 'सरिता',
+  manjusha: 'मंजूषा', manisha: 'मनीषा', maneesha: 'मनीषा',
+  kalpana: 'कल्पना', durga: 'दुर्गा', sita: 'सीता', seeta: 'सीता',
+  geeta: 'गीता', gita: 'गीता', lata: 'लता', mamta: 'ममता',
+  urmila: 'उर्मिला', anjali: 'अंजली', anjalee: 'अंजली',
+  dipali: 'दीपाली', deepali: 'दीपाली', depali: 'दीपाली',
+  pranali: 'प्रणाली', sonali: 'सोनाली', monali: 'मोनाली',
+  rupali: 'रूपाली', roopali: 'रूपाली',
+  shweta: 'श्वेता', sweta: 'श्वेता', sveta: 'श्वेता',
+  monika: 'मोनिका', snehal: 'स्नेहल', tejaswini: 'तेजस्विनी',
+  divya: 'दिव्या', diya: 'दिया', vaishali: 'वैशाली',
+  kajal: 'काजल', karishma: 'करिश्मा', kareeshma: 'करिश्मा',
+  jyoti: 'ज्योती', jyotee: 'ज्योती',
+  bhagyashree: 'भाग्यश्री', bhagyashri: 'भाग्यश्री', bhaghsree: 'भाग्यश्री',
+  namrata: 'नम्रता', madhuri: 'माधुरी', madhari: 'माधुरी',
+  archana: 'अर्चना', bhavana: 'भावना', bhavna: 'भावना',
+  chaitali: 'चैताली', chhaya: 'छाया', chaya: 'छाया',
+  deepti: 'दीप्ती', dipti: 'दीप्ती', gayatri: 'गायत्री', gaytri: 'गायत्री',
+  kirti: 'कीर्ती', keerti: 'कीर्ती', krutika: 'कृतिका', kritika: 'कृतिका',
+  madhavi: 'माधवी', mohini: 'मोहिनी', moheeni: 'मोहिनी',
+  neeta: 'नीता', nita: 'नीता', nikita: 'निकिता',
+  nilam: 'नीलम', neelam: 'नीलम', pranjal: 'प्रांजल',
+  pratibha: 'प्रतिभा', preeti: 'प्रीती', priti: 'प्रीती',
+  rajashree: 'राजश्री', rajashri: 'राजश्री', rakhi: 'राखी',
+  rashmi: 'रश्मी', renuka: 'रेणुका', riddhi: 'रिद्धी',
+  sandhya: 'संध्या', sanika: 'सानिका', sayali: 'सायली',
+  sharda: 'शारदा', shilpa: 'शिल्पा', shivani: 'शिवानी',
+  shravani: 'श्रावणी', shrutika: 'श्रुतिका', shruti: 'श्रुती',
+  simran: 'सिमरन', sonal: 'सोनल', soniya: 'सोनिया', sonia: 'सोनिया',
+  sudha: 'सुधा', sujata: 'सुजाता', sukanya: 'सुकन्या',
+  suman: 'सुमन', supriya: 'सुप्रिया', surabhi: 'सुरभी', surbhi: 'सुरभी',
+  surekha: 'सुरेखा', sushma: 'सुष्मा', sushila: 'सुशीला',
+  suvarna: 'सुवर्णा', swara: 'स्वरा', tanuja: 'तनुजा',
+  trupti: 'तृप्ती', urvashi: 'उर्वशी', vandana: 'वंदना',
+  varsha: 'वर्षा', vidya: 'विद्या', vijaya: 'विजया',
+  vrushali: 'वृषाली', laxmi: 'लक्ष्मी', lakshmi: 'लक्ष्मी',
+  anusaya: 'अनुसया', anusuya: 'अनुसया', asha: 'आशा',
+  pinti: 'पिंटी', dhanshree: 'धनश्री', dhanashri: 'धनश्री', dhanashree: 'धनश्री',
+  dhavali: 'ढवळी', kalyani: 'कल्याणी', roshni: 'रोशनी',
+  gagruti: 'जागृती', jagruti: 'जागृती', jagruthi: 'जागृती',
+  ravina: 'रवीना', tulshi: 'तुळशी', tulsi: 'तुळशी',
+  manju: 'मंजू', anju: 'अंजू', sanjana: 'संजना',
+  pragati: 'प्रगती',
 
-  // Surnames / Family Names (including Local & Ashram Shala Names)
-  patil: 'पाटील', pawar: 'पवार', shinde: 'शिंदे', deshmukh: 'देशमुख', kulkarni: 'कुलकर्णी',
-  jadhav: 'जाधव', gaikwad: 'गायकवाड', gayakwad: 'गायकवाड', chavan: 'चव्हाण', joshi: 'जोशी',
-  kadam: 'कदम', more: 'मोरे', kale: 'काळे', thorat: 'थोरात', sawant: 'सावंत',
-  bhosale: 'भोसले', bhosle: 'भोसले', salunkhe: 'साळुंखे', jagtap: 'जगताप', ghurde: 'घुरडे',
-  wagh: 'वाघ', kamble: 'कांबळे', mane: 'माने', nikam: 'निकम', ingale: 'इंगळे',
-  ingole: 'इंगोळे', mankar: 'मानकर', kharat: 'खरात', zope: 'झोपे', gore: 'गोरे',
-  auti: 'औटी', shelke: 'शेळके', sutar: 'सुतार', sonawane: 'सोनवणे', sonwane: 'सोनवणे',
-  landge: 'लांडगे', ghode: 'घोडे', bagul: 'बागुल', mahale: 'महाले', chaudhari: 'चौधरी',
-  chaudhary: 'चौधरी', borse: 'बोरसे', ahire: 'अहिरे', gangurde: 'गांगुर्डे',
-  bhamare: 'भामरे', hire: 'हिरे', pingle: 'पिंगळे', deore: 'देवरे', kapadnis: 'कापडणीस',
-  khairnar: 'खैरनार', kuwar: 'कुंवर', kunwar: 'कुंवर', gavit: 'गावीत', valvi: 'वळवी',
-  padvi: 'पाडवी', vasave: 'वसावे', thakre: 'ठाकरे', thakare: 'ठाकरे', malche: 'माळचे',
-  dhangar: 'धनगर', kokani: 'कोकणी', kokane: 'कोकणे', konkani: 'कोकणी', barde: 'बर्डे',
-  bendre: 'बेंद्रे', bendke: 'बेंदके', gavali: 'गवळी', shewale: 'शेवाळे', suryavanshi: 'सूर्यवंशी',
-  rathod: 'राठोड', chothe: 'चोथे', bhavsar: 'भावसार', bhoye: 'भोये', dhum: 'धूम',
-  dhumal: 'धुमाळ', waghmare: 'वाघमारे', gangode: 'गांगोडे', chaure: 'चौरे',
-  tadvi: 'तडवी', raut: 'राऊत', rawat: 'रावत', bhadane: 'भदाणे', sonawaneji: 'सोनवणे',
+  // Surnames / Family Names (Standard & Local Ashram Shala Surnames)
+  patil: 'पाटील', pateel: 'पाटील', paatil: 'पाटील', patille: 'पाटील',
+  pawar: 'पवार', pawaar: 'पवार', pawara: 'पवारा', pavar: 'पवार', pavarr: 'पवार',
+  shinde: 'शिंदे', sheende: 'शिंदे', sinde: 'शिंदे', shindey: 'शिंदे',
+  deshmukh: 'देशमुख', deshmuk: 'देशमुख', desmukh: 'देशमुख',
+  kulkarni: 'कुलकर्णी', koolkarni: 'कुलकर्णी',
+  jadhav: 'जाधव', jadav: 'जाधव', jaadhav: 'जाधव',
+  gaikwad: 'गायकवाड', gayakwad: 'गायकवाड', gaykwad: 'गायकवाड', gaikawad: 'गायकवाड',
+  chavan: 'चव्हाण', chavhan: 'चव्हाण', chawan: 'चव्हाण',
+  joshi: 'जोशी', joshee: 'जोशी',
+  kadam: 'कदम', more: 'मोरे', morey: 'मोरे',
+  kale: 'काळे', kaley: 'काळे', thorat: 'थोरात',
+  sawant: 'सावंत', saavant: 'सावंत',
+  bhosale: 'भोसले', bhosle: 'भोसले',
+  salunkhe: 'साळुंखे', salunke: 'साळुंखे',
+  jagtap: 'जगताप', ghurde: 'घुरडे', ghurdey: 'घुरडे',
+  wagh: 'वाघ', kamble: 'कांबळे', kambley: 'कांबळे',
+  mane: 'माने', maney: 'माने',
+  nikam: 'निकम', neekam: 'निकम',
+  ingale: 'इंगळे', ingole: 'इंगोळे',
+  mankar: 'मानकर', kharat: 'खरात', zope: 'झोपे', gore: 'गोरे',
+  auti: 'औटी', shelke: 'शेळके', sutar: 'सुतार',
+  sonawane: 'सोनवणे', sonwane: 'सोनवणे', sonawne: 'सोनवणे', sonavane: 'सोनवणे', sonavne: 'सोनवणे',
+  landge: 'लांडगे', ghode: 'घोडे',
+  bagul: 'बागुल', baagul: 'बागुल', bagool: 'बागुल',
+  mahale: 'महाले', mahaale: 'महाले', mahaley: 'महाले',
+  chaudhari: 'चौधरी', chaudhary: 'चौधरी', choudhari: 'चौधरी', choudhary: 'चौधरी', chodhari: 'चौधरी',
+  borse: 'बोरसे', borase: 'बोरसे', borsey: 'बोरसे',
+  ahire: 'अहिरे', aahire: 'अहिरे', aheere: 'अहिरे', ahirey: 'अहिरे',
+  gangurde: 'गांगुर्डे', gaangurde: 'गांगुर्डे', gangurdey: 'गांगुर्डे',
+  bhamare: 'भामरे', bhamre: 'भामरे', bhaamre: 'भामरे', bhamarey: 'भामरे',
+  hire: 'हिरे', hirey: 'हिरे',
+  pingle: 'पिंगळे', pingale: 'पिंगळे', pingley: 'पिंगळे',
+  deore: 'देवरे', devre: 'देवरे', devare: 'देवरे', deorey: 'देवरे',
+  kapadnis: 'कापडणीस', khairnar: 'खैरनार', kheirnar: 'खैरनार', khairnaar: 'खैरनार',
+  kuwar: 'कुंवर', kunwar: 'कुंवर',
+  gavit: 'गावीत', gaavit: 'गावीत', gawit: 'गावीत', gavith: 'गावीत',
+  valvi: 'वळवी', walvi: 'वळवी', valvee: 'वळवी',
+  padvi: 'पाडवी', padavi: 'पाडवी', paadvi: 'पाडवी',
+  vasave: 'वसावे', vasawe: 'वसावे', wasave: 'वसावे', wasawe: 'वसावे', vasawa: 'वसावे',
+  thakre: 'ठाकरे', thakare: 'ठाकरे', thaakre: 'ठाकरे',
+  malche: 'माळचे', dhangar: 'धनगर',
+  kokani: 'कोकणी', kokane: 'कोकणे', konkani: 'कोकणी', konkane: 'कोकणे',
+  barde: 'बर्डे', bendre: 'बेंद्रे', bendke: 'बेंदके',
+  gavali: 'गवळी', gavali: 'गवळी', gavli: 'गवळी',
+  shewale: 'शेवाळे', shevale: 'शेवाळे',
+  suryavanshi: 'सूर्यवंशी', suryawanshi: 'सूर्यवंशी', suryavansi: 'सूर्यवंशी',
+  rathod: 'राठोड', rathode: 'राठोड',
+  chothe: 'चोथे', bhavsar: 'भावसार',
+  bhoye: 'भोये', bhoy: 'भोये', bhoyeji: 'भोये',
+  dhum: 'धूम', dhumal: 'धुमाळ',
+  waghmare: 'वाघमारे', waghmaare: 'वाघमारे', waghmarey: 'वाघमारे',
+  gangode: 'गांगोडे', chaure: 'चौरे', chure: 'चौरे',
+  tadvi: 'तडवी', raut: 'राऊत', rawat: 'रावत',
+  bhadane: 'भदाणे', birari: 'बिरारी', bachhav: 'बच्छाव',
+  chitte: 'चित्ते', derle: 'डेर्ले', dhikale: 'ढिकले', dhongade: 'धोंगडे',
+  gaidhani: 'गायधनी', godse: 'गोडसे', govardhane: 'गोवर्धन', gunjal: 'गुंजाळ',
+  kandekar: 'कांदेकर', katkade: 'काटकडे', kokate: 'कोकाटे', kotwal: 'कोतवाल',
+  lonari: 'लोणारी', mandlik: 'मांडलिक', mogal: 'मोगल', nandre: 'नांद्रे',
+  pachorkar: 'पाचोरकर', pagar: 'पगार', palde: 'पाळदे', panpatil: 'पानपाटील',
+  pardeshi: 'परदेशी', pekhale: 'पेखळे', rasal: 'रसाळ',
+  sanap: 'सानप', sangle: 'सांगळे', satpute: 'सातपुते', shirke: 'शिर्के',
+  shirath: 'शिराठ', somvanshi: 'सोमवंशी', somwanshi: 'सोमवंशी',
+  tadge: 'तडगे', tambat: 'तांबट', tamboli: 'तांबोळी', tarle: 'तरळे',
+  thete: 'ठेठे', toche: 'तोचे', ugale: 'उगले', vaidya: 'वैद्य',
+  varpe: 'वारपे', vijapure: 'विजापूरे', waje: 'वाजे', wakchaure: 'वाकचौरे',
+  walunj: 'वाळुंज', wani: 'वाणी', yadav: 'यादव', yeole: 'येवले',
+  zhalte: 'झालटे', gite: 'गिते', bhalerao: 'भालेराव', misal: 'मिसाळ',
+  khade: 'खाडे', lokhande: 'लोखंडे', koli: 'कोळी', bhil: 'भिल्ल',
+  mali: 'माळी', jople: 'जोपळे', khandavi: 'खंडावी', khair: 'खैर',
+  kamdi: 'कामडी', bahiram: 'बहिराम',
 
-  // Places / General Terms
+  // Local Places & Academic / Sports Words
   waghamba: 'वाघंबा', baglan: 'बागलाण', satana: 'सटाणा', nashik: 'नाशिक',
+  kalwan: 'कळवण', surgana: 'सुरगाणा', dindori: 'दिंडोरी',
   ashram: 'आश्रम', shala: 'शाळा', madhyamik: 'माध्यमिक', shaskiya: 'शासकीय',
   kabaddi: 'कबड्डी', volleyball: 'व्हॉलीबॉल', handball: 'हँडबॉल', khokho: 'खो-खो',
-  running: 'धावणे', athletics: 'ॲथलेटिक्स', yoga: 'योग', pt: 'पीटी'
+  running: 'धावणे', athletics: 'ॲथलेटिक्स', yoga: 'योग', pt: 'पीटी',
+  general: 'सर्वसाधारण', athlete: 'खेळाडू', student: 'विद्यार्थी',
+  primary: 'प्राथमिक', secondary: 'माध्यमिक', teacher: 'शिक्षक'
 };
 
+/**
+ * Fast Levenshtein Distance for fuzzy typo matching
+ */
+function levenshteinDistance(s1: string, s2: string): number {
+  if (s1 === s2) return 0;
+  if (!s1.length) return s2.length;
+  if (!s2.length) return s1.length;
+
+  const len1 = s1.length;
+  const len2 = s2.length;
+  const prevRow = new Array(len2 + 1);
+  const currRow = new Array(len2 + 1);
+
+  for (let j = 0; j <= len2; j++) {
+    prevRow[j] = j;
+  }
+
+  for (let i = 0; i < len1; i++) {
+    currRow[0] = i + 1;
+    const c1 = s1.charCodeAt(i);
+
+    for (let j = 0; j < len2; j++) {
+      const c2 = s2.charCodeAt(j);
+      const cost = c1 === c2 ? 0 : 1;
+      currRow[j + 1] = Math.min(
+        currRow[j] + 1,       // Insertion
+        prevRow[j + 1] + 1,   // Deletion
+        prevRow[j] + cost     // Substitution
+      );
+    }
+
+    for (let j = 0; j <= len2; j++) {
+      prevRow[j] = currRow[j];
+    }
+  }
+
+  return prevRow[len2];
+}
+
+/**
+ * Fuzzy dictionary matcher: searches dictionary with typo tolerance
+ */
+function findClosestMarathiName(word: string): string | null {
+  const clean = word.toLowerCase().trim();
+  if (COMMON_MARATHI_NAMES[clean]) {
+    return COMMON_MARATHI_NAMES[clean];
+  }
+
+  // Pre-normalize common phonetic digraphs
+  const normalized = clean
+    .replace(/ee/g, 'i')
+    .replace(/oo/g, 'u')
+    .replace(/ph/g, 'f')
+    .replace(/shh/g, 'sh')
+    .replace(/w/g, 'v')
+    .replace(/z/g, 'j');
+
+  if (COMMON_MARATHI_NAMES[normalized]) {
+    return COMMON_MARATHI_NAMES[normalized];
+  }
+
+  let bestMatch: string | null = null;
+  let minDistance = 999;
+  const maxAllowedDist = clean.length <= 4 ? 1 : clean.length <= 8 ? 2 : 3;
+
+  for (const [key, devanagari] of Object.entries(COMMON_MARATHI_NAMES)) {
+    if (Math.abs(key.length - clean.length) > maxAllowedDist) continue;
+    
+    // First letter should ideally match
+    if (key[0] !== clean[0] && !(clean[0] === 'w' && key[0] === 'v') && !(clean[0] === 'v' && key[0] === 'w') && !(clean[0] === 'f' && key[0] === 'p')) {
+      continue;
+    }
+
+    const dist = levenshteinDistance(clean, key);
+    if (dist < minDistance && dist <= maxAllowedDist) {
+      minDistance = dist;
+      bestMatch = devanagari;
+      if (dist === 1) break; // Good enough match found
+    }
+  }
+
+  return bestMatch;
+}
+
+/**
+ * Syllabic & Conjunct Phonetic Transliteration Engine
+ */
 function transliterateWord(word: string): string {
   const clean = word.trim();
   if (!clean) return '';
@@ -95,15 +379,38 @@ function transliterateWord(word: string): string {
   }
 
   const lower = clean.toLowerCase();
-  if (COMMON_MARATHI_NAMES[lower]) {
-    return COMMON_MARATHI_NAMES[lower];
+
+  // 1. Direct Dictionary or Fuzzy Typo Match
+  const fuzzyMatch = findClosestMarathiName(lower);
+  if (fuzzyMatch) {
+    return fuzzyMatch;
   }
 
-  // Multi-Consonants / Conjuncts (जोडाक्षरे)
+  // 2. Suffix Decomposition (e.g. -rao, -bhau, -bai, -tai, -das, -nath, -ram, -dev, -kant, -prasad)
+  const commonSuffixes: Array<[string, string]> = [
+    ['raoji', 'रावजी'], ['rao', 'राव'], ['bhai', 'भाई'], ['bhau', 'भाऊ'],
+    ['kumar', 'कुमार'], ['kumari', 'कुमारी'], ['devi', 'देवी'], ['bai', 'बाई'],
+    ['tai', 'ताई'], ['nath', 'नाथ'], ['das', 'दास'], ['ramji', 'रामजी'],
+    ['ram', 'राम'], ['dev', 'देव'], ['deo', 'देव'], ['prasad', 'प्रसाद'],
+    ['kant', 'कांत'], ['lal', 'लाल'], ['singh', 'सिंग'], ['wanshi', 'वंशी'],
+    ['vanshi', 'वंशी'], ['kar', 'कर'], ['wale', 'वाले'], ['vale', 'वाले']
+  ];
+
+  for (const [sfx, sfxDev] of commonSuffixes) {
+    if (lower.length > sfx.length + 2 && lower.endsWith(sfx)) {
+      const base = lower.slice(0, -sfx.length);
+      const baseMatch = findClosestMarathiName(base);
+      if (baseMatch) {
+        return baseMatch + sfxDev;
+      }
+    }
+  }
+
+  // 3. Multi-Consonants / Conjuncts (जोडाक्षरे) & Digraphs
   const multiConsonants: Array<[string, string]> = [
-    ['dnyan', 'ज्ञान'], ['dny', 'ज्ञ'], ['jny', 'ज्ञ'], ['gy', 'ज्ञ'], ['dhyan', 'ज्ञान'],
+    ['dnyan', 'ज्ञान'], ['dny', 'ज्ञ'], ['jny', 'ज्ञ'], ['gyan', 'ज्ञान'], ['gy', 'ज्ञ'], ['dhyan', 'ज्ञान'],
     ['shw', 'श्व'], ['shr', 'श्र'], ['shh', 'ष'], ['sh', 'श'],
-    ['ksh', 'क्ष'], ['x', 'क्स'],
+    ['ksh', 'क्ष'], ['x', 'क्ष'],
     ['chhh', 'छ'], ['chh', 'छ'], ['ch', 'च'],
     ['kh', 'ख'], ['gh', 'घ'], ['th', 'थ'], ['dh', 'ध'],
     ['ph', 'फ'], ['bh', 'भ'], ['jh', 'झ'], ['rh', 'ऱ्ह'], ['wh', 'व्ह'],
@@ -112,7 +419,8 @@ function transliterateWord(word: string): string {
     ['dr', 'द्र'], ['br', 'ब्र'], ['mr', 'म्र'], ['vr', 'व्र'], ['st', 'स्त'],
     ['sp', 'स्प'], ['sk', 'स्क'], ['sn', 'स्न'], ['sm', 'स्म'], ['sy', 'स्य'],
     ['kt', 'क्त'], ['pt', 'प्त'], ['nt', 'ंत'], ['nd', 'ंद'], ['mb', 'ंब'],
-    ['mp', 'ंप'], ['nk', 'ंक'], ['ng', 'ंग'], ['nj', 'ंज']
+    ['mp', 'ंप'], ['nk', 'ंक'], ['ng', 'ंग'], ['nj', 'ंज'], ['ndr', 'ंद्र'],
+    ['shn', 'ष्ण'], ['shm', 'श्म'], ['hm', 'ह्म'], ['hy', 'ह्य'], ['ry', 'र्य']
   ];
 
   const singleConsonants: Record<string, string> = {
@@ -125,7 +433,7 @@ function transliterateWord(word: string): string {
   const initialVowels: Array<[string, string]> = [
     ['aai', 'आई'], ['aau', 'आऊ'], ['aa', 'आ'], ['ee', 'ई'], ['ii', 'ई'],
     ['oo', 'ऊ'], ['uu', 'ऊ'], ['ai', 'ऐ'], ['au', 'औ'], ['ou', 'औ'],
-    ['om', 'ओं'], ['ru', 'ऋ'], ['ri', 'ऋ'],
+    ['om', 'ॐ'], ['ru', 'ऋ'], ['ri', 'ऋ'],
     ['a', 'अ'], ['i', 'इ'], ['u', 'उ'], ['e', 'ए'], ['o', 'ओ']
   ];
 
@@ -138,7 +446,6 @@ function transliterateWord(word: string): string {
   let result = '';
   let i = 0;
   let isStart = true;
-  let lastWasConsonant = false;
 
   while (i < lower.length) {
     if (isStart) {
@@ -150,7 +457,6 @@ function transliterateWord(word: string): string {
           i += v.length;
           matchedVowel = true;
           isStart = false;
-          lastWasConsonant = false;
           break;
         }
       }
@@ -165,7 +471,6 @@ function transliterateWord(word: string): string {
         i += cSeq.length;
         matchedConsonant = true;
         isStart = false;
-        lastWasConsonant = true;
         break;
       }
     }
@@ -182,7 +487,6 @@ function transliterateWord(word: string): string {
             }
             i += vSeq.length;
             matchedMatra = true;
-            lastWasConsonant = false;
             break;
           }
         }
@@ -196,7 +500,6 @@ function transliterateWord(word: string): string {
       result += singleConsonants[ch];
       i += 1;
       isStart = false;
-      lastWasConsonant = true;
 
       // Check if followed by vowel / matra
       if (i < lower.length) {
@@ -210,7 +513,6 @@ function transliterateWord(word: string): string {
             }
             i += vSeq.length;
             matchedMatra = true;
-            lastWasConsonant = false;
             break;
           }
         }
@@ -226,7 +528,6 @@ function transliterateWord(word: string): string {
         i += v.length;
         matchedInnerVowel = true;
         isStart = false;
-        lastWasConsonant = false;
         break;
       }
     }
@@ -241,18 +542,31 @@ function transliterateWord(word: string): string {
   return result;
 }
 
-export function transliterateEnglishToMarathi(name: string | undefined | null): string {
+/**
+ * guessMarathiName - Main entry point for intelligent English to Marathi transliteration.
+ * Handles single names or multi-word full names (e.g. "Pawar Yogesh Ashok", "Sures Bagul").
+ */
+export function guessMarathiName(name: string | undefined | null): string {
   if (!name) return '';
   const trimmed = name.trim();
   if (!trimmed) return '';
 
+  // Preserve already Devanagari text
+  if (/^[\u0900-\u097F\s.,'-]+$/.test(trimmed)) {
+    return trimmed;
+  }
+
   const words = trimmed.split(/\s+/);
-  return words.map(w => transliterateWord(w)).join(' ').trim();
+  return words.map(w => transliterateWord(w)).filter(Boolean).join(' ').trim();
+}
+
+export function transliterateEnglishToMarathi(name: string | undefined | null): string {
+  return guessMarathiName(name);
 }
 
 export function getDisplayNameForLocale(name: string | undefined | null, nameMarathi: string | undefined | null, locale: 'en' | 'mr' = 'mr') {
   if (locale === 'mr') {
-    return (nameMarathi || transliterateEnglishToMarathi(name || '') || name || '').trim();
+    return (nameMarathi && nameMarathi.trim()) ? nameMarathi.trim() : (guessMarathiName(name || '') || name || '').trim();
   }
   return (name || '').trim();
 }

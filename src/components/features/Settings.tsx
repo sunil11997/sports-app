@@ -32,7 +32,8 @@ import {
   Smartphone as Phone,
   UploadCloud,
   History,
-  RotateCcw
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -58,11 +59,34 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [passwordInput, setPasswordInput] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isFixingNames, setIsFixingNames] = useState(false);
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   
   const LOGO_INAPP = "/icon-512.png";
+
+  const handleAutoFixMarathiNames = async () => {
+    try {
+      setIsFixingNames(true);
+      const count = await schoolData.autoFixAllMarathiNames();
+      toast({
+        title: language === 'Marathi' ? "मराठी नावे अपडेट झाली!" : "Marathi Names Auto-Fixed!",
+        description: language === 'Marathi' 
+          ? `${count} विद्यार्थ्यांची मराठी नावे यशस्वीरित्या दुरुस्त व जतन केली.` 
+          : `Successfully verified and generated Marathi names for ${count} students.`,
+        className: "bg-emerald-600 text-white font-black"
+      });
+    } catch (e) {
+      toast({
+        title: "Sync Error",
+        description: "Could not auto-fix Marathi names.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFixingNames(false);
+    }
+  };
 
   const handleManualExport = () => {
     schoolData.exportBackupData();
@@ -237,6 +261,14 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             <ShieldAlert className="w-3 h-3 text-primary" /> Data & Safety
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
+            <SettingsItem 
+              icon={Sparkles} 
+              color="bg-amber-500" 
+              label={language === 'Marathi' ? "मराठी नावे आपोआप दुरुस्त करा" : "Auto-Fix & Guess Marathi Names"} 
+              sublabel={language === 'Marathi' ? "सर्व विद्यार्थ्यांची मराठी नावे तपासा व अचूक भरा" : "1-Click Devanagari typo-fix & generator"} 
+              onClick={handleAutoFixMarathiNames}
+              disabled={isFixingNames}
+            />
             <SettingsItem icon={FileJson} color="bg-indigo-500" label="Export Registry" sublabel="Generate JSON Backup" onClick={handleManualExport} />
             <SettingsItem 
               icon={UploadCloud} 

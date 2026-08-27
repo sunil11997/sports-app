@@ -657,11 +657,11 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
 
                         {/* Role Tags */}
                         <td className="py-3.5 px-4 text-center">
-                          {idx === 0 ? (
+                          {((player.isCaptain || (currentPos && currentPos.toLowerCase().includes('captain')) || (player.positions?.[selectedSport] && player.positions[selectedSport].toLowerCase().includes('captain')))) ? (
                             <Badge className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 shadow-sm">
                               ⭐ कर्णधार (CPT)
                             </Badge>
-                          ) : idx === 1 ? (
+                          ) : ((player.isViceCaptain || (currentPos && currentPos.toLowerCase().includes('vice')) || (player.positions?.[selectedSport] && player.positions[selectedSport].toLowerCase().includes('vice')))) ? (
                             <Badge className="bg-slate-300 text-slate-900 font-black text-[9px] px-2 py-0.5">
                               🥈 उपकर्णधार (VC)
                             </Badge>

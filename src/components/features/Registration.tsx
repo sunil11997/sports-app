@@ -445,13 +445,35 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <FormField control={form.control} name="fatherName" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Father&apos;s Name (वडिलांचे नाव)</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                  <span>Father&apos;s Name (वडिलांचे नाव)</span>
+                                  {field.value && !/[\u0900-\u097F]/.test(field.value) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => form.setValue('fatherName', transliterateEnglishToMarathi(field.value))}
+                                      className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
+                                    >
+                                      मराठीत: {transliterateEnglishToMarathi(field.value)}
+                                    </button>
+                                  )}
+                                </FormLabel>
                                 <FormControl><Input placeholder="Father's full name" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />
                             <FormField control={form.control} name="motherName" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Mother&apos;s Name (आईचे नाव)</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                  <span>Mother&apos;s Name (आईचे नाव)</span>
+                                  {field.value && !/[\u0900-\u097F]/.test(field.value) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => form.setValue('motherName', transliterateEnglishToMarathi(field.value))}
+                                      className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
+                                    >
+                                      मराठीत: {transliterateEnglishToMarathi(field.value)}
+                                    </button>
+                                  )}
+                                </FormLabel>
                                 <FormControl><Input placeholder="Mother's name" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
                               </FormItem>
                             )} />

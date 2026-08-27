@@ -33,127 +33,29 @@ import {
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-// -------------------------------------------------------------
-// Web Audio API Synthesizer (100% Offline, Zero External MP3s)
-// -------------------------------------------------------------
+import { sounds } from '@/lib/soundEffects';
+
 class SoundEffects {
-  private ctx: AudioContext | null = null;
   public enabled: boolean = true;
 
-  private init() {
-    if (!this.ctx && typeof window !== 'undefined') {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
-      }
-    }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-  }
-
-  // Short Warning Tick
   public playTick() {
     if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.08);
-    } catch (e) {}
+    sounds.playCountdownTick(false);
   }
 
-  // High Warning Beep (at 10s / 5s)
   public playWarning() {
     if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.15);
-    } catch (e) {}
+    sounds.playCountdownTick(true);
   }
 
-  // Loud Referee Whistle (Dual high harmonic frequencies with flutter)
   public playWhistle() {
     if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    try {
-      const now = this.ctx.currentTime;
-      const osc1 = this.ctx.createOscillator();
-      const osc2 = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc1.type = 'sine';
-      osc2.type = 'sine';
-      osc1.frequency.setValueAtTime(2600, now);
-      osc2.frequency.setValueAtTime(3100, now);
-
-      // Tremolo flutter
-      const lfo = this.ctx.createOscillator();
-      const lfoGain = this.ctx.createGain();
-      lfo.frequency.setValueAtTime(25, now);
-      lfoGain.gain.setValueAtTime(200, now);
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc1.frequency);
-      lfoGain.connect(osc2.frequency);
-
-      gain.gain.setValueAtTime(0.8, now);
-      gain.gain.setValueAtTime(0.8, now + 0.6);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.85);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      lfo.start(now);
-      osc1.start(now);
-      osc2.start(now);
-      lfo.stop(now + 0.85);
-      osc1.stop(now + 0.85);
-      osc2.stop(now + 0.85);
-    } catch (e) {}
+    sounds.playWhistle(0.85);
   }
 
-  // Deep Electric Buzzer (00:00 Raid Over / Inning End)
   public playBuzzer() {
     if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    try {
-      const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(160, now);
-      osc.frequency.linearRampToValueAtTime(140, now + 1.1);
-
-      gain.gain.setValueAtTime(0.9, now);
-      gain.gain.setValueAtTime(0.8, now + 0.9);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 1.2);
-    } catch (e) {}
+    sounds.playBuzzer(1.2);
   }
 }
 

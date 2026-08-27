@@ -49,9 +49,9 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
     const schoolName = getOfficialSchoolName(schoolProfile, true);
     const teacherName = getTeacherName(schoolProfile);
 
-    const playerListText = squad.map((p, i) => {
-      const displayName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
-      const role = i === 0 ? ' (⭐ कर्णधार - Captain)' : i === 1 ? ' (🥈 उपकर्णधार - VC)' : '';
+      const isCapt = p.isCaptain || (p.positions?.[preselectedSport || ''] && p.positions[preselectedSport || ''].toLowerCase().includes('captain'));
+      const isVC = p.isViceCaptain || (p.positions?.[preselectedSport || ''] && p.positions[preselectedSport || ''].toLowerCase().includes('vice'));
+      const role = isCapt ? ' (⭐ कर्णधार - Captain)' : isVC ? ' (🥈 उपकर्णधार - VC)' : '';
       return `${i + 1}. ${displayName} (इयत्ता ${p.std} वी)${role}`;
     }).join('\n');
 
@@ -254,9 +254,9 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
                         <tr key={p.id} className={cn("hover:bg-slate-50/80 transition-colors", i === 0 && "bg-amber-50/40")}>
                           <td className="p-3.5 pl-5">
                             <div className="flex items-center gap-2">
-                              {i === 0 ? (
+                              {p.isCaptain || (p.positions?.[preselectedSport || ''] && p.positions[preselectedSport || ''].toLowerCase().includes('captain')) ? (
                                 <span className="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[9px] uppercase shadow-xs">C</span>
-                              ) : i === 1 ? (
+                              ) : p.isViceCaptain || (p.positions?.[preselectedSport || ''] && p.positions[preselectedSport || ''].toLowerCase().includes('vice')) ? (
                                 <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-black text-[9px] uppercase">VC</span>
                               ) : (
                                 <span className="text-[10px] font-bold text-slate-400">#{i + 1}</span>

@@ -19,7 +19,7 @@ import {
   Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn, shareToWhatsApp } from '@/lib/utils';
+import { cn, shareToWhatsApp, getDisplayNameForLocale } from '@/lib/utils';
 import { format } from 'date-fns';
 import { 
   XAxis, 
@@ -108,7 +108,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
       phone: player.mobileNumber,
       schoolName: store.data.schoolProfile.schoolName,
       teacherName: store.data.schoolProfile.teacherName,
-      studentName: player.nameMarathi || player.name,
+      studentName: getDisplayNameForLocale(player.name, player.nameMarathi, 'mr'),
       std: player.std,
       age: player.age,
       dob: player.dob,
@@ -169,7 +169,7 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
             <Table className="min-w-max border-collapse">
               <TableHeader className="bg-muted/80 sticky top-0 z-20">
                 <TableRow>
-                  <TableHead className="border-r h-14 px-8 font-black uppercase w-[220px] sticky left-0 bg-muted z-30">Student Profile</TableHead>
+                  <TableHead className="border-r h-14 px-8 font-black uppercase w-[240px] sticky left-0 bg-muted z-30">Student Profile</TableHead>
                   <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px]">{currentLabels.metric1}</TableHead>
                   <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[110px]">{currentLabels.metric7}</TableHead>
                   <TableHead className="border-r h-14 px-2 font-black uppercase text-center w-[90px] bg-primary/5">SCORE %</TableHead>
@@ -184,9 +184,14 @@ export function StandardPerformanceRegistry({ store, std }: { store: any, std: s
                   return (
                     <TableRow key={p.id} className={cn("border-b h-14", isPulse && "bg-emerald-50 animate-success-pulse")}>
                       <TableCell className="border-r px-8 font-black sticky left-0 bg-white z-10">
-                        <div className="flex items-center gap-2">
-                           {p.name.toUpperCase()}
-                           {isSyncing && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
+                        <div className="flex flex-col">
+                          <span className="font-extrabold text-xs text-slate-900 leading-tight">
+                            {getDisplayNameForLocale(p.name, p.nameMarathi, 'mr')}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground font-semibold uppercase">
+                            {p.name}
+                          </span>
+                          {isSyncing && <Loader2 className="w-3 h-3 animate-spin text-accent mt-0.5" />}
                         </div>
                       </TableCell>
                       <TableCell className="border-r p-0"><Input type="number" className="h-14 text-center border-0" value={r.metric1 || ''} onBlur={() => handleAutoSave(p)} onChange={(e) => handleValueChange(p.id, 'metric1', e.target.value)} /></TableCell>
