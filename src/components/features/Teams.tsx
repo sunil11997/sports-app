@@ -49,6 +49,8 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
     const schoolName = getOfficialSchoolName(schoolProfile, true);
     const teacherName = getTeacherName(schoolProfile);
 
+    const playerListText = squad.map((p: any, i: number) => {
+      const displayName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
       const isCapt = p.isCaptain || (p.positions?.[preselectedSport || ''] && p.positions[preselectedSport || ''].toLowerCase().includes('captain'));
       const isVC = p.isViceCaptain || (p.positions?.[preselectedSport || ''] && p.positions[preselectedSport || ''].toLowerCase().includes('vice'));
       const role = isCapt ? ' (⭐ कर्णधार - Captain)' : isVC ? ' (🥈 उपकर्णधार - VC)' : '';
