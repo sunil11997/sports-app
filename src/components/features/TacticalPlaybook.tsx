@@ -16,6 +16,7 @@ import {
   DialogTitle, 
   DialogFooter 
 } from "@/components/ui/dialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Layout, 
   Save, 
@@ -40,10 +41,13 @@ import {
   Volume2,
   Radio,
   Play,
-  Share2
+  Share2,
+  Crown,
+  Shirt,
+  UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
+import { cn, getOfficialSchoolName, getPrintSignatureBlockHtml, getDisplayNameForLocale, transliterateEnglishToMarathi } from '@/lib/utils';
 import { format } from 'date-fns';
 
 // 1. Formation Presets with Player Coordinates on a 100x60 Tactical Grid
@@ -714,6 +718,18 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
   const [decisionFilter, setDecisionFilter] = useState<string>("All");
   const [decisionSearch, setDecisionSearch] = useState<string>("");
   
+  // Real Players from Institutional Database
+  const [assignedPlayerMap, setAssignedPlayerMap] = useState<Record<string, string>>({});
+  const [selectedSlotForAssignment, setSelectedSlotForAssignment] = useState<{ id: string; roleMr: string; team: string } | null>(null);
+  const [isPlayerAssignModalOpen, setIsPlayerAssignModalOpen] = useState(false);
+  const [selectedRealPlayerDetails, setSelectedRealPlayerDetails] = useState<any | null>(null);
+
+  const sportPlayers = useMemo(() => {
+    return (store?.data?.players || []).filter((p: any) => 
+      !activeSport || activeSport === 'All' || (p.sports && p.sports.includes(activeSport))
+    );
+  }, [store?.data?.players, activeSport]);
+
   // Custom Plan Builder
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [customPlanTitle, setCustomPlanTitle] = useState("");
@@ -738,6 +754,19 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
   const activeFormation = useMemo(() => {
     return formationsList.find(f => f.id === selectedFormationId) || formationsList[0];
   }, [formationsList, selectedFormationId]);
+
+  // Auto-map real players from school roster to home team slots
+  useEffect(() => {
+    if (!activeFormation) return;
+    const initialMap: Record<string, string> = {};
+    const homeSlots = activeFormation.players.filter(p => p.team === 'home');
+    homeSlots.forEach((slot, idx) => {
+      if (sportPlayers[idx]) {
+        initialMap[slot.id] = sportPlayers[idx].id;
+      }
+    });
+    setAssignedPlayerMap(prev => ({ ...initialMap, ...prev }));
+  }, [activeFormation, sportPlayers]);
 
   const tacticalDecisionsList = useMemo(() => {
     const list = GAME_TACTICAL_DECISIONS[activeSport] || GAME_TACTICAL_DECISIONS['Kabaddi'] || [];
@@ -1010,50 +1039,180 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                 </div>
               </div>
 
-              {/* DYNAMIC SVG TACTICAL COURT */}
-              <div className="w-full aspect-[16/10] bg-emerald-900/90 rounded-2xl border-4 border-white/40 relative overflow-hidden shadow-inner flex items-center justify-center select-none">
+              {/* DYNAMIC REALISTIC SVG TACTICAL COURT */}
+              <div className="w-full aspect-[16/10] bg-slate-900 rounded-3xl border-4 border-amber-400/40 relative overflow-hidden shadow-2xl flex items-center justify-center select-none">
                 
-                {/* Court Markings based on sport */}
                 <svg viewBox="0 0 100 100" className="w-full h-full absolute inset-0">
-                  {/* Grid Lines */}
-                  <rect x="0" y="0" width="100" height="100" fill="#064e3b" />
-                  
-                  {/* Outer Boundary */}
-                  <rect x="5" y="5" width="90" height="90" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" />
-                  
-                  {/* Midline */}
-                  <line x1="5" y1="50" x2="95" y2="50" stroke="#f59e0b" strokeWidth="2" strokeDasharray="1 0" />
-                  <circle cx="50" cy="50" r="8" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                  <defs>
+                    {/* Realistic Grass / Mat Gradient Textures */}
+                    <radialGradient id="kabaddiMatGrad" cx="50%" cy="50%" r="70%">
+                      <stop offset="0%" stopColor="#0f766e" />
+                      <stop offset="100%" stopColor="#042f2e" />
+                    </radialGradient>
+                    <linearGradient id="khoClayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#9a3412" />
+                      <stop offset="50%" stopColor="#7c2d12" />
+                      <stop offset="100%" stopColor="#451a03" />
+                    </linearGradient>
+                    <linearGradient id="volleyFloorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ea580c" />
+                      <stop offset="50%" stopColor="#c2410c" />
+                      <stop offset="100%" stopColor="#9a3412" />
+                    </linearGradient>
+                    <linearGradient id="handballFloorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#0284c7" />
+                      <stop offset="100%" stopColor="#0369a1" />
+                    </linearGradient>
+                    <linearGradient id="trackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#b91c1c" />
+                      <stop offset="100%" stopColor="#7f1d1d" />
+                    </linearGradient>
+                    <pattern id="netMesh" width="2" height="2" patternUnits="userSpaceOnUse">
+                      <rect width="2" height="2" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.2" />
+                    </pattern>
+                  </defs>
 
-                  {/* Sport Specific Ground Lines */}
+                  {/* ---------------- 1. KABADDI PRO MAT SURFACE ---------------- */}
                   {activeSport === 'Kabaddi' && (
-                    <>
-                      {/* Baulk Lines */}
-                      <line x1="5" y1="32" x2="95" y2="32" stroke="rgba(255,255,255,0.6)" strokeWidth="1" />
-                      <line x1="5" y1="68" x2="95" y2="68" stroke="rgba(255,255,255,0.6)" strokeWidth="1" />
-                      {/* Bonus Lines */}
-                      <line x1="5" y1="24" x2="95" y2="24" stroke="#facc15" strokeWidth="1.2" strokeDasharray="3 2" />
-                      <line x1="5" y1="76" x2="95" y2="76" stroke="#facc15" strokeWidth="1.2" strokeDasharray="3 2" />
-                      {/* Lobbies */}
-                      <line x1="12" y1="5" x2="12" y2="95" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
-                      <line x1="88" y1="5" x2="88" y2="95" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
-                    </>
+                    <g>
+                      {/* Court Floor */}
+                      <rect x="0" y="0" width="100" height="100" fill="url(#kabaddiMatGrad)" />
+                      
+                      {/* Lobbies (Left & Right Yellow Borders) */}
+                      <rect x="5" y="5" width="8" height="90" fill="#ca8a04" opacity="0.45" />
+                      <rect x="87" y="5" width="8" height="90" fill="#ca8a04" opacity="0.45" />
+                      <text x="9" y="52" fontSize="2" fill="#fef08a" fontWeight="900" transform="rotate(-90 9 52)" textAnchor="middle">LOBBY (लॉबी)</text>
+                      <text x="91" y="52" fontSize="2" fill="#fef08a" fontWeight="900" transform="rotate(90 91 52)" textAnchor="middle">LOBBY (लॉबी)</text>
+
+                      {/* Outer Main Boundary */}
+                      <rect x="5" y="5" width="90" height="90" fill="none" stroke="#ffffff" strokeWidth="1.6" />
+                      
+                      {/* Midline (मध्य रेषा) */}
+                      <line x1="5" y1="50" x2="95" y2="50" stroke="#f59e0b" strokeWidth="2" />
+                      <text x="50" y="49" fontSize="2.2" fill="#f59e0b" fontWeight="900" textAnchor="middle">◄ MID LINE (मध्य रेषा) ►</text>
+                      
+                      {/* Baulk Lines (बॉक रेषा - 3.75m from midline) */}
+                      <line x1="5" y1="32" x2="95" y2="32" stroke="#ffffff" strokeWidth="1.2" />
+                      <text x="50" y="31" fontSize="1.8" fill="#ffffff" fontWeight="bold" opacity="0.8" textAnchor="middle">BAULK LINE (बॉक रेषा)</text>
+                      <line x1="5" y1="68" x2="95" y2="68" stroke="#ffffff" strokeWidth="1.2" />
+                      <text x="50" y="67" fontSize="1.8" fill="#ffffff" fontWeight="bold" opacity="0.8" textAnchor="middle">BAULK LINE (बॉक रेषा)</text>
+                      
+                      {/* Bonus Lines (बोनस रेषा - 1m from baulk line) */}
+                      <line x1="13" y1="24" x2="87" y2="24" stroke="#facc15" strokeWidth="1.4" strokeDasharray="3 1.5" />
+                      <text x="50" y="23" fontSize="2" fill="#fde047" fontWeight="900" textAnchor="middle">★ BONUS LINE (बोनस रेषा) ★</text>
+                      <line x1="13" y1="76" x2="87" y2="76" stroke="#facc15" strokeWidth="1.4" strokeDasharray="3 1.5" />
+                      <text x="50" y="75" fontSize="2" fill="#fde047" fontWeight="900" textAnchor="middle">★ BONUS LINE (बोनस रेषा) ★</text>
+
+                      {/* Half Court Zone Labels */}
+                      <text x="50" y="10" fontSize="2.4" fill="rgba(255,255,255,0.3)" fontWeight="900" textAnchor="middle">प्रतिस्पर्धी बाजू (OPPONENT ZONE)</text>
+                      <text x="50" y="93" fontSize="2.4" fill="rgba(255,255,255,0.3)" fontWeight="900" textAnchor="middle">आपली बाजू (OUR DEFENSE)</text>
+                    </g>
                   )}
 
+                  {/* ---------------- 2. KHO-KHO AUTHENTIC ARENA ---------------- */}
+                  {activeSport === 'Kho Kho' && (
+                    <g>
+                      {/* Mud/Clay Surface */}
+                      <rect x="0" y="0" width="100" height="100" fill="url(#khoClayGrad)" />
+                      <rect x="6" y="6" width="88" height="88" fill="none" stroke="#ffffff" strokeWidth="1.4" />
+
+                      {/* Central Running Lane */}
+                      <rect x="15" y="47" width="70" height="6" fill="rgba(0,0,0,0.2)" stroke="#ffffff" strokeWidth="0.8" />
+                      
+                      {/* 2 End Wooden Poles with Turning Radius */}
+                      <circle cx="15" cy="50" r="4.5" fill="none" stroke="#f59e0b" strokeWidth="0.8" strokeDasharray="1 1" />
+                      <circle cx="15" cy="50" r="2.2" fill="#b45309" stroke="#ffffff" strokeWidth="0.8" />
+                      <text x="15" y="44" fontSize="2" fill="#fde047" fontWeight="bold" textAnchor="middle">खांब १ (Pole 1)</text>
+
+                      <circle cx="85" cy="50" r="4.5" fill="none" stroke="#f59e0b" strokeWidth="0.8" strokeDasharray="1 1" />
+                      <circle cx="85" cy="50" r="2.2" fill="#b45309" stroke="#ffffff" strokeWidth="0.8" />
+                      <text x="85" y="44" fontSize="2" fill="#fde047" fontWeight="bold" textAnchor="middle">खांब २ (Pole 2)</text>
+
+                      {/* 8 Central Sitting Squares with Directional Indicators */}
+                      {[23, 31, 39, 47, 55, 63, 71, 79].map((cx, idx) => (
+                        <g key={idx}>
+                          <rect x={cx - 2.5} y="47.5" width="5" height="5" fill="#f59e0b" rx="0.8" stroke="#ffffff" strokeWidth="0.6" />
+                          <text x={cx} y="51" fontSize="2" fontWeight="900" fill="#0f172a" textAnchor="middle">
+                            {idx % 2 === 0 ? '▲' : '▼'}
+                          </text>
+                        </g>
+                      ))}
+
+                      {/* Cross Lanes */}
+                      {[23, 31, 39, 47, 55, 63, 71, 79].map((cx, idx) => (
+                        <line key={`lane-${idx}`} x1={cx} y1="6" x2={cx} y2="94" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
+                      ))}
+
+                      <text x="50" y="10" fontSize="2.4" fill="rgba(255,255,255,0.4)" fontWeight="900" textAnchor="middle">खो-खो मैदान (८ चौकोन व २ खांब)</text>
+                    </g>
+                  )}
+
+                  {/* ---------------- 3. VOLLEYBALL OLYMPIC COURT ---------------- */}
                   {activeSport === 'Volleyball' && (
-                    <>
+                    <g>
+                      {/* Hardwood Surface */}
+                      <rect x="0" y="0" width="100" height="100" fill="#1e3a8a" />
+                      <rect x="10" y="10" width="80" height="80" fill="url(#volleyFloorGrad)" stroke="#ffffff" strokeWidth="1.5" />
+
+                      {/* Midline 3D Net */}
+                      <line x1="10" y1="50" x2="90" y2="50" stroke="#ffffff" strokeWidth="2.5" />
+                      <rect x="10" y="48.5" width="80" height="3" fill="url(#netMesh)" stroke="#f59e0b" strokeWidth="0.6" />
+                      {/* Antenna Markers */}
+                      <line x1="10" y1="46" x2="10" y2="54" stroke="#ef4444" strokeWidth="1" />
+                      <line x1="90" y1="46" x2="90" y2="54" stroke="#ef4444" strokeWidth="1" />
+                      <text x="50" y="47.5" fontSize="2" fill="#ffffff" fontWeight="900" textAnchor="middle">NET (जाळी)</text>
+
                       {/* 3-meter Attack Lines */}
-                      <line x1="5" y1="35" x2="95" y2="35" stroke="#facc15" strokeWidth="1.5" />
-                      <line x1="5" y1="65" x2="95" y2="65" stroke="#facc15" strokeWidth="1.5" />
-                    </>
+                      <line x1="10" y1="35" x2="90" y2="35" stroke="#ffffff" strokeWidth="1.2" />
+                      <text x="50" y="34" fontSize="1.8" fill="#fef08a" fontWeight="bold" textAnchor="middle">३-मीटर अटॅक लाईन (3M ATTACK LINE)</text>
+
+                      <line x1="10" y1="65" x2="90" y2="65" stroke="#ffffff" strokeWidth="1.2" />
+                      <text x="50" y="64" fontSize="1.8" fill="#fef08a" fontWeight="bold" textAnchor="middle">३-मीटर अटॅक लाईन (3M ATTACK LINE)</text>
+
+                      {/* Service Zones */}
+                      <text x="50" y="8" fontSize="2" fill="#ffffff" fontWeight="bold" textAnchor="middle">सर्व्हिस झोन (SERVICE ZONE)</text>
+                      <text x="50" y="96" fontSize="2" fill="#ffffff" fontWeight="bold" textAnchor="middle">सर्व्हिस झोन (SERVICE ZONE)</text>
+                    </g>
                   )}
 
+                  {/* ---------------- 4. HANDBALL & OTHER SPORTS ---------------- */}
                   {activeSport === 'Handball' && (
-                    <>
-                      {/* 6-meter D-Zone Arc */}
-                      <path d="M 20 5 A 30 30 0 0 0 80 5" fill="none" stroke="#facc15" strokeWidth="1.5" />
-                      <path d="M 20 95 A 30 30 0 0 1 80 95" fill="none" stroke="#facc15" strokeWidth="1.5" />
-                    </>
+                    <g>
+                      <rect x="0" y="0" width="100" height="100" fill="url(#handballFloorGrad)" />
+                      <rect x="6" y="6" width="88" height="88" fill="none" stroke="#ffffff" strokeWidth="1.5" />
+                      
+                      {/* Midline */}
+                      <line x1="6" y1="50" x2="94" y2="50" stroke="#ffffff" strokeWidth="1.2" />
+
+                      {/* 6m Goal Crease D-Zones */}
+                      <path d="M 22 6 A 28 28 0 0 0 78 6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.4" />
+                      <path d="M 22 94 A 28 28 0 0 1 78 94" fill="#0284c7" stroke="#ffffff" strokeWidth="1.4" />
+                      <text x="50" y="16" fontSize="2" fill="#ffffff" fontWeight="bold" textAnchor="middle">६-मीटर डी-झोन (6M D-ZONE)</text>
+                      <text x="50" y="86" fontSize="2" fill="#ffffff" fontWeight="bold" textAnchor="middle">६-मीटर डी-झोन (6M D-ZONE)</text>
+
+                      {/* 9m Free Throw Dotted Arc */}
+                      <path d="M 16 6 A 34 34 0 0 0 84 6" fill="none" stroke="#facc15" strokeWidth="1.2" strokeDasharray="3 2" />
+                      <path d="M 16 94 A 34 34 0 0 1 84 94" fill="none" stroke="#facc15" strokeWidth="1.2" strokeDasharray="3 2" />
+
+                      {/* 7m Penalty Spot */}
+                      <line x1="47" y1="21" x2="53" y2="21" stroke="#ffffff" strokeWidth="1.5" />
+                      <line x1="47" y1="79" x2="53" y2="79" stroke="#ffffff" strokeWidth="1.5" />
+                    </g>
+                  )}
+
+                  {activeSport === 'Running' && (
+                    <g>
+                      <rect x="0" y="0" width="100" height="100" fill="url(#trackGrad)" />
+                      {/* 8 Running Lanes */}
+                      {[8, 14, 20, 26, 32, 38, 44, 50].map((r, i) => (
+                        <g key={i}>
+                          <rect x={r} y={r} width={100 - 2 * r} height={100 - 2 * r} rx="15" fill="none" stroke="#ffffff" strokeWidth="0.6" strokeDasharray="4 1" />
+                          <text x={r + 2} y="50" fontSize="1.8" fill="#ffffff" fontWeight="900">{8 - i}</text>
+                        </g>
+                      ))}
+                      <line x1="50" y1="8" x2="50" y2="50" stroke="#facc15" strokeWidth="1.5" />
+                      <text x="50" y="6" fontSize="2.2" fill="#facc15" fontWeight="900" textAnchor="middle">🏁 FINISH LINE (फिनिश लाईन)</text>
+                    </g>
                   )}
 
                   {/* Draw Tactical Movement Arrows */}
@@ -1070,42 +1229,107 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                         x2={arrow.to[0]}
                         y2={arrow.to[1]}
                         stroke={arrow.color}
-                        strokeWidth="1.8"
+                        strokeWidth="2"
                         strokeDasharray="2 2"
                         markerEnd={`url(#arrow-${idx})`}
                       />
                     </g>
                   ))}
 
-                  {/* Render Players on Ground */}
+                  {/* ---------------- RENDER REAL PLAYERS ON GROUND ---------------- */}
                   {activeFormation?.players?.map((p) => {
                     const isHome = p.team === 'home';
+                    const assignedPlayerId = assignedPlayerMap[p.id];
+                    const realPlayer = isHome && assignedPlayerId 
+                      ? (store?.data?.players || []).find((pl: any) => pl.id === assignedPlayerId)
+                      : null;
+
+                    const displayName = realPlayer 
+                      ? (realPlayer.nameMarathi || transliterateEnglishToMarathi(realPlayer.name) || realPlayer.name)
+                      : (p.roleMr || p.role);
+                    
+                    const jerseyNum = realPlayer 
+                      ? (realPlayer.jerseyNumbers?.[activeSport] || realPlayer.jerseyNumber || '')
+                      : '';
+
                     return (
-                      <g key={p.id} className="cursor-pointer transition-transform hover:scale-110">
+                      <g
+                        key={p.id}
+                        className="cursor-pointer transition-all hover:opacity-90 group"
+                        onClick={() => {
+                          if (isHome) {
+                            setSelectedSlotForAssignment({ id: p.id, roleMr: p.roleMr || p.role, team: p.team });
+                            setIsPlayerAssignModalOpen(true);
+                          }
+                        }}
+                      >
+                        {/* Interactive Aura Ring */}
                         <circle
                           cx={p.x}
                           cy={p.y}
-                          r="4.5"
-                          fill={isHome ? "#10b981" : "#ef4444"}
-                          stroke="#ffffff"
-                          strokeWidth="1"
+                          r="6"
+                          fill={isHome ? "rgba(16, 185, 129, 0.25)" : "rgba(239, 68, 68, 0.25)"}
+                          stroke={isHome ? "#10b981" : "#ef4444"}
+                          strokeWidth="0.8"
+                          strokeDasharray={isHome ? "none" : "1 1"}
                         />
+
+                        {/* Player Token Circle Base */}
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r="4.2"
+                          fill={isHome ? "#0f766e" : "#b91c1c"}
+                          stroke="#ffffff"
+                          strokeWidth="1.2"
+                        />
+
+                        {/* Player Jersey Number or Position Code */}
                         <text
                           x={p.x}
                           y={p.y + 1.2}
-                          fontSize="3"
+                          fontSize="2.8"
                           fontWeight="900"
                           fill="#ffffff"
                           textAnchor="middle"
                         >
-                          {p.id}
+                          {jerseyNum ? `#${jerseyNum}` : p.id}
                         </text>
+
+                        {/* Captain Crown Badge if real player is Captain */}
+                        {realPlayer?.isCaptain && (
+                          <text x={p.x} y={p.y - 5.5} fontSize="3" textAnchor="middle">👑</text>
+                        )}
+
+                        {/* Real Player Marathi Name Pill */}
+                        <rect
+                          x={p.x - 14}
+                          y={p.y + 5.5}
+                          width="28"
+                          height="4.8"
+                          rx="2.4"
+                          fill="rgba(15, 23, 42, 0.95)"
+                          stroke={isHome ? "#34d399" : "#f87171"}
+                          strokeWidth="0.5"
+                        />
                         <text
                           x={p.x}
-                          y={p.y + 8}
-                          fontSize="2.4"
+                          y={p.y + 8.8}
+                          fontSize="2.1"
+                          fontWeight="900"
+                          fill="#ffffff"
+                          textAnchor="middle"
+                        >
+                          {displayName.length > 12 ? displayName.substring(0, 11) + '..' : displayName}
+                        </text>
+
+                        {/* Tactical Role Subtitle */}
+                        <text
+                          x={p.x}
+                          y={p.y + 13}
+                          fontSize="1.8"
                           fontWeight="bold"
-                          fill="#f8fafc"
+                          fill={isHome ? "#6ee7b7" : "#fca5a5"}
                           textAnchor="middle"
                         >
                           {p.roleMr || p.role}
@@ -1115,6 +1339,60 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                   })}
                 </svg>
 
+              </div>
+
+              {/* Real Players Assigned Strip Below the Court */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5" /> मैदानावरील प्रत्यक्ष शालेय खेळाडू (Assigned Squad):
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-bold">
+                    क्लिक करून खेळाडू बदला (Tap node to change)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                  {activeFormation?.players?.filter(p => p.team === 'home').map((slot) => {
+                    const assignedId = assignedPlayerMap[slot.id];
+                    const realPlayer = assignedId 
+                      ? (store?.data?.players || []).find((pl: any) => pl.id === assignedId)
+                      : null;
+                    const marathi = realPlayer 
+                      ? (realPlayer.nameMarathi || transliterateEnglishToMarathi(realPlayer.name) || realPlayer.name)
+                      : "खेळाडू नियुक्त करा";
+                    const jersey = realPlayer 
+                      ? (realPlayer.jerseyNumbers?.[activeSport] || realPlayer.jerseyNumber || '')
+                      : '';
+
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSlotForAssignment({ id: slot.id, roleMr: slot.roleMr || slot.role, team: slot.team });
+                          setIsPlayerAssignModalOpen(true);
+                        }}
+                        className={cn(
+                          "p-2.5 rounded-xl border text-left transition-all hover:scale-105 active:scale-95 flex items-center gap-2",
+                          realPlayer ? "bg-slate-900 border-emerald-500/40 text-white" : "bg-slate-900/60 border-dashed border-slate-700 text-slate-400"
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
+                          {jersey ? `#${jersey}` : slot.id}
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-[11px] font-black text-white truncate leading-tight">
+                            {marathi}
+                          </p>
+                          <p className="text-[9px] font-bold text-amber-400 truncate">
+                            {slot.roleMr || slot.role}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Formation Selector Bar */}
@@ -1518,6 +1796,93 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
 
         </div>
       )}
+
+      {/* Real Player Assignment Dialog */}
+      <Dialog open={isPlayerAssignModalOpen} onOpenChange={setIsPlayerAssignModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black uppercase text-primary flex items-center gap-2">
+              <Shirt className="w-5 h-5 text-amber-500" />
+              खेळाडू नियुक्त करा ({selectedSlotForAssignment?.roleMr})
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <p className="text-xs text-muted-foreground font-semibold">
+              या मैदानावरील स्थानासाठी आपल्या शाळेच्या रोस्टरमधील खेळाडू निवडा:
+            </p>
+
+            <ScrollArea className="h-72 rounded-2xl border p-2 bg-muted/10">
+              <div className="space-y-2">
+                {sportPlayers.length === 0 ? (
+                  <p className="text-center py-8 text-xs font-bold text-muted-foreground">
+                    या खेळासाठी कोणतेही खेळाडू नोंदणीकृत नाहीत.
+                  </p>
+                ) : (
+                  sportPlayers.map((player: any) => {
+                    const isSelected = selectedSlotForAssignment && assignedPlayerMap[selectedSlotForAssignment.id] === player.id;
+                    const displayName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
+                    const jersey = player.jerseyNumbers?.[activeSport] || player.jerseyNumber || '';
+
+                    return (
+                      <button
+                        key={player.id}
+                        type="button"
+                        onClick={() => {
+                          if (selectedSlotForAssignment) {
+                            setAssignedPlayerMap(prev => ({
+                              ...prev,
+                              [selectedSlotForAssignment.id]: player.id
+                            }));
+                            setIsPlayerAssignModalOpen(false);
+                            toast({
+                              title: "खेळाडू नियुक्त झाला!",
+                              description: `${displayName} यांना ${selectedSlotForAssignment.roleMr} म्हणून नियुक्त केले.`,
+                              className: "bg-emerald-600 text-white font-bold"
+                            });
+                          }
+                        }}
+                        className={cn(
+                          "w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all hover:scale-[1.02] active:scale-95",
+                          isSelected ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-400" : "bg-white border-slate-200 hover:bg-slate-50"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-primary text-white font-black text-sm flex items-center justify-center shrink-0">
+                            {jersey ? `#${jersey}` : (player.name || '?')[0]}
+                          </div>
+                          <div>
+                            <p className="font-black text-xs text-slate-900 leading-tight">
+                              {displayName} {player.isCaptain && "👑"}
+                            </p>
+                            <span className="text-[10px] text-muted-foreground font-semibold">
+                              {player.name} &bull; इ. {player.std} वी (GR: {player.generalRegisterNumber || '-'})
+                            </span>
+                          </div>
+                        </div>
+
+                        <Badge variant={isSelected ? "default" : "outline"} className="text-[9px] font-black uppercase">
+                          {isSelected ? "निवडलेले" : "नियुक्त करा"}
+                        </Badge>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsPlayerAssignModalOpen(false)}
+              className="w-full rounded-xl font-black uppercase text-xs"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
