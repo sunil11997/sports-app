@@ -37,37 +37,12 @@ import type { EquipmentItem, EquipmentIssueRecord, IndentItem } from '@/lib/type
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 
-const INITIAL_EQUIPMENT: EquipmentItem[] = [
-  { id: 'eq_vb1', name: 'Volleyball (Cosco/Nivia)', nameMarathi: 'व्हॉलीबॉल (कॉस्को/निव्हिया)', category: 'Balls', totalQty: 6, availableQty: 4, damagedQty: 2, unit: 'Nos (नग)', condition: 'Needs Repair', notes: '२ बॉलमध्ये हवा कमी भरलेली आहे', lastChecked: '2026-08-20', sport: 'Volleyball' },
-  { id: 'eq_vn1', name: 'Volleyball Net with Antenna', nameMarathi: 'व्हॉलीबॉल नेट व अँटेना', category: 'Nets & Mats', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Sets (संच)', condition: 'Good', notes: 'चांगल्या स्थितीत', lastChecked: '2026-08-20', sport: 'Volleyball' },
-  { id: 'eq_km1', name: 'Kabaddi Mats (Official Interlocking)', nameMarathi: 'कबड्डी मॅट्स (अधिकृत इंटरलॉकिंग)', category: 'Nets & Mats', totalQty: 48, availableQty: 48, damagedQty: 0, unit: 'Pieces (तुकडे)', condition: 'Good', notes: 'सर्व मॅट्स सुस्थितीत', lastChecked: '2026-08-15', sport: 'Kabaddi' },
-  { id: 'eq_kp1', name: 'Kho-Kho Wooden Poles', nameMarathi: 'खो-खो लाकडी पोल जोडी', category: 'Training & PT', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Pairs (जोडी)', condition: 'Good', notes: 'ग्राउंडवर फिट केलेले', lastChecked: '2026-08-10', sport: 'Kho Kho' },
-  { id: 'eq_sp1', name: 'Shot Put Iron Ball (4 Kg - Girls)', nameMarathi: 'गोळाफेक लोखंडी गोळा (४ किलो - मुली)', category: 'Athletics', totalQty: 3, availableQty: 3, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'सराव योग्य', lastChecked: '2026-08-18', sport: 'Shot Put' },
-  { id: 'eq_sp2', name: 'Shot Put Iron Ball (5 Kg - Boys U17)', nameMarathi: 'गोळाफेक लोखंडी गोळा (५ किलो - मुले U17)', category: 'Athletics', totalQty: 3, availableQty: 3, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'सुस्थितीत', lastChecked: '2026-08-18', sport: 'Shot Put' },
-  { id: 'eq_jt1', name: 'Javelin Throw Aluminium (600g - Girls)', nameMarathi: 'भालाफेक ॲल्युमिनियम (६०० ग्रॅम - मुली)', category: 'Athletics', totalQty: 2, availableQty: 1, damagedQty: 1, unit: 'Nos (नग)', condition: 'Needs Repair', notes: '१ भाल्याची ग्रिप तुटलेली आहे', lastChecked: '2026-08-15', sport: 'Javelin Throw' },
-  { id: 'eq_jt2', name: 'Javelin Throw Aluminium (700g - Boys U17)', nameMarathi: 'भालाफेक ॲल्युमिनियम (७०० ग्रॅम - मुले)', category: 'Athletics', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'चांगल्या स्थितीत', lastChecked: '2026-08-15', sport: 'Javelin Throw' },
-  { id: 'eq_rb1', name: 'Relay Batons (Aluminium Set)', nameMarathi: 'रिले बॅटन संच (४x१०० रिले)', category: 'Athletics', totalQty: 8, availableQty: 8, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'रंगीत बॅटन संच', lastChecked: '2026-08-12', sport: 'Athletics' },
-  { id: 'eq_sw1', name: 'Digital Stopwatches (1/100s)', nameMarathi: 'डिजिटल स्टॉपवॉच (वेळ मोजणी)', category: 'Training & PT', totalQty: 4, availableQty: 3, damagedQty: 1, unit: 'Nos (नग)', condition: 'Needs Repair', notes: '१ स्टॉपवॉचची बॅटरी संपली आहे', lastChecked: '2026-08-25', sport: 'Athletics' },
-  { id: 'eq_mt1', name: 'Steel Measuring Tape (50 Meter)', nameMarathi: 'स्टील मोजपट्टी (५० मीटर लांब)', category: 'Training & PT', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'मैदान आखणीसाठी', lastChecked: '2026-08-22', sport: 'Athletics' },
-  { id: 'eq_fa1', name: 'First Aid Sports Medical Kit', nameMarathi: 'क्रीडा प्रथमोपचार पेटी (First Aid Kit)', category: 'First Aid', totalQty: 1, availableQty: 1, damagedQty: 0, unit: 'Box (पेटी)', condition: 'Good', notes: 'बँडेज, ओआयंटमेंट, स्प्रे, कॉटन उपलब्ध', lastChecked: '2026-08-26' },
-  { id: 'eq_wh1', name: 'Fox 40 Whistles (Metal / Plastic)', nameMarathi: 'शिट्टी / व्हिसल (Fox 40)', category: 'Training & PT', totalQty: 6, availableQty: 6, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'क्रीडा शिक्षक व कप्तानांसाठी', lastChecked: '2026-08-20' },
-  { id: 'eq_cn1', name: 'Agility Training Cones & Markers', nameMarathi: 'सराव कोन्स व मार्कर्स', category: 'Training & PT', totalQty: 24, availableQty: 20, damagedQty: 4, unit: 'Nos (नग)', condition: 'Needs Repair', notes: '४ कोन्स क्रॅक झाले आहेत', lastChecked: '2026-08-24' },
-  { id: 'eq_ym1', name: 'Yoga Mats (Anti-Skid 6mm)', nameMarathi: 'योगा मॅट्स (६ मिमी)', category: 'Nets & Mats', totalQty: 15, availableQty: 15, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'नियमित योगा सरावासाठी', lastChecked: '2026-08-25', sport: 'Yoga' },
-];
-
-const INITIAL_ISSUES: EquipmentIssueRecord[] = [
-  { id: 'iss_1', itemId: 'eq_vb1', itemName: 'Volleyball (Cosco)', itemNameMarathi: 'व्हॉलीबॉल', issuedTo: 'Uniram Yogesh Gavit', roleOrClass: 'इ. ९ वी (व्हॉलीबॉल कप्तान)', quantity: 2, issueDate: '2026-08-27 07:30', status: 'Issued', remarks: 'सकाळचा सराव (Morning Drill)' },
-  { id: 'iss_2', itemId: 'eq_rb1', itemName: 'Relay Batons (Aluminium Set)', itemNameMarathi: 'रिले बॅटन संच', issuedTo: 'Laxmi Bagul', roleOrClass: 'इ. ९ वी (मुली रिले संघ)', quantity: 4, issueDate: '2026-08-26 16:00', returnDate: '2026-08-26 18:00', status: 'Returned', remarks: 'सर्व बॅटन सुस्थितीत परत जमा' },
-  { id: 'iss_3', itemId: 'eq_sw1', itemName: 'Digital Stopwatch', itemNameMarathi: 'डिजिटल स्टॉपवॉच', issuedTo: 'Pankaj Pawar', roleOrClass: 'इ. ९ वी (क्रीडा मॉनिटर)', quantity: 1, issueDate: '2026-08-27 08:00', status: 'Issued', remarks: '१०० मी. धावणे वेळ मोजण्यासाठी' },
-];
-
-const INITIAL_INDENT: IndentItem[] = [
-  { id: 'ind_1', itemName: 'Kabaddi High-Density Foam Mats', itemNameMarathi: 'कबड्डी हाय-डेन्सिटी मॅट्स', category: 'Nets & Mats', currentStock: 48, requiredQty: 24, estimatedRate: 1500, totalEstimate: 36000, justification: 'शालेय तालुका व जिल्हास्तरीय कबड्डी स्पर्धेसाठी अतिरिक्त मॅट्स आवश्यक', priority: 'High' },
-  { id: 'ind_2', itemName: 'Cosco Super Volleyball', itemNameMarathi: 'कॉस्को सुपर व्हॉलीबॉल', category: 'Balls', currentStock: 4, requiredQty: 6, estimatedRate: 950, totalEstimate: 5700, justification: 'दैनिक सराव व सामन्यासाठी नवीन चेंडू', priority: 'High' },
-  { id: 'ind_3', itemName: 'Athletics High Jump Landing Bed', itemNameMarathi: 'उंच उडी लँडिंग मॅट्रेस', category: 'Athletics', currentStock: 0, requiredQty: 1, estimatedRate: 28000, totalEstimate: 28000, justification: 'खेळाडूंच्या सुरक्षिततेसाठी लँडिंग मॅट आवश्यक', priority: 'Medium' },
-  { id: 'ind_4', itemName: 'Relay Batons Standard Set', itemNameMarathi: 'रिले बॅटन संच', category: 'Athletics', currentStock: 8, requiredQty: 8, estimatedRate: 250, totalEstimate: 2000, justification: '४x१०० मी. व ४x४०० मी. रिले सराव', priority: 'Medium' },
-  { id: 'ind_5', itemName: 'Voluntex Sports First Aid Refill', itemNameMarathi: 'प्रथमोपचार साहित्य रिफिल संच', category: 'First Aid', currentStock: 1, requiredQty: 2, estimatedRate: 1800, totalEstimate: 3600, justification: 'खेळाडूंच्या दुखापतीवरील पेन रिलीफ स्प्रे व पट्टी', priority: 'High' },
-];
+const DUMMY_EQ_IDS = new Set([
+  'eq_vb1', 'eq_vn1', 'eq_km1', 'eq_kp1', 'eq_sp1', 'eq_sp2', 'eq_jt1', 'eq_jt2',
+  'eq_rb1', 'eq_sw1', 'eq_mt1', 'eq_fa1', 'eq_wh1', 'eq_cn1', 'eq_ym1'
+]);
+const DUMMY_ISS_IDS = new Set(['iss_1', 'iss_2', 'iss_3']);
+const DUMMY_IND_IDS = new Set(['ind_1', 'ind_2', 'ind_3', 'ind_4', 'ind_5']);
 
 const STORAGE_KEY_EQUIPMENT = 'wgb_sports_equipment_stock';
 const STORAGE_KEY_ISSUES = 'wgb_sports_equipment_issues';
@@ -81,30 +56,39 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY_EQUIPMENT);
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+        try {
+          const parsed: EquipmentItem[] = JSON.parse(saved);
+          return parsed.filter(item => !DUMMY_EQ_IDS.has(item.id));
+        } catch (e) { /* ignore */ }
       }
     }
-    return INITIAL_EQUIPMENT;
+    return [];
   });
 
   const [issueRecords, setIssueRecords] = useState<EquipmentIssueRecord[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY_ISSUES);
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+        try {
+          const parsed: EquipmentIssueRecord[] = JSON.parse(saved);
+          return parsed.filter(item => !DUMMY_ISS_IDS.has(item.id));
+        } catch (e) { /* ignore */ }
       }
     }
-    return INITIAL_ISSUES;
+    return [];
   });
 
   const [indentList, setIndentList] = useState<IndentItem[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY_INDENT);
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+        try {
+          const parsed: IndentItem[] = JSON.parse(saved);
+          return parsed.filter(item => !DUMMY_IND_IDS.has(item.id));
+        } catch (e) { /* ignore */ }
       }
     }
-    return INITIAL_INDENT;
+    return [];
   });
 
   // Save to localStorage whenever states update
@@ -131,10 +115,20 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [conditionFilter, setConditionFilter] = useState('All');
 
-  // Modals
+  // Modals for Adding
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isIndentModalOpen, setIsIndentModalOpen] = useState(false);
+
+  // Modals for Editing
+  const [editingEquipment, setEditingEquipment] = useState<EquipmentItem | null>(null);
+  const [isEditEquipmentModalOpen, setIsEditEquipmentModalOpen] = useState(false);
+
+  const [editingIssue, setEditingIssue] = useState<EquipmentIssueRecord | null>(null);
+  const [isEditIssueModalOpen, setIsEditIssueModalOpen] = useState(false);
+
+  const [editingIndent, setEditingIndent] = useState<IndentItem | null>(null);
+  const [isEditIndentModalOpen, setIsEditIndentModalOpen] = useState(false);
 
   // New Equipment Form State
   const [newItem, setNewItem] = useState<Partial<EquipmentItem>>({
@@ -207,7 +201,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     return { totalItems, available, damaged, activeIssued, uniqueKinds: equipmentList.length };
   }, [equipmentList, issueRecords]);
 
-  // Handlers
+  // Handlers - Stock
   const handleSaveNewEquipment = () => {
     if (!newItem.name || !newItem.nameMarathi) {
       toast({ title: "कृपया नाव प्रविष्ट करा", variant: "destructive" });
@@ -235,6 +229,36 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     toast({ title: "साहित्य यशस्वीरित्या जोडले! ✅" });
   };
 
+  const handleOpenEditEquipment = (item: EquipmentItem) => {
+    setEditingEquipment({ ...item });
+    setIsEditEquipmentModalOpen(true);
+  };
+
+  const handleUpdateEquipment = () => {
+    if (!editingEquipment || !editingEquipment.name || !editingEquipment.nameMarathi) {
+      toast({ title: "कृपया सर्व माहिती भरा", variant: "destructive" });
+      return;
+    }
+
+    setEquipmentList(prev => prev.map(eq => eq.id === editingEquipment.id ? editingEquipment : eq));
+    setIsEditEquipmentModalOpen(false);
+    setEditingEquipment(null);
+    toast({ title: "साहित्य माहिती अद्ययावत केली! ✏️" });
+  };
+
+  const handleDeleteEquipment = (id: string) => {
+    setEquipmentList(prev => prev.filter(e => e.id !== id));
+    toast({ title: "साहित्य नोंद हटवली 🗑️" });
+  };
+
+  const handleClearAllEquipment = () => {
+    if (confirm("तुम्हाला खात्री आहे की सर्व साहित्य साठा हटवायचा आहे?")) {
+      setEquipmentList([]);
+      toast({ title: "सर्व साहित्य साठा साफ केला" });
+    }
+  };
+
+  // Handlers - Issues
   const handleIssueSubmit = () => {
     if (!newIssue.itemId || !newIssue.issuedTo) {
       toast({ title: "कृपया सर्व माहिती भरा", variant: "destructive" });
@@ -280,6 +304,46 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     toast({ title: "साहित्य वाटप नोंद पूर्ण! 📤", description: `${targetItem.nameMarathi} (${qty} ${targetItem.unit}) ${record.issuedTo} ला दिले.` });
   };
 
+  const handleOpenEditIssue = (issue: EquipmentIssueRecord) => {
+    setEditingIssue({ ...issue });
+    setIsEditIssueModalOpen(true);
+  };
+
+  const handleUpdateIssue = () => {
+    if (!editingIssue || !editingIssue.issuedTo) {
+      toast({ title: "कृपया सर्व माहिती भरा", variant: "destructive" });
+      return;
+    }
+
+    setIssueRecords(prev => prev.map(i => i.id === editingIssue.id ? editingIssue : i));
+    setIsEditIssueModalOpen(false);
+    setEditingIssue(null);
+    toast({ title: "वाटप नोंद अद्ययावत केली! ✏️" });
+  };
+
+  const handleDeleteIssue = (id: string) => {
+    const issue = issueRecords.find(i => i.id === id);
+    if (issue && issue.status === 'Issued') {
+      // Restore available qty in equipment stock
+      setEquipmentList(prev => prev.map(eq => {
+        if (eq.id === issue.itemId) {
+          return { ...eq, availableQty: Math.min(eq.totalQty, eq.availableQty + issue.quantity) };
+        }
+        return eq;
+      }));
+    }
+
+    setIssueRecords(prev => prev.filter(i => i.id !== id));
+    toast({ title: "वाटप नोंद हटवली 🗑️" });
+  };
+
+  const handleClearAllIssues = () => {
+    if (confirm("तुम्हाला खात्री आहे की सर्व वाटप नोंदी हटवायच्या आहेत?")) {
+      setIssueRecords([]);
+      toast({ title: "सर्व वाटप नोंदी साफ केल्या" });
+    }
+  };
+
   const handleReturnConfirm = (issueId: string) => {
     const issue = issueRecords.find(i => i.id === issueId);
     if (!issue || issue.status === 'Returned') return;
@@ -305,6 +369,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     toast({ title: "साहित्य जमा झाले! 📥", description: `${issue.itemNameMarathi} सुरक्षित जमा करण्यात आले.` });
   };
 
+  // Handlers - Indent
   const handleAddIndentSubmit = () => {
     if (!newIndentItem.itemName || !newIndentItem.itemNameMarathi) {
       toast({ title: "कृपया वस्तूचे नाव भरा", variant: "destructive" });
@@ -333,14 +398,40 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     toast({ title: "मागणी पत्रकात साहित्य जोडले! 📋" });
   };
 
-  const handleDeleteEquipment = (id: string) => {
-    setEquipmentList(prev => prev.filter(e => e.id !== id));
-    toast({ title: "साहित्य नोंद हटवली" });
+  const handleOpenEditIndent = (indent: IndentItem) => {
+    setEditingIndent({ ...indent });
+    setIsEditIndentModalOpen(true);
+  };
+
+  const handleUpdateIndent = () => {
+    if (!editingIndent || !editingIndent.itemName || !editingIndent.itemNameMarathi) {
+      toast({ title: "कृपया सर्व माहिती भरा", variant: "destructive" });
+      return;
+    }
+
+    const reqQty = Number(editingIndent.requiredQty) || 1;
+    const rate = Number(editingIndent.estimatedRate) || 0;
+    const updated: IndentItem = {
+      ...editingIndent,
+      totalEstimate: reqQty * rate
+    };
+
+    setIndentList(prev => prev.map(i => i.id === updated.id ? updated : i));
+    setIsEditIndentModalOpen(false);
+    setEditingIndent(null);
+    toast({ title: "मागणी पत्रक आयटम अद्ययावत केला! ✏️" });
   };
 
   const handleDeleteIndent = (id: string) => {
     setIndentList(prev => prev.filter(i => i.id !== id));
-    toast({ title: "मागणी आयटम हटवला" });
+    toast({ title: "मागणी आयटम हटवला 🗑️" });
+  };
+
+  const handleClearAllIndent = () => {
+    if (confirm("तुम्हाला खात्री आहे की सर्व मागणी आयटम हटवायचे आहेत?")) {
+      setIndentList([]);
+      toast({ title: "सर्व मागणी नोंदी साफ केल्या" });
+    }
   };
 
   // WhatsApp Indent Proposal Share
@@ -691,9 +782,21 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                 <Package className="w-5 h-5 text-amber-500" />
                 क्रीडा साहित्य साठा व स्थिती तक्ता (Stock Status)
               </h3>
-              <Badge variant="secondary" className="font-black text-xs">
-                {filteredEquipment.length} आयटम
-              </Badge>
+              <div className="flex items-center gap-2">
+                {equipmentList.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearAllEquipment}
+                    className="h-8 text-[10px] font-bold text-rose-600 border-rose-200 hover:bg-rose-50 rounded-xl"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> सर्व साठा पुसा
+                  </Button>
+                )}
+                <Badge variant="secondary" className="font-black text-xs">
+                  {filteredEquipment.length} आयटम
+                </Badge>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -708,14 +811,14 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                     <th className="py-3.5 px-4 text-center">दुरुस्ती/खराब</th>
                     <th className="py-3.5 px-4 text-center">स्थिती (Condition)</th>
                     <th className="py-3.5 px-4">शेरा / स्थिती टिप्पणी</th>
-                    <th className="py-3.5 px-4 text-center w-24">कृती</th>
+                    <th className="py-3.5 px-4 text-center w-28">कृती (Action)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-muted/40">
                   {filteredEquipment.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center text-muted-foreground font-bold">
-                        कोणतेही साहित्य सापडले नाही.
+                        कोणतेही साहित्य सापडले नाही. वरील &ldquo;नवीन साहित्य नोंदवा&rdquo; बटण वापरून साहित्य जोडा.
                       </td>
                     </tr>
                   ) : (
@@ -759,14 +862,26 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                           {item.notes || '-'}
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteEquipment(item.id)}
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-600 rounded-lg"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEditEquipment(item)}
+                              className="h-8 w-8 p-0 text-primary hover:bg-primary/10 rounded-lg"
+                              title="संपादित करा (Edit)"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteEquipment(item.id)}
+                              className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-100 rounded-lg"
+                              title="हटवा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -793,12 +908,24 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                 </p>
               </div>
 
-              <Button
-                onClick={() => setIsIssueModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md gap-2 h-10 px-4"
-              >
-                <Plus className="w-4 h-4" /> नवीन वाटप नोंदवा
-              </Button>
+              <div className="flex items-center gap-2">
+                {issueRecords.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearAllIssues}
+                    className="h-9 text-[10px] font-bold text-rose-600 border-rose-200 hover:bg-rose-50 rounded-xl"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> सर्व नोंदी पुसा
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setIsIssueModalOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md gap-2 h-10 px-4"
+                >
+                  <Plus className="w-4 h-4" /> नवीन वाटप नोंदवा
+                </Button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -813,14 +940,14 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                     <th className="py-3.5 px-4 text-center">जमा वेळ (Return Date/Time)</th>
                     <th className="py-3.5 px-4 text-center">स्थिती (Status)</th>
                     <th className="py-3.5 px-4">शेरा (Purpose)</th>
-                    <th className="py-3.5 px-4 text-center w-28">कृती</th>
+                    <th className="py-3.5 px-4 text-center w-36">कृती (Action)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-muted/40">
                   {issueRecords.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center text-muted-foreground font-bold">
-                        अद्याप कोणतेही वाटप नोंदवलेले नाही.
+                        अद्याप कोणतेही वाटप नोंदवलेले नाही. &ldquo;नवीन वाटप नोंदवा&rdquo; बटण वापरून वाटप नोंद करा.
                       </td>
                     </tr>
                   ) : (
@@ -859,15 +986,36 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                           {iss.remarks || '-'}
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          {iss.status === 'Issued' && (
+                          <div className="flex items-center justify-center gap-1">
+                            {iss.status === 'Issued' && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleReturnConfirm(iss.id)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] h-8 rounded-lg px-2 shadow-sm"
+                                title="जमा करा (Return)"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> जमा
+                              </Button>
+                            )}
                             <Button
+                              variant="ghost"
                               size="sm"
-                              onClick={() => handleReturnConfirm(iss.id)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] h-8 rounded-lg px-3 shadow-sm"
+                              onClick={() => handleOpenEditIssue(iss)}
+                              className="h-8 w-8 p-0 text-primary hover:bg-primary/10 rounded-lg"
+                              title="संपादित करा (Edit)"
                             >
-                              📥 जमा करा
+                              <Edit3 className="w-4 h-4" />
                             </Button>
-                          )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteIssue(iss.id)}
+                              className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-100 rounded-lg"
+                              title="हटवा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -894,7 +1042,17 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                {indentList.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearAllIndent}
+                    className="h-10 text-xs font-bold text-rose-600 border-rose-200 hover:bg-rose-50 rounded-xl"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> सर्व मागणी पुसा
+                  </Button>
+                )}
                 <Button
                   onClick={handleWhatsAppIndentShare}
                   variant="outline"
@@ -930,51 +1088,71 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                     <th className="py-3.5 px-4 text-right">एकूण रक्कम (₹)</th>
                     <th className="py-3.5 px-4">आवश्यकतेचे कारण (Justification)</th>
                     <th className="py-3.5 px-4 text-center">प्राधान्य</th>
-                    <th className="py-3.5 px-4 text-center w-14">कृती</th>
+                    <th className="py-3.5 px-4 text-center w-24">कृती (Action)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-muted/40">
-                  {indentList.map((ind, idx) => (
-                    <tr key={ind.id} className="hover:bg-primary/5 transition-colors font-medium">
-                      <td className="py-3.5 px-4 text-center font-bold text-muted-foreground">{idx + 1}</td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-black text-slate-900">{ind.itemNameMarathi}</div>
-                        <div className="text-[10px] text-muted-foreground">{ind.itemName}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <Badge variant="outline" className="text-[9px]">{ind.category}</Badge>
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-bold text-slate-700">{ind.currentStock}</td>
-                      <td className="py-3.5 px-4 text-center font-black text-primary text-sm">{ind.requiredQty}</td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-800">
-                        ₹{ind.estimatedRate.toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-black text-emerald-700 text-sm">
-                        ₹{ind.totalEstimate.toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-700 max-w-xs">{ind.justification}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <Badge className={cn(
-                          "font-black text-[9px] px-2 py-0.5",
-                          ind.priority === 'High' && "bg-rose-600 text-white",
-                          ind.priority === 'Medium' && "bg-amber-500 text-slate-950",
-                          ind.priority === 'Low' && "bg-slate-300 text-slate-900"
-                        )}>
-                          {ind.priority}
-                        </Badge>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteIndent(ind.id)}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-600 rounded-lg"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                  {indentList.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="py-12 text-center text-muted-foreground font-bold">
+                        कोणतीही मागणी नोंदवलेली नाही. &ldquo;मागणी जोडा&rdquo; बटण वापरून वार्षिक साहित्य मागणी तयार करा.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    indentList.map((ind, idx) => (
+                      <tr key={ind.id} className="hover:bg-primary/5 transition-colors font-medium">
+                        <td className="py-3.5 px-4 text-center font-bold text-muted-foreground">{idx + 1}</td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-black text-slate-900">{ind.itemNameMarathi}</div>
+                          <div className="text-[10px] text-muted-foreground">{ind.itemName}</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge variant="outline" className="text-[9px]">{ind.category}</Badge>
+                        </td>
+                        <td className="py-3.5 px-4 text-center font-bold text-slate-700">{ind.currentStock}</td>
+                        <td className="py-3.5 px-4 text-center font-black text-primary text-sm">{ind.requiredQty}</td>
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-800">
+                          ₹{ind.estimatedRate.toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-black text-emerald-700 text-sm">
+                          ₹{ind.totalEstimate.toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-slate-700 max-w-xs">{ind.justification}</td>
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge className={cn(
+                            "font-black text-[9px] px-2 py-0.5",
+                            ind.priority === 'High' && "bg-rose-600 text-white",
+                            ind.priority === 'Medium' && "bg-amber-500 text-slate-950",
+                            ind.priority === 'Low' && "bg-slate-300 text-slate-900"
+                          )}>
+                            {ind.priority}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEditIndent(ind)}
+                              className="h-8 w-8 p-0 text-primary hover:bg-primary/10 rounded-lg"
+                              title="संपादित करा (Edit)"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteIndent(ind.id)}
+                              className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-100 rounded-lg"
+                              title="हटवा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1112,6 +1290,123 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
         </DialogContent>
       </Dialog>
 
+      {/* MODAL 1B: EDIT EQUIPMENT */}
+      <Dialog open={isEditEquipmentModalOpen} onOpenChange={setIsEditEquipmentModalOpen}>
+        <DialogContent className="sm:max-w-lg rounded-[2.5rem] p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-amber-500" /> साहित्य माहिती संपादन (Edit Equipment)
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingEquipment && (
+            <div className="space-y-4 my-2 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">साहित्याचे नाव (मराठी)</label>
+                  <Input
+                    value={editingEquipment.nameMarathi || ''}
+                    onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, nameMarathi: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Name (English)</label>
+                  <Input
+                    value={editingEquipment.name || ''}
+                    onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">प्रवर्ग (Category)</label>
+                  <Select value={editingEquipment.category} onValueChange={(val) => setEditingEquipment(prev => prev ? ({ ...prev, category: val as any }) : null)}>
+                    <SelectTrigger className="rounded-xl font-bold h-10"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Balls">चेंडू (Balls)</SelectItem>
+                      <SelectItem value="Nets & Mats">जाळी व मॅट्स (Nets & Mats)</SelectItem>
+                      <SelectItem value="Athletics">ॲथलेटिक्स (Athletics)</SelectItem>
+                      <SelectItem value="Training & PT">सराव व पीटी (Training & PT)</SelectItem>
+                      <SelectItem value="First Aid">प्रथमोपचार (First Aid)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">एकक (Unit)</label>
+                  <Input
+                    value={editingEquipment.unit || 'Nos (नग)'}
+                    onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, unit: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">एकूण संख्या</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editingEquipment.totalQty || 1}
+                    onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, totalQty: parseInt(e.target.value, 10) || 1 }) : null)}
+                    className="rounded-xl font-black h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">उपलब्ध सज्ज</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={editingEquipment.availableQty || 0}
+                    onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, availableQty: parseInt(e.target.value, 10) || 0 }) : null)}
+                    className="rounded-xl font-black h-10 text-emerald-700"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">खराब संख्या</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={editingEquipment.damagedQty || 0}
+                    onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, damagedQty: parseInt(e.target.value, 10) || 0 }) : null)}
+                    className="rounded-xl font-black h-10 text-rose-700"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">स्थिती (Condition)</label>
+                <Select value={editingEquipment.condition} onValueChange={(val) => setEditingEquipment(prev => prev ? ({ ...prev, condition: val as any }) : null)}>
+                  <SelectTrigger className="rounded-xl font-bold h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Good">सुस्थितीत (Good)</SelectItem>
+                    <SelectItem value="Needs Repair">दुरुस्ती योग्य (Needs Repair)</SelectItem>
+                    <SelectItem value="Damaged">खराब (Damaged)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">शेरा / स्थिती टिप्पणी (Notes)</label>
+                <Input
+                  value={editingEquipment.notes || ''}
+                  onChange={(e) => setEditingEquipment(prev => prev ? ({ ...prev, notes: e.target.value }) : null)}
+                  className="rounded-xl font-bold h-10"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsEditEquipmentModalOpen(false)} className="rounded-xl">रद्द करा</Button>
+            <Button onClick={handleUpdateEquipment} className="bg-primary text-white font-black rounded-xl">बदल सेव्ह करा</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* MODAL 2: ISSUE EQUIPMENT */}
       <Dialog open={isIssueModalOpen} onOpenChange={setIsIssueModalOpen}>
         <DialogContent className="sm:max-w-lg rounded-[2.5rem] p-6">
@@ -1180,6 +1475,98 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsIssueModalOpen(false)} className="rounded-xl">रद्द करा</Button>
             <Button onClick={handleIssueSubmit} className="bg-emerald-600 text-white font-black rounded-xl">वाटप नोंद पूर्ण करा</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL 2B: EDIT ISSUE */}
+      <Dialog open={isEditIssueModalOpen} onOpenChange={setIsEditIssueModalOpen}>
+        <DialogContent className="sm:max-w-lg rounded-[2.5rem] p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-amber-500" /> वाटप नोंद संपादन (Edit Issue Record)
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingIssue && (
+            <div className="space-y-4 my-2 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">विद्यार्थी / कप्तान नाव</label>
+                  <Input
+                    value={editingIssue.issuedTo || ''}
+                    onChange={(e) => setEditingIssue(prev => prev ? ({ ...prev, issuedTo: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">इयत्ता / भूमिका (Role/Class)</label>
+                  <Input
+                    value={editingIssue.roleOrClass || ''}
+                    onChange={(e) => setEditingIssue(prev => prev ? ({ ...prev, roleOrClass: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">संख्या (Quantity)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editingIssue.quantity || 1}
+                    onChange={(e) => setEditingIssue(prev => prev ? ({ ...prev, quantity: parseInt(e.target.value, 10) || 1 }) : null)}
+                    className="rounded-xl font-black h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">स्थिती (Status)</label>
+                  <Select value={editingIssue.status} onValueChange={(val) => setEditingIssue(prev => prev ? ({ ...prev, status: val as any }) : null)}>
+                    <SelectTrigger className="rounded-xl font-bold h-10"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Issued">वाटप केलेले (Issued)</SelectItem>
+                      <SelectItem value="Returned">जमा झाले (Returned)</SelectItem>
+                      <SelectItem value="Overdue">प्रलंबित (Overdue)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">वाटप वेळ / तारीख</label>
+                  <Input
+                    value={editingIssue.issueDate || ''}
+                    onChange={(e) => setEditingIssue(prev => prev ? ({ ...prev, issueDate: e.target.value }) : null)}
+                    className="rounded-xl font-mono text-xs h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">जमा वेळ / तारीख</label>
+                  <Input
+                    placeholder="उदा. 2026-08-27 18:00"
+                    value={editingIssue.returnDate || ''}
+                    onChange={(e) => setEditingIssue(prev => prev ? ({ ...prev, returnDate: e.target.value }) : null)}
+                    className="rounded-xl font-mono text-xs h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">कारण / उद्देश / शेरा (Remarks)</label>
+                <Input
+                  value={editingIssue.remarks || ''}
+                  onChange={(e) => setEditingIssue(prev => prev ? ({ ...prev, remarks: e.target.value }) : null)}
+                  className="rounded-xl font-bold h-10"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsEditIssueModalOpen(false)} className="rounded-xl">रद्द करा</Button>
+            <Button onClick={handleUpdateIssue} className="bg-primary text-white font-black rounded-xl">बदल सेव्ह करा</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1272,6 +1659,99 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsIndentModalOpen(false)} className="rounded-xl">रद्द करा</Button>
             <Button onClick={handleAddIndentSubmit} className="bg-primary text-white font-black rounded-xl">मागणी जोडा</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL 3B: EDIT INDENT ITEM */}
+      <Dialog open={isEditIndentModalOpen} onOpenChange={setIsEditIndentModalOpen}>
+        <DialogContent className="sm:max-w-lg rounded-[2.5rem] p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-amber-500" /> मागणी साहित्य संपादन (Edit Indent Item)
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingIndent && (
+            <div className="space-y-4 my-2 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">साहित्याचे नाव (मराठी)</label>
+                  <Input
+                    value={editingIndent.itemNameMarathi || ''}
+                    onChange={(e) => setEditingIndent(prev => prev ? ({ ...prev, itemNameMarathi: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Item Name (English)</label>
+                  <Input
+                    value={editingIndent.itemName || ''}
+                    onChange={(e) => setEditingIndent(prev => prev ? ({ ...prev, itemName: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">सध्याचा साठा</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={editingIndent.currentStock || 0}
+                    onChange={(e) => setEditingIndent(prev => prev ? ({ ...prev, currentStock: parseInt(e.target.value, 10) || 0 }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">मागणी संख्या</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editingIndent.requiredQty || 1}
+                    onChange={(e) => setEditingIndent(prev => prev ? ({ ...prev, requiredQty: parseInt(e.target.value, 10) || 1 }) : null)}
+                    className="rounded-xl font-black h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">अंदाजित दर (₹)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={editingIndent.estimatedRate || 0}
+                    onChange={(e) => setEditingIndent(prev => prev ? ({ ...prev, estimatedRate: parseInt(e.target.value, 10) || 0 }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">मागणीचे कारण / आवश्यकता</label>
+                <Input
+                  value={editingIndent.justification || ''}
+                  onChange={(e) => setEditingIndent(prev => prev ? ({ ...prev, justification: e.target.value }) : null)}
+                  className="rounded-xl font-bold h-10"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">प्राधान्य (Priority)</label>
+                <Select value={editingIndent.priority} onValueChange={(val) => setEditingIndent(prev => prev ? ({ ...prev, priority: val as any }) : null)}>
+                  <SelectTrigger className="rounded-xl font-bold h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="High">उच्च (High Priority - अत्यावश्यक)</SelectItem>
+                    <SelectItem value="Medium">मध्यम (Medium Priority)</SelectItem>
+                    <SelectItem value="Low">कमी (Low Priority)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsEditIndentModalOpen(false)} className="rounded-xl">रद्द करा</Button>
+            <Button onClick={handleUpdateIndent} className="bg-primary text-white font-black rounded-xl">बदल सेव्ह करा</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

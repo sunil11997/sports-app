@@ -41,6 +41,7 @@ import {
   Users,
   Search,
   Check,
+  Edit3,
   ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -661,6 +662,31 @@ export function HealthIncidents({
 
   // Lightbox / Modal
   const [viewingPhotoUrl, setViewingPhotoUrl] = useState<string | null>(null);
+
+  // Edit Incident State
+  const [editingIncident, setEditingIncident] = useState<any | null>(null);
+  const [isEditIncidentModalOpen, setIsEditIncidentModalOpen] = useState(false);
+
+  const handleOpenEditIncident = (inc: any) => {
+    setEditingIncident({ ...inc });
+    setIsEditIncidentModalOpen(true);
+  };
+
+  const handleUpdateIncident = () => {
+    if (!editingIncident) return;
+    if (store.updateHealthIncident) {
+      store.updateHealthIncident(editingIncident);
+    } else {
+      store.deleteHealthIncident(editingIncident.id);
+      store.addHealthIncident(editingIncident);
+    }
+    setIsEditIncidentModalOpen(false);
+    setEditingIncident(null);
+    toast({
+      title: "दुखापत नोंद अद्ययावत केली! ✏️",
+      className: "bg-emerald-600 text-white font-bold"
+    });
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -1464,8 +1490,18 @@ COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\
                             <Button 
                               variant="ghost" 
                               size="icon" 
+                              onClick={() => handleOpenEditIncident(inc)} 
+                              className="h-8 w-8 text-primary opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-primary/10"
+                              title="संपादित करा (Edit)"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
                               onClick={() => store.deleteHealthIncident(inc.id)} 
                               className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-destructive/10"
+                              title="हटवा (Delete)"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -1487,6 +1523,68 @@ COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\
         </div>
 
       </div>
+
+      {/* EDIT INCIDENT MODAL */}
+      <Dialog open={isEditIncidentModalOpen} onOpenChange={setIsEditIncidentModalOpen}>
+        <DialogContent className="max-w-lg rounded-3xl p-6 bg-white">
+          <DialogHeader>
+            <DialogTitle className="font-black uppercase text-base text-primary flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-amber-500" /> दुखापत नोंद संपादन (Edit Incident)
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingIncident && (
+            <div className="space-y-4 my-2 text-xs">
+              <div className="p-3 bg-muted/30 rounded-2xl border">
+                <div className="font-black text-slate-900 text-sm">{editingIncident.playerName}</div>
+                <div className="text-[10px] text-muted-foreground font-bold">तारीख: {editingIncident.date} &bull; प्रकार: {editingIncident.type}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">तीव्रता (Severity)</label>
+                  <Select 
+                    value={editingIncident.severity || 'Moderate'} 
+                    onValueChange={(val) => setEditingIncident((prev: any) => prev ? ({ ...prev, severity: val }) : null)}
+                  >
+                    <SelectTrigger className="rounded-xl font-bold h-10"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Minor">हलकी (Minor)</SelectItem>
+                      <SelectItem value="Moderate">मध्यम (Moderate)</SelectItem>
+                      <SelectItem value="Severe">गंभीर (Severe / Urgent)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">तारीख (Date)</label>
+                  <Input
+                    type="date"
+                    value={editingIncident.date || ''}
+                    onChange={(e) => setEditingIncident((prev: any) => prev ? ({ ...prev, date: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">तपशील व प्रथमोपचार (Description & Protocol)</label>
+                <Textarea
+                  rows={4}
+                  value={editingIncident.description || ''}
+                  onChange={(e) => setEditingIncident((prev: any) => prev ? ({ ...prev, description: e.target.value }) : null)}
+                  className="rounded-xl font-bold text-xs"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsEditIncidentModalOpen(false)} className="rounded-xl">रद्द करा</Button>
+            <Button onClick={handleUpdateIncident} className="bg-primary text-white font-black rounded-xl">बदल सेव्ह करा</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Lightbox Photo Preview Modal */}
       <Dialog open={!!viewingPhotoUrl} onOpenChange={() => setViewingPhotoUrl(null)}>

@@ -42,6 +42,7 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export interface PracticalSkill {
   id: string;
@@ -216,6 +217,40 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
   // View mode: 'trial' (Live Practical Deck) vs 'history' (Registry & Goals) vs 'batch' (Live Ground Roster Assessment)
   const [viewMode, setViewMode] = useState<'trial' | 'history' | 'batch'>('trial');
   const [searchFilter, setSearchFilter] = useState("");
+
+  // Edit Goal Modal State
+  const [editingGoal, setEditingGoal] = useState<any | null>(null);
+  const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
+
+  const handleOpenEditGoal = (goal: any) => {
+    setEditingGoal({ ...goal });
+    setIsEditGoalModalOpen(true);
+  };
+
+  const handleUpdateGoal = async () => {
+    if (!editingGoal) return;
+    const pMarks = Number(editingGoal.practicalMarks) || 0;
+    const targetMarksVal = Number(editingGoal.targetMarks) || 10;
+    const updated = {
+      ...editingGoal,
+      practicalMarks: pMarks,
+      targetMarks: targetMarksVal,
+      currentPB: editingGoal.currentPB || `${pMarks}/10 गुण`,
+      target: editingGoal.target || `${targetMarksVal}/10 गुण`,
+      remark: editingGoal.remark || '',
+      month: editingGoal.month || selectedMonth
+    };
+
+    if (store.setGoal) {
+      await store.setGoal(updated);
+    }
+    setIsEditGoalModalOpen(false);
+    setEditingGoal(null);
+    toast({
+      title: "प्रात्यक्षिक ध्येय नोंद अद्ययावत केली! ✏️",
+      className: "bg-emerald-600 text-white font-bold"
+    });
+  };
 
   useEffect(() => {
     if (preselectedSport) setActiveSport(preselectedSport);
@@ -943,14 +978,26 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
                       </p>
                     )}
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => store.deleteGoal(g.id)}
-                      className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 rounded-full hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEditGoal(g)}
+                        className="h-8 w-8 text-primary rounded-full hover:bg-primary/10"
+                        title="संपादित करा (Edit)"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => store.deleteGoal(g.id)}
+                        className="h-8 w-8 text-destructive rounded-full hover:bg-destructive/10"
+                        title="हटवा (Delete)"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </Card>
                 );
               })
@@ -958,6 +1005,71 @@ export function GoalTracker({ store, preselectedSport }: { store: any, preselect
           </div>
         </div>
       )}
+
+      {/* EDIT GOAL MODAL */}
+      <Dialog open={isEditGoalModalOpen} onOpenChange={setIsEditGoalModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-amber-500" /> प्रात्यक्षिक गुण संपादन (Edit Goal)
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingGoal && (
+            <div className="space-y-4 my-2 text-xs">
+              <div className="p-3 bg-muted/30 rounded-2xl border">
+                <div className="font-black text-slate-900 text-sm">{editingGoal.playerNameMarathi || editingGoal.playerName}</div>
+                <div className="text-[10px] text-muted-foreground font-bold">खेळ: {editingGoal.sport} &bull; कौशल्य: {editingGoal.metric}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">मिळालेले गुण (Marks /10)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10}
+                    value={editingGoal.practicalMarks ?? 0}
+                    onChange={(e) => setEditingGoal((prev: any) => prev ? ({ ...prev, practicalMarks: parseInt(e.target.value, 10) || 0 }) : null)}
+                    className="rounded-xl font-black h-10 text-emerald-700"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">टार्गेट ध्येय (Target)</label>
+                  <Input
+                    value={editingGoal.target || ''}
+                    onChange={(e) => setEditingGoal((prev: any) => prev ? ({ ...prev, target: e.target.value }) : null)}
+                    className="rounded-xl font-bold h-10 text-accent"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">महिना / तारीख</label>
+                <Input
+                  value={editingGoal.month || ''}
+                  onChange={(e) => setEditingGoal((prev: any) => prev ? ({ ...prev, month: e.target.value }) : null)}
+                  className="rounded-xl font-mono text-xs h-10"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700">प्रशिक्षकाचा शेरा (Coach Remark)</label>
+                <Input
+                  value={editingGoal.remark || ''}
+                  onChange={(e) => setEditingGoal((prev: any) => prev ? ({ ...prev, remark: e.target.value }) : null)}
+                  className="rounded-xl font-bold h-10"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsEditGoalModalOpen(false)} className="rounded-xl">रद्द करा</Button>
+            <Button onClick={handleUpdateGoal} className="bg-primary text-white font-black rounded-xl">बदल सेव्ह करा</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
