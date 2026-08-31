@@ -1,3 +1,15 @@
+export type UserRole = 'admin' | 'teacher' | 'coach' | 'viewer';
+
+export interface AuthUser {
+  uid: string;
+  email?: string | null;
+  phoneNumber?: string | null;
+  displayName?: string | null;
+  isAnonymous: boolean;
+  role?: UserRole;
+  schoolId?: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -22,6 +34,7 @@ export interface Player {
   histDetail?: string;
   medical?: string;
   photoUrl?: string;
+  storagePath?: string;
   category: 'athlete' | 'student';
   examMarks?: string;
   academicYear?: string;
@@ -35,6 +48,8 @@ export interface Player {
   jerseyNumber?: string;
   jerseyNumbers?: Record<string, string>; // Sport -> Jersey number e.g. { "Kabaddi": "7", "Volleyball": "10" }
   positions?: Record<string, string>; // Sport -> Tactical position e.g. { "Kabaddi": "Right Corner", "Kho Kho": "Runner (Batch 1)" }
+  schoolId?: string;
+  ownerId?: string;
 }
 
 export interface SchoolProfile {
@@ -49,6 +64,8 @@ export interface SchoolProfile {
   updatedAt: string;
   passcode?: string; // Secure PIN for app entry
   teacherSignature?: string; // Custom Base64 or Image URL for Teacher Signature
+  ownerId?: string;
+  adminEmail?: string;
 }
 
 export interface AttendanceRecord {
@@ -89,6 +106,7 @@ export interface FitnessAssessment {
   playerId?: string;
   term?: 'First' | 'Second';
   academicYear?: string;
+  schoolId?: string;
   height?: string;
   weight?: string;
   examMarks?: string;
@@ -99,6 +117,24 @@ export interface FitnessAssessment {
   prakalp?: string;      
   chachani?: string;     
   swadhyay?: string;     
+}
+
+export interface DailyReadinessRecord {
+  playerId: string;
+  date: string;
+  sleepHours?: number;
+  sorenessScore?: number;
+  fatigueScore?: number;
+  injuryStatus?: 'Fit to Train' | 'Restricted' | 'Sidelined';
+  painLevel?: number;
+  swellingStatus?: 'none' | 'mild' | 'severe';
+  rangeOfMotion?: 'full' | 'partial' | 'restricted';
+  functionalTest?: 'passed' | 'mild_discomfort' | 'failed';
+  psychologicalConfidence?: 'confident' | 'hesitant' | 'fearful';
+  notes?: string;
+  schoolId?: string;
+  academicYear?: string;
+  timestamp?: string;
 }
 
 export interface TacticalEvent {
@@ -159,6 +195,7 @@ export interface SportSkill {
   sportName?: string;
   playerId?: string;
   academicYear?: string;
+  schoolId?: string;
 }
 
 export interface AppState {
@@ -167,6 +204,8 @@ export interface AppState {
   fitness: Record<string, FitnessAssessment>;
   sportSkills: Record<string, SportSkill>; 
   healthIncidents: HealthIncident[];
+  dailyReadiness?: Record<string, DailyReadinessRecord>;
+  schoolProfile?: SchoolProfile;
 }
 
 export interface HealthIncident {
@@ -178,6 +217,9 @@ export interface HealthIncident {
   academicYear?: string;
   severity: 'Minor' | 'Critical';
   category: 'athlete' | 'student';
+  resolved?: boolean;
+  resolutionDate?: string;
+  schoolId?: string;
 }
 
 export interface EquipmentItem {
@@ -193,6 +235,7 @@ export interface EquipmentItem {
   notes?: string;
   lastChecked?: string;
   sport?: string;
+  schoolId?: string;
 }
 
 export interface EquipmentIssueRecord {
@@ -208,6 +251,7 @@ export interface EquipmentIssueRecord {
   returnDate?: string;
   status: 'Issued' | 'Returned' | 'Overdue' | 'Damaged';
   remarks?: string;
+  schoolId?: string;
 }
 
 export interface IndentItem {
@@ -222,3 +266,122 @@ export interface IndentItem {
   justification: string;
   priority: 'High' | 'Medium' | 'Low';
 }
+
+export interface PracticeSlot {
+  id: string;
+  time: string;
+  sport: string;
+  ground: string;
+  coach: string;
+  groupName: string;
+  skills: string[];
+  players: string[];
+}
+
+export interface DailyPracticeSchedule {
+  id: string;
+  schoolId: string;
+  date: string;
+  ageGroup: 'U14' | 'U17' | 'U19';
+  duration: number;
+  maxGroupSize: number;
+  grounds: string[];
+  coaches: string[];
+  timetable: PracticeSlot[];
+  updatedAt: string;
+}
+
+export interface SchoolActivity {
+  id: string;
+  title: string;
+  date: string;
+  time?: string;
+  description: string;
+  category: 'Sports' | 'Fitness' | 'Health Camp' | 'Tournament' | 'Yoga' | 'PT' | 'Other';
+  schoolId: string;
+  academicYear: string;
+  attendeesCount?: number;
+  photoUrl?: string;
+}
+
+export interface DailySummary {
+  id: string;
+  date: string;
+  schoolId: string;
+  attendancePresent: number;
+  attendanceTotal: number;
+  trainingLoadAvg: number;
+  injuriesReported: number;
+  readinessRate: number;
+  summaryNotes?: string;
+  updatedAt: string;
+}
+
+export interface ReportPhoto {
+  id: string;
+  schoolId: string;
+  date: string;
+  title: string;
+  photoUrl: string;
+  storagePath?: string;
+  category: string;
+  academicYear: string;
+}
+
+export interface DrillCompletion {
+  id: string;
+  playerId: string;
+  drillId: string;
+  drillName: string;
+  sport: string;
+  completedAt: string;
+  score?: number;
+  schoolId: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'achievement' | 'injury' | 'schedule';
+  timestamp: string;
+  read: boolean;
+  linkTab?: string;
+}
+
+export interface ParentShareData {
+  playerId: string;
+  playerName: string;
+  dob: string;
+  std: string;
+  schoolName: string;
+  teacherName: string;
+  fitnessSummary: {
+    status: string;
+    score: string;
+    bmi: string;
+  };
+  attendanceSummary: {
+    presentDays: number;
+    totalDays: number;
+    percentage: string;
+  };
+  achievements: string[];
+  recentReadiness?: string;
+  shareDate: string;
+}
+
+export interface TeamPlan {
+  id: string;
+  schoolId: string;
+  sport: string;
+  category: string;
+  gender: string;
+  starters: string[];
+  reserves: string[];
+  captainId?: string;
+  viceCaptainId?: string;
+  academicYear: string;
+  updatedAt: string;
+}
+

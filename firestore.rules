@@ -4,74 +4,209 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * FIRESTORE SECURITY RULES
+     * WAGHAMBA SPORTS HEALTH HUB &bull; PRODUCTION MULTI-TENANT SECURITY RULES
      * 
-     * Allows authenticated users to manage their school's records.
+     * Enforces strict school/tenant isolation:
+     * - A user can ONLY access records where schoolId/ownerId matches their authenticated UID.
+     * - Prevents cross-school reads, writes, updates, and deletes.
+     * - Prevents changing schoolId across tenants on updates.
+     * - Unauthenticated & unauthorized requests are rejected immediately.
      */
 
-    function isSignedIn() {
-      return request.auth != null;
+    // Authentication Helper
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
     }
 
-    // Allow authenticated users to manage school profiles
-    match /schools/{document=**} {
-      allow read, write: if isSignedIn();
+    // Direct School Ownership Helper
+    function isSchoolOwner(schoolId) {
+      return isAuthenticated() && request.auth.uid == schoolId;
     }
 
-    // Allow authenticated users to manage players
-    match /players/{document=**} {
-      allow read, write: if isSignedIn();
+    // Document-level Tenant Authorization Check
+    function isTenantAuthorized(docData) {
+      return isAuthenticated() && (
+        docData.schoolId == request.auth.uid ||
+        docData.ownerId == request.auth.uid
+      );
     }
 
-    // New Root-Level Registries
-    match /attendance_registry/{document=**} {
-      allow read, write: if isSignedIn();
+    // Create Operation Validator: Requires caller's UID to match schoolId/ownerId
+    function validTenantCreate(incomingData) {
+      return isAuthenticated() && (
+        incomingData.schoolId == request.auth.uid ||
+        incomingData.ownerId == request.auth.uid
+      );
     }
 
-    match /fitness_registry/{document=**} {
-      allow read, write: if isSignedIn();
+    // Update Operation Validator: Both existing and incoming data must belong to the caller, and schoolId cannot be transferred
+    function validTenantUpdate(existingData, incomingData) {
+      return isTenantAuthorized(existingData) &&
+             validTenantCreate(incomingData) &&
+             (!('schoolId' in existingData) || !('schoolId' in incomingData) || existingData.schoolId == incomingData.schoolId) &&
+             (!('ownerId' in existingData) || !('ownerId' in incomingData) || existingData.ownerId == incomingData.ownerId);
     }
 
-    match /skills_registry/{document=**} {
-      allow read, write: if isSignedIn();
+    // Delete Operation Validator: Must own the existing record
+    function validTenantDelete(existingData) {
+      return isTenantAuthorized(existingData);
     }
 
-    match /game_rules_registry/{document=**} {
-      allow read, write: if isSignedIn();
-    }
-    
-    match /readiness_registry/{document=**} {
-      allow read, write: if isSignedIn();
-    }
-
-    // Global Activity and Incident logs
-    match /all_health_incidents/{document=**} {
-      allow read, write: if isSignedIn();
+    // 1. School Profiles
+    match /schools/{schoolId} {
+      allow read: if isSchoolOwner(schoolId);
+      allow create: if isSchoolOwner(schoolId) || (isAuthenticated() && request.resource.data.ownerId == request.auth.uid);
+      allow update: if isSchoolOwner(schoolId);
+      allow delete: if isSchoolOwner(schoolId);
     }
 
-    match /school_activities/{document=**} {
-      allow read, write: if isSignedIn();
+    // 2. Students & Athletes Roster
+    match /players/{playerId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
     }
 
-    match /drill_completions/{document=**} {
-      allow read, write: if isSignedIn();
+    // 3. Attendance Registry
+    match /attendance_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
     }
 
-    match /goal_registry/{document=**} {
-      allow read, write: if isSignedIn();
+    // 4. Fitness Assessments Registry
+    match /fitness_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
     }
 
-    match /report_photos/{document=**} {
-      allow read, write: if isSignedIn();
+    // 5. Sports Skills Registry
+    match /skills_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
     }
 
-    match /daily_summaries/{document=**} {
-      allow read, write: if isSignedIn();
+    // 6. Daily Readiness Registry
+    match /readiness_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
     }
 
-    // Catch-all for development
+    // 7. Tactical Events & Performance Registry
+    match /tactical_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 8. Health Incidents & Injury Logs
+    match /all_health_incidents/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 9. School Activities & Event Logs
+    match /school_activities/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 10. Drill Completions
+    match /drill_completions/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 11. Goals & Targets
+    match /goal_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 12. Report Photos & Evidence Metadata
+    match /report_photos/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 13. Daily Activity Summaries
+    match /daily_summaries/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 14. Daily Practice Schedules
+    match /daily_practice_schedules/{docId} {
+      allow read: if isTenantAuthorized(resource.data) || isSchoolOwner(resource.data.schoolId);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 15. Auto Practice Master Plans
+    match /master_auto_plans/{docId} {
+      allow read: if isTenantAuthorized(resource.data) || isSchoolOwner(resource.data.schoolId);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 16. Official Game Rules Registry
+    match /game_rules_registry/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 17. Exam & Evaluation Term Configurations
+    match /exam_configs/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 18. Monthly Performance Configurations
+    match /performance_configs/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 19. Team Plans & Rosters
+    match /team_plans/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 20. Explicit Default Deny
     match /{document=**} {
-      allow read, write: if isSignedIn();
+      allow read, write: if false;
     }
   }
 }

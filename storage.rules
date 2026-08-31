@@ -1,0 +1,46 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Auth & Tenant validation helpers
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    
+    function isSchoolOwner(schoolId) {
+      return isAuthenticated() && request.auth.uid == schoolId;
+    }
+
+    function isValidImageOrPdf() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType == 'application/pdf';
+    }
+
+    function isReasonableSize() {
+      return request.resource.size < 10 * 1024 * 1024; // 10MB maximum
+    }
+
+    // 1. School Tenant Documents & Media
+    match /schools/{schoolId}/{allPaths=**} {
+      allow read: if isSchoolOwner(schoolId);
+      allow write: if isSchoolOwner(schoolId) && isValidImageOrPdf() && isReasonableSize();
+    }
+
+    // 2. Player Photos & Identity Documents
+    match /players/{schoolId}/{playerId}/{allPaths=**} {
+      allow read: if isSchoolOwner(schoolId);
+      allow write: if isSchoolOwner(schoolId) && isValidImageOrPdf() && isReasonableSize();
+    }
+
+    // 3. Official Sports Rule PDFs & Knowledge Documents
+    match /game_rules/{schoolId}/{allPaths=**} {
+      allow read: if isSchoolOwner(schoolId);
+      allow write: if isSchoolOwner(schoolId) && isValidImageOrPdf() && isReasonableSize();
+    }
+
+    // 4. Default Deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

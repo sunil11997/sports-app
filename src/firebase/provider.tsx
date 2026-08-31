@@ -4,6 +4,7 @@ import React, { createContext, useContext, ReactNode, useMemo, useState, useEffe
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
@@ -11,6 +12,7 @@ interface FirebaseProviderProps {
   firebaseApp?: FirebaseApp | null;
   firestore?: Firestore | null;
   auth?: Auth | null;
+  storage?: FirebaseStorage | null;
 }
 
 interface UserAuthState {
@@ -24,6 +26,7 @@ export interface FirebaseContextState {
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
   auth: Auth | null;
+  storage: FirebaseStorage | null;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -36,6 +39,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firebaseApp = null,
   firestore = null,
   auth = null,
+  storage = null,
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
@@ -71,11 +75,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       firebaseApp,
       firestore,
       auth,
+      storage,
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading && areServicesAvailable,
       userError: userAuthState.userError,
     };
-  }, [firebaseApp, firestore, auth, userAuthState, areServicesAvailable]);
+  }, [firebaseApp, firestore, auth, storage, userAuthState, areServicesAvailable]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -100,6 +105,12 @@ export const useFirestore = () => {
   const context = useContext(FirebaseContext);
   return context?.firestore || null;
 };
+
+export const useStorage = () => {
+  const context = useContext(FirebaseContext);
+  return context?.storage || null;
+};
+
 
 export const useUser = () => {
   const context = useContext(FirebaseContext);

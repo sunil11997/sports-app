@@ -5,6 +5,7 @@ import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, setPersistence, indexedDBLocalPersistence } from 'firebase/auth';
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 /**
  * initializeFirebase - Institutional Registry Engine
@@ -32,6 +33,7 @@ const initializedFirestoreApps = new Set<string>();
 export function getSdks(firebaseApp: FirebaseApp) {
   const isClient = typeof window !== 'undefined';
   const auth = getAuth(firebaseApp);
+  const storage = getStorage(firebaseApp);
   
   if (isClient) {
     try {
@@ -69,13 +71,16 @@ export function getSdks(firebaseApp: FirebaseApp) {
     return {
       firebaseApp,
       auth,
-      firestore
+      firestore,
+      storage
     };
   }
 
   return {
     firebaseApp,
     auth,
-    firestore: getFirestore(firebaseApp)
+    firestore: getFirestore(firebaseApp),
+    storage
   };
 }
+
