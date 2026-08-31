@@ -37,12 +37,23 @@ import type { EquipmentItem, EquipmentIssueRecord, IndentItem } from '@/lib/type
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 
-const DUMMY_EQ_IDS = new Set([
-  'eq_vb1', 'eq_vn1', 'eq_km1', 'eq_kp1', 'eq_sp1', 'eq_sp2', 'eq_jt1', 'eq_jt2',
-  'eq_rb1', 'eq_sw1', 'eq_mt1', 'eq_fa1', 'eq_wh1', 'eq_cn1', 'eq_ym1'
-]);
-const DUMMY_ISS_IDS = new Set(['iss_1', 'iss_2', 'iss_3']);
-const DUMMY_IND_IDS = new Set(['ind_1', 'ind_2', 'ind_3', 'ind_4', 'ind_5']);
+const DEFAULT_EQUIPMENT_STOCK: EquipmentItem[] = [
+  { id: 'eq_vb_1', name: 'Volleyball (Cosco Super)', nameMarathi: 'व्हॉलीबॉल (कॉस्को)', category: 'Balls', totalQty: 6, availableQty: 6, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', sport: 'Volleyball', notes: 'मॅच व सराव दर्जाचे बॉल्स' },
+  { id: 'eq_vn_1', name: 'Volleyball Net with Wire Cable', nameMarathi: 'व्हॉलीबॉल नेट (केबलसह)', category: 'Nets & Mats', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Sets (संच)', condition: 'Good', sport: 'Volleyball', notes: 'अधिकृत मॅच नेट' },
+  { id: 'eq_km_1', name: 'Kabaddi Mats (Interlocking EVA)', nameMarathi: 'कबड्डी मॅट्स (इंटर-लॉकिंग)', category: 'Nets & Mats', totalQty: 48, availableQty: 48, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', sport: 'Kabaddi', notes: 'अधिकृत ४० मिमी मॅट संच' },
+  { id: 'eq_kg_1', name: 'Knee & Ankle Guards', nameMarathi: 'नी गार्ड व अँकल सपोर्ट', category: 'Training & PT', totalQty: 14, availableQty: 14, damagedQty: 0, unit: 'Pairs (जोड्या)', condition: 'Good', sport: 'Kabaddi', notes: 'सराव व संरक्षणासाठी' },
+  { id: 'eq_sp_1', name: 'Shot Put (12 LBS / 5.45 Kg)', nameMarathi: 'गोळाफेक गोळा (मुले)', category: 'Athletics', totalQty: 3, availableQty: 3, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', sport: 'Shot Put', notes: 'मुले U17/U19 वजन' },
+  { id: 'eq_sp_2', name: 'Shot Put (8.8 LBS / 4 Kg)', nameMarathi: 'गोळाफेक गोळा (मुली)', category: 'Athletics', totalQty: 3, availableQty: 3, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', sport: 'Shot Put', notes: 'मुली U17/U19 वजन' },
+  { id: 'eq_jt_1', name: 'Javelin (800g / 600g)', nameMarathi: 'भालाफेक भाला (ॲल्युमिनियम)', category: 'Athletics', totalQty: 4, availableQty: 4, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', sport: 'Javelin Throw', notes: 'प्रशिक्षण व मॅच भाले' },
+  { id: 'eq_dt_1', name: 'Discus Throw (1.5 Kg / 1 Kg)', nameMarathi: 'थाळीफेक थाळी (रबर/स्टील)', category: 'Athletics', totalQty: 4, availableQty: 4, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', sport: 'Disc Throw', notes: 'मुले व मुली अधिकृत वजन' },
+  { id: 'eq_cn_1', name: 'Agility Training Cones & Markers', nameMarathi: 'ट्रेनिंग कोन्स व मार्कर्स', category: 'Training & PT', totalQty: 40, availableQty: 40, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'स्पीड व अजिलिटी ड्रिल्स' },
+  { id: 'eq_sk_1', name: 'Speed Skipping Ropes', nameMarathi: 'स्पीड दोरी (स्किपिंग रोप्स)', category: 'Training & PT', totalQty: 25, availableQty: 25, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'कार्डिओ व फुटवर्क' },
+  { id: 'eq_sw_1', name: 'Digital Stopwatch (1/100s)', nameMarathi: 'डिजिटल स्टॉपवॉच (वेळ मोजणी)', category: 'Training & PT', totalQty: 4, availableQty: 4, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'अचूक धाव चाचणीसाठी' },
+  { id: 'eq_mt_1', name: 'Measuring Steel Tape (50m & 30m)', nameMarathi: 'मोजपट्टी टेप (५० मी / ३० मी)', category: 'Athletics', totalQty: 3, availableQty: 3, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'उडी व फेक अंतरासाठी' },
+  { id: 'eq_wh_1', name: 'Fox 40 Referee Whistles', nameMarathi: 'क्रीडा शिट्टी (व्हिसल)', category: 'Training & PT', totalQty: 6, availableQty: 6, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: 'सामना व सरावासाठी' },
+  { id: 'eq_fa_1', name: 'Sports First Aid Kit & Ice Sprays', nameMarathi: 'प्रथमोपचार किट व आइस स्प्रे', category: 'First Aid', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Sets (संच)', condition: 'Good', notes: 'क्रॅम्प, स्प्रे व बँडेज' },
+  { id: 'eq_kk_1', name: 'Kho-Kho Wooden Poles & Flags', nameMarathi: 'खो-खो लाकडी खांब व ध्वज', category: 'Nets & Mats', totalQty: 2, availableQty: 2, damagedQty: 0, unit: 'Sets (संच)', condition: 'Good', sport: 'Kho Kho', notes: 'अधिकृत ग्राउंड खांब' }
+];
 
 const STORAGE_KEY_EQUIPMENT = 'wgb_sports_equipment_stock';
 const STORAGE_KEY_ISSUES = 'wgb_sports_equipment_issues';
@@ -58,11 +69,13 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       if (saved) {
         try {
           const parsed: EquipmentItem[] = JSON.parse(saved);
-          return parsed.filter(item => !DUMMY_EQ_IDS.has(item.id));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
         } catch (e) { /* ignore */ }
       }
     }
-    return [];
+    return DEFAULT_EQUIPMENT_STOCK;
   });
 
   const [issueRecords, setIssueRecords] = useState<EquipmentIssueRecord[]>(() => {
@@ -71,7 +84,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       if (saved) {
         try {
           const parsed: EquipmentIssueRecord[] = JSON.parse(saved);
-          return parsed.filter(item => !DUMMY_ISS_IDS.has(item.id));
+          if (Array.isArray(parsed)) return parsed;
         } catch (e) { /* ignore */ }
       }
     }
@@ -84,7 +97,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       if (saved) {
         try {
           const parsed: IndentItem[] = JSON.parse(saved);
-          return parsed.filter(item => !DUMMY_IND_IDS.has(item.id));
+          if (Array.isArray(parsed)) return parsed;
         } catch (e) { /* ignore */ }
       }
     }
@@ -1409,34 +1422,102 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
 
       {/* MODAL 2: ISSUE EQUIPMENT */}
       <Dialog open={isIssueModalOpen} onOpenChange={setIsIssueModalOpen}>
-        <DialogContent className="sm:max-w-lg rounded-[2.5rem] p-6">
+        <DialogContent className="sm:max-w-lg rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-primary uppercase">क्रीडा साहित्य वाटप नोंद (Issue Gear)</DialogTitle>
+            <DialogTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
+              <ArrowUpRight className="w-5 h-5 text-emerald-600" />
+              क्रीडा साहित्य वाटप नोंद (Issue Gear)
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 my-2 text-xs">
+            {/* Equipment Selection */}
             <div className="space-y-1">
-              <label className="font-bold text-slate-700">साहित्य निवडा (Select Equipment)</label>
-              <Select value={newIssue.itemId || ''} onValueChange={(val) => setNewIssue(prev => ({ ...prev, itemId: val }))}>
-                <SelectTrigger className="rounded-xl font-bold h-10"><SelectValue placeholder="साहित्य निवडा..." /></SelectTrigger>
-                <SelectContent>
-                  {equipmentList.filter(e => e.availableQty > 0).map(eq => (
-                    <SelectItem key={eq.id} value={eq.id} className="font-bold text-xs">
-                      {eq.nameMarathi} (उपलब्ध: {eq.availableQty} {eq.unit})
+              <label className="font-bold text-slate-700 flex items-center justify-between">
+                <span>साहित्य निवडा (Select Equipment) *</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">एकूण प्रकार: {equipmentList.length}</span>
+              </label>
+              {equipmentList.length === 0 ? (
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 flex items-center justify-between">
+                  <span className="font-medium">साठा रिकामा आहे.</span>
+                  <Button 
+                    size="sm" 
+                    onClick={() => setEquipmentList(DEFAULT_EQUIPMENT_STOCK)}
+                    className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg"
+                  >
+                    मानक साठा जोडा (Load Standard Stock)
+                  </Button>
+                </div>
+              ) : (
+                <Select value={newIssue.itemId || ''} onValueChange={(val) => setNewIssue(prev => ({ ...prev, itemId: val }))}>
+                  <SelectTrigger className="rounded-xl font-bold h-11 border-2">
+                    <SelectValue placeholder="साहित्य निवडा..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {equipmentList.map(eq => (
+                      <SelectItem 
+                        key={eq.id} 
+                        value={eq.id} 
+                        className="font-bold text-xs"
+                        disabled={eq.availableQty <= 0}
+                      >
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span>{eq.nameMarathi || eq.name}</span>
+                          <span className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded font-mono ml-2",
+                            eq.availableQty > 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                          )}>
+                            {eq.availableQty > 0 ? `उपलब्ध: ${eq.availableQty} ${eq.unit}` : 'साठा संपला'}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Quick Player Select from Roster or Custom Type */}
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 flex items-center justify-between">
+                <span>खेळाडू / विद्यार्थी निवडा (Select Registered Student/Player)</span>
+                <span className="text-[10px] text-primary font-bold">किंवा खाली थेट टाईप करा</span>
+              </label>
+              <Select 
+                value="" 
+                onValueChange={(pId) => {
+                  const pl = (store?.data?.players || []).find((p: any) => p.id === pId);
+                  if (pl) {
+                    const marathi = pl.nameMarathi || transliterateEnglishToMarathi(pl.name) || pl.name;
+                    setNewIssue(prev => ({
+                      ...prev,
+                      issuedTo: marathi,
+                      roleOrClass: `इ. ${pl.std || '९'} वी (${(pl.sports && pl.sports[0]) || 'खेळाडू'})`
+                    }));
+                  }
+                }}
+              >
+                <SelectTrigger className="rounded-xl font-medium text-xs h-9 border border-dashed border-primary/40 bg-slate-50">
+                  <SelectValue placeholder="रोस्टरमधून विद्यार्थी निवडा (वैकल्पिक)..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-52">
+                  {(store?.data?.players || []).map((pl: any) => (
+                    <SelectItem key={pl.id} value={pl.id} className="text-xs">
+                      {pl.nameMarathi || transliterateEnglishToMarathi(pl.name) || pl.name} (इ. {pl.std} वी - {pl.sports?.join(', ') || 'खेळाडू'})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">विद्यार्थी / कप्तान नाव</label>
+                <label className="font-bold text-slate-700">विद्यार्थी / कप्तान नाव *</label>
                 <Input
-                  placeholder="उदा. युनिराम गावित"
+                  placeholder="उदा. युनिराम गावित / सचिन गांगुर्डे"
                   value={newIssue.issuedTo || ''}
                   onChange={(e) => setNewIssue(prev => ({ ...prev, issuedTo: e.target.value }))}
-                  className="rounded-xl font-bold h-10"
+                  className="rounded-xl font-bold h-10 border-2"
                 />
               </div>
               <div className="space-y-1">
@@ -1445,36 +1526,37 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                   placeholder="उदा. इ. ९ वी (व्हॉलीबॉल कप्तान)"
                   value={newIssue.roleOrClass || ''}
                   onChange={(e) => setNewIssue(prev => ({ ...prev, roleOrClass: e.target.value }))}
-                  className="rounded-xl font-bold h-10"
+                  className="rounded-xl font-bold h-10 border-2"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-slate-700">संख्या (Quantity)</label>
+              <label className="font-bold text-slate-700">संख्या (Quantity) *</label>
               <Input
                 type="number"
                 min={1}
+                max={99}
                 value={newIssue.quantity || 1}
                 onChange={(e) => setNewIssue(prev => ({ ...prev, quantity: parseInt(e.target.value, 10) || 1 }))}
-                className="rounded-xl font-black h-10"
+                className="rounded-xl font-black h-10 border-2"
               />
             </div>
 
             <div className="space-y-1">
               <label className="font-bold text-slate-700">कारण / उद्देश (Remarks/Purpose)</label>
               <Input
-                placeholder="उदा. सकाळचा सराव / आंतरशालेय सामना"
+                placeholder="उदा. सकाळचा सराव / तालुकास्तरीय सामना"
                 value={newIssue.remarks || ''}
                 onChange={(e) => setNewIssue(prev => ({ ...prev, remarks: e.target.value }))}
-                className="rounded-xl font-bold h-10"
+                className="rounded-xl font-bold h-10 border-2"
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsIssueModalOpen(false)} className="rounded-xl">रद्द करा</Button>
-            <Button onClick={handleIssueSubmit} className="bg-emerald-600 text-white font-black rounded-xl">वाटप नोंद पूर्ण करा</Button>
+            <Button onClick={handleIssueSubmit} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl">वाटप नोंद पूर्ण करा</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

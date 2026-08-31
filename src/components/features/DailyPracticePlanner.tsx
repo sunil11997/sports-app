@@ -25,7 +25,8 @@ import {
   MapPin, 
   BookOpen, 
   AlertTriangle,
-  Clock
+  Clock,
+  Share2
 } from 'lucide-react';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
@@ -453,20 +454,72 @@ export function DailyPracticePlanner({ store, preselectedSport }: { store: any; 
     win?.document.close();
   };
 
-  // Add Custom / Manual Time Slot
-  const handleAddCustomSlot = () => {
+  // Professional WhatsApp Group Broadcast Generator
+  const handleWhatsAppGroupShare = () => {
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = schoolProfile?.schoolName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा";
+    const teacherName = schoolProfile?.teacherName || "क्रीडा शिक्षक / मार्गदर्शक";
+
+    if (timetable.length === 0) {
+      toast({ title: "वेळापत्रक रिक्त आहे", description: "प्रथम सराव वेळापत्रक तयार करा किंवा स्लॉट जोडा.", variant: "destructive" });
+      return;
+    }
+
+    const slotsByTime: Record<string, any[]> = {};
+    timetable.forEach(slot => {
+      if (!slotsByTime[slot.time]) slotsByTime[slot.time] = [];
+      slotsByTime[slot.time].push(slot);
+    });
+
+    let scheduleItems = "";
+    let itemIndex = 1;
+    Object.entries(slotsByTime).forEach(([timeStr, slots]) => {
+      slots.forEach(slot => {
+        const skillsText = slot.skills?.length ? slot.skills.join(', ') : 'नियमित सराव व कौशल्ये';
+        const athleteCount = slot.players?.length || 0;
+        scheduleItems += `\n${itemIndex}. ⏰ *[${timeStr}]* - *${slot.sport || slot.groupName}*\n   📍 *मैदान/स्थान:* ${slot.ground}\n   👨‍🏫 *मार्गदर्शक/कोच:* ${slot.coach}\n   🎯 *सराव घटक:* ${skillsText}\n   👥 *खेळाडू गट:* ${slot.groupName} (${athleteCount} खेळाडू)\n`;
+        itemIndex++;
+      });
+    });
+
+    const msg = `🏆 *${schoolName}*\n📋 *दैनिक क्रीडा सराव व विशेष उपक्रम वेळापत्रक (Daily Practice Schedule)*\n📅 *दिनांक:* ${selectedDate} | 👥 *वयोगट:* ${selectedAgeGroup}\n👨‍🏫 *क्रीडा शिक्षक:* ${teacherName}\n==============================\n⚡ *नियोजित सराव व उपक्रम तपशील:*${scheduleItems}\n==============================\n📌 *महत्त्वाच्या सूचना:*\n१. सर्व खेळाडूंनी ठरवून दिलेल्या वेळेच्या ५ मिनिटे आधी मैदानावर उपस्थित राहावे.\n२. योग्य क्रीडा गणवेश (Jersey/Kit) व स्पोर्ट्स शूज सक्तीचे आहेत.\n३. सराव संपल्यानंतर योग्य वॉर्म-डाऊन व हायड्रेशन घ्यावे.\n\nवाघंबा स्पोर्ट्स हब &bull; अधिकृत क्रीडा प्रणाली 🚀`;
+
+    const encoded = encodeURIComponent(msg);
+    if (typeof window !== 'undefined') {
+      window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    }
+  };
+
+  // Add Custom / Manual Time Slot or Activity
+  const handleAddCustomSlot = (activityType?: string) => {
+    const isSpecial = !!activityType;
+    const defaultSport = activityType || SPORTS_LIST[0];
+    const defaultSkill = activityType === 'Yoga' 
+      ? 'योग, प्राणायाम व सूर्यनमस्कार' 
+      : activityType === 'PT Mass' 
+      ? 'पी.टी. संचलन व एरोबिक्स' 
+      : activityType === 'Fitness' 
+      ? 'स्ट्रेंथ, कंडिशनिंग व ॲजिलिटी ड्रिल्स' 
+      : activityType === 'Video' 
+      ? 'सामना रणनीती व व्हिडिओ विश्लेषण'
+      : activityType === 'Match'
+      ? 'सराव सामना (Match Simulation)'
+      : 'General Skill & Conditioning';
+
     const newSlot = {
       id: `manual_${Date.now()}`,
-      time: "07:30 - 08:00",
-      sport: SPORTS_LIST[0],
+      time: "06:30 - 07:30",
+      sport: defaultSport,
       ground: grounds[0] || "Main Ground",
       coach: coaches[0] || "Coach Sunil",
-      groupName: "Custom Group",
-      skills: ["General Conditioning"],
+      groupName: isSpecial ? `${defaultSport} सत्र` : "विशेष सराव गट",
+      skills: [defaultSkill],
       players: []
     };
-    setTimetable([...timetable, newSlot]);
+    setTimetable(prev => [...prev, newSlot]);
+    toast({ title: `➕ ${defaultSport} स्लॉट जोडला`, description: "वेळ व खेळाडू बदलण्यासाठी 'Edit' वर क्लिक करा." });
   };
+
 
   // Delete Timetable Slot
   const handleDeleteSlot = (id: string) => {
@@ -550,7 +603,14 @@ export function DailyPracticePlanner({ store, preselectedSport }: { store: any; 
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <Button 
+            onClick={handleWhatsAppGroupShare}
+            className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 rounded-xl shadow-lg flex items-center gap-2 border-none"
+          >
+            <Share2 className="w-4 h-4" /> WhatsApp ग्रुप वेळापत्रक
+          </Button>
+
           <div className="space-y-1 w-full sm:w-32">
             <label className="text-[9px] font-black text-primary uppercase ml-2">Age Group</label>
             <Select value={selectedAgeGroup} onValueChange={(val: any) => setSelectedAgeGroup(val)}>
@@ -563,16 +623,15 @@ export function DailyPracticePlanner({ store, preselectedSport }: { store: any; 
             </Select>
           </div>
 
-          <div className="space-y-1 w-full sm:w-80">
+          <div className="space-y-1 w-full sm:w-72">
             <label className="text-[9px] font-black text-primary uppercase ml-2">Schedule Date</label>
             <Input 
               type="text" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)} 
-              placeholder="e.g. 01/01/2011 to 30/05/2012"
+              placeholder="e.g. 2026-08-31"
               className="h-12 font-bold bg-white rounded-xl border-2 shadow-sm"
             />
-            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider ml-2">e.g. 01/01/2011 to 30/05/2012</p>
           </div>
 
           <div className="space-y-1 w-full sm:w-32">
@@ -589,6 +648,39 @@ export function DailyPracticePlanner({ store, preselectedSport }: { store: any; 
           </div>
         </div>
       </div>
+
+      {/* Quick Custom Activities Strip */}
+      <Card className="p-4 rounded-2xl border-2 border-primary/10 bg-white shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Plus className="w-4 h-4 text-primary" />
+            <span className="text-xs font-black uppercase text-primary tracking-wider">
+              विशेष उपक्रम व ऍक्टिव्हिटी जोडा (Add Activities):
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleAddCustomSlot('Yoga')} className="h-8 text-xs font-bold rounded-lg border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100">
+              🧘‍♂️ योग व ध्यान
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleAddCustomSlot('PT Mass')} className="h-8 text-xs font-bold rounded-lg border-blue-300 text-blue-800 bg-blue-50 hover:bg-blue-100">
+              🏃‍♂️ पी.टी. संचलन
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleAddCustomSlot('Fitness')} className="h-8 text-xs font-bold rounded-lg border-purple-300 text-purple-800 bg-purple-50 hover:bg-purple-100">
+              💪 स्ट्रेंथ व कंडिशनिंग
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleAddCustomSlot('Video')} className="h-8 text-xs font-bold rounded-lg border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100">
+              🎥 रणनीती व व्हिडिओ सत्र
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleAddCustomSlot('Match')} className="h-8 text-xs font-bold rounded-lg border-rose-300 text-rose-800 bg-rose-50 hover:bg-rose-100">
+              ⚔️ सराव सामना
+            </Button>
+            <Button size="sm" onClick={() => handleAddCustomSlot()} className="h-8 text-xs font-bold rounded-lg bg-primary text-white">
+              ➕ इतर उपक्रम
+            </Button>
+          </div>
+        </div>
+      </Card>
+
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Left Columns - Setup / Parameters */}
@@ -689,7 +781,7 @@ export function DailyPracticePlanner({ store, preselectedSport }: { store: any; 
         <div className="xl:col-span-2 space-y-6">
           <div className="flex justify-between items-center pl-2">
             <h3 className="text-sm font-black uppercase text-primary tracking-widest pl-2 border-l-4 border-primary">Schedule Timetable</h3>
-            <Button onClick={handleAddCustomSlot} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-primary border h-8 px-4 rounded-xl flex items-center gap-1">
+            <Button onClick={() => handleAddCustomSlot()} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-primary border h-8 px-4 rounded-xl flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> Add Custom Slot
             </Button>
           </div>
