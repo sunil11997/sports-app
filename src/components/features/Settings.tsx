@@ -63,6 +63,51 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const [authMode, setAuthMode] = useState<'sync' | 'login'>('sync');
   const [showRegistration, setShowRegistration] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [confirmPinInput, setConfirmPinInput] = useState("");
+
+  const currentPasscode = schoolData.data.schoolProfile?.passcode || (typeof window !== 'undefined' ? localStorage.getItem('wgb_app_pin_lock') : null);
+
+  const handleSavePin = () => {
+    if (!/^\d{4}$/.test(pinInput)) {
+      toast({
+        variant: "destructive",
+        title: language === 'Marathi' ? "अवैध पिन!" : "Invalid PIN",
+        description: language === 'Marathi' ? "कृपया केवळ ४ अंकी क्रमांक टाका." : "PIN must be exactly 4 digits."
+      });
+      return;
+    }
+    if (pinInput !== confirmPinInput) {
+      toast({
+        variant: "destructive",
+        title: language === 'Marathi' ? "पिन जुळत नाही!" : "PIN Mismatch",
+        description: language === 'Marathi' ? "दोन्ही पिन सारखे असणे आवश्यक आहे." : "Confirm PIN does not match."
+      });
+      return;
+    }
+
+    schoolData.updatePasscode(pinInput);
+    setIsPinModalOpen(false);
+    setPinInput("");
+    setConfirmPinInput("");
+    toast({
+      title: language === 'Marathi' ? "सुरक्षा पिन सेट झाला! 🔒" : "Security PIN Set! 🔒",
+      description: language === 'Marathi' ? "आता ॲप उघडताना हा ४ अंकी पिन विचारेल." : "App is now protected with your 4-digit PIN.",
+      className: "bg-emerald-600 text-white font-bold"
+    });
+  };
+
+  const handleRemovePin = () => {
+    schoolData.updatePasscode("");
+    setIsPinModalOpen(false);
+    setPinInput("");
+    setConfirmPinInput("");
+    toast({
+      title: language === 'Marathi' ? "पिन लॉक काढला 🔓" : "PIN Lock Removed 🔓",
+      description: language === 'Marathi' ? "आता ॲप थेट उघडेल." : "App will now open directly without PIN prompt."
+    });
+  };
   
   const LOGO_INAPP = "/icon-512.png";
 
@@ -269,6 +314,18 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
               onClick={handleAutoFixMarathiNames}
               disabled={isFixingNames}
             />
+            <SettingsItem 
+              icon={Lock} 
+              color="bg-rose-500" 
+              label={language === 'Marathi' ? "ॲप सुरक्षा पिन लॉक (PIN Lock)" : "App Security PIN Lock"} 
+              sublabel={currentPasscode ? (language === 'Marathi' ? "४ अंकी पिन सक्रिय आहे (सुरक्षित)" : "4-digit PIN is active (Protected)") : (language === 'Marathi' ? "ॲप सुरक्षित ठेवण्यासाठी पिन सेट करा" : "Set a 4-digit PIN to lock app")} 
+              value={currentPasscode ? (language === 'Marathi' ? "सक्रिय (ON)" : "ACTIVE") : (language === 'Marathi' ? "बंद (OFF)" : "DISABLED")}
+              onClick={() => {
+                setPinInput("");
+                setConfirmPinInput("");
+                setIsPinModalOpen(true);
+              }} 
+            />
             <SettingsItem icon={FileJson} color="bg-indigo-500" label="Export Registry" sublabel="Generate JSON Backup" onClick={handleManualExport} />
             <SettingsItem 
               icon={UploadCloud} 
@@ -385,6 +442,92 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
         defaultEmail={emailInput}
         language={language}
       />
+
+      {/* 🔒 App PIN Lock Configuration Modal */}
+      <Dialog open={isPinModalOpen} onOpenChange={setIsPinModalOpen}>
+        <DialogContent className="sm:max-w-[420px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl bg-white">
+          <DialogHeader className="bg-gradient-to-br from-slate-900 via-primary to-slate-950 p-6 text-white text-left">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
+                <Lock className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-black uppercase tracking-tight text-white">
+                  {language === 'Marathi' ? "ॲप सुरक्षा पिन लॉक" : "App Security PIN Lock"}
+                </DialogTitle>
+                <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-0.5">
+                  {currentPasscode 
+                    ? (language === 'Marathi' ? "सध्या पिन सक्रिय आहे" : "PIN Lock Currently Active") 
+                    : (language === 'Marathi' ? "नवीन ४ अंकी पिन सेट करा" : "Set New 4-Digit Security PIN")}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4 text-left">
+            <div className="space-y-1">
+              <label className="text-[11px] font-black uppercase text-slate-700 tracking-wider">
+                {language === 'Marathi' ? "४ अंकी सुरक्षा पिन (New 4-Digit PIN)" : "New 4-Digit PIN"}
+              </label>
+              <Input
+                type="password"
+                maxLength={4}
+                placeholder="••••"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                className="h-14 text-center text-2xl tracking-[0.5em] font-black rounded-2xl border-2"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-black uppercase text-slate-700 tracking-wider">
+                {language === 'Marathi' ? "पिन पुन्हा टाका (Confirm PIN)" : "Confirm PIN"}
+              </label>
+              <Input
+                type="password"
+                maxLength={4}
+                placeholder="••••"
+                value={confirmPinInput}
+                onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, ''))}
+                className="h-14 text-center text-2xl tracking-[0.5em] font-black rounded-2xl border-2"
+              />
+            </div>
+
+            <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
+              {language === 'Marathi'
+                ? "हा पिन सेट केल्यावर ॲप उघडताना ४ अंकी पिन विचारला जाईल, ज्यामुळे तुमचा शाळेचा डेटा सुरक्षित राहील."
+                : "Setting a PIN protects student attendance, fitness tests, and records when opening the app."}
+            </p>
+          </div>
+
+          <DialogFooter className="p-4 bg-slate-50 border-t flex flex-col gap-2 sm:flex-col">
+            <Button
+              onClick={handleSavePin}
+              className="w-full h-12 rounded-xl bg-primary text-white font-black uppercase text-xs tracking-wider shadow-md active-scale"
+            >
+              {language === 'Marathi' ? "पिन जतन करा (Save PIN)" : "Save PIN"}
+            </Button>
+
+            {currentPasscode && (
+              <Button
+                onClick={handleRemovePin}
+                variant="destructive"
+                className="w-full h-11 rounded-xl font-black uppercase text-xs tracking-wider"
+              >
+                {language === 'Marathi' ? "पिन लॉक बंद करा (Disable PIN)" : "Disable PIN Lock"}
+              </Button>
+            )}
+
+            <Button
+              onClick={() => setIsPinModalOpen(false)}
+              variant="outline"
+              className="w-full h-11 rounded-xl font-bold uppercase text-xs text-slate-600"
+            >
+              {language === 'Marathi' ? "रद्द करा (Cancel)" : "Cancel"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

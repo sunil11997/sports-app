@@ -81,6 +81,7 @@ import { TeamEligibilityRoster } from '@/components/features/TeamEligibilityRost
 import { PlayerPositionJerseyManager } from '@/components/features/PlayerPositionJerseyManager';
 import { EquipmentInventoryHub } from '@/components/features/EquipmentInventoryHub';
 import { ParentProgressShareModal } from '@/components/features/ParentProgressShareModal';
+import { PasscodeLock } from '@/components/features/PasscodeLock';
 
 const translations = {
   English: {
@@ -432,6 +433,8 @@ export default function WaghambaApp() {
     return (schoolData.data.players || []).filter((p: any) => isBirthdayToday(p.dob));
   }, [isMounted, schoolData?.data?.players]);
 
+  const activePasscode = schoolData.data.schoolProfile?.passcode || (typeof window !== 'undefined' ? localStorage.getItem('wgb_app_pin_lock') : null);
+
   if (!isMounted) return <div className="min-h-screen bg-[#1e3a8a]" />;
 
   if (showSplash) {
@@ -448,6 +451,22 @@ export default function WaghambaApp() {
           className="object-contain object-center animate-in fade-in zoom-in-95 duration-700" 
         />
       </div>
+    );
+  }
+
+  // 🔒 Security PIN Lock Gate
+  if (activePasscode && !isUnlocked) {
+    return (
+      <PasscodeLock 
+        correctPasscode={activePasscode} 
+        onSuccess={() => setIsUnlocked(true)} 
+        onResetPin={() => {
+          schoolData.updatePasscode("");
+          setIsUnlocked(true);
+        }}
+        teacherEmail={user?.email || schoolData.data.schoolProfile?.adminEmail}
+        language={language}
+      />
     );
   }
 
@@ -511,6 +530,22 @@ export default function WaghambaApp() {
               <button onClick={toggleRotation} className="h-8 w-8 rounded-full bg-primary/5 text-primary flex items-center justify-center hover:bg-primary/10 transition-colors">
                 <RotateCw className="w-4 h-4" />
               </button>
+              {activePasscode && (
+                <button 
+                  onClick={() => {
+                    setIsUnlocked(false);
+                    toast({
+                      title: language === 'Marathi' ? "ॲप लॉक केले 🔒" : "App Locked 🔒",
+                      description: language === 'Marathi' ? "प्रवेश करण्यासाठी पुन्हा पिन टाका." : "Enter PIN to access.",
+                      className: "bg-slate-900 text-white font-bold"
+                    });
+                  }}
+                  className="h-8 w-8 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 flex items-center justify-center transition-colors active-scale"
+                  title="ॲप लॉक करा (Lock App)"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                </button>
+              )}
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10">
                 <CalendarDays className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">{headerDate}</span>
