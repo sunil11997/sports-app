@@ -104,6 +104,8 @@ export function FaceAttendanceModal({
     setCurrentSession(activeSession);
   }, [activeSession]);
 
+  const [enrolledVersion, setEnrolledVersion] = useState(0);
+
   // Filter players who have enrolled face descriptors
   const enrolledPlayers = useMemo(() => {
     return players.filter(
@@ -111,7 +113,7 @@ export function FaceAttendanceModal({
         (p.faceDescriptor && p.faceDescriptor.length > 0) ||
         (p.faceDescriptors && p.faceDescriptors.length > 0)
     );
-  }, [players]);
+  }, [players, enrolledVersion]);
 
   // Students who have an existing profile photo but no face descriptor yet
   const unenrolledWithPhoto = useMemo(() => {
@@ -120,7 +122,7 @@ export function FaceAttendanceModal({
         (!p.faceDescriptor || p.faceDescriptor.length === 0) &&
         (p.photoUrl || p.aadharPhotoUrl)
     );
-  }, [players]);
+  }, [players, enrolledVersion]);
 
   // 1-Click Auto-Enroll all students from their existing profile photos
   const handleBatchEnrollFromPhotos = async () => {
@@ -171,15 +173,16 @@ export function FaceAttendanceModal({
       }
     }
 
+    setEnrolledVersion((v) => v + 1);
     setIsBatchEnrolling(false);
     setBatchProgress(null);
 
-    // Rebuild the face matcher immediately with the newly enrolled students
-    const newlyEnrolled = players.filter(
+    // Rebuild the face matcher immediately with all enrolled students
+    const allEnrolled = players.filter(
       (p) => p.faceDescriptor && p.faceDescriptor.length > 0
     );
-    if (newlyEnrolled.length > 0) {
-      const matcher = await buildFaceMatcher(newlyEnrolled, 0.52);
+    if (allEnrolled.length > 0) {
+      const matcher = await buildFaceMatcher(allEnrolled, 0.58);
       setFaceMatcher(matcher);
     }
 
@@ -190,11 +193,11 @@ export function FaceAttendanceModal({
     const message = isMarathi
       ? `यशस्वी! ${successCount} विद्यार्थ्यांची फोटोवरून चेहरा नोंदणी पूर्ण झाली!` +
         (failedCount > 0
-          ? ` (${failedCount} फोटोंमध्ये चेहरा आढळला नाही, त्यांची कॅमेऱ्याने थेट नोंदणी करा)`
+          ? ` (${failedCount} फोटोंमध्ये चेहरा स्पष्ट आढळला नाही, त्यांची कॅमेऱ्याने थेट नोंदणी करा)`
           : "")
-      : `Success! Enrolled ${successCount} students from photos.` +
+      : `Success! Auto-enrolled ${successCount} students from photos.` +
         (failedCount > 0
-          ? ` (${failedCount} faces not detected, please enroll with live camera)`
+          ? ` (${failedCount} faces were unclear, please enroll with live camera)`
           : "");
 
     alert(message);
@@ -206,7 +209,7 @@ export function FaceAttendanceModal({
   useEffect(() => {
     let active = true;
     if (enrolledPlayers.length > 0) {
-      buildFaceMatcher(enrolledPlayers, 0.52).then((matcher) => {
+      buildFaceMatcher(enrolledPlayers, 0.58).then((matcher) => {
         if (active) setFaceMatcher(matcher);
       });
     } else {
@@ -391,11 +394,11 @@ export function FaceAttendanceModal({
 
               if (faceMatcher) {
                 const match = faceMatcher.findBestMatch(detection.descriptor);
-                if (match.label !== "unknown" && match.distance < 0.52) {
+                if (match.label !== "unknown" && match.distance < 0.58) {
                   isMatch = true;
                   matchedPlayer = playerMap.get(match.label) || null;
-                  // Convert distance to approximate percentage (0.0 dist -> 100%, 0.52 -> ~80%)
-                  confidence = Math.round((1 - match.distance) * 100);
+                  // Convert distance to realistic confidence percentage
+                  confidence = Math.round(Math.max(65, Math.min(99, (1 - match.distance * 0.75) * 100)));
                 }
               }
 

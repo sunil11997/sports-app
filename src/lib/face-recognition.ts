@@ -760,6 +760,51 @@ export async function extractFaceDescriptor(
     if (res) return res;
   }
 
+  // PASS 5: Regional Sub-Crops (Crucial for Aadhaar cards, ID cards, and wide portrait shots)
+  const cropRegions = [
+    { x: 0, y: 0, w: srcW, h: Math.floor(srcH * 0.65) }, // Top 65% (Head & Shoulders)
+    { x: 0, y: 0, w: Math.floor(srcW * 0.6), h: Math.floor(srcH * 0.6) }, // Top-Left 60% (Aadhaar photo location)
+    { x: Math.floor(srcW * 0.4), y: 0, w: Math.floor(srcW * 0.6), h: Math.floor(srcH * 0.6) }, // Top-Right 60% (ID photo location)
+    { x: Math.floor(srcW * 0.15), y: Math.floor(srcH * 0.1), w: Math.floor(srcW * 0.7), h: Math.floor(srcH * 0.7) }, // Center 70%
+  ];
+
+  for (const region of cropRegions) {
+    if (region.w > 60 && region.h > 60) {
+      try {
+        const cropCanvas = document.createElement("canvas");
+        cropCanvas.width = region.w;
+        cropCanvas.height = region.h;
+        const cropCtx = cropCanvas.getContext("2d");
+        if (cropCtx) {
+          cropCtx.drawImage(
+            input,
+            region.x,
+            region.y,
+            region.w,
+            region.h,
+            0,
+            0,
+            region.w,
+            region.h
+          );
+          const res = await runDetectionOnTarget(faceapi, cropCanvas, true);
+          if (res) return res;
+
+          // Try regional crop with shadow lifting
+          const liftedCrop = createEnhancedCanvas(cropCanvas, region.w, region.h, {
+            brightness: 1.4,
+            gamma: 0.6,
+            contrast: 1.3,
+          });
+          const resLifted = await runDetectionOnTarget(faceapi, liftedCrop, true);
+          if (resLifted) return resLifted;
+        }
+      } catch (e) {
+        // Continue to next region
+      }
+    }
+  }
+
   return null;
 }
 
@@ -843,7 +888,7 @@ export async function detectAllFacesWithDescriptors(
   try {
     const options = new faceapi.TinyFaceDetectorOptions({
       inputSize: 320,
-      scoreThreshold: 0.40,
+      scoreThreshold: 0.25,
     });
 
     const results = await faceapi
@@ -860,11 +905,11 @@ export async function detectAllFacesWithDescriptors(
 
 /**
  * Builds a FaceMatcher index from all players who have enrolled face descriptors.
- * distanceThreshold: lower = stricter match (default 0.52).
+ * distanceThreshold: lower = stricter match, higher = more forgiving (default 0.58).
  */
 export async function buildFaceMatcher(
   players: Player[],
-  distanceThreshold = 0.52
+  distanceThreshold = 0.58
 ): Promise<any | null> {
   if (typeof window === "undefined") return null;
   const faceapi = await getFaceApi();
