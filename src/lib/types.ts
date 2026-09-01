@@ -58,6 +58,8 @@ export interface Player {
 
 export interface SchoolProfile {
   id: string;
+  name?: string; // Legacy alias for schoolName
+  nameMarathi?: string; // Devanagari School Name
   teacherName: string;
   qualification: string;
   role: string;
@@ -240,6 +242,9 @@ export interface EquipmentItem {
   lastChecked?: string;
   sport?: string;
   schoolId?: string;
+  academicYear?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface EquipmentIssueRecord {
@@ -256,6 +261,9 @@ export interface EquipmentIssueRecord {
   status: 'Issued' | 'Returned' | 'Overdue' | 'Damaged';
   remarks?: string;
   schoolId?: string;
+  academicYear?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IndentItem {
@@ -269,6 +277,69 @@ export interface IndentItem {
   totalEstimate: number;
   justification: string;
   priority: 'High' | 'Medium' | 'Low';
+  schoolId?: string;
+  academicYear?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ReportPhotoMetadata {
+  id: string;
+  schoolId: string;
+  academicYear: string;
+  date: string;
+  title?: string;
+  caption?: string;
+  photoUrl: string;
+  storagePath?: string;
+  sport?: string;
+  drill?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationName?: string | null;
+  timestamp: string;
+}
+
+export interface SchoolMember {
+  id: string;
+  userId: string;
+  schoolId: string;
+  role: 'admin' | 'teacher' | 'coach' | 'viewer';
+  name?: string;
+  email?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface FullSchoolBackupData {
+  version: string;
+  exportedAt: string;
+  schoolId: string;
+  academicYear: string;
+  schoolProfile?: SchoolProfile | null;
+  players?: Player[];
+  attendance?: AttendanceRecord;
+  fitness?: Record<string, FitnessAssessment>;
+  fitnessHistory?: Record<string, FitnessAssessment[]>;
+  sportSkills?: Record<string, SportSkill>;
+  skillsHistory?: Record<string, (SportSkill & { sportName: string })[]>;
+  dailyReadiness?: Record<string, any>;
+  tacticalEvents?: TacticalEvent[];
+  goals?: GoalRecord[];
+  teams?: Record<string, any>;
+  teamPlans?: Record<string, any>;
+  schoolActivities?: any[];
+  healthIncidents?: HealthIncident[];
+  dailySummaries?: Record<string, { summary: string; weather: string }>;
+  drillCompletions?: Record<string, boolean>;
+  reportPhotos?: Record<string, any[]>;
+  equipmentInventory?: EquipmentItem[];
+  equipmentIssues?: EquipmentIssueRecord[];
+  equipmentIndents?: IndentItem[];
+  gameRules?: Record<string, any>;
+  examConfigs?: Record<string, ExamLabels>;
+  performanceConfigs?: Record<string, PerformanceLabels>;
 }
 
 export interface PracticeSlot {

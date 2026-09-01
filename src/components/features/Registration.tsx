@@ -221,6 +221,25 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
+      // Duplicate GR Number check
+      if (values.generalRegisterNumber?.trim()) {
+        const existingGr = (store.data?.players || []).find(
+          (p: Player) =>
+            p.id !== values.id &&
+            p.generalRegisterNumber?.trim() &&
+            p.generalRegisterNumber.trim().toLowerCase() === values.generalRegisterNumber.trim().toLowerCase()
+        );
+        if (existingGr) {
+          toast({
+            title: "डुप्लिकेट जी.आर. नंबर (Duplicate GR Number)",
+            description: `हा GR नंबर (${values.generalRegisterNumber}) आधीच विद्यार्थी "${existingGr.nameMarathi || existingGr.name}" साठी नोंदवला आहे.`,
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const ageValidation = getAgeValidation(values.dob);
       const calculatedAge = ageValidation ? ageValidation.ageYears : 0;
       const ageCategory = ageValidation ? ageValidation.category : "None";

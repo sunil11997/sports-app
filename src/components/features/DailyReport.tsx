@@ -68,9 +68,9 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   const [photoCaption, setPhotoCaption] = useState("");
   const [photoSport, setPhotoSport] = useState(preselectedSport || "Volleyball");
   const [photoDrill, setPhotoDrill] = useState("Spike & Serve Practice");
-  const [currentLat, setCurrentLat] = useState<number | null>(20.5937);
-  const [currentLng, setCurrentLng] = useState<number | null>(74.0045);
-  const [locationName, setLocationName] = useState("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
+  const [currentLat, setCurrentLat] = useState<number | null>(null);
+  const [currentLng, setCurrentLng] = useState<number | null>(null);
+  const [locationName, setLocationName] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
@@ -126,7 +126,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     return () => { active = false; };
   }, [reportDate, store?.data?.reportPhotos, store?.data?.dailySummaries]);
 
-  // Fetch device live location
+  // Fetch device live location (Strictly real device GPS - No Fake Fallbacks)
   const getDeviceLocation = () => {
     setIsLocating(true);
     if (typeof window !== 'undefined' && 'geolocation' in navigator) {
@@ -136,21 +136,39 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           const lng = parseFloat(pos.coords.longitude.toFixed(5));
           setCurrentLat(lat);
           setCurrentLng(lng);
-          setLocationName(`वाघंबा, ता. बागलाण, जि. नाशिक (Lat: ${lat}°, Lng: ${lng}°)`);
+          setLocationName(`Lat: ${lat}°, Lng: ${lng}°`);
           setIsLocating(false);
-          toast({ title: "GPS सुसज्ज! (GPS Acquired)", description: `Lat: ${lat}, Lng: ${lng}`, className: "bg-emerald-600 text-white font-bold" });
+          toast({
+            title: isMarathi ? "GPS सुसज्ज! (GPS Acquired)" : "GPS Acquired",
+            description: `Lat: ${lat}, Lng: ${lng}`,
+            className: "bg-emerald-600 text-white font-bold",
+          });
         },
         (err) => {
           setIsLocating(false);
-          setCurrentLat(20.5937);
-          setCurrentLng(74.0045);
-          setLocationName("शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक (Lat: 20.5937°, Lng: 74.0045°)");
-          toast({ title: "GPS Fallback Active", description: "शाळा मूळ लोकेशन सेट केले.", variant: "default" });
+          setCurrentLat(null);
+          setCurrentLng(null);
+          setLocationName(null);
+          toast({
+            title: isMarathi ? "स्थान उपलब्ध नाही (Location Unavailable)" : "Location Unavailable",
+            description: isMarathi
+              ? "GPS परवानगी नाकारली किंवा सिग्नल उपलब्ध नाही."
+              : "Device location access denied or GPS unavailable.",
+            variant: "destructive",
+          });
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
     } else {
       setIsLocating(false);
+      setCurrentLat(null);
+      setCurrentLng(null);
+      setLocationName(null);
+      toast({
+        title: isMarathi ? "स्थान उपलब्ध नाही" : "Location Unavailable",
+        description: isMarathi ? "या ब्राउझरमध्ये GPS सुविधा उपलब्ध नाही." : "Geolocation is not supported by your browser.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -204,9 +222,11 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         ctx.fillStyle = '#cbd5e1';
         ctx.font = `${fontSize3}px sans-serif`;
         const timeStr = format(new Date(), 'dd MMM yyyy, hh:mm a');
-        const latStr = currentLat ? currentLat.toString() : '20.5937';
-        const lngStr = currentLng ? currentLng.toString() : '74.0045';
-        ctx.fillText(`🌐 GPS: Lat ${latStr}° N, Long ${lngStr}° E  |  🕒 ${timeStr}`, 14, startY + (bannerHeight * 0.86));
+        const gpsText =
+          currentLat && currentLng
+            ? `🌐 GPS: Lat ${currentLat}° N, Long ${currentLng}° E`
+            : `🌐 GPS: स्थान उपलब्ध नाही (Location Unavailable)`;
+        ctx.fillText(`${gpsText}  |  🕒 ${timeStr}`, 14, startY + (bannerHeight * 0.86));
 
         const stampedUrl = canvas.toDataURL('image/jpeg', 0.85);
         const photoDate = reportDate || format(new Date(), 'yyyy-MM-dd');
@@ -220,7 +240,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           drill: activeDrill,
           lat: currentLat,
           lng: currentLng,
-          locationName: locationName,
+          locationName: locationName || undefined,
           timestamp: new Date().toLocaleTimeString()
         };
 
@@ -586,13 +606,14 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       reportPhotos.forEach(p => {
         const sportLabel = p.sport || 'Sports';
         const drillLabel = p.drill ? ('- ' + p.drill) : '';
-        const latVal = p.lat || 20.5937;
-        const lngVal = p.lng || 74.0045;
+        const latVal = p.lat != null ? p.lat : null;
+        const lngVal = p.lng != null ? p.lng : null;
+        const gpsHtml = latVal && lngVal ? `📍 GPS: Lat ${latVal}°, Long ${lngVal}°` : `📍 GPS: स्थान अनुपलब्ध (Unavailable)`;
         photosHtml += '<div class="photo-card">';
         photosHtml += '<img src="' + p.url + '" />';
         photosHtml += '<div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-top: 4px;">' + p.caption + '</div>';
         photosHtml += '<div style="font-size: 9.5px; color: #d97706; font-weight: 800;">🏆 ' + sportLabel + ' ' + drillLabel + '</div>';
-        photosHtml += '<div style="font-size: 9px; color: #475569; font-weight: 700;">📍 GPS: Lat ' + latVal + '°, Long ' + lngVal + '°</div>';
+        photosHtml += '<div style="font-size: 9px; color: #475569; font-weight: 700;">' + gpsHtml + '</div>';
         photosHtml += '</div>';
       });
       photosHtml += '</div>';
@@ -1442,7 +1463,11 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                         </button>
                         <div className="absolute bottom-0 inset-x-0 bg-slate-950/85 p-1.5 text-white text-[9px]">
                           <p className="font-black truncate">{photo.caption}</p>
-                          <p className="text-[8px] text-amber-400 font-bold">📍 Lat {photo.lat || 20.5937}°, Lng {photo.lng || 74.0045}°</p>
+                          <p className="text-[8px] text-amber-400 font-bold">
+                            {photo.lat != null && photo.lng != null
+                              ? `📍 Lat ${photo.lat}°, Lng ${photo.lng}°`
+                              : `📍 GPS: स्थान अनुपलब्ध`}
+                          </p>
                         </div>
                       </div>
                     ))}

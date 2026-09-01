@@ -1,13 +1,12 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * WAGHAMBA SPORTS HEALTH HUB &bull; PRODUCTION MULTI-TENANT SECURITY RULES
+     * WAGHAMBA SPORTS HEALTH HUB • PRODUCTION MULTI-TENANT SECURITY RULES v6.2
      * 
-     * Enforces strict school/tenant isolation:
-     * - A user can ONLY access records where schoolId/ownerId matches their authenticated UID.
+     * Enforces strict school/tenant isolation and role-based permissions:
+     * - A user can ONLY access records where schoolId/ownerId matches their authenticated UID or their school membership.
      * - Prevents cross-school reads, writes, updates, and deletes.
      * - Prevents changing schoolId across tenants on updates.
      * - Unauthenticated & unauthorized requests are rejected immediately.
@@ -60,7 +59,15 @@ service cloud.firestore {
       allow delete: if isSchoolOwner(schoolId);
     }
 
-    // 2. Students & Athletes Roster
+    // 2. School Members & Roles
+    match /school_members/{memberId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.schoolId == request.auth.uid);
+      allow create: if isAuthenticated() && (request.resource.data.schoolId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+      allow update: if isAuthenticated() && (resource.data.schoolId == request.auth.uid || resource.data.userId == request.auth.uid);
+      allow delete: if isAuthenticated() && resource.data.schoolId == request.auth.uid;
+    }
+
+    // 3. Students & Athletes Roster
     match /players/{playerId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -68,7 +75,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 3. Attendance Registry
+    // 4. Attendance Registry
     match /attendance_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -76,7 +83,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 4. Fitness Assessments Registry
+    // 5. Fitness Assessments Registry
     match /fitness_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -84,7 +91,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 5. Sports Skills Registry
+    // 6. Sports Skills Registry
     match /skills_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -92,7 +99,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 6. Daily Readiness Registry
+    // 7. Daily Readiness Registry
     match /readiness_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -100,7 +107,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 7. Tactical Events & Performance Registry
+    // 8. Tactical Events & Performance Registry
     match /tactical_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -108,7 +115,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 8. Health Incidents & Injury Logs
+    // 9. Health Incidents & Injury Logs
     match /all_health_incidents/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -116,7 +123,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 9. School Activities & Event Logs
+    // 10. School Activities & Event Logs
     match /school_activities/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -124,7 +131,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 10. Drill Completions
+    // 11. Drill Completions
     match /drill_completions/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -132,7 +139,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 11. Goals & Targets
+    // 12. Goals & Targets
     match /goal_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -140,7 +147,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 12. Report Photos & Evidence Metadata
+    // 13. Report Photos & Evidence Metadata
     match /report_photos/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -148,7 +155,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 13. Daily Activity Summaries
+    // 14. Daily Activity Summaries
     match /daily_summaries/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -156,7 +163,31 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 14. Daily Practice Schedules
+    // 15. Equipment Inventory Stock (Authoritative Firestore)
+    match /equipment_inventory/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 16. Equipment Issue & Return Records
+    match /equipment_issues/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 17. Equipment Indents & Budget Proposals
+    match /equipment_indents/{docId} {
+      allow read: if isTenantAuthorized(resource.data);
+      allow create: if validTenantCreate(request.resource.data);
+      allow update: if validTenantUpdate(resource.data, request.resource.data);
+      allow delete: if validTenantDelete(resource.data);
+    }
+
+    // 18. Daily Practice Schedules
     match /daily_practice_schedules/{docId} {
       allow read: if isTenantAuthorized(resource.data) || isSchoolOwner(resource.data.schoolId);
       allow create: if validTenantCreate(request.resource.data);
@@ -164,7 +195,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 15. Auto Practice Master Plans
+    // 19. Auto Practice Master Plans
     match /master_auto_plans/{docId} {
       allow read: if isTenantAuthorized(resource.data) || isSchoolOwner(resource.data.schoolId);
       allow create: if validTenantCreate(request.resource.data);
@@ -172,7 +203,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 16. Official Game Rules Registry
+    // 20. Official Game Rules Registry
     match /game_rules_registry/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -180,7 +211,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 17. Exam & Evaluation Term Configurations
+    // 21. Exam & Evaluation Term Configurations
     match /exam_configs/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -188,7 +219,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 18. Monthly Performance Configurations
+    // 22. Monthly Performance Configurations
     match /performance_configs/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -196,7 +227,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 19. Team Plans & Rosters
+    // 23. Team Plans & Rosters
     match /team_plans/{docId} {
       allow read: if isTenantAuthorized(resource.data);
       allow create: if validTenantCreate(request.resource.data);
@@ -204,7 +235,7 @@ service cloud.firestore {
       allow delete: if validTenantDelete(resource.data);
     }
 
-    // 20. Explicit Default Deny
+    // 24. Explicit Default Deny
     match /{document=**} {
       allow read, write: if false;
     }

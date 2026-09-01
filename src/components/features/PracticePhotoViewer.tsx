@@ -402,28 +402,33 @@ export function PracticePhotoViewer({
         {/* METADATA INFO FLOATING CARD */}
         {showInfo && (
           <div className="absolute bottom-20 sm:bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-20 bg-slate-900/90 backdrop-blur-md border-2 border-amber-400/30 rounded-2xl p-4 text-white shadow-2xl animate-in slide-in-from-bottom-2 duration-200">
-            <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
-              <div>
-                <p className="font-black text-sm text-white tracking-tight leading-snug">
-                  {currentPhoto.caption || "दैनिक क्रीडा सराव"}
-                </p>
-                <p className="text-[11px] font-bold text-amber-400 mt-0.5">
-                  🏆 {currentPhoto.sport || 'Sports'} {currentPhoto.drill ? `• ${currentPhoto.drill}` : ''}
-                </p>
-              </div>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-[9px] font-black shrink-0 uppercase px-2 py-0.5">
-                GPS Verified
-              </Badge>
+            <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
+              <span className="font-bold text-white text-xs truncate">
+                {currentPhoto.caption || `${currentPhoto.sport || "Sports"} Practice`}
+              </span>
+              {currentPhoto.lat != null && currentPhoto.lng != null ? (
+                <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] shrink-0 font-mono">
+                  GPS Verified
+                </Badge>
+              ) : (
+                <Badge className="bg-slate-800 text-slate-400 border border-slate-700 text-[10px] shrink-0 font-mono">
+                  Location Unavailable
+                </Badge>
+              )}
             </div>
 
             <div className="space-y-1.5 text-[11px] text-slate-300 font-medium">
               <div className="flex items-center gap-2 text-slate-400">
                 <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="truncate">{currentPhoto.locationName || "शासकीय माध्यमिक आश्रम शाळा वाघंबा, नाशिक"}</span>
+                <span className="truncate">{currentPhoto.locationName || "Location not recorded"}</span>
               </div>
               
               <div className="flex items-center justify-between text-[10.5px] font-mono text-slate-300 bg-slate-950/60 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <span className="text-amber-400">🌐 Lat {currentPhoto.lat || 20.5937}°, Lng {currentPhoto.lng || 74.0045}°</span>
+                <span className={currentPhoto.lat != null ? "text-amber-400" : "text-slate-500"}>
+                  {currentPhoto.lat != null && currentPhoto.lng != null
+                    ? `🌐 Lat ${currentPhoto.lat}°, Lng ${currentPhoto.lng}°`
+                    : `🌐 GPS: Unavailable`}
+                </span>
                 <span className="text-slate-400">🕒 {currentPhoto.timestamp || currentPhoto.date}</span>
               </div>
             </div>

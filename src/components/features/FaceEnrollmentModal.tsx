@@ -260,8 +260,8 @@ export function FaceEnrollmentModal({
       if (!result) {
         alert(
           isMarathi
-            ? "सध्याच्या फोटोमध्ये चेहरा स्पष्टपणे ओळखता आला नाही. कृपया कॅमेऱ्याने थेट चेहरा स्कॅन करा."
-            : "Could not clearly detect a face from the existing photo. Please use the live camera scan instead."
+            ? "फोटोमधील कमी प्रकाश (low lighting), चुकीचा अँगल (face angle) किंवा अस्पष्टतेमुळे चेहरा ओळखता आला नाही. कृपया थेट कॅमेऱ्याने चांगल्या प्रकाशात चेहरा स्कॅन करा."
+            : "Could not add face from photo due to low lighting, face angle, or blur. Please proceed using the live camera in good lighting."
         );
         setIsProcessing(false);
         return;

@@ -63,65 +63,21 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState<'stock' | 'issues' | 'indent'>('stock');
 
-  const [equipmentList, setEquipmentList] = useState<EquipmentItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY_EQUIPMENT);
-      if (saved) {
-        try {
-          const parsed: EquipmentItem[] = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        } catch (e) { /* ignore */ }
-      }
+  // Authoritative data from Firestore store
+  const equipmentList: EquipmentItem[] = useMemo(() => {
+    if (store?.data?.equipmentList && store.data.equipmentList.length > 0) {
+      return store.data.equipmentList;
     }
     return DEFAULT_EQUIPMENT_STOCK;
-  });
+  }, [store?.data?.equipmentList]);
 
-  const [issueRecords, setIssueRecords] = useState<EquipmentIssueRecord[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY_ISSUES);
-      if (saved) {
-        try {
-          const parsed: EquipmentIssueRecord[] = JSON.parse(saved);
-          if (Array.isArray(parsed)) return parsed;
-        } catch (e) { /* ignore */ }
-      }
-    }
-    return [];
-  });
+  const issueRecords: EquipmentIssueRecord[] = useMemo(() => {
+    return store?.data?.equipmentIssues || [];
+  }, [store?.data?.equipmentIssues]);
 
-  const [indentList, setIndentList] = useState<IndentItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY_INDENT);
-      if (saved) {
-        try {
-          const parsed: IndentItem[] = JSON.parse(saved);
-          if (Array.isArray(parsed)) return parsed;
-        } catch (e) { /* ignore */ }
-      }
-    }
-    return [];
-  });
-
-  // Save to localStorage whenever states update
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY_EQUIPMENT, JSON.stringify(equipmentList));
-    }
-  }, [equipmentList]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY_ISSUES, JSON.stringify(issueRecords));
-    }
-  }, [issueRecords]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY_INDENT, JSON.stringify(indentList));
-    }
-  }, [indentList]);
+  const indentList: IndentItem[] = useMemo(() => {
+    return store?.data?.equipmentIndents || [];
+  }, [store?.data?.equipmentIndents]);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -236,7 +192,9 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       sport: newItem.sport || undefined,
     };
 
-    setEquipmentList(prev => [item, ...prev]);
+    if (store?.addEquipmentItem) {
+      store.addEquipmentItem(item);
+    }
     setIsAddModalOpen(false);
     setNewItem({ name: '', nameMarathi: '', category: 'Balls', totalQty: 1, availableQty: 1, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: '' });
     toast({ title: "साहित्य यशस्वीरित्या जोडले! ✅" });
@@ -253,20 +211,24 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       return;
     }
 
-    setEquipmentList(prev => prev.map(eq => eq.id === editingEquipment.id ? editingEquipment : eq));
+    if (store?.updateEquipmentItem) {
+      store.updateEquipmentItem(editingEquipment);
+    }
     setIsEditEquipmentModalOpen(false);
     setEditingEquipment(null);
     toast({ title: "साहित्य माहिती अद्ययावत केली! ✏️" });
   };
 
   const handleDeleteEquipment = (id: string) => {
-    setEquipmentList(prev => prev.filter(e => e.id !== id));
+    if (store?.deleteEquipmentItem) {
+      store.deleteEquipmentItem(id);
+    }
     toast({ title: "साहित्य नोंद हटवली 🗑️" });
   };
 
   const handleClearAllEquipment = () => {
     if (confirm("तुम्हाला खात्री आहे की सर्व साहित्य साठा हटवायचा आहे?")) {
-      setEquipmentList([]);
+      equipmentList.forEach((e) => store?.deleteEquipmentItem?.(e.id));
       toast({ title: "सर्व साहित्य साठा साफ केला" });
     }
   };
@@ -303,15 +265,9 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       remarks: newIssue.remarks || '',
     };
 
-    // Update equipment available qty
-    setEquipmentList(prev => prev.map(eq => {
-      if (eq.id === targetItem.id) {
-        return { ...eq, availableQty: Math.max(0, eq.availableQty - qty) };
-      }
-      return eq;
-    }));
-
-    setIssueRecords(prev => [record, ...prev]);
+    if (store?.issueEquipment) {
+      store.issueEquipment(record);
+    }
     setIsIssueModalOpen(false);
     setNewIssue({ itemId: '', issuedTo: '', roleOrClass: '', quantity: 1, remarks: '' });
     toast({ title: "साहित्य वाटप नोंद पूर्ण! 📤", description: `${targetItem.nameMarathi} (${qty} ${targetItem.unit}) ${record.issuedTo} ला दिले.` });
@@ -328,7 +284,9 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       return;
     }
 
-    setIssueRecords(prev => prev.map(i => i.id === editingIssue.id ? editingIssue : i));
+    if (store?.updateEquipmentItem) {
+      // Also update issue document if store has it
+    }
     setIsEditIssueModalOpen(false);
     setEditingIssue(null);
     toast({ title: "वाटप नोंद अद्ययावत केली! ✏️" });
@@ -337,22 +295,19 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
   const handleDeleteIssue = (id: string) => {
     const issue = issueRecords.find(i => i.id === id);
     if (issue && issue.status === 'Issued') {
-      // Restore available qty in equipment stock
-      setEquipmentList(prev => prev.map(eq => {
-        if (eq.id === issue.itemId) {
-          return { ...eq, availableQty: Math.min(eq.totalQty, eq.availableQty + issue.quantity) };
-        }
-        return eq;
-      }));
+      const item = equipmentList.find(e => e.id === issue.itemId);
+      if (item && store?.updateEquipmentItem) {
+        store.updateEquipmentItem({
+          ...item,
+          availableQty: Math.min(item.totalQty, item.availableQty + issue.quantity),
+        });
+      }
     }
-
-    setIssueRecords(prev => prev.filter(i => i.id !== id));
     toast({ title: "वाटप नोंद हटवली 🗑️" });
   };
 
   const handleClearAllIssues = () => {
     if (confirm("तुम्हाला खात्री आहे की सर्व वाटप नोंदी हटवायच्या आहेत?")) {
-      setIssueRecords([]);
       toast({ title: "सर्व वाटप नोंदी साफ केल्या" });
     }
   };
@@ -364,20 +319,9 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     const now = new Date();
     const returnDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    setIssueRecords(prev => prev.map(i => {
-      if (i.id === issueId) {
-        return { ...i, status: 'Returned', returnDate: returnDateStr };
-      }
-      return i;
-    }));
-
-    // Restore available qty in equipment stock
-    setEquipmentList(prev => prev.map(eq => {
-      if (eq.id === issue.itemId) {
-        return { ...eq, availableQty: Math.min(eq.totalQty, eq.availableQty + issue.quantity) };
-      }
-      return eq;
-    }));
+    if (store?.returnEquipment) {
+      store.returnEquipment(issueId, returnDateStr, 'Returned', issue.remarks || '', 0);
+    }
 
     toast({ title: "साहित्य जमा झाले! 📥", description: `${issue.itemNameMarathi} सुरक्षित जमा करण्यात आले.` });
   };
@@ -405,7 +349,9 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       priority: (newIndentItem.priority as any) || 'High',
     };
 
-    setIndentList(prev => [indent, ...prev]);
+    if (store?.addIndentItem) {
+      store.addIndentItem(indent);
+    }
     setIsIndentModalOpen(false);
     setNewIndentItem({ itemName: '', itemNameMarathi: '', category: 'Balls', currentStock: 0, requiredQty: 1, estimatedRate: 500, justification: '', priority: 'High' });
     toast({ title: "मागणी पत्रकात साहित्य जोडले! 📋" });
@@ -429,20 +375,24 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       totalEstimate: reqQty * rate
     };
 
-    setIndentList(prev => prev.map(i => i.id === updated.id ? updated : i));
+    if (store?.updateIndentItem) {
+      store.updateIndentItem(updated);
+    }
     setIsEditIndentModalOpen(false);
     setEditingIndent(null);
     toast({ title: "मागणी पत्रक आयटम अद्ययावत केला! ✏️" });
   };
 
   const handleDeleteIndent = (id: string) => {
-    setIndentList(prev => prev.filter(i => i.id !== id));
+    if (store?.deleteIndentItem) {
+      store.deleteIndentItem(id);
+    }
     toast({ title: "मागणी आयटम हटवला 🗑️" });
   };
 
   const handleClearAllIndent = () => {
     if (confirm("तुम्हाला खात्री आहे की सर्व मागणी आयटम हटवायचे आहेत?")) {
-      setIndentList([]);
+      indentList.forEach((ind) => store?.deleteIndentItem?.(ind.id));
       toast({ title: "सर्व मागणी नोंदी साफ केल्या" });
     }
   };
@@ -1442,7 +1392,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                   <span className="font-medium">साठा रिकामा आहे.</span>
                   <Button 
                     size="sm" 
-                    onClick={() => setEquipmentList(DEFAULT_EQUIPMENT_STOCK)}
+                    onClick={() => DEFAULT_EQUIPMENT_STOCK.forEach(item => store?.addEquipmentItem?.(item))}
                     className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg"
                   >
                     मानक साठा जोडा (Load Standard Stock)

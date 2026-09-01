@@ -45,8 +45,9 @@ const playerRecommendationPrompt = ai.definePrompt({
     maxOutputTokens: 2048,
     temperature: 0.5,
   },
-  prompt: `You are Coach Sunil Deshmukh, the expert head sports coach at Waghamba Ashram Shala. 
+  prompt: `You are an expert Head Sports Coach and Physical Education Director. 
   IMPORTANT: Provide all sections in {{{language}}}.
+  NOTE: Do not give definitive medical diagnoses; recommend consulting medical staff for health concerns.
 
   Player Profile:
   - Name: {{{name}}}

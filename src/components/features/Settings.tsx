@@ -133,10 +133,13 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     }
   };
 
+  const [pendingRestoreData, setPendingRestoreData] = useState<any>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+
   const handleManualExport = () => {
     schoolData.exportBackupData();
     toast({
-      title: language === 'Marathi' ? "डेटा एक्सपोर्ट झाला" : "Consolidated Registry Exported",
+      title: language === 'Marathi' ? "डेटा एक्सपोर्ट झाला ✅" : "Consolidated Registry Exported ✅",
       description: language === 'Marathi' ? "तुमच्या शाळेचा संपूर्ण डेटा JSON फाईलमध्ये जतन केला आहे." : "A complete institutional JSON backup has been generated."
     });
   };
@@ -149,18 +152,34 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
     reader.onload = async (event) => {
       try {
         const json = JSON.parse(event.target?.result as string);
-        if (!json.data) throw new Error("Invalid format");
+        if (!json || typeof json !== 'object') throw new Error("Invalid format");
         
-        await schoolData.importBackupData(json);
-        toast({ 
-          title: "Registry Restored", 
-          description: "Institutional data has been successfully synchronized to the cloud.",
-          className: "bg-emerald-600 text-white font-black"
-        });
-      } catch (err) {
+        setIsRestoring(true);
+        const res = await schoolData.importBackupData(json);
+        setIsRestoring(false);
+
+        if (res.success) {
+          const countSummary = Object.entries(res.importedCounts)
+            .map(([name, count]) => `${name}: ${count}`)
+            .join(', ');
+
+          toast({ 
+            title: language === 'Marathi' ? "डेटा यशस्वीरित्या रिस्टोअर झाला! 🎉" : "Registry Restored Successfully! 🎉", 
+            description: `${language === 'Marathi' ? 'एकूण नोंदी' : 'Total Records'}: ${res.totalRecords} (${countSummary})`,
+            className: "bg-emerald-600 text-white font-black"
+          });
+        } else {
+          toast({
+            title: language === 'Marathi' ? "रिस्टोअर त्रुटी" : "Restore Error",
+            description: res.errors?.join('; ') || "Unknown error",
+            variant: "destructive"
+          });
+        }
+      } catch (err: any) {
+        setIsRestoring(false);
         toast({ 
           title: "Import Error", 
-          description: "The selected file is not a valid WGB Registry backup.", 
+          description: "The selected file is not a valid WGB Registry backup JSON.", 
           variant: "destructive" 
         });
       }
@@ -291,6 +310,97 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
             </div>
           </div>
         )}
+
+        {/* 📅 ACADEMIC YEAR SELECTOR */}
+        <div className="space-y-2">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <School className="w-3 h-3 text-primary" /> {language === 'Marathi' ? "शैक्षणिक वर्ष (Academic Year)" : "Academic Year"}
+          </label>
+          <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-black text-xs">
+                📅
+              </div>
+              <div>
+                <p className="font-black text-xs text-slate-800">
+                  {language === 'Marathi' ? "सक्रिय शैक्षणिक वर्ष" : "Active Academic Year"}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {language === 'Marathi' ? "हजेरी, फिटनेस व नोंदी या वर्षासाठी दिसतील" : "Records scoped to this session"}
+                </p>
+              </div>
+            </div>
+            <select
+              value={schoolData.selectedYear}
+              onChange={(e) => {
+                schoolData.setSelectedYear(e.target.value);
+                toast({
+                  title: language === 'Marathi' ? "शैक्षणिक वर्ष बदलले" : "Academic Year Changed",
+                  description: `${e.target.value} ${language === 'Marathi' ? 'सक्रिय केले आहे.' : 'is now active.'}`
+                });
+              }}
+              aria-label={language === 'Marathi' ? "शैक्षणिक वर्ष निवडा" : "Select Academic Year"}
+              className="bg-slate-50 border-2 border-slate-200 text-slate-900 font-black text-xs rounded-xl px-3 py-2 outline-none focus:border-primary"
+            >
+              {schoolData.availableAcademicYears.map((year: string) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 🏥 DATA HEALTH & SYSTEM STATUS */}
+        <div className="space-y-2">
+          <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Database className="w-3 h-3 text-primary" /> {language === 'Marathi' ? "डेटा स्थिती व सिस्टीम स्टेटस" : "Data Health & System Status"}
+          </label>
+          <div className="rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-950 to-primary/40 text-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`} />
+                <span className="font-black text-xs uppercase tracking-wider">
+                  {isOnline ? (language === 'Marathi' ? "ऑनलाइन सिंक सक्रिय (Online)" : "Cloud Online") : (language === 'Marathi' ? "ऑफलाइन मोड (Offline)" : "Offline Mode")}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!isOnline || schoolData.isSyncing}
+                onClick={() => {
+                  schoolData.syncOfflineAttendance();
+                  toast({ title: language === 'Marathi' ? "सिंक सुरू आहे..." : "Syncing..." });
+                }}
+                className="h-8 text-xs font-black bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-xl"
+              >
+                {schoolData.isSyncing ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                {language === 'Marathi' ? "आत्ता सिंक करा" : "Sync Now"}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="bg-white/5 p-2.5 rounded-2xl border border-white/10">
+                <p className="text-base font-black text-emerald-400">{schoolData.data.players.length}</p>
+                <p className="text-[9px] text-slate-300 font-bold uppercase">{language === 'Marathi' ? "विद्यार्थी" : "Students"}</p>
+              </div>
+              <div className="bg-white/5 p-2.5 rounded-2xl border border-white/10">
+                <p className="text-base font-black text-amber-400">{Object.keys(schoolData.data.attendance || {}).length}</p>
+                <p className="text-[9px] text-slate-300 font-bold uppercase">{language === 'Marathi' ? "हजेरी" : "Attendance"}</p>
+              </div>
+              <div className="bg-white/5 p-2.5 rounded-2xl border border-white/10">
+                <p className="text-base font-black text-blue-400">{schoolData.data.equipmentList?.length || 0}</p>
+                <p className="text-[9px] text-slate-300 font-bold uppercase">{language === 'Marathi' ? "साहित्य" : "Equipment"}</p>
+              </div>
+            </div>
+
+            {schoolData.pendingSyncCount > 0 && (
+              <div className="bg-amber-500/20 border border-amber-500/30 p-2.5 rounded-xl flex items-center justify-between text-xs text-amber-200">
+                <span>⚠️ {schoolData.pendingSyncCount} {language === 'Marathi' ? "नोंदी ऑफलाइन जतन आहेत (सिंक बाकी)" : "pending offline records"}</span>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="space-y-2">
           <label className="px-5 text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">

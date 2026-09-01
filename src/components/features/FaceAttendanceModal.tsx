@@ -183,11 +183,11 @@ export function FaceAttendanceModal({
     const message = isMarathi
       ? `यशस्वी! ${successCount} विद्यार्थ्यांची फोटोवरून चेहरा नोंदणी झाली!` +
         (failedCount > 0
-          ? ` (${failedCount} विद्यार्थ्यांचे फोटो अस्पष्ट असल्यामुळे कॅमेऱ्याने नोंदणी करावी लागेल)`
+          ? ` (${failedCount} विद्यार्थ्यांचे फोटोमधील प्रकाश (low light) किंवा अँगलमुळे चेहरा ओळखता आला नाही. त्यांची कॅमेऱ्याने थेट नोंदणी करा)`
           : "")
       : `Success! Auto-enrolled ${successCount} students from photos.` +
         (failedCount > 0
-          ? ` (${failedCount} could not be detected due to lighting/angle, please enroll with camera)`
+          ? ` (${failedCount} could not be added due to low lighting area or face angle. Please proceed with live camera scan)`
           : "");
 
     alert(message);
