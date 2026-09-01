@@ -41,8 +41,16 @@ import {
   ListFilter,
   Check,
   CalendarDays,
-  AlertCircle
+  AlertCircle,
+  Camera,
+  Sparkles
 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const FaceAttendanceModal = dynamic(
+  () => import("./FaceAttendanceModal").then((m) => m.FaceAttendanceModal),
+  { ssr: false }
+);
 
 const SPORTS_CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -80,6 +88,8 @@ export function Attendance({ store, section, language = 'English' }: { store: an
   const [absentSessionFilter, setAbsentSessionFilter] = useState<'Morning' | 'Evening' | 'Both'>('Morning');
   // Absence filter type: 'all_unattended' (not marked 'P') vs 'marked_absent' (explicitly 'A')
   const [absentTypeFilter, setAbsentTypeFilter] = useState<'all_unattended' | 'marked_absent'>('all_unattended');
+  // Face Attendance AI Scanner Modal state
+  const [isFaceAttendanceOpen, setIsFaceAttendanceOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -479,7 +489,16 @@ export function Attendance({ store, section, language = 'English' }: { store: an
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={() => setIsFaceAttendanceOpen(true)}
+            className="h-11 rounded-xl px-5 font-black uppercase text-xs tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-2 active-scale transition-all"
+          >
+            <Camera className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
+            {localMarathiView ? 'चेहरा हजेरी (Face Attendance)' : 'Face Attendance'}
+          </Button>
+
           <div className="flex bg-muted/40 p-1 rounded-xl border">
             <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-9 px-4 text-[10px] font-black uppercase rounded-lg">English</Button>
             <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-9 px-4 text-[10px] font-black uppercase rounded-lg">मराठी</Button>
@@ -970,6 +989,23 @@ export function Attendance({ store, section, language = 'English' }: { store: an
             </div>
           </Card>
         </div>
+      )}
+
+      {/* AI Face Attendance Scanner Modal */}
+      {isFaceAttendanceOpen && (
+        <FaceAttendanceModal
+          isOpen={isFaceAttendanceOpen}
+          onClose={() => setIsFaceAttendanceOpen(false)}
+          players={store.data.players || []}
+          activeSession={activeSession}
+          onSessionChange={(sess) => setActiveSession(sess)}
+          dateStr={selectedAbsentDate || (currentDate ? format(currentDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'))}
+          attendance={store.data.attendance || {}}
+          onMarkAttendance={(playerId, dStr, sess, status) => {
+            handleSetSingleStatus(playerId, dStr, sess, status);
+          }}
+          language={localMarathiView ? 'Marathi' : 'English'}
+        />
       )}
     </div>
   );

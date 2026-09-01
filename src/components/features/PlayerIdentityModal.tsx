@@ -5,15 +5,23 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Printer, X, FileText, CheckCircle2, User, Camera, ShieldCheck, Edit3 } from 'lucide-react';
+import { Printer, X, FileText, CheckCircle2, User, Camera, ShieldCheck, Edit3, Sparkles } from 'lucide-react';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 import { getDisplayNameForLocale, calculateBMI, getOfficialSchoolName, getTeacherName } from '@/lib/utils';
 import type { Player } from '@/lib/types';
+import dynamic from 'next/dynamic';
+
+const FaceEnrollmentModal = dynamic(
+  () => import('./FaceEnrollmentModal').then((m) => m.FaceEnrollmentModal),
+  { ssr: false }
+);
 
 interface PlayerIdentityModalProps {
   player: Player;
   schoolProfile?: any;
+  store?: any;
+  language?: string;
   onClose: () => void;
 }
 
@@ -59,7 +67,8 @@ export function calculateAgeOn31Dec2025(dobStr: string): string {
   }
 }
 
-export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerIdentityModalProps) {
+export function PlayerIdentityModal({ player, schoolProfile, store, language = 'Marathi', onClose }: PlayerIdentityModalProps) {
+  const [currentPlayer, setCurrentPlayer] = useState<Player>(player);
   const [motherName, setMotherName] = useState(player.motherName || '');
   const [fatherName, setFatherName] = useState(player.fatherName || '');
   const [saralId, setSaralId] = useState(player.saralId || player.serialNumber || '');
@@ -68,8 +77,10 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
   const [selectedSport, setSelectedSport] = useState(player.sports && player.sports.length > 0 ? player.sports.join(', ') : '');
   const [photoUrl, setPhotoUrl] = useState(player.photoUrl || player.aadharPhotoUrl || '');
   const [isEditing, setIsEditing] = useState(false);
+  const [isFaceEnrollOpen, setIsFaceEnrollOpen] = useState(false);
 
   React.useEffect(() => {
+    setCurrentPlayer(player);
     setMotherName(player.motherName || '');
     setFatherName(player.fatherName || '');
     setSaralId(player.saralId || player.serialNumber || '');
@@ -533,16 +544,37 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
             <div className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>ऑटो-फील माहिती: <strong>{displayName}</strong> (इयत्ता {player.std} वी)</span>
+              {currentPlayer.faceDescriptor ? (
+                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 font-bold text-[10px] uppercase ml-1">
+                  ✓ चेहरा नोंदणीकृत
+                </Badge>
+              ) : (
+                <Badge className="bg-amber-100 text-amber-800 border-amber-300 font-bold text-[10px] uppercase ml-1">
+                  चेहरा नोंदणी बाकी
+                </Badge>
+              )}
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(!isEditing)}
-              className="text-xs font-black uppercase rounded-xl h-9 border-primary/30 text-primary hover:bg-primary/10 flex items-center gap-1.5"
-            >
-              <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "फॉर्म बंद करा (Done)" : "माहितीत बदल करा (Edit Fields)"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFaceEnrollOpen(true)}
+                className="text-xs font-black uppercase rounded-xl h-9 border-emerald-500/40 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                {currentPlayer.faceDescriptor ? "चेहरा अपडेट करा (Re-Enroll Face)" : "चेहरा नोंदणी (Enroll Face ID)"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-xs font-black uppercase rounded-xl h-9 border-primary/30 text-primary hover:bg-primary/10 flex items-center gap-1.5"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "फॉर्म बंद करा (Done)" : "माहितीत बदल करा (Edit Fields)"}
+              </Button>
+            </div>
           </div>
 
           {/* EDITABLE FIELDS PANEL */}
@@ -669,6 +701,23 @@ export function PlayerIdentityModal({ player, schoolProfile, onClose }: PlayerId
           </div>
         </CardContent>
       </Card>
+
+      {/* Face Enrollment AI Modal */}
+      {isFaceEnrollOpen && (
+        <FaceEnrollmentModal
+          player={currentPlayer}
+          isOpen={isFaceEnrollOpen}
+          onClose={() => setIsFaceEnrollOpen(false)}
+          store={store}
+          language={language}
+          onEnrolled={(updated) => {
+            setCurrentPlayer(updated);
+            if (updated.faceEnrolledPhotoUrl) {
+              setPhotoUrl(updated.faceEnrolledPhotoUrl);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

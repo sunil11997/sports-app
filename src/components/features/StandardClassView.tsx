@@ -1354,6 +1354,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         <PlayerIdentityModal
           player={selectedIdentityPlayer}
           schoolProfile={store?.data?.schoolProfile}
+          store={store}
           onClose={() => setSelectedIdentityPlayer(null)}
         />
       )}

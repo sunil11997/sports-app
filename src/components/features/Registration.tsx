@@ -757,6 +757,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         <PlayerIdentityModal
           player={selectedIdentityPlayer}
           schoolProfile={store?.data?.schoolProfile}
+          store={store}
           onClose={() => setSelectedIdentityPlayer(null)}
         />
       )}

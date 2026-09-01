@@ -48,6 +48,10 @@ export interface Player {
   jerseyNumber?: string;
   jerseyNumbers?: Record<string, string>; // Sport -> Jersey number e.g. { "Kabaddi": "7", "Volleyball": "10" }
   positions?: Record<string, string>; // Sport -> Tactical position e.g. { "Kabaddi": "Right Corner", "Kho Kho": "Runner (Batch 1)" }
+  faceDescriptor?: number[]; // 128-dimensional face embedding vector
+  faceDescriptors?: number[][]; // Multiple enrolled face descriptors (optional)
+  faceEnrolledAt?: string; // ISO date timestamp of face registration
+  faceEnrolledPhotoUrl?: string; // Captured snapshot during face enrollment
   schoolId?: string;
   ownerId?: string;
 }

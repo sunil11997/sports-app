@@ -312,6 +312,7 @@ export function PlayerIDCardManager({ store, preselectedSport, section }: Player
         <PlayerIdentityModal
           player={selectedPlayerForModal}
           schoolProfile={store?.data?.schoolProfile || store?.schoolProfile}
+          store={store}
           onClose={() => setSelectedPlayerForModal(null)}
         />
       )}
