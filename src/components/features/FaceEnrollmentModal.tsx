@@ -18,11 +18,13 @@ import {
   RotateCw,
   Sparkles,
   Trash2,
+  ImageIcon,
 } from "lucide-react";
 import type { Player } from "@/lib/types";
 import {
   loadFaceModels,
   extractFaceDescriptor,
+  extractFaceDescriptorFromImageUrl,
   playAttendanceChime,
 } from "@/lib/face-recognition";
 import { getDisplayNameForLocale } from "@/lib/utils";
@@ -230,6 +232,55 @@ export function FaceEnrollmentModal({
     }
   };
 
+  // Extract and enroll face using existing profile photo URL/Base64
+  const existingPhoto = player?.photoUrl || player?.aadharPhotoUrl;
+  const handleEnrollFromExistingPhoto = async () => {
+    if (!existingPhoto || !player || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      const result = await extractFaceDescriptorFromImageUrl(existingPhoto);
+
+      if (!result) {
+        alert(
+          isMarathi
+            ? "सध्याच्या फोटोमध्ये चेहरा स्पष्टपणे ओळखता आला नाही. कृपया कॅमेऱ्याने थेट चेहरा स्कॅन करा."
+            : "Could not clearly detect a face from the existing photo. Please use the live camera scan instead."
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      const descriptorArray = Array.from(result.descriptor);
+
+      const updatedPlayer: Player = {
+        ...player,
+        faceDescriptor: descriptorArray,
+        faceDescriptors: [descriptorArray],
+        faceEnrolledAt: new Date().toISOString(),
+        faceEnrolledPhotoUrl: existingPhoto,
+      };
+
+      store.updatePlayer(updatedPlayer);
+      setCapturedPhoto(existingPhoto);
+      setEnrolledSuccess(true);
+      playAttendanceChime("success");
+
+      if (onEnrolled) {
+        onEnrolled(updatedPlayer);
+      }
+    } catch (e: any) {
+      console.error("Enrollment from photo failed:", e);
+      alert(
+        isMarathi
+          ? "फोटोवरून चेहरा नोंदणी अयशस्वी: " + (e?.message || "")
+          : "Photo enrollment failed: " + (e?.message || "")
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // Remove enrolled face data
   const handleRemoveFaceData = () => {
     if (!player) return;
@@ -296,7 +347,48 @@ export function FaceEnrollmentModal({
           </div>
         </DialogHeader>
 
-        <div className="p-4 flex flex-col items-center gap-4">
+        <div className="p-4 flex flex-col items-center gap-3">
+          {/* Use Existing Profile Photo Banner */}
+          {existingPhoto && !enrolledSuccess && (
+            <div className="w-full bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={existingPhoto}
+                    alt="Student Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="overflow-hidden text-left">
+                  <p className="text-xs font-bold text-slate-100 flex items-center gap-1.5 truncate">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    {isMarathi ? "सध्याचा फोटो उपलब्ध" : "Profile Photo Found"}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {isMarathi
+                      ? "कॅमेरा न वापरता थेट फोटोवरून नोंदवा"
+                      : "Auto-enroll directly from existing photo"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isProcessing || isLoadingModels}
+                onClick={handleEnrollFromExistingPhoto}
+                className="text-xs font-bold bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 shrink-0 h-9 px-3 gap-1.5"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ImageIcon className="w-3.5 h-3.5" />
+                )}
+                {isMarathi ? "फोटो वापरा" : "Use Photo"}
+              </Button>
+            </div>
+          )}
+
           {/* Camera Viewport */}
           <div className="relative w-full aspect-[4/3] max-w-sm rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-700 flex items-center justify-center shadow-inner">
             {isLoadingModels ? (

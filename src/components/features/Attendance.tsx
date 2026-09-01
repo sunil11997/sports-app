@@ -997,6 +997,7 @@ export function Attendance({ store, section, language = 'English' }: { store: an
           isOpen={isFaceAttendanceOpen}
           onClose={() => setIsFaceAttendanceOpen(false)}
           players={store.data.players || []}
+          store={store}
           activeSession={activeSession}
           onSessionChange={(sess) => setActiveSession(sess)}
           dateStr={selectedAbsentDate || (currentDate ? format(currentDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'))}

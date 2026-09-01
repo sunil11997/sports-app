@@ -22,6 +22,8 @@ import {
   VolumeX,
   Sparkles,
   UserCheck,
+  Zap,
+  ImageIcon,
   X,
 } from "lucide-react";
 import type { Player } from "@/lib/types";
@@ -29,6 +31,7 @@ import {
   loadFaceModels,
   detectAllFacesWithDescriptors,
   buildFaceMatcher,
+  extractFaceDescriptorFromImageUrl,
   playAttendanceChime,
   speakAttendanceAnnounce,
 } from "@/lib/face-recognition";
@@ -38,6 +41,7 @@ interface FaceAttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
   players: Player[];
+  store?: any;
   activeSession: "Morning" | "Evening";
   onSessionChange?: (session: "Morning" | "Evening") => void;
   dateStr: string;
@@ -62,6 +66,7 @@ export function FaceAttendanceModal({
   isOpen,
   onClose,
   players,
+  store,
   activeSession,
   onSessionChange,
   dateStr,
@@ -81,6 +86,8 @@ export function FaceAttendanceModal({
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [recentScans, setRecentScans] = useState<ScanEvent[]>([]);
   const [currentSession, setCurrentSession] = useState<"Morning" | "Evening">(activeSession);
+  const [isBatchEnrolling, setIsBatchEnrolling] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Debounce map to avoid re-triggering the same player within 8 seconds
   const lastMarkedRef = useRef<Record<string, number>>({});
@@ -98,6 +105,59 @@ export function FaceAttendanceModal({
         (p.faceDescriptors && p.faceDescriptors.length > 0)
     );
   }, [players]);
+
+  // Students who have an existing profile photo but no face descriptor yet
+  const unenrolledWithPhoto = useMemo(() => {
+    return players.filter(
+      (p) =>
+        (!p.faceDescriptor || p.faceDescriptor.length === 0) &&
+        (p.photoUrl || p.aadharPhotoUrl)
+    );
+  }, [players]);
+
+  // 1-Click Auto-Enroll all students from their existing profile photos
+  const handleBatchEnrollFromPhotos = async () => {
+    if (isBatchEnrolling || unenrolledWithPhoto.length === 0 || !store) return;
+
+    setIsBatchEnrolling(true);
+    setBatchProgress({ current: 0, total: unenrolledWithPhoto.length });
+
+    let successCount = 0;
+    for (let i = 0; i < unenrolledWithPhoto.length; i++) {
+      const student = unenrolledWithPhoto[i];
+      const photo = student.photoUrl || student.aadharPhotoUrl;
+      setBatchProgress({ current: i + 1, total: unenrolledWithPhoto.length });
+
+      if (photo) {
+        try {
+          const res = await extractFaceDescriptorFromImageUrl(photo);
+          if (res) {
+            const descArr = Array.from(res.descriptor);
+            const updated: Player = {
+              ...student,
+              faceDescriptor: descArr,
+              faceDescriptors: [descArr],
+              faceEnrolledAt: new Date().toISOString(),
+              faceEnrolledPhotoUrl: photo,
+            };
+            store.updatePlayer(updated);
+            successCount++;
+          }
+        } catch (err) {
+          console.warn("Failed auto-enroll for", student.name, err);
+        }
+      }
+    }
+
+    setIsBatchEnrolling(false);
+    setBatchProgress(null);
+    playAttendanceChime("success");
+    alert(
+      isMarathi
+        ? `यशस्वी! ${successCount} विद्यार्थ्यांची फोटोवरून चेहरा नोंदणी झाली!`
+        : `Success! Auto-enrolled ${successCount} students from their profile photos!`
+    );
+  };
 
   // Build the FaceMatcher index asynchronously
   const [faceMatcher, setFaceMatcher] = useState<any>(null);
@@ -458,7 +518,51 @@ export function FaceAttendanceModal({
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
           {/* Camera Scanner Viewport (2 Columns on MD) */}
-          <div className="md:col-span-2 p-4 flex flex-col items-center justify-center bg-slate-950">
+          <div className="md:col-span-2 p-4 flex flex-col items-center justify-center bg-slate-950 gap-3">
+            {/* Auto-Enroll All Existing Photos Quick Banner */}
+            {unenrolledWithPhoto.length > 0 && store && (
+              <div className="w-full bg-slate-900 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between gap-2 shadow-md">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div className="text-left overflow-hidden">
+                    <p className="text-xs font-bold text-slate-100 truncate">
+                      {isMarathi
+                        ? `${unenrolledWithPhoto.length} विद्यार्थ्यांचे प्रोफाईल फोटो उपलब्ध आहेत`
+                        : `${unenrolledWithPhoto.length} students have profile photos`}
+                    </p>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      {isMarathi
+                        ? "एका क्लिकवर सर्वांची चेहरा नोंदणी करा"
+                        : "1-Click Auto-Enroll all from existing photos"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBatchEnrolling || isLoadingModels}
+                  onClick={handleBatchEnrollFromPhotos}
+                  className="h-8 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 border-none shrink-0"
+                >
+                  {isBatchEnrolling ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      {batchProgress
+                        ? `${batchProgress.current}/${batchProgress.total}`
+                        : "..."}
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-3.5 h-3.5 mr-1 fill-current" />
+                      {isMarathi ? "सर्व फोटोवरून नोंदवा" : "Auto-Enroll All"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
             <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-800 flex items-center justify-center shadow-2xl">
               {isLoadingModels ? (
                 <div className="flex flex-col items-center gap-3 text-slate-400">

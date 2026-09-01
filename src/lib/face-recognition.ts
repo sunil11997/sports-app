@@ -105,6 +105,34 @@ export async function extractFaceDescriptor(
 }
 
 /**
+ * Loads an image from a URL or Base64 string and extracts its face descriptor.
+ */
+export async function extractFaceDescriptorFromImageUrl(
+  imageUrl: string
+): Promise<{ descriptor: Float32Array; detection: any } | null> {
+  if (typeof window === "undefined" || !imageUrl) return null;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = async () => {
+      try {
+        const result = await extractFaceDescriptor(img);
+        resolve(result);
+      } catch (e) {
+        console.error("Error processing image URL for face descriptor:", e);
+        resolve(null);
+      }
+    };
+    img.onerror = () => {
+      console.warn("Failed to load image from URL for face recognition:", imageUrl);
+      resolve(null);
+    };
+    img.src = imageUrl;
+  });
+}
+
+/**
  * Detects all faces present in the video/canvas frame with 128-d descriptors.
  */
 export async function detectAllFacesWithDescriptors(
