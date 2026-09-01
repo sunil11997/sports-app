@@ -80,8 +80,158 @@ export function areFaceModelsLoaded(): boolean {
 }
 
 /**
- * Detects a single face in a video, image, or canvas element and computes its 128-d descriptor vector.
- * Includes multi-model and multi-scale fallback for static photos.
+ * Creates an enhanced HTMLCanvasElement with adjusted brightness, contrast, gamma, and rotation.
+ */
+function createEnhancedCanvas(
+  source: CanvasImageSource,
+  srcW: number,
+  srcH: number,
+  options: {
+    brightness?: number;   // multiplier, e.g. 1.4 (+40%), 1.8 (+80%)
+    contrast?: number;     // multiplier, e.g. 1.25
+    gamma?: number;        // exponent for shadows, e.g. 0.6
+    rotationDeg?: number;  // degrees: -15, 15, -30, 30, -45, 45, 90, -90, 180
+  } = {}
+): HTMLCanvasElement {
+  const { brightness = 1.0, contrast = 1.0, gamma = 1.0, rotationDeg = 0 } = options;
+  const canvas = document.createElement("canvas");
+
+  if (rotationDeg % 180 !== 0 && rotationDeg % 90 !== 0) {
+    const rad = (Math.abs(rotationDeg) * Math.PI) / 180;
+    const sin = Math.sin(rad);
+    const cos = Math.cos(rad);
+    canvas.width = Math.round(srcW * cos + srcH * sin);
+    canvas.height = Math.round(srcW * sin + srcH * cos);
+  } else if (Math.abs(rotationDeg) === 90 || Math.abs(rotationDeg) === 270) {
+    canvas.width = srcH;
+    canvas.height = srcW;
+  } else {
+    canvas.width = srcW;
+    canvas.height = srcH;
+  }
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return canvas;
+
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  if (rotationDeg !== 0) {
+    ctx.rotate((rotationDeg * Math.PI) / 180);
+  }
+  ctx.drawImage(source, -srcW / 2, -srcH / 2, srcW, srcH);
+  ctx.restore();
+
+  // Apply pixel manipulation for lighting/shadow/contrast enhancement
+  if (brightness !== 1.0 || contrast !== 1.0 || gamma !== 1.0) {
+    try {
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+      const factor = (259 * (contrast * 100 + 255)) / (255 * (259 - contrast * 100));
+
+      for (let i = 0; i < data.length; i += 4) {
+        for (let c = 0; c < 3; c++) {
+          let val = data[i + c];
+          // 1. Gamma correction (lifts deep shadows in low-light photos)
+          if (gamma !== 1.0) {
+            val = 255 * Math.pow(val / 255, gamma);
+          }
+          // 2. Brightness multiplier
+          val = val * brightness;
+          // 3. Contrast adjustment
+          if (contrast !== 1.0) {
+            val = factor * (val - 128) + 128;
+          }
+          data[i + c] = Math.max(0, Math.min(255, val));
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    } catch (e) {
+      // Ignore canvas security errors if any
+    }
+  }
+
+  return canvas;
+}
+
+/**
+ * Executes multi-scale detection on a specific element/canvas.
+ */
+async function runDetectionOnTarget(
+  faceapi: any,
+  target: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement,
+  isStatic = false
+): Promise<{ descriptor: Float32Array; detection: any } | null> {
+  // 1. Try SSD MobileNet v1 (Ultra-robust for varied poses & shadows)
+  if (ssdModelLoaded) {
+    try {
+      const ssdOptions = new faceapi.SsdMobilenetv1Options({
+        minConfidence: isStatic ? 0.12 : 0.35,
+      });
+      const res = await faceapi
+        .detectSingleFace(target, ssdOptions)
+        .withFaceLandmarks(true)
+        .withFaceDescriptor();
+
+      if (res) return { descriptor: res.descriptor, detection: res.detection };
+    } catch (e) { /* ignore and continue */ }
+  }
+
+  // 2. Multi-Scale TinyFaceDetector passes
+  const inputSizes = isStatic ? [416, 320, 512, 224, 608, 160] : [320, 224];
+  const thresholds = isStatic ? [0.20, 0.10, 0.05] : [0.40, 0.25];
+
+  for (const size of inputSizes) {
+    for (const scoreThreshold of thresholds) {
+      try {
+        const tinyOptions = new faceapi.TinyFaceDetectorOptions({
+          inputSize: size,
+          scoreThreshold,
+        });
+        const res = await faceapi
+          .detectSingleFace(target, tinyOptions)
+          .withFaceLandmarks(true)
+          .withFaceDescriptor();
+
+        if (res) return { descriptor: res.descriptor, detection: res.detection };
+      } catch (e) { /* ignore and continue */ }
+    }
+  }
+
+  // 3. detectAllFaces fallback (picks the largest face if single-face was indecisive)
+  if (isStatic) {
+    try {
+      const allFacesOptions = new faceapi.TinyFaceDetectorOptions({
+        inputSize: 416,
+        scoreThreshold: 0.08,
+      });
+      const allResults = await faceapi
+        .detectAllFaces(target, allFacesOptions)
+        .withFaceLandmarks(true)
+        .withFaceDescriptors();
+
+      if (allResults && allResults.length > 0) {
+        // Pick the largest detected face by bounding box area
+        let bestFace = allResults[0];
+        let maxArea = bestFace.detection.box.width * bestFace.detection.box.height;
+
+        for (let i = 1; i < allResults.length; i++) {
+          const area = allResults[i].detection.box.width * allResults[i].detection.box.height;
+          if (area > maxArea) {
+            maxArea = area;
+            bestFace = allResults[i];
+          }
+        }
+        return { descriptor: bestFace.descriptor, detection: bestFace.detection };
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  return null;
+}
+
+/**
+ * Detects a face in video, image, or canvas with full multi-pass compensation
+ * for low light, shadows, high glare, tilts, and bad angles.
  */
 export async function extractFaceDescriptor(
   input: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement,
@@ -94,70 +244,53 @@ export async function extractFaceDescriptor(
   const isLoaded = await loadFaceModels();
   if (!isLoaded) return null;
 
-  // 1. If static photo and SSD MobileNet is loaded, try high-accuracy SSD detection first
-  if (isStaticPhoto && ssdModelLoaded) {
-    try {
-      const ssdOptions = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 });
-      const result = await faceapi
-        .detectSingleFace(input, ssdOptions)
-        .withFaceLandmarks(true)
-        .withFaceDescriptor();
+  // PASS 1: Standard Direct Detection
+  const directResult = await runDetectionOnTarget(faceapi, input, isStaticPhoto);
+  if (directResult) return directResult;
 
-      if (result) {
-        return {
-          descriptor: result.descriptor,
-          detection: result.detection,
-        };
-      }
-    } catch (e) {
-      console.warn("SSD photo detection attempt error, trying TinyFaceDetector...", e);
-    }
+  // If live video or non-static, skip heavy multi-pass
+  if (!isStaticPhoto) return null;
+
+  // Extract base dimensions
+  const srcW = (input as HTMLImageElement).naturalWidth || input.width || 400;
+  const srcH = (input as HTMLImageElement).naturalHeight || input.height || 400;
+
+  // PASS 2: Low-Light & Shadow Boosting Passes
+  const lightProfiles = [
+    { brightness: 1.4, gamma: 0.65, contrast: 1.25 },  // Moderate Low-Light
+    { brightness: 1.85, gamma: 0.45, contrast: 1.4 },  // Extreme Darkness / Deep Shadows
+    { brightness: 0.75, gamma: 1.35, contrast: 1.3 },  // Blown-out / Flash Glare
+    { brightness: 2.2, gamma: 0.35, contrast: 1.5 },   // Ultra Dark / Night Photo
+  ];
+
+  for (const profile of lightProfiles) {
+    const enhancedCanvas = createEnhancedCanvas(input, srcW, srcH, profile);
+    const res = await runDetectionOnTarget(faceapi, enhancedCanvas, true);
+    if (res) return res;
   }
 
-  // 2. Try TinyFaceDetector with standard options (inputSize: 320, scoreThreshold: 0.35)
-  try {
-    const options = new faceapi.TinyFaceDetectorOptions({
-      inputSize: isStaticPhoto ? 416 : 320,
-      scoreThreshold: isStaticPhoto ? 0.25 : 0.40,
-    });
-
-    const result = await faceapi
-      .detectSingleFace(input, options)
-      .withFaceLandmarks(true)
-      .withFaceDescriptor();
-
-    if (result) {
-      return {
-        descriptor: result.descriptor,
-        detection: result.detection,
-      };
-    }
-  } catch (e) {
-    console.warn("Primary TinyFace detection error:", e);
+  // PASS 3: Multi-Angle / Orientation & Tilt Rotation Passes (-45° to +45°, 90°, -90°, 180°)
+  const angleProfiles = [-15, 15, -30, 30, -45, 45, 90, -90, 180];
+  for (const deg of angleProfiles) {
+    const rotatedCanvas = createEnhancedCanvas(input, srcW, srcH, { rotationDeg: deg });
+    const res = await runDetectionOnTarget(faceapi, rotatedCanvas, true);
+    if (res) return res;
   }
 
-  // 3. Fallback for difficult/small photos: try higher sensitivity (inputSize: 224, threshold: 0.15)
-  if (isStaticPhoto) {
-    try {
-      const sensitiveOptions = new faceapi.TinyFaceDetectorOptions({
-        inputSize: 224,
-        scoreThreshold: 0.15,
-      });
+  // PASS 4: Combined Bad Angle + Low-Light Boost Passes
+  const combinedProfiles = [
+    { rotationDeg: -15, brightness: 1.5, gamma: 0.55, contrast: 1.3 },
+    { rotationDeg: 15, brightness: 1.5, gamma: 0.55, contrast: 1.3 },
+    { rotationDeg: -30, brightness: 1.5, gamma: 0.55, contrast: 1.3 },
+    { rotationDeg: 30, brightness: 1.5, gamma: 0.55, contrast: 1.3 },
+    { rotationDeg: 90, brightness: 1.5, gamma: 0.55, contrast: 1.3 },
+    { rotationDeg: -90, brightness: 1.5, gamma: 0.55, contrast: 1.3 },
+  ];
 
-      const fallbackResult = await faceapi
-        .detectSingleFace(input, sensitiveOptions)
-        .withFaceLandmarks(true)
-        .withFaceDescriptor();
-
-      if (fallbackResult) {
-        return {
-          descriptor: fallbackResult.descriptor,
-          detection: fallbackResult.detection,
-        };
-      }
-    } catch (e) {
-      // Sensitive fallback failed
-    }
+  for (const combined of combinedProfiles) {
+    const combinedCanvas = createEnhancedCanvas(input, srcW, srcH, combined);
+    const res = await runDetectionOnTarget(faceapi, combinedCanvas, true);
+    if (res) return res;
   }
 
   return null;
@@ -165,7 +298,7 @@ export async function extractFaceDescriptor(
 
 /**
  * Loads an image from a URL or Base64 string and extracts its face descriptor.
- * Handles CORS, Data URLs, canvas normalization, and high-resolution scaling.
+ * Handles CORS, Data URLs, canvas normalization, shadow lifting, and rotation.
  */
 export async function extractFaceDescriptorFromImageUrl(
   imageUrl: string
@@ -191,7 +324,6 @@ export async function extractFaceDescriptorFromImageUrl(
           finalSrc = objectUrlToRevoke;
         }
       } catch (fetchErr) {
-        // Fetch failed, proceed with direct image src with anonymous crossOrigin
         finalSrc = trimmed;
       }
     }
@@ -207,36 +339,10 @@ export async function extractFaceDescriptorFromImageUrl(
           await img.decode().catch(() => {});
         }
 
-        // Draw image onto a normalized canvas (max 800px) to enhance detection speed & reliability
-        const maxDim = 800;
-        let width = img.naturalWidth || img.width || 400;
-        let height = img.naturalHeight || img.height || 400;
-
-        if (width > maxDim || height > maxDim) {
-          const ratio = Math.min(maxDim / width, maxDim / height);
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const result = await extractFaceDescriptor(canvas, true);
-          if (result) {
-            if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
-            resolve(result);
-            return;
-          }
-        }
-
-        // Direct image element detection fallback
-        const directResult = await extractFaceDescriptor(img, true);
+        // Run ultra-resilient multi-pass extraction on the loaded image
+        const result = await extractFaceDescriptor(img, true);
         if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
-        resolve(directResult);
+        resolve(result);
       } catch (e) {
         console.error("Error extracting descriptor from loaded image:", e);
         if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
