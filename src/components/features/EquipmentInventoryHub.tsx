@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getOfficialSchoolName, getTeacherName, transliterateEnglishToMarathi } from '@/lib/utils';
+import { getIndiaLocalDateString } from '@/lib/date-utils';
 import type { EquipmentItem, EquipmentIssueRecord, IndentItem } from '@/lib/types';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -188,7 +189,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
       unit: newItem.unit || 'Nos (नग)',
       condition: (newItem.condition as any) || 'Good',
       notes: newItem.notes || '',
-      lastChecked: new Date().toISOString().split('T')[0],
+      lastChecked: getIndiaLocalDateString(),
       sport: newItem.sport || undefined,
     };
 

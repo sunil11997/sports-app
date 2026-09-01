@@ -29,11 +29,15 @@ import {
 import type { Player } from "@/lib/types";
 import {
   loadFaceModels,
+  areFaceModelsLoaded,
   detectAllFacesWithDescriptors,
   buildFaceMatcher,
   extractFaceDescriptorFromImageUrl,
   playAttendanceChime,
   speakAttendanceAnnounce,
+  parseCameraError,
+  analyzeFaceFrameQuality,
+  type FaceQualityResult,
 } from "@/lib/face-recognition";
 import { getDisplayNameForLocale } from "@/lib/utils";
 
@@ -80,7 +84,9 @@ export function FaceAttendanceModal({
   const streamRef = useRef<MediaStream | null>(null);
 
   const [isLoadingModels, setIsLoadingModels] = useState(true);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [modelLoadError, setModelLoadError] = useState(false);
+  const [cameraError, setCameraError] = useState<{ message: string; actionable: string } | null>(null);
+  const [qualityResult, setQualityResult] = useState<FaceQualityResult | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [speechEnabled, setSpeechEnabled] = useState(true);
@@ -88,6 +94,7 @@ export function FaceAttendanceModal({
   const [currentSession, setCurrentSession] = useState<"Morning" | "Evening">(activeSession);
   const [isBatchEnrolling, setIsBatchEnrolling] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
 
   // Debounce map to avoid re-triggering the same player within 8 seconds
   const lastMarkedRef = useRef<Record<string, number>>({});
@@ -223,49 +230,62 @@ export function FaceAttendanceModal({
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setCameraActive(false);
+    setQualityResult(null);
   }, []);
 
-  // Start active camera with specific facingMode
-  const startCamera = useCallback(async (modeOverride?: "user" | "environment") => {
-    stopCamera();
-    setCameraError(null);
-    const targetMode = modeOverride || facingMode;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: targetMode },
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-        },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-    } catch (err: any) {
-      console.warn("Primary camera request failed, trying generic fallback...", err);
+  // Start active camera with specific facingMode and safe attributes
+  const startCamera = useCallback(
+    async (modeOverride?: "user" | "environment") => {
+      stopCamera();
+      setCameraError(null);
+      const targetMode = modeOverride || facingMode;
       try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: targetMode },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
           audio: false,
         });
-        streamRef.current = fallbackStream;
+        streamRef.current = stream;
         if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
+          videoRef.current.srcObject = stream;
+          videoRef.current.setAttribute("playsinline", "true");
+          videoRef.current.setAttribute("autoplay", "true");
+          videoRef.current.muted = true;
           await videoRef.current.play();
+          setCameraActive(true);
         }
-      } catch (fallbackErr: any) {
-        console.error("Attendance camera error:", fallbackErr);
-        setCameraError(
-          isMarathi
-            ? "कॅमेरा सुरू करता आला नाही. कृपया कॅमेरा परवानगी तपासा."
-            : "Could not access camera. Please verify device permissions."
-        );
+      } catch (err: any) {
+        console.warn("Primary camera request failed, trying generic fallback...", err);
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          streamRef.current = fallbackStream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = fallbackStream;
+            videoRef.current.setAttribute("playsinline", "true");
+            videoRef.current.setAttribute("autoplay", "true");
+            videoRef.current.muted = true;
+            await videoRef.current.play();
+            setCameraActive(true);
+          }
+        } catch (fallbackErr: any) {
+          console.error("Attendance camera error:", fallbackErr);
+          const parsed = parseCameraError(fallbackErr);
+          setCameraError({
+            message: isMarathi ? parsed.messageMr : parsed.messageEn,
+            actionable: isMarathi ? parsed.actionableMr : parsed.actionableEn,
+          });
+        }
       }
-    }
-  }, [facingMode, isMarathi, stopCamera]);
+    },
+    [facingMode, isMarathi, stopCamera]
+  );
 
   // Init models and start camera on open
   useEffect(() => {
@@ -273,17 +293,14 @@ export function FaceAttendanceModal({
 
     if (isOpen) {
       setIsLoadingModels(true);
+      setModelLoadError(false);
       loadFaceModels().then((loaded) => {
         if (!isCancelled) {
           setIsLoadingModels(false);
           if (loaded) {
             startCamera();
           } else {
-            setCameraError(
-              isMarathi
-                ? "फेस डिटेक्शन मॉडेल्स लोड होऊ शकले नाहीत."
-                : "Failed to load face detection models."
-            );
+            setModelLoadError(true);
           }
         }
       });
@@ -296,7 +313,20 @@ export function FaceAttendanceModal({
       isCancelled = true;
       stopCamera();
     };
-  }, [isOpen, startCamera, stopCamera, isMarathi]);
+  }, [isOpen, startCamera, stopCamera]);
+
+  // Retry loading face models
+  const handleRetryModels = async () => {
+    setIsLoadingModels(true);
+    setModelLoadError(false);
+    const loaded = await loadFaceModels(true);
+    setIsLoadingModels(false);
+    if (loaded) {
+      startCamera();
+    } else {
+      setModelLoadError(true);
+    }
+  };
 
   // Switch session
   const handleToggleSession = (sess: "Morning" | "Evening") => {
@@ -321,10 +351,15 @@ export function FaceAttendanceModal({
 
       if (
         video &&
-        video.readyState === 4 &&
+        video.readyState >= 2 &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0 &&
         canvas &&
         !isLoadingModels &&
         !cameraError &&
+        !modelLoadError &&
+        cameraActive &&
+        areFaceModelsLoaded() &&
         !isDetectingRef.current
       ) {
         isDetectingRef.current = true;
@@ -341,6 +376,10 @@ export function FaceAttendanceModal({
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fast diagnostic quality check for guidance
+            const quality = await analyzeFaceFrameQuality(video, 0.25);
+            setQualityResult(quality);
 
             const detections = await detectAllFacesWithDescriptors(video);
 
@@ -373,15 +412,25 @@ export function FaceAttendanceModal({
 
               // Top Label Box
               ctx.fillStyle = isMatch ? "rgba(16, 185, 129, 0.9)" : "rgba(245, 158, 11, 0.9)";
-              const labelText = isMatch && matchedPlayer
-                ? `${getDisplayNameForLocale(matchedPlayer.name, matchedPlayer.nameMarathi, isMarathi ? "mr" : "en")} (${confidence}%)`
-                : isMarathi
-                ? "नोंदणी नसलेला चेहरा"
-                : "Unknown Face";
+              const labelText =
+                isMatch && matchedPlayer
+                  ? `${getDisplayNameForLocale(
+                      matchedPlayer.name,
+                      matchedPlayer.nameMarathi,
+                      isMarathi ? "mr" : "en"
+                    )} (${confidence}%)`
+                  : isMarathi
+                  ? "नोंदणी नसलेला चेहरा"
+                  : "Unknown Face";
 
               ctx.font = "bold 14px sans-serif";
               const textWidth = ctx.measureText(labelText).width;
-              ctx.fillRect(mirroredX, box.y > 30 ? box.y - 28 : box.y + box.height + 4, textWidth + 16, 24);
+              ctx.fillRect(
+                mirroredX,
+                box.y > 30 ? box.y - 28 : box.y + box.height + 4,
+                textWidth + 16,
+                24
+              );
 
               ctx.fillStyle = "#ffffff";
               ctx.fillText(
@@ -446,7 +495,7 @@ export function FaceAttendanceModal({
       animId = requestAnimationFrame(runRecognitionLoop);
     };
 
-    if (isOpen && !isLoadingModels && !cameraError) {
+    if (isOpen && !isLoadingModels && !cameraError && !modelLoadError) {
       animId = requestAnimationFrame(runRecognitionLoop);
     }
 
@@ -457,6 +506,7 @@ export function FaceAttendanceModal({
     isOpen,
     isLoadingModels,
     cameraError,
+    modelLoadError,
     faceMatcher,
     playerMap,
     facingMode,
@@ -465,6 +515,7 @@ export function FaceAttendanceModal({
     isMarathi,
     soundEnabled,
     speechEnabled,
+    cameraActive,
     onMarkAttendance,
   ]);
 
@@ -624,21 +675,34 @@ export function FaceAttendanceModal({
 
             <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-800 flex items-center justify-center shadow-2xl">
               {isLoadingModels ? (
-                <div className="flex flex-col items-center gap-3 text-slate-400">
+                <div className="flex flex-col items-center gap-3 text-slate-400 p-6 text-center">
                   <Loader2 className="w-10 h-10 animate-spin text-emerald-400" />
-                  <span className="text-sm font-medium">
-                    {isMarathi ? "AI मॉडेल लोड होत आहे..." : "Initializing Face AI Vision..."}
+                  <span className="text-sm font-semibold">
+                    {isMarathi ? "फेस डिटेक्शन लोड होत आहे..." : "Loading face detection..."}
                   </span>
                   <span className="text-xs text-slate-500">
-                    {isMarathi ? "कृपया थोडा वेळ थांबा" : "Preparing high-speed face detection"}
+                    {isMarathi ? "कृत्रिम बुद्धिमत्ता मॉडेल तयार होत आहेत" : "Initializing high-speed face recognition models"}
                   </span>
                 </div>
-              ) : cameraError ? (
+              ) : modelLoadError ? (
                 <div className="p-6 text-center text-rose-400 text-sm flex flex-col items-center gap-3">
                   <AlertCircle className="w-10 h-10 text-rose-500" />
-                  <span>{cameraError}</span>
-                  <Button size="sm" variant="outline" onClick={() => startCamera()} className="mt-2">
-                    {isMarathi ? "पुन्हा प्रयत्न करा" : "Retry Camera"}
+                  <span className="font-bold">
+                    {isMarathi ? "फेस मॉडेल लोड अयशस्वी झाले" : "Face model failed to load"}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={handleRetryModels} className="mt-2 text-white">
+                    <RotateCw className="w-3.5 h-3.5 mr-1" />
+                    {isMarathi ? "पुन्हा प्रयत्न करा" : "Retry face detection"}
+                  </Button>
+                </div>
+              ) : cameraError ? (
+                <div className="p-6 text-center text-rose-400 text-sm flex flex-col items-center gap-2">
+                  <AlertCircle className="w-10 h-10 text-rose-500" />
+                  <span className="font-bold text-sm">{cameraError.message}</span>
+                  <span className="text-xs text-slate-400">{cameraError.actionable}</span>
+                  <Button size="sm" variant="outline" onClick={() => startCamera()} className="mt-3 text-white">
+                    <RotateCw className="w-3.5 h-3.5 mr-1" />
+                    {isMarathi ? "कॅमेरा पुन्हा सुरू करा" : "Retry Camera"}
                   </Button>
                 </div>
               ) : (
@@ -647,6 +711,7 @@ export function FaceAttendanceModal({
                     ref={videoRef}
                     playsInline
                     muted
+                    autoPlay
                     className={`w-full h-full object-cover ${
                       facingMode === "user" ? "scale-x-[-1]" : ""
                     }`}
@@ -657,22 +722,53 @@ export function FaceAttendanceModal({
                     className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                   />
 
-                  {/* Kiosk Mode Scan Guide Overlay */}
-                  <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700/60 flex items-center gap-2 text-xs text-slate-200">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span>
-                      {isMarathi
-                        ? "विद्यार्थ्याने कॅमेऱ्यासमोर उभे राहावे"
-                        : "Stand in front of the camera"}
-                    </span>
+                  {/* Face Alignment Oval Guide with Dynamic Color State */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div
+                      className={`w-48 h-60 rounded-[50%] border-2 transition-all duration-300 ${
+                        qualityResult?.isAcceptable
+                          ? "border-emerald-400 shadow-[0_0_24px_rgba(52,211,153,0.6)] scale-100"
+                          : qualityResult?.code === "NO_FACE"
+                          ? "border-dashed border-slate-500/70 scale-95"
+                          : "border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)] scale-95"
+                      }`}
+                    />
+                  </div>
+
+                  {/* Live Diagnostic Quality Banner */}
+                  <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
+                    <div
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md transition-all shadow-md flex items-center gap-1.5 ${
+                        qualityResult?.isAcceptable
+                          ? "bg-emerald-500/90 text-slate-950"
+                          : qualityResult?.code === "POOR_LIGHTING" || qualityResult?.code === "HIGH_GLARE"
+                          ? "bg-amber-500/90 text-slate-950"
+                          : qualityResult?.code === "MULTIPLE_FACES" || qualityResult?.code === "OUTSIDE_FRAME"
+                          ? "bg-rose-500/90 text-white"
+                          : "bg-slate-900/85 text-slate-200 border border-slate-700"
+                      }`}
+                    >
+                      {qualityResult ? (
+                        isMarathi ? qualityResult.messageMr : qualityResult.messageEn
+                      ) : isMarathi ? (
+                        "विद्यार्थ्याने कॅमेऱ्यासमोर यावे"
+                      ) : (
+                        "Stand in front of camera"
+                      )}
+                    </div>
+
+                    <div className="bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/60 text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      <span>{isMarathi ? "लाईव्ह" : "Live AI"}</span>
+                    </div>
                   </div>
 
                   {/* Warning if no students have enrolled face ID */}
                   {enrolledPlayers.length === 0 && (
                     <div className="absolute inset-x-4 bottom-4 bg-amber-500/90 text-slate-950 p-3 rounded-xl text-xs font-semibold text-center shadow-lg">
                       {isMarathi
-                        ? "⚠️ कोणत्याही विद्यार्थ्याची चेहरा नोंदणी झालेली नाही. कृपया आधी प्रोफाईलमध्ये चेहरा नोंदवा."
-                        : "⚠️ No students have enrolled face biometric yet. Please enroll faces in student profiles first."}
+                        ? "⚠️ कोणत्याही विद्यार्थ्याची चेहरा नोंदणी झालेली नाही. कृपया आधी प्रोफाईलमध्ये चेहरा नोंदवा किंवा वरील 'सर्व फोटोवरून नोंदवा' बटण दाबा."
+                        : "⚠️ No students have enrolled face biometric yet. Please auto-enroll from photos above or enroll via profile."}
                     </div>
                   )}
                 </>

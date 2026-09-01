@@ -7,6 +7,145 @@ let modelsLoadingPromise: Promise<boolean> | null = null;
 let modelsLoaded = false;
 let ssdModelLoaded = false;
 
+export type CameraErrorType =
+  | "PERMISSION_DENIED"
+  | "CAMERA_UNAVAILABLE"
+  | "CAMERA_IN_USE"
+  | "OVERCONSTRAINED"
+  | "NOT_SECURE_CONTEXT"
+  | "UNSUPPORTED_BROWSER"
+  | "UNKNOWN";
+
+export interface ParsedCameraError {
+  type: CameraErrorType;
+  messageEn: string;
+  messageMr: string;
+  actionableEn: string;
+  actionableMr: string;
+}
+
+export type FaceQualityCode =
+  | "READY"
+  | "CAMERA_NOT_READY"
+  | "MODELS_LOADING"
+  | "MODELS_FAILED"
+  | "NO_FACE"
+  | "MULTIPLE_FACES"
+  | "TOO_FAR"
+  | "TOO_CLOSE"
+  | "OUTSIDE_FRAME"
+  | "POOR_LIGHTING"
+  | "HIGH_GLARE"
+  | "TURNED_AWAY"
+  | "BLURRY";
+
+export interface FaceQualityResult {
+  code: FaceQualityCode;
+  messageEn: string;
+  messageMr: string;
+  isAcceptable: boolean;
+  qualityScore: number; // 0 to 100
+  detection?: any;
+  descriptor?: Float32Array;
+  metrics: {
+    brightness: number;
+    faceRatio: number;
+    offsetCenterX: number;
+    offsetCenterY: number;
+    faceCount: number;
+    poseRatio?: number;
+  };
+}
+
+/**
+ * Checks if the current browser environment is running under a secure context (HTTPS / localhost).
+ */
+export function isSecureContextEnv(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.isSecureContext !== undefined) return window.isSecureContext;
+  return (
+    window.location.protocol === "https:" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  );
+}
+
+/**
+ * Maps standard DOM / MediaDevices exceptions into clear, actionable bilingual error structures.
+ */
+export function parseCameraError(err: any): ParsedCameraError {
+  if (!isSecureContextEnv()) {
+    return {
+      type: "NOT_SECURE_CONTEXT",
+      messageEn: "Camera requires HTTPS or a secure context.",
+      messageMr: "कॅमेरा सुरू करण्यासाठी सुरक्षित (HTTPS) कनेक्शन आवश्यक आहे.",
+      actionableEn: "Open the website with https:// or install the secure PWA.",
+      actionableMr: "कृपया संकेतस्थळ https:// सह उघडा किंवा ॲप स्थापित करा.",
+    };
+  }
+
+  if (!navigator?.mediaDevices?.getUserMedia) {
+    return {
+      type: "UNSUPPORTED_BROWSER",
+      messageEn: "Browser does not support camera access.",
+      messageMr: "हा ब्राउझर कॅमेरा ॲक्सेसला सपोर्ट करत नाही.",
+      actionableEn: "Please use Google Chrome, Edge, or install as PWA app.",
+      actionableMr: "कृपया गुगल क्रोम वापरा किंवा ॲप इन्स्टॉल करा.",
+    };
+  }
+
+  const name = err?.name || "";
+  const msg = (err?.message || "").toLowerCase();
+
+  if (name === "NotAllowedError" || name === "PermissionDeniedError" || msg.includes("permission")) {
+    return {
+      type: "PERMISSION_DENIED",
+      messageEn: "Camera permission denied.",
+      messageMr: "कॅमेरा परवानगी नाकारली गेली आहे.",
+      actionableEn: "Please enable camera permission in your browser address bar/settings and tap Retry.",
+      actionableMr: "कृपया ब्राउझर सेटिंग्जमध्ये जाऊन कॅमेरा परवानगी 'Allow' करा आणि पुन्हा प्रयत्न करा.",
+    };
+  }
+
+  if (name === "NotFoundError" || name === "DevicesNotFoundError" || msg.includes("not found")) {
+    return {
+      type: "CAMERA_UNAVAILABLE",
+      messageEn: "Camera unavailable. No camera device found.",
+      messageMr: "कॅमेरा डिव्हाइस उपलब्ध नाही किंवा जोडलेले नाही.",
+      actionableEn: "Check that your camera hardware is connected and enabled.",
+      actionableMr: "कृपया डिव्हाइसचा कॅमेरा व्यवस्थित सुरू आहे का ते तपासा.",
+    };
+  }
+
+  if (name === "NotReadableError" || name === "TrackStartError" || msg.includes("in use")) {
+    return {
+      type: "CAMERA_IN_USE",
+      messageEn: "Camera is already in use by another application.",
+      messageMr: "कॅमेरा इतर कोणत्याही ॲप किंवा ब्राउझर टॅबद्वारे वापरला जात आहे.",
+      actionableEn: "Close other camera apps/tabs and tap Retry.",
+      actionableMr: "कृपया इतर कॅमेरा ॲप्स किंवा टॅब्स बंद करा आणि पुन्हा प्रयत्न करा.",
+    };
+  }
+
+  if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
+    return {
+      type: "OVERCONSTRAINED",
+      messageEn: "Requested camera configuration is not supported by hardware.",
+      messageMr: "मागितलेली कॅमेरा गुणवत्ता डिव्हाइस सपोर्ट करत नाही.",
+      actionableEn: "Switching to default camera resolution...",
+      actionableMr: "डिफॉल्ट रिझोल्यूशनवर स्विच केले जात आहे...",
+    };
+  }
+
+  return {
+    type: "UNKNOWN",
+    messageEn: err?.message || "Could not access camera.",
+    messageMr: "कॅमेरा सुरू करताना अडचण आली. कृपया परवानगी तपासा.",
+    actionableEn: "Please refresh the page and verify camera permissions.",
+    actionableMr: "कृपया पेज रीफ्रेश करा आणि कॅमेरा परवानगी तपासा.",
+  };
+}
+
 /**
  * Dynamically loads the @vladmandic/face-api module strictly on client side.
  */
@@ -20,12 +159,12 @@ export async function getFaceApi() {
 
 /**
  * Loads the face-api neural network models from the public /models directory.
- * Caches the load promise to ensure it only initializes once.
+ * Supports force reload on retry.
  */
-export async function loadFaceModels(): Promise<boolean> {
+export async function loadFaceModels(forceReload = false): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  if (modelsLoaded) return true;
-  if (modelsLoadingPromise) return modelsLoadingPromise;
+  if (!forceReload && modelsLoaded) return true;
+  if (!forceReload && modelsLoadingPromise) return modelsLoadingPromise;
 
   modelsLoadingPromise = (async () => {
     try {
@@ -77,6 +216,334 @@ export async function loadFaceModels(): Promise<boolean> {
 
 export function areFaceModelsLoaded(): boolean {
   return modelsLoaded;
+}
+
+/**
+ * Calculates average brightness (0-255) from a video or canvas element in a given bounding box.
+ */
+export function calculateLuminosity(
+  source: HTMLVideoElement | HTMLCanvasElement,
+  box?: { x: number; y: number; width: number; height: number }
+): number {
+  try {
+    const canvas = document.createElement("canvas");
+    const sw = (source as HTMLVideoElement).videoWidth || source.width || 320;
+    const sh = (source as HTMLVideoElement).videoHeight || source.height || 240;
+
+    if (sw === 0 || sh === 0) return 120;
+
+    canvas.width = 64;
+    canvas.height = 48;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return 120;
+
+    if (box && box.width > 10 && box.height > 10) {
+      // Clip to face box
+      const sx = Math.max(0, box.x);
+      const sy = Math.max(0, box.y);
+      const sWidth = Math.min(sw - sx, box.width);
+      const sHeight = Math.min(sh - sy, box.height);
+      ctx.drawImage(source, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+    } else {
+      // Central 50%
+      ctx.drawImage(source, sw * 0.25, sh * 0.25, sw * 0.5, sh * 0.5, 0, 0, canvas.width, canvas.height);
+    }
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imgData.data;
+    let totalLuma = 0;
+    const totalPixels = canvas.width * canvas.height;
+
+    for (let i = 0; i < d.length; i += 4) {
+      // Perceived luminance formula (ITU-R BT.709)
+      const luma = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      totalLuma += luma;
+    }
+
+    return Math.round(totalLuma / totalPixels);
+  } catch (e) {
+    return 120;
+  }
+}
+
+/**
+ * Diagnostic Face Quality Analyzer:
+ * Inspects lighting, distance, centering, pose angle, and face count.
+ * Never outputs a generic "Face not detected" when a specific cause is known.
+ */
+export async function analyzeFaceFrameQuality(
+  videoOrCanvas: HTMLVideoElement | HTMLCanvasElement,
+  minConfidence = 0.25
+): Promise<FaceQualityResult> {
+  const isVideo = videoOrCanvas instanceof HTMLVideoElement;
+  const width = isVideo ? videoOrCanvas.videoWidth : videoOrCanvas.width;
+  const height = isVideo ? videoOrCanvas.videoHeight : videoOrCanvas.height;
+
+  // 1. Verify Camera / Frame Readiness
+  if (isVideo && (videoOrCanvas.readyState < 2 || width === 0 || height === 0 || videoOrCanvas.paused)) {
+    return {
+      code: "CAMERA_NOT_READY",
+      messageEn: "Initializing camera stream...",
+      messageMr: "कॅमेरा सुरू होत आहे...",
+      isAcceptable: false,
+      qualityScore: 0,
+      metrics: { brightness: 0, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+    };
+  }
+
+  // 2. Verify Models Readiness
+  if (!modelsLoaded) {
+    return {
+      code: "MODELS_LOADING",
+      messageEn: "Loading face detection...",
+      messageMr: "फेस डिटेक्शन लोड होत आहे...",
+      isAcceptable: false,
+      qualityScore: 0,
+      metrics: { brightness: 0, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+    };
+  }
+
+  const faceapi = await getFaceApi();
+  if (!faceapi) {
+    return {
+      code: "MODELS_FAILED",
+      messageEn: "Face model failed to load",
+      messageMr: "फेस मॉडेल लोड होऊ शकले नाही",
+      isAcceptable: false,
+      qualityScore: 0,
+      metrics: { brightness: 0, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+    };
+  }
+
+  // 3. Luminosity / Lighting check
+  const overallLuma = calculateLuminosity(videoOrCanvas);
+  if (overallLuma < 35) {
+    return {
+      code: "POOR_LIGHTING",
+      messageEn: "Poor lighting — Please move to a brighter area",
+      messageMr: "कमी उजेड (प्रकाश अपुरा आहे) — कृपया चांगल्या प्रकाशात या",
+      isAcceptable: false,
+      qualityScore: 20,
+      metrics: { brightness: overallLuma, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+    };
+  }
+  if (overallLuma > 235) {
+    return {
+      code: "HIGH_GLARE",
+      messageEn: "High glare — Avoid direct backlight or harsh reflection",
+      messageMr: "अतिप्रखर प्रकाश/चमक — उजेडाची दिशा बदला",
+      isAcceptable: false,
+      qualityScore: 25,
+      metrics: { brightness: overallLuma, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+    };
+  }
+
+  // 4. Run face detection with landmarks
+  try {
+    const tinyOptions = new faceapi.TinyFaceDetectorOptions({
+      inputSize: 320,
+      scoreThreshold: minConfidence,
+    });
+
+    const detections = await faceapi
+      .detectAllFaces(videoOrCanvas, tinyOptions)
+      .withFaceLandmarks(true)
+      .withFaceDescriptors();
+
+    if (!detections || detections.length === 0) {
+      return {
+        code: "NO_FACE",
+        messageEn: "No face detected in guide",
+        messageMr: "मार्गदर्शकात चेहरा आढळला नाही",
+        isAcceptable: false,
+        qualityScore: 0,
+        metrics: { brightness: overallLuma, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+      };
+    }
+
+    if (detections.length > 1) {
+      return {
+        code: "MULTIPLE_FACES",
+        messageEn: "Multiple faces detected — Single person only",
+        messageMr: "एकापेक्षा जास्त चेहरे दिसत आहेत — एकाच व्यक्तीने समोर या",
+        isAcceptable: false,
+        qualityScore: 30,
+        metrics: { brightness: overallLuma, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: detections.length },
+      };
+    }
+
+    // Single face evaluation
+    const target = detections[0];
+    const box = target.detection.box;
+    const faceW = box.width;
+    const faceH = box.height;
+    const faceRatio = faceW / width;
+
+    // Check Distance
+    if (faceRatio < 0.16) {
+      return {
+        code: "TOO_FAR",
+        messageEn: "Face is too far away — Move closer to camera",
+        messageMr: "चेहरा खूप लांब आहे — कॅमेऱ्याच्या जवळ या",
+        isAcceptable: false,
+        qualityScore: 40,
+        detection: target.detection,
+        metrics: { brightness: overallLuma, faceRatio, offsetCenterX: 0, offsetCenterY: 0, faceCount: 1 },
+      };
+    }
+    if (faceRatio > 0.75) {
+      return {
+        code: "TOO_CLOSE",
+        messageEn: "Face is too close — Step back slightly",
+        messageMr: "चेहरा खूप जवळ आहे — थोडे मागे जा",
+        isAcceptable: false,
+        qualityScore: 45,
+        detection: target.detection,
+        metrics: { brightness: overallLuma, faceRatio, offsetCenterX: 0, offsetCenterY: 0, faceCount: 1 },
+      };
+    }
+
+    // Check Centering in Guide
+    const faceCenterX = box.x + faceW / 2;
+    const faceCenterY = box.y + faceH / 2;
+    const offsetCenterX = Math.abs(faceCenterX - width / 2) / width;
+    const offsetCenterY = Math.abs(faceCenterY - height / 2) / height;
+
+    if (offsetCenterX > 0.28 || offsetCenterY > 0.30) {
+      return {
+        code: "OUTSIDE_FRAME",
+        messageEn: "Face is outside the frame — Center face in the oval guide",
+        messageMr: "चेहरा मार्गदर्शकाच्या बाहेर आहे — चेहरा मध्यभागी ठेवा",
+        isAcceptable: false,
+        qualityScore: 50,
+        detection: target.detection,
+        metrics: { brightness: overallLuma, faceRatio, offsetCenterX, offsetCenterY, faceCount: 1 },
+      };
+    }
+
+    // Check Head Pose / Tilt using facial landmarks (nose to eyes ratio)
+    let poseRatio = 1.0;
+    if (target.landmarks) {
+      const nose = target.landmarks.getNose();
+      const leftEye = target.landmarks.getLeftEye();
+      const rightEye = target.landmarks.getRightEye();
+
+      if (nose.length > 0 && leftEye.length > 0 && rightEye.length > 0) {
+        const noseTip = nose[3] || nose[0];
+        const leftEyeCenter = leftEye[0];
+        const rightEyeCenter = rightEye[3] || rightEye[0];
+
+        const distLeft = Math.abs(noseTip.x - leftEyeCenter.x);
+        const distRight = Math.abs(rightEyeCenter.x - noseTip.x);
+
+        if (distLeft > 0 && distRight > 0) {
+          poseRatio = distLeft / distRight;
+          if (poseRatio < 0.35 || poseRatio > 2.8) {
+            return {
+              code: "TURNED_AWAY",
+              messageEn: "Face is turned away — Look directly at the camera",
+              messageMr: "चेहरा वळलेला आहे — कृपया सरळ कॅमेऱ्याकडे पहा",
+              isAcceptable: false,
+              qualityScore: 55,
+              detection: target.detection,
+              metrics: { brightness: overallLuma, faceRatio, offsetCenterX, offsetCenterY, faceCount: 1, poseRatio },
+            };
+          }
+        }
+      }
+    }
+
+    // All quality checks passed!
+    const qualityScore = Math.min(
+      100,
+      Math.round(85 + (1 - offsetCenterX - offsetCenterY) * 10 + (overallLuma > 60 && overallLuma < 200 ? 5 : 0))
+    );
+
+    return {
+      code: "READY",
+      messageEn: "Face aligned perfectly ✓ Hold steady",
+      messageMr: "चेहरा अचूक स्थितीत आहे ✓ स्थिर राहा",
+      isAcceptable: true,
+      qualityScore,
+      detection: target.detection,
+      descriptor: target.descriptor,
+      metrics: { brightness: overallLuma, faceRatio, offsetCenterX, offsetCenterY, faceCount: 1, poseRatio },
+    };
+  } catch (e) {
+    return {
+      code: "NO_FACE",
+      messageEn: "Adjust face position in camera",
+      messageMr: "चेहरा कॅमेऱ्यासमोर व्यवस्थित ठेवा",
+      isAcceptable: false,
+      qualityScore: 10,
+      metrics: { brightness: overallLuma, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+    };
+  }
+}
+
+/**
+ * Stability Tracker:
+ * Requires continuous acceptable frames for a short duration (e.g. 1000ms)
+ * to prevent capturing accidental motion blurs or unstable poses.
+ */
+export class FaceStabilityTracker {
+  private startTime: number | null = null;
+  private requiredDurationMs: number;
+
+  constructor(requiredDurationMs = 1000) {
+    this.requiredDurationMs = requiredDurationMs;
+  }
+
+  public update(isAcceptable: boolean): { isStable: boolean; progressPercent: number } {
+    const now = Date.now();
+    if (!isAcceptable) {
+      this.startTime = null;
+      return { isStable: false, progressPercent: 0 };
+    }
+
+    if (!this.startTime) {
+      this.startTime = now;
+      return { isStable: false, progressPercent: 10 };
+    }
+
+    const elapsed = now - this.startTime;
+    const progressPercent = Math.min(100, Math.round((elapsed / this.requiredDurationMs) * 100));
+    const isStable = elapsed >= this.requiredDurationMs;
+
+    return { isStable, progressPercent };
+  }
+
+  public reset() {
+    this.startTime = null;
+  }
+}
+
+/**
+ * Resizes and compresses captured canvas to JPEG DataURL (max 320x320, ~15-25KB)
+ * to avoid storing bloated Base64 in Firestore.
+ */
+export function compressFacePhoto(
+  source: CanvasImageSource,
+  maxDim = 320,
+  quality = 0.85
+): string {
+  const canvas = document.createElement("canvas");
+  let sw = (source as HTMLVideoElement).videoWidth || (source as HTMLImageElement).naturalWidth || (source as HTMLCanvasElement).width || 320;
+  let sh = (source as HTMLVideoElement).videoHeight || (source as HTMLImageElement).naturalHeight || (source as HTMLCanvasElement).height || 240;
+
+  if (sw > maxDim || sh > maxDim) {
+    const ratio = Math.min(maxDim / sw, maxDim / sh);
+    sw = Math.round(sw * ratio);
+    sh = Math.round(sh * ratio);
+  }
+
+  canvas.width = sw;
+  canvas.height = sh;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.drawImage(source, 0, 0, sw, sh);
+  }
+  return canvas.toDataURL("image/jpeg", quality);
 }
 
 /**

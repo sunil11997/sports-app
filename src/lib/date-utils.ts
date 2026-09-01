@@ -170,3 +170,35 @@ export function calculateBmi(
   const bmi = weightKg / (heightMeters * heightMeters);
   return Number.isFinite(bmi) ? parseFloat(bmi.toFixed(1)) : null;
 }
+
+/**
+ * Calculates official tournament age as of 31st December of a given academic year.
+ * In India school games (DSO/SGFI), eligibility is evaluated as of 31st December of the tournament academic year.
+ */
+export function calculateAgeOn31DecOfAcademicYear(
+  dobStr?: string,
+  academicYearStr: string = getCurrentAcademicYear()
+): string {
+  if (!dobStr || typeof dobStr !== "string") return "---";
+  try {
+    const dob = new Date(dobStr);
+    if (isNaN(dob.getTime())) return "---";
+
+    // Extract start year from "2026-27" -> 2026
+    const startYear = parseInt(academicYearStr.split("-")[0], 10) || new Date().getFullYear();
+    const targetDate = new Date(`${startYear}-12-31T23:59:59`);
+
+    let years = targetDate.getFullYear() - dob.getFullYear();
+    let months = targetDate.getMonth() - dob.getMonth();
+
+    if (months < 0 || (months === 0 && targetDate.getDate() < dob.getDate())) {
+      years--;
+      months += 12;
+    }
+
+    if (years < 0) return "---";
+    return `${years} वर्षे ${months} महिने`;
+  } catch (e) {
+    return "---";
+  }
+}

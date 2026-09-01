@@ -47,24 +47,10 @@ export function convertDobToMarathiWords(dobStr: string): string {
   return `${marathiDigits(day)}/${marathiDigits(month)}/${marathiDigits(year)} (${day} ${monthNames[month] || ''} ${year})`;
 }
 
+import { calculateAgeOn31DecOfAcademicYear, getCurrentAcademicYear } from '@/lib/date-utils';
+
 export function calculateAgeOn31Dec2025(dobStr: string): string {
-  if (!dobStr) return '---';
-  try {
-    const dob = new Date(dobStr);
-    const targetDate = new Date('2025-12-31');
-    
-    let years = targetDate.getFullYear() - dob.getFullYear();
-    let months = targetDate.getMonth() - dob.getMonth();
-    
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    
-    return `${years} वर्षे ${months} महिने`;
-  } catch (e) {
-    return '---';
-  }
+  return calculateAgeOn31DecOfAcademicYear(dobStr, getCurrentAcademicYear());
 }
 
 export function PlayerIdentityModal({ player, schoolProfile, store, language = 'Marathi', onClose }: PlayerIdentityModalProps) {
