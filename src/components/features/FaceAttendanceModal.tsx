@@ -123,15 +123,17 @@ export function FaceAttendanceModal({
     setBatchProgress({ current: 0, total: unenrolledWithPhoto.length });
 
     let successCount = 0;
+    let failedCount = 0;
+
     for (let i = 0; i < unenrolledWithPhoto.length; i++) {
       const student = unenrolledWithPhoto[i];
       const photo = student.photoUrl || student.aadharPhotoUrl;
       setBatchProgress({ current: i + 1, total: unenrolledWithPhoto.length });
 
-      if (photo) {
+      if (photo && typeof photo === "string" && photo.trim().length > 10) {
         try {
           const res = await extractFaceDescriptorFromImageUrl(photo);
-          if (res) {
+          if (res && res.descriptor) {
             const descArr = Array.from(res.descriptor);
             const updated: Player = {
               ...student,
@@ -140,23 +142,55 @@ export function FaceAttendanceModal({
               faceEnrolledAt: new Date().toISOString(),
               faceEnrolledPhotoUrl: photo,
             };
-            store.updatePlayer(updated);
+            // Immediate in-memory sync
+            student.faceDescriptor = descArr;
+            student.faceDescriptors = [descArr];
+            student.faceEnrolledAt = updated.faceEnrolledAt;
+            student.faceEnrolledPhotoUrl = photo;
+
+            if (store && typeof store.updatePlayer === "function") {
+              store.updatePlayer(updated);
+            }
             successCount++;
+          } else {
+            failedCount++;
           }
         } catch (err) {
           console.warn("Failed auto-enroll for", student.name, err);
+          failedCount++;
         }
+      } else {
+        failedCount++;
       }
     }
 
     setIsBatchEnrolling(false);
     setBatchProgress(null);
-    playAttendanceChime("success");
-    alert(
-      isMarathi
-        ? `यशस्वी! ${successCount} विद्यार्थ्यांची फोटोवरून चेहरा नोंदणी झाली!`
-        : `Success! Auto-enrolled ${successCount} students from their profile photos!`
+
+    // Rebuild the face matcher immediately with the newly enrolled students
+    const newlyEnrolled = players.filter(
+      (p) => p.faceDescriptor && p.faceDescriptor.length > 0
     );
+    if (newlyEnrolled.length > 0) {
+      const matcher = await buildFaceMatcher(newlyEnrolled, 0.52);
+      setFaceMatcher(matcher);
+    }
+
+    if (successCount > 0) {
+      playAttendanceChime("success");
+    }
+
+    const message = isMarathi
+      ? `यशस्वी! ${successCount} विद्यार्थ्यांची फोटोवरून चेहरा नोंदणी झाली!` +
+        (failedCount > 0
+          ? ` (${failedCount} विद्यार्थ्यांचे फोटो अस्पष्ट असल्यामुळे कॅमेऱ्याने नोंदणी करावी लागेल)`
+          : "")
+      : `Success! Auto-enrolled ${successCount} students from photos.` +
+        (failedCount > 0
+          ? ` (${failedCount} could not be detected due to lighting/angle, please enroll with camera)`
+          : "");
+
+    alert(message);
   };
 
   // Build the FaceMatcher index asynchronously

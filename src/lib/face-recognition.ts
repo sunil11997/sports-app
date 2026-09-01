@@ -5,6 +5,7 @@ import type { Player } from "@/lib/types";
 let faceapiInstance: typeof import("@vladmandic/face-api") | null = null;
 let modelsLoadingPromise: Promise<boolean> | null = null;
 let modelsLoaded = false;
+let ssdModelLoaded = false;
 
 /**
  * Dynamically loads the @vladmandic/face-api module strictly on client side.
@@ -37,6 +38,15 @@ export async function loadFaceModels(): Promise<boolean> {
         faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
       ]);
+
+      // Attempt to load SSD MobileNet for ultra-reliable static photo detection
+      try {
+        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+        ssdModelLoaded = true;
+      } catch (e) {
+        console.warn("SSD MobileNet not available, using TinyFace fallback.");
+      }
+
       modelsLoaded = true;
       return true;
     } catch (err) {
@@ -71,9 +81,11 @@ export function areFaceModelsLoaded(): boolean {
 
 /**
  * Detects a single face in a video, image, or canvas element and computes its 128-d descriptor vector.
+ * Includes multi-model and multi-scale fallback for static photos.
  */
 export async function extractFaceDescriptor(
-  input: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement
+  input: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement,
+  isStaticPhoto = false
 ): Promise<{ descriptor: Float32Array; detection: any } | null> {
   if (typeof window === "undefined") return null;
   const faceapi = await getFaceApi();
@@ -82,10 +94,31 @@ export async function extractFaceDescriptor(
   const isLoaded = await loadFaceModels();
   if (!isLoaded) return null;
 
+  // 1. If static photo and SSD MobileNet is loaded, try high-accuracy SSD detection first
+  if (isStaticPhoto && ssdModelLoaded) {
+    try {
+      const ssdOptions = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 });
+      const result = await faceapi
+        .detectSingleFace(input, ssdOptions)
+        .withFaceLandmarks(true)
+        .withFaceDescriptor();
+
+      if (result) {
+        return {
+          descriptor: result.descriptor,
+          detection: result.detection,
+        };
+      }
+    } catch (e) {
+      console.warn("SSD photo detection attempt error, trying TinyFaceDetector...", e);
+    }
+  }
+
+  // 2. Try TinyFaceDetector with standard options (inputSize: 320, scoreThreshold: 0.35)
   try {
     const options = new faceapi.TinyFaceDetectorOptions({
-      inputSize: 320,
-      scoreThreshold: 0.45,
+      inputSize: isStaticPhoto ? 416 : 320,
+      scoreThreshold: isStaticPhoto ? 0.25 : 0.40,
     });
 
     const result = await faceapi
@@ -93,42 +126,131 @@ export async function extractFaceDescriptor(
       .withFaceLandmarks(true)
       .withFaceDescriptor();
 
-    if (!result) return null;
-    return {
-      descriptor: result.descriptor,
-      detection: result.detection,
-    };
+    if (result) {
+      return {
+        descriptor: result.descriptor,
+        detection: result.detection,
+      };
+    }
   } catch (e) {
-    console.error("Error extracting face descriptor:", e);
-    return null;
+    console.warn("Primary TinyFace detection error:", e);
   }
+
+  // 3. Fallback for difficult/small photos: try higher sensitivity (inputSize: 224, threshold: 0.15)
+  if (isStaticPhoto) {
+    try {
+      const sensitiveOptions = new faceapi.TinyFaceDetectorOptions({
+        inputSize: 224,
+        scoreThreshold: 0.15,
+      });
+
+      const fallbackResult = await faceapi
+        .detectSingleFace(input, sensitiveOptions)
+        .withFaceLandmarks(true)
+        .withFaceDescriptor();
+
+      if (fallbackResult) {
+        return {
+          descriptor: fallbackResult.descriptor,
+          detection: fallbackResult.detection,
+        };
+      }
+    } catch (e) {
+      // Sensitive fallback failed
+    }
+  }
+
+  return null;
 }
 
 /**
  * Loads an image from a URL or Base64 string and extracts its face descriptor.
+ * Handles CORS, Data URLs, canvas normalization, and high-resolution scaling.
  */
 export async function extractFaceDescriptorFromImageUrl(
   imageUrl: string
 ): Promise<{ descriptor: Float32Array; detection: any } | null> {
-  if (typeof window === "undefined" || !imageUrl) return null;
+  if (typeof window === "undefined" || !imageUrl || typeof imageUrl !== "string") return null;
 
-  return new Promise((resolve) => {
+  const trimmed = imageUrl.trim();
+  if (!trimmed) return null;
+
+  await loadFaceModels();
+
+  return new Promise(async (resolve) => {
+    let objectUrlToRevoke: string | null = null;
+    let finalSrc = trimmed;
+
+    // If it's a remote HTTP/HTTPS URL (e.g. Firebase Storage), try fetch -> blob to avoid CORS canvas taint
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      try {
+        const response = await fetch(trimmed, { mode: "cors" });
+        if (response.ok) {
+          const blob = await response.blob();
+          objectUrlToRevoke = URL.createObjectURL(blob);
+          finalSrc = objectUrlToRevoke;
+        }
+      } catch (fetchErr) {
+        // Fetch failed, proceed with direct image src with anonymous crossOrigin
+        finalSrc = trimmed;
+      }
+    }
+
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    if (!trimmed.startsWith("data:") && !trimmed.startsWith("blob:")) {
+      img.crossOrigin = "anonymous";
+    }
+
     img.onload = async () => {
       try {
-        const result = await extractFaceDescriptor(img);
-        resolve(result);
+        if ("decode" in img) {
+          await img.decode().catch(() => {});
+        }
+
+        // Draw image onto a normalized canvas (max 800px) to enhance detection speed & reliability
+        const maxDim = 800;
+        let width = img.naturalWidth || img.width || 400;
+        let height = img.naturalHeight || img.height || 400;
+
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const result = await extractFaceDescriptor(canvas, true);
+          if (result) {
+            if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+            resolve(result);
+            return;
+          }
+        }
+
+        // Direct image element detection fallback
+        const directResult = await extractFaceDescriptor(img, true);
+        if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+        resolve(directResult);
       } catch (e) {
-        console.error("Error processing image URL for face descriptor:", e);
+        console.error("Error extracting descriptor from loaded image:", e);
+        if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
         resolve(null);
       }
     };
-    img.onerror = () => {
-      console.warn("Failed to load image from URL for face recognition:", imageUrl);
+
+    img.onerror = (err) => {
+      console.warn("Failed to load image for face recognition:", trimmed.substring(0, 50), err);
+      if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
       resolve(null);
     };
-    img.src = imageUrl;
+
+    img.src = finalSrc;
   });
 }
 
@@ -148,7 +270,7 @@ export async function detectAllFacesWithDescriptors(
   try {
     const options = new faceapi.TinyFaceDetectorOptions({
       inputSize: 320,
-      scoreThreshold: 0.45,
+      scoreThreshold: 0.40,
     });
 
     const results = await faceapi
