@@ -67,14 +67,15 @@ export function FaceEnrollmentModal({
     }
   }, []);
 
-  // Start camera feed
-  const startCamera = useCallback(async () => {
+  // Start camera feed with specific facingMode
+  const startCamera = useCallback(async (modeOverride?: "user" | "environment") => {
     stopCamera();
     setCameraError(null);
+    const targetMode = modeOverride || facingMode;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: facingMode,
+          facingMode: { ideal: targetMode },
           width: { ideal: 640 },
           height: { ideal: 480 },
         },
@@ -86,12 +87,25 @@ export function FaceEnrollmentModal({
         await videoRef.current.play();
       }
     } catch (err: any) {
-      console.error("Camera access error:", err);
-      setCameraError(
-        isMarathi
-          ? "कॅमेरा सुरू करताना अडचण आली. कृपया कॅमेरा परवानगी तपासा."
-          : "Could not access camera. Please verify camera permissions."
-      );
+      console.warn("Primary camera request failed, attempting fallback...", err);
+      try {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+        streamRef.current = fallbackStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = fallbackStream;
+          await videoRef.current.play();
+        }
+      } catch (fallbackErr: any) {
+        console.error("Camera access error:", fallbackErr);
+        setCameraError(
+          isMarathi
+            ? "कॅमेरा सुरू करताना अडचण आली. कृपया कॅमेरा परवानगी तपासा."
+            : "Could not access camera. Please verify camera permissions."
+        );
+      }
     }
   }, [facingMode, isMarathi, stopCamera]);
 
@@ -165,7 +179,9 @@ export function FaceEnrollmentModal({
 
   // Toggle front/back camera
   const handleToggleCamera = () => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+    const nextMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(nextMode);
+    startCamera(nextMode);
   };
 
   // Capture face and extract 128-d descriptor
@@ -336,13 +352,22 @@ export function FaceEnrollmentModal({
               </div>
             </div>
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={handleToggleCamera}
-              className="text-slate-400 hover:text-white"
-              title={isMarathi ? "कॅमेरा बदला" : "Switch Camera"}
+              className="h-8 px-2.5 text-xs border-slate-700 bg-slate-800 text-slate-200 hover:text-white flex items-center gap-1.5 font-bold shadow-sm"
+              title={isMarathi ? "पुढील/मागील कॅमेरा बदला" : "Switch Front/Back Camera"}
             >
-              <RotateCw className="w-4 h-4" />
+              <RotateCw className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-[11px]">
+                {facingMode === "environment"
+                  ? isMarathi
+                    ? "मागील (Back)"
+                    : "Back Cam"
+                  : isMarathi
+                  ? "पुढील (Front)"
+                  : "Front Cam"}
+              </span>
             </Button>
           </div>
         </DialogHeader>
@@ -402,7 +427,7 @@ export function FaceEnrollmentModal({
               <div className="p-4 text-center text-rose-400 text-xs flex flex-col items-center gap-2">
                 <AlertCircle className="w-8 h-8" />
                 <span>{cameraError}</span>
-                <Button size="sm" variant="outline" onClick={startCamera} className="mt-2">
+                <Button size="sm" variant="outline" onClick={() => startCamera()} className="mt-2">
                   {isMarathi ? "पुन्हा प्रयत्न करा" : "Retry"}
                 </Button>
               </div>

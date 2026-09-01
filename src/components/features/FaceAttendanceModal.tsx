@@ -191,14 +191,15 @@ export function FaceAttendanceModal({
     }
   }, []);
 
-  // Start active camera
-  const startCamera = useCallback(async () => {
+  // Start active camera with specific facingMode
+  const startCamera = useCallback(async (modeOverride?: "user" | "environment") => {
     stopCamera();
     setCameraError(null);
+    const targetMode = modeOverride || facingMode;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: facingMode,
+          facingMode: { ideal: targetMode },
           width: { ideal: 640 },
           height: { ideal: 480 },
         },
@@ -210,12 +211,25 @@ export function FaceAttendanceModal({
         await videoRef.current.play();
       }
     } catch (err: any) {
-      console.error("Attendance camera error:", err);
-      setCameraError(
-        isMarathi
-          ? "कॅमेरा सुरू करता आला नाही. कृपया कॅमेरा परवानगी तपासा."
-          : "Could not access camera. Please verify device permissions."
-      );
+      console.warn("Primary camera request failed, trying generic fallback...", err);
+      try {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+        streamRef.current = fallbackStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = fallbackStream;
+          await videoRef.current.play();
+        }
+      } catch (fallbackErr: any) {
+        console.error("Attendance camera error:", fallbackErr);
+        setCameraError(
+          isMarathi
+            ? "कॅमेरा सुरू करता आला नाही. कृपया कॅमेरा परवानगी तपासा."
+            : "Could not access camera. Please verify device permissions."
+        );
+      }
     }
   }, [facingMode, isMarathi, stopCamera]);
 
@@ -258,7 +272,9 @@ export function FaceAttendanceModal({
 
   // Toggle front/back camera
   const handleToggleCamera = () => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+    const nextMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(nextMode);
+    startCamera(nextMode);
   };
 
   // Real-time detection and recognition loop
@@ -501,15 +517,24 @@ export function FaceAttendanceModal({
                 {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </Button>
 
-              {/* Camera Switch */}
+              {/* Camera Switch (Front / Back Camera) */}
               <Button
                 variant="outline"
-                size="icon"
+                size="sm"
                 onClick={handleToggleCamera}
-                className="h-8 w-8 border-slate-700 text-slate-300 hover:text-white"
-                title={isMarathi ? "कॅमेरा बदला" : "Switch Camera"}
+                className="h-8 px-2.5 text-xs border-slate-700 bg-slate-800 text-slate-200 hover:text-white flex items-center gap-1.5 font-bold shadow-sm"
+                title={isMarathi ? "पुढील/मागील कॅमेरा बदला" : "Switch Front/Back Camera"}
               >
-                <RotateCw className="w-4 h-4" />
+                <RotateCw className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[11px]">
+                  {facingMode === "environment"
+                    ? isMarathi
+                      ? "मागील कॅमेरा (Back)"
+                      : "Back Cam"
+                    : isMarathi
+                    ? "पुढील कॅमेरा (Front)"
+                    : "Front Cam"}
+                </span>
               </Button>
             </div>
           </div>
@@ -578,7 +603,7 @@ export function FaceAttendanceModal({
                 <div className="p-6 text-center text-rose-400 text-sm flex flex-col items-center gap-3">
                   <AlertCircle className="w-10 h-10 text-rose-500" />
                   <span>{cameraError}</span>
-                  <Button size="sm" variant="outline" onClick={startCamera} className="mt-2">
+                  <Button size="sm" variant="outline" onClick={() => startCamera()} className="mt-2">
                     {isMarathi ? "पुन्हा प्रयत्न करा" : "Retry Camera"}
                   </Button>
                 </div>
