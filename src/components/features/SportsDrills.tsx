@@ -253,13 +253,12 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   // On first load or when activeSport changes, auto-select attended students
   useEffect(() => {
     const availableSkills = SPORTS_DATA[activeSport]?.skills || [];
-    const currentOrFirst = availableSkills.includes(activeDrill) ? activeDrill : availableSkills[0] || "Standard Drill";
-    setActiveDrill(currentOrFirst);
+    setActiveDrill((prevDrill) => (availableSkills.includes(prevDrill) ? prevDrill : availableSkills[0] || "Standard Drill"));
     
     const attended = playersInSport.filter((p: any) => getAttendanceStatus(p.id).status === 'P');
     const targetList = attended.length > 0 ? attended : playersInSport;
     setSelectedStudentIds(targetList.map((p: any) => p.id));
-  }, [activeSport]);
+  }, [activeSport, playersInSport, getAttendanceStatus]);
 
   // Filtered list based on view mode (Attended Only vs All)
   const displayPlayers = useMemo(() => {

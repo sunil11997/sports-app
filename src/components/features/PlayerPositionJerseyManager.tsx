@@ -208,8 +208,8 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
   useEffect(() => {
     const currentCap = sportPlayers.find((p: any) => p.isCaptain || p.positions?.[selectedSport]?.toLowerCase().includes('captain'));
     const currentVC = sportPlayers.find((p: any) => p.isViceCaptain || p.positions?.[selectedSport]?.toLowerCase().includes('vice'));
-    if (currentCap && !captainId) setCaptainId(currentCap.id);
-    if (currentVC && !viceCaptainId) setViceCaptainId(currentVC.id);
+    if (currentCap) setCaptainId(prev => prev || currentCap.id);
+    if (currentVC) setViceCaptainId(prev => prev || currentVC.id);
   }, [sportPlayers, selectedSport]);
 
   // Compute jersey duplicates

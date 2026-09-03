@@ -121,7 +121,7 @@ export function DailyPracticePlanner({ store, preselectedSport }: { store: any; 
       }
     });
     return () => unsub();
-  }, [store.isLoaded, scheduleKey]);
+  }, [store.isLoaded, scheduleKey, db]);
 
   // List of eligible athletes matching selected age group
   const eligibleAthletes = useMemo(() => {

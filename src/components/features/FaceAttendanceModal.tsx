@@ -108,6 +108,7 @@ export function FaceAttendanceModal({
 
   // Filter players who have enrolled face descriptors
   const enrolledPlayers = useMemo(() => {
+    void enrolledVersion;
     return players.filter(
       (p) =>
         (p.faceDescriptor && p.faceDescriptor.length > 0) ||
@@ -117,6 +118,7 @@ export function FaceAttendanceModal({
 
   // Students who have an existing profile photo but no face descriptor yet
   const unenrolledWithPhoto = useMemo(() => {
+    void enrolledVersion;
     return players.filter(
       (p) =>
         (!p.faceDescriptor || p.faceDescriptor.length === 0) &&

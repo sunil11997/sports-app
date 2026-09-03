@@ -49,7 +49,9 @@ export function ParentProgressShareModal({
   const teacherName = getTeacherName(schoolProfile);
 
   // Player metrics
-  const fitness = store?.data?.fitness?.[player?.id] || { score: '85', status: 'Excellent (उत्कृष्ट)' };
+  const fitness = useMemo(() => {
+    return store?.data?.fitness?.[player?.id] || { score: '85', status: 'Excellent (उत्कृष्ट)' };
+  }, [store?.data?.fitness, player?.id]);
   const ageVal = getAgeValidation(player?.dob);
   const mainSport = player?.sports?.[0] || 'Kabaddi';
   const jersey = player?.jerseyNumbers?.[mainSport] || player?.jerseyNumber || '-';
@@ -61,7 +63,7 @@ export function ParentProgressShareModal({
     if (!player) return '';
 
     return `*${schoolName}*\n*विद्यार्थी क्रीडा व शारीरिक प्रगती अहवाल (Sports & Fitness Report Card)*\n\n*विद्यार्थ्याचे नाव:* ${marathiName} (${player.name})\n*इयत्ता:* ${player.std} वी | *हजेरी क्रमांक/GR:* ${player.generalRegisterNumber || player.serialNumber || '-'}\n*वय / वयोगट:* ${ageVal?.ageYears || player.age} वर्षे (${ageVal?.category || player.ageCategory || 'U17'})\n------------------------------\n🏅 *क्रीडा प्रकार:* ${player.sports?.join(', ') || 'क्रीडा सराव'}\n🎽 *जर्सी क्रमांक:* #${jersey} | *स्थान / पोझिशन:* ${position}\n💪 *शारीरिक तंदुरुस्ती स्कोअर:* ${fitness.score}/100 [${fitness.status || 'Good'}]\n📏 *उंची / वजन / BMI:* ${player.height || '-'} cm | ${player.weight || '-'} kg | BMI: ${player.bmi || '-'}\n------------------------------\n📝 *क्रीडा शिक्षकांचा अभिप्राय:* ${customTeacherRemark}\n\n*क्रीडा शिक्षक:* ${teacherName}\n*वाघंबा स्पोर्ट्स हब डिजिटल प्रणाली*`;
-  }, [player, marathiName, ageVal, mainSport, jersey, position, fitness, customTeacherRemark, schoolName, teacherName]);
+  }, [player, marathiName, ageVal, jersey, position, fitness, customTeacherRemark, schoolName, teacherName]);
 
   const handleSendWhatsApp = () => {
     const encoded = encodeURIComponent(whatsappText);

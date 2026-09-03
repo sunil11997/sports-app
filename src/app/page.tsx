@@ -55,34 +55,106 @@ import { cn, isBirthdayToday, transliterateEnglishToMarathi } from '@/lib/utils'
 import { format, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { usePWA } from '@/components/providers/pwa-provider';
+import dynamic from 'next/dynamic';
+import { TableSkeleton } from '@/components/ui/loading-skeletons';
+
+const HubFallback = () => (
+  <div className="p-6">
+    <TableSkeleton rows={6} cols={4} />
+  </div>
+);
 
 /**
  * Platinum Hub v5.3 Stable
  * Hardened for Screen Rotation and Nothing Phone (2a) Safe Areas.
  */
 import { Dashboard } from '@/components/features/Dashboard';
-import { Registration } from '@/components/features/Registration';
-import { Attendance } from '@/components/features/Attendance';
-import { Fitness } from '@/components/features/Fitness';
-import { ExamsHub } from '@/components/features/ExamsHub';
-import { PromotionHub } from '@/components/features/PromotionHub';
-import { GameHub } from '@/components/features/GameHub';
-import { Settings } from '@/components/features/Settings';
-import { PerformanceDossier } from '@/components/features/History';
-import { Gamification } from '@/components/features/Gamification';
-import { PlayerIDCardManager } from '@/components/features/PlayerIDCardManager';
-import { AIAdvice } from '@/components/features/AIAdvice';
-import { PerformanceHub } from '@/components/features/PerformanceHub';
-import { HallOfFame } from '@/components/features/HallOfFame';
-import { ClassesSection } from '@/components/features/ClassesSection';
-import { DailyReport } from '@/components/features/DailyReport';
-import { MatchScoreboard } from '@/components/features/MatchScoreboard';
-import { OtpLogin } from '@/components/features/OtpLogin';
-import { TeamEligibilityRoster } from '@/components/features/TeamEligibilityRoster';
-import { PlayerPositionJerseyManager } from '@/components/features/PlayerPositionJerseyManager';
-import { EquipmentInventoryHub } from '@/components/features/EquipmentInventoryHub';
-import { ParentProgressShareModal } from '@/components/features/ParentProgressShareModal';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
+
+const Registration = dynamic(
+  () => import('@/components/features/Registration').then((m) => m.Registration),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const Attendance = dynamic(
+  () => import('@/components/features/Attendance').then((m) => m.Attendance),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const Fitness = dynamic(
+  () => import('@/components/features/Fitness').then((m) => m.Fitness),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const ExamsHub = dynamic(
+  () => import('@/components/features/ExamsHub').then((m) => m.ExamsHub),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const PromotionHub = dynamic(
+  () => import('@/components/features/PromotionHub').then((m) => m.PromotionHub),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const GameHub = dynamic(
+  () => import('@/components/features/GameHub').then((m) => m.GameHub),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const Settings = dynamic(
+  () => import('@/components/features/Settings').then((m) => m.Settings),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const PerformanceDossier = dynamic(
+  () => import('@/components/features/History').then((m) => m.PerformanceDossier),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const Gamification = dynamic(
+  () => import('@/components/features/Gamification').then((m) => m.Gamification),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const PlayerIDCardManager = dynamic(
+  () => import('@/components/features/PlayerIDCardManager').then((m) => m.PlayerIDCardManager),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const AIAdvice = dynamic(
+  () => import('@/components/features/AIAdvice').then((m) => m.AIAdvice),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const PerformanceHub = dynamic(
+  () => import('@/components/features/PerformanceHub').then((m) => m.PerformanceHub),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const HallOfFame = dynamic(
+  () => import('@/components/features/HallOfFame').then((m) => m.HallOfFame),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const ClassesSection = dynamic(
+  () => import('@/components/features/ClassesSection').then((m) => m.ClassesSection),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const DailyReport = dynamic(
+  () => import('@/components/features/DailyReport').then((m) => m.DailyReport),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const MatchScoreboard = dynamic(
+  () => import('@/components/features/MatchScoreboard').then((m) => m.MatchScoreboard),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const OtpLogin = dynamic(
+  () => import('@/components/features/OtpLogin').then((m) => m.OtpLogin),
+  { ssr: false }
+);
+const TeamEligibilityRoster = dynamic(
+  () => import('@/components/features/TeamEligibilityRoster').then((m) => m.TeamEligibilityRoster),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const PlayerPositionJerseyManager = dynamic(
+  () => import('@/components/features/PlayerPositionJerseyManager').then((m) => m.PlayerPositionJerseyManager),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const EquipmentInventoryHub = dynamic(
+  () => import('@/components/features/EquipmentInventoryHub').then((m) => m.EquipmentInventoryHub),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const ParentProgressShareModal = dynamic(
+  () => import('@/components/features/ParentProgressShareModal').then((m) => m.ParentProgressShareModal),
+  { ssr: false }
+);
 
 const translations = {
   English: {
