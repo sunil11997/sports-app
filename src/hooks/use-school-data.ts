@@ -126,7 +126,9 @@ export function useSchoolData(isActive: boolean = true) {
         const status = queue[key];
         const parts = key.split("_");
         if (parts.length < 3) continue;
-        const [playerId, date, session] = parts;
+        const session = parts.pop()!;
+        const date = parts.pop()!;
+        const playerId = parts.join("_");
         const attRef = doc(db, "attendance_registry", `${playerId}_${date}_${session}`);
 
         if (!status) {
@@ -585,7 +587,9 @@ export function useSchoolData(isActive: boolean = true) {
       Object.entries(newAttendance).forEach(([key, status]) => {
         const parts = key.split("_");
         if (parts.length < 3) return;
-        const [playerId, date, session] = parts;
+        const session = parts.pop()!;
+        const date = parts.pop()!;
+        const playerId = parts.join("_");
         const attRef = doc(db, "attendance_registry", `${playerId}_${date}_${session}`);
         if (!navigator.onLine) {
           const q = JSON.parse(localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || "{}");

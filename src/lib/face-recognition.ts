@@ -841,7 +841,8 @@ export async function extractFaceDescriptorFromImageUrl(
     }
 
     const img = new Image();
-    if (!trimmed.startsWith("data:") && !trimmed.startsWith("blob:")) {
+    // Only set crossOrigin on remote HTTP/HTTPS endpoints; NEVER on blob: or data: URLs
+    if (finalSrc.startsWith("http://") || finalSrc.startsWith("https://")) {
       img.crossOrigin = "anonymous";
     }
 
@@ -887,8 +888,8 @@ export async function detectAllFacesWithDescriptors(
 
   try {
     const options = new faceapi.TinyFaceDetectorOptions({
-      inputSize: 320,
-      scoreThreshold: 0.25,
+      inputSize: 416,
+      scoreThreshold: 0.20,
     });
 
     const results = await faceapi
@@ -905,11 +906,11 @@ export async function detectAllFacesWithDescriptors(
 
 /**
  * Builds a FaceMatcher index from all players who have enrolled face descriptors.
- * distanceThreshold: lower = stricter match, higher = more forgiving (default 0.58).
+ * distanceThreshold: lower = stricter match, higher = more forgiving (default 0.60).
  */
 export async function buildFaceMatcher(
   players: Player[],
-  distanceThreshold = 0.58
+  distanceThreshold = 0.60
 ): Promise<any | null> {
   if (typeof window === "undefined") return null;
   const faceapi = await getFaceApi();
@@ -917,17 +918,34 @@ export async function buildFaceMatcher(
 
   const labeledDescriptors: any[] = [];
 
+  const toFloat32Descriptor = (raw: any): Float32Array | null => {
+    if (!raw) return null;
+    if (raw instanceof Float32Array && raw.length === 128) return raw;
+    if (Array.isArray(raw) && raw.length === 128) return new Float32Array(raw.map(Number));
+    if (typeof raw === "object") {
+      const vals = Object.values(raw).map(Number);
+      if (vals.length === 128) return new Float32Array(vals);
+    }
+    return null;
+  };
+
   players.forEach((p) => {
     const descriptors: Float32Array[] = [];
 
-    if (p.faceDescriptor && Array.isArray(p.faceDescriptor) && p.faceDescriptor.length > 0) {
-      descriptors.push(new Float32Array(p.faceDescriptor));
-    }
+    const primary = toFloat32Descriptor(p.faceDescriptor);
+    if (primary) descriptors.push(primary);
 
-    if (p.faceDescriptors && Array.isArray(p.faceDescriptors)) {
-      p.faceDescriptors.forEach((arr) => {
-        if (Array.isArray(arr) && arr.length > 0) {
-          descriptors.push(new Float32Array(arr));
+    if (p.faceDescriptors) {
+      const list = Array.isArray(p.faceDescriptors)
+        ? p.faceDescriptors
+        : typeof p.faceDescriptors === "object"
+        ? Object.values(p.faceDescriptors)
+        : [];
+
+      list.forEach((arr) => {
+        const d = toFloat32Descriptor(arr);
+        if (d && (!primary || descriptors.length === 0)) {
+          descriptors.push(d);
         }
       });
     }

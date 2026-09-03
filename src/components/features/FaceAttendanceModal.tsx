@@ -99,6 +99,9 @@ export function FaceAttendanceModal({
   // Debounce map to avoid re-triggering the same player within 8 seconds
   const lastMarkedRef = useRef<Record<string, number>>({});
   const isDetectingRef = useRef(false);
+  const onMarkAttendanceRef = useRef(onMarkAttendance);
+  onMarkAttendanceRef.current = onMarkAttendance;
+  const lastQualityUpdateRef = useRef(0);
 
   useEffect(() => {
     setCurrentSession(activeSession);
@@ -109,21 +112,28 @@ export function FaceAttendanceModal({
   // Filter players who have enrolled face descriptors
   const enrolledPlayers = useMemo(() => {
     void enrolledVersion;
-    return players.filter(
-      (p) =>
-        (p.faceDescriptor && p.faceDescriptor.length > 0) ||
-        (p.faceDescriptors && p.faceDescriptors.length > 0)
-    );
+    return players.filter((p) => {
+      const hasFd =
+        (Array.isArray(p.faceDescriptor) && p.faceDescriptor.length > 0) ||
+        (p.faceDescriptor && typeof p.faceDescriptor === "object" && Object.keys(p.faceDescriptor).length > 0);
+      const hasFds =
+        (Array.isArray(p.faceDescriptors) && p.faceDescriptors.length > 0) ||
+        (p.faceDescriptors && typeof p.faceDescriptors === "object" && Object.keys(p.faceDescriptors).length > 0);
+      return hasFd || hasFds;
+    });
   }, [players, enrolledVersion]);
 
   // Students who have an existing profile photo but no face descriptor yet
   const unenrolledWithPhoto = useMemo(() => {
     void enrolledVersion;
-    return players.filter(
-      (p) =>
-        (!p.faceDescriptor || p.faceDescriptor.length === 0) &&
-        (p.photoUrl || p.aadharPhotoUrl)
-    );
+    return players.filter((p) => {
+      const hasFd =
+        (Array.isArray(p.faceDescriptor) && p.faceDescriptor.length > 0) ||
+        (p.faceDescriptor && typeof p.faceDescriptor === "object" && Object.keys(p.faceDescriptor).length > 0) ||
+        (Array.isArray(p.faceDescriptors) && p.faceDescriptors.length > 0) ||
+        (p.faceDescriptors && typeof p.faceDescriptors === "object" && Object.keys(p.faceDescriptors).length > 0);
+      return !hasFd && Boolean(p.photoUrl || p.aadharPhotoUrl);
+    });
   }, [players, enrolledVersion]);
 
   // 1-Click Auto-Enroll all students from their existing profile photos
@@ -180,11 +190,17 @@ export function FaceAttendanceModal({
     setBatchProgress(null);
 
     // Rebuild the face matcher immediately with all enrolled students
-    const allEnrolled = players.filter(
-      (p) => p.faceDescriptor && p.faceDescriptor.length > 0
-    );
+    const allEnrolled = players.filter((p) => {
+      const hasFd =
+        (Array.isArray(p.faceDescriptor) && p.faceDescriptor.length > 0) ||
+        (p.faceDescriptor && typeof p.faceDescriptor === "object" && Object.keys(p.faceDescriptor).length > 0);
+      const hasFds =
+        (Array.isArray(p.faceDescriptors) && p.faceDescriptors.length > 0) ||
+        (p.faceDescriptors && typeof p.faceDescriptors === "object" && Object.keys(p.faceDescriptors).length > 0);
+      return hasFd || hasFds;
+    });
     if (allEnrolled.length > 0) {
-      const matcher = await buildFaceMatcher(allEnrolled, 0.58);
+      const matcher = await buildFaceMatcher(allEnrolled, 0.60);
       setFaceMatcher(matcher);
     }
 
@@ -211,7 +227,7 @@ export function FaceAttendanceModal({
   useEffect(() => {
     let active = true;
     if (enrolledPlayers.length > 0) {
-      buildFaceMatcher(enrolledPlayers, 0.58).then((matcher) => {
+      buildFaceMatcher(enrolledPlayers, 0.60).then((matcher) => {
         if (active) setFaceMatcher(matcher);
       });
     } else {
@@ -382,11 +398,66 @@ export function FaceAttendanceModal({
           if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Fast diagnostic quality check for guidance
-            const quality = await analyzeFaceFrameQuality(video, 0.25);
-            setQualityResult(quality);
-
+            // Single-pass face detection with descriptors
             const detections = await detectAllFacesWithDescriptors(video);
+
+            // Throttle diagnostic quality updates to every 400ms to avoid 60fps re-render overhead
+            const nowTime = Date.now();
+            if (nowTime - lastQualityUpdateRef.current > 400) {
+              lastQualityUpdateRef.current = nowTime;
+              if (detections.length === 0) {
+                setQualityResult({
+                  code: "NO_FACE",
+                  messageEn: "Adjust face position in camera",
+                  messageMr: "चेहरा कॅमेऱ्यासमोर व्यवस्थित ठेवा",
+                  isAcceptable: false,
+                  qualityScore: 10,
+                  metrics: { brightness: 120, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: 0 },
+                });
+              } else if (detections.length > 1) {
+                setQualityResult({
+                  code: "MULTIPLE_FACES",
+                  messageEn: "Multiple faces detected — Single person only",
+                  messageMr: "एकापेक्षा जास्त चेहरे दिसत आहेत — एकाच व्यक्तीने समोर या",
+                  isAcceptable: false,
+                  qualityScore: 30,
+                  metrics: { brightness: 120, faceRatio: 0, offsetCenterX: 0, offsetCenterY: 0, faceCount: detections.length },
+                });
+              } else {
+                const targetBox = detections[0].detection.box;
+                const faceRatio = targetBox.width / videoWidth;
+                const isTooFar = faceRatio < 0.12;
+                const isTooClose = faceRatio > 0.85;
+                if (isTooFar) {
+                  setQualityResult({
+                    code: "TOO_FAR",
+                    messageEn: "Face is too far away — Move closer",
+                    messageMr: "चेहरा खूप लांब आहे — कॅमेऱ्याच्या जवळ या",
+                    isAcceptable: false,
+                    qualityScore: 40,
+                    metrics: { brightness: 120, faceRatio, offsetCenterX: 0, offsetCenterY: 0, faceCount: 1 },
+                  });
+                } else if (isTooClose) {
+                  setQualityResult({
+                    code: "TOO_CLOSE",
+                    messageEn: "Face is too close — Step back slightly",
+                    messageMr: "चेहरा खूप जवळ आहे — थोडे मागे जा",
+                    isAcceptable: false,
+                    qualityScore: 45,
+                    metrics: { brightness: 120, faceRatio, offsetCenterX: 0, offsetCenterY: 0, faceCount: 1 },
+                  });
+                } else {
+                  setQualityResult({
+                    code: "READY",
+                    messageEn: "Face detected ✓ Scanning...",
+                    messageMr: "चेहरा ओळखला जात आहे ✓",
+                    isAcceptable: true,
+                    qualityScore: 95,
+                    metrics: { brightness: 120, faceRatio, offsetCenterX: 0, offsetCenterY: 0, faceCount: 1 },
+                  });
+                }
+              }
+            }
 
             detections.forEach((detection) => {
               const { box } = detection.detection;
@@ -396,11 +467,11 @@ export function FaceAttendanceModal({
 
               if (faceMatcher) {
                 const match = faceMatcher.findBestMatch(detection.descriptor);
-                if (match.label !== "unknown" && match.distance < 0.58) {
+                if (match.label !== "unknown" && match.distance <= 0.60) {
                   isMatch = true;
                   matchedPlayer = playerMap.get(match.label) || null;
                   // Convert distance to realistic confidence percentage
-                  confidence = Math.round(Math.max(65, Math.min(99, (1 - match.distance * 0.75) * 100)));
+                  confidence = Math.round(Math.max(65, Math.min(99, (1 - match.distance * 0.7) * 100)));
                 }
               }
 
@@ -408,11 +479,15 @@ export function FaceAttendanceModal({
               const mirroredX =
                 facingMode === "user" ? canvas.width - box.x - box.width : box.x;
 
-              // Bounding Box
+              // Bounding Box with safe roundRect fallback
               ctx.lineWidth = 3;
               ctx.strokeStyle = isMatch ? "#10b981" : "#f59e0b"; // Green if match, Amber if unknown
               ctx.beginPath();
-              ctx.roundRect(mirroredX, box.y, box.width, box.height, 12);
+              if (typeof (ctx as any).roundRect === "function") {
+                (ctx as any).roundRect(mirroredX, box.y, box.width, box.height, 12);
+              } else {
+                ctx.rect(mirroredX, box.y, box.width, box.height);
+              }
               ctx.stroke();
 
               // Top Label Box
@@ -461,7 +536,7 @@ export function FaceAttendanceModal({
                   );
 
                   // Mark Present in parent store
-                  onMarkAttendance(pId, dateStr, currentSession, "P");
+                  onMarkAttendanceRef.current(pId, dateStr, currentSession, "P");
 
                   if (soundEnabled) {
                     playAttendanceChime("success");
@@ -521,7 +596,6 @@ export function FaceAttendanceModal({
     soundEnabled,
     speechEnabled,
     cameraActive,
-    onMarkAttendance,
   ]);
 
   // Calculate session count of present students
