@@ -28,12 +28,15 @@ import {
   AlertTriangle,
   History,
   CheckCircle2,
-  Volleyball
+  Volleyball,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 import { sounds } from '@/lib/soundEffects';
+import { marathiAnnouncer, getMarathiNumberWord } from '@/lib/marathiAnnouncer';
 
 class SoundEffects {
   public enabled: boolean = true;
@@ -108,6 +111,8 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   // Fullscreen State
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
+  const [voiceAnnounceEnabled, setVoiceAnnounceEnabled] = useState(true);
+  const [matchSecondsElapsed, setMatchSecondsElapsed] = useState<number>(0);
 
   // Teams Configuration
   const [teamAHouse, setTeamAHouse] = useState('shivaji');
@@ -163,10 +168,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const [servingTeam, setServingTeam] = useState<'A' | 'B'>('A');
   const [setHistory, setSetHistory] = useState<{ set: number; a: number; b: number }[]>([]);
 
-  // Audio Mute sync
+  // Audio & Marathi Announcer Mute sync
   useEffect(() => {
     sfx.enabled = !soundMuted;
-  }, [soundMuted]);
+    marathiAnnouncer.enabled = !soundMuted && voiceAnnounceEnabled;
+  }, [soundMuted, voiceAnnounceEnabled]);
 
   // Sync House Names
   useEffect(() => {
@@ -231,22 +237,62 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     let interval: any = null;
     if (isMatchClockRunning && matchSecondsRemaining > 0) {
       interval = setInterval(() => {
+        // Track elapsed match seconds for 3-minute periodic Marathi score announcement
+        setMatchSecondsElapsed((prevElapsed) => {
+          const nextElapsed = prevElapsed + 1;
+          if (sport === 'Kabaddi' && nextElapsed > 0 && nextElapsed % 180 === 0) {
+            marathiAnnouncer.announcePeriodicScore(teamACustomName, scoreA, teamBCustomName, scoreB);
+            const wordA = getMarathiNumberWord(scoreA);
+            const wordB = getMarathiNumberWord(scoreB);
+            toast({
+              title: "🎙️ मराठी गुणफलक समालोचन (३-मिनिट समालोचन)",
+              description: `${teamACustomName}: ${scoreA} (${wordA}) गुण | ${teamBCustomName}: ${scoreB} (${wordB}) गुण`,
+              className: "bg-blue-900 text-amber-300 font-bold border-2 border-amber-400 shadow-xl"
+            });
+          }
+          return nextElapsed;
+        });
+
         setMatchSecondsRemaining((prev) => {
-          if (prev <= 1) {
+          const nextTime = prev - 1;
+
+          // Announce Last Minute / Remaining Time in Marathi
+          if (nextTime === 60) {
+            sfx.playWhistle();
+            marathiAnnouncer.announceLastMinute(60);
+            toast({
+              title: "⏱️ शेवटचा १ मिनिट बाकी! (Last 1 Minute)",
+              description: "सामन्याचा शेवटचा एक मिनिट शिल्लक आहे.",
+              className: "bg-red-600 text-white font-black"
+            });
+          } else if (nextTime === 30) {
+            sfx.playWarning();
+            marathiAnnouncer.announceLastMinute(30);
+            toast({
+              title: "⏱️ शेवटचे ३० सेकंद बाकी! (Last 30s)",
+              description: "सामन्याची शेवटची ३० सेकंद शिल्लक आहेत.",
+              className: "bg-amber-600 text-white font-black"
+            });
+          } else if (nextTime === 10) {
+            marathiAnnouncer.announceLastMinute(10);
+          }
+
+          if (nextTime <= 0) {
             setIsMatchClockRunning(false);
             sfx.playWhistle();
+            marathiAnnouncer.speak("सामना संपला! अधिकृत वेळ समाप्त झाली आहे!");
             toast({
               title: "🏁 हाफ / सामना वेळ संपला (Half/Match Time End)",
               description: `अधिकृत शिट्टी वाजली आहे.`,
             });
             return 0;
           }
-          return prev - 1;
+          return nextTime;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isMatchClockRunning, matchSecondsRemaining, toast]);
+  }, [isMatchClockRunning, matchSecondsRemaining, sport, teamACustomName, scoreA, teamBCustomName, scoreB, toast]);
 
   // -------------------------------------------------------------
   // KHO-KHO INNING TIMER
@@ -301,8 +347,15 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setIsRaidRunning(true);
 
     if (sport === 'Kabaddi' && (raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB) >= 2) {
+      sfx.playWhistle();
       sfx.playDoOrDie();
       const tName = raidingTeam === 'A' ? teamACustomName : teamBCustomName;
+
+      // Announce in Marathi that it's the 3rd raid (डू ऑर डाय रेड)
+      setTimeout(() => {
+        marathiAnnouncer.announceDoOrDieRaid(tName);
+      }, 500);
+
       toast({
         title: "⚡ डू ऑर डाय रेड सुरू! (DO OR DIE RAID) ⚡",
         description: `${tName} ची ३ री रेड! गुण मिळवणे अनिवार्य आहे, अन्यथा रेडर बाद!`,
@@ -515,6 +568,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setTimeoutsA(2);
     setTimeoutsB(2);
     setMatchSecondsRemaining(1200);
+    setMatchSecondsElapsed(0);
     setIsMatchClockRunning(false);
     setKhoTurn(1);
     setKhoInningSeconds(540);
@@ -621,6 +675,46 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             title={soundMuted ? "Unmute Sound" : "Mute Sound"}
           >
             {soundMuted ? <VolumeX className="w-4 h-4 text-red-500" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
+          </Button>
+
+          {/* Marathi Voice Announcer Toggle */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setVoiceAnnounceEnabled(!voiceAnnounceEnabled);
+              toast({
+                title: !voiceAnnounceEnabled ? "🎙️ मराठी समालोचन चालू (Voice ON)" : "🎙️ मराठी समालोचन बंद (Voice OFF)",
+                description: !voiceAnnounceEnabled 
+                  ? "डू ऑर डाय रेड, ३-मिनिट गुणफलक आणि शेवटच्या मिनिटाची उद्घोषणा चालू केली." 
+                  : "मराठी समालोचन आवाज बंद करण्यात आला आहे."
+              });
+            }}
+            className={cn(
+              "rounded-xl h-9 px-3 text-xs font-bold transition-all border",
+              voiceAnnounceEnabled ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40" : "text-slate-400 border-slate-200"
+            )}
+            title={voiceAnnounceEnabled ? "Mute Marathi Announcer" : "Turn ON Marathi Announcer"}
+          >
+            {voiceAnnounceEnabled ? <Mic className="w-4 h-4 mr-1 text-amber-600" /> : <MicOff className="w-4 h-4 mr-1 text-slate-400" />}
+            {voiceAnnounceEnabled ? "मराठी आवाज" : "आवाज बंद"}
+          </Button>
+
+          {/* Quick Speak Current Score */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              marathiAnnouncer.announcePeriodicScore(teamACustomName, scoreA, teamBCustomName, scoreB);
+              toast({
+                title: "🎙️ गुणफलक उद्घोषणा",
+                description: `${teamACustomName}: ${scoreA} | ${teamBCustomName}: ${scoreB}`
+              });
+            }}
+            className="rounded-xl h-9 px-2.5 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
+            title="सध्याचा गुणफलक मराठीत ऐका (Speak Score)"
+          >
+            📢 गुण बोला
           </Button>
 
           <Button
@@ -977,14 +1071,27 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => sfx.playDoOrDie()}
-                    className="h-7 px-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale"
-                    title="डू ऑर डाय सायरन वाजवा (Sound Siren)"
-                  >
-                    🚨 सायरन (Siren)
-                  </Button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        sfx.playWhistle();
+                        marathiAnnouncer.announceDoOrDieRaid(raidingTeam === 'A' ? teamACustomName : teamBCustomName);
+                      }}
+                      className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale flex items-center gap-1"
+                      title="मराठीत ३ री रेड बोला (Speak Marathi Announcement)"
+                    >
+                      <Mic className="w-3 h-3" /> ३ री रेड बोला
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => sfx.playDoOrDie()}
+                      className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale"
+                      title="डू ऑर डाय सायरन वाजवा (Sound Siren)"
+                    >
+                      🚨 सायरन
+                    </Button>
+                  </div>
                 </div>
               )}
 
