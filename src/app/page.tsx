@@ -631,9 +631,9 @@ export default function WaghambaApp() {
         </header>
 
         <main className="flex-1 w-full max-w-7xl mx-auto p-3 sm:p-4 md:p-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 h-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 w-full">
             
-            <TabsContent value="home" className="mt-0 space-y-6 sm:space-y-8 animate-in fade-in duration-700 h-full">
+            <TabsContent value="home" className="mt-0 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
               <div className="flex bg-muted/40 p-1 rounded-2xl border w-full sm:w-fit mb-4 sm:mb-6 shadow-inner overflow-x-auto scrollbar-hide">
                 <button 
                   onClick={() => setSubTab("overview")} 
@@ -717,19 +717,19 @@ export default function WaghambaApp() {
               {subTab === "enroll" && <Registration store={schoolData} section={selectedSection || 'general'} />}
             </TabsContent>
 
-            <TabsContent value="sport" className="mt-0 h-full">
+            <TabsContent value="sport" className="mt-0">
               <GameHub store={schoolData} />
             </TabsContent>
 
-            <TabsContent value="icard" className="mt-0 h-full">
+            <TabsContent value="icard" className="mt-0">
               <PlayerIDCardManager store={schoolData} section={selectedSection || 'sports'} />
             </TabsContent>
 
-            <TabsContent value="daily-report" className="mt-0 h-full">
+            <TabsContent value="daily-report" className="mt-0">
               <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />
             </TabsContent>
 
-            <TabsContent value="students" className="mt-0 space-y-6 sm:space-y-8 animate-in fade-in duration-700 h-full">
+            <TabsContent value="students" className="mt-0 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {[
@@ -803,11 +803,11 @@ export default function WaghambaApp() {
               initialPlayerId={sharePlayerId} 
             />
 
-            <TabsContent value="i-card" className="mt-0 h-full">
+            <TabsContent value="i-card" className="mt-0">
               <PlayerIDCardManager store={schoolData} />
             </TabsContent>
 
-            <TabsContent value="profile" className="mt-0 h-full">
+            <TabsContent value="profile" className="mt-0">
                <Settings language={language} setLanguage={setLanguage} />
             </TabsContent>
 
@@ -837,7 +837,7 @@ export default function WaghambaApp() {
 
   if (stage === 'selector') {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="max-w-4xl w-full space-y-6 sm:space-y-12 my-auto py-6">
           <div className="text-center space-y-4 sm:space-y-6">
             <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-2 sm:mb-4 flex items-center justify-center bg-white rounded-2xl sm:rounded-[2.5rem] shadow-xl sm:shadow-2xl border-2 sm:border-4 border-primary/10 p-2 overflow-hidden">
@@ -874,7 +874,7 @@ export default function WaghambaApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-muted/20 to-primary/5 flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-white via-muted/20 to-primary/5 flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden overflow-y-auto">
       {/* Decorative Blur Spheres */}
       <div className="absolute top-10 left-10 w-72 h-72 bg-accent/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />

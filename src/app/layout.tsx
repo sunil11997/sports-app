@@ -51,7 +51,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
-      <body className="antialiased font-sans overflow-x-hidden w-full max-w-full" suppressHydrationWarning>
+      <body className="antialiased font-sans overflow-x-clip min-h-screen w-full max-w-full" suppressHydrationWarning>
         <FirebaseClientProvider>
           <PWAProvider>
             <ServiceWorkerRegister />
