@@ -57,6 +57,11 @@ class SoundEffects {
     if (!this.enabled) return;
     sounds.playBuzzer(1.2);
   }
+
+  public playDoOrDie() {
+    if (!this.enabled) return;
+    sounds.playDoOrDie(2.4);
+  }
 }
 
 const sfx = new SoundEffects();
@@ -134,6 +139,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const [timeoutsB, setTimeoutsB] = useState<number>(2);
   const [timeoutClock, setTimeoutClock] = useState<number | null>(null);
 
+  // Computed: Current Raiding Team's Empty Raids & Do-Or-Die status
+  const currentRaidingEmptyRaids = raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB;
+  const isDoOrDieRaid = sport === 'Kabaddi' && currentRaidingEmptyRaids >= 2;
+
   // -------------------------------------------------------------
   // KHO-KHO SPECIFIC STATES
   // -------------------------------------------------------------
@@ -185,18 +194,35 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
           else if (next === 0) {
             sfx.playBuzzer();
             setIsRaidRunning(false);
-            toast({
-              title: "⏰ रेड वेळ संपली (Raid Time Out!)",
-              description: `30 सेकंद पूर्ण झाले आहेत. गुण / आउट तपासा.`,
-              variant: "destructive",
-            });
+            
+            // In Kabaddi, 30s timeout on 3rd raid (Do-or-Die) means raider is OUT!
+            const isDoOrDieCurrent = (raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB) >= 2;
+            if (isDoOrDieCurrent) {
+              const defTeam = raidingTeam === 'A' ? 'B' : 'A';
+              const rName = raidingTeam === 'A' ? teamACustomName : teamBCustomName;
+              const dName = raidingTeam === 'A' ? teamBCustomName : teamACustomName;
+              addScore(defTeam, 1, 'Do-Or-Die Out');
+              if (raidingTeam === 'A') setEmptyRaidsA(0);
+              else setEmptyRaidsB(0);
+              toast({
+                title: "💀 डू ऑर डाय वेळ संपली! (Do-Or-Die Timeout)",
+                description: `${rName} ची ३० सेकंदांची वेळ संपली & रेडर बाद! ${dName} ला +१ गुण.`,
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "⏰ रेड वेळ संपली (Raid Time Out!)",
+                description: `30 सेकंद पूर्ण झाले आहेत. गुण / आउट तपासा.`,
+                variant: "destructive",
+              });
+            }
           }
           return next;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRaidRunning, raidSeconds, toast]);
+  }, [isRaidRunning, raidSeconds, raidingTeam, emptyRaidsA, emptyRaidsB, teamACustomName, teamBCustomName, toast]);
 
   // -------------------------------------------------------------
   // MATCH CLOCK INTERVAL
@@ -273,6 +299,16 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const startRaidClock = () => {
     if (raidSeconds === 0) setRaidSeconds(30);
     setIsRaidRunning(true);
+
+    if (sport === 'Kabaddi' && (raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB) >= 2) {
+      sfx.playDoOrDie();
+      const tName = raidingTeam === 'A' ? teamACustomName : teamBCustomName;
+      toast({
+        title: "⚡ डू ऑर डाय रेड सुरू! (DO OR DIE RAID) ⚡",
+        description: `${tName} ची ३ री रेड! गुण मिळवणे अनिवार्य आहे, अन्यथा रेडर बाद!`,
+        className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-2xl animate-bounce"
+      });
+    }
   };
 
   const pauseRaidClock = () => {
@@ -311,7 +347,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
 
     // Kabaddi specific adjustments
     if (sport === 'Kabaddi') {
-      if (type.includes('Raid') || type.includes('Touch') || type.includes('Bonus')) {
+      if (type.includes('Raid') || type.includes('Touch') || type.includes('Bonus') || type.includes('Do-Or-Die Touch')) {
         // Successful raid: reset empty raid count for raiding team
         if (team === 'A') setEmptyRaidsA(0);
         else setEmptyRaidsB(0);
@@ -322,8 +358,8 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
         } else {
           setDefendersA(prev => Math.max(1, prev - (points >= 3 ? points - (type.includes('Bonus') ? 1 : 0) : points)));
         }
-      } else if (type.includes('Tackle') || type.includes('Super Tackle')) {
-        // Raider tackled out: defending team gets point
+      } else if (type.includes('Tackle') || type.includes('Super Tackle') || type.includes('Do-Or-Die Out')) {
+        // Raider tackled out or Do-or-Die failed: defending team gets point
         // Deduct 1 defender from the raiding team
         if (team === 'A') {
           setDefendersB(prev => Math.max(1, prev - 1));
@@ -387,21 +423,48 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   // Handle Empty Raid
   const handleEmptyRaid = () => {
     if (raidingTeam === 'A') {
-      const nextCount = emptyRaidsA + 1;
-      setEmptyRaidsA(nextCount);
-      if (nextCount >= 3) {
-        // Do or die failed: opponent gets point & raider out
+      if (emptyRaidsA >= 2) {
+        // This was 3rd raid (Do-Or-Die) and raider did empty raid -> OUT!
+        sfx.playWhistle();
         addScore('B', 1, 'Do-Or-Die Out');
         setEmptyRaidsA(0);
+        toast({
+          title: "💀 डू ऑर डाय रेड अयशस्वी! (Do-or-Die Failed)",
+          description: `${teamACustomName} चा रेडर बाद! ${teamBCustomName} ला +१ गुण मिळाला.`,
+          variant: "destructive"
+        });
         return;
       }
+      const nextCount = emptyRaidsA + 1;
+      setEmptyRaidsA(nextCount);
+      if (nextCount === 2) {
+        toast({
+          title: "⚠️ सावधान: पुढील रेड 'डू ऑर डाय' असेल!",
+          description: `${teamACustomName} च्या २ रिकाम्या रेड झाल्या आहेत. आता त्यांची पुढील ३ री रेड डू ऑर डाय असेल!`,
+          className: "bg-amber-500 text-slate-950 font-black"
+        });
+      }
     } else {
-      const nextCount = emptyRaidsB + 1;
-      setEmptyRaidsB(nextCount);
-      if (nextCount >= 3) {
+      if (emptyRaidsB >= 2) {
+        // This was 3rd raid (Do-Or-Die) and raider did empty raid -> OUT!
+        sfx.playWhistle();
         addScore('A', 1, 'Do-Or-Die Out');
         setEmptyRaidsB(0);
+        toast({
+          title: "💀 डू ऑर डाय रेड अयशस्वी! (Do-or-Die Failed)",
+          description: `${teamBCustomName} चा रेडर बाद! ${teamACustomName} ला +१ गुण मिळाला.`,
+          variant: "destructive"
+        });
         return;
+      }
+      const nextCount = emptyRaidsB + 1;
+      setEmptyRaidsB(nextCount);
+      if (nextCount === 2) {
+        toast({
+          title: "⚠️ सावधान: पुढील रेड 'डू ऑर डाय' असेल!",
+          description: `${teamBCustomName} च्या २ रिकाम्या रेड झाल्या आहेत. आता त्यांची पुढील ३ री रेड डू ऑर डाय असेल!`,
+          className: "bg-amber-500 text-slate-950 font-black"
+        });
       }
     }
     resetRaidClock(raidingTeam === 'A' ? 'B' : 'A');
@@ -668,10 +731,67 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                   <p className="text-[10px] font-bold text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
                   <p className="text-lg font-black text-primary">{defendersA} / 7</p>
                 </div>
-                <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">रिकामी रेड (Empty)</p>
-                  <p className={cn("text-lg font-black", emptyRaidsA === 2 ? "text-red-500 animate-pulse font-extrabold" : "text-primary")}>
-                    {emptyRaidsA} / 2 {emptyRaidsA === 2 && "⚠️ DO-OR-DIE!"}
+                <div className={cn(
+                  "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
+                  emptyRaidsA === 2 ? "bg-red-50 border-red-400 dark:bg-red-950/40 dark:border-red-800 ring-2 ring-red-500/40" : "bg-muted/40 border-muted"
+                )}>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">रेड स्थिती (Raid Track)</p>
+                    {emptyRaidsA === 2 && (
+                      <Badge className="bg-red-600 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1.5 py-0">
+                        ⚡ DO-OR-DIE
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Pro Kabaddi Style 3-Raid Tracker */}
+                  <div className="flex items-center justify-center gap-1.5 my-1">
+                    <button
+                      type="button"
+                      onClick={() => setEmptyRaidsA(prev => prev === 1 ? 0 : 1)}
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
+                        emptyRaidsA >= 1 
+                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                      )}
+                      title="रेड १ रिकामी (Click to toggle)"
+                    >
+                      १
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEmptyRaidsA(prev => prev === 2 ? 1 : 2)}
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
+                        emptyRaidsA >= 2 
+                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                      )}
+                      title="रेड २ रिकामी (Click to toggle)"
+                    >
+                      २
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = emptyRaidsA === 2 ? 0 : 2;
+                        setEmptyRaidsA(next);
+                        if (next === 2) sfx.playDoOrDie();
+                      }}
+                      className={cn(
+                        "px-2 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all active-scale",
+                        emptyRaidsA === 2 
+                          ? "bg-red-600 text-white animate-pulse shadow-md ring-2 ring-red-400 font-extrabold" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                      )}
+                      title="३ री रेड: डू ऑर डाय (Click to trigger)"
+                    >
+                      ⚡ ३: DO-OR-DIE
+                    </button>
+                  </div>
+                  <p className="text-[8px] text-center text-muted-foreground font-bold">
+                    {emptyRaidsA === 0 ? "दोन्ही रेड सुरक्षित" : emptyRaidsA === 1 ? "१ रिकामी रेड झाली" : "⚠️ ३ री रेड डू ऑर डाय!"}
                   </p>
                 </div>
               </div>
@@ -833,26 +953,105 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
           {/* ---------------- 30-SEC RAID CLOCK / INNING CLOCK ---------------- */}
           {sport === 'Kabaddi' && (
             <Card className={cn(
-              "p-6 rounded-[2.5rem] border-4 text-center shadow-2xl relative overflow-hidden transition-all",
-              raidSeconds <= 5 ? "border-red-600 bg-red-950/20" : raidSeconds <= 10 ? "border-amber-500 bg-amber-950/10" : "border-primary/20",
+              "p-5 sm:p-6 rounded-[2.5rem] border-4 text-center shadow-2xl relative overflow-hidden transition-all",
+              isDoOrDieRaid 
+                ? "border-red-600 bg-red-950/20 ring-4 ring-red-500/60 shadow-[0_0_40px_rgba(220,38,38,0.4)]" 
+                : raidSeconds <= 5 
+                  ? "border-red-600 bg-red-950/20" 
+                  : raidSeconds <= 10 
+                    ? "border-amber-500 bg-amber-950/10" 
+                    : "border-primary/20",
               isFullscreen ? "bg-slate-900 text-white" : "bg-white"
             )}>
+              {/* DO OR DIE RAID ALERT BANNER */}
+              {isDoOrDieRaid && (
+                <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white py-2 px-3 rounded-2xl mb-3 flex items-center justify-between shadow-lg border border-amber-300/40 animate-pulse">
+                  <div className="flex items-center gap-2 text-left">
+                    <Zap className="w-5 h-5 text-amber-300 fill-amber-300 animate-bounce shrink-0" />
+                    <div>
+                      <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-200">
+                        ⚡ डू ऑर डाय रेड (DO OR DIE RAID) ⚡
+                      </p>
+                      <p className="text-[9px] font-bold text-white/90">
+                        २ रिकाम्या रेडनंतर ही ३ री रेड आहे &bull; गुण मिळवणे अनिवार्य!
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => sfx.playDoOrDie()}
+                    className="h-7 px-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale"
+                    title="डू ऑर डाय सायरन वाजवा (Sound Siren)"
+                  >
+                    🚨 सायरन (Siren)
+                  </Button>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5" /> ३० सेकंद प्रो रेडर घड्याळ
+                <span className={cn(
+                  "text-[10px] font-black uppercase tracking-widest flex items-center gap-1",
+                  isDoOrDieRaid ? "text-red-600 animate-pulse font-extrabold" : "text-orange-600"
+                )}>
+                  <Flame className="w-3.5 h-3.5" /> {isDoOrDieRaid ? "⚡ ३ री रेड: डू ऑर डाय" : "३० सेकंद प्रो रेडर घड्याळ"}
                 </span>
-                <span className="text-[10px] font-bold text-muted-foreground">
-                  {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड
+                <span className={cn(
+                  "text-[10px] font-bold",
+                  isDoOrDieRaid ? "text-red-600 font-black" : "text-muted-foreground"
+                )}>
+                  {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड {isDoOrDieRaid && "(डू ऑर डाय)"}
                 </span>
               </div>
 
               {/* HUGE DIGITAL DIGITS */}
               <div className={cn(
                 "text-8xl md:text-9xl font-black font-mono tracking-tighter select-none my-2 transition-colors",
-                raidSeconds <= 5 ? "text-red-600 animate-pulse" : raidSeconds <= 10 ? "text-amber-500" : "text-primary dark:text-emerald-400"
+                isDoOrDieRaid 
+                  ? "text-red-600 animate-pulse" 
+                  : raidSeconds <= 5 
+                    ? "text-red-600 animate-pulse" 
+                    : raidSeconds <= 10 
+                      ? "text-amber-500" 
+                      : "text-primary dark:text-emerald-400"
               )}>
                 {raidSeconds.toString().padStart(2, '0')}
               </div>
+
+              {/* DO-OR-DIE QUICK ACTION BUTTONS */}
+              {isDoOrDieRaid && (
+                <div className="grid grid-cols-2 gap-2 my-2">
+                  <Button
+                    onClick={() => {
+                      addScore(raidingTeam, 1, 'Do-Or-Die Touch');
+                      toast({
+                        title: "🎉 डू ऑर डाय यशस्वी! (Success!)",
+                        description: `${raidingTeam === 'A' ? teamACustomName : teamBCustomName} ने डू ऑर डाय रेडमध्ये गुण मिळवला!`,
+                        className: "bg-emerald-600 text-white font-bold"
+                      });
+                    }}
+                    className="h-11 rounded-xl font-black text-xs uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active-scale flex items-center justify-center gap-1"
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> ✅ डू ऑर डाय गुण (+१)
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const defTeam = raidingTeam === 'A' ? 'B' : 'A';
+                      sfx.playWhistle();
+                      addScore(defTeam, 1, 'Do-Or-Die Out');
+                      if (raidingTeam === 'A') setEmptyRaidsA(0);
+                      else setEmptyRaidsB(0);
+                      toast({
+                        title: "💀 डू ऑर डाय अयशस्वी! (Raider Out)",
+                        description: `${raidingTeam === 'A' ? teamACustomName : teamBCustomName} चा रेडर बाद! विपक्षी संघाला +१ गुण.`,
+                        variant: "destructive"
+                      });
+                    }}
+                    className="h-11 rounded-xl font-black text-xs uppercase bg-red-600 hover:bg-red-700 text-white shadow-md active-scale flex items-center justify-center gap-1"
+                  >
+                    <ShieldAlert className="w-4 h-4" /> ❌ रेडर बाद (विपक्षी +१)
+                  </Button>
+                </div>
+              )}
 
               {/* RAID CONTROL BUTTONS */}
               <div className="grid grid-cols-3 gap-2 mt-4">
@@ -860,11 +1059,15 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                   onClick={isRaidRunning ? pauseRaidClock : startRaidClock}
                   className={cn(
                     "h-14 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-lg active-scale",
-                    isRaidRunning ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                    isRaidRunning 
+                      ? "bg-amber-600 hover:bg-amber-700" 
+                      : isDoOrDieRaid 
+                        ? "bg-red-600 hover:bg-red-700 animate-pulse" 
+                        : "bg-emerald-600 hover:bg-emerald-700"
                   )}
                 >
                   {isRaidRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                  {isRaidRunning ? "थांबवा" : "रेड सुरू"}
+                  {isRaidRunning ? "थांबवा" : isDoOrDieRaid ? "⚡ रेड सुरू (Do-or-Die)" : "रेड सुरू"}
                 </Button>
 
                 <Button
@@ -877,19 +1080,51 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 <Button
                   onClick={handleEmptyRaid}
                   variant="outline"
-                  className="h-14 rounded-2xl font-black text-[11px] uppercase tracking-wider border-slate-300 dark:border-slate-700 hover:bg-muted"
+                  className={cn(
+                    "h-14 rounded-2xl font-black text-[11px] uppercase tracking-wider border hover:bg-muted active-scale",
+                    isDoOrDieRaid ? "border-red-500 text-red-600 bg-red-50 dark:bg-red-950/40" : "border-slate-300 dark:border-slate-700"
+                  )}
                 >
-                  रिकामी रेड (Empty)
+                  {isDoOrDieRaid ? "डू ऑर डाय बाद (Empty)" : "रिकामी रेड (Empty)"}
                 </Button>
               </div>
 
               {/* Sound Effect Test Triggers */}
-              <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t">
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-3 pt-3 border-t">
                 <Button size="sm" variant="ghost" onClick={() => sfx.playWhistle()} className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">
                   🔊 शिट्टी (Whistle)
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => sfx.playBuzzer()} className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">
                   📢 बजर (Buzzer)
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => sfx.playDoOrDie()} className="h-7 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50">
+                  ⚡ सायरन (Do-or-Die Siren)
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (isDoOrDieRaid) {
+                      if (raidingTeam === 'A') setEmptyRaidsA(0);
+                      else setEmptyRaidsB(0);
+                      toast({ title: "डू ऑर डाय रेड रद्द (Reset Do-or-Die)" });
+                    } else {
+                      if (raidingTeam === 'A') setEmptyRaidsA(2);
+                      else setEmptyRaidsB(2);
+                      sfx.playDoOrDie();
+                      toast({
+                        title: "⚡ डू ऑर डाय रेड सक्रिय! (Do-or-Die Active)",
+                        description: `${raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची ३ री रेड आता डू ऑर डाय आहे!`,
+                        className: "bg-red-600 text-white font-bold"
+                      });
+                    }
+                  }}
+                  className={cn(
+                    "h-7 text-[10px] font-black rounded-xl border transition-all",
+                    isDoOrDieRaid ? "bg-red-600 text-white hover:bg-red-700 border-red-600" : "text-amber-700 border-amber-400 hover:bg-amber-50"
+                  )}
+                >
+                  {isDoOrDieRaid ? "✕ Do-or-Die बंद" : "⚡ Do-or-Die सेट करा"}
                 </Button>
               </div>
             </Card>
@@ -1028,10 +1263,67 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                   <p className="text-[10px] font-bold text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
                   <p className="text-lg font-black text-primary">{defendersB} / 7</p>
                 </div>
-                <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">रिकामी रेड (Empty)</p>
-                  <p className={cn("text-lg font-black", emptyRaidsB === 2 ? "text-red-500 animate-pulse font-extrabold" : "text-primary")}>
-                    {emptyRaidsB} / 2 {emptyRaidsB === 2 && "⚠️ DO-OR-DIE!"}
+                <div className={cn(
+                  "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
+                  emptyRaidsB === 2 ? "bg-red-50 border-red-400 dark:bg-red-950/40 dark:border-red-800 ring-2 ring-red-500/40" : "bg-muted/40 border-muted"
+                )}>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">रेड स्थिती (Raid Track)</p>
+                    {emptyRaidsB === 2 && (
+                      <Badge className="bg-red-600 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1.5 py-0">
+                        ⚡ DO-OR-DIE
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Pro Kabaddi Style 3-Raid Tracker */}
+                  <div className="flex items-center justify-center gap-1.5 my-1">
+                    <button
+                      type="button"
+                      onClick={() => setEmptyRaidsB(prev => prev === 1 ? 0 : 1)}
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
+                        emptyRaidsB >= 1 
+                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                      )}
+                      title="रेड १ रिकामी (Click to toggle)"
+                    >
+                      १
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEmptyRaidsB(prev => prev === 2 ? 1 : 2)}
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
+                        emptyRaidsB >= 2 
+                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                      )}
+                      title="रेड २ रिकामी (Click to toggle)"
+                    >
+                      २
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = emptyRaidsB === 2 ? 0 : 2;
+                        setEmptyRaidsB(next);
+                        if (next === 2) sfx.playDoOrDie();
+                      }}
+                      className={cn(
+                        "px-2 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all active-scale",
+                        emptyRaidsB === 2 
+                          ? "bg-red-600 text-white animate-pulse shadow-md ring-2 ring-red-400 font-extrabold" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                      )}
+                      title="३ री रेड: डू ऑर डाय (Click to trigger)"
+                    >
+                      ⚡ ३: DO-OR-DIE
+                    </button>
+                  </div>
+                  <p className="text-[8px] text-center text-muted-foreground font-bold">
+                    {emptyRaidsB === 0 ? "दोन्ही रेड सुरक्षित" : emptyRaidsB === 1 ? "१ रिकामी रेड झाली" : "⚠️ ३ री रेड डू ऑर डाय!"}
                   </p>
                 </div>
               </div>
