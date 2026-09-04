@@ -340,7 +340,7 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto bg-white/95 backdrop-blur-2xl border border-primary/10 rounded-[2.5rem] shadow-2xl p-6 sm:p-8 space-y-6 animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden">
+    <Card className="w-full max-w-lg mx-auto bg-white/95 backdrop-blur-2xl border border-primary/10 rounded-2xl sm:rounded-[2.5rem] shadow-2xl p-4 sm:p-8 space-y-4 sm:space-y-6 animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden">
       
       {/* Background Decorative Accents */}
       <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
@@ -348,14 +348,14 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
 
       {/* Header */}
       <div className="text-center space-y-2 relative z-10">
-        <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto shadow-inner mb-3">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary/10 text-primary rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto shadow-inner mb-2 sm:mb-3">
           {step === 'verified' ? (
-            <CheckCircle2 className="w-8 h-8 text-emerald-600 animate-bounce" />
+            <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 animate-bounce" />
           ) : (
-            <ShieldCheck className="w-8 h-8 text-primary" />
+            <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
           )}
         </div>
-        <h3 className="text-2xl font-display font-black uppercase text-primary tracking-tight">
+        <h3 className="text-xl sm:text-2xl font-display font-black uppercase text-primary tracking-tight">
           {t.title}
         </h3>
         <p className="text-xs font-bold text-muted-foreground max-w-xs mx-auto leading-relaxed">
@@ -364,23 +364,23 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
       </div>
 
       {step === 'input' && (
-        <div className="space-y-5 relative z-10">
+        <div className="space-y-4 sm:space-y-5 relative z-10">
 
           {/* PRIMARY OPTION: Official Google 2-Step Verification */}
-          <div className="bg-primary/5 p-4 rounded-3xl border-2 border-primary/15 space-y-3 shadow-sm">
+          <div className="bg-primary/5 p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border-2 border-primary/15 space-y-2.5 sm:space-y-3 shadow-sm">
             <Button
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading}
-              className="w-full h-16 rounded-2xl bg-white hover:bg-neutral-50 text-neutral-800 border-2 border-neutral-200 shadow-md font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3 transition-all active-scale"
+              className="w-full h-13 sm:h-16 rounded-xl sm:rounded-2xl bg-white hover:bg-neutral-50 text-neutral-800 border-2 border-neutral-200 shadow-md font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 sm:gap-3 transition-all active-scale"
             >
               {isGoogleLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-primary" />
                   <span>{t.googleVerifying}</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
@@ -390,13 +390,13 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
                 </>
               )}
             </Button>
-            <p className="text-[11px] font-bold text-muted-foreground text-center px-2 leading-relaxed">
+            <p className="text-[10px] sm:text-[11px] font-bold text-muted-foreground text-center px-1 sm:px-2 leading-relaxed">
               {t.googleDesc}
             </p>
           </div>
 
           {/* Divider */}
-          <div className="relative flex items-center justify-center my-2">
+          <div className="relative flex items-center justify-center my-1.5 sm:my-2">
             <div className="border-t border-primary/10 w-full" />
             <span className="bg-white px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 shrink-0">
               {t.orDivider}
@@ -405,12 +405,12 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
           </div>
 
           {/* Phone Form Input */}
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5">
               <PhoneCall className="w-3.5 h-3.5 text-accent-foreground" /> {t.mobileTab}
             </label>
             <div className="flex items-center gap-2">
-              <div className="h-14 px-4 bg-muted/30 border-2 border-primary/10 rounded-2xl flex items-center justify-center font-black text-sm text-primary shadow-sm">
+              <div className="h-12 sm:h-14 px-3 sm:px-4 bg-muted/30 border-2 border-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm text-primary shadow-sm shrink-0">
                 🇮🇳 +91
               </div>
               <Input
@@ -419,7 +419,7 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 placeholder={t.phonePlaceholder}
-                className="h-14 rounded-2xl text-base font-bold tracking-wider border-2 border-primary/10 focus:border-primary px-4 bg-white/70"
+                className="h-12 sm:h-14 rounded-xl sm:rounded-2xl text-sm sm:text-base font-bold tracking-wider border-2 border-primary/10 focus:border-primary px-3 sm:px-4 bg-white/70"
               />
             </div>
           </div>
@@ -430,11 +430,11 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
           <Button
             onClick={handleSendOtp}
             disabled={isSending || phone.replace(/\D/g, '').length !== 10}
-            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-display font-black uppercase tracking-widest shadow-lg text-xs active-scale transition-all"
+            className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-primary hover:bg-primary/90 text-white font-display font-black uppercase tracking-widest shadow-lg text-xs active-scale transition-all"
           >
             {isSending ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                 {t.sending}
               </>
             ) : (
@@ -445,16 +445,16 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
           </Button>
 
           {errorInfo && (
-            <div className="p-4 bg-destructive/10 rounded-2xl border border-destructive/20 text-destructive text-xs space-y-1.5 animate-in fade-in duration-300">
-              <div className="flex items-center gap-2 font-black uppercase text-[11px] tracking-wider">
+            <div className="p-3.5 sm:p-4 bg-destructive/10 rounded-xl sm:rounded-2xl border border-destructive/20 text-destructive text-xs space-y-1 sm:space-y-1.5 animate-in fade-in duration-300">
+              <div className="flex items-center gap-2 font-black uppercase text-[10px] sm:text-[11px] tracking-wider">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorInfo.title}</span>
               </div>
-              <p className="font-semibold text-muted-foreground leading-relaxed">
+              <p className="font-semibold text-muted-foreground leading-relaxed text-[11px] sm:text-xs">
                 {errorInfo.message}
               </p>
               {errorInfo.code && errorInfo.code !== 'unknown' && (
-                <p className="text-[10px] font-mono text-muted-foreground/70 pt-1">
+                <p className="text-[9px] sm:text-[10px] font-mono text-muted-foreground/70 pt-0.5 sm:pt-1">
                   Error Code: {errorInfo.code}
                 </p>
               )}
@@ -462,15 +462,15 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
           )}
 
           {/* Security & Data Protection Notice */}
-          <div className="p-3.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-[11px] text-emerald-900 flex items-start gap-2.5">
-            <Lock className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+          <div className="p-3 sm:p-3.5 bg-emerald-500/10 rounded-xl sm:rounded-2xl border border-emerald-500/20 text-[10px] sm:text-[11px] text-emerald-900 flex items-start gap-2 sm:gap-2.5">
+            <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 shrink-0 mt-0.5" />
             <span className="font-semibold leading-relaxed">{t.securityNote}</span>
           </div>
         </div>
       )}
 
       {step === 'otp' && (
-        <div className="space-y-6 relative z-10 animate-in fade-in duration-300">
+        <div className="space-y-5 sm:space-y-6 relative z-10 animate-in fade-in duration-300">
           <div className="text-center space-y-1">
             <Badge className="bg-primary/10 text-primary border-primary/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-1">
               {t.enterOtpHeader}
@@ -481,7 +481,7 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
           </div>
 
           {/* 6 Digit Input Grid */}
-          <div className="flex justify-center gap-2 sm:gap-3 my-4">
+          <div className="flex justify-center gap-1.5 sm:gap-3 my-3 sm:my-4">
             {otp.map((digit, index) => (
               <Input
                 key={index}
@@ -492,7 +492,7 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
                 value={digit}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-black rounded-2xl border-2 border-primary/20 focus:border-primary focus:ring-2 ring-primary/20 p-0 shadow-sm bg-white"
+                className="w-9 h-12 xs:w-10 xs:h-14 sm:w-12 sm:h-16 text-center text-lg sm:text-xl font-black rounded-xl sm:rounded-2xl border-2 border-primary/20 focus:border-primary focus:ring-2 ring-primary/20 p-0 shadow-sm bg-white"
               />
             ))}
           </div>
@@ -501,16 +501,16 @@ export function OtpLogin({ onLoginSuccess, language = 'English' }: OtpLoginProps
           <Button
             onClick={handleVerifyOtp}
             disabled={isVerifying || otp.join('').length !== 6}
-            className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-display font-black uppercase tracking-widest shadow-xl text-sm active-scale transition-all"
+            className="w-full h-13 sm:h-16 rounded-xl sm:rounded-2xl bg-primary hover:bg-primary/90 text-white font-display font-black uppercase tracking-widest shadow-xl text-xs sm:text-sm active-scale transition-all"
           >
             {isVerifying ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                 {t.verifying}
               </>
             ) : (
               <>
-                {t.verifyOtp} <ArrowRight className="w-5 h-5 ml-2" />
+                {t.verifyOtp} <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </>
             )}
           </Button>

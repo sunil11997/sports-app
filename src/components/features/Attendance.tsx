@@ -457,64 +457,64 @@ export function Attendance({ store, section, language = 'English' }: { store: an
       )}
 
       {/* Main View Mode Selector (Grid vs Absentees Tracker) */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-white p-4 rounded-[2rem] border shadow-lg">
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl border shadow-inner">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-2xl sm:rounded-[2rem] border shadow-lg">
+        <div className="grid grid-cols-2 sm:flex bg-slate-100 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border shadow-inner gap-1">
           <Button
             variant={viewMode === 'grid' ? "default" : "ghost"}
             onClick={() => setViewMode('grid')}
             className={cn(
-              "h-11 rounded-xl px-6 font-black uppercase text-xs tracking-wider transition-all flex items-center gap-2",
+              "h-10 sm:h-11 rounded-lg sm:rounded-xl px-2 sm:px-6 font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-center",
               viewMode === 'grid' ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-white"
             )}
           >
-            <CalendarDays className="w-4 h-4" />
-            {localMarathiView ? 'मासिक नोंदवही (Grid)' : 'Monthly Register'}
+            <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{localMarathiView ? 'मासिक नोंदवही' : 'Monthly Register'}</span>
           </Button>
 
           <Button
             variant={viewMode === 'absentees' ? "default" : "ghost"}
             onClick={() => setViewMode('absentees')}
             className={cn(
-              "h-11 rounded-xl px-6 font-black uppercase text-xs tracking-wider transition-all flex items-center gap-2 relative",
+              "h-10 sm:h-11 rounded-lg sm:rounded-xl px-2 sm:px-6 font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-center relative",
               viewMode === 'absentees' ? "bg-destructive text-white shadow-md" : "text-destructive hover:bg-rose-50"
             )}
           >
-            <UserX className="w-4 h-4" />
-            {localMarathiView ? 'गैरहजर विद्यार्थी Tracker' : 'Absent Students Tracker'}
+            <UserX className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{localMarathiView ? 'गैरहजर ट्रॅकर' : 'Absentee Tracker'}</span>
             {absenteesData.morningTotalAbsent > 0 && (
-              <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-destructive shadow-sm">
+              <span className="ml-0.5 sm:ml-1 px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-white text-destructive shadow-sm">
                 {absenteesData.morningTotalAbsent}
               </span>
             )}
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3">
           <Button
             onClick={() => setIsFaceAttendanceOpen(true)}
-            className="h-11 rounded-xl px-5 font-black uppercase text-xs tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-2 active-scale transition-all"
+            className="h-10 sm:h-11 rounded-xl px-3 sm:px-5 font-black uppercase text-[10px] sm:text-xs tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-1.5 sm:gap-2 active-scale transition-all flex-1 sm:flex-initial justify-center"
           >
-            <Camera className="w-4 h-4" />
-            <Sparkles className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
-            {localMarathiView ? 'चेहरा हजेरी (Face Attendance)' : 'Face Attendance'}
+            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-200 animate-pulse" />
+            <span className="truncate">{localMarathiView ? 'चेहरा हजेरी' : 'Face Attendance'}</span>
           </Button>
 
-          <div className="flex bg-muted/40 p-1 rounded-xl border">
-            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-9 px-4 text-[10px] font-black uppercase rounded-lg">English</Button>
-            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-9 px-4 text-[10px] font-black uppercase rounded-lg">मराठी</Button>
+          <div className="flex bg-muted/40 p-1 rounded-xl border shrink-0">
+            <Button variant={!localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(false)} className="h-8 sm:h-9 px-3 sm:px-4 text-[9px] sm:text-[10px] font-black uppercase rounded-lg">English</Button>
+            <Button variant={localMarathiView ? "default" : "ghost"} onClick={() => setLocalMarathiView(true)} className="h-8 sm:h-9 px-3 sm:px-4 text-[9px] sm:text-[10px] font-black uppercase rounded-lg">मराठी</Button>
           </div>
         </div>
       </div>
 
       {/* Category Filter Chips */}
-      <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/40 rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
+      <div className="flex flex-nowrap sm:flex-wrap gap-1.5 p-1.5 bg-muted/40 rounded-xl sm:rounded-2xl border shadow-inner overflow-x-auto scrollbar-hide">
         {categories.map(cat => (
           <Button
             key={cat.id}
             variant={activeCategory === cat.id ? "default" : "ghost"}
             size="sm"
             className={cn(
-              "h-9 rounded-xl px-5 text-[10px] font-black uppercase transition-all whitespace-nowrap",
+              "h-8 sm:h-9 rounded-lg sm:rounded-xl px-3 sm:px-5 text-[9px] sm:text-[10px] font-black uppercase transition-all whitespace-nowrap shrink-0",
               activeCategory === cat.id ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:bg-white'
             )}
             onClick={() => setActiveCategory(cat.id)}
@@ -527,53 +527,53 @@ export function Attendance({ store, section, language = 'English' }: { store: an
       {/* VIEW MODE 1: MONTHLY GRID VIEW */}
       {viewMode === 'grid' && (
         <>
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2.5rem] border shadow-xl">
-            <div className="flex items-center gap-6 flex-1">
+          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 sm:gap-6 bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border shadow-xl">
+            <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 flex-1">
               <div className="flex flex-col">
-                <h2 className="text-2xl font-black text-primary uppercase tracking-tight">Presence Log</h2>
-                <div className="flex bg-muted/40 p-1 rounded-xl border mt-2">
-                  <Button variant={activeSession === 'Morning' ? "default" : "ghost"} onClick={() => setActiveSession('Morning')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Morning</Button>
-                  <Button variant={activeSession === 'Evening' ? "default" : "ghost"} onClick={() => setActiveSession('Evening')} className="h-8 px-4 text-[9px] font-black uppercase rounded-lg">Evening</Button>
+                <h2 className="text-xl sm:text-2xl font-black text-primary uppercase tracking-tight">Presence Log</h2>
+                <div className="flex bg-muted/40 p-1 rounded-xl border mt-1.5 sm:mt-2 w-fit">
+                  <Button variant={activeSession === 'Morning' ? "default" : "ghost"} onClick={() => setActiveSession('Morning')} className="h-7 sm:h-8 px-3 sm:px-4 text-[9px] font-black uppercase rounded-lg">Morning</Button>
+                  <Button variant={activeSession === 'Evening' ? "default" : "ghost"} onClick={() => setActiveSession('Evening')} className="h-7 sm:h-8 px-3 sm:px-4 text-[9px] font-black uppercase rounded-lg">Evening</Button>
                 </div>
               </div>
             </div>
             
-            <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 lg:w-[450px]">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-primary/40" />
+            <div className="flex flex-col md:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
+              <div className="relative flex-1 w-full lg:w-[400px]">
+                <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-6 sm:h-6 text-primary/40" />
                 <Input 
                   placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
-                  className="pl-14 h-16 rounded-[1.2rem] border-2 border-primary/10 bg-muted/20 font-black text-lg shadow-inner focus:bg-white transition-all"
+                  className="pl-11 sm:pl-14 h-12 sm:h-16 rounded-xl sm:rounded-[1.2rem] border-2 border-primary/10 bg-muted/20 font-bold sm:font-black text-xs sm:text-lg shadow-inner focus:bg-white transition-all" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               
-              <div className="flex items-center gap-2">
-                 <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border shadow-inner">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
+              <div className="flex items-center justify-between sm:justify-start gap-2">
+                 <div className="flex items-center gap-1 sm:gap-2 bg-muted/30 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border shadow-inner">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}>
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <span className="font-black text-primary uppercase text-[10px] min-w-[100px] text-center tracking-widest">
+                    <span className="font-black text-primary uppercase text-[9px] sm:text-[10px] min-w-[80px] sm:min-w-[100px] text-center tracking-wider sm:tracking-widest">
                       {currentDate ? format(currentDate, 'MMM yyyy') : '...'}
                     </span>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl" onClick={() => currentDate && setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}>
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
-                  <Button onClick={handlePrint} className="h-12 px-6 bg-primary text-white rounded-xl font-black uppercase text-xs shadow-lg active-scale">
-                    <Printer className="w-4 h-4 mr-2" /> Print
+                  <Button onClick={handlePrint} className="h-10 sm:h-12 px-4 sm:px-6 bg-primary text-white rounded-xl font-black uppercase text-xs shadow-lg active-scale">
+                    <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Print
                   </Button>
               </div>
             </div>
           </div>
 
-          <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
+          <Card className="border-2 rounded-2xl sm:rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
             <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
               <Table className="border-collapse min-w-max">
                 <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
-                  <TableRow className="h-14">
-                    <TableHead className="border-r px-6 font-black text-[11px] uppercase w-[220px] sticky left-0 top-0 bg-slate-200 z-[60]">Student Profile</TableHead>
+                  <TableRow className="h-12 sm:h-14">
+                    <TableHead className="border-r px-3 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase w-[150px] sm:w-[220px] sticky left-0 top-0 bg-slate-200 z-[60]">Student Profile</TableHead>
                     {days.map(day => (
                       <TableHead key={day.toString()} className="border-r px-1 font-black text-[10px] uppercase text-center w-[40px] sticky top-0 bg-slate-100 z-40">
                         {format(day, 'd')}
@@ -589,7 +589,7 @@ export function Attendance({ store, section, language = 'English' }: { store: an
                     let monthlyTotal = 0;
                     return (
                       <TableRow key={player.id} className="border-b h-14 group hover:bg-primary/5 transition-colors">
-                        <TableCell className="border-r px-6 text-[10px] font-black sticky left-0 bg-white z-20 uppercase border-r group-hover:bg-muted/5">
+                        <TableCell className="border-r px-3 sm:px-6 text-[9px] sm:text-[10px] font-black sticky left-0 bg-white z-20 uppercase group-hover:bg-muted/5 truncate max-w-[150px] sm:max-w-none">
                           {localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}
                         </TableCell>
                         {days.map(day => {
@@ -714,56 +714,56 @@ export function Attendance({ store, section, language = 'English' }: { store: an
           </div>
 
           {/* Metrics Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border-2 rounded-[2rem] p-6 bg-gradient-to-br from-amber-50 to-orange-50/50 border-amber-200 shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+            <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-gradient-to-br from-amber-50 to-orange-50/50 border-amber-200 shadow-md">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
+                  <p className="text-[9px] sm:text-[10px] font-black text-amber-800 uppercase tracking-widest">
                     ☀️ {localMarathiView ? 'सकाळ सत्र गैरहजर' : 'Morning Session Absentees'}
                   </p>
-                  <h3 className="text-4xl font-black text-amber-900 mt-1">
+                  <h3 className="text-2xl sm:text-4xl font-black text-amber-900 mt-0.5 sm:mt-1">
                     {absenteesData.morningTotalAbsent} <span className="text-xs font-bold text-amber-700">/ {absenteesData.total}</span>
                   </h3>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg">
-                  <Sun className="w-6 h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shrink-0">
+                  <Sun className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
               </div>
-              <div className="flex items-center justify-between text-[11px] font-bold text-amber-800 mt-3 pt-3 border-t border-amber-200/60">
+              <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-amber-800 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-amber-200/60">
                 <span>Present: <strong>{absenteesData.morningPresent}</strong></span>
                 <span>Explicit &apos;A&apos;: <strong>{absenteesData.morningExplicitAbsent}</strong></span>
                 <span>Unmarked: <strong>{absenteesData.morningUnmarked}</strong></span>
               </div>
             </Card>
 
-            <Card className="border-2 rounded-[2rem] p-6 bg-gradient-to-br from-indigo-50 to-blue-50/50 border-indigo-200 shadow-md">
+            <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-blue-50/50 border-indigo-200 shadow-md">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="text-[10px] font-black text-indigo-800 uppercase tracking-widest">
+                  <p className="text-[9px] sm:text-[10px] font-black text-indigo-800 uppercase tracking-widest">
                     🌙 {localMarathiView ? 'संध्याकाळ सत्र गैरहजर' : 'Evening Session Absentees'}
                   </p>
-                  <h3 className="text-4xl font-black text-indigo-900 mt-1">
+                  <h3 className="text-2xl sm:text-4xl font-black text-indigo-900 mt-0.5 sm:mt-1">
                     {absenteesData.eveningTotalAbsent} <span className="text-xs font-bold text-indigo-700">/ {absenteesData.total}</span>
                   </h3>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg">
-                  <Moon className="w-6 h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shrink-0">
+                  <Moon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
               </div>
-              <div className="flex items-center justify-between text-[11px] font-bold text-indigo-800 mt-3 pt-3 border-t border-indigo-200/60">
+              <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-indigo-800 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-indigo-200/60">
                 <span>Present: <strong>{absenteesData.eveningPresent}</strong></span>
                 <span>Explicit &apos;A&apos;: <strong>{absenteesData.eveningExplicitAbsent}</strong></span>
                 <span>Unmarked: <strong>{absenteesData.eveningUnmarked}</strong></span>
               </div>
             </Card>
 
-            <Card className="border-2 rounded-[2rem] p-6 bg-white border-rose-200 shadow-md flex flex-col justify-between">
+            <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-white border-rose-200 shadow-md flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <p className="text-[10px] font-black text-destructive uppercase tracking-widest">
+                  <p className="text-[9px] sm:text-[10px] font-black text-destructive uppercase tracking-widest">
                     📋 {localMarathiView ? 'सध्याच्या फिल्टरनुसार गैरहजर' : 'Matching Absentees'}
                   </p>
-                  <Badge variant="destructive" className="font-extrabold px-3 py-1 text-xs">
+                  <Badge variant="destructive" className="font-extrabold px-2.5 sm:px-3 py-0.5 sm:py-1 text-xs">
                     {absenteesData.list.length} Students
                   </Badge>
                 </div>
@@ -835,18 +835,18 @@ export function Attendance({ store, section, language = 'English' }: { store: an
           </div>
 
           {/* Absent Students Table / Card List */}
-          <Card className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
-            <div className="p-6 border-b bg-slate-50/80 flex justify-between items-center">
+          <Card className="border-2 rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-white shadow-xl">
+            <div className="p-4 sm:p-6 border-b bg-slate-50/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div>
-                <h3 className="text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2">
-                  <UserX className="w-5 h-5 text-destructive" />
+                <h3 className="text-base sm:text-xl font-black text-primary uppercase tracking-tight flex items-center gap-2">
+                  <UserX className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
                   {localMarathiView ? 'अनुपस्थित विद्यार्थी सूची' : 'Absent Students Identification List'}
                 </h3>
-                <p className="text-xs text-muted-foreground font-bold uppercase mt-0.5">
+                <p className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase mt-0.5">
                   {format(parseISO(absenteesData.dateStr), 'EEEE, dd MMMM yyyy')} • {absenteesData.list.length} {localMarathiView ? 'विद्यार्थी' : 'students found'}
                 </p>
               </div>
-              <Badge variant="outline" className="font-extrabold border-primary/20 text-primary bg-primary/5 text-xs px-3 py-1">
+              <Badge variant="outline" className="font-extrabold border-primary/20 text-primary bg-primary/5 text-[10px] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 self-start sm:self-auto">
                 {absentSessionFilter} Session
               </Badge>
             </div>

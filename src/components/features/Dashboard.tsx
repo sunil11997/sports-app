@@ -207,50 +207,50 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
           </div>
         </Card>
       )}
-      <div className="flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border">
+        <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-6">
           <div className="flex bg-muted/40 p-1 rounded-xl border">
-            <Button variant={!isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(false)} className="h-9 text-[10px] font-black uppercase">English</Button>
-            <Button variant={isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(true)} className="h-9 text-[10px] font-black uppercase">मराठी</Button>
+            <Button variant={!isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(false)} className="h-8 sm:h-9 text-[9px] sm:text-[10px] font-black uppercase px-3 sm:px-4">English</Button>
+            <Button variant={isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(true)} className="h-8 sm:h-9 text-[9px] sm:text-[10px] font-black uppercase px-3 sm:px-4">मराठी</Button>
           </div>
-          <h2 className="text-xl font-black text-primary uppercase">{isMarathiView ? 'विद्यार्थी नोंदणी' : 'Registry Roster'}</h2>
+          <h2 className="text-base sm:text-xl font-black text-primary uppercase">{isMarathiView ? 'विद्यार्थी नोंदणी' : 'Registry Roster'}</h2>
         </div>
-        <div className="relative flex-1 md:w-80">
+        <div className="relative w-full sm:flex-1 md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder={isMarathiView ? "नाव / आधार शोधा..." : "Search name/Aadhar..."} 
-            className="pl-9 h-11 rounded-full bg-muted/30 border-none" 
+            className="pl-9 h-10 sm:h-11 rounded-full bg-muted/30 border-none text-xs sm:text-sm font-semibold" 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
           />
         </div>
       </div>
 
-      <Card className="google-card overflow-hidden">
+      <Card className="google-card rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
         <div className="overflow-x-auto scrollbar-hide">
           <Table className="min-w-max">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="px-6 text-[10px] font-black uppercase w-[100px]">Roll</TableHead>
-                <TableHead className="px-4 text-[10px] font-black uppercase">Student Profile</TableHead>
-                <TableHead className="px-4 text-[10px] font-black uppercase text-center">GR No</TableHead>
-                <TableHead className="px-4 text-[10px] font-black uppercase text-center">Standard</TableHead>
-                <TableHead className="px-4 text-[10px] font-black uppercase text-center">Height/Weight</TableHead>
-                <TableHead className="px-6 text-[10px] font-black uppercase text-right">Actions</TableHead>
+                <TableHead className="px-4 sm:px-6 text-[10px] font-black uppercase w-[70px] sm:w-[100px]">Roll</TableHead>
+                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase">Student Profile</TableHead>
+                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase text-center">GR No</TableHead>
+                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase text-center">Standard</TableHead>
+                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase text-center">Height/Weight</TableHead>
+                <TableHead className="px-4 sm:px-6 text-[10px] font-black uppercase text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPlayers.map((p: Player) => (
-                <TableRow key={p.id} className="h-20 hover:bg-primary/5 transition-colors">
-                  <TableCell className="px-6"><Badge variant="secondary" className="font-black text-xs">{p.serialNumber || '0'}</Badge></TableCell>
-                  <TableCell className="px-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-12 h-12 border shadow-sm">
+                <TableRow key={p.id} className="h-16 sm:h-20 hover:bg-primary/5 transition-colors">
+                  <TableCell className="px-4 sm:px-6"><Badge variant="secondary" className="font-black text-xs">{p.serialNumber || '0'}</Badge></TableCell>
+                  <TableCell className="px-3 sm:px-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border shadow-sm shrink-0">
                         <AvatarImage src={p.photoUrl} className="object-cover" />
                         <AvatarFallback className="font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-black text-sm uppercase text-primary">{isMarathiView ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name}</p>
+                        <p className="font-black text-xs sm:text-sm uppercase text-primary leading-tight">{isMarathiView ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name}</p>
                         {(() => {
                           const ageVal = getAgeValidation(p.dob);
                           const age = ageVal ? ageVal.ageYears : (parseInt(p.age as any) || 0);
@@ -270,16 +270,16 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 text-center font-bold text-xs">{p.generalRegisterNumber || '---'}</TableCell>
-                  <TableCell className="px-4 text-center"><Badge variant="outline" className="font-black text-[10px]">Std {p.std}</Badge></TableCell>
-                  <TableCell className="px-4 text-center">
+                  <TableCell className="px-3 sm:px-4 text-center font-bold text-xs">{p.generalRegisterNumber || '---'}</TableCell>
+                  <TableCell className="px-3 sm:px-4 text-center"><Badge variant="outline" className="font-black text-[10px]">Std {p.std}</Badge></TableCell>
+                  <TableCell className="px-3 sm:px-4 text-center">
                     <div className="text-[10px] font-black text-primary/60 uppercase">
                       {p.height ? `${p.height}cm` : '--'} / {p.weight ? `${p.weight}kg` : '--'}
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 text-right flex justify-end gap-2 pt-6">
-                    <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)}><Edit className="w-4 h-4 text-primary" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeletePlayer(p.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <TableCell className="px-4 sm:px-6 text-right flex justify-end gap-1 sm:gap-2 pt-4 sm:pt-6">
+                    <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)} className="h-8 w-8 sm:h-9 sm:w-9"><Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeletePlayer(p.id)} className="h-8 w-8 sm:h-9 sm:w-9"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -289,16 +289,16 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
       </Card>
 
       <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="sm:max-w-[850px] rounded-[3rem] p-0 overflow-hidden h-[85vh] flex flex-col border-none shadow-3xl">
-          <DialogHeader className="bg-primary p-8 text-white shrink-0">
-             <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md"><UserCheck className="w-8 h-8 text-white" /></div>
-                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Institutional Profile Editor</DialogTitle>
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[850px] rounded-2xl sm:rounded-[3rem] p-0 overflow-hidden h-[90vh] sm:h-[85vh] flex flex-col border-none shadow-3xl bg-white">
+          <DialogHeader className="bg-primary p-4 sm:p-8 text-white shrink-0">
+             <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0"><UserCheck className="w-5 h-5 sm:w-8 sm:h-8 text-white" /></div>
+                <DialogTitle className="text-base sm:text-2xl font-black uppercase tracking-tight">Institutional Profile Editor</DialogTitle>
              </div>
           </DialogHeader>
 
           <ScrollArea className="flex-1">
-            <div className="p-10 space-y-10">
+            <div className="p-4 sm:p-10 space-y-6 sm:space-y-10">
               {editingPlayer && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                   <div className="lg:col-span-4 space-y-8">
@@ -513,8 +513,8 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
             </div>
           </ScrollArea>
 
-          <DialogFooter className="p-8 border-t bg-muted/10 shrink-0">
-             <Button onClick={handleUpdatePlayer} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-lg">Save Registry Profile</Button>
+          <DialogFooter className="p-4 sm:p-8 border-t bg-muted/10 shrink-0">
+             <Button onClick={handleUpdatePlayer} className="w-full h-12 sm:h-14 bg-primary text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-wider sm:tracking-widest shadow-lg">Save Registry Profile</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

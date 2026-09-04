@@ -95,52 +95,52 @@ export function GameHub({ store }: { store: any }) {
 
   if (selectedGame) {
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border-2 border-primary/10 shadow-sm">
-          <div className="flex items-center gap-4">
+      <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-6 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 border-primary/10 shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => setSelectedGame(null)} 
-              className="rounded-full h-12 w-12 hover:bg-primary/5 text-primary flex items-center justify-center"
+              className="rounded-full h-10 w-10 sm:h-12 sm:w-12 hover:bg-primary/5 text-primary flex items-center justify-center shrink-0"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="h-10 w-px bg-muted mx-2" />
+            <div className="h-8 sm:h-10 w-px bg-muted mx-1 sm:mx-2" />
             <div>
-              <h2 className="text-3xl font-black text-primary uppercase tracking-tight leading-none">{selectedGame} Hub</h2>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-2">Institutional Sports Registry</p>
+              <h2 className="text-xl sm:text-3xl font-black text-primary uppercase tracking-tight leading-none">{selectedGame} Hub</h2>
+              <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider sm:tracking-[0.2em] mt-1 sm:mt-2">Institutional Sports Registry</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-500" />
-            <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest bg-emerald-50 px-3 py-1 rounded-full">Pro Coaching Active</span>
+          <div className="flex items-center gap-2 self-start md:self-center">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-700 tracking-wider sm:tracking-widest bg-emerald-50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">Pro Coaching Active</span>
           </div>
         </div>
 
-        <Tabs defaultValue="readiness" className="space-y-8">
+        <Tabs defaultValue="readiness" className="space-y-6 sm:space-y-8">
           <div className="w-full overflow-x-auto scrollbar-hide pb-2">
-            <TabsList className="bg-muted/50 p-2 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-2 w-max min-w-full">
-              <TabsTrigger value="equipment" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2 border-2 border-amber-500/40 shadow-sm">
+            <TabsList className="bg-muted/50 p-1.5 sm:p-2 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-1.5 sm:gap-2 w-max min-w-full">
+              <TabsTrigger value="equipment" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-500/40 shadow-sm">
                 <Package className="w-3.5 h-3.5 text-amber-400" /> Equipment (साहित्य नोंद)
               </TabsTrigger>
-              <TabsTrigger value="eligibility" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-blue-800 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-2 border-2 border-blue-500/40 shadow-sm">
+              <TabsTrigger value="eligibility" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-blue-800 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-blue-500/40 shadow-sm">
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Eligibility (वय पात्रता तक्ता)
               </TabsTrigger>
-              <TabsTrigger value="jerseys" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-700 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-2 border-2 border-emerald-500/40 shadow-sm">
+              <TabsTrigger value="jerseys" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-emerald-700 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-emerald-500/40 shadow-sm">
                 <Shirt className="w-3.5 h-3.5 text-amber-400" /> Jersey & Positions (जर्सी व पोझिशन)
               </TabsTrigger>
-              <TabsTrigger value="scoreboard" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-2 border-2 border-amber-500/40 shadow-sm">
+              <TabsTrigger value="scoreboard" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-500/40 shadow-sm">
                 <Trophy className="w-3.5 h-3.5 text-amber-500" /> Scoreboard (लाईव्ह गुणफलक)
               </TabsTrigger>
-              <TabsTrigger value="id-cards" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-blue-900 data-[state=active]:text-amber-400 whitespace-nowrap flex items-center gap-2 border-2 border-amber-400/30">
+              <TabsTrigger value="id-cards" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-blue-900 data-[state=active]:text-amber-400 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-400/30">
                 <FileBadge className="w-4 h-4 text-amber-400" /> ID Cards (ओळखपत्रे)
               </TabsTrigger>
-              <TabsTrigger value="readiness" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+              <TabsTrigger value="readiness" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2">
                 <HeartPulse className="w-3.5 h-3.5" /> Readiness
               </TabsTrigger>
-              <TabsTrigger value="planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+              <TabsTrigger value="planner" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2">
                 <Users className="w-3.5 h-3.5" /> Team Planner
               </TabsTrigger>
-              <TabsTrigger value="auto-planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
+              <TabsTrigger value="auto-planner" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2">
                 <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Auto Planner
               </TabsTrigger>
               <TabsTrigger value="daily-planner" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
@@ -236,35 +236,35 @@ export function GameHub({ store }: { store: any }) {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700 pb-20">
-      <div className="bg-primary/5 p-12 rounded-[3.5rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
-        <div className="relative z-10 space-y-4">
-          <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
-            <CirclePlay className="w-10 h-10 text-primary" />
+    <div className="space-y-6 sm:space-y-12 animate-in fade-in duration-700 pb-20">
+      <div className="bg-primary/5 p-6 sm:p-12 rounded-2xl sm:rounded-[3.5rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
+        <div className="relative z-10 space-y-3 sm:space-y-4">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-xl sm:rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
+            <CirclePlay className="w-7 h-7 sm:w-10 sm:h-10 text-primary" />
           </div>
-          <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Game Hub</h2>
-          <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
+          <h2 className="text-2xl sm:text-4xl font-black text-primary uppercase tracking-tight">Institutional Game Hub</h2>
+          <p className="text-xs sm:text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
             Select a discipline to access technical mastery, tactical playbooks, and injury logs.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
         {GAMES.map((game) => {
           const GameIcon = game.icon;
           return (
             <Card 
               key={game.id} 
               onClick={() => setSelectedGame(game.id)}
-              className="border-2 rounded-[3rem] p-10 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden text-center"
+              className="border-2 rounded-2xl sm:rounded-[3rem] p-5 sm:p-10 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden text-center"
             >
-              <div className={cn("w-20 h-20 mx-auto rounded-[1.5rem] flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500", game.bg)}>
-                <GameIcon className={cn("w-10 h-10", game.color)} />
+              <div className={cn("w-14 h-14 sm:w-20 sm:h-20 mx-auto rounded-xl sm:rounded-[1.5rem] flex items-center justify-center mb-4 sm:mb-6 transition-transform group-hover:scale-110 duration-500", game.bg)}>
+                <GameIcon className={cn("w-7 h-7 sm:w-10 sm:h-10", game.color)} />
               </div>
-              <h3 className="text-3xl font-black text-primary uppercase tracking-tight">{game.label}</h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Open Management Deck</p>
-              <div className="absolute top-6 right-8 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-                <ChevronRight className="w-6 h-6 text-primary/20" />
+              <h3 className="text-xl sm:text-3xl font-black text-primary uppercase tracking-tight">{game.label}</h3>
+              <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase mt-1 sm:mt-2 tracking-wider sm:tracking-widest">Open Management Deck</p>
+              <div className="absolute top-4 sm:top-6 right-5 sm:right-8 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-primary/20" />
               </div>
             </Card>
           );

@@ -237,122 +237,124 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[3rem] border shadow-xl">
-        <div className="flex items-center gap-6 flex-1">
-          <div className="w-20 h-20 bg-accent/10 rounded-[2rem] flex items-center justify-center border-2 border-accent/20 shadow-inner">
-            <Flame className="w-10 h-10 text-accent animate-pulse" />
+      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 sm:gap-6 bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[3rem] border shadow-xl">
+        <div className="flex items-center gap-3 sm:gap-6 flex-1">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 bg-accent/10 rounded-xl sm:rounded-[2rem] flex items-center justify-center border-2 border-accent/20 shadow-inner shrink-0">
+            <Flame className="w-7 h-7 sm:w-10 sm:h-10 text-accent animate-pulse" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Registry Engine v6.0 Stable</p>
+            <h2 className="text-xl sm:text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
+            <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 sm:mt-1">Registry Engine v6.0 Stable</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-[550px]">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-primary/40" />
+        <div className="flex items-center gap-2 sm:gap-4 w-full lg:w-auto">
+          <div className="relative flex-1 lg:w-[500px]">
+            <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-7 sm:h-7 text-primary/40" />
             <Input 
               placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
-              className="pl-16 h-24 rounded-[1.5rem] border-2 border-primary/10 bg-muted/20 font-black text-2xl shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/30" 
+              className="pl-11 sm:pl-16 h-12 sm:h-16 lg:h-20 rounded-xl sm:rounded-[1.5rem] border-2 border-primary/10 bg-muted/20 font-bold sm:font-black text-xs sm:text-lg lg:text-xl shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/40" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
             />
           </div>
-          <Button onClick={handlePrint} className="h-24 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-sm shadow-2xl active-scale transition-all">
-            <Printer className="w-8 h-8 mr-3" /> Export Report
+          <Button onClick={handlePrint} className="h-12 sm:h-16 lg:h-20 px-4 sm:px-8 lg:px-10 bg-primary hover:bg-primary/90 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm shadow-xl active-scale transition-all shrink-0">
+            <Printer className="w-4 h-4 sm:w-6 sm:h-6 sm:mr-2" />
+            <span className="hidden sm:inline">Export Report</span>
+            <span className="sm:hidden">Export</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 p-2 bg-muted/40 rounded-[2rem] border shadow-inner overflow-x-auto scrollbar-hide">
+      <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 p-2 bg-muted/40 rounded-xl sm:rounded-[2rem] border shadow-inner overflow-x-auto scrollbar-hide">
         {GENERAL_CATEGORIES.map(cat => (
           <Button
             key={cat.id}
             variant={activeCategory === cat.id ? "default" : "ghost"}
             size="sm"
             className={cn(
-              "h-11 rounded-xl px-8 text-[11px] font-black uppercase transition-all whitespace-nowrap",
-              activeCategory === cat.id ? 'bg-primary text-white shadow-lg scale-105' : 'text-muted-foreground hover:bg-white'
+              "h-9 sm:h-11 rounded-lg sm:rounded-xl px-4 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase transition-all whitespace-nowrap shrink-0",
+              activeCategory === cat.id ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:bg-white'
             )}
             onClick={() => setActiveCategory(cat.id)}
           >
             {cat.label}
           </Button>
         ))}
-        <div className="ml-auto flex items-center px-4">
-           <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 h-8 flex items-center gap-2 px-4 rounded-full">
+        <div className="ml-auto flex items-center px-2 shrink-0">
+           <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 h-7 sm:h-8 flex items-center gap-1.5 px-3 rounded-full text-[9px] sm:text-[10px]">
               <RefreshCw className={cn("w-3 h-3", isOnline && "animate-spin")} />
               {isOnline ? 'CLOUD SYNC' : 'OFFLINE MODE'}
            </Badge>
         </div>
       </div>
 
-      <Card className="border-2 rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
+      <Card className="border-2 rounded-2xl sm:rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
         <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
-              <TableRow className="h-20">
-                <TableHead className="px-10 font-black uppercase w-[250px] sticky left-0 top-0 bg-slate-200 z-[60] border-r">
+              <TableRow className="h-14 sm:h-20">
+                <TableHead className="px-3 sm:px-10 font-black uppercase w-[150px] sm:w-[250px] sticky left-0 top-0 bg-slate-200 z-[60] border-r text-xs">
                    Student Profile
                 </TableHead>
-                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Zap className="w-4 h-4 mx-auto mb-2 text-accent" />10x6 Shuttle
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-accent" />10x6 Shuttle
                 </TableHead>
-                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Trophy className="w-4 h-4 mx-auto mb-2 text-amber-500" />Board Jump
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-amber-500" />Board Jump
                 </TableHead>
-                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Timer className="w-4 h-4 mx-auto mb-2 text-blue-500" />50m Speed
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Timer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-blue-500" />50m Speed
                 </TableHead>
-                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Activity className="w-4 h-4 mx-auto mb-2 text-emerald-500" />600m Run
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-emerald-500" />600m Run
                 </TableHead>
-                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Ruler className="w-4 h-4 mx-auto mb-2 text-purple-500" />Sit & Reach
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Ruler className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-purple-500" />Sit & Reach
                 </TableHead>
-                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Zap className="w-4 h-4 mx-auto mb-2 text-rose-500" />Sit-Ups
+                <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
+                   <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-rose-500" />Sit-Ups
                 </TableHead>
-                <TableHead className="px-6 font-black uppercase text-center w-[130px] bg-primary/10 sticky top-0 z-40 border-r">
+                <TableHead className="px-3 sm:px-6 font-black uppercase text-center w-[100px] sm:w-[130px] bg-primary/10 sticky top-0 z-40 border-r text-xs">
                    Fitness %
                 </TableHead>
-                <TableHead className="px-4 font-black uppercase text-center w-[80px] sticky top-0 bg-slate-100 z-40">
+                <TableHead className="px-2 sm:px-4 font-black uppercase text-center w-[70px] sm:w-[80px] sticky top-0 bg-slate-100 z-40 text-xs">
                    Report
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPlayers.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-40 opacity-20 font-black uppercase text-2xl tracking-[0.3em]">No registry entries</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-40 opacity-20 font-black uppercase text-xl sm:text-2xl tracking-[0.3em]">No registry entries</TableCell></TableRow>
               ) : filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                 const isPulse = lastSavedId === player.id;
                 const isSyncing = isSaving === player.id;
                 return (
-                  <TableRow key={player.id} className={cn("border-b h-20 transition-all", isPulse && "bg-emerald-50 animate-success-pulse", isSyncing && "bg-muted/50")}>
-                    <TableCell className="px-10 font-black sticky left-0 bg-white z-20 uppercase text-xs border-r group-hover:bg-muted/5 transition-colors">
+                  <TableRow key={player.id} className={cn("border-b h-14 sm:h-20 transition-all", isPulse && "bg-emerald-50 animate-success-pulse", isSyncing && "bg-muted/50")}>
+                    <TableCell className="px-3 sm:px-10 font-black sticky left-0 bg-white z-20 uppercase text-xs border-r group-hover:bg-muted/5 transition-colors">
                       <div className="flex flex-col">
-                        <span className="text-primary leading-none truncate max-w-[200px]">{localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Roll #{player.serialNumber || '0'} &bull; Std {player.std}</span>
+                        <span className="text-primary leading-none truncate max-w-[130px] sm:max-w-[200px]">{localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}</span>
+                        <span className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-wider sm:tracking-widest">Roll #{player.serialNumber || '0'} &bull; Std {player.std}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-20 text-center border-0 bg-transparent focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" className="h-20 text-center border-0 bg-transparent text-sm font-black focus:bg-white" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                    <TableCell className="p-6 text-center bg-primary/5 border-r">
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                    <TableCell className="p-3 sm:p-6 text-center bg-primary/5 border-r">
                       <div className="flex flex-col items-center justify-center">
-                        <span className="text-2xl font-black text-primary leading-none">{current.score || '0'}%</span>
+                        <span className="text-lg sm:text-2xl font-black text-primary leading-none">{current.score || '0'}%</span>
                         <Badge className={cn(
-                          "mt-2 text-[8px] font-black uppercase border-0 px-3",
+                          "mt-1 sm:mt-2 text-[7px] sm:text-[8px] font-black uppercase border-0 px-2 sm:px-3",
                           current.status === 'Elite' ? "bg-amber-400 text-white" : "bg-emerald-500 text-white"
                         )}>{current.status || 'Active'}</Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="p-2 text-center">
-                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50 rounded-full h-12 w-12 shadow-inner border border-transparent hover:border-emerald-100">
-                        <MessageSquare className="w-5 h-5" />
+                    <TableCell className="p-1 sm:p-2 text-center">
+                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 sm:h-12 sm:w-12 shadow-inner border border-transparent hover:border-emerald-100">
+                        <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -841,37 +841,37 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20" suppressHydrationWarning>
       {/* Top Banner */}
-      <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div className="flex-1 space-y-3 text-center lg:text-left">
-            <Badge className="bg-primary text-white text-[10px] font-black uppercase px-4 py-1 tracking-widest">
+      <div className="bg-primary/5 p-4 sm:p-8 rounded-2xl sm:rounded-[3rem] border-2 border-primary/10 shadow-lg">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 sm:gap-8">
+          <div className="flex-1 space-y-2 sm:space-y-3 text-center lg:text-left">
+            <Badge className="bg-primary text-white text-[9px] sm:text-[10px] font-black uppercase px-3 sm:px-4 py-0.5 sm:py-1 tracking-wider sm:tracking-widest">
               Daily Auto-Report Engine
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-black text-primary uppercase tracking-tight flex items-center justify-center lg:justify-start gap-3">
-              <FileText className="w-9 h-9 text-amber-500" /> दैनिक अहवाल (Daily Report)
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary uppercase tracking-tight flex items-center justify-center lg:justify-start gap-2 sm:gap-3">
+              <FileText className="w-6 h-6 sm:w-9 sm:h-9 text-amber-500" /> दैनिक अहवाल (Daily Report)
             </h2>
-            <p className="text-sm font-semibold text-foreground/70">
+            <p className="text-xs sm:text-sm font-semibold text-foreground/70">
               शाळेचे नाव मराठीत, योगा, पी.टी. मास व कबड्डी ड्रिल्सच्या मुले/मुलींच्या संख्येचा स्वयंचलित अहवाल.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-2.5 sm:gap-3 shrink-0">
             <div className="space-y-1">
-              <label className="text-[9px] font-black text-primary uppercase ml-2 tracking-widest">निवडा तारीख (Date)</label>
+              <label className="text-[9px] font-black text-primary uppercase ml-1 sm:ml-2 tracking-wider sm:tracking-widest">निवडा तारीख (Date)</label>
               <Input 
                 type="date" 
                 value={reportDate} 
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReportDate(e.target.value)} 
-                className="rounded-2xl border-2 h-12 font-black shadow-sm bg-white" 
+                className="rounded-xl sm:rounded-2xl border-2 h-11 sm:h-12 font-bold sm:font-black text-xs sm:text-sm shadow-sm bg-white" 
               />
             </div>
             
-            <div className="flex gap-2 self-end">
-              <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white h-12 rounded-2xl font-black uppercase text-xs tracking-wider shadow-lg active-scale px-6">
-                <Printer className="w-4 h-4 mr-2" /> प्रिंट / PDF
+            <div className="flex gap-2 self-stretch sm:self-end w-full sm:w-auto">
+              <Button onClick={handlePrint} className="flex-1 sm:flex-initial bg-primary hover:bg-primary/90 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-6">
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> प्रिंट / PDF
               </Button>
-              <Button onClick={handleShareWhatsApp} className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 rounded-2xl font-black uppercase text-xs tracking-wider shadow-lg active-scale px-6">
-                <Share2 className="w-4 h-4 mr-2" /> शाळा ग्रुप
+              <Button onClick={handleShareWhatsApp} className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-6">
+                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> शाळा ग्रुप
               </Button>
             </div>
           </div>
@@ -879,25 +879,25 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       </div>
 
       {/* Attendance Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-blue-100 flex flex-col justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-white shadow-md border-blue-100 flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-[10px] font-black uppercase text-blue-700 bg-blue-50 px-3 py-1 rounded-full">सकाळ सत्र (Morning)</span>
-              <Users className="w-5 h-5 text-blue-600" />
+            <div className="flex justify-between items-center mb-2 sm:mb-3">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-blue-700 bg-blue-50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">सकाळ सत्र (Morning)</span>
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center mt-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center mt-2">
               <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
                 <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
-                <p className="text-xl font-black text-blue-800">{attendanceCounts.morningBoys}</p>
+                <p className="text-lg sm:text-xl font-black text-blue-800">{attendanceCounts.morningBoys}</p>
               </div>
               <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
                 <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
-                <p className="text-xl font-black text-pink-800">{attendanceCounts.morningGirls}</p>
+                <p className="text-lg sm:text-xl font-black text-pink-800">{attendanceCounts.morningGirls}</p>
               </div>
               <div className="bg-slate-100 p-2 rounded-xl border border-slate-200">
                 <p className="text-[9px] font-bold text-slate-600 uppercase">एकूण</p>
-                <p className="text-xl font-black text-slate-900">{attendanceCounts.morningTotal}</p>
+                <p className="text-lg sm:text-xl font-black text-slate-900">{attendanceCounts.morningTotal}</p>
               </div>
             </div>
           </div>
@@ -908,31 +908,31 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               setAbsentModalSession('Morning');
               setShowAbsenteeModal(true);
             }}
-            className="w-full mt-3 text-[10px] font-black uppercase border border-amber-200 text-amber-800 hover:bg-amber-50 h-8 rounded-xl flex items-center justify-center gap-1"
+            className="w-full mt-3 text-[9px] sm:text-[10px] font-black uppercase border border-amber-200 text-amber-800 hover:bg-amber-50 h-8 rounded-xl flex items-center justify-center gap-1"
           >
             <UserX className="w-3.5 h-3.5 text-amber-600" />
             गैरहजर विद्यार्थी सूची (Morning)
           </Button>
         </Card>
 
-        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-indigo-100 flex flex-col justify-between">
+        <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-white shadow-md border-indigo-100 flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">संध्याकाळ सत्र (Evening)</span>
-              <Users className="w-5 h-5 text-indigo-600" />
+            <div className="flex justify-between items-center mb-2 sm:mb-3">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">संध्याकाळ सत्र (Evening)</span>
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center mt-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center mt-2">
               <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
                 <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
-                <p className="text-xl font-black text-blue-800">{attendanceCounts.eveningBoys}</p>
+                <p className="text-lg sm:text-xl font-black text-blue-800">{attendanceCounts.eveningBoys}</p>
               </div>
               <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
                 <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
-                <p className="text-xl font-black text-pink-800">{attendanceCounts.eveningGirls}</p>
+                <p className="text-lg sm:text-xl font-black text-pink-800">{attendanceCounts.eveningGirls}</p>
               </div>
               <div className="bg-slate-100 p-2 rounded-xl border border-slate-200">
                 <p className="text-[9px] font-bold text-slate-600 uppercase">एकूण</p>
-                <p className="text-xl font-black text-slate-900">{attendanceCounts.eveningTotal}</p>
+                <p className="text-lg sm:text-xl font-black text-slate-900">{attendanceCounts.eveningTotal}</p>
               </div>
             </div>
           </div>
@@ -943,66 +943,66 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               setAbsentModalSession('Evening');
               setShowAbsenteeModal(true);
             }}
-            className="w-full mt-3 text-[10px] font-black uppercase border border-indigo-200 text-indigo-800 hover:bg-indigo-50 h-8 rounded-xl flex items-center justify-center gap-1"
+            className="w-full mt-3 text-[9px] sm:text-[10px] font-black uppercase border border-indigo-200 text-indigo-800 hover:bg-indigo-50 h-8 rounded-xl flex items-center justify-center gap-1"
           >
             <UserX className="w-3.5 h-3.5 text-indigo-600" />
             गैरहजर विद्यार्थी सूची (Evening)
           </Button>
         </Card>
 
-        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-emerald-100">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">फिटनेस मूल्यमापन</span>
-            <Zap className="w-5 h-5 text-emerald-500" />
+        <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-white shadow-md border-emerald-100">
+          <div className="flex justify-between items-center mb-2 sm:mb-3">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">फिटनेस मूल्यमापन</span>
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center mt-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center mt-2">
             <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
               <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
-              <p className="text-xl font-black text-blue-800">{fitnessCounts.boys}</p>
+              <p className="text-lg sm:text-xl font-black text-blue-800">{fitnessCounts.boys}</p>
             </div>
             <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
               <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
-              <p className="text-xl font-black text-pink-800">{fitnessCounts.girls}</p>
+              <p className="text-lg sm:text-xl font-black text-pink-800">{fitnessCounts.girls}</p>
             </div>
             <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-200">
               <p className="text-[9px] font-bold text-emerald-600 uppercase">एकूण</p>
-              <p className="text-xl font-black text-emerald-900">{fitnessCounts.total}</p>
+              <p className="text-lg sm:text-xl font-black text-emerald-900">{fitnessCounts.total}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="border-2 rounded-[2rem] p-6 bg-white shadow-md border-amber-100">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-3 py-1 rounded-full">आरोग्य तक्रारी</span>
-            <AlertTriangle className="w-5 h-5 text-amber-500" />
+        <Card className="border-2 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 bg-white shadow-md border-amber-100">
+          <div className="flex justify-between items-center mb-2 sm:mb-3">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">आरोग्य तक्रारी</span>
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center mt-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center mt-2">
             <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
               <p className="text-[9px] font-bold text-blue-600 uppercase">मुले</p>
-              <p className="text-xl font-black text-blue-800">{healthSummaryCounts.boys}</p>
+              <p className="text-lg sm:text-xl font-black text-blue-800">{healthSummaryCounts.boys}</p>
             </div>
             <div className="bg-pink-50/60 p-2 rounded-xl border border-pink-100">
               <p className="text-[9px] font-bold text-pink-600 uppercase">मुली</p>
-              <p className="text-xl font-black text-pink-800">{healthSummaryCounts.girls}</p>
+              <p className="text-lg sm:text-xl font-black text-pink-800">{healthSummaryCounts.girls}</p>
             </div>
             <div className="bg-amber-50 p-2 rounded-xl border border-amber-200">
               <p className="text-[9px] font-bold text-amber-600 uppercase">एकूण</p>
-              <p className="text-xl font-black text-amber-900">{healthSummaryCounts.total}</p>
+              <p className="text-lg sm:text-xl font-black text-amber-900">{healthSummaryCounts.total}</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Main Grid: Left Column for Recorded Activities, Right Column for Quick Add & Notes */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         
         {/* Left Column: Recorded Activities Breakdown */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-6 sm:space-y-8">
           
           {drillGroupedSummary.totalConductededCount === 0 ? (
-            <Card className="border-2 border-dashed rounded-[2.5rem] bg-slate-50/50 p-10 text-center space-y-3">
-              <Trophy className="w-12 h-12 text-amber-500 mx-auto opacity-50" />
-              <h3 className="font-black text-slate-800 text-base uppercase">आज कोणतेही खेळ किंवा योगा उपक्रम नोंदवलेले नाहीत</h3>
+            <Card className="border-2 border-dashed rounded-2xl sm:rounded-[2.5rem] bg-slate-50/50 p-6 sm:p-10 text-center space-y-3">
+              <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-amber-500 mx-auto opacity-50" />
+              <h3 className="font-black text-slate-800 text-sm sm:text-base uppercase">आज कोणतेही खेळ किंवा योगा उपक्रम नोंदवलेले नाहीत</h3>
               <p className="text-xs font-semibold text-slate-500 max-w-md mx-auto">
                 (No Conducted Activities Recorded Today) - उजवीकडील &quot;त्वरित उपक्रम नोंदवा&quot; कार्डवरून वॉलीबॉल, खो-खो, योगा, किंवा पी.टी. मास नोंदवा.
               </p>

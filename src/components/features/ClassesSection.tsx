@@ -39,42 +39,42 @@ export function ClassesSection({ store, language = 'English' }: { store: any, la
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-primary/5 p-12 rounded-[3.5rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
-        <div className="relative z-10 space-y-4">
-          <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
-            <LayoutGrid className="w-10 h-10 text-primary" />
+    <div className="space-y-6 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="bg-primary/5 p-6 sm:p-12 rounded-2xl sm:rounded-[3.5rem] border-2 border-primary/10 shadow-lg text-center relative overflow-hidden">
+        <div className="relative z-10 space-y-3 sm:space-y-4">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-xl sm:rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
+            <LayoutGrid className="w-7 h-7 sm:w-10 sm:h-10 text-primary" />
           </div>
-          <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Classes Profile</h2>
-          <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-4xl font-black text-primary uppercase tracking-tight">Institutional Classes Profile</h2>
+          <p className="text-xs sm:text-lg font-medium text-muted-foreground max-w-2xl mx-auto">
             View exhausted health, fitness, and activity profiles for every institutional standard.
           </p>
         </div>
-        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {Object.entries(classSummaries).map(([std, count]) => (
           <Card 
             key={std} 
             onClick={() => setSelectedStd(std)}
-            className="border-2 rounded-[2.5rem] p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden"
+            className="border-2 rounded-2xl sm:rounded-[2.5rem] p-3.5 sm:p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden"
           >
-            <div className="relative z-10 space-y-6">
+            <div className="relative z-10 space-y-4 sm:space-y-6">
               <div className="flex justify-between items-start">
-                <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
-                  <GraduationCap className="w-8 h-8 text-primary group-hover:text-white" />
+                <div className="bg-primary/10 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                  <GraduationCap className="w-5 h-5 sm:w-8 sm:h-8 text-primary group-hover:text-white" />
                 </div>
-                <Badge className="bg-primary text-white font-black text-xl px-4 py-1 rounded-full">Std {std}</Badge>
+                <Badge className="bg-primary text-white font-black text-xs sm:text-xl px-2.5 sm:px-4 py-0.5 sm:py-1 rounded-full">Std {std}</Badge>
               </div>
               
               <div className="space-y-1">
-                <div className="flex items-end justify-between border-b border-dashed pb-2">
-                  <span className="text-muted-foreground font-black text-[10px] uppercase">Students</span>
-                  <span className="text-3xl font-black text-primary">{count}</span>
+                <div className="flex items-end justify-between border-b border-dashed pb-1.5 sm:pb-2">
+                  <span className="text-muted-foreground font-black text-[9px] sm:text-[10px] uppercase">Students</span>
+                  <span className="text-xl sm:text-3xl font-black text-primary">{count}</span>
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground uppercase pt-2 tracking-widest flex items-center gap-1">
-                  <Users className="w-3 h-3" /> Open Class Profile
+                <p className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase pt-1 sm:pt-2 tracking-wider sm:tracking-widest flex items-center gap-1">
+                  <Users className="w-3 h-3" /> Open Profile
                 </p>
               </div>
             </div>
