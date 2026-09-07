@@ -45,7 +45,8 @@ import {
   Shirt,
   Package,
   Sun,
-  Lock
+  Lock,
+  Award
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -154,6 +155,18 @@ const EquipmentInventoryHub = dynamic(
 const ParentProgressShareModal = dynamic(
   () => import('@/components/features/ParentProgressShareModal').then((m) => m.ParentProgressShareModal),
   { ssr: false }
+);
+const SportsCertificateGenerator = dynamic(
+  () => import('@/components/features/SportsCertificateGenerator').then((m) => m.SportsCertificateGenerator),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const StudentSportsReportCard = dynamic(
+  () => import('@/components/features/StudentSportsReportCard').then((m) => m.StudentSportsReportCard),
+  { ssr: false, loading: () => <HubFallback /> }
+);
+const TournamentFixturesHub = dynamic(
+  () => import('@/components/features/TournamentFixturesHub').then((m) => m.TournamentFixturesHub),
+  { ssr: false, loading: () => <HubFallback /> }
 );
 
 const translations = {
@@ -733,6 +746,9 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {[
+                      { id: "sports-certificates", label: "Sports Certificates", desc: "प्रावीण्य व सहभाग प्रमाणपत्रे प्रिंट करा", icon: Award, color: "bg-amber-600" },
+                      { id: "sports-report-cards", label: "Sports Report Cards", desc: "वार्षिक क्रीडा प्रगती पुस्तक (A4 & WhatsApp)", icon: FileText, color: "bg-emerald-700" },
+                      { id: "tournament-fixtures", label: "Tournament Fixtures", desc: "स्पर्धा वेळापत्रक, बाद फेरी व गुणतालिका", icon: Trophy, color: "bg-blue-700" },
                       { id: "equipment-inventory", label: "Equipment & Kit Inventory", desc: "साहित्य नोंद, वाटप-जमा व वार्षिक मागणी", icon: Package, color: "bg-amber-700" },
                       { id: "parent-share", label: "Parent WhatsApp Cards", desc: "पालक प्रगती व फिटनेस अहवाल पाठवा", icon: Share2, color: "bg-emerald-600" },
                       { id: "eligibility-roster", label: "DSO Eligibility Roster", desc: "Age Cut-off & U14/U17/U19 Validator", icon: ShieldCheck, color: "bg-blue-800" },
@@ -775,6 +791,9 @@ export default function WaghambaApp() {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                   </Button>
                   <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    {subTab === "sports-certificates" && <SportsCertificateGenerator store={schoolData} />}
+                    {subTab === "sports-report-cards" && <StudentSportsReportCard store={schoolData} />}
+                    {subTab === "tournament-fixtures" && <TournamentFixturesHub store={schoolData} />}
                     {subTab === "equipment-inventory" && <EquipmentInventoryHub store={schoolData} />}
                     {subTab === "eligibility-roster" && <TeamEligibilityRoster store={schoolData} />}
                     {subTab === "position-jersey" && <PlayerPositionJerseyManager store={schoolData} />}

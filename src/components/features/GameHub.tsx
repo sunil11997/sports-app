@@ -28,7 +28,9 @@ import {
   FileBadge,
   BookOpen,
   Shirt,
-  Package
+  Package,
+  Award,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlayerIDCardManager } from './PlayerIDCardManager';
@@ -51,6 +53,9 @@ import { MatchScoreboard } from './MatchScoreboard';
 import { TeamEligibilityRoster } from './TeamEligibilityRoster';
 import { PlayerPositionJerseyManager } from './PlayerPositionJerseyManager';
 import { EquipmentInventoryHub } from './EquipmentInventoryHub';
+import { SportsCertificateGenerator } from './SportsCertificateGenerator';
+import { StudentSportsReportCard } from './StudentSportsReportCard';
+import { TournamentFixturesHub } from './TournamentFixturesHub';
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -118,7 +123,16 @@ export function GameHub({ store }: { store: any }) {
 
         <Tabs defaultValue="readiness" className="space-y-6 sm:space-y-8">
           <div className="w-full overflow-x-auto scrollbar-hide pb-2">
-            <TabsList className="bg-muted/50 p-1.5 sm:p-2 h-auto rounded-full border shadow-inner flex flex-nowrap shrink-0 gap-1.5 sm:gap-2 w-max min-w-full">
+            <TabsList className="bg-muted/40 p-1 sm:p-1.5 rounded-full border border-border/60 flex items-center w-max min-w-full sm:min-w-0">
+              <TabsTrigger value="certificates" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-400/40 shadow-sm">
+                <Award className="w-3.5 h-3.5 text-amber-300" /> Certificates (प्रमाणपत्रे)
+              </TabsTrigger>
+              <TabsTrigger value="report-cards" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-emerald-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-emerald-400/40 shadow-sm">
+                <FileText className="w-3.5 h-3.5 text-emerald-300" /> Report Card (क्रीडा प्रगती पुस्तक)
+              </TabsTrigger>
+              <TabsTrigger value="fixtures" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-blue-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-blue-400/40 shadow-sm">
+                <Trophy className="w-3.5 h-3.5 text-amber-300" /> Fixtures & Standings (वेळापत्रक व गुणतालिका)
+              </TabsTrigger>
               <TabsTrigger value="equipment" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-500/40 shadow-sm">
                 <Package className="w-3.5 h-3.5 text-amber-400" /> Equipment (साहित्य नोंद)
               </TabsTrigger>
@@ -172,7 +186,15 @@ export function GameHub({ store }: { store: any }) {
               </TabsTrigger>
             </TabsList>
           </div>
-
+          <TabsContent value="certificates" className="mt-0">
+            <SportsCertificateGenerator store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
+          <TabsContent value="report-cards" className="mt-0">
+            <StudentSportsReportCard store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
+          <TabsContent value="fixtures" className="mt-0">
+            <TournamentFixturesHub store={store} preselectedSport={selectedGame || undefined} />
+          </TabsContent>
           <TabsContent value="equipment" className="mt-0">
             <EquipmentInventoryHub store={store} />
           </TabsContent>
