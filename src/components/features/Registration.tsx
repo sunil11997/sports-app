@@ -34,7 +34,8 @@ import {
   Loader2,
   Weight,
   Ruler,
-  FileText
+  FileText,
+  CreditCard
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn, getAgeValidation, transliterateEnglishToMarathi } from '@/lib/utils';
@@ -68,6 +69,7 @@ const formSchema = z.object({
   bloodGroup: z.string().optional().default("None"),
   generalRegisterNumber: z.string().optional().default(""),
   aadharNumber: z.string().optional().default(""),
+  panNumber: z.string().optional().default(""),
   mobileNumber: z.string().optional().default(""),
   address: z.string().optional().default(""),
   sports: z.array(z.string()).optional().default([]),
@@ -116,6 +118,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     weight: "",
     bloodGroup: "None", 
     aadharNumber: "", 
+    panNumber: "",
     mobileNumber: "", 
     generalRegisterNumber: "", 
     address: "",
@@ -640,16 +643,32 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                               </FormItem>
                             )} />
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField control={form.control} name="aadharNumber" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Aadhar ID (आधार क्रमांक)</FormLabel>
                                 <FormControl><Input placeholder="12-digit number" maxLength={12} className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
+                            <FormField control={form.control} name="panNumber" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1.5">
+                                  <CreditCard className="w-3.5 h-3.5" /> PAN Number (पॅन क्रमांक)
+                                </FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="10-digit PAN (ABCDE1234F)" 
+                                    maxLength={10} 
+                                    className="h-12 border-2 rounded-xl font-bold uppercase tracking-wider" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )} />
                              <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Parent Mobile</FormLabel>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Parent Mobile (पालक मोबाईल)</FormLabel>
                                 <FormControl><Input placeholder="For WhatsApp reports" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />

@@ -27,7 +27,8 @@ import {
   Home,
   ScanFace,
   Upload,
-  Cake
+  Cake,
+  CreditCard
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -393,6 +394,27 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                           />
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black text-primary uppercase ml-1">Father&apos;s Name (वडिलांचे नाव)</Label>
+                          <Input 
+                            value={editingPlayer.fatherName || ""} 
+                            onChange={(e) => setEditingPlayer({...editingPlayer, fatherName: e.target.value})} 
+                            className="h-12 border-2 rounded-xl font-bold" 
+                            placeholder="Father's full name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black text-primary uppercase ml-1">Mother&apos;s Name (आईचे नाव)</Label>
+                          <Input 
+                            value={editingPlayer.motherName || ""} 
+                            onChange={(e) => setEditingPlayer({...editingPlayer, motherName: e.target.value})} 
+                            className="h-12 border-2 rounded-xl font-bold" 
+                            placeholder="Mother's full name"
+                          />
+                        </div>
+                      </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
@@ -478,9 +500,10 @@ export function Dashboard({ store, section, searchTerm: initialSearch = "", t }:
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><FileDigit className="w-3 h-3" /> Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><CreditCard className="w-3 h-3" /> PAN Number (पॅन क्रमांक)</Label><Input value={editingPlayer.panNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, panNumber: e.target.value.toUpperCase()})} maxLength={10} className="h-12 border-2 rounded-xl font-bold uppercase tracking-wider" placeholder="ABCDE1234F" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile Number</Label><Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black text-primary">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Home className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
+                        <div className="space-y-2 md:col-span-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Home className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                       </div>
                     </div>
                     

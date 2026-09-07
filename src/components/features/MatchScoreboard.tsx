@@ -30,10 +30,12 @@ import {
   CheckCircle2,
   Volleyball,
   Mic,
-  MicOff
+  MicOff,
+  Coins
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 import { sounds } from '@/lib/soundEffects';
 import { marathiAnnouncer, getMarathiNumberWord } from '@/lib/marathiAnnouncer';
@@ -64,6 +66,11 @@ class SoundEffects {
   public playDoOrDie() {
     if (!this.enabled) return;
     sounds.playDoOrDie(2.4);
+  }
+
+  public playCoinFlip() {
+    if (!this.enabled) return;
+    sounds.playCoinFlip();
   }
 }
 
@@ -122,13 +129,28 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
 
   // Match Half/Period & Match Clock
   const [matchHalf, setMatchHalf] = useState<number>(1); // 1 = 1st Half, 2 = 2nd Half, 3 = Extra Time
+  const [matchDurationSeconds, setMatchDurationSeconds] = useState<number>(1200); // Configurable duration (default 20 mins)
   const [matchSecondsRemaining, setMatchSecondsRemaining] = useState<number>(1200); // Default 20 mins
   const [isMatchClockRunning, setIsMatchClockRunning] = useState<boolean>(false);
+  const [isTimeEditOpen, setIsTimeEditOpen] = useState<boolean>(false);
+  const [timeEditMinutes, setTimeEditMinutes] = useState<number>(20);
+  const [timeEditSeconds, setTimeEditSeconds] = useState<number>(0);
 
   // Points & Statistics
   const [scoreA, setScoreA] = useState<number>(0);
   const [scoreB, setScoreB] = useState<number>(0);
   const [eventsLog, setEventsLog] = useState<ScoreEvent[]>([]);
+
+  // -------------------------------------------------------------
+  // MATCH TOSS (नाणेफेक) STATES & LOGIC
+  // -------------------------------------------------------------
+  const [isTossOpen, setIsTossOpen] = useState(false);
+  const [tossCaller, setTossCaller] = useState<'A' | 'B'>('A');
+  const [tossCall, setTossCall] = useState<'heads' | 'tails'>('heads');
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [tossResult, setTossResult] = useState<'heads' | 'tails' | null>(null);
+  const [tossWinner, setTossWinner] = useState<'A' | 'B' | null>(null);
+  const [tossDecision, setTossDecision] = useState<'raid' | 'court' | 'chase' | 'run' | 'serve' | null>(null);
 
   // -------------------------------------------------------------
   // KABADDI SPECIFIC STATES
@@ -244,9 +266,15 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             marathiAnnouncer.announcePeriodicScore(teamACustomName, scoreA, teamBCustomName, scoreB);
             const wordA = getMarathiNumberWord(scoreA);
             const wordB = getMarathiNumberWord(scoreB);
+            const diff = Math.abs(scoreA - scoreB);
+            const leadText = scoreA > scoreB
+              ? `${teamACustomName} +${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
+              : scoreB > scoreA
+                ? `${teamBCustomName} +${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
+                : 'दोन्ही संघ बरोबरीत';
             toast({
               title: "🎙️ मराठी गुणफलक समालोचन (३-मिनिट समालोचन)",
-              description: `${teamACustomName}: ${scoreA} (${wordA}) गुण | ${teamBCustomName}: ${scoreB} (${wordB}) गुण`,
+              description: `${teamACustomName}: ${scoreA} (${wordA}) | ${teamBCustomName}: ${scoreB} (${wordB}) • ${leadText}`,
               className: "bg-blue-900 text-amber-300 font-bold border-2 border-amber-400 shadow-xl"
             });
           }
@@ -338,6 +366,111 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     }
     return () => clearInterval(interval);
   }, [timeoutClock]);
+
+  // -------------------------------------------------------------
+  // MATCH DURATION CONTROLS
+  // -------------------------------------------------------------
+  const updateMatchDuration = (mins: number, secs: number = 0) => {
+    const totalSecs = Math.max(10, mins * 60 + secs);
+    setMatchDurationSeconds(totalSecs);
+    setMatchSecondsRemaining(totalSecs);
+    setIsMatchClockRunning(false);
+    setIsTimeEditOpen(false);
+    toast({
+      title: "⏱️ सामना वेळ सेट केली (Match Duration Set)",
+      description: `सामन्याची वेळ ${mins} मिनिटे ${secs > 0 ? `${secs} सेकंद` : ''} करण्यात आली आहे.`,
+    });
+  };
+
+  const adjustMatchTime = (deltaSeconds: number) => {
+    setMatchSecondsRemaining(prev => Math.max(0, prev + deltaSeconds));
+  };
+
+  // -------------------------------------------------------------
+  // MATCH TOSS (नाणेफेक) HANDLERS
+  // -------------------------------------------------------------
+  const handleFlipCoin = () => {
+    if (isFlipping) return;
+    setIsFlipping(true);
+    setTossResult(null);
+    setTossWinner(null);
+    setTossDecision(null);
+    sfx.playCoinFlip();
+
+    setTimeout(() => {
+      const outcome: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+      setTossResult(outcome);
+      const winner = tossCall === outcome ? tossCaller : (tossCaller === 'A' ? 'B' : 'A');
+      setTossWinner(winner);
+      setIsFlipping(false);
+      sfx.playWhistle();
+
+      const winnerName = winner === 'A' ? teamACustomName : teamBCustomName;
+      toast({
+        title: `🪙 नाणेफेक निकाल: ${outcome === 'heads' ? 'छाप (HEADS)' : 'काटा (TAILS)'}`,
+        description: `अभिनंदन! ${winnerName} ने नाणेफेक जिंकली आहे. आपला निर्णय निवडा.`,
+        className: "bg-amber-500 text-slate-950 font-black border-2 border-amber-300 shadow-xl"
+      });
+    }, 1200);
+  };
+
+  const handleTossDecision = (decision: 'raid' | 'court' | 'chase' | 'run' | 'serve') => {
+    setTossDecision(decision);
+    const winner = tossWinner || tossCaller;
+    const winnerName = winner === 'A' ? teamACustomName : teamBCustomName;
+    const otherTeamName = winner === 'A' ? teamBCustomName : teamACustomName;
+
+    // Announce via voice with Marathi Announcer
+    marathiAnnouncer.announceToss(winnerName, decision, otherTeamName, sport);
+
+    // Apply decision to match state
+    if (sport === 'Kabaddi') {
+      if (decision === 'raid') {
+        setRaidingTeam(winner);
+      } else if (decision === 'court') {
+        setRaidingTeam(winner === 'A' ? 'B' : 'A');
+      }
+    } else if (sport === 'Kho Kho') {
+      if (decision === 'chase') {
+        setChasingTeam(winner);
+      } else if (decision === 'run') {
+        setChasingTeam(winner === 'A' ? 'B' : 'A');
+      }
+    } else if (sport === 'Volleyball' || sport === 'General') {
+      if (decision === 'serve') {
+        setServingTeam(winner);
+      } else if (decision === 'court') {
+        setServingTeam(winner === 'A' ? 'B' : 'A');
+      }
+    }
+
+    // Log to events timeline
+    let decisionLabel = "";
+    if (decision === 'raid') decisionLabel = "पहिली चढाई (Raid First)";
+    else if (decision === 'court') decisionLabel = "मैदानाची बाजू (Court Side)";
+    else if (decision === 'chase') decisionLabel = "पहिली चेसिंग (Chasing First)";
+    else if (decision === 'run') decisionLabel = "डिफेन्स (Running First)";
+    else if (decision === 'serve') decisionLabel = "पहिली सर्व्हिस (Service First)";
+
+    const tossEvent: ScoreEvent = {
+      id: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' }),
+      team: winner,
+      teamName: winnerName,
+      points: 0,
+      type: 'नाणेफेक (Toss)',
+      desc: `🪙 नाणेफेक निकाल: ${winnerName} ने नाणेफेक जिंकून ${decisionLabel} निवडले.`
+    };
+    setEventsLog(prev => [tossEvent, ...prev]);
+
+    toast({
+      title: "🪙 नाणेफेक पूर्ण झाली!",
+      description: `${winnerName} ने ${decisionLabel} निवडले आहे. सामना सुरू करण्यासाठी सज्ज!`,
+      className: "bg-emerald-600 text-white font-bold"
+    });
+
+    setIsTossOpen(false);
+  };
 
   // -------------------------------------------------------------
   // ACTIONS: KABADDI RAID CLOCK
@@ -567,7 +700,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setDefendersB(7);
     setTimeoutsA(2);
     setTimeoutsB(2);
-    setMatchSecondsRemaining(1200);
+    setMatchSecondsRemaining(matchDurationSeconds);
     setMatchSecondsElapsed(0);
     setIsMatchClockRunning(false);
     setKhoTurn(1);
@@ -580,6 +713,9 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setSetsWonB(0);
     setSetHistory([]);
     setTimeoutClock(null);
+    setTossWinner(null);
+    setTossDecision(null);
+    setTossResult(null);
     toast({ title: "सामना रिसेट झाला (Match Reset Completed)" });
   };
 
@@ -700,19 +836,38 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             {voiceAnnounceEnabled ? "मराठी आवाज" : "आवाज बंद"}
           </Button>
 
+          {/* Match Toss (नाणेफेक) Button */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsTossOpen(true)}
+            className="rounded-xl h-9 px-3 text-xs font-black text-amber-900 bg-amber-100 hover:bg-amber-200 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 shadow-sm"
+            title="लाईव्ह नाणेफेक करा (Perform Match Toss)"
+          >
+            <Coins className="w-4 h-4 mr-1.5 text-amber-600 animate-bounce" />
+            {tossWinner ? "🪙 नाणेफेक निकाल" : "🪙 नाणेफेक (Toss)"}
+          </Button>
+
           {/* Quick Speak Current Score */}
           <Button
             size="sm"
             variant="outline"
             onClick={() => {
               marathiAnnouncer.announcePeriodicScore(teamACustomName, scoreA, teamBCustomName, scoreB);
+              const diff = Math.abs(scoreA - scoreB);
+              const leadText = scoreA > scoreB
+                ? `${teamACustomName} ${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
+                : scoreB > scoreA
+                  ? `${teamBCustomName} ${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
+                  : 'दोन्ही संघ बरोबरीत';
               toast({
-                title: "🎙️ गुणफलक उद्घोषणा",
-                description: `${teamACustomName}: ${scoreA} | ${teamBCustomName}: ${scoreB}`
+                title: "🎙️ गुणफलक उद्घोषणा (Score Announcement)",
+                description: `${teamACustomName}: ${scoreA} | ${teamBCustomName}: ${scoreB} • ${leadText}`,
+                className: "bg-blue-900 text-amber-300 font-bold border-2 border-amber-400 shadow-xl"
               });
             }}
             className="rounded-xl h-9 px-2.5 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
-            title="सध्याचा गुणफलक मराठीत ऐका (Speak Score)"
+            title="सध्याचा गुणफलक व आघाडी मराठीत ऐका (Speak Score & Lead)"
           >
             📢 गुण बोला
           </Button>
@@ -992,8 +1147,72 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
         {/* ================= CENTER MATCH ARENA & TIMERS ================= */}
         <div className="lg:col-span-4 flex flex-col justify-between gap-4">
           
+          {/* LIVE SCORE LEAD & STATUS BANNER */}
+          {scoreA !== scoreB ? (
+            <div className={cn(
+              "py-2 px-3.5 rounded-2xl text-center text-xs font-black uppercase tracking-wider flex items-center justify-between border shadow-sm",
+              scoreA > scoreB 
+                ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900" 
+                : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900"
+            )}>
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0" />
+                <span className="truncate">{scoreA > scoreB ? teamACustomName : teamBCustomName} आघाडीवर!</span>
+              </div>
+              <Badge className={cn("text-[10px] font-black shrink-0", scoreA > scoreB ? "bg-red-600 text-white" : "bg-blue-600 text-white")}>
+                +{Math.abs(scoreA - scoreB)} गुण आघाडी (+{getMarathiNumberWord(Math.abs(scoreA - scoreB))})
+              </Badge>
+            </div>
+          ) : (
+            <div className="py-1.5 px-3 rounded-2xl text-center text-[11px] font-bold text-muted-foreground bg-muted/40 border flex items-center justify-center gap-2">
+              <span>दोन्ही संघ बरोबरीत (Level: {scoreA} - {scoreB})</span>
+            </div>
+          )}
+
+          {/* TOSS RESULT STATUS BANNER */}
+          {tossWinner && tossDecision ? (
+            <div className="bg-amber-500/15 border border-amber-500/30 rounded-2xl px-3.5 py-2 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Coins className="w-4 h-4 text-amber-600 shrink-0" />
+                <div className="text-left">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">नाणेफेक निकाल (Toss Result)</p>
+                  <p className="font-black text-amber-800 dark:text-amber-200 text-xs">
+                    {tossWinner === 'A' ? teamACustomName : teamBCustomName} ने जिंकून {
+                      tossDecision === 'raid' ? 'पहिली चढाई' :
+                      tossDecision === 'court' ? 'मैदानाची बाजू' :
+                      tossDecision === 'chase' ? 'पहिली चेसिंग' :
+                      tossDecision === 'run' ? 'डिफेन्स' : 'पहिली सर्व्हिस'
+                    } निवडली
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setIsTossOpen(true)} 
+                className="h-7 text-[10px] px-2 font-black text-amber-800 dark:text-amber-300 hover:bg-amber-200/50 rounded-xl"
+              >
+                बदला
+              </Button>
+            </div>
+          ) : (
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-dashed border-amber-300/80 rounded-2xl px-3.5 py-2 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                <Coins className="w-4 h-4 text-amber-600 animate-bounce shrink-0" />
+                <span className="font-bold text-[11px]">नाणेफेक अद्याप झालेली नाही</span>
+              </div>
+              <Button 
+                size="sm" 
+                onClick={() => setIsTossOpen(true)} 
+                className="h-7 text-[10px] px-3 font-black bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl shadow-sm"
+              >
+                🪙 नाणेफेक करा (Toss Now)
+              </Button>
+            </div>
+          )}
+
           {/* MATCH HALF / ROUND CLOCK */}
-          <Card className={cn("p-6 rounded-[2.5rem] border-2 text-center shadow-lg", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
+          <Card className={cn("p-5 sm:p-6 rounded-[2.5rem] border-2 text-center shadow-lg relative", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
             <div className="flex items-center justify-between mb-2">
               <Badge variant="outline" className="font-bold text-[10px] uppercase">
                 {sport === 'Kabaddi' ? `हाफ ${matchHalf}` : sport === 'Kho Kho' ? `टर्न ${khoTurn}/4` : `सेट ${volleySet}`}
@@ -1001,29 +1220,84 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                 सामना वेळ (Match Clock)
               </span>
-              <Button 
-                size="sm" 
-                variant="ghost"
-                onClick={() => {
-                  if (sport === 'Kabaddi') setMatchHalf(h => h === 1 ? 2 : 1);
-                  else if (sport === 'Kho Kho') setKhoTurn(t => (t % 4) + 1);
-                }}
-                className="h-6 text-[10px] font-bold px-2"
+              <div className="flex items-center gap-1">
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => setIsTimeEditOpen(true)}
+                  className="h-6 text-[10px] font-bold px-2 text-primary hover:bg-primary/10 rounded-lg"
+                  title="सामन्याची वेळ बदला / सेट करा (Edit Match Time)"
+                >
+                  ⏱️ वेळ बदला
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => {
+                    if (sport === 'Kabaddi') setMatchHalf(h => h === 1 ? 2 : 1);
+                    else if (sport === 'Kho Kho') setKhoTurn(t => (t % 4) + 1);
+                  }}
+                  className="h-6 text-[10px] font-bold px-2"
+                >
+                  हाफ बदला
+                </Button>
+              </div>
+            </div>
+
+            {/* Time display with direct click to edit & quick +/- 1 min buttons */}
+            <div className="flex items-center justify-center gap-3 py-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => adjustMatchTime(-60)}
+                disabled={matchSecondsRemaining < 60}
+                className="h-8 px-2.5 rounded-xl text-[11px] font-black border-slate-300 dark:border-slate-700 active:scale-95"
+                title="-१ मिनिट कमी करा (-1 Min)"
               >
-                बदला
+                -1m
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => setIsTimeEditOpen(true)}
+                className="text-5xl font-black font-mono tracking-tighter text-slate-800 dark:text-slate-100 hover:text-primary transition-colors cursor-pointer select-none group flex items-center gap-1.5"
+                title="वेळ बदलण्यासाठी क्लिक करा (Click to Edit Match Duration)"
+              >
+                <span>{formatTime(matchSecondsRemaining)}</span>
+                <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary uppercase tracking-widest block font-sans">
+                  ✏️
+                </span>
+              </button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => adjustMatchTime(60)}
+                className="h-8 px-2.5 rounded-xl text-[11px] font-black border-slate-300 dark:border-slate-700 active:scale-95"
+                title="+१ मिनिट वाढवा (+1 Min)"
+              >
+                +1m
               </Button>
             </div>
 
-            <div className="text-5xl font-black font-mono tracking-tighter text-slate-800 dark:text-slate-100 py-1">
-              {formatTime(matchSecondsRemaining)}
+            <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-bold mb-3">
+              <span>एकूण वेळ: {Math.floor(matchDurationSeconds / 60)} मिनिटे {matchDurationSeconds % 60 > 0 ? `${matchDurationSeconds % 60}s` : ''}</span>
+              <span>&bull;</span>
+              <button 
+                type="button" 
+                onClick={() => setIsTimeEditOpen(true)}
+                className="text-primary hover:underline font-extrabold cursor-pointer"
+              >
+                वेळ बदला (Change)
+              </button>
             </div>
 
-            <div className="flex items-center justify-center gap-2 mt-3">
+            <div className="flex items-center justify-center gap-2">
               <Button
                 size="sm"
                 onClick={() => setIsMatchClockRunning(!isMatchClockRunning)}
                 className={cn(
-                  "rounded-xl h-10 px-5 font-black text-xs tracking-wider",
+                  "rounded-xl h-10 px-5 font-black text-xs tracking-wider shadow-sm",
                   isMatchClockRunning ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"
                 )}
               >
@@ -1035,9 +1309,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 variant="outline"
                 onClick={() => {
                   setIsMatchClockRunning(false);
-                  setMatchSecondsRemaining(1200);
+                  setMatchSecondsRemaining(matchDurationSeconds);
                 }}
                 className="rounded-xl h-10 px-3 font-bold text-xs"
+                title={`वेळ रिसेट करा (${Math.floor(matchDurationSeconds / 60)} मिनिटे)`}
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -1580,6 +1855,303 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
           </div>
         )}
       </Card>
+
+      {/* ----------------- EDIT MATCH TIME MODAL ----------------- */}
+      <Dialog open={isTimeEditOpen} onOpenChange={setIsTimeEditOpen}>
+        <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-slate-900 border-2">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2 text-primary">
+              <Clock className="w-5 h-5 text-amber-500" /> सामन्याची वेळ सेट करा (Set Match Duration)
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-muted-foreground">
+              खेळ व वयोगटानुसार सामन्याचा वेळ निवडा किंवा स्वतःची वेळ मिनिटे व सेकंदात नोंदवा.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Presets */}
+          <div className="space-y-4 pt-2">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
+                लोकप्रिय वेळ पर्याय (Quick Presets):
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "५ मिनिटे", mins: 5, desc: "सराव सामना" },
+                  { label: "७ मिनिटे", mins: 7, desc: "U14 ज्युनिअर" },
+                  { label: "१० मिनिटे", mins: 10, desc: "शालेय स्पर्धा" },
+                  { label: "१५ मिनिटे", mins: 15, desc: "हाफ टाईम" },
+                  { label: "२० मिनिटे", mins: 20, desc: "DSO वरिष्ठ" },
+                  { label: "३० मिनिटे", mins: 30, desc: "पूर्ण वेळ" },
+                ].map((preset) => (
+                  <button
+                    key={preset.mins}
+                    type="button"
+                    onClick={() => {
+                      setTimeEditMinutes(preset.mins);
+                      setTimeEditSeconds(0);
+                      updateMatchDuration(preset.mins, 0);
+                    }}
+                    className={cn(
+                      "p-2.5 rounded-2xl border text-center transition-all active:scale-95",
+                      matchDurationSeconds === preset.mins * 60
+                        ? "bg-primary text-white border-primary shadow-md"
+                        : "bg-muted/40 hover:bg-muted border-muted text-foreground"
+                    )}
+                  >
+                    <p className="text-xs font-black">{preset.label}</p>
+                    <p className={cn("text-[9px]", matchDurationSeconds === preset.mins * 60 ? "text-white/80" : "text-muted-foreground")}>
+                      {preset.desc}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Input */}
+            <div className="border-t pt-4">
+              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
+                इच्छित वेळ नोंदवा (Custom Minutes & Seconds):
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">मिनिटे (Minutes)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={timeEditMinutes}
+                    onChange={(e) => setTimeEditMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="font-black text-center text-lg h-11 rounded-xl"
+                  />
+                </div>
+                <span className="text-2xl font-black text-muted-foreground mt-4">:</span>
+                <div className="flex-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">सेकंद (Seconds)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={timeEditSeconds}
+                    onChange={(e) => setTimeEditSeconds(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+                    className="font-black text-center text-lg h-11 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={() => updateMatchDuration(timeEditMinutes, timeEditSeconds)}
+                  className="flex-1 h-11 rounded-xl font-black bg-primary text-white hover:bg-primary/90 shadow-md"
+                >
+                  वेळ लागू करा (Apply Time)
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsTimeEditOpen(false)}
+                  className="h-11 rounded-xl font-bold"
+                >
+                  रद्द करा
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ----------------- MATCH TOSS MODAL ----------------- */}
+      <Dialog open={isTossOpen} onOpenChange={setIsTossOpen}>
+        <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-slate-900 border-2">
+          <DialogHeader className="text-center sm:text-left">
+            <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center justify-center sm:justify-start gap-2 text-primary">
+              <Coins className="w-6 h-6 text-amber-500 animate-bounce" />
+              लाईव्ह सामना नाणेफेक (Match Toss)
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-muted-foreground text-center sm:text-left">
+              सामन्याच्या सुरुवातीला अधिकृत नाणेफेक करा व पहिली चढाई/सर्व्हिस किंवा मैदान बाजू निश्चित करा.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Step 1: Select Calling Team */}
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
+                १. नाणेफेक कोण कॉल करेल? (Calling Team):
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTossCaller('A')}
+                  className={cn(
+                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs",
+                    tossCaller === 'A'
+                      ? "bg-red-600 text-white border-red-600 shadow-md ring-2 ring-red-300"
+                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
+                  )}
+                >
+                  🔴 {teamACustomName}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTossCaller('B')}
+                  className={cn(
+                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs",
+                    tossCaller === 'B'
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-300"
+                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
+                  )}
+                >
+                  🔵 {teamBCustomName}
+                </button>
+              </div>
+            </div>
+
+            {/* Step 2: Select Call (Heads / Tails) */}
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
+                २. कॉल काय निवडला? (Call Choice):
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTossCall('heads')}
+                  className={cn(
+                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs flex items-center justify-center gap-2",
+                    tossCall === 'heads'
+                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
+                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
+                  )}
+                >
+                  🪙 छाप (HEADS)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTossCall('tails')}
+                  className={cn(
+                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs flex items-center justify-center gap-2",
+                    tossCall === 'tails'
+                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
+                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
+                  )}
+                >
+                  🪙 काटा (TAILS)
+                </button>
+              </div>
+            </div>
+
+            {/* Coin Animation Area */}
+            <div className="text-center py-6 bg-slate-50 dark:bg-slate-950/60 rounded-3xl border border-dashed border-amber-400/60 my-2 flex flex-col items-center justify-center">
+              <div className={cn(
+                "w-20 h-20 rounded-full border-4 border-amber-400 shadow-2xl flex items-center justify-center bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 text-slate-950 font-black text-xl transition-all select-none",
+                isFlipping ? "animate-spin scale-110 shadow-amber-400/50" : "scale-100"
+              )}>
+                {isFlipping ? (
+                  <Coins className="w-10 h-10 text-slate-950 animate-pulse" />
+                ) : tossResult ? (
+                  tossResult === 'heads' ? "छाप" : "काटा"
+                ) : (
+                  "₹"
+                )}
+              </div>
+
+              {isFlipping && (
+                <p className="text-xs font-black text-amber-600 mt-3 animate-pulse uppercase tracking-wider">
+                  नाणे हवेत फिरत आहे... (Flipping Coin...)
+                </p>
+              )}
+
+              {!isFlipping && tossResult && (
+                <div className="mt-3 text-center animate-in zoom-in-90 duration-300">
+                  <Badge className="bg-emerald-600 text-white font-black text-xs uppercase px-3 py-1 mb-1">
+                    निकाल: {tossResult === 'heads' ? 'छाप (HEADS)' : 'काटा (TAILS)'}
+                  </Badge>
+                  <p className="text-sm font-black text-primary">
+                    🏆 {tossWinner === 'A' ? teamACustomName : teamBCustomName} ने नाणेफेक जिंकली!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            {!tossWinner ? (
+              <Button
+                onClick={handleFlipCoin}
+                disabled={isFlipping}
+                className="w-full h-12 rounded-2xl font-black text-sm uppercase tracking-wider bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-lg active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Coins className="w-5 h-5" /> नाणे उडवा (Flip Coin)
+              </Button>
+            ) : (
+              <div className="space-y-2 border-t pt-3 animate-in fade-in duration-300">
+                <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground text-center">
+                  {tossWinner === 'A' ? teamACustomName : teamBCustomName} ची निवड काय?
+                </p>
+                
+                {sport === 'Kabaddi' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={() => handleTossDecision('raid')}
+                      className="h-12 rounded-xl font-black text-xs bg-orange-600 hover:bg-orange-700 text-white shadow-md active:scale-95"
+                    >
+                      🔥 पहिली चढाई (Raid First)
+                    </Button>
+                    <Button
+                      onClick={() => handleTossDecision('court')}
+                      className="h-12 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
+                    >
+                      🛡️ कोर्ट बाजू (Court Side)
+                    </Button>
+                  </div>
+                )}
+
+                {sport === 'Kho Kho' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={() => handleTossDecision('chase')}
+                      className="h-12 rounded-xl font-black text-xs bg-purple-600 hover:bg-purple-700 text-white shadow-md active:scale-95"
+                    >
+                      🏃‍♂️ पहिली चेसिंग (Chase First)
+                    </Button>
+                    <Button
+                      onClick={() => handleTossDecision('run')}
+                      className="h-12 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
+                    >
+                      🛡️ डिफेन्स (Running First)
+                    </Button>
+                  </div>
+                )}
+
+                {(sport === 'Volleyball' || sport === 'General') && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={() => handleTossDecision('serve')}
+                      className="h-12 rounded-xl font-black text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md active:scale-95"
+                    >
+                      🏐 पहिली सर्व्हिस (Serve First)
+                    </Button>
+                    <Button
+                      onClick={() => handleTossDecision('court')}
+                      className="h-12 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
+                    >
+                      🛡️ कोर्ट बाजू (Court Side)
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex justify-center pt-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleFlipCoin}
+                    className="text-xs font-bold text-muted-foreground hover:text-foreground"
+                  >
+                    पुन्हा नाणे उडवा (Re-flip)
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ----------------- PRINT-ONLY OFFICIAL A4 SCORECARD ----------------- */}
       <div className="hidden print:block fixed inset-0 bg-white p-8 z-[9999] text-black">

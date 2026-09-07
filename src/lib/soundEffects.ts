@@ -200,6 +200,42 @@ class SoundEngine {
     siren2.stop(now + duration);
     subOsc.stop(now + duration);
   }
+
+  /**
+   * 🪙 Authentic Metallic Coin Flip & Ping Ring
+   */
+  playCoinFlip() {
+    const ctx = this.initCtx();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+
+    // Sharp metallic chime frequency (2400Hz & 3600Hz)
+    osc1.frequency.setValueAtTime(2400, now);
+    osc1.frequency.exponentialRampToValueAtTime(1800, now + 0.8);
+
+    osc2.frequency.setValueAtTime(3600, now);
+    osc2.frequency.exponentialRampToValueAtTime(2200, now + 0.8);
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.5, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.9);
+    osc2.stop(now + 0.9);
+  }
 }
 
 export const sounds = new SoundEngine();

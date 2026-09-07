@@ -25,6 +25,7 @@ export interface Player {
   bmi: string;
   bloodGroup?: string;
   aadharNumber?: string;
+  panNumber?: string;
   mobileNumber?: string;
   generalRegisterNumber?: string;
   address?: string;

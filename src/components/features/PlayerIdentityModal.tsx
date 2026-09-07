@@ -57,6 +57,7 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
   const [currentPlayer, setCurrentPlayer] = useState<Player>(player);
   const [motherName, setMotherName] = useState(player.motherName || '');
   const [fatherName, setFatherName] = useState(player.fatherName || '');
+  const [panNumber, setPanNumber] = useState(player.panNumber || '');
   const [saralId, setSaralId] = useState(player.saralId || player.serialNumber || '');
   const [admissionDate, setAdmissionDate] = useState(player.admissionDate || '');
   const [identificationMark, setIdentificationMark] = useState(player.identificationMark || '');
@@ -69,6 +70,7 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
     setCurrentPlayer(player);
     setMotherName(player.motherName || '');
     setFatherName(player.fatherName || '');
+    setPanNumber(player.panNumber || '');
     setSaralId(player.saralId || player.serialNumber || '');
     setAdmissionDate(player.admissionDate || '');
     setIdentificationMark(player.identificationMark || '');
@@ -395,8 +397,8 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
               </tr>
               <tr>
                 <td class="sr">६</td>
-                <td class="label">आधार क्रमांक</td>
-                <td class="value"><strong>${player.aadharNumber || '---'}</strong></td>
+                <td class="label">आधार क्रमांक / पॅन क्रमांक</td>
+                <td class="value"><strong>${player.aadharNumber || '---'}</strong>${panNumber ? ` &bull; <strong>PAN: ${panNumber}</strong>` : ''}</td>
               </tr>
               <tr>
                 <td class="sr">७</td>
@@ -575,6 +577,10 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
                 <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold" />
               </div>
               <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-amber-900">पॅन क्रमांक (PAN Number)</label>
+                <Input value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} maxLength={10} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold uppercase tracking-wider" placeholder="ABCDE1234F" />
+              </div>
+              <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-amber-900">सरल आयडी (Saral ID)</label>
                 <Input value={saralId} onChange={(e) => setSaralId(e.target.value)} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold" />
               </div>
@@ -650,7 +656,7 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>३. आईचे नाव:</strong> {motherName || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>४. वडिलांचे नाव:</strong> {fatherName || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>५. जन्म तारीख:</strong> {dobWords}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>६. आधार नं:</strong> {player.aadharNumber || '---'}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>६. आधार / पॅन नं:</strong> {player.aadharNumber || '---'}{panNumber ? ` • PAN: ${panNumber}` : ''}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>७. सरल नं:</strong> {saralId || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>८. ३१ डिसे. २०२५ रोजी वय:</strong> {age31Dec}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>९. निवडलेला खेळ:</strong> {selectedSport || '---'}</div>

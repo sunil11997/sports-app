@@ -75,19 +75,21 @@ class MarathiVoiceAnnouncer {
 
   /**
    * 📢 Announce Periodic 3-Minute Score Update in Marathi
-   * e.g. "शिवाजी संघ तीन गुण, रमण संघ आठ गुण!"
+   * e.g. "शिवाजी संघ बारा गुण, रमण संघ सात गुण! शिवाजी संघ पाच गुणांनी आघाडीवर आहे!"
    */
   announcePeriodicScore(teamAName: string, scoreA: number, teamBName: string, scoreB: number) {
     const wordA = getMarathiNumberWord(scoreA);
     const wordB = getMarathiNumberWord(scoreB);
+    const diff = Math.abs(scoreA - scoreB);
+    const diffWord = getMarathiNumberWord(diff);
 
     let status = "";
     if (scoreA > scoreB) {
-      status = `${teamAName} आघाडीवर!`;
+      status = `${teamAName} ${diffWord} गुणांनी आघाडीवर आहे!`;
     } else if (scoreB > scoreA) {
-      status = `${teamBName} आघाडीवर!`;
+      status = `${teamBName} ${diffWord} गुणांनी आघाडीवर आहे!`;
     } else {
-      status = `दोन्ही संघ बरोबरीत!`;
+      status = `दोन्ही संघ ${wordA} गुणांवर बरोबरीत आहेत!`;
     }
 
     const text = `गुणफलक समालोचन! ${teamAName} ${wordA} गुण, ${teamBName} ${wordB} गुण! ${status}`;
@@ -105,6 +107,27 @@ class MarathiVoiceAnnouncer {
     } else if (remainingSeconds === 10) {
       this.speak("शेवटचे दहा सेकंद!", true);
     }
+  }
+
+  /**
+   * 🪙 Announce Match Toss (नाणेफेक) in Marathi
+   */
+  announceToss(winnerName: string, decision: 'raid' | 'court' | 'chase' | 'run' | 'serve', otherTeamName: string, sport: string = 'Kabaddi') {
+    let text = "";
+    if (decision === 'raid') {
+      text = `नाणेफेक निकाल! ${winnerName} ने नाणेफेक जिंकली असून पहिली चढाई निवडली आहे!`;
+    } else if (decision === 'court') {
+      text = `नाणेफेक निकाल! ${winnerName} ने नाणेफेक जिंकून मैदानाची बाजू निवडली आहे. ${otherTeamName} पहिली सुरुवात करेल!`;
+    } else if (decision === 'chase') {
+      text = `नाणेफेक निकाल! ${winnerName} ने नाणेफेक जिंकून पहिली चेसिंग निवडली आहे!`;
+    } else if (decision === 'run') {
+      text = `नाणेफेक निकाल! ${winnerName} ने नाणेफेक जिंकून डिफेन्स निवडला आहे. ${otherTeamName} पहिली चेसिंग करेल!`;
+    } else if (decision === 'serve') {
+      text = `नाणेफेक निकाल! ${winnerName} ने नाणेफेक जिंकून पहिली सर्व्हिस निवडली आहे!`;
+    } else {
+      text = `नाणेफेक निकाल! ${winnerName} ने नाणेफेक जिंकली आहे!`;
+    }
+    this.speak(text, true);
   }
 }
 
