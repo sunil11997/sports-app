@@ -1,10 +1,10 @@
 /**
- * Waghamba Sports Hub - Official PWA Service Worker (v6.0)
+ * Waghamba Sports Health Hub - Official PWA Service Worker (v6.3 Enterprise)
  * Handles app shell caching, static assets, and local notification clicks.
  * Private Firestore/Auth traffic is passed through directly to allow IndexedDB offline persistence.
  */
 
-const CACHE_NAME = 'wgb-sports-v6.0';
+const CACHE_NAME = 'wgb-sports-v6.3';
 
 // Essential Static Assets to pre-cache
 const STATIC_PRECACHE = [
@@ -22,7 +22,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_PRECACHE).catch((err) => {
-        console.warn('WGB SW: Precache partial error (ignored):', err);
+        console.warn('WGB SW: Precache partial notice (proceeding):', err);
       });
     })
   );
@@ -71,6 +71,7 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('firestore.googleapis.com') ||
     url.hostname.includes('firebaseapp.com') ||
     url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('identitytoolkit.googleapis.com') ||
     url.hostname.includes('google.com') ||
     url.pathname.startsWith('/api/')
   ) {
@@ -98,7 +99,7 @@ self.addEventListener('fetch', (event) => {
           if (event.request.headers.get('accept')?.includes('text/html')) {
             return caches.match('/offline.html');
           }
-          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+          return new Response('Network unavailable', { status: 503, statusText: 'Service Unavailable' });
         });
       })
   );

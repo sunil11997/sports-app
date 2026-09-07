@@ -43,6 +43,7 @@ import { PracticePhotoViewer } from './PracticePhotoViewer';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn, parseMedicalLog, transliterateEnglishToMarathi } from '@/lib/utils';
+import { generateId } from '@/lib/id-generator';
 import { useToast } from '@/hooks/use-toast';
 
 export function DailyReport({ store, section, language = 'Marathi', preselectedSport }: { store: any, section: 'sports' | 'general', language?: string, preselectedSport?: string }) {
@@ -232,7 +233,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         const photoDate = reportDate || format(new Date(), 'yyyy-MM-dd');
 
         const newPhoto: GeoPhoto = {
-          id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          id: generateId('photo'),
           date: photoDate,
           url: stampedUrl,
           caption: photoCaption || `${activeSport} - ${activeDrill}`,

@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml, isBirthdayToday } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
+import { generateId } from '@/lib/id-generator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
@@ -216,7 +217,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     const finalNameMarathi = (newStudentData.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
     const bmi = calculateBMI(newStudentData.height, newStudentData.weight);
 
-    const id = `std${std}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const id = generateId(`std${std}`);
     await store.addPlayer({
       ...newStudentData,
       id,

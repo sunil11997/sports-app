@@ -177,7 +177,7 @@ export function FaceAttendanceModal({
             failedCount++;
           }
         } catch (err) {
-          console.warn("Failed auto-enroll for", student.name, err);
+          console.warn("Failed auto-enroll for student:", student.id);
           failedCount++;
         }
       } else {

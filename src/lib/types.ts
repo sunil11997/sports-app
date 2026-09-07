@@ -55,6 +55,8 @@ export interface Player {
   faceEnrolledPhotoUrl?: string; // Captured snapshot during face enrollment
   schoolId?: string;
   ownerId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SchoolProfile {
@@ -80,6 +82,7 @@ export interface AttendanceRecord {
 }
 
 export interface FitnessAssessment {
+  id?: string;
   shuttleRun?: string;   // 10*6 Shuttle Run (Agility)
   run50m?: string;       // 50 Meter Run (Speed)
   run600m?: string;      // 600 Meter Run (Endurance / Stamina)

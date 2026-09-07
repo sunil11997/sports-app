@@ -1,547 +1,120 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from 'react';
-import Image from 'next/image';
-import { Card } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Edit, 
-  Search, 
-  Trash2, 
-  Hash, 
-  UserCheck, 
-  Calendar, 
-  Contact, 
-  MapPin, 
-  HeartPulse, 
-  Medal,
-  Camera,
-  CircleX,
-  Type,
-  Ruler,
-  Weight,
-  Phone,
-  FileDigit,
-  Home,
-  ScanFace,
-  Upload,
-  Cake,
-  CreditCard
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getAgeValidation, getLocalizedAgeCategory, transliterateEnglishToMarathi, isBirthdayToday } from '@/lib/utils';
 import type { Player } from '@/lib/types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { isBirthdayToday } from '@/lib/utils';
+import { BirthdayBanner } from './dashboard/BirthdayBanner';
+import { PlayerSearch } from './dashboard/PlayerSearch';
+import { PlayerTable } from './dashboard/PlayerTable';
+import { PlayerEditDialog } from './dashboard/PlayerEditDialog';
 
-const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
+export interface DashboardProps {
+  store: any;
+  section: string;
+  searchTerm?: string;
+  t?: any;
+}
 
-export function Dashboard({ store, section, searchTerm: initialSearch = "", t }: { store: any, section: string, searchTerm?: string, t: any }) {
+export function Dashboard({
+  store,
+  section,
+  searchTerm: initialSearch = '',
+  t,
+}: DashboardProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(false);
-  
-  const editingAgeValidation = useMemo(() => getAgeValidation(editingPlayer?.dob), [editingPlayer?.dob]);
-  
-  const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const profileUploadRef = useRef<HTMLInputElement>(null);
-  const aadharUploadRef = useRef<HTMLInputElement>(null);
 
   const isGeneral = section === 'general';
 
   const filteredPlayers = useMemo(() => {
-    return (store.data.players || [])
+    return (store?.data?.players || [])
       .filter((p: Player) => {
         const matchesSection = isGeneral ? true : p.category === 'athlete';
-        const query = searchTerm.toLowerCase();
-        return matchesSection && (
-          p.name.toLowerCase().includes(query) || 
-          (p.nameMarathi || "").includes(searchTerm) ||
-          (p.aadharNumber || "").includes(searchTerm) || 
-          (p.generalRegisterNumber || "").toLowerCase().includes(query)
+        const query = searchTerm.toLowerCase().trim();
+        if (!query) return matchesSection;
+
+        return (
+          matchesSection &&
+          (p.name.toLowerCase().includes(query) ||
+            (p.nameMarathi || '').includes(searchTerm) ||
+            (p.aadharNumber || '').includes(searchTerm) ||
+            (p.generalRegisterNumber || '').toLowerCase().includes(query) ||
+            String(p.std || '').includes(query))
         );
       })
-      .sort((a: any, b: any) => (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0));
-  }, [store.data.players, isGeneral, searchTerm]);
-
-  const handleUpdatePlayer = () => {
-    if (editingPlayer) {
-      const ageValidation = getAgeValidation(editingPlayer.dob);
-      const finalName = (editingPlayer.name || '').trim();
-      const finalNameMarathi = (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
-      const updatedPlayer = {
-        ...editingPlayer,
-        name: finalName,
-        nameMarathi: finalNameMarathi,
-        age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
-        ageCategory: ageValidation ? ageValidation.category : "None",
-        ageDetailed: ageValidation ? ageValidation.ageString : "",
-      };
-      store.updatePlayer(updatedPlayer);
-      setEditingPlayer(null);
-      stopCamera();
-      toast({ title: "Registry Updated", description: `${finalName}'s profile has been modified.` });
-    }
-  };
-
-  const startCamera = async (type: 'profile' | 'aadhar', mode: 'user' | 'environment' = 'environment') => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    try {
-      const constraints = { video: { facingMode: mode }, audio: false };
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-      setStream(newStream);
-      setActiveCam(type);
-      setFacingMode(mode);
-    } catch (error: any) {
-      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        try {
-          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          setStream(fallbackStream);
-          setActiveCam(type);
-          setFacingMode('user');
-        } catch (inner) {
-          toast({ variant: 'destructive', title: 'Camera Not Found' });
-        }
-      } else {
-        toast({ variant: 'destructive', title: 'Camera Access Denied' });
-      }
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    setStream(null);
-    setActiveCam(null);
-  };
-
-  const takePhoto = () => {
-    if (videoRef.current && canvasRef.current && activeCam && editingPlayer) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        if (facingMode === 'user') {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-        }
-        ctx.drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-        stopCamera();
-      }
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
-    const file = e.target.files?.[0];
-    if (file && editingPlayer) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        if (type === 'profile') setEditingPlayer({ ...editingPlayer, photoUrl: dataUrl });
-        else setEditingPlayer({ ...editingPlayer, aadharPhotoUrl: dataUrl });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleDeletePlayer = (playerId: string) => {
-    if (confirm("Permanently delete this student from the institutional registry?")) {
-      store.deletePlayer(playerId);
-      toast({ title: "Registry Purged", variant: "destructive" });
-    }
-  };
-
-  React.useEffect(() => {
-    if (videoRef.current && stream && activeCam) { videoRef.current.srcObject = stream; }
-  }, [stream, activeCam]);
+      .sort(
+        (a: any, b: any) =>
+          (parseInt(a.serialNumber || '0', 10) || 0) -
+          (parseInt(b.serialNumber || '0', 10) || 0)
+      );
+  }, [store?.data?.players, isGeneral, searchTerm]);
 
   const birthdaysToday = useMemo(() => {
     return (store?.data?.players || []).filter((p: any) => isBirthdayToday(p.dob));
   }, [store?.data?.players]);
 
-  if (!store.isLoaded) return <TableSkeleton rows={10} cols={5} />;
+  const handleSavePlayer = (updated: Player) => {
+    store.updatePlayer(updated);
+    setEditingPlayer(null);
+    toast({
+      title: isMarathiView ? 'माहिती अद्ययावत केली' : 'Registry Updated',
+      description: `${updated.name}'s profile has been updated.`,
+    });
+  };
+
+  const handleDeletePlayer = (playerId: string) => {
+    const msg = isMarathiView
+      ? 'या विद्यार्थ्याची नोंद कायमस्वरूपी काढून टाकायची आहे का?'
+      : 'Permanently delete this student from the institutional registry?';
+    if (confirm(msg)) {
+      store.deletePlayer(playerId);
+      toast({
+        title: isMarathiView ? 'नोंद हटवली' : 'Registry Purged',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (!store?.isLoaded) {
+    return <TableSkeleton rows={10} cols={5} />;
+  }
 
   return (
-    <div className="space-y-6">
-      {birthdaysToday.length > 0 && (
-        <Card className="border-2 border-rose-200 bg-gradient-to-r from-amber-500 via-rose-500 to-pink-600 text-white p-6 rounded-[2.5rem] shadow-xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner">
-                <Cake className="w-8 h-8 text-white animate-bounce" />
-              </div>
-              <div>
-                <Badge className="bg-white/20 text-white font-black uppercase text-[10px] px-3 py-1 mb-1">
-                  🎂 Today&apos;s Birthday Celebration (आजचा वाढदिवस)
-                </Badge>
-                <h3 className="text-xl font-black uppercase tracking-tight">
-                  {birthdaysToday.map((b: any) => isMarathiView ? (b.nameMarathi || transliterateEnglishToMarathi(b.name) || b.name) : b.name).join(', ')}
-                </h3>
-                <p className="text-xs font-extrabold text-white/90 mt-0.5">
-                  {isMarathiView 
-                    ? 'क्रीडा विभाग व वाघंबा आश्रमशाळेतर्फे वाढदिवसाच्या हार्दिक शुभेच्छा! 🥳🎉'
-                    : 'Wishing you a fantastic birthday filled with health, joy & athletic success! 🎉'}
-                </p>
-              </div>
-            </div>
-            <Badge className="bg-white text-rose-600 font-black text-sm px-4 py-2 rounded-xl shadow-lg">
-              {birthdaysToday.length} {birthdaysToday.length === 1 ? 'Student' : 'Students'}
-            </Badge>
-          </div>
-        </Card>
-      )}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] shadow-sm border">
-        <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-6">
-          <div className="flex bg-muted/40 p-1 rounded-xl border">
-            <Button variant={!isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(false)} className="h-8 sm:h-9 text-[9px] sm:text-[10px] font-black uppercase px-3 sm:px-4">English</Button>
-            <Button variant={isMarathiView ? "default" : "ghost"} onClick={() => setIsMarathiView(true)} className="h-8 sm:h-9 text-[9px] sm:text-[10px] font-black uppercase px-3 sm:px-4">मराठी</Button>
-          </div>
-          <h2 className="text-base sm:text-xl font-black text-primary uppercase">{isMarathiView ? 'विद्यार्थी नोंदणी' : 'Registry Roster'}</h2>
-        </div>
-        <div className="relative w-full sm:flex-1 md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder={isMarathiView ? "नाव / आधार शोधा..." : "Search name/Aadhar..."} 
-            className="pl-9 h-10 sm:h-11 rounded-full bg-muted/30 border-none text-xs sm:text-sm font-semibold" 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
-          />
-        </div>
-      </div>
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
+      {/* Birthday Banner Alert */}
+      <BirthdayBanner
+        birthdays={birthdaysToday}
+        isMarathiView={isMarathiView}
+      />
 
-      <Card className="google-card rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <Table className="min-w-max">
-            <TableHeader className="bg-muted/30">
-              <TableRow>
-                <TableHead className="px-4 sm:px-6 text-[10px] font-black uppercase w-[70px] sm:w-[100px]">Roll</TableHead>
-                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase">Student Profile</TableHead>
-                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase text-center">GR No</TableHead>
-                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase text-center">Standard</TableHead>
-                <TableHead className="px-3 sm:px-4 text-[10px] font-black uppercase text-center">Height/Weight</TableHead>
-                <TableHead className="px-4 sm:px-6 text-[10px] font-black uppercase text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPlayers.map((p: Player) => (
-                <TableRow key={p.id} className="h-16 sm:h-20 hover:bg-primary/5 transition-colors">
-                  <TableCell className="px-4 sm:px-6"><Badge variant="secondary" className="font-black text-xs">{p.serialNumber || '0'}</Badge></TableCell>
-                  <TableCell className="px-3 sm:px-4">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border shadow-sm shrink-0">
-                        <AvatarImage src={p.photoUrl} className="object-cover" />
-                        <AvatarFallback className="font-black uppercase text-xs">{(p.name || "?")[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-black text-xs sm:text-sm uppercase text-primary leading-tight">{isMarathiView ? (p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name) : p.name}</p>
-                        {(() => {
-                          const ageVal = getAgeValidation(p.dob);
-                          const age = ageVal ? ageVal.ageYears : (parseInt(p.age as any) || 0);
-                          const displayAge = (!age || age <= 0 || isNaN(age)) 
-                            ? (isMarathiView ? "वय: अपूर्ण" : "Age: Pending") 
-                            : `${isMarathiView ? "वय" : "Age"} ${age}`;
-                          const category = ageVal ? ageVal.category : (p.ageCategory || "None");
-                          return (
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">
-                              {p.gender} &bull; {displayAge}
-                              {category && category !== "None" && age > 0 && (
-                                <> &bull; {getLocalizedAgeCategory(category, isMarathiView)}</>
-                              )}
-                            </p>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-3 sm:px-4 text-center font-bold text-xs">{p.generalRegisterNumber || '---'}</TableCell>
-                  <TableCell className="px-3 sm:px-4 text-center"><Badge variant="outline" className="font-black text-[10px]">Std {p.std}</Badge></TableCell>
-                  <TableCell className="px-3 sm:px-4 text-center">
-                    <div className="text-[10px] font-black text-primary/60 uppercase">
-                      {p.height ? `${p.height}cm` : '--'} / {p.weight ? `${p.weight}kg` : '--'}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 sm:px-6 text-right flex justify-end gap-1 sm:gap-2 pt-4 sm:pt-6">
-                    <Button variant="ghost" size="icon" onClick={() => setEditingPlayer(p)} className="h-8 w-8 sm:h-9 sm:w-9"><Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeletePlayer(p.id)} className="h-8 w-8 sm:h-9 sm:w-9"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+      {/* Search and Language Controls */}
+      <PlayerSearch
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        isMarathiView={isMarathiView}
+        onToggleLanguage={() => setIsMarathiView(!isMarathiView)}
+        totalCount={filteredPlayers.length}
+      />
 
-      <Dialog open={!!editingPlayer} onOpenChange={() => { setEditingPlayer(null); stopCamera(); }}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[850px] rounded-2xl sm:rounded-[3rem] p-0 overflow-hidden h-[90vh] sm:h-[85vh] flex flex-col border-none shadow-3xl bg-white">
-          <DialogHeader className="bg-primary p-4 sm:p-8 text-white shrink-0">
-             <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0"><UserCheck className="w-5 h-5 sm:w-8 sm:h-8 text-white" /></div>
-                <DialogTitle className="text-base sm:text-2xl font-black uppercase tracking-tight">Institutional Profile Editor</DialogTitle>
-             </div>
-          </DialogHeader>
+      {/* Main Student Roster Table */}
+      <PlayerTable
+        players={filteredPlayers}
+        isMarathiView={isMarathiView}
+        onEditPlayer={(p) => setEditingPlayer(p)}
+        onDeletePlayer={handleDeletePlayer}
+      />
 
-          <ScrollArea className="flex-1">
-            <div className="p-4 sm:p-10 space-y-6 sm:space-y-10">
-              {editingPlayer && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                  <div className="lg:col-span-4 space-y-8">
-                     <div className="space-y-4">
-                       <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><Camera className="w-3 h-3" /> Profile Photo</Label>
-                       <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden border-4 border-primary/5 bg-muted/20 shadow-inner">
-                         {activeCam === 'profile' ? (
-                           <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover", facingMode === 'user' && "-scale-x-100")} />
-                         ) : editingPlayer.photoUrl ? (
-                           <div className="relative w-full h-full"><Image src={editingPlayer.photoUrl} alt="Profile" fill unoptimized className="object-cover" /></div>
-                         ) : (
-                           <div className="w-full h-full flex items-center justify-center opacity-10"><UserCheck className="w-12 h-12" /></div>
-                         )}
-                         {activeCam === 'profile' && (
-                           <div className="absolute bottom-4 inset-x-4 flex gap-2">
-                             <Button size="sm" onClick={takePhoto} className="flex-1 h-10 bg-accent text-white font-black text-[9px] rounded-xl">CAPTURE</Button>
-                             <Button size="sm" variant="destructive" onClick={stopCamera} className="h-10 w-10 p-0 rounded-xl"><CircleX className="w-4 h-4" /></Button>
-                           </div>
-                         )}
-                       </div>
-                       {!activeCam && (
-                         <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="flex-1 h-12 rounded-2xl font-black text-[9px] uppercase" onClick={() => startCamera('profile', 'environment')}><Camera className="w-3 h-3 mr-2" /> BACK CAM</Button>
-                            <Button size="sm" variant="ghost" onClick={() => profileUploadRef.current?.click()} className="h-12 w-12 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
-                            <input type="file" ref={profileUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'profile')} />
-                         </div>
-                       )}
-                     </div>
-
-                     <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><ScanFace className="w-3 h-3" /> Identity Scan</Label>
-                        <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden border-2 border-dashed border-primary/10 bg-muted/10 shadow-inner">
-                          {activeCam === 'aadhar' ? (
-                            <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover")} />
-                          ) : editingPlayer.aadharPhotoUrl ? (
-                            <div className="relative w-full h-full"><Image src={editingPlayer.aadharPhotoUrl} alt="Aadhar" fill unoptimized className="object-cover" /></div>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center opacity-10"><ScanFace className="w-8 h-8" /></div>
-                          )}
-                        </div>
-                        {!activeCam && (
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase" onClick={() => startCamera('aadhar', 'environment')}>BACK SCAN</Button>
-                            <Button size="sm" variant="ghost" onClick={() => aadharUploadRef.current?.click()} className="h-10 w-10 p-0 rounded-xl border-2"><Upload className="w-4 h-4" /></Button>
-                            <input type="file" ref={aadharUploadRef} hidden accept="image/*" onChange={(e) => handleFileUpload(e, 'aadhar')} />
-                          </div>
-                        )}
-                      </div>
-                  </div>
-
-                  <div className="lg:col-span-8 space-y-12">
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                        <Hash className="w-4 h-4" />
-                        <h3 className="font-black uppercase text-xs tracking-widest">Primary Details</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
-                          <Input 
-                            value={editingPlayer.name} 
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const mar = transliterateEnglishToMarathi(val);
-                              setEditingPlayer(prev => prev ? ({
-                                ...prev,
-                                name: val,
-                                nameMarathi: (!prev.nameMarathi || prev.nameMarathi === transliterateEnglishToMarathi(prev.name)) ? mar : prev.nameMarathi
-                              }) : null);
-                            }} 
-                            className="h-12 border-2 rounded-xl font-bold" 
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between ml-2">
-                            <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</Label>
-                            {editingPlayer.name && (
-                              <button 
-                                type="button" 
-                                onClick={() => setEditingPlayer(prev => prev ? ({ ...prev, nameMarathi: transliterateEnglishToMarathi(prev.name) }) : null)}
-                                className="text-[9px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
-                              >
-                                💡 सुचवलेले: {transliterateEnglishToMarathi(editingPlayer.name)}
-                              </button>
-                            )}
-                          </div>
-                          <Input 
-                            placeholder={transliterateEnglishToMarathi(editingPlayer.name) || "पूर्ण नाव मराठीत"}
-                            value={editingPlayer.nameMarathi || ""} 
-                            onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} 
-                            className="h-12 border-2 rounded-xl font-bold" 
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-primary uppercase ml-1">Father&apos;s Name (वडिलांचे नाव)</Label>
-                          <Input 
-                            value={editingPlayer.fatherName || ""} 
-                            onChange={(e) => setEditingPlayer({...editingPlayer, fatherName: e.target.value})} 
-                            className="h-12 border-2 rounded-xl font-bold" 
-                            placeholder="Father's full name"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-primary uppercase ml-1">Mother&apos;s Name (आईचे नाव)</Label>
-                          <Input 
-                            value={editingPlayer.motherName || ""} 
-                            onChange={(e) => setEditingPlayer({...editingPlayer, motherName: e.target.value})} 
-                            className="h-12 border-2 rounded-xl font-bold" 
-                            placeholder="Mother's full name"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Gender</Label><Select value={editingPlayer.gender} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, gender: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Standard</Label><Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{[...Array(12)].map((_, i) => (<SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>))}</SelectContent></Select></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary uppercase ml-1">Registry Role</Label><Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="student">Student</SelectItem><SelectItem value="athlete">Athlete</SelectItem></SelectContent></Select></div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                        <HeartPulse className="w-4 h-4" />
-                        <h3 className="font-black uppercase text-xs tracking-widest">Biometric Profile</h3>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Calendar className="w-3 h-3" /> Date of Birth</Label><Input type="date" value={editingPlayer.dob || ""} onChange={(e) => setEditingPlayer({...editingPlayer, dob: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Ruler className="w-3 h-3" /> Ht (cm)</Label><Input type="number" value={editingPlayer.height || ""} onChange={(e) => setEditingPlayer({...editingPlayer, height: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Ruler className="w-3 h-3" /> Sit Ht (cm)</Label><Input type="number" value={editingPlayer.sittingHeight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, sittingHeight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Weight className="w-3 h-3" /> Wt (kg)</Label><Input type="number" value={editingPlayer.weight || ""} onChange={(e) => setEditingPlayer({...editingPlayer, weight: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      </div>
-
-                      {editingAgeValidation && (
-                        <div className="p-6 bg-slate-50 rounded-[2rem] border-2 border-primary/5 space-y-4 shadow-inner">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
-                                {isMarathiView ? "जन्म तारीख" : "Date of Birth"}
-                              </span>
-                              <p className="text-sm font-black text-primary">{editingPlayer.dob}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
-                                {isMarathiView ? "वय (३१ डिसेंबर २०२६ रोजी)" : "Age (as of 31 Dec 2026)"}
-                              </span>
-                              <p className="text-sm font-black text-primary">
-                                {isMarathiView ? (
-                                  editingAgeValidation.ageString
-                                    .replace(/Years/g, "वर्षे")
-                                    .replace(/Months/g, "महिने")
-                                    .replace(/Days/g, "दिवस")
-                                ) : (
-                                  editingAgeValidation.ageString
-                                )}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
-                                {isMarathiView ? "नियुक्त गट" : "Assigned Category"}
-                              </span>
-                              <p className={cn("text-sm font-black uppercase", editingAgeValidation.eligible ? "text-primary" : "text-destructive")}>
-                                {getLocalizedAgeCategory(editingAgeValidation.category, isMarathiView)}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">
-                                {isMarathiView ? "पात्रता स्थिती" : "Eligibility Status"}
-                              </span>
-                              <div>
-                                <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", 
-                                  editingAgeValidation.eligible ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-destructive/5 text-destructive border border-destructive/20"
-                                )}>
-                                  {editingAgeValidation.eligible ? (isMarathiView ? "पात्र" : "Eligible") : (isMarathiView ? "अपात्र" : "Not eligible")}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {!editingAgeValidation.eligible && (
-                            <p className="text-xs font-black text-destructive uppercase tracking-wide bg-destructive/5 p-3 rounded-xl border border-destructive/10">
-                              {isMarathiView ? "उपलब्ध वयोगटासाठी पात्र नाही." : "Not eligible for available age categories."}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Blood Group</Label><Select value={editingPlayer.bloodGroup || "None"} onValueChange={(val) => setEditingPlayer({...editingPlayer, bloodGroup: val})}><SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger><SelectContent>{BLOOD_GROUPS.map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}</SelectContent></Select></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">Roll Number</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
-                        <Contact className="w-4 h-4" />
-                        <h3 className="font-black uppercase text-xs tracking-widest">Administrative</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><FileDigit className="w-3 h-3" /> Aadhar Number</Label><Input value={editingPlayer.aadharNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, aadharNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><CreditCard className="w-3 h-3" /> PAN Number (पॅन क्रमांक)</Label><Input value={editingPlayer.panNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, panNumber: e.target.value.toUpperCase()})} maxLength={10} className="h-12 border-2 rounded-xl font-bold uppercase tracking-wider" placeholder="ABCDE1234F" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Phone className="w-3 h-3" /> Mobile Number</Label><Input value={editingPlayer.mobileNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, mobileNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2"><Label className="text-[10px] font-black text-primary">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                        <div className="space-y-2 md:col-span-2"><Label className="text-[10px] font-black text-primary flex items-center gap-1"><Home className="w-3 h-3" /> Address</Label><Input value={editingPlayer.address || ""} onChange={(e) => setEditingPlayer({...editingPlayer, address: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase text-accent flex items-center gap-2"><Medal className="w-4 h-4" /> Sports Registry</Label>
-                      <div className="bg-accent/5 p-6 rounded-3xl border-2 border-dashed border-accent/10 grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {SPORTS_LIST.map(sport => (
-                          <div key={sport} className="flex items-center space-x-2">
-                            <Checkbox 
-                              checked={editingPlayer.sports?.includes(sport)} 
-                              onCheckedChange={(checked) => {
-                                const curr = editingPlayer.sports || [];
-                                const next = checked ? [...curr, sport] : curr.filter(s => s !== sport);
-                                setEditingPlayer({...editingPlayer, sports: next});
-                              }}
-                            />
-                            <Label className="text-[10px] font-black uppercase text-foreground/70">{sport}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-primary ml-2">Medical Notes</Label>
-                      <Input value={editingPlayer.medical || ""} onChange={(e) => setEditingPlayer({...editingPlayer, medical: e.target.value})} className="h-12 border-2 rounded-xl font-bold" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          <DialogFooter className="p-4 sm:p-8 border-t bg-muted/10 shrink-0">
-             <Button onClick={handleUpdatePlayer} className="w-full h-12 sm:h-14 bg-primary text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-wider sm:tracking-widest shadow-lg">Save Registry Profile</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <canvas ref={canvasRef} className="hidden" />
+      {/* Modular Player Edit Dialog */}
+      <PlayerEditDialog
+        player={editingPlayer}
+        isOpen={Boolean(editingPlayer)}
+        onClose={() => setEditingPlayer(null)}
+        onSave={handleSavePlayer}
+      />
     </div>
   );
 }

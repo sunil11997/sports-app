@@ -1,3 +1,9 @@
+/**
+ * Photo Storage Service for Daily Reports & Practice Evidence.
+ * Uses persistent IndexedDB exclusively, preventing localStorage quota exhaustion (5MB limit)
+ * and avoiding unsafe local persistence of uncompressed biometric image data.
+ */
+
 export interface GeoPhoto {
   id: string;
   date: string;
@@ -35,15 +41,11 @@ function openDB(): Promise<IDBDatabase> {
 }
 
 export async function savePhotoToIDB(photo: GeoPhoto): Promise<void> {
-  // Always save to localStorage immediately for instant synchronous persistence
-  try {
-    const key = `wgb_photos_${photo.date}`;
-    const saved = localStorage.getItem(key);
-    const existing: GeoPhoto[] = saved ? JSON.parse(saved) : [];
-    const updated = [photo, ...existing.filter(p => p.id !== photo.id)];
-    localStorage.setItem(key, JSON.stringify(updated));
-  } catch (e) {
-    console.error('LocalStorage save failed:', e);
+  // Clean up any legacy localStorage entry for this date to free up quota
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(`wgb_photos_${photo.date}`);
+    } catch {}
   }
 
   try {
@@ -56,24 +58,14 @@ export async function savePhotoToIDB(photo: GeoPhoto): Promise<void> {
       req.onerror = () => reject(req.error);
     });
   } catch (err) {
-    console.error('Failed to save photo to IndexedDB:', err);
+    console.warn('Failed to save photo to IndexedDB:', err);
   }
 }
 
 export async function getPhotosByDateFromIDB(date: string): Promise<GeoPhoto[]> {
   const photosMap = new Map<string, GeoPhoto>();
 
-  // 1. Get from localStorage
-  try {
-    const key = `wgb_photos_${date}`;
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      const lsPhotos: GeoPhoto[] = JSON.parse(saved);
-      lsPhotos.forEach(p => photosMap.set(p.id, p));
-    }
-  } catch (e) {}
-
-  // 2. Get from IndexedDB & merge
+  // Load from IndexedDB
   try {
     const db = await openDB();
     await new Promise<void>((resolve) => {
@@ -89,7 +81,7 @@ export async function getPhotosByDateFromIDB(date: string): Promise<GeoPhoto[]> 
       req.onerror = () => resolve();
     });
   } catch (err) {
-    console.error('Failed to load photos from IndexedDB:', err);
+    console.warn('Failed to load photos from IndexedDB:', err);
   }
 
   const result = Array.from(photosMap.values());
@@ -98,15 +90,12 @@ export async function getPhotosByDateFromIDB(date: string): Promise<GeoPhoto[]> 
 }
 
 export async function deletePhotoFromIDB(id: string, date: string): Promise<void> {
-  // Always clean up localStorage
-  try {
-    const key = `wgb_photos_${date}`;
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      const filtered = JSON.parse(saved).filter((p: GeoPhoto) => p.id !== id);
-      localStorage.setItem(key, JSON.stringify(filtered));
-    }
-  } catch (e) {}
+  // Clean up legacy localStorage if present
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(`wgb_photos_${date}`);
+    } catch {}
+  }
 
   try {
     const db = await openDB();
@@ -118,6 +107,6 @@ export async function deletePhotoFromIDB(id: string, date: string): Promise<void
       req.onerror = () => reject(req.error);
     });
   } catch (err) {
-    console.error('Failed to delete photo from IndexedDB:', err);
+    console.warn('Failed to delete photo from IndexedDB:', err);
   }
 }

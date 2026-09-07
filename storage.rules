@@ -7,35 +7,42 @@ service firebase.storage {
       return request.auth != null && request.auth.uid != null;
     }
     
-    function isSchoolOwner(schoolId) {
-      return isAuthenticated() && request.auth.uid == schoolId;
+    function isSchoolAuthorized(schoolId) {
+      return isAuthenticated() && (
+        request.auth.uid == schoolId ||
+        firestore.exists(/databases/(default)/documents/schools/$(schoolId)) &&
+        firestore.get(/databases/(default)/documents/schools/$(schoolId)).data.ownerId == request.auth.uid ||
+        firestore.exists(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid))
+      );
     }
 
-    function isValidImageOrPdf() {
-      return request.resource.contentType.matches('image/.*') ||
-             request.resource.contentType == 'application/pdf';
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB maximum for photos
     }
 
-    function isReasonableSize() {
-      return request.resource.size < 10 * 1024 * 1024; // 10MB maximum
+    function isValidDocument() {
+      return (request.resource.contentType.matches('image/.*') ||
+              request.resource.contentType == 'application/pdf') &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB maximum for PDFs
     }
 
     // 1. School Tenant Documents & Media
     match /schools/{schoolId}/{allPaths=**} {
-      allow read: if isSchoolOwner(schoolId);
-      allow write: if isSchoolOwner(schoolId) && isValidImageOrPdf() && isReasonableSize();
+      allow read: if isSchoolAuthorized(schoolId);
+      allow write: if isSchoolAuthorized(schoolId) && isValidDocument();
     }
 
     // 2. Player Photos & Identity Documents
     match /players/{schoolId}/{playerId}/{allPaths=**} {
-      allow read: if isSchoolOwner(schoolId);
-      allow write: if isSchoolOwner(schoolId) && isValidImageOrPdf() && isReasonableSize();
+      allow read: if isSchoolAuthorized(schoolId);
+      allow write: if isSchoolAuthorized(schoolId) && isValidImage();
     }
 
     // 3. Official Sports Rule PDFs & Knowledge Documents
     match /game_rules/{schoolId}/{allPaths=**} {
-      allow read: if isSchoolOwner(schoolId);
-      allow write: if isSchoolOwner(schoolId) && isValidImageOrPdf() && isReasonableSize();
+      allow read: if isSchoolAuthorized(schoolId);
+      allow write: if isSchoolAuthorized(schoolId) && isValidDocument();
     }
 
     // 4. Default Deny

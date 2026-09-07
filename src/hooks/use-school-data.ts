@@ -35,13 +35,22 @@ import {
   executeRestore,
   type RestoreSummary,
 } from "@/lib/backup-restore";
+import { generateId } from "@/lib/id-generator";
+import {
+  enqueueMutation,
+  processOfflineQueue,
+  migrateLegacyLocalStorageQueue,
+  getPendingMutationsCount,
+  type SyncStatusEvent,
+} from "@/lib/offline-queue";
 
 const OFFLINE_ATTENDANCE_KEY = "wgb_offline_attendance_queue";
 const OFFLINE_EQUIPMENT_KEY = "wgb_offline_equipment_stock";
 
 /**
- * useSchoolData - Institutional Registry Engine v6.2.0
- * Hardened for dynamic Academic Years (IST), Firestore Equipment collections, complete Backup/Restore.
+ * useSchoolData - Institutional Registry Engine v6.3.0
+ * Hardened for dynamic Academic Years (IST), Firestore Equipment collections, complete Backup/Restore,
+ * and persistent IndexedDB offline mutation queue with real-time status events.
  */
 export function useSchoolData(isActive: boolean = true) {
   const db = useFirestore();
@@ -107,52 +116,26 @@ export function useSchoolData(isActive: boolean = true) {
   }, [db, user, selectedYear, isActive]);
   const { data: schoolActivities } = useCollection(activitiesQuery);
 
-  // Sync Offline Attendance Queue
+  // Sync Offline Attendance Queue via IndexedDB
   const syncOfflineAttendance = useCallback(async () => {
     if (!user || !db || !navigator.onLine || syncLockRef.current) return;
-
-    const queueStr = localStorage.getItem(OFFLINE_ATTENDANCE_KEY);
-    if (!queueStr) return;
-
-    const queue: AttendanceRecord = JSON.parse(queueStr);
-    const keys = Object.keys(queue);
-    if (keys.length === 0) return;
 
     syncLockRef.current = true;
     setIsSyncing(true);
 
     try {
-      for (const key of keys) {
-        const status = queue[key];
-        const parts = key.split("_");
-        if (parts.length < 3) continue;
-        const session = parts.pop()!;
-        const date = parts.pop()!;
-        const playerId = parts.join("_");
-        const attRef = doc(db, "attendance_registry", `${playerId}_${date}_${session}`);
+      // 1. Migrate any legacy localStorage items if found
+      await migrateLegacyLocalStorageQueue(user.uid, selectedYear);
 
-        if (!status) {
-          deleteDocumentNonBlocking(attRef);
-        } else {
-          setDocumentNonBlocking(
-            attRef,
-            {
-              status,
-              playerId,
-              date,
-              session,
-              schoolId: user.uid,
-              academicYear: selectedYear,
-            },
-            { merge: true }
-          );
-        }
-        delete queue[key];
-      }
-      localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(queue));
-      setPendingCount(0);
+      // 2. Process persistent IndexedDB queue
+      await processOfflineQueue(db, (count) => {
+        setPendingCount(count);
+      });
+
+      const count = await getPendingMutationsCount();
+      setPendingCount(count);
     } catch (error) {
-      console.warn("WGB: Offline sync failed, retry required.", error);
+      console.warn("WGB: Offline sync retry needed:", error);
     } finally {
       setIsSyncing(false);
       syncLockRef.current = false;
@@ -164,7 +147,14 @@ export function useSchoolData(isActive: boolean = true) {
     if (!user || !db || !isActive) return;
 
     const handleSync = () => syncOfflineAttendance();
+    const handleStatus = (e: any) => {
+      if (e?.detail) {
+        if (typeof e.detail.pendingCount === "number") setPendingCount(e.detail.pendingCount);
+        if (typeof e.detail.isSyncing === "boolean") setIsSyncing(e.detail.isSyncing);
+      }
+    };
     window.addEventListener("online", handleSync);
+    window.addEventListener("wgb-offline-sync-status", handleStatus);
     handleSync();
 
     const today = getIndiaLocalDateString();
@@ -412,6 +402,7 @@ export function useSchoolData(isActive: boolean = true) {
 
     return () => {
       window.removeEventListener("online", handleSync);
+      window.removeEventListener("wgb-offline-sync-status", handleStatus);
       unsubs.forEach((unsub) => unsub());
     };
   }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
@@ -584,18 +575,36 @@ export function useSchoolData(isActive: boolean = true) {
     setAttendance: (newAttendance: AttendanceRecord) => {
       if (!user || !db) return;
       setAttendanceData((prev) => ({ ...prev, ...newAttendance }));
-      Object.entries(newAttendance).forEach(([key, status]) => {
+      Object.entries(newAttendance).forEach(async ([key, status]) => {
         const parts = key.split("_");
         if (parts.length < 3) return;
         const session = parts.pop()!;
         const date = parts.pop()!;
         const playerId = parts.join("_");
-        const attRef = doc(db, "attendance_registry", `${playerId}_${date}_${session}`);
+        const docId = `${playerId}_${date}_${session}`;
+        const attRef = doc(db, "attendance_registry", docId);
         if (!navigator.onLine) {
-          const q = JSON.parse(localStorage.getItem(OFFLINE_ATTENDANCE_KEY) || "{}");
-          q[key] = status;
-          localStorage.setItem(OFFLINE_ATTENDANCE_KEY, JSON.stringify(q));
-          setPendingCount(Object.keys(q).length);
+          await enqueueMutation({
+            collectionName: "attendance_registry",
+            docId,
+            action: status ? "set" : "delete",
+            payload: status
+              ? {
+                  status,
+                  playerId,
+                  date,
+                  session,
+                  schoolId: user.uid,
+                  academicYear: selectedYear,
+                  updatedAt: new Date().toISOString(),
+                }
+              : undefined,
+            options: { merge: true },
+            schoolId: user.uid,
+            academicYear: selectedYear,
+          });
+          const count = await getPendingMutationsCount();
+          setPendingCount(count);
         } else {
           if (!status) deleteDocumentNonBlocking(attRef);
           else
@@ -651,7 +660,7 @@ export function useSchoolData(isActive: boolean = true) {
 
     addTacticalEvent: (e: any) => {
       if (!user || !db) return;
-      const id = Math.random().toString(36).substr(2, 9);
+      const id = e.id || generateId("tac");
       setDocumentNonBlocking(
         doc(db, "tactical_registry", id),
         { ...e, id, schoolId: user.uid, academicYear: selectedYear, updatedAt: new Date().toISOString() },

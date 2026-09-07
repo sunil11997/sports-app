@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { generateId } from '@/lib/id-generator';
 
 export function SchoolActivities({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
@@ -26,7 +27,7 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
   const handleSave = () => {
     if (!summary) return;
     store.addActivity({
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateId('act'),
       date, std, type, duration, summary, category: targetCategory
     });
     setSummary("");

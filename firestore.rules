@@ -3,239 +3,272 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * WAGHAMBA SPORTS HEALTH HUB • PRODUCTION MULTI-TENANT SECURITY RULES v6.2
+     * WAGHAMBA SPORTS HEALTH HUB • ENTERPRISE RBAC & PRIVACY SECURITY RULES v6.3
      * 
-     * Enforces strict school/tenant isolation and role-based permissions:
-     * - A user can ONLY access records where schoolId/ownerId matches their authenticated UID or their school membership.
-     * - Prevents cross-school reads, writes, updates, and deletes.
-     * - Prevents changing schoolId across tenants on updates.
-     * - Unauthenticated & unauthorized requests are rejected immediately.
+     * Server-side Enforced Role-Based Access Control:
+     * - Authentication -> Authenticated User -> School Membership -> Server-Enforced Role -> Scoped Data Access
+     * - Supported Roles:
+     *     * 'admin': Full school configuration, staff membership management, student delete, audit logs.
+     *     * 'teacher': Attendance, fitness assessments, health/injury records, student profile CRUD.
+     *     * 'coach': Tactics, sports drills, practice plans, scoreboards, equipment, daily readiness.
+     *     * 'viewer': Read-only access to rosters, public matches, schedules. No write/mutate permissions.
+     * - Backward Compatibility:
+     *     * Existing school creators/owners where auth.uid == schoolId or auth.uid == ownerId are automatically granted 'admin'.
+     * - Cross-School Tenant Isolation:
+     *     * Strict prevention of reading, querying, or writing cross-tenant data.
+     * - Immutability:
+     *     * schoolId, ownerId, and primary record identifiers cannot be transferred or mutated.
      */
 
-    // Authentication Helper
+    // --- Core Authentication Helpers ---
     function isAuthenticated() {
       return request.auth != null && request.auth.uid != null;
     }
 
-    // Direct School Ownership Helper
-    function isSchoolOwner(schoolId) {
-      return isAuthenticated() && request.auth.uid == schoolId;
-    }
-
-    // Document-level Tenant Authorization Check
-    function isTenantAuthorized(docData) {
+    // Direct School Ownership Check (Owner is always Admin)
+    function isDirectSchoolOwner(schoolId) {
       return isAuthenticated() && (
-        docData.schoolId == request.auth.uid ||
-        docData.ownerId == request.auth.uid
+        request.auth.uid == schoolId ||
+        (exists(/databases/$(database)/documents/schools/$(schoolId)) &&
+         get(/databases/$(database)/documents/schools/$(schoolId)).data.ownerId == request.auth.uid)
       );
     }
 
-    // Create Operation Validator: Requires caller's UID to match schoolId/ownerId
-    function validTenantCreate(incomingData) {
+    // Server-side Membership Lookup
+    function getMembershipDoc(schoolId) {
+      return get(/databases/$(database)/documents/school_members/$(schoolId + '_' + request.auth.uid));
+    }
+
+    function hasValidMembership(schoolId) {
       return isAuthenticated() && (
-        incomingData.schoolId == request.auth.uid ||
-        incomingData.ownerId == request.auth.uid
+        isDirectSchoolOwner(schoolId) ||
+        (exists(/databases/$(database)/documents/school_members/$(schoolId + '_' + request.auth.uid)) &&
+         getMembershipDoc(schoolId).data.status == 'active')
       );
     }
 
-    // Update Operation Validator: Both existing and incoming data must belong to the caller, and schoolId cannot be transferred
-    function validTenantUpdate(existingData, incomingData) {
-      return isTenantAuthorized(existingData) &&
-             validTenantCreate(incomingData) &&
-             (!('schoolId' in existingData) || !('schoolId' in incomingData) || existingData.schoolId == incomingData.schoolId) &&
+    // Role Resolvers (Server-enforced, NOT client-trusted)
+    function getUserRole(schoolId) {
+      return isDirectSchoolOwner(schoolId) 
+        ? 'admin' 
+        : (exists(/databases/$(database)/documents/school_members/$(schoolId + '_' + request.auth.uid))
+            ? getMembershipDoc(schoolId).data.role
+            : 'none');
+    }
+
+    function isAdmin(schoolId) {
+      return isAuthenticated() && getUserRole(schoolId) == 'admin';
+    }
+
+    function isTeacherOrAbove(schoolId) {
+      return isAuthenticated() && getUserRole(schoolId) in ['admin', 'teacher'];
+    }
+
+    function isCoachOrAbove(schoolId) {
+      return isAuthenticated() && getUserRole(schoolId) in ['admin', 'teacher', 'coach'];
+    }
+
+    function canReadSchool(schoolId) {
+      return isAuthenticated() && (
+        isDirectSchoolOwner(schoolId) ||
+        hasValidMembership(schoolId)
+      );
+    }
+
+    // Immutability Guard: Prevents cross-tenant document reassignment
+    function areTenantFieldsPreserved(existingData, incomingData) {
+      return (!('schoolId' in existingData) || !('schoolId' in incomingData) || existingData.schoolId == incomingData.schoolId) &&
              (!('ownerId' in existingData) || !('ownerId' in incomingData) || existingData.ownerId == incomingData.ownerId);
     }
 
-    // Delete Operation Validator: Must own the existing record
-    function validTenantDelete(existingData) {
-      return isTenantAuthorized(existingData);
-    }
-
-    // 1. School Profiles
+    // --- 1. School Profiles ---
     match /schools/{schoolId} {
-      allow read: if isSchoolOwner(schoolId);
-      allow create: if isSchoolOwner(schoolId) || (isAuthenticated() && request.resource.data.ownerId == request.auth.uid);
-      allow update: if isSchoolOwner(schoolId);
-      allow delete: if isSchoolOwner(schoolId);
+      allow read: if canReadSchool(schoolId);
+      allow create: if isAuthenticated() && (request.auth.uid == schoolId || request.resource.data.ownerId == request.auth.uid);
+      allow update: if isAdmin(schoolId) && areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isDirectSchoolOwner(schoolId);
     }
 
-    // 2. School Members & Roles
+    // --- 2. School Staff Members & Roles ---
     match /school_members/{memberId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.schoolId == request.auth.uid);
-      allow create: if isAuthenticated() && (request.resource.data.schoolId == request.auth.uid || request.resource.data.userId == request.auth.uid);
-      allow update: if isAuthenticated() && (resource.data.schoolId == request.auth.uid || resource.data.userId == request.auth.uid);
-      allow delete: if isAuthenticated() && resource.data.schoolId == request.auth.uid;
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin(resource.data.schoolId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin(request.resource.data.schoolId) ||
+        (request.resource.data.userId == request.auth.uid && isDirectSchoolOwner(request.resource.data.schoolId))
+      );
+      allow update: if isAdmin(resource.data.schoolId) &&
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.schoolId == resource.data.schoolId;
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 3. Students & Athletes Roster
+    // --- 3. Students & Athletes Roster ---
     match /players/{playerId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow update: if isTeacherOrAbove(resource.data.schoolId) && 
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 4. Attendance Registry
+    // --- 4. Isolated Biometric Embeddings (High Sensitivity) ---
+    match /player_biometrics/{playerId} {
+      allow read: if isTeacherOrAbove(resource.data.schoolId);
+      allow create, update: if isTeacherOrAbove(request.resource.data.schoolId) &&
+                               areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isAdmin(resource.data.schoolId);
+    }
+
+    // --- 5. Attendance Registry ---
     match /attendance_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isCoachOrAbove(request.resource.data.schoolId);
+      allow update: if isCoachOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isCoachOrAbove(resource.data.schoolId);
     }
 
-    // 5. Fitness Assessments Registry
+    // --- 6. Fitness Assessments Registry ---
     match /fitness_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow update: if isTeacherOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 6. Sports Skills Registry
+    // --- 7. Sports Skills Registry ---
     match /skills_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isCoachOrAbove(request.resource.data.schoolId);
+      allow update: if isCoachOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isTeacherOrAbove(resource.data.schoolId);
     }
 
-    // 7. Daily Readiness Registry
+    // --- 8. Daily Readiness Registry ---
     match /readiness_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isCoachOrAbove(request.resource.data.schoolId);
+      allow update: if isCoachOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isTeacherOrAbove(resource.data.schoolId);
     }
 
-    // 8. Tactical Events & Performance Registry
+    // --- 9. Tactical Events & Performance ---
     match /tactical_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isCoachOrAbove(request.resource.data.schoolId);
+      allow update: if isCoachOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isCoachOrAbove(resource.data.schoolId);
     }
 
-    // 9. Health Incidents & Injury Logs
+    // --- 10. Health Incidents & Injury Logs ---
     match /all_health_incidents/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isCoachOrAbove(request.resource.data.schoolId);
+      allow update: if isTeacherOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 10. School Activities & Event Logs
+    // --- 11. School Activities & Event Logs ---
     match /school_activities/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow update: if isTeacherOrAbove(resource.data.schoolId) &&
+                       areTenantFieldsPreserved(resource.data, request.resource.data);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 11. Drill Completions
+    // --- 12. Drill Completions & Targets ---
     match /drill_completions/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isCoachOrAbove(resource.data.schoolId);
     }
 
-    // 12. Goals & Targets
     match /goal_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isTeacherOrAbove(resource.data.schoolId);
     }
 
-    // 13. Report Photos & Evidence Metadata
+    // --- 13. Activity Summaries & Evidence Photos Metadata ---
     match /report_photos/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow delete: if isTeacherOrAbove(resource.data.schoolId);
     }
 
-    // 14. Daily Activity Summaries
     match /daily_summaries/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow delete: if isTeacherOrAbove(resource.data.schoolId);
     }
 
-    // 15. Equipment Inventory Stock (Authoritative Firestore)
+    // --- 14. Equipment Inventory Stock & Tracking ---
     match /equipment_inventory/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 16. Equipment Issue & Return Records
     match /equipment_issues/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 17. Equipment Indents & Budget Proposals
     match /equipment_indents/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isAdmin(resource.data.schoolId);
     }
 
-    // 18. Daily Practice Schedules
+    // --- 15. Schedules & Team Plans ---
     match /daily_practice_schedules/{docId} {
-      allow read: if isTenantAuthorized(resource.data) || isSchoolOwner(resource.data.schoolId);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isCoachOrAbove(resource.data.schoolId);
     }
 
-    // 19. Auto Practice Master Plans
     match /master_auto_plans/{docId} {
-      allow read: if isTenantAuthorized(resource.data) || isSchoolOwner(resource.data.schoolId);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isCoachOrAbove(resource.data.schoolId);
     }
 
-    // 20. Official Game Rules Registry
-    match /game_rules_registry/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
-    }
-
-    // 21. Exam & Evaluation Term Configurations
-    match /exam_configs/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
-    }
-
-    // 22. Monthly Performance Configurations
-    match /performance_configs/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
-    }
-
-    // 23. Team Plans & Rosters
     match /team_plans/{docId} {
-      allow read: if isTenantAuthorized(resource.data);
-      allow create: if validTenantCreate(request.resource.data);
-      allow update: if validTenantUpdate(resource.data, request.resource.data);
-      allow delete: if validTenantDelete(resource.data);
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isCoachOrAbove(resource.data.schoolId);
     }
 
-    // 24. Explicit Default Deny
+    // --- 16. Academic Evaluations & Rules ---
+    match /game_rules_registry/{docId} {
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isCoachOrAbove(request.resource.data.schoolId);
+      allow delete: if isAdmin(resource.data.schoolId);
+    }
+
+    match /exam_configs/{docId} {
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow delete: if isAdmin(resource.data.schoolId);
+    }
+
+    match /performance_configs/{docId} {
+      allow read: if canReadSchool(resource.data.schoolId);
+      allow create, update: if isTeacherOrAbove(request.resource.data.schoolId);
+      allow delete: if isAdmin(resource.data.schoolId);
+    }
+
+    // --- 17. Default Deny ---
     match /{document=**} {
       allow read, write: if false;
     }

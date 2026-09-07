@@ -47,6 +47,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { cn, parseMedicalLog, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
+import { generateId } from '@/lib/id-generator';
 
 // ==========================================
 // 1. REALISTIC ANATOMICAL BODY REGIONS
@@ -788,9 +789,10 @@ REHAB_STAGES: ${info?.returnStages}
 COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\n[PHOTO_ATTACHED]: true` : ''}`;
     
     const incident = {
-      id: `inj_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: generateId('inj'),
       playerId: selectedPlayer,
       playerName: player?.name || "Unknown",
+      playerNameAtTimeOfRecord: player?.name || "Unknown",
       date,
       description: fullLog,
       severity: (severity.includes('Severe') || severity.includes('Critical')) ? 'Critical' : 'Minor',

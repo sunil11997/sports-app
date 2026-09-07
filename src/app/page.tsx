@@ -71,6 +71,7 @@ const HubFallback = () => (
  */
 import { Dashboard } from '@/components/features/Dashboard';
 import { PasscodeLock } from '@/components/features/PasscodeLock';
+import { GroundModeBar } from '@/components/features/GroundModeBar';
 
 const Registration = dynamic(
   () => import('@/components/features/Registration').then((m) => m.Registration),
@@ -831,6 +832,35 @@ export default function WaghambaApp() {
             </TabsContent>
 
           </Tabs>
+
+          <GroundModeBar
+            isActive={isGroundMode}
+            pendingSyncCount={schoolData.pendingSyncCount}
+            onAction={(action) => {
+              if (action === 'attendance') {
+                setActiveTab('students');
+                setSubTab('attendance');
+              } else if (action === 'practice') {
+                setActiveTab('game');
+              } else if (action === 'scoreboard') {
+                setActiveTab('students');
+                setSubTab('scoreboard-module');
+              } else if (action === 'injury') {
+                setActiveTab('game');
+              } else if (action === 'camera') {
+                setActiveTab('students');
+                setSubTab('daily-report');
+              } else if (action === 'sync') {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new Event('online'));
+                  toast({
+                    title: 'Offline Sync Initiated',
+                    description: 'Processing pending mutations...',
+                  });
+                }
+              }
+            }}
+          />
         </main>
 
         <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t h-[calc(4.25rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-1 sm:px-2 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">

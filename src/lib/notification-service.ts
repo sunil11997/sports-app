@@ -5,6 +5,7 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { NotificationItem } from './types';
+import { generateId } from './id-generator';
 
 export class NotificationService {
   private static isCapacitorAvailable(): boolean {
@@ -80,7 +81,7 @@ export class NotificationService {
     linkTab?: string
   ): NotificationItem {
     return {
-      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: generateId('notif'),
       title,
       message,
       type,

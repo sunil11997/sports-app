@@ -16,6 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { generateId } from '@/lib/id-generator';
 
 const BODY_PARTS = [
   { id: 'ankle', label: 'Ankle (घोटा)' },
@@ -58,9 +59,10 @@ export function InjuryLogger({ store }: { store: any }) {
       const today = format(new Date(), 'yyyy-MM-dd');
       
       const incident = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: generateId('inj'),
         playerId: selectedPlayerId,
         playerName: player?.name || "Unknown",
+        playerNameAtTimeOfRecord: player?.name || "Unknown",
         date: today,
         description: `[INJURY LOG] भाग: ${selectedBodyPart}, प्रकार: ${selectedInjuryType}, तीव्रता: ${severity}`,
         severity: severity.includes('Severe') ? 'Critical' : 'Minor',

@@ -43,6 +43,8 @@ import { usePWA } from '@/components/providers/pwa-provider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { generateId } from '@/lib/id-generator';
+import { compressImage, maskAadhaar } from '@/lib/privacy-utils';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import type { Player } from '@/lib/types';
 
@@ -190,7 +192,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     setActiveCam(null);
   };
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
     if (videoRef.current && canvasRef.current && activeCam) {
       const canvas = canvasRef.current;
       const video = videoRef.current;
@@ -200,24 +202,36 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       if (ctx) {
         if (facingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
         ctx.drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (activeCam === 'profile') form.setValue('photoUrl', dataUrl);
-        else form.setValue('aadharPhotoUrl', dataUrl);
+        try {
+          const compressed = await compressImage(canvas.toDataURL('image/jpeg', 0.85), 800, 0.75);
+          if (activeCam === 'profile') form.setValue('photoUrl', compressed.dataUrl);
+          else form.setValue('aadharPhotoUrl', compressed.dataUrl);
+        } catch {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          if (activeCam === 'profile') form.setValue('photoUrl', dataUrl);
+          else form.setValue('aadharPhotoUrl', dataUrl);
+        }
         stopCamera();
       }
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'aadhar') => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        if (type === 'profile') form.setValue('photoUrl', dataUrl);
-        else form.setValue('aadharPhotoUrl', dataUrl);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, 800, 0.75);
+        if (type === 'profile') form.setValue('photoUrl', compressed.dataUrl);
+        else form.setValue('aadharPhotoUrl', compressed.dataUrl);
+      } catch {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+          if (type === 'profile') form.setValue('photoUrl', dataUrl);
+          else form.setValue('aadharPhotoUrl', dataUrl);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -262,7 +276,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         ...values,
         name: finalName,
         nameMarathi: finalNameMarathi,
-        id: values.id || Math.random().toString(36).substr(2, 9), 
+        id: values.id || generateId('std'), 
         age: calculatedAge,
         ageCategory,
         ageDetailed,
