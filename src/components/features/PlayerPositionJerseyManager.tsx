@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Shirt, 
@@ -24,7 +24,9 @@ import {
   Layers,
   Camera,
   Shield,
-  Upload
+  Upload,
+  UserCheck,
+  X
 } from 'lucide-react';
 import { 
   cn, 
@@ -33,6 +35,11 @@ import {
   getTeacherName, 
   getSportPositions,
   SPORT_POSITIONS_MAP,
+  LEFT_COURT_POSITIONS,
+  MIDDLE_COURT_POSITIONS,
+  RIGHT_COURT_POSITIONS,
+  NUMBERED_COURT_POSITIONS,
+  getPositionBadgeInfo,
   transliterateEnglishToMarathi 
 } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -128,7 +135,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedGender, setSelectedGender] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'court' | 'table'>('court');
+  const [viewMode, setViewMode] = useState<'court' | 'lanes' | 'table'>('court');
   const [isSaving, setIsSaving] = useState(false);
 
   // Coach Manual Captain & Vice Captain Selection
@@ -596,6 +603,196 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
     }
   };
 
+  // Render options for position select dropdowns (Sport specific + Left 1-6 + Middle 1-5 + Right 1-6)
+  const renderPositionSelectOptions = () => {
+    const sportSpecific = (SPORT_POSITIONS_MAP[selectedSport] || []).map(p => ({
+      id: p.id,
+      nameMr: p.nameMr,
+      shortCode: p.shortCode,
+    }));
+
+    return (
+      <>
+        {sportSpecific.length > 0 && (
+          <SelectGroup>
+            <SelectLabel className="text-[10px] font-black uppercase text-amber-500 tracking-wider py-1 px-2">
+              🎯 अधिकृत {selectedSport} पोझिशन्स
+            </SelectLabel>
+            {sportSpecific.map(pos => (
+              <SelectItem key={pos.id} value={pos.nameMr} className="text-xs font-bold">
+                <span className="font-mono text-emerald-500 font-bold mr-1.5">[{pos.shortCode}]</span> {pos.nameMr}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        )}
+
+        <SelectSeparator className="my-1" />
+
+        {/* Left 1 to 6 */}
+        <SelectGroup>
+          <SelectLabel className="text-[10px] font-black uppercase text-blue-500 tracking-wider py-1 px-2 flex items-center justify-between">
+            <span>⬅️ डावी फळी (Left 1 ते 6)</span>
+            <span className="text-[9px] font-mono text-blue-400">६ पोझिशन्स</span>
+          </SelectLabel>
+          {LEFT_COURT_POSITIONS.map(pos => (
+            <SelectItem key={pos.id} value={pos.nameMr} className="text-xs font-bold">
+              <span className="font-mono text-blue-600 dark:text-blue-400 font-black mr-1.5">[{pos.shortCode}]</span> {pos.nameMr}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+
+        <SelectSeparator className="my-1" />
+
+        {/* Middle 1 to 5 */}
+        <SelectGroup>
+          <SelectLabel className="text-[10px] font-black uppercase text-amber-500 tracking-wider py-1 px-2 flex items-center justify-between">
+            <span>⏺️ मध्य फळी (Middle 1 ते 5)</span>
+            <span className="text-[9px] font-mono text-amber-400">५ पोझिशन्स</span>
+          </SelectLabel>
+          {MIDDLE_COURT_POSITIONS.map(pos => (
+            <SelectItem key={pos.id} value={pos.nameMr} className="text-xs font-bold">
+              <span className="font-mono text-amber-600 dark:text-amber-400 font-black mr-1.5">[{pos.shortCode}]</span> {pos.nameMr}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+
+        <SelectSeparator className="my-1" />
+
+        {/* Right 1 to 6 */}
+        <SelectGroup>
+          <SelectLabel className="text-[10px] font-black uppercase text-emerald-500 tracking-wider py-1 px-2 flex items-center justify-between">
+            <span>➡️ उजवी फळी (Right 1 ते 6)</span>
+            <span className="text-[9px] font-mono text-emerald-400">६ पोझिशन्स</span>
+          </SelectLabel>
+          {RIGHT_COURT_POSITIONS.map(pos => (
+            <SelectItem key={pos.id} value={pos.nameMr} className="text-xs font-bold">
+              <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black mr-1.5">[{pos.shortCode}]</span> {pos.nameMr}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </>
+    );
+  };
+
+  // Render individual tactical lane slot in 17-Lanes Board
+  const renderLaneSlot = (posDef: any, theme: 'blue' | 'amber' | 'emerald') => {
+    const assignedPlayer = sportPlayers.find((p: any) => {
+      const draft = draftChanges[p.id];
+      const pPos = draft?.position !== undefined ? draft.position : (p.positions?.[selectedSport] || '');
+      return pPos === posDef.nameMr || pPos === posDef.nameEn || pPos === posDef.shortCode;
+    });
+
+    const themeBorder = theme === 'blue' ? 'border-blue-500/40 bg-blue-950/50 hover:border-blue-400' :
+      theme === 'amber' ? 'border-amber-500/40 bg-amber-950/50 hover:border-amber-400' :
+      'border-emerald-500/40 bg-emerald-950/50 hover:border-emerald-400';
+
+    const themeBadge = theme === 'blue' ? 'bg-blue-600 text-white' :
+      theme === 'amber' ? 'bg-amber-500 text-slate-950 font-black' :
+      'bg-emerald-600 text-white';
+
+    if (assignedPlayer) {
+      const draft = draftChanges[assignedPlayer.id];
+      const currentJersey = draft?.jersey !== undefined 
+        ? draft.jersey 
+        : (assignedPlayer.jerseyNumbers?.[selectedSport] || assignedPlayer.jerseyNumber || '-');
+      const photo = draft?.photoUrl || assignedPlayer.photoUrl;
+      const marathiName = assignedPlayer.nameMarathi || transliterateEnglishToMarathi(assignedPlayer.name) || assignedPlayer.name;
+      const isCapt = (captainId === assignedPlayer.id || draft?.isCaptain);
+      const isVC = (viceCaptainId === assignedPlayer.id || draft?.isViceCaptain);
+
+      return (
+        <div 
+          key={posDef.id}
+          className={cn(
+            "flex items-center justify-between p-2.5 rounded-2xl border-2 transition-all shadow-sm",
+            themeBorder,
+            isCapt && "ring-2 ring-amber-400 bg-amber-950/60",
+            isVC && "ring-2 ring-slate-300 bg-slate-900/80"
+          )}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className={cn("text-xs font-mono font-black px-2 py-0.5 rounded-lg shrink-0", themeBadge)}>
+              {posDef.shortCode}
+            </span>
+
+            <Avatar className="w-9 h-9 rounded-xl border border-white/20 shrink-0">
+              <AvatarImage src={photo} alt={assignedPlayer.name} className="object-cover" />
+              <AvatarFallback className="bg-slate-800 text-amber-300 font-bold text-[10px]">
+                {assignedPlayer.name ? assignedPlayer.name.slice(0, 2).toUpperCase() : 'PL'}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <span className="font-black text-xs text-white truncate max-w-[110px] sm:max-w-[140px]" title={marathiName}>
+                  {marathiName}
+                </span>
+                {isCapt && <Crown className="w-3 h-3 text-amber-400 shrink-0" />}
+                {isVC && <Medal className="w-3 h-3 text-slate-300 shrink-0" />}
+              </div>
+              <div className="text-[10px] text-slate-400 truncate">
+                #{currentJersey} &bull; इ. {assignedPlayer.std} वी &bull; {posDef.nameEn}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => handlePositionChange(assignedPlayer.id, '')}
+              className="h-7 w-7 p-0 text-rose-400 hover:text-rose-200 hover:bg-rose-950/50 rounded-lg"
+              title="या स्थानावरून खेळाडू काढा (Clear position)"
+            >
+              <X className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Unassigned Slot
+    return (
+      <div 
+        key={posDef.id}
+        className="flex items-center justify-between p-2.5 rounded-2xl border-2 border-dashed border-white/15 bg-slate-900/40 hover:bg-slate-900/60 transition-all"
+      >
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={cn("text-xs font-mono font-black px-2 py-0.5 rounded-lg", themeBadge)}>
+            {posDef.shortCode}
+          </span>
+          <span className="text-xs font-bold text-slate-300">
+            {posDef.nameMr}
+          </span>
+        </div>
+
+        <div className="max-w-[150px] sm:max-w-[170px] w-full ml-2">
+          <Select
+            value=""
+            onValueChange={(playerId) => handlePositionChange(playerId, posDef.nameMr)}
+          >
+            <SelectTrigger className="h-7 text-[10px] font-bold rounded-lg bg-slate-950/80 border border-white/20 text-slate-300 px-2">
+              <SelectValue placeholder="+ खेळाडू निवडा" />
+            </SelectTrigger>
+            <SelectContent className="max-h-56 text-xs">
+              {sportPlayers.map((p: any) => {
+                const draft = draftChanges[p.id];
+                const pJersey = draft?.jersey !== undefined ? draft.jersey : (p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-');
+                const mName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
+                return (
+                  <SelectItem key={p.id} value={p.id} className="text-xs font-bold">
+                    <span className="font-mono text-amber-400 mr-1">#{pJersey}</span> {mName} (इ. {p.std})
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
   // Render a player card on tactical court or bench
   const renderPlayerCard = (player: any, idx: number, posDef?: CourtPositionDef, isReserve = false) => {
     const draft = draftChanges[player.id];
@@ -609,6 +806,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
     const isCapt = (captainId === player.id || draft?.isCaptain);
     const isVC = (viceCaptainId === player.id || draft?.isViceCaptain);
     const marathiName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
+    const posBadge = getPositionBadgeInfo(currentPos);
 
     return (
       <div 
@@ -643,8 +841,14 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                 <Medal className="w-2.5 h-2.5" /> VC
               </Badge>
             ) : (
-              <span className="text-[9px] font-mono text-emerald-400/80 font-bold">
-                {posDef?.shortCode || `#${idx + 1}`}
+              <span className={cn(
+                "text-[9px] font-mono font-bold px-1 py-0.5 rounded",
+                posBadge.zone === 'left' ? "text-blue-300 bg-blue-950/70 border border-blue-500/30" :
+                posBadge.zone === 'middle' ? "text-amber-300 bg-amber-950/70 border border-amber-500/30" :
+                posBadge.zone === 'right' ? "text-emerald-300 bg-emerald-950/70 border border-emerald-500/30" :
+                "text-emerald-400/80"
+              )}>
+                {posBadge.shortCode ? `[${posBadge.shortCode}]` : (posDef?.shortCode || `#${idx + 1}`)}
               </span>
             )}
           </div>
@@ -699,12 +903,8 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             <SelectTrigger className="h-6 text-[9px] font-bold rounded-lg bg-slate-900 border border-amber-400/30 text-amber-300 px-1.5">
               <SelectValue placeholder="पोझिशन..." />
             </SelectTrigger>
-            <SelectContent className="max-h-48 text-xs">
-              {availablePositions.map(pos => (
-                <SelectItem key={pos.id} value={pos.nameMr} className="text-xs font-bold">
-                  <span className="font-mono text-primary font-bold mr-1">[{pos.shortCode}]</span> {pos.nameMr}
-                </SelectItem>
-              ))}
+            <SelectContent className="max-h-60 text-xs">
+              {renderPositionSelectOptions()}
             </SelectContent>
           </Select>
         </div>
@@ -806,7 +1006,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
 
       {/* Filters and Sport Switcher */}
       <Card className="p-6 rounded-[2rem] border-2 border-primary/10 shadow-sm bg-white">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
           {/* Sport Selector */}
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
@@ -875,11 +1075,11 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
           </div>
 
           {/* View Mode Toggle */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 lg:col-span-2">
             <label className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-amber-500" /> डिस्प्ले व्ह्यू (View)
+              <Layers className="w-3.5 h-3.5 text-amber-500" /> डिस्प्ले व्ह्यू (View Mode)
             </label>
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
               <button
                 type="button"
                 onClick={() => setViewMode('court')}
@@ -889,6 +1089,16 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                 )}
               >
                 <Activity className="w-3.5 h-3.5" /> ग्राउंड (Court)
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('lanes')}
+                className={cn(
+                  "flex-1 py-1.5 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1 transition-all",
+                  viewMode === 'lanes' ? "bg-emerald-700 text-white shadow" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <Target className="w-3.5 h-3.5" /> १७ लेन (L6-M5-R6)
               </button>
               <button
                 type="button"
@@ -1146,6 +1356,91 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             )}
           </Card>
         </div>
+      ) : viewMode === 'lanes' ? (
+        /* 17 TACTICAL LANES VIEW (LEFT 6, MIDDLE 5, RIGHT 6) */
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <Card className="rounded-[2.5rem] border-4 border-emerald-950/80 shadow-2xl bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950 text-white overflow-hidden p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-700/40">
+              <div>
+                <div className="flex items-center gap-2 text-amber-400 font-black text-xs uppercase tracking-widest">
+                  <Target className="w-4 h-4" /> १७-लेन रणनीती ग्राउंड रचना
+                </div>
+                <h3 className="text-xl md:text-2xl font-black text-white mt-1">
+                  डावा १ ते ६ &bull; मध्य १ ते ५ &bull; उजवा १ ते ६ रणनीती व्यू
+                </h3>
+                <p className="text-xs text-emerald-200/80 font-medium">
+                  {selectedSport} सामन्यासाठी अचूक रणनीती नियोजन: डावी बाजू (६ स्थाने), मध्य फळी (५ स्थाने) आणि उजवी बाजू (६ स्थाने)
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-blue-600 text-white font-black text-xs px-2.5 py-1 shadow">
+                  ⬅️ डावी: L1 ते L6
+                </Badge>
+                <Badge className="bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-1 shadow">
+                  ⏺️ मध्य: M1 ते M5
+                </Badge>
+                <Badge className="bg-emerald-600 text-white font-black text-xs px-2.5 py-1 shadow">
+                  ➡️ उजवी: R1 ते R6
+                </Badge>
+              </div>
+            </div>
+
+            {/* 3 TACTICAL COLUMNS: LEFT 6, MIDDLE 5, RIGHT 6 */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* LEFT COLUMN (6 POSITIONS) */}
+              <div className="bg-slate-950/60 border-2 border-blue-500/40 rounded-3xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+                <div className="flex items-center justify-between border-b border-blue-500/30 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-600 text-white font-black text-xs">डावी बाजू (Left)</Badge>
+                    <span className="text-sm font-black text-blue-200">L1 ते L6</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-blue-300">६ स्थाने</span>
+                </div>
+                <div className="space-y-2.5 flex-1">
+                  {LEFT_COURT_POSITIONS.map(pos => renderLaneSlot(pos, 'blue'))}
+                </div>
+                <div className="pt-2 border-t border-blue-500/20 text-center text-[10px] text-blue-300/60 font-bold uppercase">
+                  डावी फळी / आक्रमक व बचाव (Left Zone)
+                </div>
+              </div>
+
+              {/* MIDDLE COLUMN (5 POSITIONS) */}
+              <div className="bg-slate-950/60 border-2 border-amber-500/40 rounded-3xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+                <div className="flex items-center justify-between border-b border-amber-500/30 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-amber-500 text-slate-950 font-black text-xs">मध्य भाग (Middle)</Badge>
+                    <span className="text-sm font-black text-amber-200">M1 ते M5</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-amber-300">५ स्थाने</span>
+                </div>
+                <div className="space-y-2.5 flex-1">
+                  {MIDDLE_COURT_POSITIONS.map(pos => renderLaneSlot(pos, 'amber'))}
+                </div>
+                <div className="pt-2 border-t border-amber-500/20 text-center text-[10px] text-amber-300/60 font-bold uppercase">
+                  मध्य फळी / सेटर व मुख्य नियंत्रक (Middle Zone)
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN (6 POSITIONS) */}
+              <div className="bg-slate-950/60 border-2 border-emerald-500/40 rounded-3xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+                <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-emerald-600 text-white font-black text-xs">उजवी बाजू (Right)</Badge>
+                    <span className="text-sm font-black text-emerald-200">R1 ते R6</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-emerald-300">६ स्थाने</span>
+                </div>
+                <div className="space-y-2.5 flex-1">
+                  {RIGHT_COURT_POSITIONS.map(pos => renderLaneSlot(pos, 'emerald'))}
+                </div>
+                <div className="pt-2 border-t border-emerald-500/20 text-center text-[10px] text-emerald-300/60 font-bold uppercase">
+                  उजवी फळी / आक्रमक व बचाव (Right Zone)
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       ) : (
         /* TABLE MODE VIEW */
         <Card className="rounded-[2.5rem] border-2 border-primary/10 shadow-sm overflow-hidden bg-white">
@@ -1281,13 +1576,8 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                             )}>
                               <SelectValue placeholder="पोझिशन निवडा..." />
                             </SelectTrigger>
-                            <SelectContent>
-                              {availablePositions.map(pos => (
-                                <SelectItem key={pos.id} value={pos.nameMr} className="font-bold text-xs">
-                                  <span className="font-mono text-primary font-black mr-1.5">[{pos.shortCode}]</span>
-                                  {pos.nameMr}
-                                </SelectItem>
-                              ))}
+                            <SelectContent className="max-h-64 text-xs">
+                              {renderPositionSelectOptions()}
                             </SelectContent>
                           </Select>
                         </td>

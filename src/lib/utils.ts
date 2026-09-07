@@ -755,7 +755,76 @@ export interface SportPositionDef {
   nameEn: string;
   nameMr: string;
   shortCode: string;
-  category?: 'Attack' | 'Defense' | 'Setter' | 'Field' | 'Track' | 'Specialist';
+  category?: 'Attack' | 'Defense' | 'Setter' | 'Field' | 'Track' | 'Specialist' | 'LeftZone' | 'MiddleZone' | 'RightZone';
+}
+
+// 17 Numbered Tactical Lane / Court Positions (Left 6, Middle 5, Right 6)
+export const LEFT_COURT_POSITIONS: SportPositionDef[] = [
+  { id: 'left_1', nameEn: 'Left 1', nameMr: 'डावा १ (Left 1)', shortCode: 'L1', category: 'LeftZone' },
+  { id: 'left_2', nameEn: 'Left 2', nameMr: 'डावा २ (Left 2)', shortCode: 'L2', category: 'LeftZone' },
+  { id: 'left_3', nameEn: 'Left 3', nameMr: 'डावा ३ (Left 3)', shortCode: 'L3', category: 'LeftZone' },
+  { id: 'left_4', nameEn: 'Left 4', nameMr: 'डावा ४ (Left 4)', shortCode: 'L4', category: 'LeftZone' },
+  { id: 'left_5', nameEn: 'Left 5', nameMr: 'डावा ५ (Left 5)', shortCode: 'L5', category: 'LeftZone' },
+  { id: 'left_6', nameEn: 'Left 6', nameMr: 'डावा ६ (Left 6)', shortCode: 'L6', category: 'LeftZone' },
+];
+
+export const MIDDLE_COURT_POSITIONS: SportPositionDef[] = [
+  { id: 'middle_1', nameEn: 'Middle 1', nameMr: 'मध्य १ (Middle 1)', shortCode: 'M1', category: 'MiddleZone' },
+  { id: 'middle_2', nameEn: 'Middle 2', nameMr: 'मध्य २ (Middle 2)', shortCode: 'M2', category: 'MiddleZone' },
+  { id: 'middle_3', nameEn: 'Middle 3', nameMr: 'मध्य ३ (Middle 3)', shortCode: 'M3', category: 'MiddleZone' },
+  { id: 'middle_4', nameEn: 'Middle 4', nameMr: 'मध्य ४ (Middle 4)', shortCode: 'M4', category: 'MiddleZone' },
+  { id: 'middle_5', nameEn: 'Middle 5', nameMr: 'मध्य ५ (Middle 5)', shortCode: 'M5', category: 'MiddleZone' },
+];
+
+export const RIGHT_COURT_POSITIONS: SportPositionDef[] = [
+  { id: 'right_1', nameEn: 'Right 1', nameMr: 'उजवा १ (Right 1)', shortCode: 'R1', category: 'RightZone' },
+  { id: 'right_2', nameEn: 'Right 2', nameMr: 'उजवा २ (Right 2)', shortCode: 'R2', category: 'RightZone' },
+  { id: 'right_3', nameEn: 'Right 3', nameMr: 'उजवा ३ (Right 3)', shortCode: 'R3', category: 'RightZone' },
+  { id: 'right_4', nameEn: 'Right 4', nameMr: 'उजवा ४ (Right 4)', shortCode: 'R4', category: 'RightZone' },
+  { id: 'right_5', nameEn: 'Right 5', nameMr: 'उजवा ५ (Right 5)', shortCode: 'R5', category: 'RightZone' },
+  { id: 'right_6', nameEn: 'Right 6', nameMr: 'उजवा ६ (Right 6)', shortCode: 'R6', category: 'RightZone' },
+];
+
+export const NUMBERED_COURT_POSITIONS: SportPositionDef[] = [
+  ...LEFT_COURT_POSITIONS,
+  ...MIDDLE_COURT_POSITIONS,
+  ...RIGHT_COURT_POSITIONS,
+];
+
+export function getPositionBadgeInfo(posName: string | undefined): { shortCode: string; zone: 'left' | 'middle' | 'right' | 'sport' | 'none' } {
+  if (!posName) return { shortCode: '', zone: 'none' };
+  
+  const found = NUMBERED_COURT_POSITIONS.find(
+    p => p.nameMr === posName || p.nameEn === posName || p.shortCode === posName || p.id === posName
+  );
+  if (found) {
+    if (found.id.startsWith('left_')) return { shortCode: found.shortCode, zone: 'left' };
+    if (found.id.startsWith('middle_')) return { shortCode: found.shortCode, zone: 'middle' };
+    if (found.id.startsWith('right_')) return { shortCode: found.shortCode, zone: 'right' };
+  }
+
+  // Fallback checks
+  if (posName.includes('डावा १') || posName.includes('Left 1')) return { shortCode: 'L1', zone: 'left' };
+  if (posName.includes('डावा २') || posName.includes('Left 2')) return { shortCode: 'L2', zone: 'left' };
+  if (posName.includes('डावा ३') || posName.includes('Left 3')) return { shortCode: 'L3', zone: 'left' };
+  if (posName.includes('डावा ४') || posName.includes('Left 4')) return { shortCode: 'L4', zone: 'left' };
+  if (posName.includes('डावा ५') || posName.includes('Left 5')) return { shortCode: 'L5', zone: 'left' };
+  if (posName.includes('डावा ६') || posName.includes('Left 6')) return { shortCode: 'L6', zone: 'left' };
+
+  if (posName.includes('मध्य १') || posName.includes('Middle 1')) return { shortCode: 'M1', zone: 'middle' };
+  if (posName.includes('मध्य २') || posName.includes('Middle 2')) return { shortCode: 'M2', zone: 'middle' };
+  if (posName.includes('मध्य ३') || posName.includes('Middle 3')) return { shortCode: 'M3', zone: 'middle' };
+  if (posName.includes('मध्य ४') || posName.includes('Middle 4')) return { shortCode: 'M4', zone: 'middle' };
+  if (posName.includes('मध्य ५') || posName.includes('Middle 5')) return { shortCode: 'M5', zone: 'middle' };
+
+  if (posName.includes('उजवा १') || posName.includes('Right 1')) return { shortCode: 'R1', zone: 'right' };
+  if (posName.includes('उजवा २') || posName.includes('Right 2')) return { shortCode: 'R2', zone: 'right' };
+  if (posName.includes('उजवा ३') || posName.includes('Right 3')) return { shortCode: 'R3', zone: 'right' };
+  if (posName.includes('उजवा ४') || posName.includes('Right 4')) return { shortCode: 'R4', zone: 'right' };
+  if (posName.includes('उजवा ५') || posName.includes('Right 5')) return { shortCode: 'R5', zone: 'right' };
+  if (posName.includes('उजवा ६') || posName.includes('Right 6')) return { shortCode: 'R6', zone: 'right' };
+
+  return { shortCode: '', zone: 'sport' };
 }
 
 export const SPORT_POSITIONS_MAP: Record<string, SportPositionDef[]> = {
@@ -810,12 +879,14 @@ export const SPORT_POSITIONS_MAP: Record<string, SportPositionDef[]> = {
 };
 
 export function getSportPositions(sportName: string): SportPositionDef[] {
-  return SPORT_POSITIONS_MAP[sportName] || [
+  const specific = SPORT_POSITIONS_MAP[sportName] || [
     { id: 'player', nameEn: 'Standard Player', nameMr: 'खेळाडू', shortCode: 'PL', category: 'Specialist' },
     { id: 'captain', nameEn: 'Captain', nameMr: 'कर्णधार (Captain)', shortCode: 'CPT', category: 'Specialist' },
     { id: 'vice_captain', nameEn: 'Vice Captain', nameMr: 'उपकर्णधार (Vice Captain)', shortCode: 'VC', category: 'Specialist' },
     { id: 'substitute', nameEn: 'Substitute', nameMr: 'राखीव खेळाडू (Sub)', shortCode: 'SUB', category: 'Specialist' },
   ];
+
+  return [...specific, ...NUMBERED_COURT_POSITIONS];
 }
 
 export interface ParsedMedicalLog {
