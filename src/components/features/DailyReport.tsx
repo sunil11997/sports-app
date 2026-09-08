@@ -353,11 +353,11 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     );
 
     // Also include custom logged activities for today
-    const activitiesToday = (store?.data?.activities || []).filter((a: any) => 
+    const activitiesToday = (store?.data?.activities || store?.data?.schoolActivities || []).filter((a: any) => 
       a.date === reportDate
     );
 
-    const drillMap: Record<string, { sport: string; drill: string; boys: number; girls: number }> = {};
+    const drillMap: Record<string, { id?: string; sport: string; drill: string; boys: number; girls: number }> = {};
 
     // Process raw drill completions
     rawCompletions.forEach((d: any) => {
@@ -385,24 +385,28 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
       else drillMap[key].boys++;
     });
 
-    // Process logged activities
+    // Process logged activities (e.g. from SportsDrills, YogaPtHub, or Quick Add)
     activitiesToday.forEach((a: any) => {
-      const sport = a.type || 'Activity';
+      const sport = a.sport || a.type || 'Activity';
       if (preselectedSport && sport.toLowerCase() !== preselectedSport.toLowerCase()) return;
 
-      const drill = a.summary || a.type;
+      const drill = a.drillName || a.summary || a.type;
       const key = `${sport}___${drill}`;
+      const b = parseInt(a.boysCount || '0') || 0;
+      const g = parseInt(a.girlsCount || '0') || 0;
 
       if (!drillMap[key]) {
         drillMap[key] = { 
+          id: a.id,
           sport, 
           drill, 
-          boys: parseInt(a.boysCount || '0') || 0, 
-          girls: parseInt(a.girlsCount || '0') || 0 
+          boys: b, 
+          girls: g 
         };
       } else {
-        drillMap[key].boys += parseInt(a.boysCount || '0') || 0;
-        drillMap[key].girls += parseInt(a.girlsCount || '0') || 0;
+        drillMap[key].boys = Math.max(drillMap[key].boys, b);
+        drillMap[key].girls = Math.max(drillMap[key].girls, g);
+        if (!drillMap[key].id && a.id) drillMap[key].id = a.id;
       }
     });
 
@@ -426,7 +430,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
     const totalConductededCount = yoga.length + ptMass.length + volleyball.length + khoKho.length + kabaddi.length + other.length;
 
     return { yoga, ptMass, volleyball, khoKho, kabaddi, other, totalConductededCount };
-  }, [store?.data?.drillCompletionsRaw, store?.data?.activities, players, reportDate, isMounted, preselectedSport]);
+  }, [store?.data?.drillCompletionsRaw, store?.data?.activities, store?.data?.schoolActivities, players, reportDate, isMounted, preselectedSport]);
 
   // Health summary count (NO student names)
   const healthSummaryCounts = useMemo(() => {
@@ -498,6 +502,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
         className: "bg-emerald-600 text-white font-bold" 
       });
       setEditingActivityId(null);
+    }
+  };
+
+  const handleDeleteActivity = (activityId?: string) => {
+    if (!activityId) return;
+    if (store?.deleteActivity) {
+      store.deleteActivity(activityId);
+      toast({
+        title: "सराव अहवालातून काढला (Drill Removed)",
+        description: "सदर सराव उपक्रम दैनिक अहवालातून यशस्वीरित्या काढला गेला आहे.",
+        className: "bg-slate-900 text-white font-bold"
+      });
     }
   };
 
@@ -1028,7 +1044,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                           <p className="font-black text-sm text-indigo-950 uppercase">{item.drill}</p>
                           <p className="text-[10px] font-bold text-indigo-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="flex gap-3 text-center">
+                        <div className="flex gap-2 sm:gap-3 text-center items-center">
                           <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
                             <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
                             <span className="text-blue-900 font-black">{item.boys}</span>
@@ -1041,6 +1057,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                             <span className="text-[9px] block uppercase opacity-80">एकूण</span>
                             <span className="font-black">{item.boys + item.girls}</span>
                           </div>
+                          {item.id && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="सराव अहवालातून काढा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1066,7 +1094,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                           <p className="font-black text-sm text-teal-950 uppercase">{item.drill}</p>
                           <p className="text-[10px] font-bold text-teal-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="flex gap-3 text-center">
+                        <div className="flex gap-2 sm:gap-3 text-center items-center">
                           <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
                             <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
                             <span className="text-blue-900 font-black">{item.boys}</span>
@@ -1079,6 +1107,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                             <span className="text-[9px] block uppercase opacity-80">एकूण</span>
                             <span className="font-black">{item.boys + item.girls}</span>
                           </div>
+                          {item.id && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="सराव अहवालातून काढा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1104,7 +1144,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                           <p className="font-black text-sm text-sky-950 uppercase">{item.drill}</p>
                           <p className="text-[10px] font-bold text-sky-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="flex gap-3 text-center">
+                        <div className="flex gap-2 sm:gap-3 text-center items-center">
                           <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
                             <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
                             <span className="text-blue-900 font-black">{item.boys}</span>
@@ -1117,6 +1157,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                             <span className="text-[9px] block uppercase opacity-80">एकूण</span>
                             <span className="font-black">{item.boys + item.girls}</span>
                           </div>
+                          {item.id && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="सराव अहवालातून काढा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1142,7 +1194,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                           <p className="font-black text-sm text-orange-950 uppercase">{item.drill}</p>
                           <p className="text-[10px] font-bold text-orange-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="flex gap-3 text-center">
+                        <div className="flex gap-2 sm:gap-3 text-center items-center">
                           <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
                             <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
                             <span className="text-blue-900 font-black">{item.boys}</span>
@@ -1155,6 +1207,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                             <span className="text-[9px] block uppercase opacity-80">एकूण</span>
                             <span className="font-black">{item.boys + item.girls}</span>
                           </div>
+                          {item.id && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="सराव अहवालातून काढा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1180,7 +1244,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                           <p className="font-black text-sm text-amber-950 uppercase">{item.drill}</p>
                           <p className="text-[10px] font-bold text-amber-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="flex gap-3 text-center">
+                        <div className="flex gap-2 sm:gap-3 text-center items-center">
                           <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
                             <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
                             <span className="text-blue-900 font-black">{item.boys}</span>
@@ -1193,6 +1257,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                             <span className="text-[9px] block uppercase opacity-80">एकूण</span>
                             <span className="font-black">{item.boys + item.girls}</span>
                           </div>
+                          {item.id && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="सराव अहवालातून काढा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1218,7 +1294,7 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                           <p className="font-black text-sm text-slate-950 uppercase">{item.drill}</p>
                           <p className="text-[10px] font-bold text-slate-600 uppercase mt-0.5">{item.sport}</p>
                         </div>
-                        <div className="flex gap-3 text-center">
+                        <div className="flex gap-2 sm:gap-3 text-center items-center">
                           <div className="bg-white px-3 py-1.5 rounded-xl border font-bold text-xs">
                             <span className="text-blue-600 text-[10px] block font-black uppercase">मुले</span>
                             <span className="text-blue-900 font-black">{item.boys}</span>
@@ -1231,6 +1307,18 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
                             <span className="text-[9px] block uppercase opacity-80">एकूण</span>
                             <span className="font-black">{item.boys + item.girls}</span>
                           </div>
+                          {item.id && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActivity(item.id)}
+                              className="h-9 w-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="सराव अहवालातून काढा (Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}

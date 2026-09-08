@@ -52,7 +52,7 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
   const { user } = useUser();
   const { toast } = useToast();
   const schoolData = useSchoolData();
-  const { isOnline, isInstallable, installApp } = usePWA();
+  const { isOnline, isInstallable, isStandalone, installApp, triggerInstall, setIsInstallModalOpen } = usePWA();
   const restoreFileRef = useRef<HTMLInputElement>(null);
   
   const [emailInput, setEmailInput] = useState("");
@@ -296,17 +296,23 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       </div>
 
       <div className="space-y-6">
-        {isOnline && isInstallable && (
+        {!isStandalone && (
           <div className="bg-primary/5 border-2 border-primary/20 p-6 rounded-[2.5rem] shadow-lg animate-in zoom-in-95 duration-500">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-xl">
                 <Download className="text-white w-8 h-8 animate-bounce" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-black text-primary uppercase tracking-tight">Native Web App Ready</h3>
-                <p className="text-xs font-medium text-muted-foreground max-w-[250px] mx-auto leading-relaxed">Install this system directly to your device.</p>
+                <h3 className="font-black text-primary uppercase tracking-tight">
+                  {language === 'Marathi' ? "मोबाईल / डेस्कटॉप ॲप इन्स्टॉल करा" : "Install App on Device"}
+                </h3>
+                <p className="text-xs font-medium text-muted-foreground max-w-[250px] mx-auto leading-relaxed">
+                  {language === 'Marathi' ? "थेट फोनवर ॲपप्रमाणे चालवण्यासाठी इन्स्टॉल करा." : "Install directly on your phone or PC for instant 1-tap access."}
+                </p>
               </div>
-              <Button onClick={installApp} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale">Install Now</Button>
+              <Button onClick={triggerInstall} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active-scale">
+                {language === 'Marathi' ? "आत्ताच इन्स्टॉल करा (Install Now)" : "Install Now"}
+              </Button>
             </div>
           </div>
         )}
@@ -455,7 +461,14 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
              <SettingsItem icon={RotateCcw} color="bg-orange-600" label="Rotate Application View" sublabel="Toggle Landscape/Portrait" onClick={toggleRotation} />
-             <SettingsItem icon={Phone} color="bg-orange-500" label="Native Hub Status" sublabel={isInstallable ? "Ready to Install" : "Running on Web"} value={isInstallable ? "Available" : "Active"} onClick={isInstallable ? installApp : undefined} />
+             <SettingsItem 
+               icon={Phone} 
+               color="bg-orange-500" 
+               label="Native Hub Status" 
+               sublabel={isStandalone ? "Installed (Standalone Mode)" : isInstallable ? "Ready to Install" : "Running on Web"} 
+               value={isStandalone ? "Installed" : "Install App"} 
+               onClick={!isStandalone ? triggerInstall : undefined} 
+             />
              <SettingsItem icon={CheckCircle2} color="bg-primary" label="App Build Version" value="v6.0.0 (Build 6)" sublabel="Waghamba Sports & Health Hub v6" />
           </div>
         </div>

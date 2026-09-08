@@ -78,6 +78,30 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
 
   const currentGuide: YogaPtGuide | undefined = YOGA_PT_KNOWLEDGE_BASE[selectedSkill];
 
+  const handleSelectSkill = (skillName: string) => {
+    setSelectedSkill(skillName);
+    if (store?.recordDrillActivity) {
+      const b = parseInt(boysCount) || 30;
+      const g = parseInt(girlsCount) || 25;
+      const classesText = selectedClasses.length === ALL_12_CLASSES.length 
+        ? 'सर्व इयत्ता १ ते १२' 
+        : `इयत्ता ${selectedClasses.join(', ')} वी`;
+      store.recordDrillActivity({
+        drillName: skillName,
+        sport: gameType,
+        boysCount: b,
+        girlsCount: g,
+        date: sessionDate,
+        notes: `[${classesText}] ${skillName}`
+      });
+      toast({
+        title: "सराव दैनिक अहवालात जोडला (Drill Added to Daily Report)",
+        description: `${skillName} (${gameType}) दैनिक अहवालात यशस्वीरित्या नोंदवला गेला.`,
+        className: "bg-emerald-600 text-white font-bold"
+      });
+    }
+  };
+
   const archivedActivities = React.useMemo(() => {
     return (store.data.activities || []).filter((a: any) => 
       a.type?.toLowerCase() === gameType.toLowerCase() || 
@@ -256,7 +280,7 @@ export function YogaPtHub({ store, gameType, onBack }: YogaPtHubProps) {
                       key={skillName}
                       type="button"
                       variant={isSelected ? 'default' : 'outline'}
-                      onClick={() => setSelectedSkill(skillName)}
+                      onClick={() => handleSelectSkill(skillName)}
                       className={cn(
                         "h-14 px-6 rounded-2xl font-black text-xs uppercase transition-all shrink-0 border-2 flex items-center gap-2",
                         isSelected 

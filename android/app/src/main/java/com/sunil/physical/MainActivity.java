@@ -1,4 +1,4 @@
-package com.waghamba.sportshub;
+package com.sunil.physical;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

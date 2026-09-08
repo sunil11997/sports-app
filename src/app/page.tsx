@@ -209,8 +209,7 @@ export default function WaghambaApp() {
   const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' || showSplash);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const { isInstallable, isStandalone, installApp } = usePWA();
-  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
+  const { isInstallable, isStandalone, installApp, setIsInstallModalOpen, triggerInstall } = usePWA();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<string>('default');
   const [activeAchievements, setActiveAchievements] = useState<any[]>([]);
@@ -247,11 +246,8 @@ export default function WaghambaApp() {
       });
       return;
     }
-    const success = await installApp();
-    if (!success) {
-      setIsInstallGuideOpen(true);
-    }
-  }, [isStandalone, installApp, toast]);
+    await triggerInstall();
+  }, [isStandalone, triggerInstall, toast]);
 
   // Register Service Worker on mount for mobile push notifications
   useEffect(() => {
@@ -1173,60 +1169,6 @@ export default function WaghambaApp() {
               className="w-full h-10 sm:h-11 rounded-xl bg-primary text-white font-black uppercase text-xs tracking-wider"
             >
               बंद करा (Close)
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 📲 PWA Installation Guide Dialog */}
-      <Dialog open={isInstallGuideOpen} onOpenChange={setIsInstallGuideOpen}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[480px] rounded-2xl sm:rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl bg-white">
-          <DialogHeader className="bg-gradient-to-br from-emerald-600 to-teal-700 p-4 sm:p-6 text-white text-left">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md shrink-0">
-                <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <DialogTitle className="text-base sm:text-lg font-black uppercase tracking-tight text-white">
-                  मोबाईल ॲप डाऊनलोड करा
-                </DialogTitle>
-                <p className="text-[10px] sm:text-[11px] font-bold text-white/80 uppercase tracking-wider mt-0.5">
-                  Install WGB Sports App on your device
-                </p>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 text-left bg-white">
-            <div className="p-3 sm:p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 space-y-1.5 sm:space-y-2">
-              <div className="flex items-center gap-2 text-emerald-950 font-black text-xs uppercase">
-                <span>🤖</span> Android / Google Chrome मध्ये:
-              </div>
-              <ol className="text-xs text-slate-700 space-y-1 sm:space-y-1.5 list-decimal list-inside font-medium">
-                <li>क्रोम ब्राउझरच्या वरच्या उजव्या कोपऱ्यात <strong>३ डॉट्स (⋮)</strong> वर क्लिक करा.</li>
-                <li>यादीतील <strong>&apos;Install App&apos;</strong> किंवा <strong>&apos;Add to Home screen&apos;</strong> निवडा.</li>
-                <li><strong>&apos;Install&apos;</strong> बटणावर क्लिक करा. ॲप थेट फोनच्या ॲप ड्रॉवरमध्ये येईल.</li>
-              </ol>
-            </div>
-
-            <div className="p-3 sm:p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 space-y-1.5 sm:space-y-2">
-              <div className="flex items-center gap-2 text-blue-950 font-black text-xs uppercase">
-                <span>🍎</span> iPhone / Safari ब्राउझर मध्ये:
-              </div>
-              <ol className="text-xs text-slate-700 space-y-1 sm:space-y-1.5 list-decimal list-inside font-medium">
-                <li>सफारीच्या तळाशी असलेल्या <strong>Share (📤)</strong> चिन्हावर टॅप करा.</li>
-                <li>खाली स्क्रोल करून <strong>&apos;Add to Home Screen&apos;</strong> निवडा.</li>
-                <li>वरच्या उजव्या कोपऱ्यात <strong>&apos;Add&apos;</strong> वर टॅप करा.</li>
-              </ol>
-            </div>
-          </div>
-
-          <DialogFooter className="p-3 sm:p-4 bg-slate-50 border-t">
-            <Button 
-              onClick={() => setIsInstallGuideOpen(false)} 
-              className="w-full h-10 sm:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-xs tracking-wider"
-            >
-              समजले (Got it)
             </Button>
           </DialogFooter>
         </DialogContent>

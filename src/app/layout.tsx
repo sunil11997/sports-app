@@ -6,6 +6,7 @@ import { Inter, Poppins } from "next/font/google";
 import ServiceWorkerRegister from "./sw-register";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { PWAProvider } from "@/components/providers/pwa-provider";
+import { InstallAppModal } from "@/components/pwa/InstallAppModal";
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({
           <PWAProvider>
             <ServiceWorkerRegister />
             {children}
+            <InstallAppModal />
             <Toaster />
           </PWAProvider>
         </FirebaseClientProvider>

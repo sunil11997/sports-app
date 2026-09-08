@@ -220,7 +220,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     return playersInSport.filter((p: any) => getAttendanceStatus(p.id).status === 'P').length;
   }, [playersInSport, getAttendanceStatus]);
 
-  // Automatically select attended students when drill changes or when component initializes
+  // Automatically select attended students and record selected drill into Daily Report
   const selectAttendedStudentsForDrill = useCallback((drillName: string, sport: string) => {
     setActiveDrill(drillName);
     
@@ -241,14 +241,42 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     const targetIds = targetList.map((p: any) => p.id);
     setSelectedStudentIds(targetIds);
 
+    const bCount = targetList.filter((p: any) => p.gender !== 'Female').length;
+    const gCount = targetList.filter((p: any) => p.gender === 'Female').length;
+
+    // 📋 Auto-populate into Daily Report activities
+    if (store?.recordDrillActivity) {
+      store.recordDrillActivity({
+        sport,
+        drill: drillName,
+        date: selectedDate,
+        session: selectedSession,
+        boysCount: bCount,
+        girlsCount: gCount
+      });
+    } else if (store?.addActivity) {
+      const safeSport = (sport || 'Sports').replace(/\s+/g, '_');
+      const safeDrill = (drillName || 'Drill').replace(/\s+/g, '_');
+      const id = `drill_act_${safeSport}_${safeDrill}_${selectedDate}_${selectedSession}`;
+      store.addActivity({
+        id,
+        date: selectedDate,
+        type: sport,
+        session: selectedSession,
+        drillName,
+        summary: drillName,
+        boysCount: bCount.toString(),
+        girlsCount: gCount.toString(),
+        createdAt: new Date().toISOString()
+      });
+    }
+
     toast({
-      title: `🎯 Drill Selected: ${drillName}`,
-      description: attended.length > 0 
-        ? `उपस्थित ${attended.length} खेळाडू आपोआप निवडले गेले! (${attended.length} attended students auto-selected)`
-        : `सर्व ${targetPlayers.length} खेळाडू निवडले गेले (${targetPlayers.length} athletes loaded)`,
+      title: `🎯 दैनिक अहवालात समाविष्ट: ${drillName}`,
+      description: `${sport} - ${drillName} सराव दैनिक अहवालात (Daily Report) नोंदवला गेला! (मुले: ${bCount}, मुली: ${gCount})`,
       className: "bg-emerald-600 text-white font-bold"
     });
-  }, [store?.data?.players, store?.data?.attendance, selectedDate, selectedSession, toast]);
+  }, [store, selectedDate, selectedSession, toast]);
 
   // On first load or when activeSport changes, auto-select attended students
   useEffect(() => {
@@ -369,10 +397,27 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       count++;
     });
 
+    if (mastered) {
+      const completedPlayers = (store.data.players || []).filter((p: any) => selectedStudentIds.includes(p.id));
+      const bCount = completedPlayers.filter((p: any) => p.gender !== 'Female').length;
+      const gCount = completedPlayers.filter((p: any) => p.gender === 'Female').length;
+
+      if (store?.recordDrillActivity) {
+        store.recordDrillActivity({
+          sport: activeSport,
+          drill: activeDrill,
+          date: selectedDate,
+          session: selectedSession,
+          boysCount: bCount,
+          girlsCount: gCount
+        });
+      }
+    }
+
     toast({
       title: mastered ? "⚡ All Attended Logged!" : "Mastery Reset",
       description: mastered 
-        ? `Successfully marked ${count} students complete for "${activeDrill}".`
+        ? `Successfully marked ${count} students complete for "${activeDrill}" and updated Daily Report.`
         : `Reset drill status for ${count} students.`,
       className: mastered ? "bg-emerald-600 text-white font-bold" : undefined
     });

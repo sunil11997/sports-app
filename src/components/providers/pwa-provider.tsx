@@ -6,14 +6,22 @@ interface PWAContextType {
   isOnline: boolean;
   isInstallable: boolean;
   isStandalone: boolean;
+  isIOS: boolean;
+  isInstallModalOpen: boolean;
+  setIsInstallModalOpen: (open: boolean) => void;
   installApp: () => Promise<boolean>;
+  triggerInstall: () => Promise<void>;
 }
 
 const PWAContext = createContext<PWAContextType>({ 
   isOnline: true, 
   isInstallable: false, 
   isStandalone: false,
-  installApp: async () => false 
+  isIOS: false,
+  isInstallModalOpen: false,
+  setIsInstallModalOpen: () => {},
+  installApp: async () => false,
+  triggerInstall: async () => {}
 });
 
 export const usePWA = () => useContext(PWAContext);
@@ -23,12 +31,19 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsOnline(navigator.onLine);
       const handleOnline = () => setIsOnline(true);
       const handleOffline = () => setIsOnline(false);
+
+      // Detect iOS Safari / WebKit
+      const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      setIsIOS(isAppleDevice);
 
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
@@ -59,6 +74,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         setIsInstallable(false);
         setIsStandalone(true);
         setDeferredPrompt(null);
+        setIsInstallModalOpen(false);
         console.log('WGB: App successfully installed to device!');
       });
 
@@ -126,8 +142,28 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const triggerInstall = async (): Promise<void> => {
+    if (deferredPrompt) {
+      const success = await installApp();
+      if (!success) {
+        setIsInstallModalOpen(true);
+      }
+    } else {
+      setIsInstallModalOpen(true);
+    }
+  };
+
   return (
-    <PWAContext.Provider value={{ isOnline, isInstallable, isStandalone, installApp }}>
+    <PWAContext.Provider value={{
+      isOnline,
+      isInstallable,
+      isStandalone,
+      isIOS,
+      isInstallModalOpen,
+      setIsInstallModalOpen,
+      installApp,
+      triggerInstall
+    }}>
       {children}
     </PWAContext.Provider>
   );

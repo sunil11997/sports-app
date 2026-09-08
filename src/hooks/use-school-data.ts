@@ -429,6 +429,7 @@ export function useSchoolData(isActive: boolean = true) {
       reportPhotos,
       dailySummaries,
       schoolActivities: schoolActivities || [],
+      activities: schoolActivities || [],
       healthIncidents: healthIncidents || [],
       teamPlans,
       equipmentList,
@@ -570,6 +571,48 @@ export function useSchoolData(isActive: boolean = true) {
     deleteActivity: (id: string) => {
       if (!db) return;
       deleteDocumentNonBlocking(doc(db, "school_activities", id));
+    },
+
+    recordDrillActivity: (params: {
+      sport: string;
+      drill?: string;
+      drillName?: string;
+      date?: string;
+      session?: string;
+      boysCount?: number;
+      girlsCount?: number;
+      notes?: string;
+    }) => {
+      if (!user || !db) return;
+      const actualDrill = params.drillName || params.drill || 'Drill';
+      const actualDate = params.date || getIndiaLocalDateString();
+      const actualSession = params.session || 'Morning';
+      const safeSport = (params.sport || 'Sports').replace(/\s+/g, '_');
+      const safeDrill = actualDrill.replace(/\s+/g, '_');
+      const id = `drill_act_${safeSport}_${safeDrill}_${actualDate}_${actualSession}`;
+
+      const act = {
+        id,
+        date: actualDate,
+        type: params.sport,
+        sport: params.sport,
+        session: actualSession,
+        drillName: actualDrill,
+        summary: actualDrill + (params.notes ? ` - ${params.notes}` : ''),
+        boysCount: (params.boysCount ?? 0).toString(),
+        girlsCount: (params.girlsCount ?? 0).toString(),
+        totalCount: ((params.boysCount ?? 0) + (params.girlsCount ?? 0)).toString(),
+        category: 'athlete',
+        schoolId: user.uid,
+        academicYear: selectedYear,
+        updatedAt: new Date().toISOString()
+      };
+
+      setDocumentNonBlocking(
+        doc(db, "school_activities", id),
+        act,
+        { merge: true }
+      );
     },
 
     setAttendance: (newAttendance: AttendanceRecord) => {
