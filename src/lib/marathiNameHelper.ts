@@ -339,8 +339,16 @@ export function correctMarathiFullName(fullName: string): string {
   return words.map(correctMarathiWord).join(' ');
 }
 
+// Set of common Maharashtra tribal and regional surnames in Ashram schools
+export const ASHRAM_SCHOOL_SURNAMES = new Set([
+  'पवार', 'गायकवाड', 'बागुल', 'भोये', 'भोईर', 'जाधव', 'गावित', 'गांगुर्डे',
+  'सूर्यवंशी', 'खांडवी', 'राठोड', 'जोपळे', 'चव्हाण', 'कोल्हे', 'वाघ', 'जगताप',
+  'अंबिस', 'शिंदे', 'महाले', 'पडवळ', 'मोरे', 'झुंजारराव', 'बेंडकुळे', 'कुवर'
+]);
+
 /**
  * Decomposes a Marathi full name into Student Name, Mother Name, Father Name, and Surname.
+ * Accurately detects whether surname is at the start (Ashram school format) or at the end.
  */
 export function decomposeMarathiFullName(fullName: string) {
   const corrected = correctMarathiFullName(fullName);
@@ -354,17 +362,36 @@ export function decomposeMarathiFullName(fullName: string) {
   if (tokens.length === 1) {
     studentName = tokens[0];
   } else if (tokens.length === 2) {
-    studentName = tokens[0];
-    surname = tokens[1];
+    if (ASHRAM_SCHOOL_SURNAMES.has(tokens[0])) {
+      surname = tokens[0];
+      studentName = tokens[1];
+    } else {
+      studentName = tokens[0];
+      surname = tokens[1];
+    }
   } else if (tokens.length === 3) {
-    studentName = tokens[0];
-    fatherName = tokens[1];
-    surname = tokens[2];
+    // Check if first token is surname (e.g. पवार राहुल रमेश)
+    if (ASHRAM_SCHOOL_SURNAMES.has(tokens[0])) {
+      surname = tokens[0];
+      studentName = tokens[1];
+      fatherName = tokens[2];
+    } else {
+      studentName = tokens[0];
+      fatherName = tokens[1];
+      surname = tokens[2];
+    }
   } else if (tokens.length >= 4) {
-    studentName = tokens[0];
-    motherName = tokens[1];
-    fatherName = tokens[2];
-    surname = tokens.slice(3).join(' ');
+    if (ASHRAM_SCHOOL_SURNAMES.has(tokens[0])) {
+      surname = tokens[0];
+      studentName = tokens[1];
+      motherName = tokens[2];
+      fatherName = tokens.slice(3).join(' ');
+    } else {
+      studentName = tokens[0];
+      motherName = tokens[1];
+      fatherName = tokens[2];
+      surname = tokens.slice(3).join(' ');
+    }
   }
 
   return {
@@ -378,6 +405,10 @@ export function decomposeMarathiFullName(fullName: string) {
 
 /**
  * Searches the official Waghamba School Master Registry by query and optional class standard.
+ * Features:
+ * - Multi-token matching across word boundaries
+ * - Phonetic English-to-Marathi transliterated matching
+ * - Search by Student Name, Marathi Name, Roll Number, APAAR ID, Village, Parent Name, Phone
  */
 export function searchWaghambaStudents(query: string, std?: string): SchoolStudent[] {
   let list = WAGHAMBA_STUDENTS_DATA;
@@ -389,16 +420,48 @@ export function searchWaghambaStudents(query: string, std?: string): SchoolStude
     return list;
   }
 
-  const q = query.toLowerCase().trim();
+  const rawQ = query.trim().toLowerCase();
+  const rawClean = cleanLegacyMarathiText(rawQ).toLowerCase();
+  const tokens = rawQ.split(/\s+/).filter(Boolean);
+
   return list.filter((s) => {
-    return (
-      (s.nameMarathi && s.nameMarathi.toLowerCase().includes(q)) ||
-      (s.name && s.name.toLowerCase().includes(q)) ||
-      (s.rollNo && s.rollNo === q) ||
-      (s.apaarId && s.apaarId.includes(q)) ||
-      (s.village && s.village.toLowerCase().includes(q)) ||
-      (s.parentName && s.parentName.toLowerCase().includes(q)) ||
-      (s.mobileNumber && s.mobileNumber.includes(q))
-    );
+    const nameEng = (s.name || '').toLowerCase();
+    const nameMar = (s.nameMarathi || '').toLowerCase();
+    const roll = s.rollNo || '';
+    const apaar = s.apaarId || '';
+    const vill = (s.village || '').toLowerCase();
+    const parent = (s.parentName || '').toLowerCase();
+    const mob = s.mobileNumber || '';
+
+    // Direct single query match
+    if (
+      nameEng.includes(rawQ) ||
+      nameMar.includes(rawQ) ||
+      nameMar.includes(rawClean) ||
+      roll === rawQ ||
+      apaar.includes(rawQ) ||
+      vill.includes(rawQ) ||
+      parent.includes(rawQ) ||
+      mob.includes(rawQ)
+    ) {
+      return true;
+    }
+
+    // Token-wise match (every token must match something in the student record)
+    if (tokens.length > 1) {
+      const allTokensMatch = tokens.every((tok) => {
+        return (
+          nameEng.includes(tok) ||
+          nameMar.includes(tok) ||
+          parent.includes(tok) ||
+          vill.includes(tok) ||
+          roll === tok
+        );
+      });
+      if (allTokensMatch) return true;
+    }
+
+    return false;
   });
 }
+

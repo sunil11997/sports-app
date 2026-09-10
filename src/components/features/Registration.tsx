@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { 
   UserPlus, 
+  User,
   Camera, 
   CircleX, 
   ImageIcon, 
@@ -49,7 +50,8 @@ import { generateId } from '@/lib/id-generator';
 import { compressImage, maskAadhaar } from '@/lib/privacy-utils';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { MarathiStudentDirectoryModal } from '@/components/features/MarathiStudentDirectoryModal';
-import { correctMarathiFullName, cleanLegacyMarathiText } from '@/lib/marathiNameHelper';
+import { StudentPdfAutoSuggest } from '@/components/features/StudentPdfAutoSuggest';
+import { correctMarathiFullName, cleanLegacyMarathiText, decomposeMarathiFullName } from '@/lib/marathiNameHelper';
 import type { SchoolStudent } from '@/data/waghambaStudents';
 import type { Player } from '@/lib/types';
 
@@ -103,23 +105,26 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const [isSchoolRosterOpen, setIsSchoolRosterOpen] = useState(false);
 
   const handleSelectFromRoster = (st: SchoolStudent) => {
+    const marathiFullName = correctMarathiFullName(st.nameMarathi);
+    const decomposed = decomposeMarathiFullName(marathiFullName);
+
     form.setValue('name', st.name);
-    form.setValue('nameMarathi', correctMarathiFullName(st.nameMarathi));
-    form.setValue('motherName', st.motherName);
-    form.setValue('fatherName', st.fatherName);
+    form.setValue('nameMarathi', marathiFullName);
+    form.setValue('motherName', st.motherName || decomposed.motherName || '');
+    form.setValue('fatherName', st.fatherName || decomposed.fatherName || st.parentName || '');
     form.setValue('std', st.std);
     form.setValue('serialNumber', st.rollNo);
     form.setValue('gender', st.gender);
     form.setValue('dob', st.dob);
     form.setValue('saralId', st.apaarId || st.rollNo);
-    form.setValue('address', st.address);
-    form.setValue('mobileNumber', st.mobileNumber);
+    form.setValue('address', st.address || (st.village ? `${st.village}, ता. सुरगाणा` : 'वाघंबा'));
+    form.setValue('mobileNumber', st.mobileNumber || '');
     form.setValue('category', 'student');
     form.setValue('sports', st.sports || ['Running', 'Kabaddi', 'Kho Kho']);
 
     toast({
-      title: "विद्यार्थी डेटा लोड झाला! ✅",
-      description: `${correctMarathiFullName(st.nameMarathi)} (इयत्ता ${st.std} वी, रोल नं. ${st.rollNo}) ची माहिती फॉर्ममध्ये भरली आहे.`,
+      title: "विद्यार्थी माहिती आपोआप भरली! ✨",
+      description: `${marathiFullName} (${st.name}) - इयत्ता ${st.std} वी, रोल नं. ${st.rollNo} ची सर्व माहिती फॉर्ममध्ये भरली आहे.`,
       className: "bg-emerald-600 text-white font-black"
     });
   };
@@ -466,73 +471,77 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                             <UserCircle2 className="w-5 h-5" />
                             <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity & Parents Info</h3>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                             <FormField control={form.control} name="name" render={({ field }) => (
-                               <FormItem>
-                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Full Name (English) *</FormLabel>
-                                 <FormControl>
-                                   <Input 
-                                     placeholder="Full legal name" 
-                                     className="h-14 font-black border-2 rounded-2xl bg-white text-lg" 
-                                     {...field} 
-                                     onChange={(e) => {
-                                       field.onChange(e);
-                                       const val = e.target.value;
-                                       const currentMarathi = form.getValues('nameMarathi') || '';
-                                       const prevName = form.getValues('name') || '';
-                                       const autoMarathi = transliterateEnglishToMarathi(val);
-                                       if (!currentMarathi || currentMarathi === transliterateEnglishToMarathi(prevName)) {
-                                         form.setValue('nameMarathi', autoMarathi);
-                                       }
-                                     }}
-                                   />
-                                 </FormControl>
-                                 <FormMessage />
-                               </FormItem>
-                             )} />
-                             <FormField control={form.control} name="nameMarathi" render={({ field }) => (
-                               <FormItem>
-                                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
-                                    <span className="flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</span>
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const cur = form.getValues('nameMarathi') || form.getValues('name') || '';
-                                          const cleaned = cleanLegacyMarathiText(cur);
-                                          const corrected = correctMarathiFullName(cleaned);
-                                          form.setValue('nameMarathi', corrected);
-                                          toast({
-                                            title: "मराठी नाव दुरुस्त झाले! ✨",
-                                            description: `शुद्ध केलेले नाव: ${corrected}`
-                                          });
-                                        }}
-                                        className="text-[9px] font-black text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors"
-                                      >
-                                        <Sparkles className="w-3 h-3" /> शुद्धलेखन दुरुस्त करा
-                                      </button>
-                                      {form.watch('name') && (
-                                        <button
-                                          type="button"
-                                          onClick={() => form.setValue('nameMarathi', transliterateEnglishToMarathi(form.getValues('name')))}
-                                          className="text-[10px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
-                                        >
-                                          💡 {transliterateEnglishToMarathi(form.watch('name'))}
-                                        </button>
-                                      )}
-                                    </div>
-                                  </FormLabel>
-                                 <FormControl>
-                                   <Input 
-                                     placeholder={transliterateEnglishToMarathi(form.watch('name')) || "पूर्ण नाव मराठीत"} 
-                                     className="h-14 font-black border-2 rounded-2xl bg-white text-lg" 
-                                     {...field} 
-                                   />
-                                 </FormControl>
-                                 <FormMessage />
-                               </FormItem>
-                             )} />
-                          </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <FormField control={form.control} name="name" render={({ field }) => (
+                                <FormItem>
+                                  <StudentPdfAutoSuggest
+                                    label={<><User className="w-3.5 h-3.5" /> Full Name (English) *</>}
+                                    value={field.value}
+                                    onChange={(val) => {
+                                      field.onChange(val);
+                                      const currentMarathi = form.getValues('nameMarathi') || '';
+                                      const prevName = form.getValues('name') || '';
+                                      const autoMarathi = transliterateEnglishToMarathi(val);
+                                      if (!currentMarathi || currentMarathi === transliterateEnglishToMarathi(prevName)) {
+                                        form.setValue('nameMarathi', autoMarathi);
+                                      }
+                                    }}
+                                    onSelectStudent={handleSelectFromRoster}
+                                    placeholder="Type student name (e.g. Rahul Pawar)..."
+                                    currentStd={form.watch('std')}
+                                    mode="english"
+                                    inputClassName="h-14 font-black border-2 rounded-2xl bg-white text-lg"
+                                  />
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
+                              <FormField control={form.control} name="nameMarathi" render={({ field }) => (
+                                <FormItem>
+                                   <div className="flex items-center justify-between mb-1.5">
+                                     <span className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1.5">
+                                       <Type className="w-3.5 h-3.5" /> नाव (मराठी)
+                                     </span>
+                                     <div className="flex items-center gap-2">
+                                       <button
+                                         type="button"
+                                         onClick={() => {
+                                           const cur = form.getValues('nameMarathi') || form.getValues('name') || '';
+                                           const cleaned = cleanLegacyMarathiText(cur);
+                                           const corrected = correctMarathiFullName(cleaned);
+                                           form.setValue('nameMarathi', corrected);
+                                           toast({
+                                             title: "मराठी नाव दुरुस्त झाले! ✨",
+                                             description: `शुद्ध केलेले नाव: ${corrected}`
+                                           });
+                                         }}
+                                         className="text-[9px] font-black text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors"
+                                       >
+                                         <Sparkles className="w-3 h-3" /> शुद्धलेखन दुरुस्त करा
+                                       </button>
+                                       {form.watch('name') && (
+                                         <button
+                                           type="button"
+                                           onClick={() => form.setValue('nameMarathi', transliterateEnglishToMarathi(form.getValues('name')))}
+                                           className="text-[10px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
+                                         >
+                                           💡 {transliterateEnglishToMarathi(form.watch('name'))}
+                                         </button>
+                                       )}
+                                     </div>
+                                   </div>
+                                  <StudentPdfAutoSuggest
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    onSelectStudent={handleSelectFromRoster}
+                                    placeholder={transliterateEnglishToMarathi(form.watch('name')) || "मराठीत पूर्ण नाव टाका (उदा. पवार राहुल रमेश)"}
+                                    currentStd={form.watch('std')}
+                                    mode="marathi"
+                                    inputClassName="h-14 font-black border-2 rounded-2xl bg-white text-lg"
+                                  />
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
+                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <FormField control={form.control} name="fatherName" render={({ field }) => (
                               <FormItem>

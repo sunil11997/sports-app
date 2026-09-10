@@ -48,6 +48,9 @@ import { useToast } from '@/hooks/use-toast';
 import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml, isBirthdayToday } from '@/lib/utils';
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
+import { StudentPdfAutoSuggest } from '@/components/features/StudentPdfAutoSuggest';
+import { correctMarathiFullName } from '@/lib/marathiNameHelper';
+import type { SchoolStudent } from '@/data/waghambaStudents';
 import { generateId } from '@/lib/id-generator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -238,6 +241,45 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     setIsDirectAddOpen(false);
     setNewStudentData({
       name: '', nameMarathi: '', gender: 'Male', dob: '', weight: '', height: '', sittingHeight: '', serialNumber: '', generalRegisterNumber: '', category: 'student', sports: [], bloodGroup: 'None'
+    });
+  };
+
+  const handleSelectStudentForAdd = (st: SchoolStudent) => {
+    setNewStudentData(prev => ({
+      ...prev,
+      name: st.name,
+      nameMarathi: correctMarathiFullName(st.nameMarathi),
+      gender: st.gender,
+      dob: st.dob,
+      serialNumber: st.rollNo,
+      generalRegisterNumber: st.apaarId || prev.generalRegisterNumber
+    }));
+
+    toast({
+      title: isMarathiView ? "विद्यार्थी माहिती आपोआप भरली! ✨" : "Student Auto-filled from PDF!",
+      description: `${correctMarathiFullName(st.nameMarathi)} (${st.name}) - इयत्ता ${st.std} वी, रोल नं. ${st.rollNo}`,
+      className: "bg-emerald-600 text-white font-black"
+    });
+  };
+
+  const handleSelectStudentForEdit = (st: SchoolStudent) => {
+    setEditingPlayer(prev => prev ? ({
+      ...prev,
+      name: st.name,
+      nameMarathi: correctMarathiFullName(st.nameMarathi),
+      gender: st.gender,
+      dob: st.dob,
+      serialNumber: st.rollNo,
+      generalRegisterNumber: st.apaarId || prev.generalRegisterNumber,
+      address: st.address || prev.address,
+      mobileNumber: st.mobileNumber || prev.mobileNumber,
+      std: st.std || prev.std
+    }) : null);
+
+    toast({
+      title: isMarathiView ? "विद्यार्थी माहिती आपोआप भरली! ✨" : "Student Auto-filled from PDF!",
+      description: `${correctMarathiFullName(st.nameMarathi)} (${st.name}) - इयत्ता ${st.std} वी, रोल नं. ${st.rollNo}`,
+      className: "bg-emerald-600 text-white font-black"
     });
   };
 
@@ -770,23 +812,26 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary ml-2">Full Name (English)</Label>
-                          <Input 
-                            value={editingPlayer.name} 
-                            onChange={(e) => {
-                              const val = e.target.value;
+                          <StudentPdfAutoSuggest
+                            label={isMarathiView ? "पूर्ण नाव (English)" : "Full Name (English)"}
+                            value={editingPlayer.name}
+                            onChange={(val) => {
                               const mar = transliterateEnglishToMarathi(val);
                               setEditingPlayer(prev => prev ? ({
                                 ...prev,
                                 name: val,
                                 nameMarathi: (!prev.nameMarathi || prev.nameMarathi === transliterateEnglishToMarathi(prev.name)) ? mar : prev.nameMarathi
                               }) : null);
-                            }} 
-                            className="h-12 border-2 rounded-xl font-bold" 
+                            }}
+                            onSelectStudent={handleSelectStudentForEdit}
+                            placeholder="Full name in English"
+                            currentStd={editingPlayer.std || std}
+                            mode="english"
+                            inputClassName="h-12 border-2 rounded-xl font-bold"
                           />
                         </div>
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between ml-2">
+                          <div className="flex items-center justify-between ml-2 mb-1.5">
                             <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2"><Type className="w-3 h-3" />नाव (मराठी)</Label>
                             {editingPlayer.name && (
                               <button 
@@ -798,10 +843,14 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                               </button>
                             )}
                           </div>
-                          <Input 
-                            value={editingPlayer.nameMarathi || ""} 
-                            onChange={(e) => setEditingPlayer({...editingPlayer, nameMarathi: e.target.value})} 
-                            className="h-12 border-2 rounded-xl font-bold" 
+                          <StudentPdfAutoSuggest
+                            value={editingPlayer.nameMarathi || ""}
+                            onChange={(val) => setEditingPlayer(prev => prev ? ({ ...prev, nameMarathi: val }) : null)}
+                            onSelectStudent={handleSelectStudentForEdit}
+                            placeholder="मराठीत पूर्ण नाव"
+                            currentStd={editingPlayer.std || std}
+                            mode="marathi"
+                            inputClassName="h-12 border-2 rounded-xl font-bold"
                           />
                         </div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
@@ -986,24 +1035,26 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-primary">विद्यार्थ्याचे नाव (English Name)</Label>
-                  <Input 
-                    placeholder="e.g. Rahul Ramesh Pawar"
-                    value={newStudentData.name} 
-                    onChange={e => {
-                      const val = e.target.value;
+                  <StudentPdfAutoSuggest
+                    label={isMarathiView ? "विद्यार्थ्याचे नाव (English Name)" : "Student Name (English)"}
+                    value={newStudentData.name}
+                    onChange={(val) => {
                       const mar = transliterateEnglishToMarathi(val);
                       setNewStudentData(prev => ({
                         ...prev,
                         name: val,
                         nameMarathi: (!prev.nameMarathi || prev.nameMarathi === transliterateEnglishToMarathi(prev.name)) ? mar : prev.nameMarathi
                       }));
-                    }} 
-                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                    }}
+                    onSelectStudent={handleSelectStudentForAdd}
+                    placeholder="e.g. Rahul Ramesh Pawar"
+                    currentStd={std}
+                    mode="english"
+                    inputClassName="h-11 border-2 rounded-xl font-bold text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-1.5">
                     <Label className="text-[10px] font-black uppercase text-primary">विद्यार्थ्याचे नाव (मराठी)</Label>
                     {newStudentData.name && (
                       <button 
@@ -1011,17 +1062,23 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         onClick={() => setNewStudentData(prev => ({ ...prev, nameMarathi: transliterateEnglishToMarathi(prev.name) }))}
                         className="text-[9px] font-extrabold text-emerald-700 hover:underline flex items-center gap-1"
                       >
-                        💡 सुचवलेले: {transliterateEnglishToMarathi(newStudentData.name)}
+                        💡 {transliterateEnglishToMarathi(newStudentData.name)}
                       </button>
                     )}
                   </div>
-                  <Input 
+                  <StudentPdfAutoSuggest
+                    value={newStudentData.nameMarathi}
+                    onChange={(val) => setNewStudentData(prev => ({ ...prev, nameMarathi: val }))}
+                    onSelectStudent={handleSelectStudentForAdd}
                     placeholder="उदा. राहुल रमेश पवार"
-                    value={newStudentData.nameMarathi} 
-                    onChange={e => setNewStudentData({...newStudentData, nameMarathi: e.target.value})} 
-                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                    currentStd={std}
+                    mode="marathi"
+                    inputClassName="h-11 border-2 rounded-xl font-bold text-xs"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-primary">लिंग (Gender)</Label>
                   <Select value={newStudentData.gender} onValueChange={(val: any) => setNewStudentData({...newStudentData, gender: val})}>
