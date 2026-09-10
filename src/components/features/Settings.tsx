@@ -33,8 +33,11 @@ import {
   UploadCloud,
   History,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  BookOpen,
+  Wand2
 } from 'lucide-react';
+import { MarathiStudentDirectoryModal } from '@/components/features/MarathiStudentDirectoryModal';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -130,6 +133,31 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
       });
     } finally {
       setIsFixingNames(false);
+    }
+  };
+
+  const [isImportingSchool, setIsImportingSchool] = useState(false);
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
+
+  const handleImportSchoolDatabase = async () => {
+    try {
+      setIsImportingSchool(true);
+      const res = await schoolData.importSchoolStudentsDatabase();
+      toast({
+        title: language === 'Marathi' ? "शाळा विद्यार्थी डेटा सिंक झाला! ✅" : "School Roster Synced! ✅",
+        description: language === 'Marathi' 
+          ? `शासकीय आश्रमशाळा वाघंबा मधील ${res.added} नवीन विद्यार्थी जोडले व ${res.updated} विद्यार्थी माहिती अपडेट केली.`
+          : `Successfully imported ${res.added} new students and updated ${res.updated} existing students from Waghamba school registry.`,
+        className: "bg-emerald-600 text-white font-black"
+      });
+    } catch (e) {
+      toast({
+        title: "Sync Error",
+        description: "Could not import school students database.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImportingSchool(false);
     }
   };
 
@@ -423,6 +451,21 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </label>
           <div className="rounded-[2rem] overflow-hidden bg-white border shadow-sm">
             <SettingsItem 
+              icon={BookOpen} 
+              color="bg-emerald-600" 
+              label={language === 'Marathi' ? "वाघंबा शाळा विद्यार्थी डेटा सिंक करा (४११ विद्यार्थी)" : "Sync Waghamba School Roster (411 Students)"} 
+              sublabel={language === 'Marathi' ? "इयत्ता १ ली ते १० वी चे सर्व ४११ विद्यार्थी ॲपमध्ये लोड करा" : "1-Click import official Classes 1-10 student database"} 
+              onClick={handleImportSchoolDatabase}
+              disabled={isImportingSchool}
+            />
+            <SettingsItem 
+              icon={Wand2} 
+              color="bg-purple-600" 
+              label={language === 'Marathi' ? "विद्यार्थी नोंदवही व मराठी नाव शुद्धलेखन" : "Student Directory & Marathi Name Corrector"} 
+              sublabel={language === 'Marathi' ? "४११ विद्यार्थ्यांची यादी पहा व नाव शुद्धलेखन तपासा" : "Search 411 students, view details & fix Marathi spelling"} 
+              onClick={() => setIsRosterModalOpen(true)}
+            />
+            <SettingsItem 
               icon={Sparkles} 
               color="bg-amber-500" 
               label={language === 'Marathi' ? "मराठी नावे आपोआप दुरुस्त करा" : "Auto-Fix & Guess Marathi Names"} 
@@ -651,6 +694,12 @@ export function Settings({ language, setLanguage }: { language: 'English' | 'Mar
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* WAGHAMBA STUDENT DIRECTORY & MARATHI NAME CORRECTOR */}
+      <MarathiStudentDirectoryModal
+        open={isRosterModalOpen}
+        onClose={() => setIsRosterModalOpen(false)}
+        mode="corrector"
+      />
     </div>
   );
 }

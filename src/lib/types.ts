@@ -44,6 +44,13 @@ export interface Player {
   motherName?: string;
   fatherName?: string;
   saralId?: string;
+  apaarId?: string; // Official 12-digit APAAR ID
+  parentName?: string;
+  village?: string;
+  taluka?: string;
+  district?: string;
+  pincode?: string;
+  parentMobile1?: string;
   admissionDate?: string;
   identificationMark?: string;
   jerseyNumber?: string;

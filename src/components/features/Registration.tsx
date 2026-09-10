@@ -35,7 +35,9 @@ import {
   Weight,
   Ruler,
   FileText,
-  CreditCard
+  CreditCard,
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn, getAgeValidation, transliterateEnglishToMarathi } from '@/lib/utils';
@@ -46,6 +48,9 @@ import { Badge } from '@/components/ui/badge';
 import { generateId } from '@/lib/id-generator';
 import { compressImage, maskAadhaar } from '@/lib/privacy-utils';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
+import { MarathiStudentDirectoryModal } from '@/components/features/MarathiStudentDirectoryModal';
+import { correctMarathiFullName, cleanLegacyMarathiText } from '@/lib/marathiNameHelper';
+import type { SchoolStudent } from '@/data/waghambaStudents';
 import type { Player } from '@/lib/types';
 
 const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
@@ -95,6 +100,29 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIdentityPlayer, setSelectedIdentityPlayer] = useState<Player | null>(null);
   const [isIdentitySelectorOpen, setIsIdentitySelectorOpen] = useState(false);
+  const [isSchoolRosterOpen, setIsSchoolRosterOpen] = useState(false);
+
+  const handleSelectFromRoster = (st: SchoolStudent) => {
+    form.setValue('name', st.name);
+    form.setValue('nameMarathi', correctMarathiFullName(st.nameMarathi));
+    form.setValue('motherName', st.motherName);
+    form.setValue('fatherName', st.fatherName);
+    form.setValue('std', st.std);
+    form.setValue('serialNumber', st.rollNo);
+    form.setValue('gender', st.gender);
+    form.setValue('dob', st.dob);
+    form.setValue('saralId', st.apaarId || st.rollNo);
+    form.setValue('address', st.address);
+    form.setValue('mobileNumber', st.mobileNumber);
+    form.setValue('category', 'student');
+    form.setValue('sports', st.sports || ['Running', 'Kabaddi', 'Kho Kho']);
+
+    toast({
+      title: "विद्यार्थी डेटा लोड झाला! ✅",
+      description: `${correctMarathiFullName(st.nameMarathi)} (इयत्ता ${st.std} वी, रोल नं. ${st.rollNo}) ची माहिती फॉर्ममध्ये भरली आहे.`,
+      className: "bg-emerald-600 text-white font-black"
+    });
+  };
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -306,15 +334,24 @@ export function Registration({ store, section }: { store: any, section: 'sports'
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center shrink-0 shadow-lg text-white"><Search className="w-7 h-7" /></div>
               <div className="flex-1 w-full space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-black uppercase text-accent tracking-widest ml-1">Registry Search & ID Card</label>
-                  <Button
-                    type="button"
-                    onClick={() => setIsIdentitySelectorOpen(true)}
-                    className="h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md active-scale flex items-center gap-1.5"
-                  >
-                    <FileText className="w-4 h-4" /> 🆔 खेळाडू ओळखपत्र (Print Player ID Card)
-                  </Button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <label className="text-[10px] font-black uppercase text-accent tracking-widest ml-1">Registry Search & Official School Directory</label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => setIsSchoolRosterOpen(true)}
+                      className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md active-scale flex items-center gap-1.5"
+                    >
+                      <BookOpen className="w-4 h-4" /> 📋 शाळा यादीतून निवडा (Pick Student)
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setIsIdentitySelectorOpen(true)}
+                      className="h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md active-scale flex items-center gap-1.5"
+                    >
+                      <FileText className="w-4 h-4" /> 🆔 खेळाडू ओळखपत्र (Print ID Card)
+                    </Button>
+                  </div>
                 </div>
                 <div className="relative">
                   <Input 
@@ -455,18 +492,36 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                              )} />
                              <FormField control={form.control} name="nameMarathi" render={({ field }) => (
                                <FormItem>
-                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
-                                   <span className="flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</span>
-                                   {form.watch('name') && (
-                                     <button
-                                       type="button"
-                                       onClick={() => form.setValue('nameMarathi', transliterateEnglishToMarathi(form.getValues('name')))}
-                                       className="text-[10px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
-                                     >
-                                       💡 सुचवलेले: {transliterateEnglishToMarathi(form.watch('name'))}
-                                     </button>
-                                   )}
-                                 </FormLabel>
+                                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                    <span className="flex items-center gap-2"><Type className="w-3 h-3" /> नाव (मराठी)</span>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const cur = form.getValues('nameMarathi') || form.getValues('name') || '';
+                                          const cleaned = cleanLegacyMarathiText(cur);
+                                          const corrected = correctMarathiFullName(cleaned);
+                                          form.setValue('nameMarathi', corrected);
+                                          toast({
+                                            title: "मराठी नाव दुरुस्त झाले! ✨",
+                                            description: `शुद्ध केलेले नाव: ${corrected}`
+                                          });
+                                        }}
+                                        className="text-[9px] font-black text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors"
+                                      >
+                                        <Sparkles className="w-3 h-3" /> शुद्धलेखन दुरुस्त करा
+                                      </button>
+                                      {form.watch('name') && (
+                                        <button
+                                          type="button"
+                                          onClick={() => form.setValue('nameMarathi', transliterateEnglishToMarathi(form.getValues('name')))}
+                                          className="text-[10px] font-extrabold text-accent hover:underline flex items-center gap-1 cursor-pointer"
+                                        >
+                                          💡 {transliterateEnglishToMarathi(form.watch('name'))}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </FormLabel>
                                  <FormControl>
                                    <Input 
                                      placeholder={transliterateEnglishToMarathi(form.watch('name')) || "पूर्ण नाव मराठीत"} 
@@ -813,6 +868,13 @@ export function Registration({ store, section }: { store: any, section: 'sports'
           onClose={() => setSelectedIdentityPlayer(null)}
         />
       )}
+      {/* WAGHAMBA MASTER SCHOOL ROSTER PICKER */}
+      <MarathiStudentDirectoryModal
+        open={isSchoolRosterOpen}
+        onClose={() => setIsSchoolRosterOpen(false)}
+        onSelectStudent={handleSelectFromRoster}
+        mode="picker"
+      />
     </div>
   );
 }

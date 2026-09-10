@@ -24,6 +24,8 @@ import {
   deleteDocumentNonBlocking,
 } from "@/firebase/non-blocking-updates";
 import { guessMarathiName } from "@/lib/utils";
+import { WAGHAMBA_STUDENTS_DATA } from "@/data/waghambaStudents";
+import { correctMarathiFullName, cleanLegacyMarathiText } from "@/lib/marathiNameHelper";
 import {
   getCurrentAcademicYear,
   getAvailableAcademicYears,
@@ -1025,22 +1027,87 @@ export function useSchoolData(isActive: boolean = true) {
       return executeRestore(backupPayload, db, user.uid, selectedYear);
     },
 
+    importSchoolStudentsDatabase: async (targetStandard?: string): Promise<{ added: number; updated: number }> => {
+      if (!user || !db) return { added: 0, updated: 0 };
+      const currentPlayers = aggregatedData.players || [];
+      const studentsToSync = targetStandard && targetStandard !== 'all'
+        ? WAGHAMBA_STUDENTS_DATA.filter((s) => s.std === targetStandard)
+        : WAGHAMBA_STUDENTS_DATA;
+
+      let added = 0;
+      let updated = 0;
+
+      for (const st of studentsToSync) {
+        // Match existing student by rollNo & std, or apaarId, or exact marathi name
+        const existing = currentPlayers.find(
+          (p) =>
+            (p.std === st.std && p.serialNumber === st.rollNo) ||
+            (st.apaarId && p.apaarId === st.apaarId) ||
+            (p.std === st.std && p.nameMarathi && p.nameMarathi === st.nameMarathi)
+        );
+
+        const targetId = existing ? existing.id : `${user.uid}_std${st.std}_${st.rollNo.padStart(2, '0')}`;
+        const cleanMarathi = correctMarathiFullName(st.nameMarathi);
+
+        const payload: Partial<Player> = {
+          ...(existing || {}),
+          id: targetId,
+          std: st.std,
+          serialNumber: st.rollNo,
+          name: existing?.name || st.name,
+          nameMarathi: cleanMarathi,
+          motherName: existing?.motherName || st.motherName,
+          fatherName: existing?.fatherName || st.fatherName,
+          dob: existing?.dob || st.dob,
+          age: existing?.age || st.age,
+          gender: existing?.gender || st.gender,
+          apaarId: st.apaarId || existing?.apaarId || '',
+          saralId: st.apaarId || existing?.saralId || st.rollNo,
+          village: st.village || existing?.village || '',
+          taluka: st.taluka || existing?.taluka || 'बागलाण',
+          district: st.district || existing?.district || 'नाशिक',
+          pincode: st.pincode || existing?.pincode || '423302',
+          address: existing?.address || st.address,
+          parentName: st.parentName || existing?.parentName || '',
+          mobileNumber: existing?.mobileNumber || st.mobileNumber,
+          parentMobile1: st.parentMobile1 || existing?.parentMobile1 || st.mobileNumber,
+          category: existing?.category || 'student',
+          sports: existing?.sports && existing.sports.length > 0 ? existing.sports : st.sports,
+          history: existing?.history || 'No',
+          ownerId: user.uid,
+          schoolId: user.uid,
+          academicYear: selectedYear,
+          updatedAt: new Date().toISOString(),
+        };
+
+        setDocumentNonBlocking(doc(db, 'players', targetId), payload, { merge: true });
+        if (existing) updated++;
+        else added++;
+      }
+
+      return { added, updated };
+    },
+
     autoFixAllMarathiNames: async (): Promise<number> => {
       if (!user || !db) return 0;
       let updatedCount = 0;
       const players = aggregatedData.players || [];
       for (const player of players) {
-        const guessed = guessMarathiName(player.name);
-        const currentMarathi = (player.nameMarathi || "").trim();
-        if (
-          !currentMarathi ||
-          !/[\u0900-\u097F]/.test(currentMarathi) ||
-          currentMarathi === player.name
-        ) {
-          if (guessed && guessed !== currentMarathi) {
+        const rawMarathi = player.nameMarathi || player.name || '';
+        const cleanedMarathi = cleanLegacyMarathiText(rawMarathi);
+        const correctedMarathi = correctMarathiFullName(cleanedMarathi) || guessMarathiName(player.name);
+
+        const currentMarathi = (player.nameMarathi || '').trim();
+        if (!currentMarathi || currentMarathi !== correctedMarathi) {
+          if (correctedMarathi && correctedMarathi.trim()) {
             setDocumentNonBlocking(
-              doc(db, "players", player.id),
-              { ...player, nameMarathi: guessed, ownerId: user.uid, schoolId: user.uid },
+              doc(db, 'players', player.id),
+              {
+                ...player,
+                nameMarathi: correctedMarathi,
+                ownerId: user.uid,
+                schoolId: user.uid
+              },
               { merge: true }
             );
             updatedCount++;
