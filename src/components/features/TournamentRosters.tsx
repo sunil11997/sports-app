@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Medal } from 'lucide-react';
-import { getAgeValidation, getOfficialSchoolName, getTeacherName } from '@/lib/utils';
+import { Printer, Medal, Shirt, Target } from 'lucide-react';
+import { getAgeValidation, getOfficialSchoolName, getTeacherName, sanitizeGrNumber } from '@/lib/utils';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -42,8 +42,17 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       if (groups[cat]) {
         const skillData = store.data.sportSkills[`${p.id}_${selectedSport}`] || { score: '0' };
         const fitnessData = store.data.fitness[p.id] || { score: '0' };
-        const rating = (parseFloat(skillData.score) * 0.7) + (parseFloat(fitnessData.score) * 0.3);
-        groups[cat].push({ ...p, competencyRating: rating.toFixed(1) });
+        const rating = (parseFloat(skillData.score || '0') * 0.7) + (parseFloat(fitnessData.score || '0') * 0.3);
+        const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
+        const position = p.positions?.[selectedSport] || '-';
+        groups[cat].push({ 
+          ...p, 
+          competencyRating: rating.toFixed(1),
+          skillScore: skillData.score || '0',
+          fitnessScore: fitnessData.score || '0',
+          jersey,
+          position
+        });
       }
     });
 
@@ -211,7 +220,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                   <tr>
                     <td class="center"><strong>${i + 1}</strong></td>
                     <td class="center" style="font-weight: 900; color: #1e3a8a; background: #f8fafc;">#${jersey}</td>
-                    <td class="center"><strong>${p.generalRegisterNumber || '---'}</strong></td>
+                    <td class="center"><strong>${sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '---')}</strong></td>
                     <td><strong>${displayName}</strong></td>
                     <td class="center"><strong>${p.std} वी</strong></td>
                     <td class="center">${position}</td>
@@ -256,7 +265,37 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             </div>
             <div className="space-y-1">
               <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Tournament Selection</h2>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Institutional Squad Generation</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">कौशल्य गुण, फिटनेस व जर्सी पोझिशन लिंक्ड रोस्टर</p>
+              
+              {/* Direct links to Jersey/Positions and Skills tabs */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-black border-2 border-emerald-600/30 rounded-xl h-8 gap-1.5 shadow-sm"
+                  onClick={() => {
+                    const el = document.querySelector('[data-value="jersey"]') as HTMLElement || document.querySelector('[value="jersey"]') as HTMLElement;
+                    if (el) el.click();
+                  }}
+                >
+                  <Shirt className="w-3.5 h-3.5 text-emerald-600" />
+                  🎽 जर्सी व पोझिशन (Jersey & Positions)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-amber-50 text-amber-900 text-xs font-black border-2 border-amber-500/30 rounded-xl h-8 gap-1.5 shadow-sm"
+                  onClick={() => {
+                    const el = document.querySelector('[data-value="skills"]') as HTMLElement || document.querySelector('[value="skills"]') as HTMLElement;
+                    if (el) el.click();
+                  }}
+                >
+                  <Target className="w-3.5 h-3.5 text-amber-600" />
+                  🎯 कौशल्य गुण (Skills Marks)
+                </Button>
+              </div>
             </div>
           </div>
           
@@ -272,7 +311,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {categories.map(cat => (
-          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[500px]">
+          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[520px]">
             <div className="bg-muted/40 p-6 border-b flex justify-between items-center">
               <span className="text-xl font-black uppercase text-primary">{cat}</span>
               <Badge className="bg-primary text-white font-black">{processedGroups[cat].length} ATHLETES</Badge>
@@ -281,20 +320,41 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-[10px] font-black uppercase">Athlete</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase text-center">Age</TableHead>
-                    <TableHead className="text-center text-[10px] font-black uppercase">Rating</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase">खेळाडू (Athlete)</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center">जर्सी</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center">पोझिशन</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center">कौशल्य</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center">फिटनेस</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase">रेटिंग</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {processedGroups[cat].slice(0, 15).map((p, i) => {
-                    const ageVal = getAgeValidation(p.dob);
-                    const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
                     return (
-                      <TableRow key={p.id} className={i < 12 ? 'bg-emerald-50/30' : ''}>
-                        <TableCell className="text-xs font-bold truncate max-w-[150px]">{(p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name).toUpperCase()}</TableCell>
-                        <TableCell className="text-xs font-bold text-center">{age <= 0 ? "Pending" : age}</TableCell>
-                        <TableCell className="text-center font-black text-primary">{p.competencyRating}</TableCell>
+                      <TableRow key={p.id} className={i < 12 ? 'bg-emerald-50/40 font-medium' : 'font-medium'}>
+                        <TableCell className="text-xs font-bold max-w-[130px]">
+                          <div className="font-black text-slate-900 truncate">
+                            {(p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name)}
+                          </div>
+                          <div className="text-[9px] text-muted-foreground font-normal">
+                            इ.{p.std} &bull; GR: {sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '-')}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs font-black text-center text-amber-700">
+                          #{p.jersey}
+                        </TableCell>
+                        <TableCell className="text-[11px] font-bold text-center text-slate-700 truncate max-w-[90px]" title={p.position}>
+                          {p.position}
+                        </TableCell>
+                        <TableCell className="text-xs font-black text-center text-emerald-700">
+                          {p.skillScore}
+                        </TableCell>
+                        <TableCell className="text-xs font-black text-center text-blue-700">
+                          {p.fitnessScore}
+                        </TableCell>
+                        <TableCell className="text-center font-black text-primary text-xs">
+                          {p.competencyRating}
+                        </TableCell>
                       </TableRow>
                     );
                   })}

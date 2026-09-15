@@ -26,7 +26,8 @@ import {
   getOfficialSchoolName, 
   getTeacherName, 
   getAgeValidation, 
-  transliterateEnglishToMarathi 
+  transliterateEnglishToMarathi,
+  sanitizeGrNumber
 } from '@/lib/utils';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
@@ -139,6 +140,11 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
     const ageVal = getAgeValidation(player.dob);
     const bmiInfo = getBmiDetails(player.height, player.weight);
     const fit = fitnessRecords[player.id] || {};
+    const run50 = fit.run50m || fit.sprint50m;
+    const reach = fit.sitAndReach || fit.flexibility;
+    const situps = fit.sitUps;
+    const shuttle = fit.shuttleRun;
+    const run600 = fit.run600m;
     const att = getAttendanceStats(player.id);
     const mainSport = player.sports?.[0] || 'क्रीडा खेळाडू';
     const pos = player.positions?.[mainSport] || 'खेळाडू';
@@ -188,22 +194,22 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
         <body style="padding-top: 55px;">
           <div class="no-print print-controls">
             <button onclick="window.close()" class="btn btn-back">&larr; बंद करा (Close)</button>
-            <button onclick="window.print()" class="btn btn-print">🖨️ क्रीडा प्रगती पुस्तक प्रिंट करा (A4 Sheet)</button>
+            <button onclick="window.print()" class="btn btn-print">🖨️ अधिकृत क्रीडा प्रगती पुस्तक प्रिंट करा (A4 Sheet)</button>
           </div>
 
           <div class="paper">
             <table class="header-table">
               <tr>
                 <td style="width: 15%; text-align: center;">
-                  <img src="${TRIBAL_DEV_LOGO_B64}" style="height: 52px;" />
+                  <img src="${TRIBAL_DEV_LOGO_B64}" style="height: 55px;" />
                 </td>
                 <td style="width: 70%; text-align: center;">
-                  <div style="font-size: 9px; font-weight: bold; color: #64748b;">महाराष्ट्र शासन &bull; शालेय क्रीडा व शारीरिक शिक्षण विभाग</div>
+                  <div style="font-size: 9px; font-weight: bold; color: #64748b;">महाराष्ट्र शासन - आदिवासी विकास विभाग</div>
                   <div class="school-title">${schoolName}</div>
                   <div class="sub-title">तालुका: ${schoolProfile?.taluka || 'बागलाण'}, जिल्हा: ${schoolProfile?.district || 'नाशिक'}</div>
                 </td>
                 <td style="width: 15%; text-align: center;">
-                  <img src="${AMRIT_MAHOTSAV_LOGO_B64}" style="height: 48px;" />
+                  <img src="${AMRIT_MAHOTSAV_LOGO_B64}" style="height: 50px;" />
                 </td>
               </tr>
             </table>
@@ -224,7 +230,7 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
                       <th style="width: 25%;">विद्यार्थ्याचे नाव:</th>
                       <td><b>${mName}</b> (${player.name})</td>
                       <th style="width: 20%;">GR क्रमांक:</th>
-                      <td><b>${player.generalRegisterNumber || '-'}</b></td>
+                      <td><b>${sanitizeGrNumber(player.generalRegisterNumber, player.serialNumber || '-')}</b></td>
                     </tr>
                     <tr>
                       <th>आईचे नाव:</th>
@@ -289,36 +295,36 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
                   <td style="text-align: center;">१</td>
                   <td><b>५० मीटर धावणे (50m Sprint)</b></td>
                   <td>गती व वेग (Speed & Acceleration)</td>
-                  <td style="text-align: center; font-weight: bold;">${fit.sprint50m ? `${fit.sprint50m} सेकंद` : '८.४ से.'}</td>
-                  <td style="text-align: center; font-weight: bold; color: #047857;">A (उत्कृष्ट)</td>
+                  <td style="text-align: center; font-weight: bold;">${run50 ? `${run50} सेकंद` : '<span style="color: #94a3b8;">नोंद नाही / चाचणी बाकी</span>'}</td>
+                  <td style="text-align: center; font-weight: bold; color: ${run50 ? '#047857' : '#94a3b8'};">${run50 ? (parseFloat(run50) <= 8.5 ? 'A (उत्कृष्ट)' : 'B (चांगले)') : '-'}</td>
                 </tr>
                 <tr>
                   <td style="text-align: center;">२</td>
                   <td><b>सिट अँड रीच (Sit & Reach)</b></td>
                   <td>लवचिकता (Flexibility)</td>
-                  <td style="text-align: center; font-weight: bold;">${fit.flexibility ? `${fit.flexibility} सेमी` : '+१४ सेमी'}</td>
-                  <td style="text-align: center; font-weight: bold; color: #047857;">A+ (विशेष)</td>
+                  <td style="text-align: center; font-weight: bold;">${reach ? `+${reach} सेमी` : '<span style="color: #94a3b8;">नोंद नाही / चाचणी बाकी</span>'}</td>
+                  <td style="text-align: center; font-weight: bold; color: ${reach ? '#047857' : '#94a3b8'};">${reach ? (parseFloat(reach) >= 10 ? 'A+ (विशेष)' : 'B (चांगले)') : '-'}</td>
                 </tr>
                 <tr>
                   <td style="text-align: center;">३</td>
                   <td><b>सिट-अप्स (Sit-ups / 1 Min)</b></td>
                   <td>पोटाची व स्नायू ताकद (Core Strength)</td>
-                  <td style="text-align: center; font-weight: bold;">${fit.sitUps || '३२ पुनरावृत्ती'}</td>
-                  <td style="text-align: center; font-weight: bold; color: #047857;">A (उत्कृष्ट)</td>
+                  <td style="text-align: center; font-weight: bold;">${situps ? `${situps} पुनरावृत्ती` : '<span style="color: #94a3b8;">नोंद नाही / चाचणी बाकी</span>'}</td>
+                  <td style="text-align: center; font-weight: bold; color: ${situps ? '#047857' : '#94a3b8'};">${situps ? (parseFloat(situps) >= 25 ? 'A (उत्कृष्ट)' : 'B (चांगले)') : '-'}</td>
                 </tr>
                 <tr>
                   <td style="text-align: center;">४</td>
                   <td><b>शटल रन (४ x १० मी)</b></td>
                   <td>चपळता (Agility & Coordination)</td>
-                  <td style="text-align: center; font-weight: bold;">${fit.shuttleRun ? `${fit.shuttleRun} सेकंद` : '१०.२ से.'}</td>
-                  <td style="text-align: center; font-weight: bold; color: #047857;">A (उत्कृष्ट)</td>
+                  <td style="text-align: center; font-weight: bold;">${shuttle ? `${shuttle} सेकंद` : '<span style="color: #94a3b8;">नोंद नाही / चाचणी बाकी</span>'}</td>
+                  <td style="text-align: center; font-weight: bold; color: ${shuttle ? '#047857' : '#94a3b8'};">${shuttle ? (parseFloat(shuttle) <= 11.5 ? 'A (उत्कृष्ट)' : 'B (चांगले)') : '-'}</td>
                 </tr>
                 <tr>
                   <td style="text-align: center;">५</td>
                   <td><b>६०० मी. धावणे/चालणे</b></td>
                   <td>हृदय व दमसास क्षमता (Cardio Endurance)</td>
-                  <td style="text-align: center; font-weight: bold;">${fit.run600m || '२ मि. ४० से.'}</td>
-                  <td style="text-align: center; font-weight: bold; color: #047857;">B+ (चांगले)</td>
+                  <td style="text-align: center; font-weight: bold;">${run600 ? `${run600} मि.` : '<span style="color: #94a3b8;">नोंद नाही / चाचणी बाकी</span>'}</td>
+                  <td style="text-align: center; font-weight: bold; color: ${run600 ? '#047857' : '#94a3b8'};">${run600 ? 'B+ (चांगले)' : '-'}</td>
                 </tr>
               </tbody>
             </table>
@@ -529,7 +535,7 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
                     <div className="min-w-0">
                       <div className="font-black text-xs text-slate-900 truncate">{mName}</div>
                       <div className="text-[10px] text-slate-500 truncate">
-                        इ. {p.std} वी &bull; GR: {p.generalRegisterNumber || '-'}
+                        इ. {p.std} वी &bull; GR: {sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '-')}
                       </div>
                     </div>
                     <Badge variant={isCurrent ? "default" : "outline"} className={cn("text-[10px] font-bold shrink-0", isCurrent && "bg-emerald-600")}>
@@ -569,7 +575,7 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
                       {currentPlayer.nameMarathi || transliterateEnglishToMarathi(currentPlayer.name) || currentPlayer.name}
                     </h3>
                     <p className="text-xs text-slate-500 font-bold">
-                      {currentPlayer.name} &bull; इयत्ता: {currentPlayer.std} वी &bull; GR: {currentPlayer.generalRegisterNumber || '-'}
+                      {currentPlayer.name} &bull; इयत्ता: {currentPlayer.std} वी &bull; GR: {sanitizeGrNumber(currentPlayer.generalRegisterNumber, currentPlayer.serialNumber || '-')}
                     </p>
                   </div>
                 </div>
@@ -625,30 +631,68 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-bold">
-                      <tr>
-                        <td className="py-2 px-3">५० मी स्प्रिंट</td>
-                        <td className="py-2 px-3 text-slate-500">गती व वेग (Speed)</td>
-                        <td className="py-2 px-3 text-center font-mono">{fitnessRecords[currentPlayer.id]?.sprint50m || '८.४'} से.</td>
-                        <td className="py-2 px-3 text-center text-emerald-700 font-black">A</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-3">सिट अँड रीच</td>
-                        <td className="py-2 px-3 text-slate-500">लवचिकता (Flexibility)</td>
-                        <td className="py-2 px-3 text-center font-mono">+{fitnessRecords[currentPlayer.id]?.flexibility || '१४'} सेमी</td>
-                        <td className="py-2 px-3 text-center text-emerald-700 font-black">A+</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-3">सिट-अप्स (१ मिनिट)</td>
-                        <td className="py-2 px-3 text-slate-500">स्नायू ताकद (Strength)</td>
-                        <td className="py-2 px-3 text-center font-mono">{fitnessRecords[currentPlayer.id]?.sitUps || '३२'} रेॅप्स</td>
-                        <td className="py-2 px-3 text-center text-emerald-700 font-black">A</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-3">६०० मी धावणे</td>
-                        <td className="py-2 px-3 text-slate-500">दमसास (Endurance)</td>
-                        <td className="py-2 px-3 text-center font-mono">{fitnessRecords[currentPlayer.id]?.run600m || '२:४०'} मि.</td>
-                        <td className="py-2 px-3 text-center text-blue-700 font-black">B+</td>
-                      </tr>
+                      {(() => {
+                        const cFit = fitnessRecords[currentPlayer.id] || {};
+                        const c50 = cFit.run50m || cFit.sprint50m;
+                        const cReach = cFit.sitAndReach || cFit.flexibility;
+                        const cSitups = cFit.sitUps;
+                        const cShuttle = cFit.shuttleRun;
+                        const c600 = cFit.run600m;
+                        return (
+                          <>
+                            <tr>
+                              <td className="py-2 px-3">५० मी स्प्रिंट</td>
+                              <td className="py-2 px-3 text-slate-500">गती व वेग (Speed)</td>
+                              <td className="py-2 px-3 text-center font-mono">
+                                {c50 ? `${c50} से.` : <span className="text-muted-foreground font-normal text-[10px]">चाचणी बाकी</span>}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black">
+                                {c50 ? (parseFloat(c50) <= 8.5 ? <span className="text-emerald-700">A</span> : <span className="text-blue-700">B</span>) : '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">सिट अँड रीच</td>
+                              <td className="py-2 px-3 text-slate-500">लवचिकता (Flexibility)</td>
+                              <td className="py-2 px-3 text-center font-mono">
+                                {cReach ? `+${cReach} सेमी` : <span className="text-muted-foreground font-normal text-[10px]">चाचणी बाकी</span>}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black">
+                                {cReach ? (parseFloat(cReach) >= 10 ? <span className="text-emerald-700">A+</span> : <span className="text-blue-700">B</span>) : '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">सिट-अप्स (१ मिनिट)</td>
+                              <td className="py-2 px-3 text-slate-500">स्नायू ताकद (Strength)</td>
+                              <td className="py-2 px-3 text-center font-mono">
+                                {cSitups ? `${cSitups} रेॅप्स` : <span className="text-muted-foreground font-normal text-[10px]">चाचणी बाकी</span>}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black">
+                                {cSitups ? (parseFloat(cSitups) >= 25 ? <span className="text-emerald-700">A</span> : <span className="text-blue-700">B</span>) : '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">शटल रन (४ x १० मी)</td>
+                              <td className="py-2 px-3 text-slate-500">चपळता (Agility)</td>
+                              <td className="py-2 px-3 text-center font-mono">
+                                {cShuttle ? `${cShuttle} से.` : <span className="text-muted-foreground font-normal text-[10px]">चाचणी बाकी</span>}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black">
+                                {cShuttle ? (parseFloat(cShuttle) <= 11.5 ? <span className="text-emerald-700">A</span> : <span className="text-blue-700">B</span>) : '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">६०० मी धावणे</td>
+                              <td className="py-2 px-3 text-slate-500">दमसास (Endurance)</td>
+                              <td className="py-2 px-3 text-center font-mono">
+                                {c600 ? `${c600} मि.` : <span className="text-muted-foreground font-normal text-[10px]">चाचणी बाकी</span>}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black">
+                                {c600 ? <span className="text-blue-700">B+</span> : '-'}
+                              </td>
+                            </tr>
+                          </>
+                        );
+                      })()}
                     </tbody>
                   </table>
                 </div>

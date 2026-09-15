@@ -369,7 +369,7 @@ export function useSchoolData(isActive: boolean = true) {
             (doc) => ({ ...doc.data(), id: doc.id } as EquipmentItem)
           );
           setEquipmentListData(items);
-          if (typeof window !== "undefined" && items.length > 0) {
+          if (typeof window !== "undefined") {
             localStorage.setItem(OFFLINE_EQUIPMENT_KEY, JSON.stringify(items));
           }
         }

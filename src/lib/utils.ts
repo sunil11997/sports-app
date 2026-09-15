@@ -827,15 +827,24 @@ export function getPositionBadgeInfo(posName: string | undefined): { shortCode: 
   return { shortCode: '', zone: 'sport' };
 }
 
+export function sanitizeGrNumber(gr?: string | null, fallback = '-'): string {
+  if (!gr) return fallback;
+  const trimmed = String(gr).trim();
+  if (trimmed.includes('@') || trimmed.includes('.com') || trimmed.includes('.in') || trimmed.includes('.org') || trimmed.includes('mailto:')) {
+    return fallback;
+  }
+  return trimmed;
+}
+
 export const SPORT_POSITIONS_MAP: Record<string, SportPositionDef[]> = {
   'Kabaddi': [
-    { id: 'right_raider', nameEn: 'Right Raider', nameMr: 'उजवा चढाईपटू (Right Raider)', shortCode: 'RR', category: 'Attack' },
-    { id: 'left_raider', nameEn: 'Left Raider', nameMr: 'डावा चढाईपटू (Left Raider)', shortCode: 'LR', category: 'Attack' },
     { id: 'right_corner', nameEn: 'Right Corner', nameMr: 'उजवा कोपरा (Right Corner)', shortCode: 'RC', category: 'Defense' },
     { id: 'left_corner', nameEn: 'Left Corner', nameMr: 'डावा कोपरा (Left Corner)', shortCode: 'LC', category: 'Defense' },
-    { id: 'right_cover', nameEn: 'Right Cover', nameMr: 'उजवा कव्हर / मध्यरक्षक', shortCode: 'RCv', category: 'Defense' },
-    { id: 'left_cover', nameEn: 'Left Cover', nameMr: 'डावा कव्हर / मध्यरक्षक', shortCode: 'LCv', category: 'Defense' },
-    { id: 'all_rounder', nameEn: 'All-Rounder', nameMr: 'सर्वसमावेशक (All-Rounder)', shortCode: 'AR', category: 'Specialist' },
+    { id: 'right_in', nameEn: 'Right In', nameMr: 'उजवा इन (Right In)', shortCode: 'RI', category: 'Attack' },
+    { id: 'left_in', nameEn: 'Left In', nameMr: 'डावा इन (Left In)', shortCode: 'LI', category: 'Attack' },
+    { id: 'right_cover', nameEn: 'Right Cover', nameMr: 'उजवा कव्हर (Right Cover)', shortCode: 'RCv', category: 'Defense' },
+    { id: 'left_cover', nameEn: 'Left Cover', nameMr: 'डावा कव्हर (Left Cover)', shortCode: 'LCv', category: 'Defense' },
+    { id: 'center', nameEn: 'Center', nameMr: 'मध्यरक्षक / सेंटर (Center)', shortCode: 'CTR', category: 'Attack' },
   ],
   'Kho Kho': [
     { id: 'runner_batch1', nameEn: 'Runner (Batch 1)', nameMr: 'धावपटू तुकडी १ (Batch 1)', shortCode: 'R1', category: 'Defense' },

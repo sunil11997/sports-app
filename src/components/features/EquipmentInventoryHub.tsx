@@ -63,14 +63,26 @@ const STORAGE_KEY_INDENT = 'wgb_sports_equipment_indent';
 export function EquipmentInventoryHub({ store }: { store: any }) {
   const { toast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState<'stock' | 'issues' | 'indent'>('stock');
+  const [isStockClearedManually, setIsStockClearedManually] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('wgb_equipment_cleared') === 'true';
+  });
 
   // Authoritative data from Firestore store
   const equipmentList: EquipmentItem[] = useMemo(() => {
-    if (store?.data?.equipmentList && store.data.equipmentList.length > 0) {
-      return store.data.equipmentList;
+    if (isStockClearedManually) {
+      return store?.data?.equipmentList || [];
+    }
+    if (store?.data?.equipmentList) {
+      if (store.data.equipmentList.length > 0) {
+        return store.data.equipmentList;
+      }
+      if (typeof window !== 'undefined' && localStorage.getItem('wgb_equipment_initialized') === 'true') {
+        return [];
+      }
     }
     return DEFAULT_EQUIPMENT_STOCK;
-  }, [store?.data?.equipmentList]);
+  }, [store?.data?.equipmentList, isStockClearedManually]);
 
   const issueRecords: EquipmentIssueRecord[] = useMemo(() => {
     return store?.data?.equipmentIssues || [];
@@ -196,6 +208,11 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     if (store?.addEquipmentItem) {
       store.addEquipmentItem(item);
     }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('wgb_equipment_cleared');
+      localStorage.setItem('wgb_equipment_initialized', 'true');
+    }
+    setIsStockClearedManually(false);
     setIsAddModalOpen(false);
     setNewItem({ name: '', nameMarathi: '', category: 'Balls', totalQty: 1, availableQty: 1, damagedQty: 0, unit: 'Nos (नग)', condition: 'Good', notes: '' });
     toast({ title: "साहित्य यशस्वीरित्या जोडले! ✅" });
@@ -215,6 +232,11 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     if (store?.updateEquipmentItem) {
       store.updateEquipmentItem(editingEquipment);
     }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('wgb_equipment_cleared');
+      localStorage.setItem('wgb_equipment_initialized', 'true');
+    }
+    setIsStockClearedManually(false);
     setIsEditEquipmentModalOpen(false);
     setEditingEquipment(null);
     toast({ title: "साहित्य माहिती अद्ययावत केली! ✏️" });
@@ -224,14 +246,40 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
     if (store?.deleteEquipmentItem) {
       store.deleteEquipmentItem(id);
     }
+    if (equipmentList.length <= 1) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('wgb_equipment_cleared', 'true');
+        localStorage.setItem('wgb_equipment_initialized', 'true');
+        localStorage.setItem(STORAGE_KEY_EQUIPMENT, '[]');
+        localStorage.removeItem('wgb_offline_equipment_stock');
+      }
+      setIsStockClearedManually(true);
+    }
     toast({ title: "साहित्य नोंद हटवली 🗑️" });
   };
 
   const handleClearAllEquipment = () => {
-    if (confirm("तुम्हाला खात्री आहे की सर्व साहित्य साठा हटवायचा आहे?")) {
+    if (confirm("तुम्हाला खात्री आहे की सर्व साहित्य साठा हटवायचा आहे? (Are you sure you want to clear all equipment stock?)")) {
       equipmentList.forEach((e) => store?.deleteEquipmentItem?.(e.id));
-      toast({ title: "सर्व साहित्य साठा साफ केला" });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('wgb_equipment_cleared', 'true');
+        localStorage.setItem('wgb_equipment_initialized', 'true');
+        localStorage.setItem(STORAGE_KEY_EQUIPMENT, '[]');
+        localStorage.removeItem('wgb_offline_equipment_stock');
+      }
+      setIsStockClearedManually(true);
+      toast({ title: "सर्व साहित्य साठा यशस्वीरित्या साफ केला! 🗑️" });
     }
+  };
+
+  const handleRestoreDefaultEquipment = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('wgb_equipment_cleared');
+      localStorage.setItem('wgb_equipment_initialized', 'true');
+    }
+    setIsStockClearedManually(false);
+    DEFAULT_EQUIPMENT_STOCK.forEach((item) => store?.addEquipmentItem?.(item));
+    toast({ title: "डीफॉल्ट क्रीडा साहित्य साठा पूर्ववत केला! 📦" });
   };
 
   // Handlers - Issues
@@ -747,7 +795,7 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                 क्रीडा साहित्य साठा व स्थिती तक्ता (Stock Status)
               </h3>
               <div className="flex items-center gap-2">
-                {equipmentList.length > 0 && (
+                {equipmentList.length > 0 ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -755,6 +803,15 @@ export function EquipmentInventoryHub({ store }: { store: any }) {
                     className="h-8 text-[10px] font-bold text-rose-600 border-rose-200 hover:bg-rose-50 rounded-xl"
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-1" /> सर्व साठा पुसा
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRestoreDefaultEquipment}
+                    className="h-8 text-[10px] font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 rounded-xl"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1" /> डीफॉल्ट साहित्य आणा
                   </Button>
                 )}
                 <Badge variant="secondary" className="font-black text-xs">

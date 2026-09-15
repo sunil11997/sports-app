@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { 
   Award, 
   Medal, 
@@ -16,14 +17,18 @@ import {
   Calendar, 
   CheckSquare, 
   Square, 
-  Eye
+  Eye,
+  Edit3,
+  Sparkles,
+  Check
 } from 'lucide-react';
 import { 
   cn, 
   getOfficialSchoolName, 
   getTeacherName, 
   getAgeValidation,
-  transliterateEnglishToMarathi 
+  transliterateEnglishToMarathi,
+  sanitizeGrNumber
 } from '@/lib/utils';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 import { useToast } from '@/hooks/use-toast';
@@ -72,6 +77,86 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
   const schoolName = getOfficialSchoolName(schoolProfile, true);
   const teacherName = getTeacherName(schoolProfile);
 
+  // Per-student certificate overrides (name, nameMarathi, generalRegisterNumber, std, rankId)
+  const [certOverrides, setCertOverrides] = useState<Record<string, {
+    nameMarathi?: string;
+    name?: string;
+    generalRegisterNumber?: string;
+    std?: string;
+    rankId?: string;
+  }>>({});
+
+  const [editingPlayerForCert, setEditingPlayerForCert] = useState<{
+    id: string;
+    nameMarathi: string;
+    name: string;
+    generalRegisterNumber: string;
+    std: string;
+    rankId: string;
+  } | null>(null);
+
+  const getPlayerCertData = useCallback((player: any) => {
+    if (!player) return {
+      marathiName: '',
+      engName: '',
+      safeGr: '-',
+      std: '1',
+      rankId: selectedRank,
+      rankDef: RANKS.find(r => r.id === selectedRank) || RANKS[0]
+    };
+    const override = certOverrides[player.id] || {};
+    const rawGr = override.generalRegisterNumber !== undefined 
+      ? override.generalRegisterNumber 
+      : player.generalRegisterNumber;
+    const safeGr = sanitizeGrNumber(rawGr, player.serialNumber || '-');
+    const marathiName = override.nameMarathi || player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
+    const engName = override.name || player.name;
+    const std = override.std || player.std;
+    const rankId = override.rankId || selectedRank;
+    const rankDef = RANKS.find(r => r.id === rankId) || RANKS[0];
+
+    return {
+      marathiName,
+      engName,
+      safeGr,
+      std,
+      rankId,
+      rankDef,
+    };
+  }, [certOverrides, selectedRank]);
+
+  const handleOpenEditCert = (player: any) => {
+    const cert = getPlayerCertData(player);
+    setEditingPlayerForCert({
+      id: player.id,
+      nameMarathi: cert.marathiName,
+      name: cert.engName,
+      generalRegisterNumber: cert.safeGr === '-' ? '' : cert.safeGr,
+      std: cert.std,
+      rankId: cert.rankId
+    });
+  };
+
+  const handleSaveCertEdit = () => {
+    if (!editingPlayerForCert) return;
+    setCertOverrides(prev => ({
+      ...prev,
+      [editingPlayerForCert.id]: {
+        nameMarathi: editingPlayerForCert.nameMarathi,
+        name: editingPlayerForCert.name,
+        generalRegisterNumber: sanitizeGrNumber(editingPlayerForCert.generalRegisterNumber, ''),
+        std: editingPlayerForCert.std,
+        rankId: editingPlayerForCert.rankId
+      }
+    }));
+    toast({
+      title: "प्रमाणपत्र माहिती जतन झाली! ✅",
+      description: `${editingPlayerForCert.nameMarathi} ची प्रमाणपत्र माहिती अद्ययावत केली.`,
+      className: "bg-emerald-600 text-white font-black"
+    });
+    setEditingPlayerForCert(null);
+  };
+
   // Filtered players
   const filteredPlayers = useMemo(() => {
     return allPlayers.filter((p: any) => {
@@ -118,8 +203,8 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
 
   // Generate certificate HTML for printing
   const generateCertificateHtml = (player: any) => {
-    const marathiName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
-    const rankDef = RANKS.find(r => r.id === selectedRank);
+    const cert = getPlayerCertData(player);
+    const rankDef = cert.rankDef;
     const ageVal = getAgeValidation(player.dob);
     const category = ageVal?.category || player.ageCategory || 'U14';
     const photo = player.photoUrl;
@@ -163,8 +248,8 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
             <div class="recipient-section">
               ${rankText}
               <div class="certify-lead">प्रमाणित करण्यात येते की,</div>
-              <div class="recipient-name">${marathiName}</div>
-              <div class="recipient-sub">(${player.name}) &bull; इयत्ता: ${player.std} वी &bull; GR नं.: ${player.generalRegisterNumber || '-'}</div>
+              <div class="recipient-name">${cert.marathiName}</div>
+              <div class="recipient-sub">(${cert.engName}) &bull; इयत्ता: ${cert.std} वी &bull; GR नं.: ${cert.safeGr}</div>
             </div>
 
             <!-- Body Statement -->
@@ -669,68 +754,81 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
       </Card>
 
       {/* Live Certificate Preview Box */}
-      {currentPreviewPlayer && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-amber-500" />
-              <h3 className="font-black text-sm text-primary uppercase">
-                थेट नमुना अवलोकन (Live Certificate Preview)
-              </h3>
+      {currentPreviewPlayer && (() => {
+        const previewCert = getPlayerCertData(currentPreviewPlayer);
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-amber-500" />
+                <h3 className="font-black text-sm text-primary uppercase">
+                  थेट नमुना अवलोकन (Live Certificate Preview)
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleOpenEditCert(currentPreviewPlayer)}
+                  className="bg-white hover:bg-amber-50 text-slate-900 font-black text-xs rounded-xl gap-1.5 h-8 border-2 border-amber-400 shadow-sm"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-amber-600" /> ✏️ हे प्रमाणपत्र नाव/GR बदला
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handlePrint([currentPreviewPlayer])}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl gap-1.5 h-8"
+                >
+                  <Printer className="w-3.5 h-3.5" /> हे एकच प्रिंट करा (Print This)
+                </Button>
+              </div>
             </div>
-            <Button
-              size="sm"
-              onClick={() => handlePrint([currentPreviewPlayer])}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl gap-1.5 h-8"
-            >
-              <Printer className="w-3.5 h-3.5" /> हे एकच प्रिंट करा (Print This)
-            </Button>
-          </div>
 
-          <div className="bg-white rounded-3xl p-6 md:p-8 border-4 border-amber-600/60 shadow-xl relative overflow-hidden bg-gradient-to-b from-amber-50/40 via-white to-amber-50/20">
-            {/* Ornamental Border Line */}
-            <div className="border-2 border-dashed border-amber-600/40 p-6 rounded-2xl space-y-5">
-              <div className="flex items-center justify-between border-b border-amber-500/20 pb-4">
-                <img src={TRIBAL_DEV_LOGO_B64} alt="Logo" className="h-12 object-contain" />
-                <div className="text-center">
-                  <div className="text-[10px] font-black text-amber-700 uppercase tracking-wider">महाराष्ट्र शासन &bull; आदिवासी विकास विभाग</div>
-                  <div className="text-lg md:text-xl font-black text-primary">{schoolName}</div>
-                  <div className="text-xs font-bold text-slate-500">तालुका: {schoolProfile?.taluka || 'बागलाण'}, जिल्हा: {schoolProfile?.district || 'नाशिक'}</div>
-                  <div className="text-base md:text-lg font-black text-amber-700 mt-1 uppercase tracking-widest">
-                    {certType === 'merit' ? 'क्रीडा प्रावीण्य प्रमाणपत्र' : 'क्रीडा सहभाग प्रमाणपत्र'}
+            <div className="bg-white rounded-3xl p-6 md:p-8 border-4 border-amber-600/60 shadow-xl relative overflow-hidden bg-gradient-to-b from-amber-50/40 via-white to-amber-50/20">
+              {/* Ornamental Border Line */}
+              <div className="border-2 border-dashed border-amber-600/40 p-6 rounded-2xl space-y-5">
+                <div className="flex items-center justify-between border-b border-amber-500/20 pb-4">
+                  <img src={TRIBAL_DEV_LOGO_B64} alt="Logo" className="h-12 object-contain" />
+                  <div className="text-center">
+                    <div className="text-[10px] font-black text-amber-700 uppercase tracking-wider">महाराष्ट्र शासन &bull; आदिवासी विकास विभाग</div>
+                    <div className="text-lg md:text-xl font-black text-primary">{schoolName}</div>
+                    <div className="text-xs font-bold text-slate-500">तालुका: {schoolProfile?.taluka || 'बागलाण'}, जिल्हा: {schoolProfile?.district || 'नाशिक'}</div>
+                    <div className="text-base md:text-lg font-black text-amber-700 mt-1 uppercase tracking-widest">
+                      {certType === 'merit' ? 'क्रीडा प्रावीण्य प्रमाणपत्र' : 'क्रीडा सहभाग प्रमाणपत्र'}
+                    </div>
+                  </div>
+                  <img src={AMRIT_MAHOTSAV_LOGO_B64} alt="Logo" className="h-12 object-contain" />
+                </div>
+
+                <div className="text-center space-y-2 py-2">
+                  <Badge className="bg-amber-500 text-slate-950 font-black text-xs px-3 py-1 uppercase shadow">
+                    {certType === 'merit' ? previewCert.rankDef?.labelMr : '⚡ सक्रिय सहभाग'}
+                  </Badge>
+                  <div className="text-xs italic text-slate-500">प्रमाणित करण्यात येते की,</div>
+                  <div className="text-2xl font-black text-slate-900 underline decoration-amber-400 underline-offset-4">
+                    {previewCert.marathiName}
+                  </div>
+                  <div className="text-xs font-bold text-slate-600">
+                    ({previewCert.engName}) &bull; इयत्ता: {previewCert.std} वी &bull; GR: {previewCert.safeGr}
                   </div>
                 </div>
-                <img src={AMRIT_MAHOTSAV_LOGO_B64} alt="Logo" className="h-12 object-contain" />
-              </div>
 
-              <div className="text-center space-y-2 py-2">
-                <Badge className="bg-amber-500 text-slate-950 font-black text-xs px-3 py-1 uppercase shadow">
-                  {certType === 'merit' ? RANKS.find(r => r.id === selectedRank)?.labelMr : '⚡ सक्रिय सहभाग'}
-                </Badge>
-                <div className="text-xs italic text-slate-500">प्रमाणित करण्यात येते की,</div>
-                <div className="text-2xl font-black text-slate-900 underline decoration-amber-400 underline-offset-4">
-                  {currentPreviewPlayer.nameMarathi || transliterateEnglishToMarathi(currentPreviewPlayer.name) || currentPreviewPlayer.name}
+                <div className="text-center text-xs md:text-sm leading-relaxed text-slate-700 px-4">
+                  यांनी <b>{schoolName}</b> येथे आयोजित <b>{eventName} ({eventLevel})</b> मध्ये <b>{selectedSport}</b> या क्रीडा प्रकारात उत्कृष्ट खेळ सादर करून 
+                  <b> {certType === 'merit' ? previewCert.rankDef?.labelMr : 'सक्रिय सहभाग'}</b> संपादन केल्याबद्दल हे प्रमाणपत्र सस्नेह प्रदान करण्यात येत आहे.
                 </div>
-                <div className="text-xs font-bold text-slate-600">
-                  ({currentPreviewPlayer.name}) &bull; इयत्ता: {currentPreviewPlayer.std} वी &bull; GR: {currentPreviewPlayer.generalRegisterNumber || '-'}
+
+                <div className="flex flex-wrap items-center justify-between pt-4 border-t border-amber-500/20 text-xs font-bold text-slate-600">
+                  <div>क्रीडा प्रकार: <span className="text-primary font-black">{selectedSport}</span></div>
+                  <div>स्थळ: <span className="text-primary font-black">{eventVenue}</span></div>
+                  <div>दिनांक: <span className="text-primary font-black">{eventDate}</span></div>
+                  <div className="text-amber-800 font-black">क्रीडा शिक्षक: {teacherName}</div>
                 </div>
-              </div>
-
-              <div className="text-center text-xs md:text-sm leading-relaxed text-slate-700 px-4">
-                यांनी <b>{schoolName}</b> येथे आयोजित <b>{eventName} ({eventLevel})</b> मध्ये <b>{selectedSport}</b> या क्रीडा प्रकारात उत्कृष्ट खेळ सादर करून 
-                <b> {certType === 'merit' ? RANKS.find(r => r.id === selectedRank)?.labelMr : 'सक्रिय सहभाग'}</b> संपादन केल्याबद्दल हे प्रमाणपत्र सस्नेह प्रदान करण्यात येत आहे.
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between pt-4 border-t border-amber-500/20 text-xs font-bold text-slate-600">
-                <div>क्रीडा प्रकार: <span className="text-primary font-black">{selectedSport}</span></div>
-                <div>स्थळ: <span className="text-primary font-black">{eventVenue}</span></div>
-                <div>दिनांक: <span className="text-primary font-black">{eventDate}</span></div>
-                <div className="text-amber-800 font-black">क्रीडा शिक्षक: {teacherName}</div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Player Selection Table */}
       <Card className="rounded-[2rem] border-2 border-primary/10 shadow-sm overflow-hidden bg-white">
@@ -786,7 +884,7 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
                 filteredPlayers.map((player: any, idx: number) => {
                   const isSelected = selectedPlayerIds.includes(player.id);
                   const isPreview = currentPreviewPlayer?.id === player.id;
-                  const mName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
+                  const cert = getPlayerCertData(player);
 
                   return (
                     <tr 
@@ -811,12 +909,19 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
                       </td>
                       <td className="py-3 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
                       <td className="py-3 px-4">
-                        <div className="font-black text-slate-900">{mName}</div>
-                        <div className="text-[10px] text-slate-500">{player.name}</div>
+                        <div className="font-black text-slate-900 flex items-center gap-1.5">
+                          <span>{cert.marathiName}</span>
+                          {certOverrides[player.id] && (
+                            <Badge className="bg-amber-500/20 text-amber-800 text-[9px] px-1 py-0 border-amber-300">
+                              संपादित
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-500">{cert.engName}</div>
                       </td>
-                      <td className="py-3 px-4 text-center font-bold">इ. {player.std} वी</td>
-                      <td className="py-3 px-4 text-center font-mono font-bold text-slate-600">
-                        {player.generalRegisterNumber || '-'}
+                      <td className="py-3 px-4 text-center font-bold">इ. {cert.std} वी</td>
+                      <td className="py-3 px-4 text-center font-mono font-bold text-slate-700">
+                        {cert.safeGr}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <Badge variant="outline" className="text-[10px] font-bold">
@@ -825,6 +930,15 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEditCert(player)}
+                            className="h-7 text-[10px] font-black border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-lg px-2"
+                            title="नाव, GR क्र., क्रमांक संपादित करा"
+                          >
+                            <Edit3 className="w-3 h-3 mr-1 text-amber-600" /> बदला
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -850,6 +964,134 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
           </table>
         </div>
       </Card>
+
+      {/* Per-Certificate Custom Edit Modal */}
+      <Dialog open={!!editingPlayerForCert} onOpenChange={(open) => !open && setEditingPlayerForCert(null)}>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-6 border-2 border-amber-400 bg-gradient-to-b from-amber-50/50 via-white to-white shadow-2xl">
+          <DialogHeader>
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-600 border border-amber-400 mb-2">
+              <Edit3 className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-xl font-black text-slate-900 uppercase">
+              प्रमाणपत्र माहिती संपादन (Edit Certificate Details)
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-muted-foreground">
+              या प्रमाणपत्रावर दाखवले जाणारे नाव, GR क्रमांक, इयत्ता व रँक येथे बदलू शकता.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingPlayerForCert && (
+            <div className="space-y-3.5 my-2 text-xs">
+              <div className="space-y-1">
+                <label className="font-black text-slate-700 uppercase tracking-wider text-[11px]">
+                  विद्यार्थ्याचे नाव (मराठी):
+                </label>
+                <Input
+                  value={editingPlayerForCert.nameMarathi}
+                  onChange={(e) => setEditingPlayerForCert({
+                    ...editingPlayerForCert,
+                    nameMarathi: e.target.value
+                  })}
+                  className="font-bold text-sm h-11 rounded-xl border-2 border-amber-300"
+                  placeholder="उदा. राहुल दीपक गावित"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-black text-slate-700 uppercase tracking-wider text-[11px]">
+                  विद्यार्थ्याचे नाव (English):
+                </label>
+                <Input
+                  value={editingPlayerForCert.name}
+                  onChange={(e) => setEditingPlayerForCert({
+                    ...editingPlayerForCert,
+                    name: e.target.value
+                  })}
+                  className="font-bold text-sm h-11 rounded-xl border-2 border-amber-300"
+                  placeholder="e.g. Rahul Deepak Gavit"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-black text-slate-700 uppercase tracking-wider text-[11px]">
+                    G.R. क्रमांक (General Register):
+                  </label>
+                  <Input
+                    value={editingPlayerForCert.generalRegisterNumber}
+                    onChange={(e) => setEditingPlayerForCert({
+                      ...editingPlayerForCert,
+                      generalRegisterNumber: sanitizeGrNumber(e.target.value, '')
+                    })}
+                    className="font-mono font-bold text-sm h-11 rounded-xl border-2 border-amber-300"
+                    placeholder="उदा. १२४५"
+                  />
+                  <span className="text-[10px] text-muted-foreground font-semibold">
+                    (ईमेल दाखवला जाणार नाही)
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-black text-slate-700 uppercase tracking-wider text-[11px]">
+                    इयत्ता (Standard):
+                  </label>
+                  <Input
+                    value={editingPlayerForCert.std}
+                    onChange={(e) => setEditingPlayerForCert({
+                      ...editingPlayerForCert,
+                      std: e.target.value
+                    })}
+                    className="font-bold text-sm h-11 rounded-xl border-2 border-amber-300"
+                    placeholder="उदा. 8"
+                  />
+                </div>
+              </div>
+
+              {certType === 'merit' && (
+                <div className="space-y-1">
+                  <label className="font-black text-slate-700 uppercase tracking-wider text-[11px]">
+                    क्रमांक / पारितोषिक (Rank):
+                  </label>
+                  <Select 
+                    value={editingPlayerForCert.rankId} 
+                    onValueChange={(val) => setEditingPlayerForCert({
+                      ...editingPlayerForCert,
+                      rankId: val
+                    })}
+                  >
+                    <SelectTrigger className="font-bold text-xs h-11 rounded-xl border-2 border-amber-300">
+                      <SelectValue placeholder="क्रमांक निवडा" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RANKS.map(r => (
+                        <SelectItem key={r.id} value={r.id} className="font-bold text-xs">
+                          {r.labelMr}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-3">
+                <Button
+                  onClick={handleSaveCertEdit}
+                  className="flex-1 h-11 rounded-xl font-black text-xs uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center justify-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" /> बदल जतन करा (Save Changes)
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setEditingPlayerForCert(null)}
+                  className="h-11 rounded-xl text-xs font-bold text-slate-600"
+                >
+                  रद्द करा
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

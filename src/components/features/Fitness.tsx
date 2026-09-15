@@ -83,23 +83,46 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     const current = { ...(assessments[playerId] || store.data.fitness?.[playerId] || {}) };
     setIsSaving(playerId);
     
-    const shuttleVal = 100 - (parseFloat(current.shuttleRun || '0') * 4);
-    const jumpVal = (parseFloat(current.boardJump || '0') || 0) * 0.4;
-    const speedVal = 100 - (parseFloat(current.run50m || '0') * 5); 
-    const enduranceVal = 100 - (parseFloat(current.run600m || '0') * 0.5);
-    const flexVal = (parseFloat(current.sitAndReach || '0') || 0) * 2;
-    const coreVal = (parseFloat(current.sitUps || '0') || 0) * 2;
-    
-    const validMetrics = [shuttleVal, jumpVal, speedVal, enduranceVal, flexVal, coreVal]
-      .map(v => Math.max(0, Math.min(100, v)))
-      .filter(v => v > 0);
+    const validMetrics: number[] = [];
 
-    const avgScore = validMetrics.length > 0 
-      ? validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length 
-      : 0;
+    const shuttleRun = parseFloat(current.shuttleRun || '');
+    if (!isNaN(shuttleRun) && shuttleRun > 0) {
+      validMetrics.push(Math.max(0, Math.min(100, 100 - (shuttleRun * 4))));
+    }
 
-    current.score = Math.round(avgScore).toString();
-    current.status = avgScore >= 80 ? 'Elite' : avgScore >= 60 ? 'Optimal' : 'Developing';
+    const boardJump = parseFloat(current.boardJump || '');
+    if (!isNaN(boardJump) && boardJump > 0) {
+      validMetrics.push(Math.max(0, Math.min(100, boardJump * 0.4)));
+    }
+
+    const run50m = parseFloat(current.run50m || '');
+    if (!isNaN(run50m) && run50m > 0) {
+      validMetrics.push(Math.max(0, Math.min(100, 100 - (run50m * 5))));
+    }
+
+    const run600m = parseFloat(current.run600m || '');
+    if (!isNaN(run600m) && run600m > 0) {
+      validMetrics.push(Math.max(0, Math.min(100, 100 - (run600m * 0.5))));
+    }
+
+    const sitAndReach = parseFloat(current.sitAndReach || '');
+    if (!isNaN(sitAndReach) && sitAndReach > 0) {
+      validMetrics.push(Math.max(0, Math.min(100, sitAndReach * 2)));
+    }
+
+    const sitUps = parseFloat(current.sitUps || '');
+    if (!isNaN(sitUps) && sitUps > 0) {
+      validMetrics.push(Math.max(0, Math.min(100, sitUps * 2)));
+    }
+
+    if (validMetrics.length === 0) {
+      current.score = '';
+      current.status = 'प्रलंबित (Pending)';
+    } else {
+      const avgScore = validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length;
+      current.score = Math.round(avgScore).toString();
+      current.status = avgScore >= 80 ? 'Elite' : avgScore >= 60 ? 'Optimal' : 'Developing';
+    }
 
     await store.setFitness(playerId, { ...current, playerId, month: format(new Date(), 'yyyy-MM') });
     

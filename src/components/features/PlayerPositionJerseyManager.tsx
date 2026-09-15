@@ -40,7 +40,8 @@ import {
   RIGHT_COURT_POSITIONS,
   NUMBERED_COURT_POSITIONS,
   getPositionBadgeInfo,
-  transliterateEnglishToMarathi 
+  transliterateEnglishToMarathi,
+  sanitizeGrNumber
 } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -85,13 +86,13 @@ const SPORT_SQUAD_CONFIG: Record<string, {
     courtTitle: 'कबड्डी मॅट रणनीती (७ मुख्य खेळाडू + ५ राखीव)',
     courtSubtitle: 'अधिकृत कबड्डी नियमानुसार मैदानावर एका वेळी ७ खेळाडू आणि राखीव बाकावर ५ खेळाडू (एकूण १२)',
     positions: [
-      { id: 'left_corner', nameEn: 'Left Corner', nameMr: 'डावा कोपरा (LC)', shortCode: 'LC', role: 'Defense', defaultPosName: 'डावा कोपरा (Left Corner)' },
-      { id: 'left_in', nameEn: 'Left In', nameMr: 'डावा इन (LI)', shortCode: 'LI', role: 'Defense', defaultPosName: 'डावा इन (Left In)' },
-      { id: 'left_cover', nameEn: 'Left Cover', nameMr: 'डावा कव्हर (L-COV)', shortCode: 'LCv', role: 'Defense', defaultPosName: 'डावा कव्हर (Left Cover)' },
-      { id: 'center_raider', nameEn: 'Center / Main Raider', nameMr: 'मध्यरक्षक / चढाईपटू (CTR)', shortCode: 'CTR', role: 'Attack', defaultPosName: 'मध्यरक्षक / चढाईपटू' },
-      { id: 'right_cover', nameEn: 'Right Cover', nameMr: 'उजवा कव्हर (R-COV)', shortCode: 'RCv', role: 'Defense', defaultPosName: 'उजवा कव्हर (Right Cover)' },
-      { id: 'right_in', nameEn: 'Right In', nameMr: 'उजवा इन (RI)', shortCode: 'RI', role: 'Defense', defaultPosName: 'उजवा इन (Right In)' },
-      { id: 'right_corner', nameEn: 'Right Corner', nameMr: 'उजवा कोपरा (RC)', shortCode: 'RC', role: 'Defense', defaultPosName: 'उजवा कोपरा (Right Corner)' },
+      { id: 'right_corner', nameEn: 'Right Corner', nameMr: 'उजवा कोपरा (Right Corner)', shortCode: 'RC', role: 'Defense', defaultPosName: 'उजवा कोपरा (Right Corner)' },
+      { id: 'right_in', nameEn: 'Right In', nameMr: 'उजवा इन (Right In)', shortCode: 'RI', role: 'Defense', defaultPosName: 'उजवा इन (Right In)' },
+      { id: 'right_cover', nameEn: 'Right Cover', nameMr: 'उजवा कव्हर (Right Cover)', shortCode: 'RCv', role: 'Defense', defaultPosName: 'उजवा कव्हर (Right Cover)' },
+      { id: 'center', nameEn: 'Center', nameMr: 'मध्यरक्षक / सेंटर (Center)', shortCode: 'CTR', role: 'Attack', defaultPosName: 'मध्यरक्षक / सेंटर (Center)' },
+      { id: 'left_cover', nameEn: 'Left Cover', nameMr: 'डावा कव्हर (Left Cover)', shortCode: 'LCv', role: 'Defense', defaultPosName: 'डावा कव्हर (Left Cover)' },
+      { id: 'left_in', nameEn: 'Left In', nameMr: 'डावा इन (Left In)', shortCode: 'LI', role: 'Defense', defaultPosName: 'डावा इन (Left In)' },
+      { id: 'left_corner', nameEn: 'Left Corner', nameMr: 'डावा कोपरा (Left Corner)', shortCode: 'LC', role: 'Defense', defaultPosName: 'डावा कोपरा (Left Corner)' },
     ]
   },
   'Volleyball': {
@@ -449,7 +450,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             </td>
             <td>
               <div style="font-weight: 800; font-size: 11px;">${p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name}</div>
-              <div style="font-size: 9px; color: #64748b;">${p.name} &bull; GR: ${p.generalRegisterNumber || '-'}</div>
+              <div style="font-size: 9px; color: #64748b;">${p.name} &bull; GR: ${sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '-')}</div>
             </td>
             <td style="text-align: center; font-weight: bold;">इ. ${p.std} वी</td>
             <td style="text-align: center; font-weight: bold; color: #047857;">${pos}</td>
@@ -603,13 +604,29 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
     }
   };
 
-  // Render options for position select dropdowns (Sport specific + Left 1-6 + Middle 1-5 + Right 1-6)
+  // Render options for position select dropdowns
   const renderPositionSelectOptions = () => {
     const sportSpecific = (SPORT_POSITIONS_MAP[selectedSport] || []).map(p => ({
       id: p.id,
       nameMr: p.nameMr,
       shortCode: p.shortCode,
     }));
+
+    // For Kabaddi, show strictly the 7 official player positions as per rules
+    if (selectedSport === 'Kabaddi') {
+      return (
+        <SelectGroup>
+          <SelectLabel className="text-[10px] font-black uppercase text-amber-500 tracking-wider py-1 px-2">
+            🎯 अधिकृत ७ कबड्डी पोझिशन्स (7 Kabaddi Positions)
+          </SelectLabel>
+          {sportSpecific.map(pos => (
+            <SelectItem key={pos.id} value={pos.nameMr} className="text-xs font-bold">
+              <span className="font-mono text-emerald-500 font-bold mr-1.5">[{pos.shortCode}]</span> {pos.nameMr}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      );
+    }
 
     return (
       <>
@@ -890,7 +907,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             {marathiName}
           </div>
           <div className="text-[9px] text-slate-400 truncate">
-            इ. {player.std} वी &bull; GR: {player.generalRegisterNumber || '-'}
+            इ. {player.std} वी &bull; GR: {sanitizeGrNumber(player.generalRegisterNumber, player.serialNumber || '-')}
           </div>
         </div>
 
@@ -1184,6 +1201,34 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                 </Badge>
               </div>
             </div>
+
+            {/* Kabaddi 7 Positions Strategy Reference */}
+            {selectedSport === 'Kabaddi' && (
+              <div className="mb-6 bg-slate-900/80 border-2 border-amber-500/40 rounded-2xl p-4 text-xs">
+                <div className="flex items-center gap-2 text-amber-400 font-black text-sm mb-3">
+                  <Shield className="w-4 h-4 text-amber-400" />
+                  अधिकृत ७ खेळाडू पोझिशन्स व कार्य (Kabaddi 7 Player Positions)
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-slate-200">
+                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-blue-500/30">
+                    <span className="font-black text-blue-400 block mb-1">🛡️ Right Corner &amp; Left Corner [RC, LC]:</span>
+                    <span className="text-[11px] text-slate-300">The players at the absolute ends of the defensive semi-circle. They initiate tackles and try to trap the opponent raider.</span>
+                  </div>
+                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-teal-500/30">
+                    <span className="font-black text-teal-400 block mb-1">⚡ Right In &amp; Left In [RI, LI]:</span>
+                    <span className="text-[11px] text-slate-300">The players standing next to the corners. They often act as secondary raiders and hold defensive chains with the corners.</span>
+                  </div>
+                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-amber-500/30">
+                    <span className="font-black text-amber-400 block mb-1">🧱 Right Cover &amp; Left Cover [RCv, LCv]:</span>
+                    <span className="text-[11px] text-slate-300">The middle-defense players next to the ins. They block the raider&apos;s path and support heavy tackles.</span>
+                  </div>
+                  <div className="bg-slate-950/60 p-2.5 rounded-xl border border-emerald-500/30">
+                    <span className="font-black text-emerald-400 block mb-1">🎯 Center [CTR]:</span>
+                    <span className="text-[11px] text-slate-300">The player right in the middle of the formation. Usually held by the team&apos;s main raider or a primary coordinator.</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* REALISTIC COURT LAYOUT BY SPORT */}
             {selectedSport === 'Kabaddi' ? (
@@ -1555,7 +1600,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                             {isVC && <Medal className="w-3.5 h-3.5 text-slate-400" />}
                           </div>
                           <div className="text-[10px] text-muted-foreground font-semibold">
-                            {player.name} &bull; GR: {player.generalRegisterNumber || '-'}
+                            {player.name} &bull; GR: {sanitizeGrNumber(player.generalRegisterNumber, player.serialNumber || '-')}
                           </div>
                         </td>
 
