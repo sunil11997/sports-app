@@ -31,7 +31,13 @@ import {
   Volleyball,
   Mic,
   MicOff,
-  Coins
+  Coins,
+  Music,
+  Upload,
+  Trash2,
+  PlayCircle,
+  StopCircle,
+  Timer
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +77,11 @@ class SoundEffects {
   public playCoinFlip() {
     if (!this.enabled) return;
     sounds.playCoinFlip();
+  }
+
+  public playFanfare() {
+    if (!this.enabled) return;
+    sounds.playFanfare();
   }
 }
 
@@ -170,6 +181,33 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const currentRaidingEmptyRaids = raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB;
   const isDoOrDieRaid = sport === 'Kabaddi' && currentRaidingEmptyRaids >= 2;
 
+  // Computed: Defending team and Super Tackle status (Kabaddi Super Tackle is active when defending team has <= 3 court players)
+  const defendingTeam: 'A' | 'B' = raidingTeam === 'A' ? 'B' : 'A';
+  const defendingDefenders = defendingTeam === 'A' ? defendersA : defendersB;
+  const defendingTeamName = defendingTeam === 'A' ? teamACustomName : teamBCustomName;
+  const isSuperTackleOn = sport === 'Kabaddi' && defendingDefenders <= 3;
+
+  // Match Result & Winner Celebration State
+  const [isMatchResultOpen, setIsMatchResultOpen] = useState<boolean>(false);
+  const [matchWinnerInfo, setMatchWinnerInfo] = useState<{
+    winner: 'A' | 'B' | 'TIE';
+    winnerName: string;
+    loserName: string;
+    diff: number;
+    scoreA: number;
+    scoreB: number;
+  } | null>(null);
+
+  // Half Time Modal State
+  const [isHalfTimeModalOpen, setIsHalfTimeModalOpen] = useState<boolean>(false);
+
+  // Uploaded Victory Celebration Music States
+  const [uploadedMusicUrl, setUploadedMusicUrl] = useState<string | null>(null);
+  const [uploadedMusicName, setUploadedMusicName] = useState<string | null>(null);
+  const [isPlayingMusic, setIsPlayingMusic] = useState<boolean>(false);
+  const [isMusicUploadOpen, setIsMusicUploadOpen] = useState<boolean>(false);
+  const victoryAudioRef = useRef<HTMLAudioElement | null>(null);
+
   // -------------------------------------------------------------
   // KHO-KHO SPECIFIC STATES
   // -------------------------------------------------------------
@@ -253,6 +291,122 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   }, [isRaidRunning, raidSeconds, raidingTeam, emptyRaidsA, emptyRaidsB, teamACustomName, teamBCustomName, toast]);
 
   // -------------------------------------------------------------
+  // SUPER TACKLE, HALF TIME, MUSIC & MATCH CONCLUSION ACTIONS
+  // -------------------------------------------------------------
+  const announceSuperTackleNow = useCallback(() => {
+    sfx.playWarning();
+    marathiAnnouncer.announceSuperTackle(defendingTeamName);
+    toast({
+      title: "🛡️ सुपर टॅकल ऑन! (SUPER TACKLE ON)",
+      description: `${defendingTeamName} साठी सुपर टॅकल ऑन आहे. यशस्वी पकड केल्यास २ गुण मिळतील!`,
+      className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
+    });
+  }, [defendingTeamName, toast]);
+
+  const playVictoryMusic = useCallback(() => {
+    if (soundMuted) return;
+    if (uploadedMusicUrl) {
+      try {
+        if (victoryAudioRef.current) {
+          victoryAudioRef.current.pause();
+          victoryAudioRef.current.currentTime = 0;
+        }
+        const audio = new Audio(uploadedMusicUrl);
+        victoryAudioRef.current = audio;
+        setIsPlayingMusic(true);
+        audio.onended = () => setIsPlayingMusic(false);
+        audio.play().catch(err => {
+          console.warn("Custom music playback error, fallback to fanfare:", err);
+          sfx.playFanfare();
+        });
+      } catch {
+        sfx.playFanfare();
+      }
+    } else {
+      sfx.playFanfare();
+    }
+  }, [soundMuted, uploadedMusicUrl]);
+
+  const stopVictoryMusic = useCallback(() => {
+    if (victoryAudioRef.current) {
+      victoryAudioRef.current.pause();
+      victoryAudioRef.current.currentTime = 0;
+    }
+    setIsPlayingMusic(false);
+  }, []);
+
+  const toggleVictoryMusic = useCallback(() => {
+    if (isPlayingMusic) {
+      stopVictoryMusic();
+    } else {
+      playVictoryMusic();
+    }
+  }, [isPlayingMusic, playVictoryMusic, stopVictoryMusic]);
+
+  const triggerMatchConclusion = useCallback(() => {
+    setIsMatchClockRunning(false);
+    sfx.playWhistle();
+
+    const diff = Math.abs(scoreA - scoreB);
+    const winner: 'A' | 'B' | 'TIE' = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : 'TIE';
+    const wName = winner === 'A' ? teamACustomName : winner === 'B' ? teamBCustomName : 'सामना बरोबरीत';
+    const lName = winner === 'A' ? teamBCustomName : teamACustomName;
+
+    setMatchWinnerInfo({
+      winner,
+      winnerName: wName,
+      loserName: lName,
+      diff,
+      scoreA,
+      scoreB
+    });
+    setIsMatchResultOpen(true);
+
+    // Speak Marathi winner announcement first, and immediately when speech ends, play uploaded/celebration music!
+    marathiAnnouncer.announceMatchWinner(teamACustomName, scoreA, teamBCustomName, scoreB, () => {
+      playVictoryMusic();
+    });
+
+    const wordDiff = getMarathiNumberWord(diff);
+    toast({
+      title: "🏆 दोन्ही हाफ पूर्ण! निकाल जाहीर!",
+      description: winner === 'TIE'
+        ? `सामना बरोबरीत! दोन्ही संघांचे ${scoreA} गुण.`
+        : `${wName} ${diff} (${wordDiff}) गुणांनी सामना जिंकला!`,
+      className: "bg-amber-500 text-slate-950 font-black border-2 border-white shadow-2xl"
+    });
+  }, [teamACustomName, scoreA, teamBCustomName, scoreB, playVictoryMusic, toast]);
+
+  const handleHalfTime = useCallback(() => {
+    setIsMatchClockRunning(false);
+    sfx.playWhistle();
+    marathiAnnouncer.announceHalfTime(teamACustomName, scoreA, teamBCustomName, scoreB);
+    setIsHalfTimeModalOpen(true);
+    toast({
+      title: "⏸️ पहिला हाफ संपला! मध्यंतर (Half Time)",
+      description: `${teamACustomName}: ${scoreA} | ${teamBCustomName}: ${scoreB}. दुसऱ्या हाफसाठी 'दुसरा हाफ सुरू करा' निवडा.`,
+      className: "bg-blue-600 text-white font-black border-2 border-amber-300 shadow-xl"
+    });
+  }, [teamACustomName, scoreA, teamBCustomName, scoreB, toast]);
+
+  const startSecondHalf = useCallback(() => {
+    setIsHalfTimeModalOpen(false);
+    setMatchHalf(2);
+    setMatchSecondsRemaining(matchDurationSeconds);
+    // Switch raiding team for 2nd half
+    setRaidingTeam(prev => prev === 'A' ? 'B' : 'A');
+    setRaidSeconds(30);
+    setIsRaidRunning(false);
+    sfx.playWhistle();
+    setIsMatchClockRunning(true);
+    toast({
+      title: "▶️ दुसरा हाफ सुरू झाला! (2nd Half Started)",
+      description: "सामन्याचा दुसरा हाफ अधिकृतपणे सुरू झाला आहे.",
+      className: "bg-emerald-600 text-white font-black"
+    });
+  }, [matchDurationSeconds, toast]);
+
+  // -------------------------------------------------------------
   // MATCH CLOCK INTERVAL
   // -------------------------------------------------------------
   useEffect(() => {
@@ -307,12 +461,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
 
           if (nextTime <= 0) {
             setIsMatchClockRunning(false);
-            sfx.playWhistle();
-            marathiAnnouncer.speak("सामना संपला! अधिकृत वेळ समाप्त झाली आहे!");
-            toast({
-              title: "🏁 हाफ / सामना वेळ संपला (Half/Match Time End)",
-              description: `अधिकृत शिट्टी वाजली आहे.`,
-            });
+            if (matchHalf === 1) {
+              setTimeout(() => handleHalfTime(), 100);
+            } else {
+              setTimeout(() => triggerMatchConclusion(), 100);
+            }
             return 0;
           }
           return nextTime;
@@ -320,7 +473,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isMatchClockRunning, matchSecondsRemaining, sport, teamACustomName, scoreA, teamBCustomName, scoreB, toast]);
+  }, [isMatchClockRunning, matchSecondsRemaining, sport, teamACustomName, scoreA, teamBCustomName, scoreB, matchHalf, handleHalfTime, triggerMatchConclusion, toast]);
 
   // -------------------------------------------------------------
   // KHO-KHO INNING TIMER
@@ -533,6 +686,8 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
 
     // Kabaddi specific adjustments
     if (sport === 'Kabaddi') {
+      let nextRaider: 'A' | 'B' = opponent;
+
       if (type.includes('Raid') || type.includes('Touch') || type.includes('Bonus') || type.includes('Do-Or-Die Touch')) {
         // Successful raid: reset empty raid count for raiding team
         if (team === 'A') setEmptyRaidsA(0);
@@ -544,6 +699,8 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
         } else {
           setDefendersA(prev => Math.max(1, prev - (points >= 3 ? points - (type.includes('Bonus') ? 1 : 0) : points)));
         }
+        // When raiding team scores point, raid passes to opponent
+        nextRaider = opponent;
       } else if (type.includes('Tackle') || type.includes('Super Tackle') || type.includes('Do-Or-Die Out')) {
         // Raider tackled out or Do-or-Die failed: defending team gets point
         // Deduct 1 defender from the raiding team
@@ -552,15 +709,28 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
         } else {
           setDefendersA(prev => Math.max(1, prev - 1));
         }
+        // When defending team executes tackle/super tackle, the defending team gets the next raid
+        nextRaider = team;
       } else if (type === 'All-Out') {
         // All out: restore 7 defenders for opponent
         if (opponent === 'A') setDefendersA(7);
         else setDefendersB(7);
         sfx.playWhistle();
+        nextRaider = opponent;
+      } else {
+        // For any general points awarded to a team: next raid goes to opponent
+        nextRaider = opponent;
       }
 
-      // Auto reset raid clock for next raid
-      resetRaidClock(opponent);
+      // Auto reset raid clock for next raid & switch raiding team
+      resetRaidClock(nextRaider);
+
+      const nextRaiderName = nextRaider === 'A' ? teamACustomName : teamBCustomName;
+      toast({
+        title: `👉 पुढील रेड: ${nextRaiderName} ची रेड!`,
+        description: `${teamName} ला +${points} गुण (${type}). आता ${nextRaiderName} ची रेड सुरू आहे.`,
+        className: nextRaider === 'A' ? "bg-red-600 text-white font-bold" : "bg-blue-600 text-white font-bold"
+      });
     }
 
     // Kho-Kho adjustments
@@ -872,6 +1042,49 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             📢 गुण बोला
           </Button>
 
+          {/* Quick Super Tackle Announcement Option */}
+          {sport === 'Kabaddi' && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={announceSuperTackleNow}
+              className="rounded-xl h-9 px-2.5 text-xs font-black text-purple-700 bg-purple-50 border-purple-300 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-700 shadow-sm flex items-center gap-1 active:scale-95"
+              title="मराठीत 'सुपर टॅकल ऑन' घोषणा करा (Announce Super Tackle ON in Marathi)"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              ⚡ सुपर टॅकल ऑन
+            </Button>
+          )}
+
+          {/* End Match & Announce Winner Option */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={triggerMatchConclusion}
+            className="rounded-xl h-9 px-2.5 text-xs font-black text-amber-900 bg-amber-200 hover:bg-amber-300 border-amber-400 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 shadow-sm flex items-center gap-1 active:scale-95"
+            title="दोन्ही हाफ संपवून निकाल मराठीत जाहीर करा (End Match & Announce Winner in Marathi)"
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+            🏆 निकाल जाहीर
+          </Button>
+
+          {/* Upload Victory Music Button */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsMusicUploadOpen(true)}
+            className={cn(
+              "rounded-xl h-9 px-2.5 text-xs font-black transition-all border flex items-center gap-1 active:scale-95",
+              uploadedMusicUrl 
+                ? "bg-emerald-50 text-emerald-800 border-emerald-400 dark:bg-emerald-950/40" 
+                : "text-slate-600 bg-white border-slate-300 dark:bg-slate-800 dark:text-slate-200"
+            )}
+            title="विजयी झाल्यानंतर वाजणारे संगीत अपलोड करा (Upload Victory Music)"
+          >
+            <Music className="w-3.5 h-3.5 text-pink-500" />
+            {uploadedMusicName ? "🎵 संगीत लोड ✓" : "🎵 विजयी संगीत"}
+          </Button>
+
           <Button
             size="sm"
             variant="outline"
@@ -949,10 +1162,16 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 </select>
               </div>
 
-              {sport === 'Kabaddi' && raidingTeam === 'A' && (
-                <Badge className="bg-orange-600 text-white font-black text-[10px] uppercase tracking-wider animate-pulse flex items-center gap-1">
-                  <Flame className="w-3 h-3 fill-current" /> रेड सुरू (Raiding)
-                </Badge>
+              {sport === 'Kabaddi' && (
+                raidingTeam === 'A' ? (
+                  <Badge className="bg-red-600 text-white font-black text-xs uppercase tracking-wider animate-pulse flex items-center gap-1.5 px-3 py-1 shadow-md ring-2 ring-red-400">
+                    <Flame className="w-3.5 h-3.5 fill-amber-300 text-amber-300 animate-bounce" /> 🔥 रेड सुरू (RAIDING)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-slate-500 font-bold text-[10px] uppercase border-slate-300">
+                    🛡️ डिफेन्स (Defending)
+                  </Badge>
+                )
               )}
             </div>
 
@@ -976,9 +1195,47 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             {/* Tactical Badges for Kabaddi */}
             {sport === 'Kabaddi' && (
               <div className="grid grid-cols-2 gap-2 mt-4 text-center">
-                <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
-                  <p className="text-lg font-black text-primary">{defendersA} / 7</p>
+                <div className={cn(
+                  "p-2.5 rounded-2xl border text-xs flex flex-col justify-between transition-all",
+                  defendersA <= 3 
+                    ? "bg-purple-50 border-purple-400 dark:bg-purple-950/40 dark:border-purple-800 ring-2 ring-purple-500/30 shadow-sm" 
+                    : "bg-muted/40 border-muted"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
+                    {defendersA <= 3 && (
+                      <Badge className="bg-purple-700 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
+                        ⚡ सुपर टॅकल
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 my-1">
+                    <button
+                      type="button"
+                      onClick={() => setDefendersA(p => Math.max(1, p - 1))}
+                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
+                      title="१ खेळाडू कमी करा (-1 Defender)"
+                    >
+                      -
+                    </button>
+                    <p className={cn(
+                      "text-xl font-black font-mono select-none",
+                      defendersA <= 3 ? "text-purple-700 dark:text-purple-300" : "text-primary"
+                    )}>
+                      {defendersA} <span className="text-xs font-normal text-muted-foreground">/ 7</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setDefendersA(p => Math.min(7, p + 1))}
+                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
+                      title="१ खेळाडू वाढवा (+1 Defender)"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="text-[8px] text-center text-muted-foreground font-bold">
+                    {defendersA <= 3 ? "⚠️ सुपर टॅकल ऑन (२ गुण)" : "सामान्य डिफेन्स"}
+                  </p>
                 </div>
                 <div className={cn(
                   "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
@@ -1317,6 +1574,39 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 <RotateCcw className="w-4 h-4" />
               </Button>
             </div>
+
+            {/* Half Management Actions */}
+            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+              {matchHalf === 1 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleHalfTime}
+                    className="rounded-xl h-10 font-black text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md active:scale-95 flex items-center justify-center gap-1"
+                    title="पहिला हाफ संपवून मध्यंतर करा (End 1st Half / Half Time)"
+                  >
+                    <Clock className="w-3.5 h-3.5" /> ⏸️ १ ला हाफ संपवा
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={triggerMatchConclusion}
+                    className="rounded-xl h-10 font-black text-xs bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-95 flex items-center justify-center gap-1"
+                    title="सामना संपवून निकाल जाहीर करा (Finish Match Directly)"
+                  >
+                    <Trophy className="w-3.5 h-3.5" /> 🏁 सामना संपवा
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={triggerMatchConclusion}
+                  className="w-full rounded-xl h-10 font-black text-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+                  title="सामना संपवून दोन्ही हाफचा निकाल मराठीत जाहीर करा (End Match & Announce Winner)"
+                >
+                  <Trophy className="w-4 h-4 text-white" /> 🏁 दोन्ही हाफ पूर्ण - निकाल जाहीर करा
+                </Button>
+              )}
+            </div>
           </Card>
 
           {/* ---------------- 30-SEC RAID CLOCK / INNING CLOCK ---------------- */}
@@ -1370,6 +1660,49 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 </div>
               )}
 
+              {/* SUPER TACKLE ALERT BANNER */}
+              {isSuperTackleOn && (
+                <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 text-white py-2 px-3 rounded-2xl mb-3 flex items-center justify-between shadow-lg border border-purple-300/40 animate-pulse">
+                  <div className="flex items-center gap-2 text-left">
+                    <ShieldAlert className="w-5 h-5 text-amber-300 fill-amber-300 animate-bounce shrink-0" />
+                    <div>
+                      <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-200">
+                        🛡️ सुपर टॅकल ऑन ({defendingTeamName})
+                      </p>
+                      <p className="text-[9px] font-bold text-white/90">
+                        डिफेन्समध्ये {defendingDefenders} खेळाडू शिल्लक &bull; यशस्वी पकडीस +२ गुण!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={announceSuperTackleNow}
+                      className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale flex items-center gap-1"
+                      title="मराठीत सुपर टॅकल उद्घोषणा करा (Speak Super Tackle in Marathi)"
+                    >
+                      <Mic className="w-3 h-3" /> सुपर टॅकल बोला
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        addScore(defendingTeam, 2, 'Super Tackle (+2)');
+                        sfx.playWhistle();
+                        toast({
+                          title: "🛡️ सुपर टॅकल यशस्वी! (+२ गुण)",
+                          description: `${defendingTeamName} ने यशस्वी सुपर टॅकल करून २ गुण मिळवले!`,
+                          className: "bg-purple-700 text-white font-black"
+                        });
+                      }}
+                      className="h-7 px-2 rounded-xl bg-purple-900 hover:bg-purple-950 text-white font-black text-[10px] uppercase border border-purple-400 shadow shrink-0 active-scale"
+                      title="सुपर टॅकल यशस्वी: डिफेन्सला +२ गुण द्या"
+                    >
+                      +२ गुण
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-1">
                 <span className={cn(
                   "text-[10px] font-black uppercase tracking-widest flex items-center gap-1",
@@ -1383,6 +1716,38 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 )}>
                   {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड {isDoOrDieRaid && "(डू ऑर डाय)"}
                 </span>
+              </div>
+
+              {/* Interactive Raid Turn Selector */}
+              <div className="grid grid-cols-2 gap-2 my-2 p-1.5 rounded-2xl bg-muted/60 border">
+                <button
+                  type="button"
+                  onClick={() => resetRaidClock('A')}
+                  className={cn(
+                    "py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm",
+                    raidingTeam === 'A'
+                      ? "bg-red-600 text-white shadow-md ring-2 ring-red-400"
+                      : "bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-white"
+                  )}
+                >
+                  <Flame className={cn("w-3.5 h-3.5", raidingTeam === 'A' ? "text-amber-300 animate-bounce" : "text-muted-foreground")} />
+                  <span className="truncate">🔴 {teamACustomName} ची रेड</span>
+                  {raidingTeam === 'A' && <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full shrink-0">सुरू</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => resetRaidClock('B')}
+                  className={cn(
+                    "py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm",
+                    raidingTeam === 'B'
+                      ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400"
+                      : "bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-white"
+                  )}
+                >
+                  <Flame className={cn("w-3.5 h-3.5", raidingTeam === 'B' ? "text-amber-300 animate-bounce" : "text-muted-foreground")} />
+                  <span className="truncate">🔵 {teamBCustomName} ची रेड</span>
+                  {raidingTeam === 'B' && <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full shrink-0">सुरू</span>}
+                </button>
               </div>
 
               {/* HUGE DIGITAL DIGITS */}
@@ -1614,10 +1979,16 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 </select>
               </div>
 
-              {sport === 'Kabaddi' && raidingTeam === 'B' && (
-                <Badge className="bg-orange-600 text-white font-black text-[10px] uppercase tracking-wider animate-pulse flex items-center gap-1">
-                  <Flame className="w-3 h-3 fill-current" /> रेड सुरू (Raiding)
-                </Badge>
+              {sport === 'Kabaddi' && (
+                raidingTeam === 'B' ? (
+                  <Badge className="bg-blue-600 text-white font-black text-xs uppercase tracking-wider animate-pulse flex items-center gap-1.5 px-3 py-1 shadow-md ring-2 ring-blue-400">
+                    <Flame className="w-3.5 h-3.5 fill-amber-300 text-amber-300 animate-bounce" /> 🔥 रेड सुरू (RAIDING)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-slate-500 font-bold text-[10px] uppercase border-slate-300">
+                    🛡️ डिफेन्स (Defending)
+                  </Badge>
+                )
               )}
             </div>
 
@@ -1641,9 +2012,47 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             {/* Tactical Badges for Kabaddi */}
             {sport === 'Kabaddi' && (
               <div className="grid grid-cols-2 gap-2 mt-4 text-center">
-                <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
-                  <p className="text-lg font-black text-primary">{defendersB} / 7</p>
+                <div className={cn(
+                  "p-2.5 rounded-2xl border text-xs flex flex-col justify-between transition-all",
+                  defendersB <= 3 
+                    ? "bg-purple-50 border-purple-400 dark:bg-purple-950/40 dark:border-purple-800 ring-2 ring-purple-500/30 shadow-sm" 
+                    : "bg-muted/40 border-muted"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
+                    {defendersB <= 3 && (
+                      <Badge className="bg-purple-700 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
+                        ⚡ सुपर टॅकल
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 my-1">
+                    <button
+                      type="button"
+                      onClick={() => setDefendersB(p => Math.max(1, p - 1))}
+                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
+                      title="१ खेळाडू कमी करा (-1 Defender)"
+                    >
+                      -
+                    </button>
+                    <p className={cn(
+                      "text-xl font-black font-mono select-none",
+                      defendersB <= 3 ? "text-purple-700 dark:text-purple-300" : "text-primary"
+                    )}>
+                      {defendersB} <span className="text-xs font-normal text-muted-foreground">/ 7</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setDefendersB(p => Math.min(7, p + 1))}
+                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
+                      title="१ खेळाडू वाढवा (+1 Defender)"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="text-[8px] text-center text-muted-foreground font-bold">
+                    {defendersB <= 3 ? "⚠️ सुपर टॅकल ऑन (२ गुण)" : "सामान्य डिफेन्स"}
+                  </p>
                 </div>
                 <div className={cn(
                   "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
@@ -2149,6 +2558,315 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 </div>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ----------------- MATCH RESULT & VICTORY DIALOG ----------------- */}
+      <Dialog
+        open={isMatchResultOpen}
+        onOpenChange={(open) => {
+          setIsMatchResultOpen(open);
+          if (!open) stopVictoryMusic();
+        }}
+      >
+        <DialogContent className="max-w-md rounded-[2.5rem] p-6 text-center border-2 border-amber-400/50 bg-gradient-to-b from-amber-50 via-white to-amber-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 shadow-2xl">
+          <DialogHeader>
+            <div className="w-16 h-16 mx-auto mb-2 rounded-3xl bg-amber-500/20 flex items-center justify-center text-amber-500 border-2 border-amber-400 shadow-inner animate-bounce">
+              <Trophy className="w-9 h-9" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-amber-300">
+              {matchWinnerInfo?.winner === 'TIE' ? "सामना बरोबरीत! (Match Tied)" : "🏆 सामना निकाल: विजयी संघ!"}
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-muted-foreground">
+              दोन्ही हाफ पूर्ण झाले असून अंतिम निकाल अधिकृतपणे जाहीर करण्यात आला आहे.
+            </DialogDescription>
+          </DialogHeader>
+
+          {matchWinnerInfo && (
+            <div className="space-y-4 my-2">
+              {/* Winner Announcement Banner */}
+              <div className="p-4 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg">
+                {matchWinnerInfo.winner === 'TIE' ? (
+                  <div>
+                    <h3 className="text-2xl font-black uppercase">सामना बरोबरीत!</h3>
+                    <p className="text-sm font-bold text-amber-100 mt-1">
+                      दोन्ही संघांनी प्रत्येकी {matchWinnerInfo.scoreA} गुण मिळवले.
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-200 block">
+                      🎉 सामना विजेता संघ
+                    </span>
+                    <h3 className="text-3xl font-black uppercase tracking-tight text-white drop-shadow-md my-1">
+                      {matchWinnerInfo.winnerName}
+                    </h3>
+                    <p className="text-sm font-black text-amber-100">
+                      {matchWinnerInfo.diff} ({getMarathiNumberWord(matchWinnerInfo.diff)}) गुणांनी दणदणीत विजय!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Score summary comparison */}
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800/80 border text-center">
+                <div className={cn("p-2.5 rounded-xl", matchWinnerInfo.winner === 'A' ? "bg-amber-100 dark:bg-amber-950/60 border border-amber-300" : "")}>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamACustomName}</p>
+                  <p className="text-3xl font-black font-mono text-slate-900 dark:text-white">{matchWinnerInfo.scoreA}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(matchWinnerInfo.scoreA)})</p>
+                </div>
+                <div className={cn("p-2.5 rounded-xl", matchWinnerInfo.winner === 'B' ? "bg-amber-100 dark:bg-amber-950/60 border border-amber-300" : "")}>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamBCustomName}</p>
+                  <p className="text-3xl font-black font-mono text-slate-900 dark:text-white">{matchWinnerInfo.scoreB}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(matchWinnerInfo.scoreB)})</p>
+                </div>
+              </div>
+
+              {/* Celebration Victory Music Controls */}
+              <div className="p-3 rounded-2xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300/80 flex items-center justify-between gap-2">
+                <div className="text-left overflow-hidden">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-amber-900 dark:text-amber-200">
+                    <Music className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="truncate">
+                      {uploadedMusicName ? uploadedMusicName : "डीफॉल्ट बिगुल (Victory Fanfare)"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-semibold">
+                    {isPlayingMusic ? "🎶 विजयी संगीत सुरू आहे..." : "सामना संपल्यावर वाजणारे संगीत"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={toggleVictoryMusic}
+                    className={cn(
+                      "h-8 px-3 rounded-xl font-black text-xs text-white shadow active:scale-95",
+                      isPlayingMusic ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
+                    )}
+                  >
+                    {isPlayingMusic ? <StopCircle className="w-3.5 h-3.5 mr-1" /> : <PlayCircle className="w-3.5 h-3.5 mr-1" />}
+                    {isPlayingMusic ? "थांबवा" : "वाजवा"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsMusicUploadOpen(true)}
+                    className="h-8 px-2 rounded-xl text-xs font-bold border-amber-300"
+                    title="नवीन संगीत बदला"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <Button
+                  onClick={() => {
+                    marathiAnnouncer.announceMatchWinner(teamACustomName, scoreA, teamBCustomName, scoreB, () => {
+                      playVictoryMusic();
+                    });
+                  }}
+                  className="w-full h-11 rounded-2xl font-black text-xs uppercase bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <Mic className="w-4 h-4 text-slate-950" /> 📢 निकाल पुन्हा मराठीत ऐका (Speak Result)
+                </Button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={shareMatchOnWhatsApp}
+                    className="h-10 rounded-xl font-bold text-xs text-emerald-700 bg-emerald-50 border-emerald-300 hover:bg-emerald-100"
+                  >
+                    <Share2 className="w-3.5 h-3.5 mr-1" /> WhatsApp शेअर
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={printOfficialScorecard}
+                    className="h-10 rounded-xl font-bold text-xs"
+                  >
+                    <Printer className="w-3.5 h-3.5 mr-1" /> A4 गुणपत्रिका
+                  </Button>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    stopVictoryMusic();
+                    setIsMatchResultOpen(false);
+                  }}
+                  className="w-full text-xs font-bold text-muted-foreground hover:text-foreground mt-1"
+                >
+                  बंद करा (Close)
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ----------------- HALF TIME / 1ST HALF COMPLETE DIALOG ----------------- */}
+      <Dialog open={isHalfTimeModalOpen} onOpenChange={setIsHalfTimeModalOpen}>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-6 text-center border-2 border-blue-400/50 bg-gradient-to-b from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 shadow-2xl">
+          <DialogHeader>
+            <div className="w-16 h-16 mx-auto mb-2 rounded-3xl bg-blue-500/20 flex items-center justify-center text-blue-600 border-2 border-blue-400 shadow-inner">
+              <Timer className="w-9 h-9" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-blue-300">
+              ⏸️ पहिला हाफ संपला! मध्यंतर (HALF TIME)
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-muted-foreground">
+              पहिल्या हाफची वेळ पूर्ण झाली असून दोन्ही संघांचे गुण खालीलप्रमाणे आहेत.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2">
+            {/* Score Comparison */}
+            <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800/80 border text-center">
+              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamACustomName}</p>
+                <p className="text-4xl font-black font-mono text-slate-900 dark:text-white">{scoreA}</p>
+                <p className="text-[10px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(scoreA)})</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamBCustomName}</p>
+                <p className="text-4xl font-black font-mono text-slate-900 dark:text-white">{scoreB}</p>
+                <p className="text-[10px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(scoreB)})</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-blue-100/80 dark:bg-blue-950/40 text-blue-950 dark:text-blue-200 text-xs font-bold">
+              {scoreA > scoreB
+                ? `⚡ ${teamACustomName} +${scoreA - scoreB} (${getMarathiNumberWord(scoreA - scoreB)}) गुणांनी आघाडीवर आहे.`
+                : scoreB > scoreA
+                  ? `⚡ ${teamBCustomName} +${scoreB - scoreA} (${getMarathiNumberWord(scoreB - scoreA)}) गुणांनी आघाडीवर आहे.`
+                  : "⚡ दोन्ही संघ सध्या बरोबरीत आहेत."}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
+              <Button
+                onClick={() => {
+                  marathiAnnouncer.announceHalfTime(teamACustomName, scoreA, teamBCustomName, scoreB);
+                }}
+                variant="outline"
+                className="w-full h-10 rounded-xl font-bold text-xs text-blue-700 bg-blue-50 border-blue-300 hover:bg-blue-100 flex items-center justify-center gap-1.5"
+              >
+                <Mic className="w-4 h-4" /> 📢 मध्यंतर निकाल मराठीत ऐका
+              </Button>
+
+              <Button
+                onClick={startSecondHalf}
+                className="w-full h-12 rounded-2xl font-black text-sm uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                <Play className="w-4 h-4" /> ▶️ दुसरा हाफ सुरू करा (Start 2nd Half)
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsHalfTimeModalOpen(false);
+                  triggerMatchConclusion();
+                }}
+                className="w-full text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 mt-1"
+              >
+                सामना येथेच पूर्ण संपवा (Conclude Match Now)
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ----------------- VICTORY MUSIC UPLOAD DIALOG ----------------- */}
+      <Dialog open={isMusicUploadOpen} onOpenChange={setIsMusicUploadOpen}>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-6 text-center border-2 border-purple-400/50 bg-gradient-to-b from-purple-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 shadow-2xl">
+          <DialogHeader>
+            <div className="w-16 h-16 mx-auto mb-2 rounded-3xl bg-purple-500/20 flex items-center justify-center text-purple-600 border-2 border-purple-400 shadow-inner">
+              <Music className="w-9 h-9" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-purple-300">
+              🎵 विजयी संगीत (Victory Celebration Music)
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-muted-foreground">
+              सामना संपल्यावर व मराठीत निकाल जाहीर झाल्यानंतर हे संगीत आपोआप वाजवले जाईल.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2 text-left">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border space-y-3">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                ऑडिओ / गाणे निवडा (Select MP3 / Audio File):
+              </label>
+              <input
+                type="file"
+                accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (uploadedMusicUrl) URL.revokeObjectURL(uploadedMusicUrl);
+                    const url = URL.createObjectURL(file);
+                    setUploadedMusicUrl(url);
+                    setUploadedMusicName(file.name);
+                    toast({
+                      title: "🎵 संगीत अपलोड झाले!",
+                      description: `"${file.name}" हे गाणे विजयानंतर वाजवण्यासाठी सेट केले आहे.`,
+                      className: "bg-purple-600 text-white font-bold"
+                    });
+                  }
+                }}
+                className="w-full text-xs font-bold file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer border rounded-xl p-2 bg-muted/40"
+              />
+
+              {uploadedMusicName ? (
+                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 flex items-center justify-between gap-2">
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">सध्याचे सेट केलेले गाणे:</p>
+                    <p className="text-xs font-black text-purple-900 dark:text-purple-200 truncate">{uploadedMusicName}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={toggleVictoryMusic}
+                      className={cn(
+                        "h-8 px-2.5 rounded-lg text-xs font-bold text-white",
+                        isPlayingMusic ? "bg-red-600 hover:bg-red-700" : "bg-purple-600 hover:bg-purple-700"
+                      )}
+                    >
+                      {isPlayingMusic ? <StopCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        stopVictoryMusic();
+                        if (uploadedMusicUrl) URL.revokeObjectURL(uploadedMusicUrl);
+                        setUploadedMusicUrl(null);
+                        setUploadedMusicName(null);
+                        toast({ title: "अपलोड केलेले गाणे हटवले (डीफॉल्ट बिगुल सेट)" });
+                      }}
+                      className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      title="गाणे काढा"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-[11px] font-semibold text-amber-900 dark:text-amber-200">
+                  ℹ️ कोणतेही गाणे अपलोड न केल्यास, विजयानंतर प्रो कबड्डी स्टाईल बिगुल (Fanfare Synthesizer) आपोआप वाजेल.
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <Button
+                onClick={() => setIsMusicUploadOpen(false)}
+                className="w-full h-11 rounded-xl font-black text-xs uppercase bg-purple-600 hover:bg-purple-700 text-white shadow-md"
+              >
+                जतन करा आणि बंद करा (Save & Close)
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

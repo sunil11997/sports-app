@@ -236,6 +236,41 @@ class SoundEngine {
     osc1.stop(now + 0.9);
     osc2.stop(now + 0.9);
   }
+
+  /**
+   * 🏆 Victory Celebration Fanfare (Web Audio Synthesizer)
+   */
+  playFanfare() {
+    const ctx = this.initCtx();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = [
+      { f: 523.25, t: 0.0, d: 0.18 }, // C5
+      { f: 659.25, t: 0.18, d: 0.18 }, // E5
+      { f: 783.99, t: 0.36, d: 0.22 }, // G5
+      { f: 1046.50, t: 0.58, d: 0.8 }  // C6
+    ];
+
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(n.f, now + n.t);
+
+      gain.gain.setValueAtTime(0, now + n.t);
+      gain.gain.linearRampToValueAtTime(0.5, now + n.t + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.d);
+    });
+  }
 }
 
 export const sounds = new SoundEngine();
+

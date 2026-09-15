@@ -35,8 +35,11 @@ export function getMarathiNumberWord(num: number): string {
 class MarathiVoiceAnnouncer {
   public enabled: boolean = true;
 
-  public speak(text: string, priority = false) {
-    if (!this.enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  public speak(text: string, priority = false, onEnd?: () => void) {
+    if (!this.enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      if (onEnd) onEnd();
+      return;
+    }
 
     try {
       if (priority) {
@@ -59,9 +62,27 @@ class MarathiVoiceAnnouncer {
         utterance.lang = 'mr-IN';
       }
 
+      if (onEnd) {
+        utterance.onend = () => {
+          try {
+            onEnd();
+          } catch (e) {
+            console.warn("Speech onEnd callback error:", e);
+          }
+        };
+        utterance.onerror = (e) => {
+          try {
+            onEnd();
+          } catch (err) {
+            console.warn("Speech onError callback error:", err);
+          }
+        };
+      }
+
       window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.warn("Marathi Speech Synthesis warning:", err);
+      if (onEnd) onEnd();
     }
   }
 
@@ -129,6 +150,60 @@ class MarathiVoiceAnnouncer {
     }
     this.speak(text, true);
   }
+
+  /**
+   * 🛡️ Announce Super Tackle ON (सुपर टॅकल ऑन) in Marathi
+   */
+  announceSuperTackle(defendingTeamName?: string) {
+    const teamClause = defendingTeamName ? `${defendingTeamName} साठी ` : '';
+    const text = `सावधान! ${teamClause}सुपर टॅकल ऑन आहे! यशस्वी पकड झाल्यास मिळतील दोन गुण! सुपर टॅकल ऑन!`;
+    this.speak(text, true);
+  }
+
+  /**
+   * ⏸️ Announce First Half Time (पहिला हाफ संपला / मध्यंतर) in Marathi
+   */
+  announceHalfTime(teamAName: string, scoreA: number, teamBName: string, scoreB: number, onEnd?: () => void) {
+    const wordA = getMarathiNumberWord(scoreA);
+    const wordB = getMarathiNumberWord(scoreB);
+    const diff = Math.abs(scoreA - scoreB);
+    const diffWord = getMarathiNumberWord(diff);
+
+    let status = "";
+    if (scoreA > scoreB) {
+      status = `${teamAName} ${diffWord} गुणांनी आघाडीवर आहे.`;
+    } else if (scoreB > scoreA) {
+      status = `${teamBName} ${diffWord} गुणांनी आघाडीवर आहे.`;
+    } else {
+      status = `दोन्ही संघ ${wordA} गुणांवर बरोबरीत आहेत.`;
+    }
+
+    const text = `पहिला हाफ संपला! मध्यंतर! गुणफलक: ${teamAName} ${wordA} गुण, ${teamBName} ${wordB} गुण! ${status}`;
+    this.speak(text, true, onEnd);
+  }
+
+  /**
+   * 🏆 Announce Match Winner by points/guns in Marathi when both halves are complete
+   * (दोन्ही हाफ पूर्ण झाल्यानंतर अ किंवा ब संघ किती गुणांनी जिंकला याची घोषणा)
+   */
+  announceMatchWinner(teamAName: string, scoreA: number, teamBName: string, scoreB: number, onEnd?: () => void) {
+    const wordA = getMarathiNumberWord(scoreA);
+    const wordB = getMarathiNumberWord(scoreB);
+    const diff = Math.abs(scoreA - scoreB);
+    const diffWord = getMarathiNumberWord(diff);
+
+    let text = "";
+    if (scoreA > scoreB) {
+      text = `सामना संपला! दोन्ही हाफ पूर्ण झाले आहेत! ${teamAName} ने ${teamBName} चा ${diffWord} गुणांनी पराभव करून सामना जिंकला! अंतिम गुणफलक: ${teamAName} ${wordA} गुण, ${teamBName} ${wordB} गुण! ${teamAName} चे मनःपूर्वक अभिनंदन!`;
+    } else if (scoreB > scoreA) {
+      text = `सामना संपला! दोन्ही हाफ पूर्ण झाले आहेत! ${teamBName} ने ${teamAName} चा ${diffWord} गुणांनी पराभव करून सामना जिंकला! अंतिम गुणफलक: ${teamBName} ${wordB} गुण, ${teamAName} ${wordA} गुण! ${teamBName} चे मनःपूर्वक अभिनंदन!`;
+    } else {
+      text = `सामना संपला! दोन्ही हाफ पूर्ण झाले आहेत! दोन्ही संघांमध्ये चुरशीची लढत झाली असून सामना ${wordA} गुणांवर बरोबरीत सुटला आहे!`;
+    }
+
+    this.speak(text, true, onEnd);
+  }
 }
 
 export const marathiAnnouncer = new MarathiVoiceAnnouncer();
+
