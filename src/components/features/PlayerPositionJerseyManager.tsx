@@ -26,6 +26,9 @@ import {
   Shield,
   Upload,
   UserCheck,
+  Zap,
+  Sparkles,
+  Check,
   X
 } from 'lucide-react';
 import { 
@@ -45,6 +48,16 @@ import {
 } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+
+export const KABADDI_QUICK_POSITIONS = [
+  { num: 1, code: 'RC', name: 'उजवा कोपरा (Right Corner)', shortMr: 'उ.कोपरा' },
+  { num: 2, code: 'RI', name: 'उजवा इन (Right In)', shortMr: 'उ.इन' },
+  { num: 3, code: 'RCv', name: 'उजवा कव्हर (Right Cover)', shortMr: 'उ.कव्हर' },
+  { num: 4, code: 'CTR', name: 'मध्यरक्षक / सेंटर (Center)', shortMr: 'सेंटर' },
+  { num: 5, code: 'LCv', name: 'डावा कव्हर (Left Cover)', shortMr: 'डा.कव्हर' },
+  { num: 6, code: 'LI', name: 'डावा इन (Left In)', shortMr: 'डा.इन' },
+  { num: 7, code: 'LC', name: 'डावा कोपरा (Left Corner)', shortMr: 'डा.कोपरा' },
+];
 
 const SUPPORTED_SPORTS = [
   'Kabaddi',
@@ -137,6 +150,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
   const [selectedGender, setSelectedGender] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewMode, setViewMode] = useState<'court' | 'lanes' | 'table'>('court');
+  const [sortBy, setSortBy] = useState<'skills' | 'jersey' | 'name'>('skills');
   const [isSaving, setIsSaving] = useState(false);
 
   // Coach Manual Captain & Vice Captain Selection
@@ -169,9 +183,9 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
     };
   }, [selectedSport]);
 
-  // Filter players for selected sport
+  // Filter & Sort players for selected sport (Default: Ranked by Skills Marks!)
   const sportPlayers = useMemo(() => {
-    return allPlayers.filter((p: any) => {
+    const list = allPlayers.filter((p: any) => {
       const matchSport = p.sports && p.sports.includes(selectedSport);
       if (!matchSport) return false;
 
@@ -194,9 +208,26 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
 
       return true;
     });
-  }, [allPlayers, selectedSport, selectedGender, selectedCategory, searchQuery]);
 
-  // Determine starters, reserves, and extended pool
+    return list.sort((a: any, b: any) => {
+      if (sortBy === 'skills') {
+        const aSkill = parseFloat(store?.data?.sportSkills?.[`${a.id}_${selectedSport}`]?.score || '0');
+        const bSkill = parseFloat(store?.data?.sportSkills?.[`${b.id}_${selectedSport}`]?.score || '0');
+        if (bSkill !== aSkill) return bSkill - aSkill;
+
+        const aFit = parseFloat(store?.data?.fitness?.[a.id]?.score || '0');
+        const bFit = parseFloat(store?.data?.fitness?.[b.id]?.score || '0');
+        if (bFit !== aFit) return bFit - aFit;
+      } else if (sortBy === 'jersey') {
+        const aJ = parseInt(draftChanges[a.id]?.jersey || a.jerseyNumbers?.[selectedSport] || a.jerseyNumber || '999', 10);
+        const bJ = parseInt(draftChanges[b.id]?.jersey || b.jerseyNumbers?.[selectedSport] || b.jerseyNumber || '999', 10);
+        if (aJ !== bJ) return aJ - bJ;
+      }
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }, [allPlayers, selectedSport, selectedGender, selectedCategory, searchQuery, sortBy, draftChanges, store?.data?.sportSkills, store?.data?.fitness]);
+
+  // Determine starters, reserves, and extended pool based on Skills Rankings
   const { starters, reserves, extendedPool } = useMemo(() => {
     const startersLimit = squadConfig.startersCount;
     const maxSquad = squadConfig.maxSquad;
@@ -262,6 +293,109 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
         position: value
       }
     }));
+  };
+
+  // ⚡ 1-Click Auto Select Final Match Squad & Assign Official Positions Based on Skills Marks
+  const handleAutoSelectSquadBySkills = () => {
+    if (sportPlayers.length === 0) {
+      toast({
+        title: "खेळाडू सापडले नाहीत",
+        description: `${selectedSport} खेळामध्ये कोणतेही खेळाडू नोंदणीकृत नाहीत.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Rank players strictly by skills score (and fitness as secondary)
+    const sortedBySkills = [...sportPlayers].sort((a: any, b: any) => {
+      const aSkill = parseFloat(store?.data?.sportSkills?.[`${a.id}_${selectedSport}`]?.score || '0');
+      const bSkill = parseFloat(store?.data?.sportSkills?.[`${b.id}_${selectedSport}`]?.score || '0');
+      if (bSkill !== aSkill) return bSkill - aSkill;
+      const aFit = parseFloat(store?.data?.fitness?.[a.id]?.score || '0');
+      const bFit = parseFloat(store?.data?.fitness?.[b.id]?.score || '0');
+      return bFit - aFit;
+    });
+
+    const startersLimit = squadConfig.startersCount;
+    const maxSquad = squadConfig.maxSquad;
+    const final12 = sortedBySkills.slice(0, maxSquad);
+
+    const newDraft: typeof draftChanges = { ...draftChanges };
+
+    final12.forEach((player: any, idx: number) => {
+      const isStarter = idx < startersLimit;
+      let assignedPos = '';
+
+      if (selectedSport === 'Kabaddi') {
+        if (isStarter) {
+          // Official 7 starting positions:
+          // 1: Right Corner, 2: Right In, 3: Right Cover, 4: Center (Main Raider), 5: Left Cover, 6: Left In, 7: Left Corner
+          const kabaddiPositions = [
+            'उजवा कोपरा (Right Corner)',
+            'उजवा इन (Right In)',
+            'उजवा कव्हर (Right Cover)',
+            'मध्यरक्षक / सेंटर (Center)',
+            'डावा कव्हर (Left Cover)',
+            'डावा इन (Left In)',
+            'डावा कोपरा (Left Corner)'
+          ];
+          assignedPos = kabaddiPositions[idx] || 'खेळाडू';
+        } else {
+          const kabaddiReserves = [
+            'राखीव - चढाईपटू (Reserve Raider)',
+            'राखीव - कोपरा रक्षक (Reserve Corner)',
+            'राखीव - कव्हर रक्षक (Reserve Cover)',
+            'राखीव - अष्टपैलू (Reserve All-Rounder)',
+            'राखीव - बचावपटू (Reserve Defender)'
+          ];
+          assignedPos = kabaddiReserves[idx - startersLimit] || 'राखीव खेळाडू';
+        }
+      } else {
+        if (isStarter && squadConfig.positions[idx]) {
+          assignedPos = squadConfig.positions[idx].defaultPosName || squadConfig.positions[idx].nameMr;
+        } else {
+          assignedPos = `राखीव खेळाडू ${idx - startersLimit + 1}`;
+        }
+      }
+
+      newDraft[player.id] = {
+        ...(newDraft[player.id] || {}),
+        position: assignedPos,
+        jersey: (idx + 1).toString(),
+        isCaptain: idx === 0,
+        isViceCaptain: idx === 1
+      };
+    });
+
+    setCaptainId(final12[0]?.id || '');
+    setViceCaptainId(final12[1]?.id || '');
+    setSortBy('skills');
+    setDraftChanges(newDraft);
+
+    toast({
+      title: "🎯 कौशल्य गुणांवरून अंतिम संघ निवडला! ✅",
+      description: `सर्वोच्च कौशल्य गुणांच्या आधारे ${final12.length} खेळाडूंची अंतिम संघात निवड केली असून #१ ते #${startersLimit} मुख्य पोझिशन्स व जर्सी क्रमांक दिले आहेत. जतन करण्यासाठी 'बदल सेव्ह करा' दाबा.`
+    });
+  };
+
+  // 1-Click Auto-Number Jerseys #1 to #12 for the squad
+  const handleAutoNumberJerseys = () => {
+    const maxSquad = squadConfig.maxSquad;
+    const squadPlayers = sportPlayers.slice(0, maxSquad);
+    const newDraft: typeof draftChanges = { ...draftChanges };
+
+    squadPlayers.forEach((player: any, idx: number) => {
+      newDraft[player.id] = {
+        ...(newDraft[player.id] || {}),
+        jersey: (idx + 1).toString()
+      };
+    });
+
+    setDraftChanges(newDraft);
+    toast({
+      title: "🔢 जर्सी क्रमांक १ ते १२ दिले!",
+      description: `संघातील १२ खेळाडूंना अनुक्रमे १ ते १२ जर्सी क्रमांक दिले आहेत.`
+    });
   };
 
   const handleSetCaptain = (playerId: string) => {
@@ -824,6 +958,8 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
     const isVC = (viceCaptainId === player.id || draft?.isViceCaptain);
     const marathiName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
     const posBadge = getPositionBadgeInfo(currentPos);
+    const skillData = store?.data?.sportSkills?.[`${player.id}_${selectedSport}`] || { score: '0' };
+    const skillScore = parseFloat(skillData.score || '0');
 
     return (
       <div 
@@ -911,8 +1047,21 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
           </div>
         </div>
 
+        {/* Skills Marks Badge */}
+        <div className="flex items-center justify-center gap-1.5 my-1">
+          <Badge className={cn(
+            "text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm border flex items-center gap-1",
+            skillScore >= 80 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" :
+            skillScore >= 60 ? "bg-amber-500/20 text-amber-300 border-amber-500/40" :
+            "bg-slate-800 text-slate-400 border-slate-700"
+          )}>
+            <Target className="w-2.5 h-2.5" />
+            {skillScore > 0 ? `${skillScore}/100 गुण` : 'कौशल्य बाकी'}
+          </Badge>
+        </div>
+
         {/* Position Badge & Dropdown Selector */}
-        <div className="w-full mt-2">
+        <div className="w-full mt-1.5 space-y-1.5">
           <Select
             value={currentPos}
             onValueChange={(val) => handlePositionChange(player.id, val)}
@@ -924,6 +1073,50 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
               {renderPositionSelectOptions()}
             </SelectContent>
           </Select>
+
+          {/* Super Easy Quick 1-Click Position Number Buttons */}
+          {selectedSport === 'Kabaddi' && (
+            <div className="pt-0.5">
+              <div className="text-[8px] font-black text-amber-300/80 uppercase text-center mb-0.5">
+                ⚡ जलद पोझिशन (1-Tap):
+              </div>
+              <div className="grid grid-cols-4 gap-0.5">
+                {KABADDI_QUICK_POSITIONS.map(pos => {
+                  const isActive = currentPos.includes(pos.code) || currentPos.includes(pos.name);
+                  return (
+                    <button
+                      key={pos.num}
+                      type="button"
+                      onClick={() => handlePositionChange(player.id, pos.name)}
+                      className={cn(
+                        "text-[8px] font-black py-0.5 px-0.5 rounded transition-all flex items-center justify-center gap-0.5 text-center",
+                        isActive 
+                          ? "bg-amber-400 text-slate-950 ring-1 ring-amber-300 font-black shadow" 
+                          : "bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700 hover:text-white"
+                      )}
+                      title={`${pos.num}. ${pos.name}`}
+                    >
+                      <span className="font-mono text-[7px] text-amber-400">{pos.num}</span>
+                      <span>{pos.code}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => handlePositionChange(player.id, 'राखीव खेळाडू (Reserve)')}
+                  className={cn(
+                    "text-[8px] font-black py-0.5 px-0.5 rounded transition-all text-center",
+                    currentPos.includes('राखीव') || currentPos.includes('Reserve')
+                      ? "bg-slate-300 text-slate-950 font-black"
+                      : "bg-slate-900/90 hover:bg-slate-800 text-slate-400 border border-slate-800"
+                  )}
+                  title="राखीव खेळाडू"
+                >
+                  RES
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Coach Role Selector: Quick Toggle Captain / VC */}
@@ -980,6 +1173,24 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              onClick={handleAutoSelectSquadBySkills}
+              type="button"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-lg gap-2 h-11 px-4 border border-amber-300 transition-transform active:scale-95"
+              title="सर्वोच्च कौशल्य गुण असलेल्या १२ खेळाडूंची अंतिम संघात निवड करून #१ ते #७ पोझिशन्स व जर्सी क्रमांक द्या"
+            >
+              <Zap className="w-4 h-4 fill-current" />
+              ⚡ कौशल्य गुणांवरून संघ निवडा
+            </Button>
+            <Button
+              onClick={handleAutoNumberJerseys}
+              type="button"
+              variant="outline"
+              className="bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-xl border-none shadow-md gap-1.5 h-11 px-3.5"
+              title="संघातील खेळाडूंना १ ते १२ जर्सी क्रमांक द्या"
+            >
+              <ListOrdered className="w-4 h-4" /> १-१२ जर्सी द्या
+            </Button>
             {hasUnsavedChanges && (
               <Button
                 onClick={handleSaveAll}
@@ -1091,41 +1302,61 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             />
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="space-y-1.5 lg:col-span-2">
+          {/* Sort By Selector */}
+          <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-amber-500" /> डिस्प्ले व्ह्यू (View Mode)
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> क्रमवारी (Sort)
             </label>
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
+            <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
+              <SelectTrigger className="font-black text-xs rounded-xl h-11 border-2 border-primary/20 bg-amber-50/50">
+                <SelectValue placeholder="क्रम निवडा" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="skills" className="font-bold text-xs">🎯 कौशल्य गुण (सर्वोच्च)</SelectItem>
+                <SelectItem value="jersey" className="font-bold text-xs">🎽 जर्सी क्रमांक (#1..12)</SelectItem>
+                <SelectItem value="name" className="font-bold text-xs">🔤 नाव (A-Z)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-amber-500" /> व्ह्यू (View)
+            </label>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 h-11 items-center">
               <button
                 type="button"
                 onClick={() => setViewMode('court')}
                 className={cn(
-                  "flex-1 py-1.5 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1 transition-all",
+                  "flex-1 py-1.5 px-1.5 rounded-lg font-black text-[11px] flex items-center justify-center gap-1 transition-all",
                   viewMode === 'court' ? "bg-emerald-700 text-white shadow" : "text-slate-600 hover:text-slate-900"
                 )}
+                title="मैदान मांडणी व्यू"
               >
-                <Activity className="w-3.5 h-3.5" /> ग्राउंड (Court)
+                <Activity className="w-3 h-3" /> ग्राउंड
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('lanes')}
                 className={cn(
-                  "flex-1 py-1.5 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1 transition-all",
+                  "flex-1 py-1.5 px-1.5 rounded-lg font-black text-[11px] flex items-center justify-center gap-1 transition-all",
                   viewMode === 'lanes' ? "bg-emerald-700 text-white shadow" : "text-slate-600 hover:text-slate-900"
                 )}
+                title="१७ लेन व्यू"
               >
-                <Target className="w-3.5 h-3.5" /> १७ लेन (L6-M5-R6)
+                <Target className="w-3 h-3" /> लेन
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
                 className={cn(
-                  "flex-1 py-1.5 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1 transition-all",
+                  "flex-1 py-1.5 px-1.5 rounded-lg font-black text-[11px] flex items-center justify-center gap-1 transition-all",
                   viewMode === 'table' ? "bg-emerald-700 text-white shadow" : "text-slate-600 hover:text-slate-900"
                 )}
+                title="तक्ता व्यू"
               >
-                <ListOrdered className="w-3.5 h-3.5" /> तक्ता (Table)
+                <ListOrdered className="w-3 h-3" /> तक्ता
               </button>
             </div>
           </div>
@@ -1497,8 +1728,9 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                   <th className="py-3.5 px-4 text-center w-16">फोटो</th>
                   <th className="py-3.5 px-4 text-center w-28">जर्सी नं.</th>
                   <th className="py-3.5 px-4">खेळाडूचे नाव (Player Name)</th>
-                  <th className="py-3.5 px-4 text-center">इयत्ता</th>
-                  <th className="py-3.5 px-4 w-64">मैदानातील पोझिशन (Position)</th>
+                  <th className="py-3.5 px-4 text-center w-20">इयत्ता</th>
+                  <th className="py-3.5 px-4 text-center w-28">कौशल्य गुण</th>
+                  <th className="py-3.5 px-4 min-w-[300px]">मैदानातील पोझिशन (Fast 1-Click Buttons &amp; List)</th>
                   <th className="py-3.5 px-4 text-center">क्रीडा शिक्षक निवड (Captaincy)</th>
                   <th className="py-3.5 px-4 text-center">प्रकार</th>
                 </tr>
@@ -1506,7 +1738,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
               <tbody className="divide-y divide-muted/40">
                 {sportPlayers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-muted-foreground font-bold">
+                    <td colSpan={9} className="py-12 text-center text-muted-foreground font-bold">
                       {selectedSport} क्रीडा प्रकारात कोणताही खेळाडू सापडला नाही. खेळाडूंच्या प्रोफाइलमध्ये हा खेळ निवडा.
                     </td>
                   </tr>
@@ -1526,6 +1758,8 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                     const isCapt = (captainId === player.id || draft?.isCaptain);
                     const isVC = (viceCaptainId === player.id || draft?.isViceCaptain);
                     const isStarter = idx < squadConfig.startersCount;
+                    const skillData = store?.data?.sportSkills?.[`${player.id}_${selectedSport}`] || { score: '0' };
+                    const skillScore = parseFloat(skillData.score || '0');
 
                     return (
                       <tr 
@@ -1609,22 +1843,74 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                           <span className="font-bold text-slate-800">इ. {player.std} वी</span>
                         </td>
 
-                        {/* Position Selector */}
+                        {/* Skills Score */}
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge className={cn(
+                            "text-xs font-black px-2 py-0.5 shadow-sm border",
+                            skillScore >= 80 ? "bg-emerald-500/20 text-emerald-800 border-emerald-500/40" :
+                            skillScore >= 60 ? "bg-amber-500/20 text-amber-900 border-amber-500/40" :
+                            "bg-slate-100 text-slate-500 border-slate-200"
+                          )}>
+                            {skillScore > 0 ? `${skillScore}/100` : '-'}
+                          </Badge>
+                        </td>
+
+                        {/* Position Selector + Fast 1-Click Buttons */}
                         <td className="py-3.5 px-4">
-                          <Select 
-                            value={currentPos || ''} 
-                            onValueChange={(val) => handlePositionChange(player.id, val)}
-                          >
-                            <SelectTrigger className={cn(
-                              "font-bold text-xs rounded-xl h-10 border-2",
-                              isChanged ? "border-amber-500 bg-amber-50" : "border-primary/20"
-                            )}>
-                              <SelectValue placeholder="पोझिशन निवडा..." />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-64 text-xs">
-                              {renderPositionSelectOptions()}
-                            </SelectContent>
-                          </Select>
+                          <div className="space-y-1.5">
+                            {selectedSport === 'Kabaddi' && (
+                              <div className="flex flex-wrap items-center gap-1">
+                                {KABADDI_QUICK_POSITIONS.map(pos => {
+                                  const isActive = currentPos.includes(pos.code) || currentPos.includes(pos.name);
+                                  return (
+                                    <button
+                                      key={pos.num}
+                                      type="button"
+                                      onClick={() => handlePositionChange(player.id, pos.name)}
+                                      className={cn(
+                                        "text-[9.5px] font-black px-1.5 py-0.5 rounded transition-all flex items-center gap-0.5 shadow-sm",
+                                        isActive
+                                          ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400 font-black scale-105"
+                                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 hover:text-slate-950"
+                                      )}
+                                      title={`${pos.num}. ${pos.name}`}
+                                    >
+                                      <span className="font-mono text-[8.5px] text-amber-800 font-black">{pos.num}.</span>
+                                      <span>{pos.code}</span>
+                                    </button>
+                                  );
+                                })}
+                                <button
+                                  type="button"
+                                  onClick={() => handlePositionChange(player.id, 'राखीव खेळाडू (Reserve)')}
+                                  className={cn(
+                                    "text-[9.5px] font-black px-1.5 py-0.5 rounded transition-all",
+                                    currentPos.includes('राखीव') || currentPos.includes('Reserve')
+                                      ? "bg-slate-800 text-white font-black"
+                                      : "bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200"
+                                  )}
+                                  title="राखीव खेळाडू"
+                                >
+                                  राखीव
+                                </button>
+                              </div>
+                            )}
+
+                            <Select 
+                              value={currentPos || ''} 
+                              onValueChange={(val) => handlePositionChange(player.id, val)}
+                            >
+                              <SelectTrigger className={cn(
+                                "font-bold text-xs rounded-xl h-8 border-2",
+                                isChanged ? "border-amber-500 bg-amber-50" : "border-primary/20"
+                              )}>
+                                <SelectValue placeholder="पोझिशन निवडा..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-64 text-xs">
+                                {renderPositionSelectOptions()}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </td>
 
                         {/* Captaincy Selection */}
