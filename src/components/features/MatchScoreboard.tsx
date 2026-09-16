@@ -112,6 +112,7 @@ interface ScoreEvent {
   type: string;
   desc: string;
   raiderName?: string;
+  previousRaidingTeam?: 'A' | 'B';
 }
 
 export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchScoreboardProps) {
@@ -672,6 +673,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     if (team === 'A') setScoreA(prev => prev + points);
     else setScoreB(prev => prev + points);
 
+    // If defending team scored a point (e.g. tackle / caught raider), adjust label for clear event log
+    const eventType = (sport === 'Kabaddi' && (type === 'Touch Point' || type === 'Point') && team !== raidingTeam)
+      ? 'Tackle Point'
+      : type;
+
     // Event Log
     const newEvent: ScoreEvent = {
       id: Date.now().toString(),
@@ -679,47 +685,55 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       team,
       teamName,
       points,
-      type,
-      desc: `${teamName}: +${points} (${type})`
+      type: eventType,
+      desc: `${teamName}: +${points} (${eventType})`,
+      previousRaidingTeam: raidingTeam
     };
     setEventsLog(prev => [newEvent, ...prev]);
 
     // Kabaddi specific adjustments
     if (sport === 'Kabaddi') {
-      let nextRaider: 'A' | 'B' = opponent;
+      // IN KABADDI: Raids strictly alternate between Team A and Team B.
+      // Whenever ANY point is scored in the raid (raider scores OR defense tackles),
+      // that raid ends and the raiding position automatically switches to the other team.
+      // E.g. If Team A was raiding: Next raid is ALWAYS Team B.
+      // E.g. If Team B was raiding: Next raid is ALWAYS Team A.
+      const nextRaider: 'A' | 'B' = raidingTeam === 'A' ? 'B' : 'A';
 
-      if (type.includes('Raid') || type.includes('Touch') || type.includes('Bonus') || type.includes('Do-Or-Die Touch')) {
-        // Successful raid: reset empty raid count for raiding team
-        if (team === 'A') setEmptyRaidsA(0);
+      if (team === raidingTeam) {
+        // Raiding team scored points (Touch, Raid points, Bonus, etc.)
+        // Reset empty raid count for raiding team
+        if (raidingTeam === 'A') setEmptyRaidsA(0);
         else setEmptyRaidsB(0);
 
         // Deduct defenders from defending team
-        if (team === 'A') {
-          setDefendersB(prev => Math.max(1, prev - (points >= 3 ? points - (type.includes('Bonus') ? 1 : 0) : points)));
-        } else {
-          setDefendersA(prev => Math.max(1, prev - (points >= 3 ? points - (type.includes('Bonus') ? 1 : 0) : points)));
+        const touchPoints = type.includes('Bonus') ? Math.max(0, points - 1) : points;
+        if (touchPoints > 0) {
+          if (raidingTeam === 'A') {
+            setDefendersB(prev => Math.max(1, prev - touchPoints));
+          } else {
+            setDefendersA(prev => Math.max(1, prev - touchPoints));
+          }
         }
-        // When raiding team scores point, raid passes to opponent
-        nextRaider = opponent;
-      } else if (type.includes('Tackle') || type.includes('Super Tackle') || type.includes('Do-Or-Die Out')) {
-        // Raider tackled out or Do-or-Die failed: defending team gets point
-        // Deduct 1 defender from the raiding team
-        if (team === 'A') {
-          setDefendersB(prev => Math.max(1, prev - 1));
-        } else {
+      } else {
+        // Defending team scored points (Tackle, Super Tackle, Raider Out, etc.)
+        // Raider is out: reset empty raid count for raiding team
+        if (raidingTeam === 'A') setEmptyRaidsA(0);
+        else setEmptyRaidsB(0);
+
+        // Deduct 1 defender from the raiding team (the tackled raider is out)
+        if (raidingTeam === 'A') {
           setDefendersA(prev => Math.max(1, prev - 1));
+        } else {
+          setDefendersB(prev => Math.max(1, prev - 1));
         }
-        // When defending team executes tackle/super tackle, the defending team gets the next raid
-        nextRaider = team;
-      } else if (type === 'All-Out') {
+      }
+
+      if (type === 'All-Out') {
         // All out: restore 7 defenders for opponent
         if (opponent === 'A') setDefendersA(7);
         else setDefendersB(7);
         sfx.playWhistle();
-        nextRaider = opponent;
-      } else {
-        // For any general points awarded to a team: next raid goes to opponent
-        nextRaider = opponent;
       }
 
       // Auto reset raid clock for next raid & switch raiding team
@@ -728,7 +742,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       const nextRaiderName = nextRaider === 'A' ? teamACustomName : teamBCustomName;
       toast({
         title: `👉 पुढील रेड: ${nextRaiderName} ची रेड!`,
-        description: `${teamName} ला +${points} गुण (${type}). आता ${nextRaiderName} ची रेड सुरू आहे.`,
+        description: `${teamName} ला +${points} गुण (${eventType}). आता ${nextRaiderName} ची रेड सुरू आहे.`,
         className: nextRaider === 'A' ? "bg-red-600 text-white font-bold" : "bg-blue-600 text-white font-bold"
       });
     }
@@ -832,6 +846,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     const last = eventsLog[0];
     if (last.team === 'A') setScoreA(prev => Math.max(0, prev - last.points));
     else setScoreB(prev => Math.max(0, prev - last.points));
+    if (sport === 'Kabaddi' && last.previousRaidingTeam) {
+      setRaidingTeam(last.previousRaidingTeam);
+      setRaidSeconds(30);
+      setIsRaidRunning(false);
+    }
     setEventsLog(prev => prev.slice(1));
     toast({ title: "कृती पूर्ववत केली (Event Undone)", description: `${last.desc} रद्द करण्यात आले.` });
   };
