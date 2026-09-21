@@ -32,7 +32,8 @@ import {
   Square,
   Zap,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Search
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -173,6 +174,10 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
   // Selected student IDs for batch drill operations
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
+  // Search query states for player search and drill search
+  const [playerSearchTerm, setPlayerSearchTerm] = useState<string>('');
+  const [drillSearchTerm, setDrillSearchTerm] = useState<string>('');
+
   useEffect(() => {
     if (preselectedSport && SPORTS_DATA[preselectedSport]) {
       setActiveSport(preselectedSport);
@@ -288,14 +293,28 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     setSelectedStudentIds(targetList.map((p: any) => p.id));
   }, [activeSport, playersInSport, getAttendanceStatus]);
 
-  // Filtered list based on view mode (Attended Only vs All)
+  // Filtered list based on view mode (Attended Only vs All) AND search query
   const displayPlayers = useMemo(() => {
-    if (filterMode === 'attended_only') {
-      const attended = playersInSport.filter((p: any) => getAttendanceStatus(p.id).status === 'P');
-      return attended.length > 0 ? attended : playersInSport;
-    }
-    return playersInSport;
-  }, [playersInSport, filterMode, getAttendanceStatus]);
+    const query = playerSearchTerm.trim().toLowerCase();
+    // When a search query is active, search across all players in this sport so coach can find and mark any student
+    const base = (filterMode === 'attended_only' && !query)
+      ? (() => {
+          const attended = playersInSport.filter((p: any) => getAttendanceStatus(p.id).status === 'P');
+          return attended.length > 0 ? attended : playersInSport;
+        })()
+      : playersInSport;
+
+    if (!query) return base;
+
+    return base.filter((p: any) => {
+      const name = (p.name || '').toLowerCase();
+      const marathi = (p.nameMarathi || '').toLowerCase();
+      const roll = (p.serialNumber || '').toString().toLowerCase();
+      const std = (p.std || '').toString().toLowerCase();
+      const gr = (p.generalRegisterNumber || '').toString().toLowerCase();
+      return name.includes(query) || marathi.includes(query) || roll.includes(query) || std.includes(query) || gr.includes(query);
+    });
+  }, [playersInSport, filterMode, getAttendanceStatus, playerSearchTerm]);
 
   // Grouped squads
   const groupedSquads = useMemo(() => {
@@ -334,7 +353,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     }
   }, [displayPlayers, store.data.drillCompletions, drillKey, isYogaOrPt]);
 
-  const masteredThisDrill = useMemo(() => {
+  const allMasteredThisDrill = useMemo(() => {
     return playersInSport
       .filter((p: any) => {
         const lookupKey = p.id + "_" + drillKey;
@@ -342,6 +361,18 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       })
       .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
   }, [playersInSport, drillKey, store.data.drillCompletions]);
+
+  const masteredThisDrill = useMemo(() => {
+    if (!playerSearchTerm.trim()) return allMasteredThisDrill;
+    const query = playerSearchTerm.trim().toLowerCase();
+    return allMasteredThisDrill.filter((p: any) => {
+      const name = (p.name || '').toLowerCase();
+      const marathi = (p.nameMarathi || '').toLowerCase();
+      const roll = (p.serialNumber || '').toString().toLowerCase();
+      const std = (p.std || '').toString().toLowerCase();
+      return name.includes(query) || marathi.includes(query) || roll.includes(query) || std.includes(query);
+    });
+  }, [allMasteredThisDrill, playerSearchTerm]);
 
   const toggleStudentSelection = (playerId: string) => {
     setSelectedStudentIds(prev => 
@@ -369,8 +400,21 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
         gender: player?.gender || 'Male',
         std: player?.std || ''
       });
-      toast({ title: "Mastery Logged", description: `${player?.name || 'Player'} marked complete for ${activeDrill}.`, className: "bg-emerald-600 text-white" });
+
+      // 🟢 AUTOMATIC ATTENDANCE MARKING:
+      // When a player is chosen to complete a drill, automatically mark them as Present ('P') in attendance registry
+      const attKey = `${playerId}_${selectedDate}_${selectedSession}`;
+      if (store?.setAttendance) {
+        store.setAttendance({ [attKey]: 'P' });
+      }
+
+      toast({ 
+        title: "🎯 सराव पूर्ण व उपस्थिती नोंदवली!", 
+        description: `${player?.name || 'खेळाडू'} चा '${activeDrill}' सराव पूर्ण झाला आणि उपस्थिती पटामध्ये (Attendance Tab) 'उपस्थित (Present)' नोंदवले गेले.`, 
+        className: "bg-emerald-600 text-white font-bold" 
+      });
     } else {
+      store.setDrillCompletion(drillKey, playerId, false);
       toast({ title: "Keep Practicing", description: `${player?.name} needs more practice.`, variant: "default" });
     }
     setIsProcessing(null);
@@ -385,6 +429,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
     setIsBatchProcessing(true);
     let count = 0;
+    const attUpdates: Record<string, string> = {};
 
     selectedStudentIds.forEach(playerId => {
       const player = store.data.players.find((p: any) => p.id === playerId);
@@ -394,8 +439,16 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
         gender: player?.gender || 'Male',
         std: player?.std || ''
       });
+      if (mastered) {
+        attUpdates[`${playerId}_${selectedDate}_${selectedSession}`] = 'P';
+      }
       count++;
     });
+
+    // 🟢 AUTOMATIC ATTENDANCE MARKING FOR BATCH:
+    if (mastered && store?.setAttendance && Object.keys(attUpdates).length > 0) {
+      store.setAttendance(attUpdates);
+    }
 
     if (mastered) {
       const completedPlayers = (store.data.players || []).filter((p: any) => selectedStudentIds.includes(p.id));
@@ -415,9 +468,9 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     }
 
     toast({
-      title: mastered ? "⚡ All Attended Logged!" : "Mastery Reset",
+      title: mastered ? "⚡ सराव व उपस्थिती नोंदवली! (Batch Complete & Present)" : "Mastery Reset",
       description: mastered 
-        ? `Successfully marked ${count} students complete for "${activeDrill}" and updated Daily Report.`
+        ? `${count} खेळाडूंचा "${activeDrill}" सराव पूर्ण झाला आणि उपस्थिती पटामध्ये (Attendance Tab) आपोआप उपस्थिती नोंदवली गेली.`
         : `Reset drill status for ${count} students.`,
       className: mastered ? "bg-emerald-600 text-white font-bold" : undefined
     });
@@ -429,7 +482,12 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
     store.setDrillCompletion(drillKey, playerId, false);
   };
 
-  const availableDrills = SPORTS_DATA[activeSport]?.skills || [];
+  const availableDrills = useMemo(() => {
+    const list = SPORTS_DATA[activeSport]?.skills || [];
+    if (!drillSearchTerm.trim()) return list;
+    const q = drillSearchTerm.trim().toLowerCase();
+    return list.filter(d => d.toLowerCase().includes(q));
+  }, [activeSport, drillSearchTerm]);
 
   return (
     <div className="space-y-8 pb-24 animate-in fade-in duration-700">
@@ -514,11 +572,32 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
               <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> 
-              १. सराव प्रकार निवडा (Click Any Drill to Auto-Select Attended Athletes):
+              १. सराव प्रकार निवडा (Select Drill):
             </span>
-            <span className="text-[10px] font-bold text-muted-foreground">
-              {availableDrills.length} Drills Available
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="relative w-36 sm:w-48">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input 
+                  type="text"
+                  placeholder="ड्रिल शोधा... / Search drill"
+                  value={drillSearchTerm}
+                  onChange={(e) => setDrillSearchTerm(e.target.value)}
+                  className="h-8 pl-8 pr-7 text-[11px] font-bold rounded-lg border bg-white shadow-xs focus:border-primary"
+                />
+                {drillSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setDrillSearchTerm('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground shrink-0">
+                {availableDrills.length} Drills
+              </span>
+            </div>
           </div>
 
           <ScrollArea className="w-full whitespace-nowrap pb-2">
@@ -608,47 +687,126 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left 8 Cols: Athletes List */}
         <Card className="lg:col-span-8 border-2 rounded-[2.5rem] bg-white shadow-xl min-h-[600px] flex flex-col overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 md:p-8">
-            <div>
-              <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-3">
-                <ShieldCheck className="w-6 h-6 text-emerald-600" /> Ground Practice Pool
-              </CardTitle>
-              <p className="text-xs font-bold text-muted-foreground mt-0.5">
-                {filterMode === 'attended_only' ? 'फक्त उपस्थित खेळाडू दाखवले आहेत (Showing Attended Only)' : 'सर्व खेळाडू दाखवले आहेत (Showing All)'}
-              </p>
+          <CardHeader className="bg-muted/30 border-b flex flex-col gap-4 p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle className="text-xl font-black text-primary uppercase flex items-center gap-3">
+                  <ShieldCheck className="w-6 h-6 text-emerald-600" /> Ground Practice Pool
+                </CardTitle>
+                <p className="text-xs font-bold text-muted-foreground mt-0.5">
+                  {playerSearchTerm 
+                    ? `शोध: "${playerSearchTerm}" साठी खेळाडू`
+                    : filterMode === 'attended_only' 
+                      ? 'फक्त उपस्थित खेळाडू दाखवले आहेत (Showing Attended Only)' 
+                      : 'सर्व खेळाडू दाखवले आहेत (Showing All)'}
+                </p>
+              </div>
+
+              {/* Filter Toggle */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-white p-1 rounded-xl border-2 border-primary/10 shadow-sm text-xs font-bold">
+                  <button
+                    onClick={() => setFilterMode('attended_only')}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg font-black transition-all text-[10px] uppercase",
+                      filterMode === 'attended_only' 
+                        ? "bg-emerald-600 text-white shadow-sm" 
+                        : "text-muted-foreground hover:text-primary"
+                    )}
+                  >
+                    🟢 केवळ उपस्थित ({presentCount > 0 ? presentCount : displayPlayers.length})
+                  </button>
+                  <button
+                    onClick={() => setFilterMode('all')}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg font-black transition-all text-[10px] uppercase",
+                      filterMode === 'all' 
+                        ? "bg-primary text-white shadow-sm" 
+                        : "text-muted-foreground hover:text-primary"
+                    )}
+                  >
+                    👥 सर्व खेळाडू ({playersInSport.length})
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Filter Toggle */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center bg-white p-1 rounded-xl border-2 border-primary/10 shadow-sm text-xs font-bold">
-                <button
-                  onClick={() => setFilterMode('attended_only')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg font-black transition-all text-[10px] uppercase",
-                    filterMode === 'attended_only' 
-                      ? "bg-emerald-600 text-white shadow-sm" 
-                      : "text-muted-foreground hover:text-primary"
+            {/* 🔍 PLAYER SEARCH BAR */}
+            <div className="pt-2 border-t border-primary/10 space-y-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input 
+                    type="text"
+                    placeholder="खेळाडू शोधा (नाव, हजेरी क्र., इयत्ता)... / Search player to complete drill..."
+                    value={playerSearchTerm}
+                    onChange={(e) => setPlayerSearchTerm(e.target.value)}
+                    className="pl-10 pr-9 h-11 text-xs font-bold rounded-xl border-2 bg-white shadow-sm focus:border-primary"
+                  />
+                  {playerSearchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setPlayerSearchTerm('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"
+                      title="शोध साफ करा (Clear)"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   )}
-                >
-                  🟢 केवळ उपस्थित ({presentCount > 0 ? presentCount : displayPlayers.length})
-                </button>
-                <button
-                  onClick={() => setFilterMode('all')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg font-black transition-all text-[10px] uppercase",
-                    filterMode === 'all' 
-                      ? "bg-primary text-white shadow-sm" 
-                      : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  👥 सर्व खेळाडू ({playersInSport.length})
-                </button>
+                </div>
+
+                {playerSearchTerm && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge className="bg-amber-400 text-slate-950 font-black text-[10px] px-3 py-2 rounded-xl shadow-xs">
+                      🔍 {displayPlayers.length} खेळाडू सापडले
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPlayerSearchTerm('')}
+                      className="h-9 px-2 text-xs font-bold text-muted-foreground hover:text-foreground"
+                    >
+                      रीसेट
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Informative Auto-Attendance Indicator */}
+              <div className="bg-emerald-50/80 border border-emerald-200/80 p-2.5 rounded-xl text-xs flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-[11px] font-bold text-emerald-950 truncate">
+                    कोणत्याही खेळाडूसमोर <strong>&apos;सराव पूर्ण&apos;</strong> दाबा — सराव पूर्ण होऊन हजेरी पटामध्ये (Attendance Tab) आपोआप <strong>उपस्थित (Present)</strong> नोंदवला जाईल!
+                  </span>
+                </div>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-6 md:p-8 flex-1 bg-muted/5">
             <ScrollArea className="h-full max-h-[750px]">
+              {/* Empty Search State */}
+              {playerSearchTerm.trim() && Object.values(groupedSquads).every(squad => squad.length === 0) && (
+                <div className="py-16 text-center border-2 border-dashed border-primary/20 rounded-3xl bg-white p-6 shadow-sm my-4">
+                  <Search className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm font-black text-primary uppercase">
+                    &apos;{playerSearchTerm}&apos; नावाने प्रलंबित खेळाडू सापडला नाही
+                  </p>
+                  <p className="text-xs font-bold text-muted-foreground mt-1">
+                    खेळाडूने आधीच हा सराव पूर्ण केला आहे का? उजवीकडील &apos;Mastery Archive&apos; मध्ये तपासा.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPlayerSearchTerm('')}
+                    className="mt-4 font-bold rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" /> सर्व खेळाडू पहा (Clear Search)
+                  </Button>
+                </div>
+              )}
+
               <div className="space-y-10 pr-2">
                 {Object.entries(groupedSquads).map(([cat, squad]) => (
                   <div key={cat} className="space-y-4">
@@ -747,10 +905,11 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                               <Button 
                                 onClick={() => handleMasteryToggle(player.id, true)} 
                                 disabled={!!isProcessing} 
-                                className="h-8 w-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active-scale rounded-lg"
-                                title="सराव पूर्ण (Mark Mastered)"
+                                className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95 rounded-lg flex items-center gap-1 text-[11px] font-black"
+                                title="सराव पूर्ण करा आणि उपस्थिती पटामध्ये आपोआप 'Present' नोंदवा (Complete Drill & Mark Present in Attendance)"
                               >
                                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                <span className="hidden sm:inline">सराव पूर्ण</span>
                               </Button>
                             </div>
                           </div>
@@ -809,9 +968,14 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
                       <p className="font-black text-[10px] text-emerald-800 uppercase truncate max-w-[130px]">
                         {p.name}
                       </p>
-                      <span className="text-[8px] font-bold text-emerald-600/70 uppercase block">
-                        Logged Today • Std {p.std || '-'}
-                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[8px] font-bold text-emerald-600/70 uppercase">
+                          Logged Today • Std {p.std || '-'}
+                        </span>
+                        <span className="text-[7.5px] font-black uppercase px-1 py-0.2 rounded bg-emerald-200/80 text-emerald-900 border border-emerald-300">
+                          🟢 Present
+                        </span>
+                      </div>
                     </div>
                   </div>
 
