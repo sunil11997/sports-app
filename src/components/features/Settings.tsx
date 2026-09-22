@@ -50,11 +50,20 @@ import { SchoolRegistration } from './SchoolRegistration';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 
-export function Settings({ language, setLanguage }: { language: 'English' | 'Marathi', setLanguage: (l: 'English' | 'Marathi') => void }) {
+export function Settings({ 
+  language, 
+  setLanguage,
+  schoolData: passedSchoolData 
+}: { 
+  language: 'English' | 'Marathi'; 
+  setLanguage: (l: 'English' | 'Marathi') => void;
+  schoolData?: any;
+}) {
   const auth = useAuth();
   const { user } = useUser();
   const { toast } = useToast();
-  const schoolData = useSchoolData();
+  const internalSchoolData = useSchoolData(!passedSchoolData);
+  const schoolData = passedSchoolData || internalSchoolData;
   const { isOnline, isInstallable, isStandalone, installApp, triggerInstall, setIsInstallModalOpen } = usePWA();
   const restoreFileRef = useRef<HTMLInputElement>(null);
   

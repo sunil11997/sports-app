@@ -102,6 +102,7 @@ export function FaceAttendanceModal({
   const onMarkAttendanceRef = useRef(onMarkAttendance);
   onMarkAttendanceRef.current = onMarkAttendance;
   const lastQualityUpdateRef = useRef(0);
+  const lastInferenceTimeRef = useRef(0);
 
   useEffect(() => {
     setCurrentSession(activeSession);
@@ -383,6 +384,13 @@ export function FaceAttendanceModal({
         areFaceModelsLoaded() &&
         !isDetectingRef.current
       ) {
+        const now = Date.now();
+        // Throttle neural inference to at least 250ms gap (~4 FPS) to prevent device overheating and battery drain
+        if (now - lastInferenceTimeRef.current < 250) {
+          animId = requestAnimationFrame(runRecognitionLoop);
+          return;
+        }
+        lastInferenceTimeRef.current = now;
         isDetectingRef.current = true;
 
         try {

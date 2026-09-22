@@ -824,7 +824,7 @@ export default function WaghambaApp() {
             </TabsContent>
 
             <TabsContent value="profile" className="mt-0">
-               <Settings language={language} setLanguage={setLanguage} />
+               <Settings language={language} setLanguage={setLanguage} schoolData={schoolData} />
             </TabsContent>
 
           </Tabs>
