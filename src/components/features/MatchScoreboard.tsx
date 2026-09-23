@@ -182,11 +182,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const currentRaidingEmptyRaids = raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB;
   const isDoOrDieRaid = sport === 'Kabaddi' && currentRaidingEmptyRaids >= 2;
 
-  // Computed: Defending team and Super Tackle status (Kabaddi Super Tackle is active when defending team has <= 3 court players)
+  // Defending team & Super Tackle status (Manual trigger via button; automatic activation removed)
   const defendingTeam: 'A' | 'B' = raidingTeam === 'A' ? 'B' : 'A';
   const defendingDefenders = defendingTeam === 'A' ? defendersA : defendersB;
   const defendingTeamName = defendingTeam === 'A' ? teamACustomName : teamBCustomName;
-  const isSuperTackleOn = sport === 'Kabaddi' && defendingDefenders <= 3;
+  const [isSuperTackleOn, setIsSuperTackleOn] = useState<boolean>(false);
 
   // Match Result & Winner Celebration State
   const [isMatchResultOpen, setIsMatchResultOpen] = useState<boolean>(false);
@@ -292,9 +292,31 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   }, [isRaidRunning, raidSeconds, raidingTeam, emptyRaidsA, emptyRaidsB, teamACustomName, teamBCustomName, toast]);
 
   // -------------------------------------------------------------
-  // SUPER TACKLE, HALF TIME, MUSIC & MATCH CONCLUSION ACTIONS
+  // SUPER TACKLE, THIRD RAID, HALF TIME, MUSIC & MATCH CONCLUSION ACTIONS
   // -------------------------------------------------------------
+  const toggleSuperTackle = useCallback(() => {
+    setIsSuperTackleOn(prev => {
+      const next = !prev;
+      if (next) {
+        sfx.playWarning();
+        marathiAnnouncer.announceSuperTackle(defendingTeamName);
+        toast({
+          title: "🛡️ सुपर टॅकल ऑन! (SUPER TACKLE ON)",
+          description: `${defendingTeamName} साठी सुपर टॅकल ऑन केले आहे. यशस्वी पकडीस २ गुण!`,
+          className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
+        });
+      } else {
+        toast({
+          title: "🛡️ सुपर टॅकल बंद केले (Super Tackle OFF)",
+          description: "सुपर टॅकल सामान्य स्थितीत आणले आहे.",
+        });
+      }
+      return next;
+    });
+  }, [defendingTeamName, toast]);
+
   const announceSuperTackleNow = useCallback(() => {
+    setIsSuperTackleOn(true);
     sfx.playWarning();
     marathiAnnouncer.announceSuperTackle(defendingTeamName);
     toast({
@@ -303,6 +325,32 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
     });
   }, [defendingTeamName, toast]);
+
+  const toggleThirdRaid = useCallback((targetTeam?: 'A' | 'B') => {
+    const team = targetTeam || raidingTeam;
+    const teamName = team === 'A' ? teamACustomName : teamBCustomName;
+    const currentCount = team === 'A' ? emptyRaidsA : emptyRaidsB;
+    const isCurrentlyDOD = currentCount >= 2;
+
+    if (isCurrentlyDOD) {
+      if (team === 'A') setEmptyRaidsA(0);
+      else setEmptyRaidsB(0);
+      toast({
+        title: "डू ऑर डाय रेड रद्द (Reset Do-or-Die)",
+        description: `${teamName} ची ३ री रेड रद्द केली.`
+      });
+    } else {
+      if (team === 'A') setEmptyRaidsA(2);
+      else setEmptyRaidsB(2);
+      sfx.playDoOrDie();
+      marathiAnnouncer.announceDoOrDieRaid(teamName);
+      toast({
+        title: "⚡ ३ री रेड: डू ऑर डाय सक्रिय! (Do-or-Die Raid ON)",
+        description: `सावधान! ${teamName} ची ही ३ री रेड आहे. गुण मिळवणे अनिवार्य!`,
+        className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-2xl animate-bounce"
+      });
+    }
+  }, [raidingTeam, teamACustomName, teamBCustomName, emptyRaidsA, emptyRaidsB, toast]);
 
   const playVictoryMusic = useCallback(() => {
     if (soundMuted) return;
@@ -738,6 +786,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
 
       // Auto reset raid clock for next raid & switch raiding team
       resetRaidClock(nextRaider);
+      setIsSuperTackleOn(false);
 
       const nextRaiderName = nextRaider === 'A' ? teamACustomName : teamBCustomName;
       toast({
@@ -887,6 +936,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setEmptyRaidsB(0);
     setDefendersA(7);
     setDefendersB(7);
+    setIsSuperTackleOn(false);
     setTimeoutsA(2);
     setTimeoutsB(2);
     setMatchSecondsRemaining(matchDurationSeconds);
@@ -1061,17 +1111,41 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             📢 गुण बोला
           </Button>
 
-          {/* Quick Super Tackle Announcement Option */}
+          {/* Quick Super Tackle Button */}
           {sport === 'Kabaddi' && (
             <Button
               size="sm"
               variant="outline"
-              onClick={announceSuperTackleNow}
-              className="rounded-xl h-9 px-2.5 text-xs font-black text-purple-700 bg-purple-50 border-purple-300 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-700 shadow-sm flex items-center gap-1 active:scale-95"
-              title="मराठीत 'सुपर टॅकल ऑन' घोषणा करा (Announce Super Tackle ON in Marathi)"
+              onClick={toggleSuperTackle}
+              className={cn(
+                "rounded-xl h-9 px-2.5 text-xs font-black shadow-sm flex items-center gap-1 active:scale-95 transition-all",
+                isSuperTackleOn
+                  ? "bg-purple-700 hover:bg-purple-800 text-amber-300 border-amber-400 ring-2 ring-amber-400/50 animate-pulse"
+                  : "text-purple-700 bg-purple-50 border-purple-300 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-700"
+              )}
+              title="सुपर टॅकल ऑन करा आणि मराठीत उद्घोषणा ऐका (Toggle Super Tackle & Announce)"
             >
-              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              ⚡ सुपर टॅकल ऑन
+              <Zap className={cn("w-3.5 h-3.5", isSuperTackleOn ? "text-amber-300 fill-amber-300" : "text-amber-500 fill-amber-500")} />
+              {isSuperTackleOn ? "🛡️ सुपर टॅकल ऑन आहे" : "⚡ सुपर टॅकल ऑन"}
+            </Button>
+          )}
+
+          {/* Quick 3rd Raid (Do-or-Die) Button */}
+          {sport === 'Kabaddi' && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => toggleThirdRaid(raidingTeam)}
+              className={cn(
+                "rounded-xl h-9 px-2.5 text-xs font-black shadow-sm flex items-center gap-1 active:scale-95 transition-all",
+                isDoOrDieRaid
+                  ? "bg-red-600 hover:bg-red-700 text-white border-amber-300 ring-2 ring-amber-400/50 animate-pulse"
+                  : "text-red-700 bg-red-50 border-red-300 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:border-red-700"
+              )}
+              title="३ री रेड (डू ऑर डाय) सक्रिय करा आणि मराठीत उद्घोषणा ऐका (Toggle 3rd Raid & Announce)"
+            >
+              <Flame className={cn("w-3.5 h-3.5", isDoOrDieRaid ? "text-amber-300 fill-amber-300" : "text-red-500 fill-red-500")} />
+              {isDoOrDieRaid ? "🔥 ३ री रेड चालू" : "⚡ ३ री रेड (Do-or-Die)"}
             </Button>
           )}
 
@@ -1216,17 +1290,26 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
               <div className="grid grid-cols-2 gap-2 mt-4 text-center">
                 <div className={cn(
                   "p-2.5 rounded-2xl border text-xs flex flex-col justify-between transition-all",
-                  defendersA <= 3 
+                  (isSuperTackleOn && defendingTeam === 'A')
                     ? "bg-purple-50 border-purple-400 dark:bg-purple-950/40 dark:border-purple-800 ring-2 ring-purple-500/30 shadow-sm" 
                     : "bg-muted/40 border-muted"
                 )}>
                   <div className="flex items-center justify-between">
                     <p className="text-[9px] font-black text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
-                    {defendersA <= 3 && (
-                      <Badge className="bg-purple-700 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
-                        ⚡ सुपर टॅकल
+                    {isSuperTackleOn && defendingTeam === 'A' ? (
+                      <Badge className="bg-purple-700 text-amber-300 font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
+                        ⚡ सुपर टॅकल ऑन
                       </Badge>
-                    )}
+                    ) : defendingTeam === 'A' ? (
+                      <button
+                        type="button"
+                        onClick={toggleSuperTackle}
+                        className="text-[8px] font-black text-purple-700 dark:text-purple-400 hover:underline uppercase"
+                        title="सुपर टॅकल ऑन करा"
+                      >
+                        + सुपर टॅकल
+                      </button>
+                    ) : null}
                   </div>
                   <div className="flex items-center justify-center gap-2 my-1">
                     <button
@@ -1239,7 +1322,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                     </button>
                     <p className={cn(
                       "text-xl font-black font-mono select-none",
-                      defendersA <= 3 ? "text-purple-700 dark:text-purple-300" : "text-primary"
+                      (isSuperTackleOn && defendingTeam === 'A') ? "text-purple-700 dark:text-purple-300" : "text-primary"
                     )}>
                       {defendersA} <span className="text-xs font-normal text-muted-foreground">/ 7</span>
                     </p>
@@ -1252,9 +1335,27 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       +
                     </button>
                   </div>
-                  <p className="text-[8px] text-center text-muted-foreground font-bold">
-                    {defendersA <= 3 ? "⚠️ सुपर टॅकल ऑन (२ गुण)" : "सामान्य डिफेन्स"}
-                  </p>
+                  <div className="text-[8px] text-center font-bold">
+                    {isSuperTackleOn && defendingTeam === 'A' ? (
+                      <button
+                        type="button"
+                        onClick={toggleSuperTackle}
+                        className="text-purple-700 dark:text-purple-300 hover:underline"
+                        title="सुपर टॅकल बंद करा"
+                      >
+                        🛡️ सुपर टॅकल ऑन (२ गुण)
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={toggleSuperTackle}
+                        className="text-muted-foreground hover:text-purple-700 transition-colors"
+                        title="सुपर टॅकल ऑन करा आणि आवाज ऐका"
+                      >
+                        सामान्य डिफेन्स &bull; <span className="text-purple-600 font-extrabold underline">सुपर टॅकल ऑन</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className={cn(
                   "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
@@ -1302,7 +1403,15 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       onClick={() => {
                         const next = emptyRaidsA === 2 ? 0 : 2;
                         setEmptyRaidsA(next);
-                        if (next === 2) sfx.playDoOrDie();
+                        if (next === 2) {
+                          sfx.playDoOrDie();
+                          marathiAnnouncer.announceDoOrDieRaid(teamACustomName);
+                          toast({
+                            title: "⚡ ३ री रेड: डू ऑर डाय सक्रिय!",
+                            description: `${teamACustomName} ची ३ री रेड! गुण मिळवणे अनिवार्य!`,
+                            className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-xl"
+                          });
+                        }
                       }}
                       className={cn(
                         "px-2 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all active-scale",
@@ -1310,7 +1419,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                           ? "bg-red-600 text-white animate-pulse shadow-md ring-2 ring-red-400 font-extrabold" 
                           : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
                       )}
-                      title="३ री रेड: डू ऑर डाय (Click to trigger)"
+                      title="३ री रेड: डू ऑर डाय (Click to trigger & announce in Marathi)"
                     >
                       ⚡ ३: DO-OR-DIE
                     </button>
@@ -1689,7 +1798,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                         🛡️ सुपर टॅकल ऑन ({defendingTeamName})
                       </p>
                       <p className="text-[9px] font-bold text-white/90">
-                        डिफेन्समध्ये {defendingDefenders} खेळाडू शिल्लक &bull; यशस्वी पकडीस +२ गुण!
+                        डिफेन्समध्ये {defendingDefenders} खेळाडू &bull; यशस्वी पकडीस +२ गुण!
                       </p>
                     </div>
                   </div>
@@ -1700,13 +1809,14 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale flex items-center gap-1"
                       title="मराठीत सुपर टॅकल उद्घोषणा करा (Speak Super Tackle in Marathi)"
                     >
-                      <Mic className="w-3 h-3" /> सुपर टॅकल बोला
+                      <Mic className="w-3 h-3" /> पुन्हा बोला
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => {
                         addScore(defendingTeam, 2, 'Super Tackle (+2)');
                         sfx.playWhistle();
+                        setIsSuperTackleOn(false);
                         toast({
                           title: "🛡️ सुपर टॅकल यशस्वी! (+२ गुण)",
                           description: `${defendingTeamName} ने यशस्वी सुपर टॅकल करून २ गुण मिळवले!`,
@@ -1717,6 +1827,15 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       title="सुपर टॅकल यशस्वी: डिफेन्सला +२ गुण द्या"
                     >
                       +२ गुण
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setIsSuperTackleOn(false)}
+                      className="h-7 px-1.5 text-[10px] text-white/80 hover:text-white hover:bg-purple-800"
+                      title="सुपर टॅकल बंद करा"
+                    >
+                      ✕
                     </Button>
                   </div>
                 </div>
@@ -1729,12 +1848,26 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 )}>
                   <Flame className="w-3.5 h-3.5" /> {isDoOrDieRaid ? "⚡ ३ री रेड: डू ऑर डाय" : "३० सेकंद प्रो रेडर घड्याळ"}
                 </span>
-                <span className={cn(
-                  "text-[10px] font-bold",
-                  isDoOrDieRaid ? "text-red-600 font-black" : "text-muted-foreground"
-                )}>
-                  {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड {isDoOrDieRaid && "(डू ऑर डाय)"}
-                </span>
+                <div className="flex items-center gap-2">
+                  {!isSuperTackleOn && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={toggleSuperTackle}
+                      className="h-6 px-2 text-[9px] font-black rounded-lg text-purple-700 bg-purple-50 hover:bg-purple-100 border-purple-300 shadow-xs flex items-center gap-1"
+                      title="सुपर टॅकल ऑन करा आणि आवाज ऐका"
+                    >
+                      <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                      ⚡ सुपर टॅकल ऑन
+                    </Button>
+                  )}
+                  <span className={cn(
+                    "text-[10px] font-bold",
+                    isDoOrDieRaid ? "text-red-600 font-black" : "text-muted-foreground"
+                  )}>
+                    {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड {isDoOrDieRaid && "(डू ऑर डाय)"}
+                  </span>
+                </div>
               </div>
 
               {/* Interactive Raid Turn Selector */}
@@ -1869,28 +2002,26 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    if (isDoOrDieRaid) {
-                      if (raidingTeam === 'A') setEmptyRaidsA(0);
-                      else setEmptyRaidsB(0);
-                      toast({ title: "डू ऑर डाय रेड रद्द (Reset Do-or-Die)" });
-                    } else {
-                      if (raidingTeam === 'A') setEmptyRaidsA(2);
-                      else setEmptyRaidsB(2);
-                      sfx.playDoOrDie();
-                      toast({
-                        title: "⚡ डू ऑर डाय रेड सक्रिय! (Do-or-Die Active)",
-                        description: `${raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची ३ री रेड आता डू ऑर डाय आहे!`,
-                        className: "bg-red-600 text-white font-bold"
-                      });
-                    }
-                  }}
+                  onClick={() => toggleThirdRaid(raidingTeam)}
                   className={cn(
                     "h-7 text-[10px] font-black rounded-xl border transition-all",
                     isDoOrDieRaid ? "bg-red-600 text-white hover:bg-red-700 border-red-600" : "text-amber-700 border-amber-400 hover:bg-amber-50"
                   )}
+                  title="३ री रेड (डू-ऑर-डाय) सुरू / बंद करा आणि मराठीत उद्घोषणा ऐका"
                 >
-                  {isDoOrDieRaid ? "✕ Do-or-Die बंद" : "⚡ Do-or-Die सेट करा"}
+                  {isDoOrDieRaid ? "✕ Do-or-Die बंद" : "⚡ ३ री रेड (Do-or-Die) बोला"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={toggleSuperTackle}
+                  className={cn(
+                    "h-7 text-[10px] font-black rounded-xl border transition-all",
+                    isSuperTackleOn ? "bg-purple-700 text-amber-300 hover:bg-purple-800 border-amber-400" : "text-purple-700 border-purple-300 hover:bg-purple-50"
+                  )}
+                  title="सुपर टॅकल ऑन / बंद करा आणि मराठीत उद्घोषणा ऐका"
+                >
+                  {isSuperTackleOn ? "🛡️ सुपर टॅकल ऑन (बंद करा)" : "⚡ सुपर टॅकल ऑन करा"}
                 </Button>
               </div>
             </Card>
@@ -2033,17 +2164,26 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
               <div className="grid grid-cols-2 gap-2 mt-4 text-center">
                 <div className={cn(
                   "p-2.5 rounded-2xl border text-xs flex flex-col justify-between transition-all",
-                  defendersB <= 3 
+                  (isSuperTackleOn && defendingTeam === 'B')
                     ? "bg-purple-50 border-purple-400 dark:bg-purple-950/40 dark:border-purple-800 ring-2 ring-purple-500/30 shadow-sm" 
                     : "bg-muted/40 border-muted"
                 )}>
                   <div className="flex items-center justify-between">
                     <p className="text-[9px] font-black text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
-                    {defendersB <= 3 && (
-                      <Badge className="bg-purple-700 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
-                        ⚡ सुपर टॅकल
+                    {isSuperTackleOn && defendingTeam === 'B' ? (
+                      <Badge className="bg-purple-700 text-amber-300 font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
+                        ⚡ सुपर टॅकल ऑन
                       </Badge>
-                    )}
+                    ) : defendingTeam === 'B' ? (
+                      <button
+                        type="button"
+                        onClick={toggleSuperTackle}
+                        className="text-[8px] font-black text-purple-700 dark:text-purple-400 hover:underline uppercase"
+                        title="सुपर टॅकल ऑन करा"
+                      >
+                        + सुपर टॅकल
+                      </button>
+                    ) : null}
                   </div>
                   <div className="flex items-center justify-center gap-2 my-1">
                     <button
@@ -2056,7 +2196,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                     </button>
                     <p className={cn(
                       "text-xl font-black font-mono select-none",
-                      defendersB <= 3 ? "text-purple-700 dark:text-purple-300" : "text-primary"
+                      (isSuperTackleOn && defendingTeam === 'B') ? "text-purple-700 dark:text-purple-300" : "text-primary"
                     )}>
                       {defendersB} <span className="text-xs font-normal text-muted-foreground">/ 7</span>
                     </p>
@@ -2069,9 +2209,27 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       +
                     </button>
                   </div>
-                  <p className="text-[8px] text-center text-muted-foreground font-bold">
-                    {defendersB <= 3 ? "⚠️ सुपर टॅकल ऑन (२ गुण)" : "सामान्य डिफेन्स"}
-                  </p>
+                  <div className="text-[8px] text-center font-bold">
+                    {isSuperTackleOn && defendingTeam === 'B' ? (
+                      <button
+                        type="button"
+                        onClick={toggleSuperTackle}
+                        className="text-purple-700 dark:text-purple-300 hover:underline"
+                        title="सुपर टॅकल बंद करा"
+                      >
+                        🛡️ सुपर टॅकल ऑन (२ गुण)
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={toggleSuperTackle}
+                        className="text-muted-foreground hover:text-purple-700 transition-colors"
+                        title="सुपर टॅकल ऑन करा आणि आवाज ऐका"
+                      >
+                        सामान्य डिफेन्स &bull; <span className="text-purple-600 font-extrabold underline">सुपर टॅकल ऑन</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className={cn(
                   "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
@@ -2119,7 +2277,15 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                       onClick={() => {
                         const next = emptyRaidsB === 2 ? 0 : 2;
                         setEmptyRaidsB(next);
-                        if (next === 2) sfx.playDoOrDie();
+                        if (next === 2) {
+                          sfx.playDoOrDie();
+                          marathiAnnouncer.announceDoOrDieRaid(teamBCustomName);
+                          toast({
+                            title: "⚡ ३ री रेड: डू ऑर डाय सक्रिय!",
+                            description: `${teamBCustomName} ची ३ री रेड! गुण मिळवणे अनिवार्य!`,
+                            className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-xl"
+                          });
+                        }
                       }}
                       className={cn(
                         "px-2 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all active-scale",
@@ -2127,7 +2293,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                           ? "bg-red-600 text-white animate-pulse shadow-md ring-2 ring-red-400 font-extrabold" 
                           : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
                       )}
-                      title="३ री रेड: डू ऑर डाय (Click to trigger)"
+                      title="३ री रेड: डू ऑर डाय (Click to trigger & announce in Marathi)"
                     >
                       ⚡ ३: DO-OR-DIE
                     </button>
