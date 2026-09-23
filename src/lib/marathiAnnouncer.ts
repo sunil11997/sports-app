@@ -35,7 +35,7 @@ export function getMarathiNumberWord(num: number): string {
 class MarathiVoiceAnnouncer {
   public enabled: boolean = true;
 
-  public speak(text: string, priority = false, onEnd?: () => void) {
+  public speak(text: string, priority = false, onEnd?: () => void, lang?: string) {
     if (!this.enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) {
       if (onEnd) onEnd();
       return;
@@ -51,15 +51,23 @@ class MarathiVoiceAnnouncer {
       utterance.pitch = 1.05;
 
       const voices = window.speechSynthesis.getVoices();
-      const targetVoice = voices.find(v => v.lang.startsWith('mr')) 
-        || voices.find(v => v.lang.startsWith('hi')) 
-        || voices.find(v => v.lang.includes('IN'));
+      let targetVoice = null;
+      if (lang) {
+        targetVoice = voices.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()))
+          || voices.find(v => v.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase()));
+      }
+      if (!targetVoice) {
+        targetVoice = voices.find(v => v.lang.startsWith('mr')) 
+          || voices.find(v => v.lang.startsWith('hi')) 
+          || voices.find(v => v.lang.includes('IN'))
+          || voices.find(v => v.lang.startsWith('en'));
+      }
 
       if (targetVoice) {
         utterance.voice = targetVoice;
         utterance.lang = targetVoice.lang;
       } else {
-        utterance.lang = 'mr-IN';
+        utterance.lang = lang || 'mr-IN';
       }
 
       if (onEnd) {
@@ -87,11 +95,11 @@ class MarathiVoiceAnnouncer {
   }
 
   /**
-   * ⚡ Announce 3rd Raid (Do-or-Die Raid) in Marathi
+   * ⚡ Announce 3rd Raid (Do-or-Die Raid)
+   * Only says "Third raid, do or die raid" (no team name)
    */
-  announceDoOrDieRaid(teamName: string) {
-    const text = `सावधान! ${teamName} ची ही तिसरी रेड आहे! डू ऑर डाय रेड! गुण मिळवणे अनिवार्य!`;
-    this.speak(text, true);
+  announceDoOrDieRaid(_teamName?: string) {
+    this.speak("Third raid, do or die raid", true, undefined, 'en-IN');
   }
 
   /**
@@ -152,12 +160,11 @@ class MarathiVoiceAnnouncer {
   }
 
   /**
-   * 🛡️ Announce Super Tackle ON (सुपर टॅकल ऑन) in Marathi
+   * 🛡️ Announce Super Tackle ON
+   * Only says "Super tackle is on" (no team name)
    */
-  announceSuperTackle(defendingTeamName?: string) {
-    const teamClause = defendingTeamName ? `${defendingTeamName} साठी ` : '';
-    const text = `सावधान! ${teamClause}सुपर टॅकल ऑन आहे! यशस्वी पकड झाल्यास मिळतील दोन गुण! सुपर टॅकल ऑन!`;
-    this.speak(text, true);
+  announceSuperTackle(_defendingTeamName?: string) {
+    this.speak("Super tackle is on", true, undefined, 'en-IN');
   }
 
   /**

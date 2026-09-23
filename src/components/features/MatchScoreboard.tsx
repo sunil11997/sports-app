@@ -298,37 +298,34 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setIsSuperTackleOn(prev => {
       const next = !prev;
       if (next) {
-        sfx.playWarning();
-        marathiAnnouncer.announceSuperTackle(defendingTeamName);
+        marathiAnnouncer.announceSuperTackle();
         toast({
-          title: "🛡️ सुपर टॅकल ऑन! (SUPER TACKLE ON)",
-          description: `${defendingTeamName} साठी सुपर टॅकल ऑन केले आहे. यशस्वी पकडीस २ गुण!`,
+          title: "🛡️ Super Tackle is ON!",
+          description: "Super tackle is on! यशस्वी पकडीस २ गुण.",
           className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
         });
       } else {
         toast({
-          title: "🛡️ सुपर टॅकल बंद केले (Super Tackle OFF)",
+          title: "🛡️ Super Tackle OFF",
           description: "सुपर टॅकल सामान्य स्थितीत आणले आहे.",
         });
       }
       return next;
     });
-  }, [defendingTeamName, toast]);
+  }, [toast]);
 
   const announceSuperTackleNow = useCallback(() => {
     setIsSuperTackleOn(true);
-    sfx.playWarning();
-    marathiAnnouncer.announceSuperTackle(defendingTeamName);
+    marathiAnnouncer.announceSuperTackle();
     toast({
-      title: "🛡️ सुपर टॅकल ऑन! (SUPER TACKLE ON)",
-      description: `${defendingTeamName} साठी सुपर टॅकल ऑन आहे. यशस्वी पकड केल्यास २ गुण मिळतील!`,
+      title: "🛡️ Super Tackle is ON!",
+      description: "Super tackle is on!",
       className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
     });
-  }, [defendingTeamName, toast]);
+  }, [toast]);
 
   const toggleThirdRaid = useCallback((targetTeam?: 'A' | 'B') => {
     const team = targetTeam || raidingTeam;
-    const teamName = team === 'A' ? teamACustomName : teamBCustomName;
     const currentCount = team === 'A' ? emptyRaidsA : emptyRaidsB;
     const isCurrentlyDOD = currentCount >= 2;
 
@@ -336,21 +333,20 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       if (team === 'A') setEmptyRaidsA(0);
       else setEmptyRaidsB(0);
       toast({
-        title: "डू ऑर डाय रेड रद्द (Reset Do-or-Die)",
-        description: `${teamName} ची ३ री रेड रद्द केली.`
+        title: "Do-or-Die Raid Reset",
+        description: "३ री रेड रद्द केली."
       });
     } else {
       if (team === 'A') setEmptyRaidsA(2);
       else setEmptyRaidsB(2);
-      sfx.playDoOrDie();
-      marathiAnnouncer.announceDoOrDieRaid(teamName);
+      marathiAnnouncer.announceDoOrDieRaid();
       toast({
-        title: "⚡ ३ री रेड: डू ऑर डाय सक्रिय! (Do-or-Die Raid ON)",
-        description: `सावधान! ${teamName} ची ही ३ री रेड आहे. गुण मिळवणे अनिवार्य!`,
+        title: "⚡ Third Raid: Do or Die Raid!",
+        description: "Third raid, do or die raid!",
         className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-2xl animate-bounce"
       });
     }
-  }, [raidingTeam, teamACustomName, teamBCustomName, emptyRaidsA, emptyRaidsB, toast]);
+  }, [raidingTeam, emptyRaidsA, emptyRaidsB, toast]);
 
   const playVictoryMusic = useCallback(() => {
     if (soundMuted) return;
@@ -682,18 +678,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setIsRaidRunning(true);
 
     if (sport === 'Kabaddi' && (raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB) >= 2) {
-      sfx.playWhistle();
-      sfx.playDoOrDie();
-      const tName = raidingTeam === 'A' ? teamACustomName : teamBCustomName;
-
-      // Announce in Marathi that it's the 3rd raid (डू ऑर डाय रेड)
-      setTimeout(() => {
-        marathiAnnouncer.announceDoOrDieRaid(tName);
-      }, 500);
-
+      marathiAnnouncer.announceDoOrDieRaid();
       toast({
-        title: "⚡ डू ऑर डाय रेड सुरू! (DO OR DIE RAID) ⚡",
-        description: `${tName} ची ३ री रेड! गुण मिळवणे अनिवार्य आहे, अन्यथा रेडर बाद!`,
+        title: "⚡ Third Raid: Do or Die Raid! ⚡",
+        description: "Third raid, do or die raid!",
         className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-2xl animate-bounce"
       });
     }
@@ -1404,11 +1392,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                         const next = emptyRaidsA === 2 ? 0 : 2;
                         setEmptyRaidsA(next);
                         if (next === 2) {
-                          sfx.playDoOrDie();
-                          marathiAnnouncer.announceDoOrDieRaid(teamACustomName);
+                          marathiAnnouncer.announceDoOrDieRaid();
                           toast({
-                            title: "⚡ ३ री रेड: डू ऑर डाय सक्रिय!",
-                            description: `${teamACustomName} ची ३ री रेड! गुण मिळवणे अनिवार्य!`,
+                            title: "⚡ Third Raid: Do or Die Raid!",
+                            description: "Third raid, do or die raid!",
                             className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-xl"
                           });
                         }
@@ -1768,11 +1755,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                     <Button
                       size="sm"
                       onClick={() => {
-                        sfx.playWhistle();
-                        marathiAnnouncer.announceDoOrDieRaid(raidingTeam === 'A' ? teamACustomName : teamBCustomName);
+                        marathiAnnouncer.announceDoOrDieRaid();
                       }}
                       className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale flex items-center gap-1"
-                      title="मराठीत ३ री रेड बोला (Speak Marathi Announcement)"
+                      title="Speak 'Third raid, do or die raid'"
                     >
                       <Mic className="w-3 h-3" /> ३ री रेड बोला
                     </Button>
@@ -2278,11 +2264,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                         const next = emptyRaidsB === 2 ? 0 : 2;
                         setEmptyRaidsB(next);
                         if (next === 2) {
-                          sfx.playDoOrDie();
-                          marathiAnnouncer.announceDoOrDieRaid(teamBCustomName);
+                          marathiAnnouncer.announceDoOrDieRaid();
                           toast({
-                            title: "⚡ ३ री रेड: डू ऑर डाय सक्रिय!",
-                            description: `${teamBCustomName} ची ३ री रेड! गुण मिळवणे अनिवार्य!`,
+                            title: "⚡ Third Raid: Do or Die Raid!",
+                            description: "Third raid, do or die raid!",
                             className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-xl"
                           });
                         }
