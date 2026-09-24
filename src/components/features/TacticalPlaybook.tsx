@@ -1911,7 +1911,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
             </p>
           </DialogHeader>
 
-          <Tabs value={assignModalTab} onValueChange={(val: any) => setAssignModalTab(val)} className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={assignModalTab} onValueChange={(val: any) => setAssignModalTab(val)} className="flex-1 min-h-0 flex flex-col">
             <TabsList className="grid grid-cols-2 rounded-xl bg-muted/60 p-1 my-2 shrink-0">
               <TabsTrigger value="roster" className="rounded-lg font-black text-xs gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Users className="w-3.5 h-3.5" /> रोस्टर खेळाडू
@@ -1922,7 +1922,7 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
             </TabsList>
 
             {/* TAB 1: ROSTER PLAYERS */}
-            <TabsContent value="roster" className="flex-1 flex flex-col overflow-hidden mt-0 space-y-3">
+            <TabsContent value="roster" className="flex-1 min-h-0 flex flex-col mt-0 space-y-3">
               <div className="relative shrink-0">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
                 <Input
@@ -1933,8 +1933,12 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                 />
               </div>
 
-              <ScrollArea className="flex-1 pr-2 max-h-[300px]">
-                <div className="space-y-2">
+              {/* NATIVE SMOOTH SCROLL CONTAINER (Touch & Wheel Guaranteed) */}
+              <div 
+                className="flex-1 min-h-[220px] max-h-[50vh] overflow-y-auto overscroll-contain pr-2 space-y-2 scrollbar-thin touch-pan-y"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                <div className="space-y-2 pb-2">
                   {sportPlayers
                     .filter((p: any) => {
                       if (!assignSearch.trim()) return true;
@@ -1992,11 +1996,15 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
                       );
                     })}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* TAB 2: CREATE NEW TACTICAL PLAYER */}
-            <TabsContent value="new" className="flex-1 overflow-y-auto mt-0 space-y-3 pr-1">
+            <TabsContent 
+              value="new" 
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-0 space-y-3 pr-2 scrollbar-thin touch-pan-y max-h-[55vh]"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase text-primary">इंग्रजी नाव (English Name) *</label>
                 <Input

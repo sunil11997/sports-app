@@ -1696,30 +1696,35 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                   </span>
                 </div>
 
-                {/* Starters Grid: 7 Positions for Kabaddi */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 my-4">
-                  {squadConfig.positions.map((posDef, i) => {
-                    const player = starters[i];
-                    if (!player) {
-                      return (
-                        <div 
-                          key={posDef.id} 
-                          onClick={() => handleOpenAddEditModal(i, posDef)}
-                          className="cursor-pointer border-2 border-dashed border-amber-400/50 hover:border-amber-300 hover:bg-slate-900/80 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-h-[175px] bg-slate-900/40 text-slate-300 transition-all hover:scale-[1.02] group"
-                        >
-                          <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center mb-2 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
-                            <Plus className="w-4 h-4" />
+                {/* Starters Grid: 7 Positions for Kabaddi with Horizontal Scroll Support */}
+                <div className="text-[10px] text-amber-200/80 font-bold lg:hidden flex items-center justify-end gap-1 mb-1">
+                  <span>↔️ सर्व ७ पोझिशन्स पाहण्यासाठी डावीकडे/उजवीकडे स्क्रोल करा</span>
+                </div>
+                <div className="w-full overflow-x-auto pb-4 pt-1 -mx-1 px-1 scrollbar-thin touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <div className="min-w-[850px] grid grid-cols-7 gap-3 my-2">
+                    {squadConfig.positions.map((posDef, i) => {
+                      const player = starters[i];
+                      if (!player) {
+                        return (
+                          <div 
+                            key={posDef.id} 
+                            onClick={() => handleOpenAddEditModal(i, posDef)}
+                            className="cursor-pointer border-2 border-dashed border-amber-400/50 hover:border-amber-300 hover:bg-slate-900/80 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-h-[175px] bg-slate-900/40 text-slate-300 transition-all hover:scale-[1.02] group"
+                          >
+                            <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center mb-2 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
+                              <Plus className="w-4 h-4" />
+                            </div>
+                            <div className="text-xs font-black text-amber-300 mb-1">{posDef.nameMr}</div>
+                            <div className="text-[10px] text-slate-400 font-bold">खेळाडू रिक्त</div>
+                            <Button size="sm" variant="outline" className="mt-2 text-[10px] font-black h-7 bg-amber-400 text-slate-950 border-none hover:bg-amber-300 rounded-lg shadow">
+                              + खेळाडू जोडा
+                            </Button>
                           </div>
-                          <div className="text-xs font-black text-amber-300 mb-1">{posDef.nameMr}</div>
-                          <div className="text-[10px] text-slate-400 font-bold">खेळाडू रिक्त</div>
-                          <Button size="sm" variant="outline" className="mt-2 text-[10px] font-black h-7 bg-amber-400 text-slate-950 border-none hover:bg-amber-300 rounded-lg shadow">
-                            + खेळाडू जोडा
-                          </Button>
-                        </div>
-                      );
-                    }
-                    return renderPlayerCard(player, i, posDef, false);
-                  })}
+                        );
+                      }
+                      return renderPlayerCard(player, i, posDef, false);
+                    })}
+                  </div>
                 </div>
 
                 <div className="mt-6 pt-3 border-t-2 border-white/30 flex items-center justify-between text-[10px] text-amber-200/60 font-bold uppercase">
@@ -1825,10 +1830,12 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                   सध्या राखीव बाकावर खेळाडू नाहीत.
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {reserves.map((player: any, i: number) => {
-                    return renderPlayerCard(player, starters.length + i, undefined, true);
-                  })}
+                <div className="w-full overflow-x-auto pb-3 pt-1 -mx-1 px-1 scrollbar-thin touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <div className="min-w-[650px] grid grid-cols-5 gap-3">
+                    {reserves.map((player: any, i: number) => {
+                      return renderPlayerCard(player, starters.length + i, undefined, true);
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -2245,7 +2252,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             </div>
           )}
 
-          <Tabs value={activeModalTab} onValueChange={(val: any) => setActiveModalTab(val)} className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={activeModalTab} onValueChange={(val: any) => setActiveModalTab(val)} className="flex-1 min-h-0 flex flex-col">
             <TabsList className="grid grid-cols-2 rounded-xl bg-muted/60 p-1 mb-3 shrink-0">
               <TabsTrigger value="roster" className="rounded-lg font-black text-xs gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Users className="w-3.5 h-3.5" /> शाळेच्या रोस्टरमधून निवडा
@@ -2256,7 +2263,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
             </TabsList>
 
             {/* TAB 1: SELECT EXISTING PLAYER */}
-            <TabsContent value="roster" className="flex-1 flex flex-col overflow-hidden mt-0 space-y-3">
+            <TabsContent value="roster" className="flex-1 min-h-0 flex flex-col mt-0 space-y-3">
               <div className="relative shrink-0">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
                 <Input
@@ -2267,8 +2274,12 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                 />
               </div>
 
-              <ScrollArea className="flex-1 pr-3 max-h-[300px]">
-                <div className="space-y-2">
+              {/* NATIVE SMOOTH SCROLL CONTAINER (Touch & Wheel Guaranteed) */}
+              <div 
+                className="flex-1 min-h-[220px] max-h-[50vh] overflow-y-auto overscroll-contain pr-2 space-y-2 scrollbar-thin touch-pan-y"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                <div className="space-y-2 pb-2">
                   {allPlayers
                     .filter((p: any) => {
                       if (!modalSearch.trim()) return true;
@@ -2325,11 +2336,15 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                       );
                     })}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* TAB 2: CREATE NEW PLAYER */}
-            <TabsContent value="new" className="flex-1 overflow-y-auto mt-0 space-y-3 pr-1">
+            <TabsContent 
+              value="new" 
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-0 space-y-3 pr-2 scrollbar-thin touch-pan-y max-h-[55vh]"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-black uppercase text-primary">इंग्रजी नाव (English Name) *</label>
