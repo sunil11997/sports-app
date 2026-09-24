@@ -190,13 +190,10 @@ const translations = {
 };
 
 const LOGO_PATH = "/icon-512.png";
-const SPLASH_LOTTIE_URL = "https://lottie.host/33acb9fa-1151-11ee-9728-ff4c18263730/8X5iIe9y9f.json";
 
 export default function WaghambaApp() {
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const [splashData, setSplashData] = useState<any>(null);
   const [stage, setStage] = useState<'landing' | 'selector' | 'hub'>('landing');
   const [selectedSection, setSelectedSection] = useState<'sports' | 'general' | null>(null);
   const [activeTab, setActiveTab] = useState("home");
@@ -206,7 +203,7 @@ export default function WaghambaApp() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [otpUser, setOtpUser] = useState<string | null>(null);
   
-  const schoolData = useSchoolData(stage === 'hub' || stage === 'selector' || showSplash);
+  const schoolData = useSchoolData(true);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const { isInstallable, isStandalone, installApp, setIsInstallModalOpen, triggerInstall } = usePWA();
@@ -273,14 +270,6 @@ export default function WaghambaApp() {
         });
       }
     }
-
-    fetch(SPLASH_LOTTIE_URL)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => setSplashData(data))
-      .catch(() => setSplashData(null));
-
-    const timer = setTimeout(() => setShowSplash(false), 3500);
-    return () => clearTimeout(timer);
   }, []);
 
   // Request Notification Permission from User (Touch triggered for mobile browser compliance)
@@ -519,23 +508,6 @@ export default function WaghambaApp() {
   const activePasscode = schoolData.data.schoolProfile?.passcode || (typeof window !== 'undefined' ? localStorage.getItem('wgb_app_pin_lock') : null);
 
   if (!isMounted) return <div className="min-h-screen bg-[#1e3a8a]" />;
-
-  if (showSplash) {
-    return (
-      <div 
-        className="min-h-screen flex items-center justify-center p-0 z-[9999] fixed inset-0 bg-[#071d49] select-none overflow-hidden"
-      >
-        <Image 
-          src="/splash.jpg" 
-          alt="Waghamba Sports Health Hub Splash Screen" 
-          fill
-          priority
-          unoptimized
-          className="object-contain object-center animate-in fade-in zoom-in-95 duration-700" 
-        />
-      </div>
-    );
-  }
 
   // 🔒 Security PIN Lock Gate
   if (activePasscode && !isUnlocked) {
