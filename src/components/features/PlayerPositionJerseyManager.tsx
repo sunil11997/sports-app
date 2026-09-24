@@ -29,8 +29,21 @@ import {
   Zap,
   Sparkles,
   Check,
-  X
+  X,
+  UserPlus,
+  Edit3,
+  Plus,
+  RefreshCw
 } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   cn, 
   getAgeValidation, 
@@ -227,21 +240,203 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
     });
   }, [allPlayers, selectedSport, selectedGender, selectedCategory, searchQuery, sortBy, draftChanges, store?.data?.sportSkills, store?.data?.fitness]);
 
-  // Determine starters, reserves, and extended pool based on Skills Rankings
+  // Manual Slot Assignments for Tactical Court: Slot Index -> PlayerId
+  const [slotAssignments, setSlotAssignments] = useState<Record<number, string>>({});
+
+  // Add / Edit Player Modal State
+  const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
+  const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
+  const [targetPositionDef, setTargetPositionDef] = useState<CourtPositionDef | null>(null);
+  const [activeModalTab, setActiveModalTab] = useState<'roster' | 'new'>('roster');
+  const [modalSearch, setModalSearch] = useState('');
+
+  // New Player Direct Creation Form State
+  const [newPlayerNameEn, setNewPlayerNameEn] = useState('');
+  const [newPlayerNameMr, setNewPlayerNameMr] = useState('');
+  const [newPlayerStd, setNewPlayerStd] = useState('8');
+  const [newPlayerGender, setNewPlayerGender] = useState('Male');
+  const [newPlayerJersey, setNewPlayerJersey] = useState('');
+  const [newPlayerPosition, setNewPlayerPosition] = useState('');
+  const [isCreatingPlayer, setIsCreatingPlayer] = useState(false);
+
+  // Determine starters, reserves, and extended pool based on Skills Rankings and Slot Assignments
   const { starters, reserves, extendedPool } = useMemo(() => {
     const startersLimit = squadConfig.startersCount;
     const maxSquad = squadConfig.maxSquad;
 
-    const startersList = sportPlayers.slice(0, startersLimit);
-    const reservesList = sportPlayers.slice(startersLimit, maxSquad);
-    const extendedList = sportPlayers.slice(maxSquad);
+    const startersList: any[] = [];
+    const usedPlayerIds = new Set<string>();
+
+    for (let i = 0; i < startersLimit; i++) {
+      const assignedId = slotAssignments[i];
+      let assignedPlayer = assignedId ? allPlayers.find((p: any) => p.id === assignedId) : null;
+
+      // If not manually assigned by slot, check if any sportPlayer matches this slot's position and is not yet used
+      if (!assignedPlayer && squadConfig.positions[i]) {
+        const posDef = squadConfig.positions[i];
+        assignedPlayer = sportPlayers.find((p: any) => {
+          if (usedPlayerIds.has(p.id)) return false;
+          const draft = draftChanges[p.id];
+          const pos = draft?.position !== undefined ? draft.position : (p.positions?.[selectedSport] || '');
+          return pos === posDef.nameMr || pos === posDef.nameEn || pos === posDef.shortCode;
+        });
+      }
+
+      // Fallback: take next available from sportPlayers
+      if (!assignedPlayer) {
+        assignedPlayer = sportPlayers.find((p: any) => !usedPlayerIds.has(p.id)) || null;
+      }
+
+      if (assignedPlayer) {
+        usedPlayerIds.add(assignedPlayer.id);
+        startersList.push(assignedPlayer);
+      }
+    }
+
+    const remainingSportPlayers = sportPlayers.filter((p: any) => !usedPlayerIds.has(p.id));
+    const reservesList = remainingSportPlayers.slice(0, squadConfig.reservesCount);
+    reservesList.forEach((p: any) => usedPlayerIds.add(p.id));
+    const extendedList = remainingSportPlayers.slice(squadConfig.reservesCount);
 
     return {
       starters: startersList,
       reserves: reservesList,
       extendedPool: extendedList
     };
-  }, [sportPlayers, squadConfig]);
+  }, [sportPlayers, allPlayers, squadConfig, slotAssignments, draftChanges, selectedSport]);
+
+  const handleOpenAddEditModal = (slotIndex: number, posDef?: CourtPositionDef) => {
+    setTargetSlotIndex(slotIndex);
+    const position = posDef || squadConfig.positions[slotIndex] || squadConfig.positions[0];
+    setTargetPositionDef(position);
+    setNewPlayerPosition(position?.nameMr || 'उजवा कोपरा (Right Corner)');
+    setNewPlayerJersey(`${slotIndex + 1}`);
+    setNewPlayerNameEn('');
+    setNewPlayerNameMr('');
+    setModalSearch('');
+    setActiveModalTab('roster');
+    setIsAddEditModalOpen(true);
+  };
+
+  const handleAssignExistingPlayer = (player: any) => {
+    if (targetSlotIndex === null) return;
+    const pos = targetPositionDef?.nameMr || squadConfig.positions[targetSlotIndex]?.nameMr || 'खेळाडू';
+
+    setSlotAssignments(prev => ({
+      ...prev,
+      [targetSlotIndex]: player.id
+    }));
+
+    setDraftChanges(prev => ({
+      ...prev,
+      [player.id]: {
+        ...prev[player.id],
+        position: pos,
+        jersey: prev[player.id]?.jersey || player.jerseyNumbers?.[selectedSport] || player.jerseyNumber || `${targetSlotIndex + 1}`
+      }
+    }));
+
+    if (store?.updatePlayer && (!player.sports || !player.sports.includes(selectedSport))) {
+      const updatedSports = Array.from(new Set([...(player.sports || []), selectedSport]));
+      store.updatePlayer({
+        ...player,
+        sports: updatedSports,
+        positions: {
+          ...(player.positions || {}),
+          [selectedSport]: pos
+        }
+      });
+    }
+
+    setIsAddEditModalOpen(false);
+    toast({
+      title: "✅ खेळाडू रणनीतीमध्ये नियुक्त!",
+      description: `${player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name} यांना ${pos} स्थानावर नियुक्त केले.`
+    });
+  };
+
+  const handleCreateAndAssignNewPlayer = async () => {
+    if (!newPlayerNameEn.trim() && !newPlayerNameMr.trim()) {
+      toast({
+        title: "नाव आवश्यक आहे",
+        description: "कृपया खेळाडूचे नाव प्रविष्ट करा.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCreatingPlayer(true);
+    try {
+      const enName = newPlayerNameEn.trim() || newPlayerNameMr.trim();
+      const mrName = newPlayerNameMr.trim() || transliterateEnglishToMarathi(enName);
+      const pos = newPlayerPosition || targetPositionDef?.nameMr || 'खेळाडू';
+      const jersey = newPlayerJersey.trim() || `${(targetSlotIndex !== null ? targetSlotIndex : 0) + 1}`;
+      const newId = `std_${Date.now()}`;
+
+      const newPlayer = {
+        id: newId,
+        name: enName,
+        nameMarathi: mrName,
+        gender: newPlayerGender,
+        std: newPlayerStd,
+        sports: [selectedSport],
+        positions: { [selectedSport]: pos },
+        jerseyNumber: jersey,
+        jerseyNumbers: { [selectedSport]: jersey },
+        generalRegisterNumber: `GR-${Math.floor(1000 + Math.random() * 9000)}`,
+        dob: '2010-06-01',
+        ageCategory: 'U17',
+        status: 'Active',
+        createdAt: new Date().toISOString()
+      };
+
+      if (store?.addPlayer) {
+        await store.addPlayer(newPlayer);
+      }
+
+      if (targetSlotIndex !== null) {
+        setSlotAssignments(prev => ({
+          ...prev,
+          [targetSlotIndex]: newId
+        }));
+      }
+
+      setDraftChanges(prev => ({
+        ...prev,
+        [newId]: {
+          position: pos,
+          jersey: jersey
+        }
+      }));
+
+      setIsAddEditModalOpen(false);
+      toast({
+        title: "🎉 नवीन खेळाडू तयार व रणनीतीत जोडला!",
+        description: `${mrName} (#${jersey}) यांना ${selectedSport} संघात व ${pos} स्थानावर जोडले आहे.`
+      });
+    } catch (err) {
+      toast({
+        title: "त्रुटी",
+        description: "खेळाडू जोडताना त्रुटी आली.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingPlayer(false);
+    }
+  };
+
+  const handleClearSlot = (slotIndex: number) => {
+    setSlotAssignments(prev => {
+      const next = { ...prev };
+      delete next[slotIndex];
+      return next;
+    });
+    setIsAddEditModalOpen(false);
+    toast({
+      title: "स्थान रिक्त केले",
+      description: "या स्थानावरील खेळाडू हटवला आहे."
+    });
+  };
 
   // Initialize coach captain state from player flags if not explicitly set
   useEffect(() => {
@@ -1007,6 +1202,17 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
           </div>
 
           <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenAddEditModal(idx, posDef);
+              }}
+              className="p-1 rounded-md bg-amber-500/20 hover:bg-amber-400 hover:text-slate-950 text-amber-300 transition-colors border border-amber-400/40"
+              title="खेळाडू बदला किंवा संपादन करा (Edit / Change Player)"
+            >
+              <Edit3 className="w-3 h-3" />
+            </button>
             <span className="text-[10px] text-amber-300 font-black">#</span>
             <input
               type="text"
@@ -1426,10 +1632,19 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge className="bg-amber-400 text-slate-950 font-black text-xs px-3 py-1">
                   मैदानावर: {starters.length} / {squadConfig.startersCount}
                 </Badge>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => handleOpenAddEditModal(0, squadConfig.positions[0])}
+                  className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md gap-1.5 h-8 px-3"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  रणनीती संपादन / खेळाडू जोडा (Edit & Add Player)
+                </Button>
               </div>
             </div>
 
@@ -1487,10 +1702,19 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
                     const player = starters[i];
                     if (!player) {
                       return (
-                        <div key={posDef.id} className="border-2 border-dashed border-white/20 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-h-[160px] bg-slate-900/40 text-slate-400">
+                        <div 
+                          key={posDef.id} 
+                          onClick={() => handleOpenAddEditModal(i, posDef)}
+                          className="cursor-pointer border-2 border-dashed border-amber-400/50 hover:border-amber-300 hover:bg-slate-900/80 rounded-2xl p-4 flex flex-col items-center justify-center text-center min-h-[175px] bg-slate-900/40 text-slate-300 transition-all hover:scale-[1.02] group"
+                        >
+                          <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center mb-2 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
+                            <Plus className="w-4 h-4" />
+                          </div>
                           <div className="text-xs font-black text-amber-300 mb-1">{posDef.nameMr}</div>
-                          <div className="text-[10px] text-slate-400">खेळाडू रिक्त</div>
-                          <div className="text-[9px] text-slate-500 mt-2">रोस्टरमधून जोडा</div>
+                          <div className="text-[10px] text-slate-400 font-bold">खेळाडू रिक्त</div>
+                          <Button size="sm" variant="outline" className="mt-2 text-[10px] font-black h-7 bg-amber-400 text-slate-950 border-none hover:bg-amber-300 rounded-lg shadow">
+                            + खेळाडू जोडा
+                          </Button>
                         </div>
                       );
                     }
@@ -1969,6 +2193,248 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
           </div>
         </Card>
       )}
+
+      {/* ADD / EDIT PLAYER IN MATCH STRATEGY MODAL */}
+      <Dialog open={isAddEditModalOpen} onOpenChange={setIsAddEditModalOpen}>
+        <DialogContent className="sm:max-w-xl rounded-[2.5rem] p-6 max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader className="border-b pb-3 shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg font-black uppercase text-primary flex items-center gap-2">
+                <Shirt className="w-5 h-5 text-amber-500" />
+                कबड्डी रणनीती: खेळाडू संपादन / जोडा
+              </DialogTitle>
+              {targetPositionDef && (
+                <Badge className="bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-0.5">
+                  [{targetPositionDef.shortCode}] {targetPositionDef.nameMr}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground font-semibold">
+              या स्थानावर खेळण्यासाठी शाळेच्या खेळाडूंमधून निवडा किंवा नवीन खेळाडू थेट नोंदवा.
+            </p>
+          </DialogHeader>
+
+          {/* Currently Assigned Player Info */}
+          {targetSlotIndex !== null && starters[targetSlotIndex] && (
+            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-300 flex items-center justify-between shrink-0 my-2">
+              <div className="flex items-center gap-2.5">
+                <Avatar className="w-9 h-9 rounded-xl border border-amber-400">
+                  <AvatarImage src={starters[targetSlotIndex].photoUrl} />
+                  <AvatarFallback className="bg-slate-900 text-amber-300 text-xs font-black">
+                    {starters[targetSlotIndex].name ? starters[targetSlotIndex].name.slice(0, 2) : 'PL'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="text-xs font-black text-slate-900">
+                    सध्या नियुक्त: {starters[targetSlotIndex].nameMarathi || starters[targetSlotIndex].name}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    इ. {starters[targetSlotIndex].std} वी &bull; #{starters[targetSlotIndex].jerseyNumber || '-'}
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => handleClearSlot(targetSlotIndex)}
+                className="text-xs font-bold text-rose-600 border-rose-300 hover:bg-rose-50 rounded-xl h-8"
+              >
+                स्थान रिक्त करा
+              </Button>
+            </div>
+          )}
+
+          <Tabs value={activeModalTab} onValueChange={(val: any) => setActiveModalTab(val)} className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="grid grid-cols-2 rounded-xl bg-muted/60 p-1 mb-3 shrink-0">
+              <TabsTrigger value="roster" className="rounded-lg font-black text-xs gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-white">
+                <Users className="w-3.5 h-3.5" /> शाळेच्या रोस्टरमधून निवडा
+              </TabsTrigger>
+              <TabsTrigger value="new" className="rounded-lg font-black text-xs gap-1.5 data-[state=active]:bg-emerald-700 data-[state=active]:text-white">
+                <UserPlus className="w-3.5 h-3.5" /> + नवीन खेळाडू तयार करा
+              </TabsTrigger>
+            </TabsList>
+
+            {/* TAB 1: SELECT EXISTING PLAYER */}
+            <TabsContent value="roster" className="flex-1 flex flex-col overflow-hidden mt-0 space-y-3">
+              <div className="relative shrink-0">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+                <Input
+                  value={modalSearch}
+                  onChange={(e) => setModalSearch(e.target.value)}
+                  placeholder="विद्यार्थ्याचे नाव किंवा GR क्रमांक शोधा..."
+                  className="pl-9 h-10 font-bold text-xs rounded-xl"
+                />
+              </div>
+
+              <ScrollArea className="flex-1 pr-3 max-h-[300px]">
+                <div className="space-y-2">
+                  {allPlayers
+                    .filter((p: any) => {
+                      if (!modalSearch.trim()) return true;
+                      const q = modalSearch.toLowerCase().trim();
+                      const matchName = (p.name || '').toLowerCase().includes(q) || (p.nameMarathi || '').includes(q);
+                      const matchGr = (p.generalRegisterNumber || '').toLowerCase().includes(q);
+                      return matchName || matchGr;
+                    })
+                    .map((player: any) => {
+                      const isCurrent = targetSlotIndex !== null && starters[targetSlotIndex]?.id === player.id;
+                      const displayName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
+                      const hasSport = player.sports && player.sports.includes(selectedSport);
+                      const jersey = player.jerseyNumbers?.[selectedSport] || player.jerseyNumber || '-';
+
+                      return (
+                        <div
+                          key={player.id}
+                          className={cn(
+                            "p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3",
+                            isCurrent ? "bg-amber-50 border-amber-400" : "bg-white hover:bg-slate-50 border-slate-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Avatar className="w-9 h-9 rounded-xl border shrink-0">
+                              <AvatarImage src={player.photoUrl} />
+                              <AvatarFallback className="bg-slate-900 text-amber-300 font-bold text-xs">
+                                {player.name ? player.name.slice(0, 2) : 'PL'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="font-black text-xs text-slate-900 truncate">
+                                {displayName} #{jersey}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground truncate">
+                                {player.name} &bull; इ. {player.std} वी &bull; GR: {player.generalRegisterNumber || '-'}
+                                {hasSport && <span className="ml-1 text-emerald-600 font-bold">({selectedSport})</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={isCurrent}
+                            onClick={() => handleAssignExistingPlayer(player)}
+                            className={cn(
+                              "text-xs font-black rounded-xl h-8 shrink-0 px-3",
+                              isCurrent ? "bg-amber-400 text-slate-950" : "bg-primary hover:bg-primary/90 text-white"
+                            )}
+                          >
+                            {isCurrent ? "नियुक्त आहे" : "हा खेळाडू ठेवा"}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* TAB 2: CREATE NEW PLAYER */}
+            <TabsContent value="new" className="flex-1 overflow-y-auto mt-0 space-y-3 pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">इंग्रजी नाव (English Name) *</label>
+                  <Input
+                    value={newPlayerNameEn}
+                    onChange={(e) => {
+                      setNewPlayerNameEn(e.target.value);
+                      if (!newPlayerNameMr || newPlayerNameMr === transliterateEnglishToMarathi(newPlayerNameEn)) {
+                        setNewPlayerNameMr(transliterateEnglishToMarathi(e.target.value));
+                      }
+                    }}
+                    placeholder="e.g. Ramesh Shinde"
+                    className="h-10 text-xs font-bold rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">मराठी नाव (Marathi Name) *</label>
+                  <Input
+                    value={newPlayerNameMr}
+                    onChange={(e) => setNewPlayerNameMr(e.target.value)}
+                    placeholder="उदा. रमेश शिंदे"
+                    className="h-10 text-xs font-bold rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">इयत्ता (Class/Std)</label>
+                  <Select value={newPlayerStd} onValueChange={setNewPlayerStd}>
+                    <SelectTrigger className="h-10 text-xs font-bold rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['5', '6', '7', '8', '9', '10', '11', '12'].map(s => (
+                        <SelectItem key={s} value={s} className="text-xs font-bold">इ. {s} वी</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">लिंग (Gender)</label>
+                  <Select value={newPlayerGender} onValueChange={setNewPlayerGender}>
+                    <SelectTrigger className="h-10 text-xs font-bold rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male" className="text-xs font-bold">👦 मुलगा (Boy)</SelectItem>
+                      <SelectItem value="Female" className="text-xs font-bold">👧 मुलगी (Girl)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-[11px] font-black uppercase text-primary">जर्सी क्रमांक (#)</label>
+                  <Input
+                    value={newPlayerJersey}
+                    onChange={(e) => setNewPlayerJersey(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
+                    placeholder="उदा. 7"
+                    className="h-10 text-xs font-bold rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase text-primary">रणनीती पोझिशन (Position)</label>
+                <Select value={newPlayerPosition} onValueChange={setNewPlayerPosition}>
+                  <SelectTrigger className="h-10 text-xs font-bold rounded-xl bg-amber-50 border-amber-300">
+                    <SelectValue placeholder="पोझिशन निवडा" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-56">
+                    {KABADDI_QUICK_POSITIONS.map(p => (
+                      <SelectItem key={p.code} value={p.name} className="text-xs font-bold">
+                        [{p.code}] {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleCreateAndAssignNewPlayer}
+                disabled={isCreatingPlayer}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl h-11 gap-2 shadow-lg mt-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                {isCreatingPlayer ? "खेळाडू जोडत आहे..." : "नवीन खेळाडू तयार करा व रणनीतीत ठेवा"}
+              </Button>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="border-t pt-3 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddEditModalOpen(false)}
+              className="w-full rounded-xl font-black text-xs"
+            >
+              बंद करा (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

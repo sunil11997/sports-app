@@ -16,6 +16,7 @@ import {
   DialogTitle, 
   DialogFooter 
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Layout, 
@@ -44,7 +45,9 @@ import {
   Share2,
   Crown,
   Shirt,
-  UserCheck
+  UserCheck,
+  Search,
+  UserPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getOfficialSchoolName, getPrintSignatureBlockHtml, getDisplayNameForLocale, transliterateEnglishToMarathi } from '@/lib/utils';
@@ -724,6 +727,81 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
   const [isPlayerAssignModalOpen, setIsPlayerAssignModalOpen] = useState(false);
   const [selectedRealPlayerDetails, setSelectedRealPlayerDetails] = useState<any | null>(null);
 
+  // Modal tab & new player form states
+  const [assignModalTab, setAssignModalTab] = useState<'roster' | 'new'>('roster');
+  const [assignSearch, setAssignSearch] = useState('');
+  const [newTacticalPlayerNameEn, setNewTacticalPlayerNameEn] = useState('');
+  const [newTacticalPlayerNameMr, setNewTacticalPlayerNameMr] = useState('');
+  const [newTacticalPlayerStd, setNewTacticalPlayerStd] = useState('8');
+  const [newTacticalPlayerGender, setNewTacticalPlayerGender] = useState('Male');
+  const [newTacticalPlayerJersey, setNewTacticalPlayerJersey] = useState('');
+  const [isAddingTacticalPlayer, setIsAddingTacticalPlayer] = useState(false);
+
+  const handleCreateAndAssignTacticalPlayer = async () => {
+    if (!newTacticalPlayerNameEn.trim() && !newTacticalPlayerNameMr.trim()) {
+      toast({
+        title: "नाव आवश्यक आहे",
+        description: "कृपया खेळाडूचे नाव प्रविष्ट करा.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAddingTacticalPlayer(true);
+    try {
+      const en = newTacticalPlayerNameEn.trim() || newTacticalPlayerNameMr.trim();
+      const mr = newTacticalPlayerNameMr.trim() || transliterateEnglishToMarathi(en);
+      const jersey = newTacticalPlayerJersey.trim() || `${Math.floor(1 + Math.random() * 20)}`;
+      const newId = `std_${Date.now()}`;
+      const roleName = selectedSlotForAssignment?.roleMr || 'खेळाडू';
+
+      const newPlayer = {
+        id: newId,
+        name: en,
+        nameMarathi: mr,
+        gender: newTacticalPlayerGender,
+        std: newTacticalPlayerStd,
+        sports: [activeSport],
+        positions: { [activeSport]: roleName },
+        jerseyNumber: jersey,
+        jerseyNumbers: { [activeSport]: jersey },
+        generalRegisterNumber: `GR-${Math.floor(1000 + Math.random() * 9000)}`,
+        dob: '2010-06-01',
+        ageCategory: 'U17',
+        status: 'Active',
+        createdAt: new Date().toISOString()
+      };
+
+      if (store?.addPlayer) {
+        await store.addPlayer(newPlayer);
+      }
+
+      if (selectedSlotForAssignment) {
+        setAssignedPlayerMap(prev => ({
+          ...prev,
+          [selectedSlotForAssignment.id]: newId
+        }));
+      }
+
+      setIsPlayerAssignModalOpen(false);
+      setNewTacticalPlayerNameEn('');
+      setNewTacticalPlayerNameMr('');
+      setNewTacticalPlayerJersey('');
+      toast({
+        title: "🎉 नवीन खेळाडू रणनीतीत जोडला!",
+        description: `${mr} (#${jersey}) यांना ${roleName} स्थानावर नियुक्त केले.`
+      });
+    } catch (err) {
+      toast({
+        title: "त्रुटी",
+        description: "खेळाडू जोडताना त्रुटी आली.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAddingTacticalPlayer(false);
+    }
+  };
+
   const sportPlayers = useMemo(() => {
     return (store?.data?.players || []).filter((p: any) => 
       !activeSport || activeSport === 'All' || (p.sports && p.sports.includes(activeSport))
@@ -1343,13 +1421,29 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
 
               {/* Real Players Assigned Strip Below the Court */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5" /> मैदानावरील प्रत्यक्ष शालेय खेळाडू (Assigned Squad):
                   </span>
-                  <span className="text-[9px] text-slate-400 font-bold">
-                    क्लिक करून खेळाडू बदला (Tap node to change)
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        const firstHome = activeFormation?.players?.find(p => p.team === 'home');
+                        if (firstHome) {
+                          setSelectedSlotForAssignment({ id: firstHome.id, roleMr: firstHome.roleMr || firstHome.role, team: firstHome.team });
+                          setIsPlayerAssignModalOpen(true);
+                        }
+                      }}
+                      className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl h-8 px-3 gap-1.5 shadow"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" /> रणनीती खेळाडू संपादन / जोडा
+                    </Button>
+                    <span className="text-[9px] text-slate-400 font-bold hidden sm:inline">
+                      क्लिक करून खेळाडू बदला (Tap node to change)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -1799,80 +1893,187 @@ export function TacticalPlaybook({ store, preselectedSport }: { store: any, pres
 
       {/* Real Player Assignment Dialog */}
       <Dialog open={isPlayerAssignModalOpen} onOpenChange={setIsPlayerAssignModalOpen}>
-        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black uppercase text-primary flex items-center gap-2">
-              <Shirt className="w-5 h-5 text-amber-500" />
-              खेळाडू नियुक्त करा ({selectedSlotForAssignment?.roleMr})
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-6 max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader className="border-b pb-3 shrink-0">
+            <DialogTitle className="text-lg font-black uppercase text-primary flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Shirt className="w-5 h-5 text-amber-500" />
+                खेळाडू संपादन / जोडा
+              </span>
+              {selectedSlotForAssignment && (
+                <Badge className="bg-amber-500 text-slate-950 font-black text-xs px-2 py-0.5">
+                  {selectedSlotForAssignment.roleMr}
+                </Badge>
+              )}
             </DialogTitle>
+            <p className="text-xs text-muted-foreground font-semibold">
+              या मैदानावरील स्थानासाठी रोस्टरमधून खेळाडू निवडा किंवा नवीन खेळाडू थेट जोडा.
+            </p>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <p className="text-xs text-muted-foreground font-semibold">
-              या मैदानावरील स्थानासाठी आपल्या शाळेच्या रोस्टरमधील खेळाडू निवडा:
-            </p>
+          <Tabs value={assignModalTab} onValueChange={(val: any) => setAssignModalTab(val)} className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="grid grid-cols-2 rounded-xl bg-muted/60 p-1 my-2 shrink-0">
+              <TabsTrigger value="roster" className="rounded-lg font-black text-xs gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-white">
+                <Users className="w-3.5 h-3.5" /> रोस्टर खेळाडू
+              </TabsTrigger>
+              <TabsTrigger value="new" className="rounded-lg font-black text-xs gap-1.5 data-[state=active]:bg-emerald-700 data-[state=active]:text-white">
+                <UserPlus className="w-3.5 h-3.5" /> + नवीन खेळाडू
+              </TabsTrigger>
+            </TabsList>
 
-            <ScrollArea className="h-72 rounded-2xl border p-2 bg-muted/10">
-              <div className="space-y-2">
-                {sportPlayers.length === 0 ? (
-                  <p className="text-center py-8 text-xs font-bold text-muted-foreground">
-                    या खेळासाठी कोणतेही खेळाडू नोंदणीकृत नाहीत.
-                  </p>
-                ) : (
-                  sportPlayers.map((player: any) => {
-                    const isSelected = selectedSlotForAssignment && assignedPlayerMap[selectedSlotForAssignment.id] === player.id;
-                    const displayName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
-                    const jersey = player.jerseyNumbers?.[activeSport] || player.jerseyNumber || '';
-
-                    return (
-                      <button
-                        key={player.id}
-                        type="button"
-                        onClick={() => {
-                          if (selectedSlotForAssignment) {
-                            setAssignedPlayerMap(prev => ({
-                              ...prev,
-                              [selectedSlotForAssignment.id]: player.id
-                            }));
-                            setIsPlayerAssignModalOpen(false);
-                            toast({
-                              title: "खेळाडू नियुक्त झाला!",
-                              description: `${displayName} यांना ${selectedSlotForAssignment.roleMr} म्हणून नियुक्त केले.`,
-                              className: "bg-emerald-600 text-white font-bold"
-                            });
-                          }
-                        }}
-                        className={cn(
-                          "w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all hover:scale-[1.02] active:scale-95",
-                          isSelected ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-400" : "bg-white border-slate-200 hover:bg-slate-50"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary text-white font-black text-sm flex items-center justify-center shrink-0">
-                            {jersey ? `#${jersey}` : (player.name || '?')[0]}
-                          </div>
-                          <div>
-                            <p className="font-black text-xs text-slate-900 leading-tight">
-                              {displayName} {player.isCaptain && "👑"}
-                            </p>
-                            <span className="text-[10px] text-muted-foreground font-semibold">
-                              {player.name} &bull; इ. {player.std} वी (GR: {player.generalRegisterNumber || '-'})
-                            </span>
-                          </div>
-                        </div>
-
-                        <Badge variant={isSelected ? "default" : "outline"} className="text-[9px] font-black uppercase">
-                          {isSelected ? "निवडलेले" : "नियुक्त करा"}
-                        </Badge>
-                      </button>
-                    );
-                  })
-                )}
+            {/* TAB 1: ROSTER PLAYERS */}
+            <TabsContent value="roster" className="flex-1 flex flex-col overflow-hidden mt-0 space-y-3">
+              <div className="relative shrink-0">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+                <Input
+                  value={assignSearch}
+                  onChange={(e) => setAssignSearch(e.target.value)}
+                  placeholder="खेळाडूचे नाव शोधा..."
+                  className="pl-9 h-10 font-bold text-xs rounded-xl"
+                />
               </div>
-            </ScrollArea>
-          </div>
 
-          <DialogFooter>
+              <ScrollArea className="flex-1 pr-2 max-h-[300px]">
+                <div className="space-y-2">
+                  {sportPlayers
+                    .filter((p: any) => {
+                      if (!assignSearch.trim()) return true;
+                      const q = assignSearch.toLowerCase().trim();
+                      const matchName = (p.name || '').toLowerCase().includes(q) || (p.nameMarathi || '').includes(q);
+                      const matchGr = (p.generalRegisterNumber || '').toLowerCase().includes(q);
+                      return matchName || matchGr;
+                    })
+                    .map((player: any) => {
+                      const isSelected = selectedSlotForAssignment && assignedPlayerMap[selectedSlotForAssignment.id] === player.id;
+                      const displayName = player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name;
+                      const jersey = player.jerseyNumbers?.[activeSport] || player.jerseyNumber || '';
+
+                      return (
+                        <button
+                          key={player.id}
+                          type="button"
+                          onClick={() => {
+                            if (selectedSlotForAssignment) {
+                              setAssignedPlayerMap(prev => ({
+                                ...prev,
+                                [selectedSlotForAssignment.id]: player.id
+                              }));
+                              setIsPlayerAssignModalOpen(false);
+                              toast({
+                                title: "खेळाडू नियुक्त झाला!",
+                                description: `${displayName} यांना ${selectedSlotForAssignment.roleMr} म्हणून नियुक्त केले.`,
+                                className: "bg-emerald-600 text-white font-bold"
+                              });
+                            }
+                          }}
+                          className={cn(
+                            "w-full p-2.5 rounded-2xl border text-left flex items-center justify-between transition-all hover:scale-[1.01] active:scale-95",
+                            isSelected ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-400" : "bg-white border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-primary text-white font-black text-xs flex items-center justify-center shrink-0">
+                              {jersey ? `#${jersey}` : (player.name || '?')[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-black text-xs text-slate-900 leading-tight truncate">
+                                {displayName} {player.isCaptain && "👑"}
+                              </p>
+                              <span className="text-[10px] text-muted-foreground font-semibold truncate block">
+                                {player.name} &bull; इ. {player.std} वी (GR: {player.generalRegisterNumber || '-'})
+                              </span>
+                            </div>
+                          </div>
+
+                          <Badge variant={isSelected ? "default" : "outline"} className="text-[9px] font-black uppercase shrink-0">
+                            {isSelected ? "निवडलेले" : "ठेवा"}
+                          </Badge>
+                        </button>
+                      );
+                    })}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* TAB 2: CREATE NEW TACTICAL PLAYER */}
+            <TabsContent value="new" className="flex-1 overflow-y-auto mt-0 space-y-3 pr-1">
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase text-primary">इंग्रजी नाव (English Name) *</label>
+                <Input
+                  value={newTacticalPlayerNameEn}
+                  onChange={(e) => {
+                    setNewTacticalPlayerNameEn(e.target.value);
+                    if (!newTacticalPlayerNameMr || newTacticalPlayerNameMr === transliterateEnglishToMarathi(newTacticalPlayerNameEn)) {
+                      setNewTacticalPlayerNameMr(transliterateEnglishToMarathi(e.target.value));
+                    }
+                  }}
+                  placeholder="उदा. Sachin Kale"
+                  className="h-10 text-xs font-bold rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase text-primary">मराठी नाव (Marathi Name) *</label>
+                <Input
+                  value={newTacticalPlayerNameMr}
+                  onChange={(e) => setNewTacticalPlayerNameMr(e.target.value)}
+                  placeholder="उदा. सचिन काळे"
+                  className="h-10 text-xs font-bold rounded-xl"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">इयत्ता</label>
+                  <Select value={newTacticalPlayerStd} onValueChange={setNewTacticalPlayerStd}>
+                    <SelectTrigger className="h-10 text-xs font-bold rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['5', '6', '7', '8', '9', '10', '11', '12'].map(s => (
+                        <SelectItem key={s} value={s} className="text-xs font-bold">इ. {s} वी</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">लिंग</label>
+                  <Select value={newTacticalPlayerGender} onValueChange={setNewTacticalPlayerGender}>
+                    <SelectTrigger className="h-10 text-xs font-bold rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male" className="text-xs font-bold">मुले</SelectItem>
+                      <SelectItem value="Female" className="text-xs font-bold">मुली</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black uppercase text-primary">जर्सी #</label>
+                  <Input
+                    value={newTacticalPlayerJersey}
+                    onChange={(e) => setNewTacticalPlayerJersey(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
+                    placeholder="उदा. 5"
+                    className="h-10 text-xs font-bold rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleCreateAndAssignTacticalPlayer}
+                disabled={isAddingTacticalPlayer}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl h-11 gap-2 shadow-lg mt-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                {isAddingTacticalPlayer ? "खेळाडू जोडत आहे..." : "नवीन खेळाडू तयार करा व रणनीतीत ठेवा"}
+              </Button>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="border-t pt-3 shrink-0">
             <Button
               variant="outline"
               onClick={() => setIsPlayerAssignModalOpen(false)}
