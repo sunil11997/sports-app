@@ -13,7 +13,21 @@ import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 
-const SPORTS_LIST = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kho Kho', 'Athletics'];
+const SPORTS_LIST = [
+  'Javelin Throw',
+  'Long Jump',
+  'High Jump',
+  'Shot Put',
+  'Disc Throw',
+  'Running',
+  'Kabaddi',
+  'Kho Kho',
+  'Volleyball',
+  'Handball',
+  'Athletics',
+  'Yoga',
+  'PT Mass'
+];
 
 export function TournamentRosters({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const [selectedSport, setSelectedSport] = useState(preselectedSport || SPORTS_LIST[0]);
@@ -41,11 +55,20 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     return `${gender} Senior`;
   }, []);
 
-  const categories = useMemo(() => ['Boys U14', 'Boys U17', 'Boys Senior', 'Girls U14', 'Girls U17', 'Girls Senior', 'Age Pending'], []);
+  const categories = useMemo(() => ['Girls U14', 'Boys U14', 'Girls U17', 'Boys U17', 'Girls Senior', 'Boys Senior', 'Age Pending'], []);
   
   const processedGroups = useMemo(() => {
     const groups: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
-    const playersInSport = store.data.players.filter((p: any) => p.sports && p.sports.includes(selectedSport));
+    const ATHLETICS_EVENTS = ['Javelin Throw', 'Long Jump', 'High Jump', 'Shot Put', 'Disc Throw', 'Running'];
+
+    const playersInSport = store.data.players.filter((p: any) => {
+      if (!p.sports) return false;
+      if (p.sports.includes(selectedSport)) return true;
+      if (ATHLETICS_EVENTS.includes(selectedSport) && (p.sports.includes('Athletics') || p.category === 'athlete')) {
+        return true;
+      }
+      return false;
+    });
 
     playersInSport.forEach((p: any) => {
       const cat = getCategory(p);
