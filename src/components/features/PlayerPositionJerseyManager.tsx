@@ -33,7 +33,8 @@ import {
   UserPlus,
   Edit3,
   Plus,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -61,6 +62,7 @@ import {
 } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
 
 export const KABADDI_QUICK_POSITIONS = [
   { num: 1, code: 'RC', name: 'उजवा कोपरा (Right Corner)', shortMr: 'उ.कोपरा' },
@@ -165,6 +167,7 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
   const [viewMode, setViewMode] = useState<'court' | 'lanes' | 'table'>('court');
   const [sortBy, setSortBy] = useState<'skills' | 'jersey' | 'name'>('skills');
   const [isSaving, setIsSaving] = useState(false);
+  const [isOfficialModalOpen, setIsOfficialModalOpen] = useState(false);
 
   // Coach Manual Captain & Vice Captain Selection
   const [captainId, setCaptainId] = useState<string>('');
@@ -1407,6 +1410,12 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
               </Button>
             )}
             <Button
+              onClick={() => setIsOfficialModalOpen(true)}
+              className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg gap-2 h-11 px-4 border border-amber-300"
+            >
+              <FileText className="w-4 h-4" /> 📋 अधिकृत स्पर्धा शीट (Official Sheet)
+            </Button>
+            <Button
               onClick={handleWhatsAppSquadShare}
               variant="outline"
               className="bg-emerald-700/80 hover:bg-emerald-700 text-white font-black text-xs rounded-xl border-none shadow-md gap-2 h-11 px-4"
@@ -2450,6 +2459,16 @@ export function PlayerPositionJerseyManager({ store, preselectedSport }: { store
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Official Tournament Entry Sheet Modal */}
+      <OfficialTournamentSheetModal
+        isOpen={isOfficialModalOpen}
+        onClose={() => setIsOfficialModalOpen(false)}
+        initialSport={selectedSport}
+        initialCategory={selectedCategory === 'All' ? 'Girls U14' : selectedCategory}
+        initialPlayers={[...starters.filter(Boolean), ...reserves.filter(Boolean)]}
+        store={store}
+      />
     </div>
   );
 }

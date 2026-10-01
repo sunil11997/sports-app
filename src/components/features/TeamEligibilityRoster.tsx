@@ -35,6 +35,7 @@ import {
 } from '@/lib/utils';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
 
 const SPORTS_LIST = [
   'All',
@@ -65,6 +66,7 @@ export function TeamEligibilityRoster({ store, preselectedSport }: { store: any;
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
   const [selectedGenderFilter, setSelectedGenderFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isOfficialModalOpen, setIsOfficialModalOpen] = useState(false);
 
   const players = useMemo(() => store?.data?.players || [], [store?.data?.players]);
 
@@ -353,6 +355,12 @@ export function TeamEligibilityRoster({ store, preselectedSport }: { store: any;
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              onClick={() => setIsOfficialModalOpen(true)}
+              className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg gap-2 h-11 px-5 border border-amber-300"
+            >
+              <FileText className="w-4 h-4" /> 📋 अधिकृत क्रीडा स्पर्धा शीट (Official Sheet)
+            </Button>
             <Button
               onClick={handleWhatsAppShare}
               variant="outline"
@@ -712,6 +720,16 @@ export function TeamEligibilityRoster({ store, preselectedSport }: { store: any;
           </table>
         </div>
       </Card>
+
+      {/* Official Tournament Sheet Modal */}
+      <OfficialTournamentSheetModal
+        isOpen={isOfficialModalOpen}
+        onClose={() => setIsOfficialModalOpen(false)}
+        initialSport={selectedSport}
+        initialCategory={selectedCategoryFilter === 'All' ? 'Girls U14' : selectedCategoryFilter}
+        initialPlayers={filteredPlayers}
+        store={store}
+      />
     </div>
   );
 }

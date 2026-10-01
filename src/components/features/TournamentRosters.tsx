@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Medal, Shirt, Target } from 'lucide-react';
+import { Printer, Medal, Shirt, Target, FileText } from 'lucide-react';
 import { getAgeValidation, getOfficialSchoolName, getTeacherName, sanitizeGrNumber } from '@/lib/utils';
+import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -16,6 +17,15 @@ const SPORTS_LIST = ['Yoga', 'PT Mass', 'Kabaddi', 'Volleyball', 'Handball', 'Kh
 
 export function TournamentRosters({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const [selectedSport, setSelectedSport] = useState(preselectedSport || SPORTS_LIST[0]);
+  const [isOfficialModalOpen, setIsOfficialModalOpen] = useState(false);
+  const [modalCategory, setModalCategory] = useState<string>('Girls U14');
+  const [modalPlayers, setModalPlayers] = useState<any[]>([]);
+
+  const handleOpenOfficialSheet = (category?: string, playersList?: any[]) => {
+    setModalCategory(category || 'Girls U14');
+    setModalPlayers(playersList || store.data.players || []);
+    setIsOfficialModalOpen(true);
+  };
 
   useEffect(() => {
     if (preselectedSport) setSelectedSport(preselectedSport);
@@ -286,14 +296,11 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="bg-white hover:bg-amber-50 text-amber-900 text-xs font-black border-2 border-amber-500/30 rounded-xl h-8 gap-1.5 shadow-sm"
-                  onClick={() => {
-                    const el = document.querySelector('[data-value="skills"]') as HTMLElement || document.querySelector('[value="skills"]') as HTMLElement;
-                    if (el) el.click();
-                  }}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
+                  onClick={() => handleOpenOfficialSheet('Girls U14', store.data.players)}
                 >
-                  <Target className="w-3.5 h-3.5 text-amber-600" />
-                  🎯 कौशल्य गुण (Skills Marks)
+                  <FileText className="w-3.5 h-3.5 text-slate-950" />
+                  📋 अधिकृत स्पर्धा शीट (Official Tournament Sheet)
                 </Button>
               </div>
             </div>
@@ -311,7 +318,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {categories.map(cat => (
-          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[520px]">
+          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[560px]">
             <div className="bg-muted/40 p-6 border-b flex justify-between items-center">
               <span className="text-xl font-black uppercase text-primary">{cat}</span>
               <Badge className="bg-primary text-white font-black">{processedGroups[cat].length} ATHLETES</Badge>
@@ -361,14 +368,36 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 </TableBody>
               </Table>
             </div>
-            <div className="p-6 border-t bg-muted/20">
-              <Button onClick={() => handlePrint(cat)} disabled={processedGroups[cat].length === 0} className="w-full h-14 bg-white text-primary font-black uppercase text-xs tracking-widest border-2 shadow-sm rounded-2xl">
-                <Printer className="w-5 h-5 mr-2" /> Print Official Squad List
+            <div className="p-4 sm:p-6 border-t bg-muted/20 flex flex-col gap-2">
+              <Button 
+                onClick={() => handleOpenOfficialSheet(cat, processedGroups[cat])} 
+                disabled={processedGroups[cat].length === 0} 
+                className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs tracking-wider rounded-2xl shadow-md flex items-center justify-center gap-2"
+              >
+                <FileText className="w-4 h-4" /> 📋 अधिकृत क्रीडा स्पर्धा शीट (Official Sheet)
+              </Button>
+              <Button 
+                onClick={() => handlePrint(cat)} 
+                disabled={processedGroups[cat].length === 0} 
+                variant="outline" 
+                className="w-full h-10 bg-white text-primary font-black uppercase text-xs tracking-widest border-2 shadow-sm rounded-xl"
+              >
+                <Printer className="w-4 h-4 mr-2" /> Quick Squad List Print
               </Button>
             </div>
           </Card>
         ))}
       </div>
+
+      {/* Official Tournament Sheet Modal */}
+      <OfficialTournamentSheetModal
+        isOpen={isOfficialModalOpen}
+        onClose={() => setIsOfficialModalOpen(false)}
+        initialSport={selectedSport}
+        initialCategory={modalCategory}
+        initialPlayers={modalPlayers}
+        store={store}
+      />
     </div>
   );
 }

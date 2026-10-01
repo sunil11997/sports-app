@@ -4,8 +4,9 @@ import React, { useMemo, useCallback, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Users, MessageSquare, Crown, Shield } from 'lucide-react';
+import { Printer, Users, MessageSquare, Crown, Shield, FileText } from 'lucide-react';
 import { cn, getAgeValidation, getOfficialSchoolName, getTeacherName, transliterateEnglishToMarathi } from '@/lib/utils';
+import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -13,6 +14,15 @@ import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos'
 export function Teams({ store, preselectedSport }: { store: any, preselectedSport?: string }) {
   const players = store.data.players;
   const [selectedSport, setSelectedSport] = useState(preselectedSport || 'All');
+  const [isOfficialModalOpen, setIsOfficialModalOpen] = useState(false);
+  const [modalCategory, setModalCategory] = useState<string>('Boys U14');
+  const [modalPlayers, setModalPlayers] = useState<any[]>([]);
+
+  const handleOpenOfficialSheet = (category?: string, playersList?: any[]) => {
+    setModalCategory(category || 'Boys U14');
+    setModalPlayers(playersList || players || []);
+    setIsOfficialModalOpen(true);
+  };
   
   const getCategory = useCallback((p: any) => {
     const ageVal = getAgeValidation(p.dob);
@@ -202,12 +212,21 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
             </p>
           </div>
         </div>
-        <Button 
-          onClick={handlePrint}
-          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs tracking-wider h-12 px-6 rounded-2xl shadow-xl flex items-center gap-2"
-        >
-          <Printer className="w-4 h-4" /> अधिकृत संघ यादी प्रिंट करा
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button 
+            onClick={() => handleOpenOfficialSheet('Boys U14', players)}
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs tracking-wider h-12 px-5 rounded-2xl shadow-xl flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" /> 📋 अधिकृत स्पर्धा शीट (Official Sheet)
+          </Button>
+          <Button 
+            onClick={handlePrint}
+            variant="outline"
+            className="bg-white/20 hover:bg-white/30 text-white font-black uppercase text-xs tracking-wider h-12 px-5 rounded-2xl shadow-xl flex items-center gap-2 border-white/20"
+          >
+            <Printer className="w-4 h-4" /> संघ यादी प्रिंट करा
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -221,6 +240,13 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
                 <span className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5 block">{preselectedSport || 'All Sports'} Roster</span>
               </div>
               <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => handleOpenOfficialSheet(cat, groups[cat])}
+                  className="h-8 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs gap-1.5 shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5" /> स्पर्धा शीट
+                </Button>
                 <Badge className="bg-primary text-white font-black text-xs px-3 py-1 rounded-full shadow-sm">
                   {groups[cat].length} खेळाडू
                 </Badge>
@@ -286,6 +312,16 @@ export function Teams({ store, preselectedSport }: { store: any, preselectedSpor
           </Card>
         ) : null)}
       </div>
+
+      {/* Official Tournament Sheet Modal */}
+      <OfficialTournamentSheetModal
+        isOpen={isOfficialModalOpen}
+        onClose={() => setIsOfficialModalOpen(false)}
+        initialSport={preselectedSport || selectedSport}
+        initialCategory={modalCategory}
+        initialPlayers={modalPlayers}
+        store={store}
+      />
     </div>
   );
 }
