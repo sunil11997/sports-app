@@ -31,11 +31,16 @@ import {
   Copy,
   Save,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Trophy,
+  Filter,
+  Medal,
+  Activity
 } from 'lucide-react';
 import { transliterateEnglishToMarathi, getAgeValidation } from '@/lib/utils';
 import { WAGHAMBA_STUDENTS_DATA, SchoolStudent } from '@/data/waghambaStudents';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
+import { DETAILED_SKILLS_DATA } from './SportsSkills';
 
 export interface SheetRow {
   id: string;
@@ -47,6 +52,12 @@ export interface SheetRow {
   motherName: string;
   aadhar: string;
   saralId: string;
+  sportOrEvent?: string;
+  gameActivity?: string;
+  skillScore?: string;
+  skillScoreNum?: number;
+  skillRank?: number;
+  ageCategoryLabel?: string;
 }
 
 export interface UnderCategoryDef {
@@ -78,7 +89,7 @@ export const SPORT_MARATHI_MAP: Record<string, string> = {
   'Shot Put': 'गोळाफेक',
   'Disc Throw': 'थाळीफेक',
   'Running': 'धावणे (रनिंग)',
-  'Athletics': 'ऍथलेटिक्स',
+  'Athletics': 'मैदानी स्पर्धा (ऍथलेटिक्स)',
   'Yoga': 'योगासने',
   'PT Mass': 'पी.टी. कवायत',
   'All': 'सर्व खेळ'
@@ -95,15 +106,95 @@ export function is12SquadSport(sportKey: string, sportNameMr: string): boolean {
          lower.includes('हॅन्डबॉल');
 }
 
-const ATHLETICS_DISCIPLINES = [
+export const ATHLETICS_CORE_SIX = [
+  { key: 'Javelin Throw', labelMr: 'भालाफेक', fullMr: 'भालाफेक (Javelin Throw)' },
+  { key: 'Disc Throw', labelMr: 'थाळीफेक', fullMr: 'थाळीफेक (Disc Throw)' },
+  { key: 'Shot Put', labelMr: 'गोळाफेक', fullMr: 'गोळाफेक (Shot Put)' },
+  { key: 'Running', labelMr: 'धावणे', fullMr: 'धावणे (Running Event)' },
+  { key: 'Long Jump', labelMr: 'लांब उडी', fullMr: 'लांब उडी (Long Jump)' },
+  { key: 'High Jump', labelMr: 'उंच उडी', fullMr: 'उंच उडी (High Jump)' }
+];
+
+export const ATHLETICS_DISCIPLINES = [
   'Javelin Throw', 
+  'Disc Throw', 
+  'Shot Put', 
+  'Running',
   'Long Jump', 
   'High Jump', 
-  'Shot Put', 
-  'Disc Throw', 
-  'Running',
   'Athletics'
 ];
+
+export function isAthleticsSixSport(sportKey: string): boolean {
+  return ATHLETICS_DISCIPLINES.includes(sportKey);
+}
+
+// Retrieve Skill Hub marks and ranking for a player in a specific sport
+export function getPlayerSkillMarksAndRank(
+  player: any, 
+  sportKey: string, 
+  store: any
+): { score: number; scoreDisplay: string; hasMark: boolean; detailedSkills?: Record<string, string> } {
+  const skills = store?.data?.sportSkills || {};
+  let skillRecord = skills[`${player.id}_${sportKey}`];
+
+  if (!skillRecord) {
+    const mrName = SPORT_MARATHI_MAP[sportKey];
+    if (mrName && skills[`${player.id}_${mrName}`]) {
+      skillRecord = skills[`${player.id}_${mrName}`];
+    }
+  }
+
+  if (!skillRecord && ATHLETICS_DISCIPLINES.includes(sportKey)) {
+    skillRecord = skills[`${player.id}_Athletics`];
+  }
+
+  const scoreNum = skillRecord ? parseFloat(String(skillRecord.score || '0')) : 0;
+  const detailed = skillRecord?.detailedSkills;
+  const hasDetailed = detailed && typeof detailed === 'object' && Object.keys(detailed).length > 0;
+  const hasMark = (scoreNum > 0) || Boolean(hasDetailed);
+
+  return {
+    score: scoreNum,
+    scoreDisplay: hasMark ? `${scoreNum}%` : '-',
+    hasMark,
+    detailedSkills: detailed
+  };
+}
+
+// Retrieve game-related activity / skill description strictly for this specific game
+export function getPlayerGameActivity(player: any, sportKey: string, store: any): string {
+  const pos = player.positions?.[sportKey] || player.position || '';
+  const skillInfo = getPlayerSkillMarksAndRank(player, sportKey, store);
+  const detailed = skillInfo.detailedSkills;
+  const sportSkillsList = DETAILED_SKILLS_DATA[sportKey] || [];
+
+  let topSkillMr = '';
+  if (detailed && typeof detailed === 'object') {
+    let maxVal = -1;
+    let topSkillName = '';
+    for (const [sName, sVal] of Object.entries(detailed)) {
+      const num = parseFloat(String(sVal));
+      if (!isNaN(num) && num > maxVal) {
+        maxVal = num;
+        topSkillName = sName;
+      }
+    }
+    if (topSkillName) {
+      const matched = sportSkillsList.find(s => s.name === topSkillName || s.nameMr === topSkillName || s.id === topSkillName);
+      topSkillMr = matched ? matched.nameMr : topSkillName;
+    }
+  }
+
+  if (!topSkillMr && sportSkillsList.length > 0) {
+    topSkillMr = sportSkillsList[0].nameMr;
+  }
+
+  if (pos && topSkillMr) {
+    return `${pos} (${topSkillMr})`;
+  }
+  return pos || topSkillMr || (SPORT_MARATHI_MAP[sportKey] || sportKey);
+}
 
 interface OfficialTournamentSheetModalProps {
   isOpen: boolean;
@@ -202,7 +293,7 @@ export function OfficialTournamentSheetModal({
   const [sportName, setSportName] = useState<string>(SPORT_MARATHI_MAP[initialSport] || initialSport || 'कबड्डी');
   const [academicYear, setAcademicYear] = useState<string>("2026-27");
 
-  // Active Category Key (u14_girls, u14_boys, u17_girls, u17_boys, u19_girls, u19_boys)
+  // Active Category Key
   const getInitialCategoryKey = (catStr: string): string => {
     const lower = (catStr || '').toLowerCase();
     const isFemale = lower.includes('girl') || lower.includes('मुली') || lower.includes('female');
@@ -221,13 +312,27 @@ export function OfficialTournamentSheetModal({
   const [activeCategoryKey, setActiveCategoryKey] = useState<string>(getInitialCategoryKey(initialCategory));
   const [customAgeGroup, setCustomAgeGroup] = useState<string>('14 वर्षाखालील मुली');
 
-  // Multi-Category Map: each category maintains its OWN distinct rows!
+  // Filter mode: strictly show only players with Skill Hub marks by default!
+  const [onlySkillHubMarked, setOnlySkillHubMarked] = useState<boolean>(true);
+
+  // Athletics mode: when viewing Javelin, Discus, Shot Put, Running, Long Jump, High Jump
+  const isAthleticsSport = isAthleticsSixSport(selectedSportKey);
+  const [isConsolidatedAthleticsView, setIsConsolidatedAthleticsView] = useState<boolean>(false);
+
+  // Multi-Category Map: each category maintains its OWN distinct rows
   const [categorySheets, setCategorySheets] = useState<Record<string, SheetRow[]>>({});
+  // Consolidated Athletics Sheet Rows (all 6 events together)
+  const [athleticsConsolidatedRows, setAthleticsConsolidatedRows] = useState<SheetRow[]>([]);
+
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [lastSyncStatus, setLastSyncStatus] = useState<string | null>(null);
 
   // Debounced auto-save timer ref
   const debounceSyncRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  // Refs to control initialization strictly on opening or user-driven sport changes
+  const prevOpenRef = useRef<boolean>(false);
+  const prevSportRef = useRef<string>(initialSport);
 
   // Student Picker Dialog state
   const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
@@ -297,18 +402,24 @@ export function OfficialTournamentSheetModal({
 
     return {
       id: p.id || `row-${index}-${Date.now()}`,
-      srNo: String(index + 1),
+      srNo: p.srNo || String(index + 1),
       studentName: name,
       std,
       grNo: String(grNo),
       dob,
       motherName,
       aadhar,
-      saralId
+      saralId,
+      sportOrEvent: p.sportOrEvent || (SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey),
+      gameActivity: p.gameActivity || '',
+      skillScore: p.skillScore || '-',
+      skillScoreNum: p.skillScoreNum || 0,
+      skillRank: p.skillRank || (index + 1),
+      ageCategoryLabel: p.ageCategoryLabel || ''
     };
-  }, [findMasterStudent, store?.data?.players]);
+  }, [findMasterStudent, store?.data?.players, selectedSportKey]);
 
-  // Synchronize changes made on the sheet back to student's main profile in store/database
+  // Synchronize student data back to profile (only for profile fields, NEVER for srNo!)
   const syncRowToStudentProfile = useCallback((row: SheetRow) => {
     if (!store?.updatePlayer) return;
 
@@ -351,13 +462,61 @@ export function OfficialTournamentSheetModal({
     }
   }, [store]);
 
+  // Build Consolidated Athletics Sheet Rows for all 6 events:
+  // Javelin Throw, Disc Throw, Shot Put, Running, Long Jump, High Jump
+  const buildConsolidatedAthleticsRows = useCallback((): SheetRow[] => {
+    const allStorePlayers: any[] = store?.data?.players || [];
+    const collected: SheetRow[] = [];
+    const seenPlayerEvent = new Set<string>();
+
+    ATHLETICS_CORE_SIX.forEach(ev => {
+      allStorePlayers.forEach(p => {
+        const skillInfo = getPlayerSkillMarksAndRank(p, ev.key, store);
+        const isRegistered = Boolean(
+          p.sports && Array.isArray(p.sports) && (p.sports.includes(ev.key) || p.sports.includes('Athletics'))
+        );
+
+        // Include player if they have Skill Hub mark or are registered in this athletics discipline
+        if (skillInfo.hasMark || isRegistered) {
+          const key = `${p.id}_${ev.key}`;
+          if (!seenPlayerEvent.has(key)) {
+            seenPlayerEvent.add(key);
+            const activity = getPlayerGameActivity(p, ev.key, store);
+            const baseRow = playerToSheetRow(p, collected.length);
+            collected.push({
+              ...baseRow,
+              srNo: String(collected.length + 1),
+              sportOrEvent: ev.labelMr,
+              gameActivity: activity,
+              skillScore: skillInfo.scoreDisplay,
+              skillScoreNum: skillInfo.score,
+              skillRank: 1,
+              ageCategoryLabel: p.gender === 'Female' ? 'मुली' : 'मुले'
+            });
+          }
+        }
+      });
+    });
+
+    // Sort strictly by Skill Hub marks ranking (highest score first)
+    collected.sort((a, b) => (b.skillScoreNum || 0) - (a.skillScoreNum || 0));
+
+    // Re-assign Sr No and Rank by mark ranking
+    return collected.map((r, i) => ({
+      ...r,
+      srNo: String(i + 1),
+      skillRank: i + 1
+    }));
+  }, [store, playerToSheetRow]);
+
   // Build sheets for all 6 categories from store players
   const initializeCategorySheets = useCallback((sportKey: string, basePlayers?: any[]) => {
     const allStorePlayers: any[] = store?.data?.players || [];
     const newSheets: Record<string, SheetRow[]> = {};
+    const isAthletics = ATHLETICS_DISCIPLINES.includes(sportKey);
 
     OFFICIAL_CATEGORIES.forEach(catDef => {
-      // 1. Filter strictly by gender (Boys and Girls never mixed!)
+      // 1. Filter strictly by gender
       let pool = allStorePlayers.filter((p: any) => {
         const isFem = p.gender === 'Female' || p.gender === 'मुली';
         return catDef.gender === 'Female' ? isFem : !isFem;
@@ -371,7 +530,6 @@ export function OfficialTournamentSheetModal({
           if (catDef.ageType === 'U17') return ageVal.eligibilityType === 'U17';
           if (catDef.ageType === 'U19') return ageVal.eligibilityType === 'U19';
         }
-        // Fallback age
         const age = parseInt(p.age) || 0;
         if (age > 0) {
           if (catDef.ageType === 'U14') return age < 14;
@@ -381,85 +539,149 @@ export function OfficialTournamentSheetModal({
         return false;
       });
 
-      // 3. Filter / prioritize by sport
-      const sportSpecific = pool.filter((p: any) => {
-        if (!p.sports || !Array.isArray(p.sports)) return false;
-        if (p.sports.includes(sportKey)) return true;
-        if (ATHLETICS_DISCIPLINES.includes(sportKey) && (p.sports.includes('Athletics') || p.category === 'athlete')) {
-          return true;
-        }
-        return false;
+      // 3. For each player, retrieve their game-specific activities and Skill Hub marks
+      const scoredPlayers = pool.map(p => {
+        const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+        const activity = getPlayerGameActivity(p, sportKey, store);
+        const isInSport = Boolean(
+          p.sports && Array.isArray(p.sports) && (p.sports.includes(sportKey) || (isAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')))
+        );
+
+        return {
+          ...p,
+          skillScoreNum: skillInfo.score,
+          skillScoreDisplay: skillInfo.scoreDisplay,
+          hasSkillMark: skillInfo.hasMark,
+          gameActivity: activity,
+          isInSport
+        };
       });
 
-      // If players tagged with this sport exist, use them; otherwise use eligible age-group pool
-      const selectedPool = sportSpecific.length > 0 ? sportSpecific : pool.slice(0, 16);
+      // 4. Strict filter:
+      // Show players who have marks from Skill Hub for this specific game
+      let filtered = scoredPlayers.filter(p => p.hasSkillMark && (p.isInSport || isAthletics));
 
-      // If initialPlayers was passed for this specific category, use it
-      const categoryMatchesInitial = getInitialCategoryKey(initialCategory) === catDef.key;
-      const finalPool = (categoryMatchesInitial && basePlayers && basePlayers.length > 0) 
-        ? basePlayers 
-        : selectedPool;
+      // Fallback: If no players have marks yet in this category for this sport, use sport participants
+      if (filtered.length === 0) {
+        if (basePlayers && basePlayers.length > 0 && getInitialCategoryKey(initialCategory) === catDef.key) {
+          filtered = basePlayers.map(p => {
+            const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+            const activity = getPlayerGameActivity(p, sportKey, store);
+            return {
+              ...p,
+              skillScoreNum: skillInfo.score,
+              skillScoreDisplay: skillInfo.scoreDisplay,
+              hasSkillMark: skillInfo.hasMark,
+              gameActivity: activity,
+              isInSport: true
+            };
+          });
+        } else {
+          filtered = scoredPlayers.filter(p => p.isInSport);
+        }
+      }
 
-      newSheets[catDef.key] = finalPool.map((p, i) => playerToSheetRow(p, i));
+      // 5. Sort strictly by Skill Hub mark ranking (highest score first)
+      filtered.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+
+      // Map to SheetRow with initial Sr No = Mark Ranking (1, 2, 3...)
+      newSheets[catDef.key] = filtered.map((p, i) => {
+        const row = playerToSheetRow(p, i);
+        return {
+          ...row,
+          srNo: String(i + 1), // Sr No corresponds to their mark rank
+          sportOrEvent: SPORT_MARATHI_MAP[sportKey] || sportKey,
+          gameActivity: p.gameActivity,
+          skillScore: p.skillScoreDisplay,
+          skillScoreNum: p.skillScoreNum,
+          skillRank: i + 1,
+          ageCategoryLabel: catDef.shortLabel
+        };
+      });
     });
 
     setCategorySheets(newSheets);
-  }, [store?.data?.players, playerToSheetRow, initialCategory]);
 
-  // Sync on open
+    // If it's an athletics sport, also build the consolidated sheet for all 6 events
+    if (ATHLETICS_DISCIPLINES.includes(sportKey)) {
+      setAthleticsConsolidatedRows(buildConsolidatedAthleticsRows());
+    }
+  }, [store, playerToSheetRow, initialCategory, buildConsolidatedAthleticsRows]);
+
+  // Sync strictly on modal open or sport change (does NOT re-trigger on user typing!)
   useEffect(() => {
     if (isOpen) {
-      setSelectedSportKey(initialSport);
-      setSportName(SPORT_MARATHI_MAP[initialSport] || initialSport || 'कबड्डी');
-      const catKey = getInitialCategoryKey(initialCategory);
-      setActiveCategoryKey(catKey);
-      const catDef = OFFICIAL_CATEGORIES.find(c => c.key === catKey);
-      if (catDef) {
-        setCustomAgeGroup(catDef.labelMr);
+      const isFirstOpen = !prevOpenRef.current;
+      const isSportChanged = prevSportRef.current !== initialSport;
+
+      if (isFirstOpen || isSportChanged) {
+        setSelectedSportKey(initialSport);
+        setSportName(SPORT_MARATHI_MAP[initialSport] || initialSport || 'कबड्डी');
+        const catKey = getInitialCategoryKey(initialCategory);
+        setActiveCategoryKey(catKey);
+        const catDef = OFFICIAL_CATEGORIES.find(c => c.key === catKey);
+        if (catDef) {
+          setCustomAgeGroup(catDef.labelMr);
+        }
+        initializeCategorySheets(initialSport, initialPlayers);
+        prevSportRef.current = initialSport;
       }
-      initializeCategorySheets(initialSport, initialPlayers);
     }
-  }, [isOpen, initialSport, initialCategory, initialPlayers, initializeCategorySheets]);
+    prevOpenRef.current = isOpen;
+  }, [isOpen, initialSport, initialCategory, initializeCategorySheets, initialPlayers]);
 
   // Handle switching category
   const handleSelectCategory = (catKey: string) => {
     setActiveCategoryKey(catKey);
+    setIsConsolidatedAthleticsView(false);
     const catDef = OFFICIAL_CATEGORIES.find(c => c.key === catKey);
     if (catDef) {
       setCustomAgeGroup(catDef.labelMr);
     }
   };
 
-  // Active category rows
-  const activeRows = categorySheets[activeCategoryKey] || [];
+  // Active category rows (or consolidated athletics rows if toggled)
+  const activeRows = isConsolidatedAthleticsView 
+    ? athleticsConsolidatedRows 
+    : (categorySheets[activeCategoryKey] || []);
 
-  // Update rows for active category
+  // Update rows for active category or consolidated view
   const updateActiveRows = (newRows: SheetRow[]) => {
-    setCategorySheets(prev => ({
-      ...prev,
-      [activeCategoryKey]: newRows
-    }));
+    if (isConsolidatedAthleticsView) {
+      setAthleticsConsolidatedRows(newRows);
+    } else {
+      setCategorySheets(prev => ({
+        ...prev,
+        [activeCategoryKey]: newRows
+      }));
+    }
   };
 
-  // Row operations with automatic profile synchronization
+  // Row operations: user can freely edit Sr No without it being reset!
   const updateRowField = (index: number, field: keyof SheetRow, value: string) => {
     const next = [...activeRows];
     const updatedRow = { ...next[index], [field]: value };
     next[index] = updatedRow;
     updateActiveRows(next);
 
-    // Auto-update student's main profile with 350ms debounce
-    if (debounceSyncRef.current[updatedRow.id]) {
-      clearTimeout(debounceSyncRef.current[updatedRow.id]);
+    // CRITICAL: NEVER sync Sr No, Rank, or Game Activity to the student profile!
+    // This allows the teacher to edit Sr No freely without triggering store updates or reverts!
+    const sheetOnlyFields: (keyof SheetRow)[] = ['srNo', 'gameActivity', 'skillScore', 'skillScoreNum', 'skillRank', 'sportOrEvent', 'ageCategoryLabel'];
+    if (!sheetOnlyFields.includes(field)) {
+      if (debounceSyncRef.current[updatedRow.id]) {
+        clearTimeout(debounceSyncRef.current[updatedRow.id]);
+      }
+      debounceSyncRef.current[updatedRow.id] = setTimeout(() => {
+        syncRowToStudentProfile(updatedRow);
+      }, 500);
     }
-    debounceSyncRef.current[updatedRow.id] = setTimeout(() => {
-      syncRowToStudentProfile(updatedRow);
-    }, 350);
   };
 
   const handleRowBlur = (index: number) => {
-    if (activeRows[index]) {
-      syncRowToStudentProfile(activeRows[index]);
+    // Only profile fields get synced on blur if needed
+    const row = activeRows[index];
+    if (row) {
+      syncRowToStudentProfile(row);
     }
   };
 
@@ -488,6 +710,17 @@ export function OfficialTournamentSheetModal({
     updateActiveRows(next);
   };
 
+  const sortBySkillHubRanking = () => {
+    const next = [...activeRows];
+    next.sort((a, b) => (b.skillScoreNum || 0) - (a.skillScoreNum || 0));
+    const renumbered = next.map((r, i) => ({
+      ...r,
+      srNo: String(i + 1),
+      skillRank: i + 1
+    }));
+    updateActiveRows(renumbered);
+  };
+
   const addBlankRow = () => {
     const nextSr = activeRows.length > 0 ? String(activeRows.length + 1) : "1";
     const newRow: SheetRow = {
@@ -499,7 +732,12 @@ export function OfficialTournamentSheetModal({
       dob: "",
       motherName: "",
       aadhar: "",
-      saralId: ""
+      saralId: "",
+      sportOrEvent: SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey,
+      gameActivity: isAthleticsSport ? "भालाफेक / धावणे" : "चढाईपटू (Raider)",
+      skillScore: "-",
+      skillScoreNum: 0,
+      skillRank: activeRows.length + 1
     };
     updateActiveRows([...activeRows, newRow]);
   };
@@ -514,7 +752,18 @@ export function OfficialTournamentSheetModal({
 
   // Add student from picker into active category sheet
   const handleAddFromStudentPicker = (student: any) => {
-    const newRow = playerToSheetRow(student, activeRows.length);
+    const skillInfo = getPlayerSkillMarksAndRank(student, selectedSportKey, store);
+    const activity = getPlayerGameActivity(student, selectedSportKey, store);
+    const baseRow = playerToSheetRow(student, activeRows.length);
+    const newRow: SheetRow = {
+      ...baseRow,
+      srNo: String(activeRows.length + 1),
+      sportOrEvent: SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey,
+      gameActivity: activity,
+      skillScore: skillInfo.scoreDisplay,
+      skillScoreNum: skillInfo.score,
+      skillRank: activeRows.length + 1
+    };
     updateActiveRows([...activeRows, newRow]);
     setIsPickerOpen(false);
   };
@@ -522,6 +771,7 @@ export function OfficialTournamentSheetModal({
   // Generate HTML for a single category sheet matching uploaded PDF
   // RULE 1: For Kabaddi, Volleyball, Kho Kho, and Handball, strictly limit to 12 players!
   // RULE 2: ONLY headers should be bold. Other student information MUST NOT be bold!
+  // RULE 3: Shows game-related activity and Skill Hub marks & ranking!
   const generateSingleSheetTableHtml = (catLabel: string, rawRowsList: SheetRow[], isMultiPage: boolean = false) => {
     const teacherName = store?.data?.schoolProfile?.teacherName || "क्रीडा शिक्षक";
 
@@ -529,11 +779,12 @@ export function OfficialTournamentSheetModal({
     const is12 = is12SquadSport(selectedSportKey, sportName);
     const rowsList = is12 ? rawRowsList.slice(0, 12) : rawRowsList;
 
-    // Student information MUST NOT be bold (font-normal / regular weight)
     const rowsHtml = rowsList.length > 0 ? rowsList.map(r => `
       <tr>
         <td class="text-center font-normal">${r.srNo || '-'}</td>
         <td class="font-normal text-left">${r.studentName || '-'}</td>
+        <td class="text-center font-normal" style="font-weight: 600; color: #1e3a8a;">${r.gameActivity || r.sportOrEvent || '-'}</td>
+        <td class="text-center font-normal" style="font-weight: 700; color: #047857;">${r.skillScore && r.skillScore !== '-' ? `${r.skillScore} (रँक ${r.skillRank || '-'})` : '-'}</td>
         <td class="text-center font-normal">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
@@ -543,7 +794,7 @@ export function OfficialTournamentSheetModal({
       </tr>
     `).join('') : `
       <tr>
-        <td colspan="8" class="text-center py-6 text-muted font-normal">या वयोगटासाठी खेळाडू यादी उपलब्ध नाही</td>
+        <td colspan="10" class="text-center py-6 text-muted font-normal">या वयोगटासाठी खेळाडू यादी उपलब्ध नाही</td>
       </tr>
     `;
 
@@ -553,21 +804,21 @@ export function OfficialTournamentSheetModal({
           <thead>
             <!-- ROW 1: DEPARTMENT NAME (BOLD) -->
             <tr>
-              <th colspan="8" class="header-line-1">
+              <th colspan="10" class="header-line-1">
                 ${departmentName}
               </th>
             </tr>
 
             <!-- ROW 2: PROJECT NAME (BOLD) -->
             <tr>
-              <th colspan="8" class="header-line-2">
+              <th colspan="10" class="header-line-2">
                 ${projectName}
               </th>
             </tr>
 
             <!-- ROW 3: SCHOOL NAME (BOLD) -->
             <tr>
-              <th colspan="8" class="header-line-3">
+              <th colspan="10" class="header-line-3">
                 ${schoolName}
               </th>
             </tr>
@@ -577,24 +828,113 @@ export function OfficialTournamentSheetModal({
               <th colspan="3" class="meta-bar-cell text-left">
                 वयोगट :- ${catLabel}
               </th>
-              <th colspan="3" class="meta-bar-cell text-center">
+              <th colspan="4" class="meta-bar-cell text-center">
                 खेळ प्रकार :- ${sportName}
               </th>
-              <th colspan="2" class="meta-bar-cell text-center">
+              <th colspan="3" class="meta-bar-cell text-center">
                 सन:- ${academicYear}
               </th>
             </tr>
 
             <!-- ROW 5: COLUMN HEADERS (BOLD) -->
             <tr>
-              <th class="col-header" style="width: 5%;">अ.क्र.</th>
-              <th class="col-header" style="width: 25%;">विद्यार्थ्याचे नाव</th>
-              <th class="col-header" style="width: 8%;">इयत्ता</th>
-              <th class="col-header" style="width: 9%;">ज.रजि.नं.</th>
-              <th class="col-header" style="width: 11%;">जन्म तारीख</th>
-              <th class="col-header" style="width: 12%;">आईचे नाव</th>
-              <th class="col-header" style="width: 15%;">आधार कार्ड नं.</th>
-              <th class="col-header" style="width: 15%;">सरल आय.डी.नं.</th>
+              <th class="col-header" style="width: 4%;">अ.क्र.</th>
+              <th class="col-header" style="width: 20%;">विद्यार्थ्याचे नाव</th>
+              <th class="col-header" style="width: 14%;">कौशल्य क्रिया / पोझिशन</th>
+              <th class="col-header" style="width: 10%;">कौशल्य गुण / रँक</th>
+              <th class="col-header" style="width: 6%;">इयत्ता</th>
+              <th class="col-header" style="width: 7%;">ज.रजि.नं.</th>
+              <th class="col-header" style="width: 9%;">जन्म तारीख</th>
+              <th class="col-header" style="width: 10%;">आईचे नाव</th>
+              <th class="col-header" style="width: 11%;">आधार कार्ड नं.</th>
+              <th class="col-header" style="width: 9%;">सरल आय.डी.नं.</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <!-- FOOTER SIGNATURE SECTION -->
+        <div class="footer-sign-section">
+          <div class="sign-box">
+            <br/><br/>
+            <div>क्रीडा शिक्षक (स्वाक्षरी)</div>
+            <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(${teacherName})</div>
+          </div>
+          <div class="sign-box">
+            <br/><br/>
+            <div>मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)</div>
+            <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(शा. मा. आ. शाळा वाघांबा)</div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  // Generate Consolidated Athletics Sheet for all 6 events:
+  // Javelin Throw, Disc Throw, Shot Put, Running, Long Jump, High Jump
+  const generateConsolidatedAthleticsSheetHtml = (rowsList: SheetRow[]) => {
+    const teacherName = store?.data?.schoolProfile?.teacherName || "क्रीडा शिक्षक";
+
+    const rowsHtml = rowsList.length > 0 ? rowsList.map(r => `
+      <tr>
+        <td class="text-center font-normal">${r.srNo || '-'}</td>
+        <td class="font-normal text-left">${r.studentName || '-'}</td>
+        <td class="text-center font-normal" style="font-weight: 700; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
+        <td class="text-center font-normal">${r.gameActivity || '-'}</td>
+        <td class="text-center font-normal" style="font-weight: 700; color: #047857;">${r.skillScore && r.skillScore !== '-' ? `${r.skillScore} (रँक ${r.skillRank || '-'})` : '-'}</td>
+        <td class="text-center font-normal">${r.std || '-'}</td>
+        <td class="text-center font-normal">${r.grNo || '-'}</td>
+        <td class="text-center font-normal">${r.dob || '-'}</td>
+        <td class="text-center font-normal">${r.motherName || '-'}</td>
+        <td class="text-center font-normal">${r.aadhar || '-'}</td>
+        <td class="text-center font-normal"></td>
+      </tr>
+    `).join('') : `
+      <tr>
+        <td colspan="11" class="text-center py-8 text-muted font-normal">
+          भालाफेक, थाळीफेक, गोळाफेक, धावणे, लांब उडी व उंच उडीसाठी खेळाडू उपलब्ध नाहीत
+        </td>
+      </tr>
+    `;
+
+    return `
+      <div class="sheet-page">
+        <table class="official-outer-box">
+          <thead>
+            <tr>
+              <th colspan="11" class="header-line-1">${departmentName}</th>
+            </tr>
+            <tr>
+              <th colspan="11" class="header-line-2">${projectName}</th>
+            </tr>
+            <tr>
+              <th colspan="11" class="header-line-3">${schoolName}</th>
+            </tr>
+            <tr>
+              <th colspan="3" class="meta-bar-cell text-left">
+                वयोगट :- सर्व वयोगट / मुले व मुली
+              </th>
+              <th colspan="5" class="meta-bar-cell text-center" style="color: #b45309;">
+                खेळ प्रकार :- सर्व मैदानी व धावणे स्पर्धा (भालाफेक, थाळीफेक, गोळाफेक, धावणे, लांब उडी, उंच उडी)
+              </th>
+              <th colspan="3" class="meta-bar-cell text-center">
+                सन:- ${academicYear}
+              </th>
+            </tr>
+            <tr>
+              <th class="col-header" style="width: 4%;">अ.क्र.</th>
+              <th class="col-header" style="width: 19%;">विद्यार्थ्याचे नाव</th>
+              <th class="col-header" style="width: 10%;">मैदानी खेळ / इव्हेंट</th>
+              <th class="col-header" style="width: 14%;">कौशल्य क्रिया / पोझिशन</th>
+              <th class="col-header" style="width: 10%;">कौशल्य गुण / रँक</th>
+              <th class="col-header" style="width: 5%;">इयत्ता</th>
+              <th class="col-header" style="width: 7%;">ज.रजि.नं.</th>
+              <th class="col-header" style="width: 9%;">जन्म तारीख</th>
+              <th class="col-header" style="width: 9%;">आईचे नाव</th>
+              <th class="col-header" style="width: 9%;">आधार कार्ड नं.</th>
+              <th class="col-header" style="width: 4%;">सही</th>
             </tr>
           </thead>
           <tbody>
@@ -620,14 +960,13 @@ export function OfficialTournamentSheetModal({
   };
 
   // Base CSS for Printable Sheet
-  // ONLY headers are bold (font-weight: 800/900). Student data is regular (font-weight: 400).
   const getPrintStyles = () => `
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
     
     @media print {
       @page {
         size: A4 landscape;
-        margin: 0.6cm;
+        margin: 0.5cm;
       }
       .no-print {
         display: none !important;
@@ -656,7 +995,7 @@ export function OfficialTournamentSheetModal({
       background-color: #f8fafc;
       margin: 0;
       padding: 10px;
-      font-size: 11pt;
+      font-size: 10.5pt;
       line-height: 1.25;
     }
 
@@ -696,7 +1035,7 @@ export function OfficialTournamentSheetModal({
     }
 
     .page-container {
-      max-width: 1050px;
+      max-width: 1100px;
       margin: 45px auto 20px auto;
     }
 
@@ -709,7 +1048,6 @@ export function OfficialTournamentSheetModal({
       break-after: page;
     }
 
-    /* The outer bordered table structure exactly matching official PDF */
     .official-outer-box {
       background: #ffffff;
       border: 2px solid #000000;
@@ -721,55 +1059,53 @@ export function OfficialTournamentSheetModal({
     .official-outer-box td, 
     .official-outer-box th {
       border: 1px solid #000000;
-      padding: 4px 6px;
+      padding: 4px 5px;
       vertical-align: middle;
     }
 
-    /* ALL HEADERS: BOLD */
     .header-line-1 {
-      font-size: 14pt;
+      font-size: 13.5pt;
       font-weight: 900 !important;
       text-align: center;
-      padding: 6px 4px;
+      padding: 5px 4px;
       background: #ffffff;
       letter-spacing: 0.3px;
     }
 
     .header-line-2 {
-      font-size: 12.5pt;
+      font-size: 12pt;
       font-weight: 800 !important;
       text-align: center;
-      padding: 5px 4px;
+      padding: 4px 4px;
       background: #ffffff;
     }
 
     .header-line-3 {
-      font-size: 12pt;
+      font-size: 11.5pt;
       font-weight: 800 !important;
       text-align: center;
-      padding: 5px 4px;
+      padding: 4px 4px;
       background: #ffffff;
     }
 
     .meta-bar-cell {
-      font-size: 11pt;
+      font-size: 10.5pt;
       font-weight: 900 !important;
-      padding: 6px 8px;
+      padding: 5px 8px;
     }
 
     .col-header {
-      font-size: 10.5pt;
+      font-size: 10pt;
       font-weight: 900 !important;
       text-align: center;
       background: #ffffff;
-      padding: 6px 4px;
+      padding: 5px 3px;
     }
 
-    /* ALL STUDENT DATA: STRICTLY NOT BOLD (font-weight: 400) */
     .official-outer-box tbody td,
     .font-normal {
       font-weight: 400 !important;
-      font-size: 10.5pt;
+      font-size: 10pt;
     }
 
     .text-center {
@@ -778,15 +1114,15 @@ export function OfficialTournamentSheetModal({
 
     .text-left {
       text-align: left;
-      padding-left: 8px !important;
+      padding-left: 6px !important;
     }
 
     .footer-sign-section {
-      margin-top: 25px;
+      margin-top: 20px;
       display: flex;
       justify-content: space-between;
       padding: 0 20px;
-      font-size: 10.5pt;
+      font-size: 10pt;
       font-weight: 800;
     }
 
@@ -796,8 +1132,14 @@ export function OfficialTournamentSheetModal({
     }
   `;
 
-  // Print ONLY the active category sheet (e.g. 14 Girls, or 14 Boys, or 17 Girls, or 17 Boys)
+  // Print Active Sheet
   const handlePrintActiveSheet = () => {
+    // If user is in Consolidated Athletics view, print the consolidated sheet
+    if (isConsolidatedAthleticsView) {
+      handlePrintConsolidatedAthletics();
+      return;
+    }
+
     const content = generateSingleSheetTableHtml(customAgeGroup, activeRows, false);
     const limitNotice = is12PlayersOnly ? `(फक्त पहिले १२ खेळाडू - Official Squad)` : '';
 
@@ -831,8 +1173,46 @@ export function OfficialTournamentSheetModal({
     }
   };
 
-  // Print ALL 6 categories on separate A4 sheets with page breaks!
-  // (14 Girls on page 1, 14 Boys on page 2, 17 Girls on page 3, 17 Boys on page 4, etc.)
+  // Print ALL 6 Athletics Events together on a single consolidated printable sheet:
+  // Javelin Throw, Disc Throw, Shot Put, Running, Long Jump, High Jump
+  const handlePrintConsolidatedAthletics = () => {
+    const rows = athleticsConsolidatedRows.length > 0 
+      ? athleticsConsolidatedRows 
+      : buildConsolidatedAthleticsRows();
+
+    const content = generateConsolidatedAthleticsSheetHtml(rows);
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="mr">
+        <head>
+          <title>सर्व मैदानी स्पर्धा एकत्रित अधिकृत प्रवेश पत्र - भालाफेक, थाळीफेक, गोळाफेक, धावणे, लांब उडी, उंच उडी (${academicYear})</title>
+          <meta charset="utf-8" />
+          <style>${getPrintStyles()}</style>
+        </head>
+        <body>
+          <div class="no-print print-toolbar">
+            <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
+            <div style="font-weight: 800; font-size: 11pt; color: #f8fafc;">
+              🏃 सर्व मैदानी व धावणे स्पर्धा एकत्रित अधिकृत शीट (${rows.length} खेळाडू) &bull; सन ${academicYear}
+            </div>
+            <button onclick="window.print()" class="btn btn-print">🖨️ एकत्रित मैदानी शीट प्रिंट (Print Athletics Sheet)</button>
+          </div>
+          <div class="page-container">
+            ${content}
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(printHtml);
+      win.document.close();
+    }
+  };
+
+  // Print ALL 6 categories on separate A4 sheets with page breaks
   const handlePrintAllCategories = () => {
     const sheetsHtml = OFFICIAL_CATEGORIES.map(catDef => {
       const catRows = categorySheets[catDef.key] || [];
@@ -884,11 +1264,11 @@ export function OfficialTournamentSheetModal({
               </DialogTitle>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 <span className="text-xs text-muted-foreground font-semibold">
-                  आदिवासी विकास विभाग &bull; मुले व मुलींसाठी १४, १७ व १९ वयोगटनिहाय स्वतंत्र अधिकृत प्रवेश पत्र
+                  आदिवासी विकास विभाग &bull; Skill Hub कौशल्य गुण व रँकिंगनुसार खेळाडू यादी
                 </span>
-                {is12PlayersOnly && (
+                {is12PlayersOnly && !isConsolidatedAthleticsView && (
                   <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] uppercase px-2 py-0.5">
-                    ⚡ संघ मर्यादा: १२ खेळाडू (Top 12 Only)
+                    ⚡ संघ मर्यादा: १२ खेळाडू (Top 12 Squad)
                   </Badge>
                 )}
                 {lastSyncStatus && (
@@ -900,6 +1280,17 @@ export function OfficialTournamentSheetModal({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              {isAthleticsSport && (
+                <Button
+                  onClick={handlePrintConsolidatedAthletics}
+                  className="h-10 px-4 rounded-xl font-black text-xs uppercase tracking-wider bg-emerald-700 hover:bg-emerald-800 text-white shadow-md gap-1.5 border-none"
+                  title="भालाफेक, थाळीफेक, गोळाफेक, धावणे, लांब उडी, उंच उडी सर्व खेळाडू एकाच शीटवर प्रिंट करा"
+                >
+                  <Medal className="w-4 h-4 text-amber-300" />
+                  🏃 सर्व ६ मैदानी खेळ एकत्रित प्रिंट
+                </Button>
+              )}
+
               <Button
                 variant="outline"
                 size="sm"
@@ -926,7 +1317,7 @@ export function OfficialTournamentSheetModal({
                 title="१४/१७/१९ मुले व मुली सर्व शीट स्वतंत्र पानांवर प्रिंट करा"
               >
                 <Layers className="w-4 h-4 text-amber-400" />
-                📑 सर्व ६ गट शीट प्रिंट (Print All 6)
+                📑 सर्व ६ गट प्रिंट (Print All 6)
               </Button>
             </div>
           </DialogHeader>
@@ -971,7 +1362,7 @@ export function OfficialTournamentSheetModal({
             <div className="space-y-1 sm:col-span-2">
               <label className="text-[10px] font-black uppercase text-primary flex items-center justify-between">
                 <span>खेळ प्रकार (Select Sport / Field Event)</span>
-                <span className="text-muted-foreground font-semibold">कबड्डी, व्हॉलीबॉल, खो खो, हॅन्डबॉल, भालाफेक, लांब उडी इ.</span>
+                <span className="text-muted-foreground font-semibold">कबड्डी, व्हॉलीबॉल, खो खो, हॅन्डबॉल, भालाफेक, लांब उडी, गोळाफेक इ.</span>
               </label>
               <div className="flex gap-2">
                 <Select 
@@ -979,6 +1370,7 @@ export function OfficialTournamentSheetModal({
                   onValueChange={(val) => {
                     setSelectedSportKey(val);
                     setSportName(SPORT_MARATHI_MAP[val] || val);
+                    setIsConsolidatedAthleticsView(false);
                     initializeCategorySheets(val);
                   }}
                 >
@@ -997,7 +1389,7 @@ export function OfficialTournamentSheetModal({
                   value={sportName} 
                   onChange={(e) => setSportName(e.target.value)} 
                   placeholder="खेळ नाव" 
-                  className="h-9 text-xs font-bold w-36"
+                  className="h-9 text-xs font-bold w-44"
                 />
               </div>
             </div>
@@ -1013,58 +1405,107 @@ export function OfficialTournamentSheetModal({
             </div>
           </div>
 
-          {/* CATEGORY SELECTOR PILLS - Under 14 Girls, 14 Boys, 17 Girls, 17 Boys, 19 Girls, 19 Boys */}
-          <div className="shrink-0 bg-slate-100/90 dark:bg-slate-800/80 p-2 rounded-2xl border shadow-inner">
-            <div className="text-[10px] font-black uppercase text-slate-500 mb-1.5 px-1 flex items-center justify-between">
-              <span>🎯 वयोगट व लिंग निवडा (Select Under-wise Category & Gender):</span>
-              <span className="text-primary font-black">प्रत्येक वयोगट व मुला-मुलींसाठी स्वतंत्र शीट</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-              {OFFICIAL_CATEGORIES.map(cat => {
-                const isSelected = activeCategoryKey === cat.key;
-                const count = (categorySheets[cat.key] || []).length;
-                const isGirl = cat.gender === 'Female';
+          {/* ATHLETICS MODE SWITCHER IF ONE OF 6 ATHLETICS DISCIPLINES */}
+          {isAthleticsSport && (
+            <div className="shrink-0 bg-gradient-to-r from-amber-50 to-emerald-50 border-2 border-emerald-300 p-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-2 shadow-xs">
+              <div className="flex items-center gap-2">
+                <Medal className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <div className="text-xs font-black text-slate-900">
+                    मैदानी स्पर्धा पर्याय (Track & Field Events Mode):
+                  </div>
+                  <div className="text-[10px] font-semibold text-slate-600">
+                    भालाफेक, थाळीफेक, गोळाफेक, धावणे, लांब उडी, उंच उडी सर्व खेळाडू एकत्रित किंवा स्वतंत्र शीट
+                  </div>
+                </div>
+              </div>
 
-                return (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => handleSelectCategory(cat.key)}
-                    className={`h-11 px-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-between border-2 shadow-xs ${
-                      isSelected
-                        ? isGirl
-                          ? 'bg-rose-600 text-white border-rose-700 ring-2 ring-rose-400/40 shadow-md scale-[1.02]'
-                          : 'bg-blue-700 text-white border-blue-800 ring-2 ring-blue-400/40 shadow-md scale-[1.02]'
-                        : isGirl
-                          ? 'bg-rose-50 text-rose-950 border-rose-200 hover:bg-rose-100'
-                          : 'bg-blue-50 text-blue-950 border-blue-200 hover:bg-blue-100'
-                    }`}
-                  >
-                    <span className="truncate">{cat.badge}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-black shrink-0 ${
-                      isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-900 shadow-2xs'
-                    }`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={isConsolidatedAthleticsView ? "default" : "outline"}
+                  onClick={() => setIsConsolidatedAthleticsView(true)}
+                  className={`h-8 rounded-xl text-xs font-black gap-1.5 ${
+                    isConsolidatedAthleticsView 
+                      ? 'bg-emerald-700 text-white shadow-sm' 
+                      : 'bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-50'
+                  }`}
+                >
+                  <Medal className="w-3.5 h-3.5" />
+                  🏃 सर्व ६ खेळ एकत्रित शीट ({athleticsConsolidatedRows.length} खेळाडू)
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant={!isConsolidatedAthleticsView ? "default" : "outline"}
+                  onClick={() => setIsConsolidatedAthleticsView(false)}
+                  className={`h-8 rounded-xl text-xs font-black gap-1.5 ${
+                    !isConsolidatedAthleticsView 
+                      ? 'bg-amber-500 text-slate-950 shadow-sm' 
+                      : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-100'
+                  }`}
+                >
+                  🎯 फक्त {sportName} शीट
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* CATEGORY SELECTOR PILLS - Disabled in consolidated athletics mode */}
+          {!isConsolidatedAthleticsView && (
+            <div className="shrink-0 bg-slate-100/90 dark:bg-slate-800/80 p-2 rounded-2xl border shadow-inner">
+              <div className="text-[10px] font-black uppercase text-slate-500 mb-1.5 px-1 flex items-center justify-between">
+                <span>🎯 वयोगट व लिंग निवडा (Select Category & Gender):</span>
+                <span className="text-primary font-black">प्रत्येक वयोगट व मुला-मुलींसाठी स्वतंत्र शीट</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                {OFFICIAL_CATEGORIES.map(cat => {
+                  const isSelected = activeCategoryKey === cat.key;
+                  const count = (categorySheets[cat.key] || []).length;
+                  const isGirl = cat.gender === 'Female';
+
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => handleSelectCategory(cat.key)}
+                      className={`h-11 px-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-between border-2 shadow-xs ${
+                        isSelected
+                          ? isGirl
+                            ? 'bg-rose-600 text-white border-rose-700 ring-2 ring-rose-400/40 shadow-md scale-[1.02]'
+                            : 'bg-blue-700 text-white border-blue-800 ring-2 ring-blue-400/40 shadow-md scale-[1.02]'
+                          : isGirl
+                            ? 'bg-rose-50 text-rose-950 border-rose-200 hover:bg-rose-100'
+                            : 'bg-blue-50 text-blue-950 border-blue-200 hover:bg-blue-100'
+                      }`}
+                    >
+                      <span className="truncate">{cat.badge}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-black shrink-0 ${
+                        isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-900 shadow-2xs'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Active Category Information Banner */}
           <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 py-1 px-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground">चालू शीट वयोगट:</span>
+              <span className="text-xs font-bold text-muted-foreground">चालू शीट:</span>
               <Input
-                value={customAgeGroup}
+                value={isConsolidatedAthleticsView ? "सर्व मैदानी खेळ एकत्रित" : customAgeGroup}
                 onChange={(e) => setCustomAgeGroup(e.target.value)}
+                disabled={isConsolidatedAthleticsView}
                 className="h-8 text-xs font-black text-primary w-48 bg-white border-primary/30"
               />
               <Badge variant="outline" className="font-bold text-xs bg-white">
                 एकूण खेळाडू: {activeRows.length}
               </Badge>
-              {is12PlayersOnly && (
+              {is12PlayersOnly && !isConsolidatedAthleticsView && (
                 <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   प्रिंटमध्ये फक्त पहिले १२ खेळाडू येतील
@@ -1094,6 +1535,16 @@ export function OfficialTournamentSheetModal({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={sortBySkillHubRanking}
+                className="h-8 rounded-lg text-xs font-bold bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-50 gap-1 shadow-sm"
+                title="Skill Hub कौशल्य गुणांनुसार खेळाडू रँकिंग क्रमाने लावा"
+              >
+                <Trophy className="w-3.5 h-3.5 text-amber-600" /> ⭐ गुण रँकिंगनुसार लावा
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={autoRenumber}
                 className="h-8 rounded-lg text-xs font-bold bg-white text-slate-700 border-slate-300 hover:bg-slate-100 gap-1 shadow-sm"
                 title="सर्व खेळाडूंना १ ते N असा नवीन अनुक्रमांक द्या"
@@ -1108,7 +1559,7 @@ export function OfficialTournamentSheetModal({
                 className="h-8 rounded-lg text-xs font-bold bg-white text-slate-700 border-slate-300 hover:bg-slate-100 gap-1 shadow-sm"
                 title="अ.क्र. नुसार खेळाडू चढत्या क्रमाने लावा"
               >
-                🔢 सॉर्ट
+                🔢 अ.क्र. सॉर्ट
               </Button>
 
               <Button
@@ -1116,7 +1567,7 @@ export function OfficialTournamentSheetModal({
                 size="sm"
                 onClick={resetCurrentCategory}
                 className="h-8 text-xs font-bold text-muted-foreground hover:text-destructive gap-1"
-                title="चालू गटाची यादी पूर्ववत करा"
+                title="चालू यादी पूर्ववत करा"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> रीसेट
               </Button>
@@ -1124,36 +1575,40 @@ export function OfficialTournamentSheetModal({
           </div>
 
           {/* Interactive Editable Table for Active Category */}
-          {/* Note: ONLY headers are bold (font-bold/font-black). Student inputs are regular/font-normal! */}
           <div className="flex-1 min-h-[280px] overflow-auto rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white shadow-inner">
             <table className="w-full text-left text-xs border-collapse">
               <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 text-slate-900 dark:text-slate-100 border-b-2 border-slate-300">
                 <tr>
-                  <th className="p-2 text-center w-24 border-r font-black">अ.क्र. (Sr No)</th>
+                  <th className="p-2 text-center w-28 border-r font-black">अ.क्र. (Sr No)</th>
                   <th className="p-2 border-r min-w-[200px] font-black">विद्यार्थ्याचे नाव (Student Name)</th>
-                  <th className="p-2 text-center w-28 border-r font-black">इयत्ता (Std)</th>
-                  <th className="p-2 text-center w-28 border-r font-black">ज.रजि.नं. (GR No)</th>
-                  <th className="p-2 text-center w-32 border-r font-black">जन्म तारीख (DOB)</th>
-                  <th className="p-2 text-center w-32 border-r font-black">आईचे नाव (Mother)</th>
-                  <th className="p-2 text-center w-40 border-r font-black">आधार कार्ड नं. (Aadhaar)</th>
-                  <th className="p-2 text-center min-w-[180px] border-r font-black">सरल आय.डी.नं. (Saral ID)</th>
-                  <th className="p-2 text-center w-20 font-black">कृती</th>
+                  {isConsolidatedAthleticsView && (
+                    <th className="p-2 text-center w-32 border-r font-black text-amber-700">मैदानी इव्हेंट (Event)</th>
+                  )}
+                  <th className="p-2 text-center min-w-[170px] border-r font-black text-blue-900">खेळ कौशल्य / पोझिशन</th>
+                  <th className="p-2 text-center w-32 border-r font-black text-emerald-800">कौशल्य गुण / रँक</th>
+                  <th className="p-2 text-center w-24 border-r font-black">इयत्ता (Std)</th>
+                  <th className="p-2 text-center w-24 border-r font-black">ज.रजि.नं. (GR)</th>
+                  <th className="p-2 text-center w-28 border-r font-black">जन्म तारीख (DOB)</th>
+                  <th className="p-2 text-center w-28 border-r font-black">आईचे नाव (Mother)</th>
+                  <th className="p-2 text-center w-36 border-r font-black">आधार कार्ड नं. (Aadhaar)</th>
+                  <th className="p-2 text-center min-w-[150px] border-r font-black">सरल आय.डी.नं.</th>
+                  <th className="p-2 text-center w-16 font-black">कृती</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-normal">
                 {activeRows.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-12 text-muted-foreground font-normal">
-                      या वयोगटासाठी खेळाडू नाहीत. वरील &quot;+ खेळाडू ओळ&quot; किंवा &quot;👥 रोस्टरमधून जोडा&quot; वर क्लिक करा.
+                    <td colSpan={isConsolidatedAthleticsView ? 12 : 11} className="text-center py-12 text-muted-foreground font-normal">
+                      या वयोगटासाठी Skill Hub मध्ये गुण नोंदवलेले खेळाडू आढळले नाहीत. वरील &quot;+ खेळाडू ओळ&quot; किंवा &quot;👥 रोस्टरमधून जोडा&quot; वर क्लिक करा.
                     </td>
                   </tr>
                 ) : (
                   activeRows.map((row, index) => {
-                    const isBeyond12 = is12PlayersOnly && index >= 12;
+                    const isBeyond12 = is12PlayersOnly && !isConsolidatedAthleticsView && index >= 12;
 
                     return (
                       <tr key={row.id} className={`hover:bg-slate-50/80 transition-colors ${isBeyond12 ? 'bg-amber-50/30' : ''}`}>
-                        {/* अ.क्र. with quick edit and Up/Down arrows */}
+                        {/* अ.क्र. with quick edit input and Up/Down arrows */}
                         <td className="p-1.5 border-r text-center align-middle">
                           <div className="flex items-center justify-center gap-1">
                             <div className="flex flex-col gap-0.5">
@@ -1179,9 +1634,8 @@ export function OfficialTournamentSheetModal({
                             <Input
                               value={row.srNo}
                               onChange={(e) => updateRowField(index, 'srNo', e.target.value)}
-                              onBlur={() => handleRowBlur(index)}
-                              className="h-8 w-12 text-center font-normal text-xs px-1 bg-amber-50/70 border-amber-200 focus:bg-white"
-                              title="इथे अनुक्रमांक थेट बदलू शकता"
+                              className="h-8 w-14 text-center font-bold text-xs px-1 bg-amber-50 border-amber-300 focus:bg-white focus:ring-2 focus:ring-amber-500 shadow-xs"
+                              title="अनुक्रमांक थेट बदला - बदल सेव्ह राहील"
                             />
                           </div>
                         </td>
@@ -1200,6 +1654,42 @@ export function OfficialTournamentSheetModal({
                               <span className="text-[9px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded shrink-0 whitespace-nowrap">
                                 12 नंतरचा
                               </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* मैदानी इव्हेंट (Consolidated Athletics only) */}
+                        {isConsolidatedAthleticsView && (
+                          <td className="p-1.5 border-r text-center font-bold text-amber-800">
+                            <Input
+                              value={row.sportOrEvent || ''}
+                              onChange={(e) => updateRowField(index, 'sportOrEvent', e.target.value)}
+                              className="h-8 text-center text-xs font-bold text-amber-800 focus:bg-amber-50/40"
+                              placeholder="उदा. भालाफेक"
+                            />
+                          </td>
+                        )}
+
+                        {/* खेळ कौशल्य क्रिया व पोझिशन (Game Related Activities) */}
+                        <td className="p-1.5 border-r text-center">
+                          <Input
+                            value={row.gameActivity || ''}
+                            onChange={(e) => updateRowField(index, 'gameActivity', e.target.value)}
+                            className="h-8 text-center text-xs font-semibold text-blue-900 focus:bg-blue-50/40"
+                            placeholder="कौशल्य क्रिया / पोझिशन"
+                          />
+                        </td>
+
+                        {/* कौशल्य गुण व रँक (Skill Hub Marks & Ranking) */}
+                        <td className="p-1.5 border-r text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-black text-[11px] px-2 py-0.5">
+                              {row.skillScore !== '-' ? `${row.skillScore}` : '-'}
+                            </Badge>
+                            {row.skillRank && (
+                              <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-black text-[10px] px-1.5 py-0.5">
+                                #{row.skillRank}
+                              </Badge>
                             )}
                           </div>
                         </td>
@@ -1295,8 +1785,8 @@ export function OfficialTournamentSheetModal({
             <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                इथे अपडेट केलेली माहिती विद्यार्थ्यांच्या मुख्य प्रोफाईलमध्ये आपोआप सेव्ह होते.
-                {is12PlayersOnly && " कबड्डी, व्हॉलीबॉल, खो-खो व हॅन्डबॉलसाठी प्रिंटमध्ये फक्त १२ खेळाडू येतात."}
+                अ.क्र. (Sr No) थेट बदलता येतो. Skill Hub कौशल्य गुण व रँकिंगनुसार यादी तयार आहे.
+                {is12PlayersOnly && !isConsolidatedAthleticsView && " सांघिक खेळांसाठी प्रिंटमध्ये १२ खेळाडू मर्यादा लागू असते."}
               </span>
             </div>
 
@@ -1304,17 +1794,28 @@ export function OfficialTournamentSheetModal({
               <Button variant="outline" onClick={onClose} className="rounded-xl font-bold text-xs h-10">
                 रद्द करा (Close)
               </Button>
+
+              {isAthleticsSport && (
+                <Button
+                  onClick={handlePrintConsolidatedAthletics}
+                  className="h-10 px-4 rounded-xl font-black text-xs uppercase tracking-wider bg-emerald-700 hover:bg-emerald-800 text-white shadow-md gap-2"
+                >
+                  <Medal className="w-4 h-4 text-amber-300" /> सर्व ६ खेळ एकत्र प्रिंट
+                </Button>
+              )}
+
               <Button
                 onClick={handlePrintActiveSheet}
                 className="h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-md gap-2"
               >
-                <Printer className="w-4 h-4" /> चालू शीट प्रिंट ({customAgeGroup})
+                <Printer className="w-4 h-4" /> चालू शीट प्रिंट
               </Button>
+
               <Button
                 onClick={handlePrintAllCategories}
                 className="h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider bg-blue-900 hover:bg-blue-950 text-white shadow-md gap-2"
               >
-                <Layers className="w-4 h-4 text-amber-400" /> सर्व ६ गट प्रिंट (Print All 6)
+                <Layers className="w-4 h-4 text-amber-400" /> सर्व ६ गट प्रिंट
               </Button>
             </div>
           </DialogFooter>
@@ -1352,7 +1853,7 @@ export function OfficialTournamentSheetModal({
 
               const q = pickerSearch.trim().toLowerCase();
               const filtered = allStudents.filter((s: any) => {
-                if (targetGender) {
+                if (targetGender && !isConsolidatedAthleticsView) {
                   const isFem = s.gender === 'Female' || s.gender === 'मुली';
                   if (targetGender === 'Female' && !isFem) return false;
                   if (targetGender === 'Male' && isFem) return false;

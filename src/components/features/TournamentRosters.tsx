@@ -4,26 +4,34 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Medal, Shirt, Target, FileText } from 'lucide-react';
+import { Printer, Medal, Shirt, Target, FileText, Trophy, Hash, Star } from 'lucide-react';
 import { getAgeValidation, getOfficialSchoolName, getTeacherName, sanitizeGrNumber } from '@/lib/utils';
-import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
+import { 
+  OfficialTournamentSheetModal, 
+  ATHLETICS_CORE_SIX, 
+  isAthleticsSixSport,
+  getPlayerSkillMarksAndRank,
+  getPlayerGameActivity,
+  SPORT_MARATHI_MAP
+} from './OfficialTournamentSheetModal';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 
 const SPORTS_LIST = [
+  'Kabaddi',
+  'Volleyball',
+  'Kho Kho',
+  'Handball',
   'Javelin Throw',
+  'Disc Throw',
+  'Shot Put',
+  'Running',
   'Long Jump',
   'High Jump',
-  'Shot Put',
-  'Disc Throw',
-  'Running',
-  'Kabaddi',
-  'Kho Kho',
-  'Volleyball',
-  'Handball',
   'Athletics',
   'Yoga',
   'PT Mass'
@@ -35,15 +43,24 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   const [modalCategory, setModalCategory] = useState<string>('Girls U14');
   const [modalPlayers, setModalPlayers] = useState<any[]>([]);
 
+  // Local state for custom Sr No per player
+  const [customSrNumbers, setCustomSrNumbers] = useState<Record<string, string>>({});
+
   const handleOpenOfficialSheet = (category?: string, playersList?: any[]) => {
     setModalCategory(category || 'Girls U14');
-    setModalPlayers(playersList || store.data.players || []);
+    const playersWithCustomSr = (playersList || store?.data?.players || []).map((p: any, idx: number) => ({
+      ...p,
+      srNo: customSrNumbers[p.id] || String(idx + 1)
+    }));
+    setModalPlayers(playersWithCustomSr);
     setIsOfficialModalOpen(true);
   };
 
   useEffect(() => {
     if (preselectedSport) setSelectedSport(preselectedSport);
   }, [preselectedSport]);
+
+  const isAthletics = isAthleticsSixSport(selectedSport);
 
   const getCategory = useCallback((p: any) => {
     const ageVal = getAgeValidation(p.dob);
@@ -57,14 +74,16 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
   const categories = useMemo(() => ['Girls U14', 'Boys U14', 'Girls U17', 'Boys U17', 'Girls Senior', 'Boys Senior', 'Age Pending'], []);
   
+  // Process groups:
+  // USER REQUIREMENT: Show players who were given marks from Skill Hub, sorted strictly by their mark ranking!
   const processedGroups = useMemo(() => {
     const groups: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
-    const ATHLETICS_EVENTS = ['Javelin Throw', 'Long Jump', 'High Jump', 'Shot Put', 'Disc Throw', 'Running'];
+    const allPlayers: any[] = store?.data?.players || [];
 
-    const playersInSport = store.data.players.filter((p: any) => {
+    const playersInSport = allPlayers.filter((p: any) => {
       if (!p.sports) return false;
       if (p.sports.includes(selectedSport)) return true;
-      if (ATHLETICS_EVENTS.includes(selectedSport) && (p.sports.includes('Athletics') || p.category === 'athlete')) {
+      if (isAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')) {
         return true;
       }
       return false;
@@ -73,28 +92,45 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     playersInSport.forEach((p: any) => {
       const cat = getCategory(p);
       if (groups[cat]) {
-        const skillData = store.data.sportSkills[`${p.id}_${selectedSport}`] || { score: '0' };
-        const fitnessData = store.data.fitness[p.id] || { score: '0' };
-        const rating = (parseFloat(skillData.score || '0') * 0.7) + (parseFloat(fitnessData.score || '0') * 0.3);
+        const skillInfo = getPlayerSkillMarksAndRank(p, selectedSport, store);
+        const fitnessData = store?.data?.fitness?.[p.id] || { score: '0' };
+        const position = p.positions?.[selectedSport] || p.position || '-';
+        const gameActivity = getPlayerGameActivity(p, selectedSport, store);
         const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
-        const position = p.positions?.[selectedSport] || '-';
+
         groups[cat].push({ 
           ...p, 
-          competencyRating: rating.toFixed(1),
-          skillScore: skillData.score || '0',
+          skillScore: skillInfo.scoreDisplay,
+          skillScoreNum: skillInfo.score,
+          hasSkillMark: skillInfo.hasMark,
           fitnessScore: fitnessData.score || '0',
           jersey,
-          position
+          position,
+          gameActivity
         });
       }
     });
 
+    // Filter and Sort by Skill Hub Mark Ranking
     Object.keys(groups).forEach(cat => {
-      groups[cat].sort((a, b) => parseFloat(b.competencyRating) - parseFloat(a.competencyRating));
+      let list = groups[cat];
+      const withMarks = list.filter(p => p.hasSkillMark);
+
+      // If players have marks from Skill Hub, show ONLY those players!
+      // Otherwise fallback so list is not totally empty
+      const finalList = withMarks.length > 0 ? withMarks : list;
+
+      // Sort strictly by Skill Hub marks ranking (highest score first)
+      finalList.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+
+      groups[cat] = finalList.map((p, idx) => ({
+        ...p,
+        markRank: idx + 1
+      }));
     });
 
     return groups;
-  }, [selectedSport, store.data.players, store.data.sportSkills, store.data.fitness, categories, getCategory]);
+  }, [selectedSport, store, categories, getCategory, isAthletics]);
 
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category];
@@ -103,6 +139,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     const schoolName = getOfficialSchoolName(schoolProfile, true);
     const teacherName = getTeacherName(schoolProfile);
     const signatureSrc = schoolProfile?.teacherSignature || TEACHER_SIGN_B64;
+    const sportLabelMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
 
     const printContent = `
       <!DOCTYPE html>
@@ -135,7 +172,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             
             .form-heading {
               text-align: center;
-              font-size: 14px;
+              font-size: 13px;
               font-weight: 900;
               color: #ffffff;
               background: #1e3a8a;
@@ -158,8 +195,8 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             }
 
             table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 20px; }
-            th, td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; vertical-align: middle; }
-            th { background-color: #f1f5f9; font-weight: 900; text-transform: uppercase; font-size: 10px; color: #1e293b; text-align: center; }
+            th, td { border: 1px solid #94a3b8; padding: 5px 6px; text-align: left; vertical-align: middle; }
+            th { background-color: #f1f5f9; font-weight: 900; text-transform: uppercase; font-size: 9.5px; color: #1e293b; text-align: center; }
             td.center { text-align: center; }
 
             .sign-grid {
@@ -212,8 +249,8 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
               </div>
             </div>
 
-            <!-- PROJECT & SCHOOL INFO IN BOLD -->
-            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 5px; padding: 5px 10px; margin-bottom: 8px; font-size: 10.5px; font-weight: 800; line-height: 1.45;">
+            <!-- PROJECT & SCHOOL INFO -->
+            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 5px; padding: 5px 10px; margin-bottom: 8px; font-size: 10px; font-weight: 800; line-height: 1.45;">
               <div>• <strong>प्रकल्पाचे नाव:</strong> एकात्मिक आदिवासी विकास प्रकल्प कळवण, ता. कळवण, जि. नाशिक</div>
               <div>• <strong>शाळेचे पूर्ण नाव व पत्ता:</strong> ${schoolName}</div>
               <div>• <strong>दूरध्वनी क्रमांक:</strong> ०२५५५-२९९०१५ / ९४२०४५८२४६</div>
@@ -225,7 +262,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             </div>
 
             <div class="info-bar">
-              <span>🏆 खेळाचा प्रकार: <strong>${selectedSport.toUpperCase()}</strong></span>
+              <span>🏆 खेळ: <strong>${sportLabelMr.toUpperCase()} (${selectedSport.toUpperCase()})</strong></span>
               <span>🎯 वयोगट: <strong>${category.toUpperCase()}</strong></span>
               <span>👥 खेळाडू संख्या: <strong>${topTwelve.length} Athletes</strong></span>
             </div>
@@ -233,30 +270,34 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <table>
               <thead>
                 <tr>
-                  <th style="width: 30px;">अ.क्र</th>
-                  <th style="width: 50px;">जर्सी नं.</th>
-                  <th style="width: 70px;">G.R. NO.</th>
+                  <th style="width: 35px;">अ.क्र</th>
+                  <th style="width: 45px;">जर्सी नं.</th>
+                  <th style="width: 65px;">G.R. NO.</th>
                   <th>खेळाडूचे नाव (PLAYER NAME)</th>
+                  <th style="width: 100px;">कौशल्य क्रिया / स्थान</th>
+                  <th style="width: 80px;">कौशल्य गुण / रँक</th>
                   <th style="width: 45px;">इयत्ता</th>
-                  <th style="width: 90px;">स्थान / पोझिशन</th>
-                  <th style="width: 80px;">जन्म तारीख / वय</th>
-                  <th style="width: 100px;">आधार क्रमांक</th>
-                  <th style="width: 80px;">खेळाडू सही</th>
+                  <th style="width: 75px;">जन्म तारीख</th>
+                  <th style="width: 95px;">आधार क्रमांक</th>
+                  <th style="width: 60px;">सही</th>
                 </tr>
               </thead>
               <tbody>
                 ${topTwelve.map((p, i) => {
                   const displayName = p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name;
                   const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
-                  const position = p.positions?.[selectedSport] || '-';
+                  const srNo = customSrNumbers[p.id] || String(i + 1);
+                  const skillDisplay = p.skillScore && p.skillScore !== '-' ? `${p.skillScore} (रँक ${p.markRank})` : '-';
+                  
                   return `
                   <tr>
-                    <td class="center"><strong>${i + 1}</strong></td>
+                    <td class="center"><strong>${srNo}</strong></td>
                     <td class="center" style="font-weight: 900; color: #1e3a8a; background: #f8fafc;">#${jersey}</td>
                     <td class="center"><strong>${sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '---')}</strong></td>
                     <td><strong>${displayName}</strong></td>
+                    <td class="center">${p.gameActivity || p.position}</td>
+                    <td class="center" style="font-weight: 800; color: #047857;">${skillDisplay}</td>
                     <td class="center"><strong>${p.std} वी</strong></td>
-                    <td class="center">${position}</td>
                     <td class="center">${p.dob || (getAgeValidation(p.dob)?.ageYears || p.age || '---')}</td>
                     <td class="center">${p.aadharNumber || '---'}</td>
                     <td></td>
@@ -298,9 +339,10 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             </div>
             <div className="space-y-1">
               <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Tournament Selection</h2>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">कौशल्य गुण, फिटनेस व जर्सी पोझिशन लिंक्ड रोस्टर</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">
+                Skill Hub गुण रँकिंग व अधिकृत स्पर्धा प्रवेश पत्र
+              </p>
               
-              {/* Direct links to Jersey/Positions and Skills tabs */}
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <Button
                   type="button"
@@ -315,16 +357,30 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                   <Shirt className="w-3.5 h-3.5 text-emerald-600" />
                   🎽 जर्सी व पोझिशन (Jersey & Positions)
                 </Button>
+
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
-                  onClick={() => handleOpenOfficialSheet('Girls U14', store.data.players)}
+                  onClick={() => handleOpenOfficialSheet('Girls U14', store?.data?.players)}
                 >
                   <FileText className="w-3.5 h-3.5 text-slate-950" />
-                  📋 अधिकृत स्पर्धा शीट (Official Tournament Sheet)
+                  📋 अधिकृत स्पर्धा शीट (Official Sheet)
                 </Button>
+
+                {isAthletics && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
+                    onClick={() => handleOpenOfficialSheet('Girls U14', store?.data?.players)}
+                  >
+                    <Medal className="w-3.5 h-3.5 text-amber-300" />
+                    🏃 सर्व ६ मैदानी खेळ एकत्र शीट
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -333,35 +389,87 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <label className="text-[10px] font-black text-primary uppercase ml-2">Select Discipline</label>
             <Select value={selectedSport} onValueChange={setSelectedSport}>
               <SelectTrigger className="h-14 text-lg font-black bg-white rounded-2xl border-2 border-primary/20 shadow-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>{SPORTS_LIST.map(sport => <SelectItem key={sport} value={sport}>{sport}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                {SPORTS_LIST.map(sport => (
+                  <SelectItem key={sport} value={sport}>
+                    {SPORT_MARATHI_MAP[sport] ? `${SPORT_MARATHI_MAP[sport]} (${sport})` : sport}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
         </div>
       )}
 
+      {/* ATHLETICS BANNER WHEN ATHLETICS DISCIPLINE SELECTED */}
+      {isAthletics && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-blue-500/10 p-4 rounded-3xl border-2 border-emerald-400/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-sm">
+              <Medal className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="text-sm font-black text-slate-900">
+                मैदानी व धावणे स्पर्धा (Athletics Track & Field Meet)
+              </div>
+              <div className="text-xs text-muted-foreground font-semibold">
+                भालाफेक, थाळीफेक, गोळाफेक, धावणे, लांब उडी व उंच उडी सर्व खेळाडू एकत्रित अधिकृत शीटवर प्रिंट करा
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => handleOpenOfficialSheet('Girls U14', store?.data?.players)}
+            className="h-10 px-5 rounded-2xl font-black text-xs uppercase tracking-wider bg-emerald-700 hover:bg-emerald-800 text-white shadow-md gap-2 shrink-0"
+          >
+            <Printer className="w-4 h-4 text-amber-300" />
+            🏃 सर्व मैदानी खेळ एकत्रित शीट प्रिंट
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {categories.map(cat => (
-          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[560px]">
-            <div className="bg-muted/40 p-6 border-b flex justify-between items-center">
-              <span className="text-xl font-black uppercase text-primary">{cat}</span>
+          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[580px]">
+            <div className="bg-muted/40 p-5 border-b flex justify-between items-center">
+              <div>
+                <span className="text-lg font-black uppercase text-primary">{cat}</span>
+                <div className="text-[10px] text-muted-foreground font-bold">
+                  Skill Hub गुण रँकिंगनुसार क्रमवारी
+                </div>
+              </div>
               <Badge className="bg-primary text-white font-black">{processedGroups[cat].length} ATHLETES</Badge>
             </div>
             <div className="flex-1 overflow-auto p-4">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="text-[10px] font-black uppercase w-16 text-center">अ.क्र.</TableHead>
                     <TableHead className="text-[10px] font-black uppercase">खेळाडू (Athlete)</TableHead>
                     <TableHead className="text-[10px] font-black uppercase text-center">जर्सी</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase text-center">पोझिशन</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase text-center">कौशल्य</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase text-center">फिटनेस</TableHead>
-                    <TableHead className="text-center text-[10px] font-black uppercase">रेटिंग</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center">कौशल्य क्रिया</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center text-emerald-800">कौशल्य गुण</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center text-amber-700">रँक</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {processedGroups[cat].slice(0, 15).map((p, i) => {
+                    const currentSr = customSrNumbers[p.id] || String(i + 1);
+
                     return (
                       <TableRow key={p.id} className={i < 12 ? 'bg-emerald-50/40 font-medium' : 'font-medium'}>
+                        {/* Editable Sr No Input */}
+                        <TableCell className="p-1 text-center">
+                          <Input
+                            value={currentSr}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCustomSrNumbers(prev => ({ ...prev, [p.id]: val }));
+                            }}
+                            className="w-12 h-7 text-center font-bold text-xs bg-amber-50 border-amber-300 focus:bg-white px-1 mx-auto"
+                            title="अ.क्र. थेट बदला"
+                          />
+                        </TableCell>
                         <TableCell className="text-xs font-bold max-w-[130px]">
                           <div className="font-black text-slate-900 truncate">
                             {(p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name)}
@@ -373,17 +481,14 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                         <TableCell className="text-xs font-black text-center text-amber-700">
                           #{p.jersey}
                         </TableCell>
-                        <TableCell className="text-[11px] font-bold text-center text-slate-700 truncate max-w-[90px]" title={p.position}>
-                          {p.position}
+                        <TableCell className="text-[10px] font-semibold text-center text-blue-900 truncate max-w-[100px]" title={p.gameActivity || p.position}>
+                          {p.gameActivity || p.position}
                         </TableCell>
                         <TableCell className="text-xs font-black text-center text-emerald-700">
-                          {p.skillScore}
+                          {p.skillScore !== '-' ? p.skillScore : '-'}
                         </TableCell>
-                        <TableCell className="text-xs font-black text-center text-blue-700">
-                          {p.fitnessScore}
-                        </TableCell>
-                        <TableCell className="text-center font-black text-primary text-xs">
-                          {p.competencyRating}
+                        <TableCell className="text-center font-black text-amber-600 text-xs">
+                          #{p.markRank}
                         </TableCell>
                       </TableRow>
                     );
@@ -391,11 +496,11 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 </TableBody>
               </Table>
             </div>
-            <div className="p-4 sm:p-6 border-t bg-muted/20 flex flex-col gap-2">
+            <div className="p-4 sm:p-5 border-t bg-muted/20 flex flex-col gap-2">
               <Button 
                 onClick={() => handleOpenOfficialSheet(cat, processedGroups[cat])} 
                 disabled={processedGroups[cat].length === 0} 
-                className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs tracking-wider rounded-2xl shadow-md flex items-center justify-center gap-2"
+                className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-xs tracking-wider rounded-2xl shadow-md flex items-center justify-center gap-2"
               >
                 <FileText className="w-4 h-4" /> 📋 अधिकृत क्रीडा स्पर्धा शीट (Official Sheet)
               </Button>
@@ -403,9 +508,9 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 onClick={() => handlePrint(cat)} 
                 disabled={processedGroups[cat].length === 0} 
                 variant="outline" 
-                className="w-full h-10 bg-white text-primary font-black uppercase text-xs tracking-widest border-2 shadow-sm rounded-xl"
+                className="w-full h-9 bg-white text-primary font-black uppercase text-xs tracking-widest border-2 shadow-sm rounded-xl"
               >
-                <Printer className="w-4 h-4 mr-2" /> Quick Squad List Print
+                <Printer className="w-3.5 h-3.5 mr-1.5" /> Quick Squad List Print
               </Button>
             </div>
           </Card>
