@@ -20,6 +20,7 @@ import {
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+import { WAGHAMBA_STUDENTS_DATA } from '@/data/waghambaStudents';
 
 const SPORTS_LIST = [
   'Kabaddi',
@@ -48,7 +49,11 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
   const handleOpenOfficialSheet = (category?: string, playersList?: any[]) => {
     setModalCategory(category || 'Girls U14');
-    const playersWithCustomSr = (playersList || store?.data?.players || []).map((p: any, idx: number) => ({
+    const fallbackList = (store?.data?.players && store.data.players.length > 0)
+      ? store.data.players
+      : WAGHAMBA_STUDENTS_DATA;
+    const baseList = (playersList && playersList.length > 0) ? playersList : fallbackList;
+    const playersWithCustomSr = baseList.map((p: any, idx: number) => ({
       ...p,
       srNo: customSrNumbers[p.id] || String(idx + 1)
     }));
@@ -64,9 +69,19 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
   const getCategory = useCallback((p: any) => {
     const ageVal = getAgeValidation(p.dob);
-    const age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+    let age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
+
+    // Fallback: If exact DOB was unparseable, infer standard-based category
+    // (In Maharashtra school sports: Std 1-7 is U14, Std 8-10 is U17, Std 11-12 is Senior)
+    if (!age || age <= 0 || isNaN(age)) {
+      const stdNum = parseInt(String(p.std || '').replace(/\D/g, ''), 10);
+      if (stdNum > 0 && stdNum <= 7) age = 13;
+      else if (stdNum >= 8 && stdNum <= 10) age = 16;
+      else if (stdNum >= 11) age = 18;
+    }
+
     if (!age || age <= 0 || isNaN(age)) return 'Age Pending';
-    const gender = p.gender === 'Female' ? 'Girls' : 'Boys';
+    const gender = (p.gender === 'Female' || p.gender === 'female' || p.gender === 'F') ? 'Girls' : 'Boys';
     if (age < 14) return `${gender} U14`;
     if (age < 17) return `${gender} U17`;
     return `${gender} Senior`;
@@ -78,16 +93,25 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   // USER REQUIREMENT: Show players who were given marks from Skill Hub, sorted strictly by their mark ranking!
   const processedGroups = useMemo(() => {
     const groups: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
-    const allPlayers: any[] = store?.data?.players || [];
+    const allPlayers: any[] = (store?.data?.players && store.data.players.length > 0)
+      ? store.data.players
+      : WAGHAMBA_STUDENTS_DATA;
 
-    const playersInSport = allPlayers.filter((p: any) => {
+    let playersInSport = allPlayers.filter((p: any) => {
       if (!p.sports) return false;
-      if (p.sports.includes(selectedSport)) return true;
-      if (isAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')) {
+      if (Array.isArray(p.sports) && p.sports.includes(selectedSport)) return true;
+      if (typeof p.sports === 'string' && p.sports.includes(selectedSport)) return true;
+      if (isAthletics && ((Array.isArray(p.sports) && p.sports.includes('Athletics')) || p.category === 'athlete')) {
         return true;
       }
       return false;
     });
+
+    // Fallback: If no player specifically assigned to this sport yet, include the full roster
+    // so coaches can roster them, mark them, and print tournament sheets immediately!
+    if (playersInSport.length === 0) {
+      playersInSport = allPlayers;
+    }
 
     playersInSport.forEach((p: any) => {
       const cat = getCategory(p);
@@ -116,8 +140,8 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       let list = groups[cat];
       const withMarks = list.filter(p => p.hasSkillMark);
 
-      // If players have marks from Skill Hub, show ONLY those players!
-      // Otherwise fallback so list is not totally empty
+      // If players have marks from Skill Hub, prioritize those players
+      // Otherwise fallback to full list so list is not totally empty
       const finalList = withMarks.length > 0 ? withMarks : list;
 
       // Sort strictly by Skill Hub marks ranking (highest score first)
@@ -430,7 +454,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {categories.map(cat => (
-          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col h-[580px]">
+          <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[460px] max-h-[620px]">
             <div className="bg-muted/40 p-5 border-b flex justify-between items-center">
               <div>
                 <span className="text-lg font-black uppercase text-primary">{cat}</span>
@@ -440,7 +464,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
               </div>
               <Badge className="bg-primary text-white font-black">{processedGroups[cat].length} ATHLETES</Badge>
             </div>
-            <div className="flex-1 overflow-auto p-4">
+            <div className="flex-1 overflow-x-auto overflow-y-auto p-3 sm:p-4 overscroll-contain touch-pan-x touch-pan-y">
               <Table>
                 <TableHeader>
                   <TableRow>

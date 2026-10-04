@@ -465,7 +465,9 @@ export function OfficialTournamentSheetModal({
   // Build Consolidated Athletics Sheet Rows for all 6 events:
   // Javelin Throw, Disc Throw, Shot Put, Running, Long Jump, High Jump
   const buildConsolidatedAthleticsRows = useCallback((): SheetRow[] => {
-    const allStorePlayers: any[] = store?.data?.players || [];
+    const allStorePlayers: any[] = (store?.data?.players && store.data.players.length > 0)
+      ? store.data.players
+      : WAGHAMBA_STUDENTS_DATA;
     const collected: SheetRow[] = [];
     const seenPlayerEvent = new Set<string>();
 
@@ -511,7 +513,9 @@ export function OfficialTournamentSheetModal({
 
   // Build sheets for all 6 categories from store players
   const initializeCategorySheets = useCallback((sportKey: string, basePlayers?: any[]) => {
-    const allStorePlayers: any[] = store?.data?.players || [];
+    const allStorePlayers: any[] = (store?.data?.players && store.data.players.length > 0)
+      ? store.data.players
+      : WAGHAMBA_STUDENTS_DATA;
     const newSheets: Record<string, SheetRow[]> = {};
     const isAthletics = ATHLETICS_DISCIPLINES.includes(sportKey);
 
@@ -535,6 +539,13 @@ export function OfficialTournamentSheetModal({
           if (catDef.ageType === 'U14') return age < 14;
           if (catDef.ageType === 'U17') return age >= 14 && age < 17;
           if (catDef.ageType === 'U19') return age >= 17 && age <= 19;
+        }
+        // Standard-based eligibility fallback when exact DOB parsing is pending
+        const stdNum = parseInt(String(p.std).replace(/\D/g, '')) || 0;
+        if (stdNum > 0) {
+          if (catDef.ageType === 'U14') return stdNum <= 7;
+          if (catDef.ageType === 'U17') return stdNum >= 8 && stdNum <= 10;
+          if (catDef.ageType === 'U19') return stdNum > 10;
         }
         return false;
       });
@@ -1254,9 +1265,9 @@ export function OfficialTournamentSheetModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="w-[96vw] max-w-7xl max-h-[96vh] flex flex-col p-4 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 shadow-3xl overflow-hidden">
+        <DialogContent className="w-[96vw] max-w-7xl max-h-[94vh] flex flex-col p-3 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 shadow-3xl overflow-y-auto overscroll-contain touch-pan-y">
           {/* Header */}
-          <DialogHeader className="shrink-0 pb-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <DialogHeader className="shrink-0 pb-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky top-0 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md z-30">
             <div>
               <DialogTitle className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2">
                 <FileText className="w-6 h-6 text-amber-500" />
@@ -1575,7 +1586,7 @@ export function OfficialTournamentSheetModal({
           </div>
 
           {/* Interactive Editable Table for Active Category */}
-          <div className="flex-1 min-h-[280px] overflow-auto rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white shadow-inner">
+          <div className="w-full flex-1 min-h-[260px] max-h-[58vh] overflow-x-auto overflow-y-auto rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white shadow-inner touch-pan-x touch-pan-y overscroll-contain">
             <table className="w-full text-left text-xs border-collapse">
               <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 text-slate-900 dark:text-slate-100 border-b-2 border-slate-300">
                 <tr>
@@ -1781,7 +1792,7 @@ export function OfficialTournamentSheetModal({
           </div>
 
           {/* Footer controls */}
-          <DialogFooter className="shrink-0 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+          <DialogFooter className="shrink-0 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md z-30">
             <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
@@ -1824,7 +1835,7 @@ export function OfficialTournamentSheetModal({
 
       {/* Nested Dialog: Pick Student from School Master Roster */}
       <Dialog open={isPickerOpen} onOpenChange={setIsPickerOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-5 rounded-3xl bg-white border-2 shadow-2xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-5 rounded-3xl bg-white border-2 shadow-2xl overflow-y-auto overscroll-contain touch-pan-y">
           <DialogHeader className="pb-2 border-b">
             <DialogTitle className="text-lg font-black text-primary flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-emerald-600" />
@@ -1842,7 +1853,7 @@ export function OfficialTournamentSheetModal({
             />
           </div>
 
-          <div className="flex-1 min-h-[250px] max-h-[50vh] overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 min-h-[250px] max-h-[50vh] overflow-y-auto overscroll-contain touch-pan-y space-y-2 pr-1">
             {(() => {
               const allStudents: any[] = store?.data?.players?.length > 0 
                 ? store.data.players 

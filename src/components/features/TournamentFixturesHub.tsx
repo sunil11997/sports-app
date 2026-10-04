@@ -686,7 +686,7 @@ export function TournamentFixturesHub({ store, preselectedSport }: { store: any;
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-contain touch-pan-x">
               <table className="w-full text-xs text-left border-collapse">
                 <thead className="bg-slate-100 text-[11px] font-black uppercase text-primary">
                   <tr>
