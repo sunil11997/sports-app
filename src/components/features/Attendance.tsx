@@ -126,7 +126,7 @@ export function Attendance({ store, section, language = 'English' }: { store: an
   const filteredPlayers = useMemo(() => {
     return store.data.players
       .filter((p: any) => {
-        const matchesSection = isGeneral ? true : p.category === 'athlete';
+        const matchesSection = isGeneral ? true : (p.category === 'athlete' || (Array.isArray(p.sports) && p.sports.length > 0));
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
         const query = searchTerm.toLowerCase();
         const matchesSearch = (p.name || "").toLowerCase().includes(query) || 

@@ -294,16 +294,14 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <table>
               <thead>
                 <tr>
-                  <th style="width: 35px;">अ.क्र</th>
-                  <th style="width: 45px;">जर्सी नं.</th>
-                  <th style="width: 65px;">G.R. NO.</th>
+                  <th style="width: 38px;">अ.क्र</th>
+                  <th style="width: 50px;">जर्सी नं.</th>
+                  <th style="width: 70px;">G.R. NO.</th>
                   <th>खेळाडूचे नाव (PLAYER NAME)</th>
-                  <th style="width: 100px;">कौशल्य क्रिया / स्थान</th>
-                  <th style="width: 80px;">कौशल्य गुण / रँक</th>
-                  <th style="width: 45px;">इयत्ता</th>
-                  <th style="width: 75px;">जन्म तारीख</th>
-                  <th style="width: 95px;">आधार क्रमांक</th>
-                  <th style="width: 60px;">सही</th>
+                  <th style="width: 55px;">इयत्ता</th>
+                  <th style="width: 85px;">जन्म तारीख</th>
+                  <th style="width: 110px;">आधार क्रमांक</th>
+                  <th style="width: 70px;">सही</th>
                 </tr>
               </thead>
               <tbody>
@@ -311,7 +309,6 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                   const displayName = p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name;
                   const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
                   const srNo = customSrNumbers[p.id] || String(i + 1);
-                  const skillDisplay = p.skillScore && p.skillScore !== '-' ? `${p.skillScore} (रँक ${p.markRank})` : '-';
                   
                   return `
                   <tr>
@@ -319,8 +316,6 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                     <td class="center" style="font-weight: 900; color: #1e3a8a; background: #f8fafc;">#${jersey}</td>
                     <td class="center"><strong>${sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '---')}</strong></td>
                     <td><strong>${displayName}</strong></td>
-                    <td class="center">${p.gameActivity || p.position}</td>
-                    <td class="center" style="font-weight: 800; color: #047857;">${skillDisplay}</td>
                     <td class="center"><strong>${p.std} वी</strong></td>
                     <td class="center">${p.dob || (getAgeValidation(p.dob)?.ageYears || p.age || '---')}</td>
                     <td class="center">${p.aadharNumber || '---'}</td>

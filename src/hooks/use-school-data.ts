@@ -435,7 +435,7 @@ export function useSchoolData(isActive: boolean = true) {
       address: st.address || '',
       sports: st.sports && st.sports.length > 0 ? st.sports : ['Kabaddi', 'Kho Kho', 'Running', 'Athletics'],
       history: st.history || 'No',
-      category: st.category || 'student',
+      category: (st.sports && st.sports.length > 0) ? 'athlete' : (st.category || 'athlete'),
       motherName: st.motherName,
       fatherName: st.fatherName,
       saralId: st.saralId || st.rollNo,
@@ -454,7 +454,11 @@ export function useSchoolData(isActive: boolean = true) {
   // Aggregated Data Object
   const aggregatedData = useMemo(() => {
     const rawDbPlayers = allPlayers || [];
-    const effectivePlayers = rawDbPlayers.length > 0 ? rawDbPlayers : defaultPlayers;
+    const basePlayers = rawDbPlayers.length > 0 ? rawDbPlayers : defaultPlayers;
+    const effectivePlayers = basePlayers.map((p: any) => ({
+      ...p,
+      category: (p.category === 'athlete' || (Array.isArray(p.sports) && p.sports.length > 0)) ? 'athlete' : (p.category || 'student')
+    }));
 
     return {
       players: effectivePlayers,

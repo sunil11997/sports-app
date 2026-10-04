@@ -33,7 +33,7 @@ export function Dashboard({
   const filteredPlayers = useMemo(() => {
     return (store?.data?.players || [])
       .filter((p: Player) => {
-        const matchesSection = isGeneral ? true : p.category === 'athlete';
+        const matchesSection = isGeneral ? true : (p.category === 'athlete' || (Array.isArray(p.sports) && p.sports.length > 0));
         const query = searchTerm.toLowerCase().trim();
         if (!query) return matchesSection;
 
