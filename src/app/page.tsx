@@ -527,7 +527,7 @@ export default function WaghambaApp() {
 
   if (stage === 'hub' && selectedSection) {
     const teacher = schoolData.data.schoolProfile;
-    const totalAthletes = (schoolData.data.players || []).filter((p: any) => p.category === 'athlete' || (Array.isArray(p.sports) && p.sports.length > 0)).length || (schoolData.data.players || []).length;
+    const totalAthletes = (schoolData.data.players || []).filter((p: any) => p.category === 'athlete').length;
     const totalStudents = (schoolData.data.players || []).length;
     const activeDisplayCount = selectedSection === 'sports' ? totalAthletes : totalStudents;
     const countLabel = selectedSection === 'sports' ? "Total Athletes" : "Registered Students";

@@ -465,14 +465,13 @@ export function OfficialTournamentSheetModal({
   // Build Consolidated Athletics Sheet Rows for all 6 events:
   // Javelin Throw, Disc Throw, Shot Put, Running, Long Jump, High Jump
   const buildConsolidatedAthleticsRows = useCallback((): SheetRow[] => {
-    const allStorePlayers: any[] = (store?.data?.players && store.data.players.length > 0)
-      ? store.data.players
-      : WAGHAMBA_STUDENTS_DATA;
+    const allStorePlayers: any[] = store?.data?.players || [];
     const collected: SheetRow[] = [];
     const seenPlayerEvent = new Set<string>();
 
     ATHLETICS_CORE_SIX.forEach(ev => {
       allStorePlayers.forEach(p => {
+        if (p.category && p.category !== 'athlete') return;
         const skillInfo = getPlayerSkillMarksAndRank(p, ev.key, store);
         const isRegistered = Boolean(
           p.sports && Array.isArray(p.sports) && (p.sports.includes(ev.key) || p.sports.includes('Athletics'))
@@ -513,15 +512,14 @@ export function OfficialTournamentSheetModal({
 
   // Build sheets for all 6 categories from store players
   const initializeCategorySheets = useCallback((sportKey: string, basePlayers?: any[]) => {
-    const allStorePlayers: any[] = (store?.data?.players && store.data.players.length > 0)
-      ? store.data.players
-      : WAGHAMBA_STUDENTS_DATA;
+    const allStorePlayers: any[] = store?.data?.players || [];
     const newSheets: Record<string, SheetRow[]> = {};
     const isAthletics = ATHLETICS_DISCIPLINES.includes(sportKey);
 
     OFFICIAL_CATEGORIES.forEach(catDef => {
-      // 1. Filter strictly by gender
+      // 1. Filter strictly by gender and athlete category
       let pool = allStorePlayers.filter((p: any) => {
+        if (p.category && p.category !== 'athlete') return false;
         const isFem = p.gender === 'Female' || p.gender === 'मुली';
         return catDef.gender === 'Female' ? isFem : !isFem;
       });
@@ -1847,9 +1845,7 @@ export function OfficialTournamentSheetModal({
 
           <div className="flex-1 min-h-[250px] max-h-[50vh] overflow-y-auto overscroll-contain touch-pan-y space-y-2 pr-1">
             {(() => {
-              const allStudents: any[] = store?.data?.players?.length > 0 
-                ? store.data.players 
-                : WAGHAMBA_STUDENTS_DATA;
+              const allStudents: any[] = (store?.data?.players || []).filter((s: any) => s.category === 'athlete' || !s.category);
 
               const activeCatDef = OFFICIAL_CATEGORIES.find(c => c.key === activeCategoryKey);
               const targetGender = activeCatDef?.gender;

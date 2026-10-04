@@ -85,43 +85,37 @@ export function useSchoolData(isActive: boolean = true) {
   const [equipmentIssues, setEquipmentIssuesData] = useState<EquipmentIssueRecord[]>([]);
   const [equipmentIndents, setEquipmentIndentsData] = useState<IndentItem[]>([]);
 
-  // Canonical school ID for Waghamba Ashram School in Firestore
-  const PRIMARY_WAGHAMBA_SCHOOL_ID = "p9jMezasHogmbkRdZkRWrM9aTUO2";
-  const effectiveSchoolId = (user && !user.isAnonymous && user.uid !== "default") 
-    ? user.uid 
-    : PRIMARY_WAGHAMBA_SCHOOL_ID;
-
   // Memoized Firebase References
   const schoolDocRef = useMemoFirebase(
-    () => (db && isActive ? doc(db, "schools", effectiveSchoolId) : null),
-    [db, effectiveSchoolId, isActive]
+    () => (user && db && isActive ? doc(db, "schools", user.uid) : null),
+    [db, user, isActive]
   );
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
 
   const playersQuery = useMemoFirebase(() => {
-    if (!db || !isActive) return null;
-    return query(collection(db, "players"), where("schoolId", "==", effectiveSchoolId));
-  }, [db, effectiveSchoolId, isActive]);
+    if (!user || !db || !isActive) return null;
+    return query(collection(db, "players"), where("ownerId", "==", user.uid));
+  }, [db, user, isActive]);
   const { data: allPlayers, isLoading: playersLoading } = useCollection<Player>(playersQuery);
 
   const incidentsQuery = useMemoFirebase(() => {
-    if (!db || !isActive) return null;
+    if (!user || !db || !isActive) return null;
     return query(
       collection(db, "all_health_incidents"),
-      where("schoolId", "==", effectiveSchoolId),
+      where("schoolId", "==", user.uid),
       where("academicYear", "==", selectedYear)
     );
-  }, [db, effectiveSchoolId, selectedYear, isActive]);
+  }, [db, user, selectedYear, isActive]);
   const { data: healthIncidents } = useCollection<HealthIncident>(incidentsQuery);
 
   const activitiesQuery = useMemoFirebase(() => {
-    if (!db || !isActive) return null;
+    if (!user || !db || !isActive) return null;
     return query(
       collection(db, "school_activities"),
-      where("schoolId", "==", effectiveSchoolId),
+      where("schoolId", "==", user.uid),
       where("academicYear", "==", selectedYear)
     );
-  }, [db, effectiveSchoolId, selectedYear, isActive]);
+  }, [db, user, selectedYear, isActive]);
   const { data: schoolActivities } = useCollection(activitiesQuery);
 
   // Sync Offline Attendance Queue via IndexedDB
@@ -133,7 +127,7 @@ export function useSchoolData(isActive: boolean = true) {
 
     try {
       // 1. Migrate any legacy localStorage items if found
-      await migrateLegacyLocalStorageQueue(effectiveSchoolId, selectedYear);
+      await migrateLegacyLocalStorageQueue(user.uid, selectedYear);
 
       // 2. Process persistent IndexedDB queue
       await processOfflineQueue(db, (count) => {
@@ -148,7 +142,7 @@ export function useSchoolData(isActive: boolean = true) {
       setIsSyncing(false);
       syncLockRef.current = false;
     }
-  }, [db, user, selectedYear, effectiveSchoolId]);
+  }, [db, user, selectedYear]);
 
   // Firestore Real-time Subscriptions
   useEffect(() => {
@@ -170,7 +164,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "attendance_registry"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -193,7 +187,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "fitness_registry"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -224,7 +218,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "skills_registry"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -249,7 +243,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "readiness_registry"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("date", "==", today)
         ),
         (snapshot) => {
@@ -264,7 +258,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "tactical_registry"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -277,7 +271,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       ),
       onSnapshot(
-        query(collection(db, "drill_completions"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "drill_completions"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const map: Record<string, boolean> = {};
           const rawList: any[] = [];
@@ -290,7 +284,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       ),
       onSnapshot(
-        query(collection(db, "game_rules_registry"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "game_rules_registry"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const rulesMap: Record<string, any> = {};
           snapshot.docs.forEach((doc) => (rulesMap[doc.id] = doc.data()));
@@ -298,7 +292,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       ),
       onSnapshot(
-        query(collection(db, "exam_configs"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "exam_configs"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const configMap: Record<string, ExamLabels> = {};
           snapshot.docs.forEach((doc) => (configMap[doc.id] = doc.data().labels as ExamLabels));
@@ -306,7 +300,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       ),
       onSnapshot(
-        query(collection(db, "performance_configs"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "performance_configs"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const configMap: Record<string, PerformanceLabels> = {};
           snapshot.docs.forEach(
@@ -318,7 +312,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "team_plans"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -332,7 +326,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "goal_registry"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -343,7 +337,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       ),
       onSnapshot(
-        query(collection(db, "report_photos"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "report_photos"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const photosMap: Record<string, any[]> = {};
           snapshot.docs.forEach((doc) => {
@@ -357,7 +351,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       ),
       onSnapshot(
-        query(collection(db, "daily_summaries"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "daily_summaries"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const summariesMap: Record<string, { summary: string; weather: string }> = {};
           snapshot.docs.forEach((doc) => {
@@ -369,7 +363,7 @@ export function useSchoolData(isActive: boolean = true) {
       ),
       // Equipment Inventory Listeners
       onSnapshot(
-        query(collection(db, "equipment_inventory"), where("schoolId", "==", effectiveSchoolId)),
+        query(collection(db, "equipment_inventory"), where("schoolId", "==", user.uid)),
         (snapshot) => {
           const items: EquipmentItem[] = snapshot.docs.map(
             (doc) => ({ ...doc.data(), id: doc.id } as EquipmentItem)
@@ -383,7 +377,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "equipment_issues"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -396,7 +390,7 @@ export function useSchoolData(isActive: boolean = true) {
       onSnapshot(
         query(
           collection(db, "equipment_indents"),
-          where("schoolId", "==", effectiveSchoolId),
+          where("schoolId", "==", user.uid),
           where("academicYear", "==", selectedYear)
         ),
         (snapshot) => {
@@ -413,55 +407,14 @@ export function useSchoolData(isActive: boolean = true) {
       window.removeEventListener("wgb-offline-sync-status", handleStatus);
       unsubs.forEach((unsub) => unsub());
     };
-  }, [db, user, effectiveSchoolId, selectedYear, syncOfflineAttendance, isActive]);
-
-  // Default master students fallback so data is ALWAYS visible even if offline/fresh login
-  const defaultPlayers: Player[] = useMemo(() => {
-    return (WAGHAMBA_STUDENTS_DATA || []).map((st) => ({
-      id: st.id,
-      name: st.name,
-      nameMarathi: st.nameMarathi,
-      std: st.std,
-      serialNumber: st.rollNo || st.serialNumber,
-      dob: st.dob,
-      age: st.age,
-      gender: st.gender,
-      height: st.height || '',
-      weight: st.weight || '',
-      bmi: st.bmi || '',
-      bloodGroup: st.bloodGroup || 'None',
-      aadharNumber: st.apaarId || '',
-      generalRegisterNumber: st.rollNo || st.serialNumber,
-      address: st.address || '',
-      sports: st.sports && st.sports.length > 0 ? st.sports : ['Kabaddi', 'Kho Kho', 'Running', 'Athletics'],
-      history: st.history || 'No',
-      category: (st.sports && st.sports.length > 0) ? 'athlete' : (st.category || 'athlete'),
-      motherName: st.motherName,
-      fatherName: st.fatherName,
-      saralId: st.saralId || st.rollNo,
-      apaarId: st.apaarId || '',
-      village: st.village || 'वाघंबा',
-      taluka: st.taluka || 'बागलाण',
-      district: st.district || 'नाशिक',
-      parentName: st.parentName,
-      mobileNumber: st.mobileNumber,
-      ownerId: effectiveSchoolId,
-      schoolId: effectiveSchoolId,
-      academicYear: selectedYear,
-    } as Player));
-  }, [effectiveSchoolId, selectedYear]);
+  }, [db, user, selectedYear, syncOfflineAttendance, isActive]);
 
   // Aggregated Data Object
   const aggregatedData = useMemo(() => {
-    const rawDbPlayers = allPlayers || [];
-    const basePlayers = rawDbPlayers.length > 0 ? rawDbPlayers : defaultPlayers;
-    const effectivePlayers = basePlayers.map((p: any) => ({
-      ...p,
-      category: (p.category === 'athlete' || (Array.isArray(p.sports) && p.sports.length > 0)) ? 'athlete' : (p.category || 'student')
-    }));
+    const dbPlayers = allPlayers || [];
 
     return {
-      players: effectivePlayers,
+      players: dbPlayers,
       attendance,
       fitness,
       fitnessHistory,
@@ -485,23 +438,22 @@ export function useSchoolData(isActive: boolean = true) {
       equipmentIssues,
       equipmentIndents,
       schoolProfile: (schoolProfile as SchoolProfile | null) || ({
-        name: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-        nameMarathi: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-        schoolName: "शासकीय माध्यमिक आश्रम शाळा वाघंबा",
-        teacherName: "श्री. सुनील पंडित (देशमुख)",
+        name: "शासकीय माध्यमिक आश्रम शाळा, वाघंबा",
+        nameMarathi: "शासकीय माध्यमिक आश्रम शाळा, वाघंबा",
+        schoolName: "शासकीय माध्यमिक आश्रम शाळा, वाघंबा",
+        teacherName: "श्री. सुनील पंडित",
         taluka: "बागलाण",
         district: "नाशिक",
-        id: effectiveSchoolId,
+        id: user?.uid || "default",
         qualification: "B.P.Ed / M.P.Ed",
         role: "Physical Education Director",
         updatedAt: new Date().toISOString(),
-        passcode: "1997",
-        adminEmail: "sunilld97@gmail.com",
+        passcode: "",
+        adminEmail: "",
       } as SchoolProfile),
     };
   }, [
     allPlayers,
-    defaultPlayers,
     healthIncidents,
     attendance,
     fitness,
@@ -524,12 +476,12 @@ export function useSchoolData(isActive: boolean = true) {
     equipmentList,
     equipmentIssues,
     equipmentIndents,
-    effectiveSchoolId,
+    user,
   ]);
 
   return {
     data: aggregatedData,
-    isLoaded: true,
+    isLoaded: !!db && !playersLoading && !schoolsLoading,
     selectedYear,
     setSelectedYear,
     availableAcademicYears: getAvailableAcademicYears(2023, 7),
@@ -539,8 +491,8 @@ export function useSchoolData(isActive: boolean = true) {
     saveSchoolProfile: (profile: any) => {
       if (!user || !db) return;
       setDocumentNonBlocking(
-        doc(db, "schools", effectiveSchoolId),
-        { ...profile, id: effectiveSchoolId, ownerId: effectiveSchoolId, updatedAt: new Date().toISOString() },
+        doc(db, "schools", user.uid),
+        { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -554,7 +506,7 @@ export function useSchoolData(isActive: boolean = true) {
         }
       }
       if (!user || !db) return;
-      updateDocumentNonBlocking(doc(db, "schools", effectiveSchoolId), { passcode });
+      updateDocumentNonBlocking(doc(db, "schools", user.uid), { passcode });
     },
 
     addPlayer: (playerData: any) => {
@@ -563,8 +515,8 @@ export function useSchoolData(isActive: boolean = true) {
         doc(db, "players", playerData.id),
         {
           ...playerData,
-          ownerId: effectiveSchoolId,
-          schoolId: effectiveSchoolId,
+          ownerId: user.uid,
+          schoolId: user.uid,
           academicYear: selectedYear,
           updatedAt: new Date().toISOString(),
         },
@@ -578,8 +530,8 @@ export function useSchoolData(isActive: boolean = true) {
         doc(db, "players", player.id),
         {
           ...player,
-          ownerId: effectiveSchoolId,
-          schoolId: effectiveSchoolId,
+          ownerId: user.uid,
+          schoolId: user.uid,
           updatedAt: new Date().toISOString(),
         },
         { merge: true }
@@ -593,7 +545,7 @@ export function useSchoolData(isActive: boolean = true) {
 
     setTeamPlan: (sport: string, date: string, plan: any) => {
       if (!user || !db) return;
-      const id = `${effectiveSchoolId}_${sport}_${date}`;
+      const id = `${user.uid}_${sport}_${date}`;
       setDocumentNonBlocking(
         doc(db, "team_plans", id),
         {
@@ -601,7 +553,7 @@ export function useSchoolData(isActive: boolean = true) {
           id,
           sport,
           date,
-          schoolId: effectiveSchoolId,
+          schoolId: user.uid,
           academicYear: selectedYear,
           updatedAt: new Date().toISOString(),
         },
@@ -613,7 +565,7 @@ export function useSchoolData(isActive: boolean = true) {
       if (!user || !db) return;
       setDocumentNonBlocking(
         doc(db, "school_activities", act.id),
-        { ...act, schoolId: effectiveSchoolId, academicYear: selectedYear, updatedAt: new Date().toISOString() },
+        { ...act, schoolId: user.uid, academicYear: selectedYear, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -653,7 +605,7 @@ export function useSchoolData(isActive: boolean = true) {
         girlsCount: (params.girlsCount ?? 0).toString(),
         totalCount: ((params.boysCount ?? 0) + (params.girlsCount ?? 0)).toString(),
         category: 'athlete',
-        schoolId: effectiveSchoolId,
+        schoolId: user.uid,
         academicYear: selectedYear,
         updatedAt: new Date().toISOString()
       };
@@ -687,13 +639,13 @@ export function useSchoolData(isActive: boolean = true) {
                   playerId,
                   date,
                   session,
-                  schoolId: effectiveSchoolId,
+                  schoolId: user.uid,
                   academicYear: selectedYear,
                   updatedAt: new Date().toISOString(),
                 }
               : undefined,
             options: { merge: true },
-            schoolId: effectiveSchoolId,
+            schoolId: user.uid,
             academicYear: selectedYear,
           });
           const count = await getPendingMutationsCount();
@@ -708,7 +660,7 @@ export function useSchoolData(isActive: boolean = true) {
                 playerId,
                 date,
                 session,
-                schoolId: effectiveSchoolId,
+                schoolId: user.uid,
                 academicYear: selectedYear,
               },
               { merge: true }
@@ -725,7 +677,7 @@ export function useSchoolData(isActive: boolean = true) {
         {
           ...assessment,
           playerId,
-          schoolId: effectiveSchoolId,
+          schoolId: user.uid,
           date: dateId,
           updatedAt: new Date().toISOString(),
           academicYear: selectedYear,
@@ -742,7 +694,7 @@ export function useSchoolData(isActive: boolean = true) {
         {
           ...d,
           playerId,
-          schoolId: effectiveSchoolId,
+          schoolId: user.uid,
           date: dateId,
           timestamp: new Date().toISOString(),
           academicYear: selectedYear,
@@ -756,7 +708,7 @@ export function useSchoolData(isActive: boolean = true) {
       const id = e.id || generateId("tac");
       setDocumentNonBlocking(
         doc(db, "tactical_registry", id),
-        { ...e, id, schoolId: effectiveSchoolId, academicYear: selectedYear, updatedAt: new Date().toISOString() },
+        { ...e, id, schoolId: user.uid, academicYear: selectedYear, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -771,7 +723,7 @@ export function useSchoolData(isActive: boolean = true) {
       const id = `${g.playerId}_${g.month}_${g.metric.replace(/\s+/g, "_")}`;
       setDocumentNonBlocking(
         doc(db, "goal_registry", id),
-        { ...g, id, schoolId: effectiveSchoolId, academicYear: selectedYear, updatedAt: new Date().toISOString() },
+        { ...g, id, schoolId: user.uid, academicYear: selectedYear, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -784,9 +736,9 @@ export function useSchoolData(isActive: boolean = true) {
     saveDailySummary: (date: string, summary: string, weather: string) => {
       if (!user || !db) return;
       setDocumentNonBlocking(
-        doc(db, "daily_summaries", `${effectiveSchoolId}_${date}`),
+        doc(db, "daily_summaries", `${user.uid}_${date}`),
         {
-          schoolId: effectiveSchoolId,
+          schoolId: user.uid,
           date,
           summary,
           weather,
@@ -803,7 +755,7 @@ export function useSchoolData(isActive: boolean = true) {
         doc(db, "report_photos", photo.id),
         {
           ...photo,
-          schoolId: effectiveSchoolId,
+          schoolId: user.uid,
           academicYear: selectedYear,
           updatedAt: new Date().toISOString(),
         },
@@ -820,7 +772,7 @@ export function useSchoolData(isActive: boolean = true) {
       if (!user || !db) return;
       setDocumentNonBlocking(
         doc(db, "exam_configs", `${std}_${term}`),
-        { labels, std, term, schoolId: effectiveSchoolId, updatedAt: new Date().toISOString() },
+        { labels, std, term, schoolId: user.uid, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -829,7 +781,7 @@ export function useSchoolData(isActive: boolean = true) {
       if (!user || !db) return;
       setDocumentNonBlocking(
         doc(db, "performance_configs", `${std}_${month}`),
-        { labels, std, month, schoolId: effectiveSchoolId, updatedAt: new Date().toISOString() },
+        { labels, std, month, schoolId: user.uid, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -843,7 +795,7 @@ export function useSchoolData(isActive: boolean = true) {
           ...skill,
           playerId: pId,
           sportName: sport,
-          schoolId: effectiveSchoolId,
+          schoolId: user.uid,
           lastUpdated: new Date().toISOString(),
           academicYear: selectedYear,
         },
@@ -864,7 +816,7 @@ export function useSchoolData(isActive: boolean = true) {
           doc(db, "drill_completions", refId),
           {
             id: refId,
-            schoolId: effectiveSchoolId,
+            schoolId: user.uid,
             playerId: pId,
             drillId: dId,
             sportName: meta?.sportName || dId.split("_")[0] || "",
@@ -886,7 +838,7 @@ export function useSchoolData(isActive: boolean = true) {
       else
         setDocumentNonBlocking(
           doc(db, "game_rules_registry", s),
-          { sportName: s, pdfData: pdf, schoolId: effectiveSchoolId, updatedAt: new Date().toISOString() },
+          { sportName: s, pdfData: pdf, schoolId: user.uid, updatedAt: new Date().toISOString() },
           { merge: true }
         );
     },
@@ -895,7 +847,7 @@ export function useSchoolData(isActive: boolean = true) {
       if (!user || !db) return;
       setDocumentNonBlocking(
         doc(db, "all_health_incidents", i.id),
-        { ...i, schoolId: effectiveSchoolId, academicYear: selectedYear, updatedAt: new Date().toISOString() },
+        { ...i, schoolId: user.uid, academicYear: selectedYear, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -917,7 +869,7 @@ export function useSchoolData(isActive: boolean = true) {
 
       const payload: EquipmentItem = {
         ...item,
-        schoolId: effectiveSchoolId,
+        schoolId: user.uid,
         academicYear: selectedYear,
         totalQty: safeTotal,
         availableQty: safeAvailable,
@@ -938,7 +890,7 @@ export function useSchoolData(isActive: boolean = true) {
 
       const payload: EquipmentItem = {
         ...item,
-        schoolId: effectiveSchoolId,
+        schoolId: user.uid,
         totalQty: safeTotal,
         availableQty: safeAvailable,
         damagedQty: safeDamaged,
@@ -972,7 +924,7 @@ export function useSchoolData(isActive: boolean = true) {
       // Record issue
       const issuePayload: EquipmentIssueRecord = {
         ...issue,
-        schoolId: effectiveSchoolId,
+        schoolId: user.uid,
         academicYear: selectedYear,
         status: "Issued",
         createdAt: now,
@@ -1031,7 +983,7 @@ export function useSchoolData(isActive: boolean = true) {
       const now = new Date().toISOString();
       const payload: IndentItem = {
         ...indent,
-        schoolId: effectiveSchoolId,
+        schoolId: user.uid,
         academicYear: selectedYear,
         createdAt: indent.createdAt || now,
         updatedAt: now,
@@ -1043,7 +995,7 @@ export function useSchoolData(isActive: boolean = true) {
       if (!user || !db) return;
       setDocumentNonBlocking(
         doc(db, "equipment_indents", indent.id),
-        { ...indent, schoolId: effectiveSchoolId, updatedAt: new Date().toISOString() },
+        { ...indent, schoolId: user.uid, updatedAt: new Date().toISOString() },
         { merge: true }
       );
     },
@@ -1058,7 +1010,7 @@ export function useSchoolData(isActive: boolean = true) {
     // ==========================================
     exportBackupData: () => {
       if (!user) return;
-      const fullBackup = generateFullBackupData(aggregatedData, effectiveSchoolId, selectedYear);
+      const fullBackup = generateFullBackupData(aggregatedData, user.uid, selectedYear);
       downloadBackupJson(fullBackup, aggregatedData.schoolProfile?.schoolName || aggregatedData.schoolProfile?.name);
     },
 
@@ -1072,7 +1024,7 @@ export function useSchoolData(isActive: boolean = true) {
           errors: ["User or database not connected."],
         };
       }
-      return executeRestore(backupPayload, db, effectiveSchoolId, selectedYear);
+      return executeRestore(backupPayload, db, user.uid, selectedYear);
     },
 
     importSchoolStudentsDatabase: async (targetStandard?: string): Promise<{ added: number; updated: number }> => {
@@ -1094,7 +1046,7 @@ export function useSchoolData(isActive: boolean = true) {
             (p.std === st.std && p.nameMarathi && p.nameMarathi === st.nameMarathi)
         );
 
-        const targetId = existing ? existing.id : `${effectiveSchoolId}_std${st.std}_${st.rollNo.padStart(2, '0')}`;
+        const targetId = existing ? existing.id : `${user.uid}_std${st.std}_${st.rollNo.padStart(2, '0')}`;
         const cleanMarathi = correctMarathiFullName(st.nameMarathi);
 
         const payload: Partial<Player> = {
@@ -1122,8 +1074,8 @@ export function useSchoolData(isActive: boolean = true) {
           category: existing?.category || 'student',
           sports: existing?.sports && existing.sports.length > 0 ? existing.sports : st.sports,
           history: existing?.history || 'No',
-          ownerId: effectiveSchoolId,
-          schoolId: effectiveSchoolId,
+          ownerId: user.uid,
+          schoolId: user.uid,
           academicYear: selectedYear,
           updatedAt: new Date().toISOString(),
         };
@@ -1153,8 +1105,8 @@ export function useSchoolData(isActive: boolean = true) {
               {
                 ...player,
                 nameMarathi: correctedMarathi,
-                ownerId: effectiveSchoolId,
-                schoolId: effectiveSchoolId
+                ownerId: user.uid,
+                schoolId: user.uid
               },
               { merge: true }
             );

@@ -20,7 +20,6 @@ import {
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
-import { WAGHAMBA_STUDENTS_DATA } from '@/data/waghambaStudents';
 
 const SPORTS_LIST = [
   'Kabaddi',
@@ -49,10 +48,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
   const handleOpenOfficialSheet = (category?: string, playersList?: any[]) => {
     setModalCategory(category || 'Girls U14');
-    const fallbackList = (store?.data?.players && store.data.players.length > 0)
-      ? store.data.players
-      : WAGHAMBA_STUDENTS_DATA;
-    const baseList = (playersList && playersList.length > 0) ? playersList : fallbackList;
+    const baseList = (playersList && playersList.length > 0) ? playersList : (store?.data?.players || []);
     const playersWithCustomSr = baseList.map((p: any, idx: number) => ({
       ...p,
       srNo: customSrNumbers[p.id] || String(idx + 1)
@@ -93,11 +89,11 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   // USER REQUIREMENT: Show players who were given marks from Skill Hub, sorted strictly by their mark ranking!
   const processedGroups = useMemo(() => {
     const groups: Record<string, any[]> = categories.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
-    const allPlayers: any[] = (store?.data?.players && store.data.players.length > 0)
-      ? store.data.players
-      : WAGHAMBA_STUDENTS_DATA;
+    const allPlayers: any[] = store?.data?.players || [];
 
     let playersInSport = allPlayers.filter((p: any) => {
+      // In tournament rosters, strictly include sport players/athletes
+      if (p.category && p.category !== 'athlete') return false;
       if (!p.sports) return false;
       if (Array.isArray(p.sports) && p.sports.includes(selectedSport)) return true;
       if (typeof p.sports === 'string' && p.sports.includes(selectedSport)) return true;
@@ -107,10 +103,9 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       return false;
     });
 
-    // Fallback: If no player specifically assigned to this sport yet, include the full roster
-    // so coaches can roster them, mark them, and print tournament sheets immediately!
+    // Fallback: If no player specifically assigned to this sport yet, include the school's athletes
     if (playersInSport.length === 0) {
-      playersInSport = allPlayers;
+      playersInSport = allPlayers.filter((p: any) => p.category === 'athlete');
     }
 
     playersInSport.forEach((p: any) => {
