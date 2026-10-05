@@ -130,17 +130,44 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       }
     });
 
-    // Filter and Sort by Skill Hub Mark Ranking
+    // Filter and Sort by Skill Hub Mark Ranking while preserving all squad players up to 12
     Object.keys(groups).forEach(cat => {
       let list = groups[cat];
       const withMarks = list.filter(p => p.hasSkillMark);
+      const withoutMarks = list.filter(p => !p.hasSkillMark);
 
-      // If players have marks from Skill Hub, prioritize those players
-      // Otherwise fallback to full list so list is not totally empty
-      const finalList = withMarks.length > 0 ? withMarks : list;
+      // Evaluated players ranked first by skill score descending
+      withMarks.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+      // Other players follow by standard/name
+      withoutMarks.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
 
-      // Sort strictly by Skill Hub marks ranking (highest score first)
-      finalList.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+      let finalList = [...withMarks, ...withoutMarks];
+
+      // If fewer than 12 players in this sport for this category, fill up to 12 from other athletes in the same category
+      if (finalList.length < 12) {
+        const existingIds = new Set(finalList.map(p => p.id));
+        const categoryOtherAthletes = allPlayers.filter(p => {
+          if (existingIds.has(p.id)) return false;
+          if (p.category && p.category !== 'athlete') return false;
+          return getCategory(p) === cat;
+        });
+        categoryOtherAthletes.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+        for (const extra of categoryOtherAthletes) {
+          if (finalList.length >= 12) break;
+          const skillInfo = getPlayerSkillMarksAndRank(extra, selectedSport, store);
+          finalList.push({
+            ...extra,
+            skillScore: skillInfo.scoreDisplay,
+            skillScoreNum: skillInfo.score,
+            hasSkillMark: skillInfo.hasMark,
+            fitnessScore: '0',
+            jersey: extra.jerseyNumbers?.[selectedSport] || extra.jerseyNumber || '-',
+            position: extra.positions?.[selectedSport] || extra.position || '-',
+            gameActivity: getPlayerGameActivity(extra, selectedSport, store)
+          });
+        }
+      }
 
       groups[cat] = finalList.map((p, idx) => ({
         ...p,
@@ -152,8 +179,25 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   }, [selectedSport, store, categories, getCategory, isAthletics]);
 
   const handlePrint = (category: string) => {
-    const groupPlayers = processedGroups[category];
+    const groupPlayers = processedGroups[category] || [];
     const topTwelve = groupPlayers.slice(0, 12);
+
+    // Ensure strictly 12 player rows for the official tournament squad sheet
+    const rowsToPrint: any[] = [...topTwelve];
+    while (rowsToPrint.length < 12) {
+      rowsToPrint.push({
+        id: `blank_${rowsToPrint.length + 1}`,
+        isBlank: true,
+        name: '',
+        nameMarathi: '',
+        std: '-',
+        dob: '-',
+        generalRegisterNumber: '-',
+        serialNumber: '-',
+        aadharNumber: '-',
+      });
+    }
+
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true);
     const teacherName = getTeacherName(schoolProfile);
@@ -283,7 +327,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
             <div class="info-bar">
               <span>🏆 खेळ: <strong>${sportLabelMr.toUpperCase()} (${selectedSport.toUpperCase()})</strong></span>
               <span>🎯 वयोगट: <strong>${category.toUpperCase()}</strong></span>
-              <span>👥 खेळाडू संख्या: <strong>${topTwelve.length} Athletes</strong></span>
+              <span>👥 खेळाडू संख्या: <strong>12 Athletes (अधिकृत १२ खेळाडू संघ)</strong></span>
             </div>
 
             <table>
@@ -300,7 +344,21 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 </tr>
               </thead>
               <tbody>
-                ${topTwelve.map((p, i) => {
+                ${rowsToPrint.map((p, i) => {
+                  if (p.isBlank) {
+                    return `
+                    <tr>
+                      <td class="center"><strong>${i + 1}</strong></td>
+                      <td class="center" style="color: #94a3b8;">-</td>
+                      <td class="center" style="color: #94a3b8;">-</td>
+                      <td>&nbsp;</td>
+                      <td class="center" style="color: #94a3b8;">-</td>
+                      <td class="center" style="color: #94a3b8;">-</td>
+                      <td class="center" style="color: #94a3b8;">-</td>
+                      <td></td>
+                    </tr>
+                    `;
+                  }
                   const displayName = p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name;
                   const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
                   const srNo = customSrNumbers[p.id] || String(i + 1);

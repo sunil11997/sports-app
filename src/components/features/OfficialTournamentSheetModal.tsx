@@ -566,32 +566,40 @@ export function OfficialTournamentSheetModal({
         };
       });
 
-      // 4. Strict filter:
-      // Show players who have marks from Skill Hub for this specific game
-      let filtered = scoredPlayers.filter(p => p.hasSkillMark && (p.isInSport || isAthletics));
+      // 4. Form complete tournament squad (up to 12 players for team sports):
+      // Primary: Players with marks from Skill Hub for this specific game
+      const withMarksInSport = scoredPlayers.filter(p => p.hasSkillMark && (p.isInSport || isAthletics));
+      withMarksInSport.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
 
-      // Fallback: If no players have marks yet in this category for this sport, use sport participants
-      if (filtered.length === 0) {
-        if (basePlayers && basePlayers.length > 0 && getInitialCategoryKey(initialCategory) === catDef.key) {
-          filtered = basePlayers.map(p => {
-            const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
-            const activity = getPlayerGameActivity(p, sportKey, store);
-            return {
-              ...p,
-              skillScoreNum: skillInfo.score,
-              skillScoreDisplay: skillInfo.scoreDisplay,
-              hasSkillMark: skillInfo.hasMark,
-              gameActivity: activity,
-              isInSport: true
-            };
-          });
-        } else {
-          filtered = scoredPlayers.filter(p => p.isInSport);
-        }
+      // Secondary: Other players assigned to this sport without marks yet
+      const otherInSport = scoredPlayers.filter(p => !p.hasSkillMark && (p.isInSport || isAthletics));
+      otherInSport.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+      // Tertiary: Other eligible athletes in this age category
+      const otherAthletes = scoredPlayers.filter(p => !p.isInSport && !isAthletics);
+      otherAthletes.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+      let filtered = [...withMarksInSport, ...otherInSport];
+      // If fewer than 12 players, fill up to 12 from other athletes in the same age category
+      if (filtered.length < 12) {
+        filtered = [...filtered, ...otherAthletes.slice(0, 12 - filtered.length)];
       }
 
-      // 5. Sort strictly by Skill Hub mark ranking (highest score first)
-      filtered.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+      // Fallback: If still empty, use basePlayers if matching initial category
+      if (filtered.length === 0 && basePlayers && basePlayers.length > 0 && getInitialCategoryKey(initialCategory) === catDef.key) {
+        filtered = basePlayers.map(p => {
+          const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+          const activity = getPlayerGameActivity(p, sportKey, store);
+          return {
+            ...p,
+            skillScoreNum: skillInfo.score,
+            skillScoreDisplay: skillInfo.scoreDisplay,
+            hasSkillMark: skillInfo.hasMark,
+            gameActivity: activity,
+            isInSport: true
+          };
+        });
+      }
 
       // Map to SheetRow with initial Sr No = Mark Ranking (1, 2, 3...)
       newSheets[catDef.key] = filtered.map((p, i) => {
@@ -786,12 +794,37 @@ export function OfficialTournamentSheetModal({
 
     // Enforce 12-player rule for team sports
     const is12 = is12SquadSport(selectedSportKey, sportName);
-    const rowsList = is12 ? rawRowsList.slice(0, 12) : rawRowsList;
+    let rowsList = is12 ? rawRowsList.slice(0, 12) : rawRowsList;
+
+    // Ensure strictly 12 player rows for team sports on the official printed sheet
+    if (is12 && rowsList.length < 12) {
+      const padded: SheetRow[] = [...rowsList];
+      for (let i = rowsList.length; i < 12; i++) {
+        padded.push({
+          id: `blank_${i + 1}`,
+          srNo: String(i + 1),
+          studentName: '',
+          std: '-',
+          grNo: '-',
+          dob: '-',
+          motherName: '-',
+          aadhar: '-',
+          saralId: '-',
+          sportOrEvent: '-',
+          gameActivity: '',
+          skillScore: '-',
+          skillScoreNum: 0,
+          skillRank: i + 1,
+          ageCategoryLabel: catLabel
+        });
+      }
+      rowsList = padded;
+    }
 
     const rowsHtml = rowsList.length > 0 ? rowsList.map(r => `
       <tr>
         <td class="text-center font-normal">${r.srNo || '-'}</td>
-        <td class="font-normal text-left">${r.studentName || '-'}</td>
+        <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
         <td class="text-center font-normal">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
