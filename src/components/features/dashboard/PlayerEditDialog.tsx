@@ -38,6 +38,11 @@ import {
   EyeOff,
   Trophy,
   User,
+  Shirt,
+  Target,
+  Medal,
+  Award,
+  Activity,
 } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import {
@@ -59,7 +64,92 @@ const SPORTS_LIST = [
   'Disc Throw',
   'Long Jump',
   'High Jump',
+  'Athletics',
+  'Yoga',
+  'PT Mass',
 ];
+
+const SPORT_CONFIG: Record<string, { mr: string; category: string; iconLabel: string; isSquad12?: boolean }> = {
+  'Kabaddi': { mr: 'कबड्डी', category: 'सांघिक संघ (12 Squad)', iconLabel: '🤼', isSquad12: true },
+  'Volleyball': { mr: 'व्हॉलीबॉल', category: 'सांघिक संघ (12 Squad)', iconLabel: '🏐', isSquad12: true },
+  'Kho Kho': { mr: 'खो खो', category: 'सांघिक संघ (12 Squad)', iconLabel: '🏃', isSquad12: true },
+  'Handball': { mr: 'हॅन्डबॉल', category: 'सांघिक संघ (12 Squad)', iconLabel: '🤾', isSquad12: true },
+  'Running': { mr: 'धावणे (रनिंग)', category: 'ट्रॅक इव्हेंट (Track)', iconLabel: '⚡' },
+  'Shot Put': { mr: 'गोळाफेक', category: 'थ्रो इव्हेंट (Field)', iconLabel: '☄️' },
+  'Javelin Throw': { mr: 'भालाफेक', category: 'थ्रो इव्हेंट (Field)', iconLabel: '🗡️' },
+  'Disc Throw': { mr: 'थाळीफेक', category: 'थ्रो इव्हेंट (Field)', iconLabel: '🥏' },
+  'Long Jump': { mr: 'लांब उडी', category: 'जंप इव्हेंट (Field)', iconLabel: '🦘' },
+  'High Jump': { mr: 'उंच उडी', category: 'जंप इव्हेंट (Field)', iconLabel: '🪜' },
+  'Athletics': { mr: 'मैदानी स्पर्धा (ऍथलेटिक्स)', category: 'मैदानी महोत्सव', iconLabel: '🏅' },
+  'Yoga': { mr: 'योगासने', category: 'विशेष प्रात्यक्षिक', iconLabel: '🧘' },
+  'PT Mass': { mr: 'पी.टी. कवायत', category: 'विशेष संचलन', iconLabel: '🚩' }
+};
+
+const SPORT_POSITION_OPTIONS: Record<string, { code: string; labelMr: string }[]> = {
+  'Kabaddi': [
+    { code: 'RC', labelMr: 'उजवा कोपरा (Right Corner #1)' },
+    { code: 'LC', labelMr: 'डावा कोपरा (Left Corner #7)' },
+    { code: 'RI', labelMr: 'उजवा इन (Right In #2)' },
+    { code: 'LI', labelMr: 'डावा इन (Left In #6)' },
+    { code: 'RCv', labelMr: 'उजवा कव्हर (Right Cover #3)' },
+    { code: 'LCv', labelMr: 'डावा कव्हर (Left Cover #5)' },
+    { code: 'CTR', labelMr: 'मध्यरक्षक / सेंटर (Center #4)' },
+    { code: 'RDR', labelMr: 'मुख्य चढाईपटू (Main Raider)' },
+    { code: 'AR', labelMr: 'ऑल-राउंडर (All-Rounder)' }
+  ],
+  'Volleyball': [
+    { code: 'SET', labelMr: 'सेटर / पासर (Setter / Playmaker)' },
+    { code: 'OH', labelMr: 'आक्रमक / स्मॅशर (Outside Hitter / Spiker)' },
+    { code: 'MB', labelMr: 'मध्यरक्षक / ब्लॉकर (Middle Blocker)' },
+    { code: 'OPP', labelMr: 'विरुद्ध आक्रमक (Opposite Hitter)' },
+    { code: 'LIB', labelMr: 'लिबेरो / मुख्य बचावपटू (Libero)' },
+    { code: 'UNI', labelMr: 'युनिव्हर्सल खेळाडू (Universal Player)' }
+  ],
+  'Kho Kho': [
+    { code: 'CH', labelMr: 'आक्रमक पाठलागपटू (Active Chaser)' },
+    { code: 'R1', labelMr: 'धावपटू तुकडी १ (Runner Batch 1)' },
+    { code: 'R2', labelMr: 'धावपटू तुकडी २ (Runner Batch 2)' },
+    { code: 'R3', labelMr: 'धावपटू तुकडी ३ (Runner Batch 3)' },
+    { code: 'PD', labelMr: 'पोल डायव्हर (Pole Diver)' },
+    { code: 'AR', labelMr: 'ऑल-राउंडर (All-Rounder)' }
+  ],
+  'Handball': [
+    { code: 'GK', labelMr: 'गोलरक्षक (Goalkeeper)' },
+    { code: 'LW', labelMr: 'डावा विंग (Left Wing)' },
+    { code: 'RW', labelMr: 'उजवा विंग (Right Wing)' },
+    { code: 'CB', labelMr: 'मध्य फळी (Center Back / Playmaker)' },
+    { code: 'PV', labelMr: 'पिव्हट / लाईन खेळाडू (Pivot)' },
+    { code: 'LB', labelMr: 'डावा बॅक (Left Back)' },
+    { code: 'RB', labelMr: 'उजवा बॅक (Right Back)' }
+  ],
+  'Running': [
+    { code: '100M', labelMr: '१०० मी. धावणे (100m Sprint)' },
+    { code: '200M', labelMr: '२०० मी. धावणे (200m Sprint)' },
+    { code: '400M', labelMr: '४०० मी. धावणे (400m Run)' },
+    { code: 'RELAY', labelMr: '४x१०० रिले (4x100m Relay)' }
+  ],
+  'Athletics': [
+    { code: '100M', labelMr: '१०० मी. धावणे (100m Sprint)' },
+    { code: '200M', labelMr: '२०० मी. धावणे (200m Sprint)' },
+    { code: '400M', labelMr: '४०० मी. धावणे (400m Run)' },
+    { code: 'RELAY', labelMr: '४x१०० रिले (4x100m Relay)' },
+    { code: 'LJ', labelMr: 'लांब उडी (Long Jump)' },
+    { code: 'HJ', labelMr: 'उंच उडी (High Jump)' },
+    { code: 'SP', labelMr: 'गोळाफेक (Shot Put)' },
+    { code: 'JT', labelMr: 'भालाफेक (Javelin Throw)' },
+    { code: 'DT', labelMr: 'थाळीफेक (Discus Throw)' }
+  ],
+  'Yoga': [
+    { code: 'ASANA', labelMr: 'आसन प्रात्यक्षिकपटू (Asana Performer)' },
+    { code: 'LEAD', labelMr: 'सूर्य नमस्कार संघ प्रमुख (Surya Namaskar Lead)' },
+    { code: 'BAL', labelMr: 'संतुलन आसन विशेष (Balance Asana)' }
+  ],
+  'PT Mass': [
+    { code: 'DRILL', labelMr: 'कवायतपटू (Mass PT Performer)' },
+    { code: 'CMD', labelMr: 'पुढील रांग कमांडर (Front Row Lead)' },
+    { code: 'FLAG', labelMr: 'ध्वज संचलन पथक (March Squad)' }
+  ]
+};
 
 interface PlayerEditDialogProps {
   player: Player | null;
@@ -204,11 +294,29 @@ export function PlayerEditDialog({
     const finalNameMarathi =
       (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
 
+    const primary = editingPlayer.primarySport || editingPlayer.sports?.[0] || '';
+    const jersey = (editingPlayer.jerseyNumber || '').replace(/[^0-9]/g, '');
+    const pos = (editingPlayer.position || '').trim();
+
+    const updatedJerseyNumbers = {
+      ...(editingPlayer.jerseyNumbers || {}),
+      ...(primary && jersey ? { [primary]: jersey } : {})
+    };
+    const updatedPositions = {
+      ...(editingPlayer.positions || {}),
+      ...(primary && pos ? { [primary]: pos } : {})
+    };
+
     const updated: Player = {
       ...editingPlayer,
       name: finalName,
       nameMarathi: finalNameMarathi,
       category: editingPlayer.category || 'student',
+      primarySport: primary || undefined,
+      jerseyNumber: jersey || undefined,
+      jerseyNumbers: Object.keys(updatedJerseyNumbers).length > 0 ? updatedJerseyNumbers : undefined,
+      position: pos || undefined,
+      positions: Object.keys(updatedPositions).length > 0 ? updatedPositions : undefined,
       age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
       ageCategory: ageValidation ? ageValidation.category : 'None',
       ageDetailed: ageValidation ? ageValidation.ageString : '',
@@ -630,34 +738,189 @@ export function PlayerEditDialog({
               </div>
             </div>
 
-            {/* Sports Selection Checkboxes */}
-            <div className="space-y-2 pt-2">
-              <Label className="text-[10px] font-black uppercase tracking-wider text-primary">
-                Sports Disciplines (सहभागी खेळ)
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-4 border-2 rounded-2xl bg-slate-50">
+            {/* Sports & Tournament Section */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Medal className="w-3.5 h-3.5 text-accent" />
+                  Sports Disciplines (सहभागी खेळ - सर्व १३ खेळ)
+                </Label>
+                <span className="text-[10px] font-bold text-muted-foreground">
+                  {(editingPlayer.sports || []).length} निवडले
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 p-4 border-2 rounded-2xl bg-slate-50">
                 {SPORTS_LIST.map((sport) => {
                   const currentSports = editingPlayer.sports || [];
                   const isChecked = currentSports.includes(sport);
+                  const conf = SPORT_CONFIG[sport] || { mr: sport, category: 'खेळ', iconLabel: '🏅' };
                   return (
-                    <label
+                    <div
                       key={sport}
-                      className="flex items-center gap-2 text-xs font-bold cursor-pointer select-none"
+                      onClick={() => {
+                        const next = isChecked
+                          ? currentSports.filter((s) => s !== sport)
+                          : [...currentSports, sport];
+                        const primary = editingPlayer.primarySport === sport && isChecked
+                          ? (next[0] || '')
+                          : (!editingPlayer.primarySport && !isChecked ? sport : editingPlayer.primarySport);
+                        setEditingPlayer({
+                          ...editingPlayer,
+                          sports: next,
+                          primarySport: primary,
+                          category: next.length > 0 ? 'athlete' : editingPlayer.category,
+                        });
+                      }}
+                      className={cn(
+                        "flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer select-none",
+                        isChecked
+                          ? "bg-white border-amber-500 shadow-sm ring-1 ring-amber-500/20"
+                          : "bg-white/60 border-slate-200 hover:bg-white"
+                      )}
                     >
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={(checked) => {
-                          const next = checked
-                            ? [...currentSports, sport]
-                            : currentSports.filter((s) => s !== sport);
-                          setEditingPlayer({ ...editingPlayer, sports: next });
-                        }}
-                      />
-                      <span>{sport}</span>
-                    </label>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            const next = checked
+                              ? [...currentSports, sport]
+                              : currentSports.filter((s) => s !== sport);
+                            setEditingPlayer({
+                              ...editingPlayer,
+                              sports: next,
+                              category: next.length > 0 ? 'athlete' : editingPlayer.category,
+                            });
+                          }}
+                        />
+                        <div>
+                          <div className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                            <span>{conf.iconLabel}</span>
+                            <span>{conf.mr}</span>
+                          </div>
+                          <span className="text-[9px] text-muted-foreground">{sport}</span>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[8px] font-bold px-1.5 py-0.5">
+                        {conf.category}
+                      </Badge>
+                    </div>
                   );
                 })}
               </div>
+
+              {/* Tournament Athlete Settings (Only when sports selected or athlete) */}
+              {(editingPlayer.category === 'athlete' || (editingPlayer.sports && editingPlayer.sports.length > 0)) && (
+                <div className="p-4 rounded-2xl bg-amber-50/50 border-2 border-amber-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Shirt className="w-4 h-4 text-indigo-600" />
+                      <h5 className="text-[11px] font-black uppercase tracking-wider">
+                        Tournament & Squad Configuration (स्पर्धा तपशील)
+                      </h5>
+                    </div>
+                    <Badge className="bg-amber-600 text-white text-[9px] font-black px-2 py-0.5 uppercase">
+                      🏆 Match Ready
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Primary Tournament Sport */}
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1">
+                        <Target className="w-3 h-3 text-accent" /> मुख्य स्पर्धा खेळ (Primary Sport)
+                      </Label>
+                      <Select
+                        value={editingPlayer.primarySport || editingPlayer.sports?.[0] || ''}
+                        onValueChange={(val) => setEditingPlayer({ ...editingPlayer, primarySport: val })}
+                      >
+                        <SelectTrigger className="h-10 border-2 rounded-xl font-bold text-xs bg-white">
+                          <SelectValue placeholder="खेळ निवडा" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(editingPlayer.sports && editingPlayer.sports.length > 0 ? editingPlayer.sports : SPORTS_LIST).map((s) => (
+                            <SelectItem key={s} value={s} className="font-bold text-xs">
+                              {SPORT_CONFIG[s]?.iconLabel} {SPORT_CONFIG[s]?.mr || s} ({s})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Official Jersey Number */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1">
+                          <Shirt className="w-3 h-3 text-indigo-600" /> जर्सी क्रमांक (Jersey #)
+                        </Label>
+                        <span className="text-[9px] text-muted-foreground font-semibold">१..१२ संघ</span>
+                      </div>
+                      <Input
+                        type="text"
+                        value={editingPlayer.jerseyNumber || ''}
+                        onChange={(e) => setEditingPlayer({ ...editingPlayer, jerseyNumber: e.target.value.replace(/[^0-9]/g, '').slice(0, 3) })}
+                        placeholder="उदा. 7"
+                        className="h-10 border-2 rounded-xl font-black text-xs bg-white text-primary"
+                      />
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setEditingPlayer({ ...editingPlayer, jerseyNumber: n })}
+                            className={cn(
+                              "px-1.5 py-0.5 rounded text-[9px] font-black border transition-all",
+                              editingPlayer.jerseyNumber === n
+                                ? "bg-indigo-600 text-white border-indigo-700"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                            )}
+                          >
+                            #{n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Position / Tactical Role */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1">
+                      <Activity className="w-3 h-3 text-accent" /> खेळातील स्थान / पोझिशन (Tactical Position)
+                    </Label>
+                    <Input
+                      type="text"
+                      value={editingPlayer.position || ''}
+                      onChange={(e) => setEditingPlayer({ ...editingPlayer, position: e.target.value })}
+                      placeholder="उदा. Right Corner, Setter, Chaser, Raider..."
+                      className="h-10 border-2 rounded-xl font-bold text-xs bg-white"
+                    />
+                    {(() => {
+                      const curSport = editingPlayer.primarySport || editingPlayer.sports?.[0] || 'Kabaddi';
+                      const opts = SPORT_POSITION_OPTIONS[curSport] || [];
+                      if (opts.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 pt-1 max-h-20 overflow-y-auto">
+                          {opts.map((opt) => (
+                            <button
+                              key={opt.code}
+                              type="button"
+                              onClick={() => setEditingPlayer({ ...editingPlayer, position: opt.labelMr })}
+                              className={cn(
+                                "px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all",
+                                editingPlayer.position === opt.labelMr
+                                  ? "bg-accent text-white border-accent shadow-sm"
+                                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                              )}
+                            >
+                              {opt.labelMr}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </ScrollArea>

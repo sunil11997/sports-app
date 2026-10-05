@@ -33,6 +33,11 @@ export const PlayerSchema = z.object({
   jerseyNumber: z.string().optional(),
   jerseyNumbers: z.record(z.string()).optional(),
   positions: z.record(z.string()).optional(),
+  position: z.string().optional(),
+  primarySport: z.string().optional(),
+  isCaptain: z.boolean().optional(),
+  isViceCaptain: z.boolean().optional(),
+  isStarter: z.boolean().optional(),
   schoolId: z.string().optional(),
   ownerId: z.string().optional()
 });

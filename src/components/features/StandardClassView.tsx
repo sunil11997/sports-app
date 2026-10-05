@@ -59,7 +59,37 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
+const SPORTS_LIST = [
+  'Kabaddi',
+  'Volleyball',
+  'Kho Kho',
+  'Handball',
+  'Running',
+  'Shot Put',
+  'Javelin Throw',
+  'Disc Throw',
+  'Long Jump',
+  'High Jump',
+  'Athletics',
+  'Yoga',
+  'PT Mass'
+];
+
+const SPORT_MARATHI_LABELS: Record<string, string> = {
+  'Kabaddi': 'कबड्डी',
+  'Volleyball': 'व्हॉलीबॉल',
+  'Kho Kho': 'खो खो',
+  'Handball': 'हॅन्डबॉल',
+  'Running': 'धावणे',
+  'Shot Put': 'गोळाफेक',
+  'Javelin Throw': 'भालाफेक',
+  'Disc Throw': 'थाळीफेक',
+  'Long Jump': 'लांब उडी',
+  'High Jump': 'उंच उडी',
+  'Athletics': 'मैदानी स्पर्धा (ऍथलेटिक्स)',
+  'Yoga': 'योगासने',
+  'PT Mass': 'पी.टी. कवायत'
+};
 
 export function StandardClassView({ store, std, language = 'English' }: { store: any, std: string, language?: string }) {
   const { toast } = useToast();
@@ -979,7 +1009,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                                 }}
                                 className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
                               />
-                              <Label className="text-[10px] font-black uppercase text-foreground/70">{sport}</Label>
+                              <Label className="text-[10px] font-black uppercase text-foreground/70">
+                                {SPORT_MARATHI_LABELS[sport] ? `${SPORT_MARATHI_LABELS[sport]} (${sport})` : sport}
+                              </Label>
                             </div>
                           ))}
                         </div>
@@ -1243,7 +1275,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         }}
                         className="w-4 h-4 rounded"
                       />
-                      <span className="text-[10px] font-bold text-foreground/80">{sport}</span>
+                      <span className="text-[10px] font-bold text-foreground/80">
+                        {SPORT_MARATHI_LABELS[sport] ? `${SPORT_MARATHI_LABELS[sport]} (${sport})` : sport}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -1449,7 +1483,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                           }}
                           className="w-4 h-4 rounded"
                         />
-                        <span className="text-[10px] font-bold text-foreground/80">{sport}</span>
+                        <span className="text-[10px] font-bold text-foreground/80">
+                          {SPORT_MARATHI_LABELS[sport] ? `${SPORT_MARATHI_LABELS[sport]} (${sport})` : sport}
+                        </span>
                       </div>
                     ))}
                   </div>

@@ -38,7 +38,14 @@ import {
   FileText,
   CreditCard,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Shirt,
+  Target,
+  Trophy,
+  Award,
+  Star,
+  Activity,
+  Check
 } from 'lucide-react';
 import { differenceInYears, isValid } from 'date-fns';
 import { cn, getAgeValidation, transliterateEnglishToMarathi } from '@/lib/utils';
@@ -55,7 +62,104 @@ import { correctMarathiFullName, cleanLegacyMarathiText, decomposeMarathiFullNam
 import type { SchoolStudent } from '@/data/waghambaStudents';
 import type { Player } from '@/lib/types';
 
-const SPORTS_LIST = ['Kabaddi', 'Volleyball', 'Kho Kho', 'Handball', 'Running', 'Shot Put', 'Javelin Throw', 'Disc Throw', 'Long Jump', 'High Jump'];
+export const SPORTS_LIST = [
+  'Kabaddi',
+  'Volleyball',
+  'Kho Kho',
+  'Handball',
+  'Running',
+  'Shot Put',
+  'Javelin Throw',
+  'Disc Throw',
+  'Long Jump',
+  'High Jump',
+  'Athletics',
+  'Yoga',
+  'PT Mass'
+];
+
+export const SPORT_CONFIG: Record<string, { mr: string; category: string; iconLabel: string; isSquad12?: boolean }> = {
+  'Kabaddi': { mr: 'कबड्डी', category: 'सांघिक संघ (12 Squad)', iconLabel: '🤼', isSquad12: true },
+  'Volleyball': { mr: 'व्हॉलीबॉल', category: 'सांघिक संघ (12 Squad)', iconLabel: '🏐', isSquad12: true },
+  'Kho Kho': { mr: 'खो खो', category: 'सांघिक संघ (12 Squad)', iconLabel: '🏃', isSquad12: true },
+  'Handball': { mr: 'हॅन्डबॉल', category: 'सांघिक संघ (12 Squad)', iconLabel: '🤾', isSquad12: true },
+  'Running': { mr: 'धावणे (रनिंग)', category: 'ट्रॅक इव्हेंट (Track)', iconLabel: '⚡' },
+  'Shot Put': { mr: 'गोळाफेक', category: 'थ्रो इव्हेंट (Field)', iconLabel: '☄️' },
+  'Javelin Throw': { mr: 'भालाफेक', category: 'थ्रो इव्हेंट (Field)', iconLabel: '🗡️' },
+  'Disc Throw': { mr: 'थाळीफेक', category: 'थ्रो इव्हेंट (Field)', iconLabel: '🥏' },
+  'Long Jump': { mr: 'लांब उडी', category: 'जंप इव्हेंट (Field)', iconLabel: '🦘' },
+  'High Jump': { mr: 'उंच उडी', category: 'जंप इव्हेंट (Field)', iconLabel: '🪜' },
+  'Athletics': { mr: 'मैदानी स्पर्धा (ऍथलेटिक्स)', category: 'मैदानी महोत्सव', iconLabel: '🏅' },
+  'Yoga': { mr: 'योगासने', category: 'विशेष क्रीडा प्रात्यक्षिक', iconLabel: '🧘' },
+  'PT Mass': { mr: 'पी.टी. कवायत', category: 'विशेष संचलन पथक', iconLabel: '🚩' }
+};
+
+export const SPORT_POSITION_OPTIONS: Record<string, { code: string; labelMr: string; labelEn: string }[]> = {
+  'Kabaddi': [
+    { code: 'RC', labelMr: 'उजवा कोपरा (Right Corner #1)', labelEn: 'Right Corner' },
+    { code: 'LC', labelMr: 'डावा कोपरा (Left Corner #7)', labelEn: 'Left Corner' },
+    { code: 'RI', labelMr: 'उजवा इन (Right In #2)', labelEn: 'Right In' },
+    { code: 'LI', labelMr: 'डावा इन (Left In #6)', labelEn: 'Left In' },
+    { code: 'RCv', labelMr: 'उजवा कव्हर (Right Cover #3)', labelEn: 'Right Cover' },
+    { code: 'LCv', labelMr: 'डावा कव्हर (Left Cover #5)', labelEn: 'Left Cover' },
+    { code: 'CTR', labelMr: 'मध्यरक्षक / सेंटर (Center #4)', labelEn: 'Center' },
+    { code: 'RDR', labelMr: 'मुख्य चढाईपटू (Main Raider)', labelEn: 'Main Raider' },
+    { code: 'AR', labelMr: 'ऑल-राउंडर (All-Rounder)', labelEn: 'All-Rounder' }
+  ],
+  'Volleyball': [
+    { code: 'SET', labelMr: 'सेटर / पासर (Setter / Playmaker)', labelEn: 'Setter' },
+    { code: 'OH', labelMr: 'आक्रमक / स्मॅशर (Outside Hitter / Spiker)', labelEn: 'Outside Hitter' },
+    { code: 'MB', labelMr: 'मध्यरक्षक / ब्लॉकर (Middle Blocker)', labelEn: 'Middle Blocker' },
+    { code: 'OPP', labelMr: 'विरुद्ध आक्रमक (Opposite Hitter)', labelEn: 'Opposite Hitter' },
+    { code: 'LIB', labelMr: 'लिबेरो / मुख्य बचावपटू (Libero)', labelEn: 'Libero' },
+    { code: 'UNI', labelMr: 'युनिव्हर्सल खेळाडू (Universal Player)', labelEn: 'Universal' }
+  ],
+  'Kho Kho': [
+    { code: 'CH', labelMr: 'आक्रमक पाठलागपटू (Active Chaser)', labelEn: 'Active Chaser' },
+    { code: 'R1', labelMr: 'धावपटू तुकडी १ (Runner Batch 1)', labelEn: 'Runner Batch 1' },
+    { code: 'R2', labelMr: 'धावपटू तुकडी २ (Runner Batch 2)', labelEn: 'Runner Batch 2' },
+    { code: 'R3', labelMr: 'धावपटू तुकडी ३ (Runner Batch 3)', labelEn: 'Runner Batch 3' },
+    { code: 'PD', labelMr: 'पोल डायव्हर (Pole Diver)', labelEn: 'Pole Diver' },
+    { code: 'AR', labelMr: 'ऑल-राउंडर (All-Rounder)', labelEn: 'All-Rounder' }
+  ],
+  'Handball': [
+    { code: 'GK', labelMr: 'गोलरक्षक (Goalkeeper)', labelEn: 'Goalkeeper' },
+    { code: 'LW', labelMr: 'डावा विंग (Left Wing)', labelEn: 'Left Wing' },
+    { code: 'RW', labelMr: 'उजवा विंग (Right Wing)', labelEn: 'Right Wing' },
+    { code: 'CB', labelMr: 'मध्य फळी (Center Back / Playmaker)', labelEn: 'Center Back' },
+    { code: 'PV', labelMr: 'पिव्हट / लाईन खेळाडू (Pivot)', labelEn: 'Pivot' },
+    { code: 'LB', labelMr: 'डावा बॅक (Left Back)', labelEn: 'Left Back' },
+    { code: 'RB', labelMr: 'उजवा बॅक (Right Back)', labelEn: 'Right Back' }
+  ],
+  'Running': [
+    { code: '100M', labelMr: '१०० मी. धावणे (100m Sprint)', labelEn: '100m Sprint' },
+    { code: '200M', labelMr: '२०० मी. धावणे (200m Sprint)', labelEn: '200m Sprint' },
+    { code: '400M', labelMr: '४०० मी. धावणे (400m Run)', labelEn: '400m Run' },
+    { code: 'RELAY', labelMr: '४x१०० रिले (4x100m Relay)', labelEn: '4x100m Relay' }
+  ],
+  'Athletics': [
+    { code: '100M', labelMr: '१०० मी. धावणे (100m Sprint)', labelEn: '100m Sprint' },
+    { code: '200M', labelMr: '२०० मी. धावणे (200m Sprint)', labelEn: '200m Sprint' },
+    { code: '400M', labelMr: '४०० मी. धावणे (400m Run)', labelEn: '400m Run' },
+    { code: 'RELAY', labelMr: '४x१०० रिले (4x100m Relay)', labelEn: '4x100m Relay' },
+    { code: 'LJ', labelMr: 'लांब उडी (Long Jump)', labelEn: 'Long Jump' },
+    { code: 'HJ', labelMr: 'उंच उडी (High Jump)', labelEn: 'High Jump' },
+    { code: 'SP', labelMr: 'गोळाफेक (Shot Put)', labelEn: 'Shot Put' },
+    { code: 'JT', labelMr: 'भालाफेक (Javelin Throw)', labelEn: 'Javelin Throw' },
+    { code: 'DT', labelMr: 'थाळीफेक (Discus Throw)', labelEn: 'Discus Throw' }
+  ],
+  'Yoga': [
+    { code: 'ASANA', labelMr: 'आसन प्रात्यक्षिकपटू (Asana Performer)', labelEn: 'Asana Performer' },
+    { code: 'LEAD', labelMr: 'सूर्य नमस्कार संघ प्रमुख (Surya Namaskar Lead)', labelEn: 'Surya Namaskar Lead' },
+    { code: 'BAL', labelMr: 'संतुलन आसन विशेष (Balance Asana)', labelEn: 'Balance Asana' }
+  ],
+  'PT Mass': [
+    { code: 'DRILL', labelMr: 'कवायतपटू (Mass PT Performer)', labelEn: 'Mass PT Performer' },
+    { code: 'CMD', labelMr: 'पुढील रांग कमांडर (Front Row Lead)', labelEn: 'Front Row Lead' },
+    { code: 'FLAG', labelMr: 'ध्वज संचलन पथक (March Squad)', labelEn: 'March Squad' }
+  ]
+};
+
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 const formSchema = z.object({
@@ -82,6 +186,11 @@ const formSchema = z.object({
   mobileNumber: z.string().optional().default(""),
   address: z.string().optional().default(""),
   sports: z.array(z.string()).optional().default([]),
+  primarySport: z.string().optional().default(""),
+  jerseyNumber: z.string().optional().default(""),
+  position: z.string().optional().default(""),
+  tournamentRole: z.enum(["player", "captain", "vice_captain", "substitute"]).optional().default("player"),
+  isStarter: z.boolean().optional().default(true),
   history: z.enum(["Yes", "No"]).optional().default("No"),
   histDetail: z.string().optional().default(""),
   medical: z.string().optional().default(""),
@@ -158,6 +267,11 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     generalRegisterNumber: "", 
     address: "",
     sports: [], 
+    primarySport: "",
+    jerseyNumber: "",
+    position: "",
+    tournamentRole: "player",
+    isStarter: true,
     history: "No", 
     histDetail: "", 
     medical: "", 
@@ -179,9 +293,24 @@ export function Registration({ store, section }: { store: any, section: 'sports'
   }, [registrySearch, store.data.players]);
 
   const handleAutoFill = (student: any) => {
+    const firstSport = (student.sports && student.sports[0]) || '';
+    const initialPrimarySport = student.primarySport || firstSport || '';
+    const initialJersey = student.jerseyNumber || (student.jerseyNumbers && initialPrimarySport && student.jerseyNumbers[initialPrimarySport]) || '';
+    const initialPosition = student.position || (student.positions && initialPrimarySport && student.positions[initialPrimarySport]) || '';
+    
+    let role: "player" | "captain" | "vice_captain" | "substitute" = "player";
+    if (student.isCaptain || (initialPosition && initialPosition.toLowerCase().includes('captain'))) role = 'captain';
+    else if (student.isViceCaptain || (initialPosition && initialPosition.toLowerCase().includes('vice'))) role = 'vice_captain';
+    else if (student.isStarter === false) role = 'substitute';
+
     form.reset({ 
       ...student, 
-      category: (section === 'sports' ? 'athlete' : (student.category || 'student')) as "athlete" | "student" 
+      category: (section === 'sports' || (student.sports && student.sports.length > 0) ? 'athlete' : (student.category || 'student')) as "athlete" | "student",
+      primarySport: initialPrimarySport,
+      jerseyNumber: initialJersey,
+      position: initialPosition,
+      tournamentRole: role,
+      isStarter: student.isStarter !== undefined ? student.isStarter : true,
     });
     setRegistrySearch("");
     toast({ title: "Data Fetched", description: `Loaded registry details for ${student.name}.` });
@@ -304,6 +433,29 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
       const finalName = (values.name || '').trim();
       const finalNameMarathi = (values.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+      const primary = values.primarySport || (values.sports && values.sports[0]) || '';
+      const jersey = (values.jerseyNumber || '').replace(/[^0-9]/g, '');
+      const pos = (values.position || '').trim();
+
+      const existingPlayer = values.id ? (store.data?.players || []).find((p: any) => p.id === values.id) : null;
+
+      const jerseyNumbers: Record<string, string> = {
+        ...(existingPlayer?.jerseyNumbers || {})
+      };
+      if (primary && jersey) {
+        jerseyNumbers[primary] = jersey;
+      }
+
+      const positions: Record<string, string> = {
+        ...(existingPlayer?.positions || {})
+      };
+      if (primary && pos) {
+        positions[primary] = pos;
+      }
+
+      const isCaptain = values.tournamentRole === 'captain';
+      const isViceCaptain = values.tournamentRole === 'vice_captain';
+      const isStarter = values.tournamentRole !== 'substitute' && values.isStarter !== false;
 
       await store.addPlayer({ 
         ...values,
@@ -313,12 +465,21 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         age: calculatedAge,
         ageCategory,
         ageDetailed,
-        bmi 
+        bmi,
+        category: (section === 'sports' || (values.sports && values.sports.length > 0)) ? 'athlete' : values.category,
+        primarySport: primary || undefined,
+        jerseyNumber: jersey || undefined,
+        jerseyNumbers: Object.keys(jerseyNumbers).length > 0 ? jerseyNumbers : undefined,
+        position: pos || undefined,
+        positions: Object.keys(positions).length > 0 ? positions : undefined,
+        isCaptain,
+        isViceCaptain,
+        isStarter
       });
       
       toast({ 
-        title: "Enrollment Success", 
-        description: `${values.name} archived to registry.`,
+        title: "नोंदणी यशस्वी (Enrollment Success)", 
+        description: `${finalNameMarathi || values.name} यांची माहिती सिंक झाली.`,
         className: "bg-primary text-white" 
       });
       form.reset(defaultValues);
@@ -776,29 +937,268 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         </div>
 
                         <div className="space-y-8">
-                          <div className="flex items-center gap-3 text-accent border-b-2 border-accent/5 pb-2">
-                            <Medal className="w-5 h-5" />
-                            <h3 className="font-black uppercase text-xs tracking-widest text-accent">Sports Registry</h3>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-accent/20 pb-3 gap-2">
+                            <div className="flex items-center gap-3 text-accent">
+                              <Trophy className="w-6 h-6 text-amber-500" />
+                              <div>
+                                <h3 className="font-black uppercase text-sm tracking-widest text-primary">
+                                  शालेय क्रीडा व स्पर्धा नोंदणी (Sports & Tournament Registry)
+                                </h3>
+                                <p className="text-[11px] text-muted-foreground font-semibold">
+                                  सर्व १३ अधिकृत क्रीडा प्रकार, जर्सी क्रमांक, खेळातील स्थान आणि स्पर्धा वयोगट पर्याय
+                                </p>
+                              </div>
+                            </div>
+                            <Badge className="w-fit bg-amber-100 text-amber-900 border border-amber-300 font-black text-[10px] px-3 py-1 uppercase tracking-wider">
+                              🏆 Tournament Ready
+                            </Badge>
                           </div>
-                          <div className="bg-accent/5 p-8 rounded-3xl border-2 border-dashed border-accent/10">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                              {SPORTS_LIST.map(sport => (
-                                <div key={sport} className="flex items-center space-x-3">
-                                  <Checkbox 
-                                    id={`sport-${sport}`}
-                                    checked={form.watch('sports').includes(sport)} 
-                                    onCheckedChange={(checked) => {
+
+                          {/* Sports Checkboxes Grid */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[11px] font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
+                                <Medal className="w-3.5 h-3.5 text-accent" />
+                                सहभागी खेळ निवडा (Select Sports Disciplines)
+                              </Label>
+                              <span className="text-[10px] font-bold text-muted-foreground">
+                                {form.watch('sports').length} खेळ निवडले
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-accent/5 p-4 rounded-3xl border-2 border-dashed border-accent/20">
+                              {SPORTS_LIST.map(sport => {
+                                const isChecked = form.watch('sports').includes(sport);
+                                const conf = SPORT_CONFIG[sport] || { mr: sport, category: 'खेळ', iconLabel: '🏅' };
+                                return (
+                                  <div 
+                                    key={sport} 
+                                    onClick={() => {
                                       const current = form.getValues('sports');
-                                      const next = checked ? [...current, sport] : current.filter(s => s !== sport);
+                                      const next = isChecked ? current.filter(s => s !== sport) : [...current, sport];
                                       form.setValue('sports', next);
+                                      if (!isChecked && !form.getValues('primarySport')) {
+                                        form.setValue('primarySport', sport);
+                                      }
+                                      if (isChecked && form.getValues('primarySport') === sport) {
+                                        form.setValue('primarySport', next[0] || '');
+                                      }
                                     }}
-                                    className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
-                                  />
-                                  <Label htmlFor={`sport-${sport}`} className="text-[10px] font-black uppercase text-foreground/70">{sport}</Label>
-                                </div>
-                              ))}
+                                    className={cn(
+                                      "flex items-center justify-between p-3 rounded-2xl border-2 transition-all cursor-pointer select-none",
+                                      isChecked 
+                                        ? "bg-white border-amber-500 shadow-md ring-2 ring-amber-500/20" 
+                                        : "bg-white/60 border-slate-200 hover:border-slate-300 hover:bg-white"
+                                    )}
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <Checkbox 
+                                        id={`sport-${sport}`}
+                                        checked={isChecked} 
+                                        onCheckedChange={(checked) => {
+                                          const current = form.getValues('sports');
+                                          const next = checked ? [...current, sport] : current.filter(s => s !== sport);
+                                          form.setValue('sports', next);
+                                          if (checked && !form.getValues('primarySport')) {
+                                            form.setValue('primarySport', sport);
+                                          }
+                                        }}
+                                        className="w-5 h-5 rounded-md border-2 border-accent/30 data-[state=checked]:bg-accent"
+                                      />
+                                      <div>
+                                        <div className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                          <span>{conf.iconLabel}</span>
+                                          <span>{conf.mr}</span>
+                                        </div>
+                                        <div className="text-[10px] text-muted-foreground font-semibold">
+                                          {sport}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <Badge variant="outline" className={cn(
+                                      "text-[9px] font-black uppercase tracking-wider px-2 py-0.5",
+                                      conf.isSquad12 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-50 text-slate-600 border-slate-200"
+                                    )}>
+                                      {conf.category}
+                                    </Badge>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
+
+                          {/* Tournament Athlete Profile Controls */}
+                          <div className="p-6 bg-gradient-to-br from-slate-50 to-amber-50/30 rounded-3xl border-2 border-primary/10 space-y-6">
+                            <div className="flex items-center gap-2 text-primary">
+                              <Shirt className="w-5 h-5 text-indigo-600" />
+                              <h4 className="font-black uppercase text-xs tracking-widest">
+                                स्पर्धा तपशील व खेळाडू स्थान (Tournament Details & Squad Role)
+                              </h4>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Primary Tournament Sport */}
+                              <FormField control={form.control} name="primarySport" render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1.5">
+                                    <Target className="w-3.5 h-3.5 text-accent" />
+                                    मुख्य स्पर्धा खेळ (Primary Tournament Sport)
+                                  </FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value || form.watch('sports')[0] || ''}>
+                                    <FormControl>
+                                      <SelectTrigger className="h-12 border-2 rounded-xl font-bold bg-white">
+                                        <SelectValue placeholder="मुख्य खेळ निवडा..." />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {(form.watch('sports').length > 0 ? form.watch('sports') : SPORTS_LIST).map((s) => (
+                                        <SelectItem key={s} value={s} className="font-bold text-xs">
+                                          {SPORT_CONFIG[s]?.iconLabel} {SPORT_CONFIG[s]?.mr || s} ({s})
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )} />
+
+                              {/* Tournament Squad / Leadership Role */}
+                              <FormField control={form.control} name="tournamentRole" render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1.5">
+                                    <Award className="w-3.5 h-3.5 text-amber-500" />
+                                    संघ भूमिका / दर्जा (Squad & Leadership Role)
+                                  </FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="h-12 border-2 rounded-xl font-bold bg-white">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="player" className="font-bold text-xs">👤 सामान्य खेळाडू / संघ सदस्य (Regular Player)</SelectItem>
+                                      <SelectItem value="captain" className="font-bold text-xs">👑 संघ कर्णधार - Captain (C)</SelectItem>
+                                      <SelectItem value="vice_captain" className="font-bold text-xs">⭐ उप-कर्णधार - Vice Captain (VC)</SelectItem>
+                                      <SelectItem value="substitute" className="font-bold text-xs">🔄 राखीव खेळाडू - Extra / Substitute (SUB)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )} />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Jersey Number */}
+                              <FormField control={form.control} name="jerseyNumber" render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                    <span className="flex items-center gap-1.5">
+                                      <Shirt className="w-3.5 h-3.5 text-indigo-600" />
+                                      जर्सी क्रमांक (Official Jersey #)
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground font-semibold">१ ते १२ अधिकृत संघ</span>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="e.g. 7" 
+                                      className="h-12 border-2 rounded-xl font-black text-primary bg-white text-base" 
+                                      {...field} 
+                                      onChange={(e) => field.onChange(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
+                                    />
+                                  </FormControl>
+                                  <div className="flex flex-wrap gap-1 pt-1.5">
+                                    {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map((num) => (
+                                      <button
+                                        key={num}
+                                        type="button"
+                                        onClick={() => field.onChange(num)}
+                                        className={cn(
+                                          "px-2 py-0.5 rounded-lg text-[10px] font-black border transition-all",
+                                          field.value === num 
+                                            ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                                        )}
+                                      >
+                                        #{num}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </FormItem>
+                              )} />
+
+                              {/* Position / Tactical Role */}
+                              <FormField control={form.control} name="position" render={({ field }) => {
+                                const currentSport = form.watch('primarySport') || form.watch('sports')[0] || 'Kabaddi';
+                                const options = SPORT_POSITION_OPTIONS[currentSport] || [];
+                                return (
+                                  <FormItem>
+                                    <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                      <span className="flex items-center gap-1.5">
+                                        <Activity className="w-3.5 h-3.5 text-accent" />
+                                        खेळातील स्थान / पोझिशन (Tactical Position)
+                                      </span>
+                                      <span className="text-[9px] text-muted-foreground font-semibold">{currentSport}</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        placeholder="उदा. Right Corner, Setter, Raider..." 
+                                        className="h-12 border-2 rounded-xl font-bold bg-white" 
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    {options.length > 0 && (
+                                      <div className="flex flex-wrap gap-1.5 pt-1.5 max-h-20 overflow-y-auto">
+                                        {options.map((opt) => (
+                                          <button
+                                            key={opt.code}
+                                            type="button"
+                                            onClick={() => field.onChange(opt.labelMr)}
+                                            className={cn(
+                                              "px-2 py-1 rounded-lg text-[10px] font-bold border transition-all text-left",
+                                              field.value === opt.labelMr 
+                                                ? "bg-accent text-white border-accent shadow-sm" 
+                                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                                            )}
+                                          >
+                                            {opt.labelMr}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </FormItem>
+                                );
+                              }} />
+                            </div>
+
+                            {/* Tournament Eligibility Callout */}
+                            <div className="bg-white p-4 rounded-2xl border-2 border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shrink-0">
+                                  <Trophy className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-black text-slate-800 uppercase tracking-tight">
+                                    शालेय क्रीडा स्पर्धा वयोगट पात्रता (Tournament Age Eligibility)
+                                  </div>
+                                  <div className="text-[11px] font-semibold text-muted-foreground">
+                                    {ageValidation ? (
+                                      <span>
+                                        वय: <strong className="text-primary">{ageValidation.ageString}</strong> &bull; वयोगट: <strong className="text-amber-700">{form.watch('gender') === 'Female' ? '👧 मुली' : '👦 मुले'} {ageValidation.category}</strong>
+                                      </span>
+                                    ) : (
+                                      "जन्म तारीख टाकल्यावर वयोगट आपोआप निश्चित होईल."
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <Badge className={cn(
+                                "px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-wider shrink-0",
+                                ageValidation?.eligible ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"
+                              )}>
+                                {ageValidation?.eligible ? "✓ SGFI स्पर्धा पात्र (Eligible)" : "तपशील तपासा"}
+                              </Badge>
+                            </div>
+                          </div>
+
                           <FormField control={form.control} name="medical" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Medical Notes / Allergies</FormLabel>
