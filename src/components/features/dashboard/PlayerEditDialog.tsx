@@ -36,11 +36,14 @@ import {
   ScanFace,
   Eye,
   EyeOff,
+  Trophy,
+  User,
 } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import {
   getAgeValidation,
   transliterateEnglishToMarathi,
+  cn,
 } from '@/lib/utils';
 import { compressImage, maskAadhaar, isValidAadhaar } from '@/lib/privacy-utils';
 
@@ -205,6 +208,7 @@ export function PlayerEditDialog({
       ...editingPlayer,
       name: finalName,
       nameMarathi: finalNameMarathi,
+      category: editingPlayer.category || 'student',
       age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
       ageCategory: ageValidation ? ageValidation.category : 'None',
       ageDetailed: ageValidation ? ageValidation.ageString : '',
@@ -377,8 +381,8 @@ export function PlayerEditDialog({
               </div>
             </div>
 
-            {/* Standard, G.R. Number, Gender */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Standard, G.R. Number, Gender, Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase tracking-wider text-primary">
                   Standard (इयत्ता)
@@ -426,6 +430,24 @@ export function PlayerEditDialog({
                     <SelectItem value="Male">Male (मुलगा)</SelectItem>
                     <SelectItem value="Female">Female (मुलगी)</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1">
+                  <Trophy className="w-3 h-3 text-amber-500" /> Category (प्रवर्ग)
+                </Label>
+                <Select
+                  value={editingPlayer.category || 'student'}
+                  onValueChange={(val: 'athlete' | 'student') => setEditingPlayer({ ...editingPlayer, category: val })}
+                >
+                  <SelectTrigger className="h-11 border-2 rounded-xl font-bold text-xs">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student" className="font-bold text-xs">General Student (विद्यार्थी)</SelectItem>
+                    <SelectItem value="athlete" className="font-bold text-xs">Active Athlete (खेळाडू)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -533,6 +555,78 @@ export function PlayerEditDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Athlete Roster Status Card */}
+            <div className={cn(
+              "p-4 rounded-2xl border-2 transition-all space-y-3",
+              editingPlayer.category === 'athlete'
+                ? "bg-amber-50/70 border-amber-300 shadow-sm"
+                : "bg-slate-50 border-slate-200"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center font-bold shadow-sm transition-colors",
+                    editingPlayer.category === 'athlete'
+                      ? "bg-amber-500 text-white"
+                      : "bg-slate-200 text-slate-600"
+                  )}>
+                    <Trophy className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-tight text-slate-800">
+                      Athlete Status & Sports Roster
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground font-semibold">
+                      {editingPlayer.category === 'athlete'
+                        ? "नोंदणी: ॲक्टिव्ह खेळाडू (Active Athlete on Sports Roster)"
+                        : "नोंदणी: सामान्य विद्यार्थी (General Student Only)"}
+                    </p>
+                  </div>
+                </div>
+
+                <Badge
+                  className={cn(
+                    "text-[10px] font-black px-2.5 py-1 uppercase tracking-wider",
+                    editingPlayer.category === 'athlete'
+                      ? "bg-amber-600 text-white shadow-sm"
+                      : "bg-slate-200 text-slate-600"
+                  )}
+                >
+                  {editingPlayer.category === 'athlete' ? "🏆 Athlete Active" : "Student"}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant={editingPlayer.category === 'athlete' ? "default" : "outline"}
+                  onClick={() => setEditingPlayer({ ...editingPlayer, category: 'athlete' })}
+                  className={cn(
+                    "h-10 rounded-xl font-black text-[11px] uppercase tracking-wide gap-1.5 transition-all",
+                    editingPlayer.category === 'athlete'
+                      ? "bg-amber-600 hover:bg-amber-700 text-white shadow-md"
+                      : "border-2 hover:border-amber-300"
+                  )}
+                >
+                  <Trophy className="w-3.5 h-3.5" /> Add in Athlete (खेळाडू)
+                </Button>
+
+                <Button
+                  type="button"
+                  variant={editingPlayer.category !== 'athlete' ? "default" : "outline"}
+                  onClick={() => setEditingPlayer({ ...editingPlayer, category: 'student' })}
+                  className={cn(
+                    "h-10 rounded-xl font-black text-[11px] uppercase tracking-wide gap-1.5 transition-all",
+                    editingPlayer.category !== 'athlete'
+                      ? "bg-primary text-white shadow-md"
+                      : "border-2 hover:border-primary/40"
+                  )}
+                >
+                  <User className="w-3.5 h-3.5" /> General Student (विद्यार्थी)
+                </Button>
               </div>
             </div>
 

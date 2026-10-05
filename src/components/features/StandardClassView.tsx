@@ -36,7 +36,9 @@ import {
   UserPlus,
   Plus,
   Save,
-  Cake
+  Cake,
+  Trophy,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -863,10 +865,15 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                            </Select>
                         </div>
                         <div className="space-y-2">
-                           <Label className="text-[10px] font-black uppercase text-primary ml-2">Category</Label>
-                           <Select value={editingPlayer.category} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
+                           <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center gap-1.5">
+                             <Trophy className="w-3.5 h-3.5 text-amber-500" /> Category / प्रवर्ग
+                           </Label>
+                           <Select value={editingPlayer.category || 'student'} onValueChange={(val: any) => setEditingPlayer({...editingPlayer, category: val})}>
                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                             <SelectContent><SelectItem value="student">General Student</SelectItem><SelectItem value="athlete">Active Athlete</SelectItem></SelectContent>
+                             <SelectContent>
+                               <SelectItem value="student">📚 General Student (सामान्य विद्यार्थी)</SelectItem>
+                               <SelectItem value="athlete">🏆 Active Athlete (खेळाडू - Add in Athlete)</SelectItem>
+                             </SelectContent>
                            </Select>
                         </div>
                       </div>
@@ -1168,6 +1175,57 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     onChange={e => setNewStudentData({...newStudentData, generalRegisterNumber: e.target.value})} 
                     className="h-11 border-2 rounded-xl font-bold text-xs" 
                   />
+                </div>
+              </div>
+
+              {/* Category / Athlete Selection */}
+              <div className={cn(
+                "p-4 rounded-2xl border-2 transition-all space-y-2.5",
+                newStudentData.category === 'athlete'
+                  ? "bg-amber-50/70 border-amber-300"
+                  : "bg-muted/10 border"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-amber-600" />
+                    <Label className="text-[10px] font-black uppercase text-primary">
+                      {isMarathiView ? "प्रवर्ग / Athlete Status" : "Category / Athlete Status"}
+                    </Label>
+                  </div>
+                  <Badge className={cn(
+                    "text-[10px] font-black",
+                    newStudentData.category === 'athlete' ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700"
+                  )}>
+                    {newStudentData.category === 'athlete' ? "🏆 Active Athlete (खेळाडू)" : "Student (विद्यार्थी)"}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant={newStudentData.category === 'athlete' ? "default" : "outline"}
+                    onClick={() => setNewStudentData({ ...newStudentData, category: 'athlete' })}
+                    className={cn(
+                      "h-10 rounded-xl font-black text-[11px] uppercase tracking-wide gap-1.5 transition-all",
+                      newStudentData.category === 'athlete'
+                        ? "bg-amber-600 hover:bg-amber-700 text-white shadow-md"
+                        : "border-2 hover:border-amber-300"
+                    )}
+                  >
+                    <Trophy className="w-3.5 h-3.5" /> {isMarathiView ? "खेळाडू (Add as Athlete)" : "Add as Athlete"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={newStudentData.category !== 'athlete' ? "default" : "outline"}
+                    onClick={() => setNewStudentData({ ...newStudentData, category: 'student' })}
+                    className={cn(
+                      "h-10 rounded-xl font-black text-[11px] uppercase tracking-wide gap-1.5 transition-all",
+                      newStudentData.category !== 'athlete'
+                        ? "bg-primary text-white shadow-md"
+                        : "border-2 hover:border-primary/40"
+                    )}
+                  >
+                    <User className="w-3.5 h-3.5" /> {isMarathiView ? "सामान्य विद्यार्थी (Student)" : "General Student"}
+                  </Button>
                 </div>
               </div>
 
