@@ -35,7 +35,8 @@ import {
   RotateCcw,
   Sparkles,
   BookOpen,
-  Wand2
+  Wand2,
+  RefreshCw
 } from 'lucide-react';
 import { MarathiStudentDirectoryModal } from '@/components/features/MarathiStudentDirectoryModal';
 import { useToast } from '@/hooks/use-toast';
@@ -45,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { useSchoolData } from '@/hooks/use-school-data';
 import { usePWA } from '@/components/providers/pwa-provider';
 import { initiateSignOut, syncViaEmail } from '@/firebase/non-blocking-login';
+import { clearFirestoreIndexedDb } from '@/firebase/services';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SchoolRegistration } from './SchoolRegistration';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -520,6 +522,22 @@ export function Settings({
                sublabel={isStandalone ? "Installed (Standalone Mode)" : isInstallable ? "Ready to Install" : "Running on Web"} 
                value={isStandalone ? "Installed" : "Install App"} 
                onClick={!isStandalone ? triggerInstall : undefined} 
+             />
+             <SettingsItem
+               icon={RefreshCw}
+               color="bg-rose-500"
+               label={language === 'Marathi' ? "लोकल डेटाबेस कॅश दुरुस्त करा" : "Repair Local Database Cache"}
+               sublabel={language === 'Marathi' ? "IndexedDB कॅश साफ करून ॲप रीलोड करा" : "Purge corrupted IndexedDB cache & reload fresh"}
+               onClick={async () => {
+                 toast({
+                   title: language === 'Marathi' ? "कॅश दुरुस्ती सुरू..." : "Repairing Local Cache...",
+                   description: language === 'Marathi' ? "लोकल डेटाबेस साफ करून ॲप रीफ्रेश होत आहे." : "Purging local cache and reloading...",
+                 });
+                 await clearFirestoreIndexedDb();
+                 setTimeout(() => {
+                   window.location.reload();
+                 }, 400);
+               }}
              />
              <SettingsItem icon={CheckCircle2} color="bg-primary" label="App Build Version" value="v6.0.0 (Build 6)" sublabel="Waghamba Sports & Health Hub v6" />
           </div>
