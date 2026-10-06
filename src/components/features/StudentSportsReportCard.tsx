@@ -247,8 +247,8 @@ export function StudentSportsReportCard({ store, preselectedSport }: { store: an
                     <tr>
                       <th>लिंग:</th>
                       <td>${player.gender === 'Female' ? '👧 विद्यार्थिनी (Female)' : '👦 विद्यार्थी (Male)'}</td>
-                      <th>पॅन / आधार क्र.:</th>
-                      <td>${player.panNumber || '-'}</td>
+                      <th>पेन / आधार क्र.:</th>
+                      <td>${player.penNumber || player.panNumber || player.aadharNumber || '-'}</td>
                     </tr>
                   </table>
                 </td>

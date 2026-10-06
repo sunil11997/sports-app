@@ -36,6 +36,7 @@ import {
   Weight,
   Ruler,
   FileText,
+  FileDigit,
   CreditCard,
   BookOpen,
   Sparkles,
@@ -183,6 +184,7 @@ const formSchema = z.object({
   generalRegisterNumber: z.string().optional().default(""),
   aadharNumber: z.string().optional().default(""),
   panNumber: z.string().optional().default(""),
+  penNumber: z.string().optional().default(""),
   mobileNumber: z.string().optional().default(""),
   address: z.string().optional().default(""),
   sports: z.array(z.string()).optional().default([]),
@@ -226,6 +228,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     form.setValue('gender', st.gender);
     form.setValue('dob', st.dob);
     form.setValue('saralId', st.saralId || st.apaarId || st.rollNo);
+    form.setValue('penNumber', st.penNumber || '');
     form.setValue('address', st.address || (st.village ? `${st.village}, ता. सुरगाणा` : 'वाघंबा'));
     form.setValue('mobileNumber', st.mobileNumber || '');
     form.setValue('category', 'student');
@@ -263,6 +266,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     bloodGroup: "None", 
     aadharNumber: "", 
     panNumber: "",
+    penNumber: "",
     mobileNumber: "", 
     generalRegisterNumber: "", 
     address: "",
@@ -466,6 +470,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         motherName: values.motherName?.trim() || '',
         fatherName: values.fatherName?.trim() || '',
         saralId: values.saralId?.trim() || '',
+        penNumber: values.penNumber?.trim() || values.panNumber?.trim() || '',
         id: values.id || generateId('std'), 
         age: calculatedAge,
         ageCategory,
@@ -919,18 +924,24 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                                 <FormControl><Input placeholder="12-digit number" maxLength={12} className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
                               </FormItem>
                             )} />
-                            <FormField control={form.control} name="panNumber" render={({ field }) => (
+                            <FormField control={form.control} name="penNumber" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center gap-1.5">
-                                  <CreditCard className="w-3.5 h-3.5" /> PAN Number (पॅन क्रमांक)
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                  <span className="flex items-center gap-1.5">
+                                    <FileDigit className="w-3.5 h-3.5 text-accent" /> PEN No. (पेन क्रमांक / UDISE+ PEN)
+                                  </span>
+                                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
                                 </FormLabel>
                                 <FormControl>
                                   <Input 
-                                    placeholder="10-digit PAN (ABCDE1234F)" 
-                                    maxLength={10} 
-                                    className="h-12 border-2 rounded-xl font-bold uppercase tracking-wider" 
+                                    placeholder="11-digit PEN (उदा. 20182720011)" 
+                                    maxLength={20} 
+                                    className="h-12 border-2 rounded-xl font-bold font-mono tracking-wider" 
                                     {...field} 
-                                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                    onChange={(e) => {
+                                      field.onChange(e.target.value);
+                                      form.setValue('panNumber', e.target.value);
+                                    }}
                                   />
                                 </FormControl>
                               </FormItem>

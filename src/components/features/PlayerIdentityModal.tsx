@@ -397,8 +397,8 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
               </tr>
               <tr>
                 <td class="sr">६</td>
-                <td class="label">आधार क्रमांक / पॅन क्रमांक</td>
-                <td class="value"><strong>${player.aadharNumber || '---'}</strong>${panNumber ? ` &bull; <strong>PAN: ${panNumber}</strong>` : ''}</td>
+                <td class="label">आधार क्रमांक / पेन क्रमांक (PEN No.)</td>
+                <td class="value"><strong>${player.aadharNumber || '---'}</strong>${panNumber ? ` &bull; <strong>PEN: ${panNumber}</strong>` : ''}</td>
               </tr>
               <tr>
                 <td class="sr">७</td>
@@ -577,8 +577,8 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
                 <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-amber-900">पॅन क्रमांक (PAN Number)</label>
-                <Input value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} maxLength={10} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold uppercase tracking-wider" placeholder="ABCDE1234F" />
+                <label className="text-[10px] font-black uppercase text-amber-900">पेन क्रमांक (PEN Number / UDISE+)</label>
+                <Input value={panNumber} onChange={(e) => setPanNumber(e.target.value)} maxLength={20} className="h-10 rounded-xl bg-white border-amber-200 text-xs font-bold font-mono tracking-wider" placeholder="20182720011" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-amber-900">सरल आयडी (Saral ID)</label>
@@ -656,7 +656,7 @@ export function PlayerIdentityModal({ player, schoolProfile, store, language = '
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>३. आईचे नाव:</strong> {motherName || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>४. वडिलांचे नाव:</strong> {fatherName || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>५. जन्म तारीख:</strong> {dobWords}</div>
-              <div className="p-2 bg-slate-50 border rounded-xl"><strong>६. आधार / पॅन नं:</strong> {player.aadharNumber || '---'}{panNumber ? ` • PAN: ${panNumber}` : ''}</div>
+              <div className="p-2 bg-slate-50 border rounded-xl"><strong>६. आधार / पेन नं:</strong> {player.aadharNumber || '---'}{panNumber ? ` • PEN: ${panNumber}` : ''}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>७. सरल नं:</strong> {saralId || '---'}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>८. ३१ डिसे. २०२५ रोजी वय:</strong> {age31Dec}</div>
               <div className="p-2 bg-slate-50 border rounded-xl"><strong>९. निवडलेला खेळ:</strong> {selectedSport || '---'}</div>

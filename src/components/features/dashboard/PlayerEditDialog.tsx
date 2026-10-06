@@ -632,40 +632,61 @@ export function PlayerEditDialog({
               />
             </div>
 
-            {/* Aadhaar Number with Privacy Masking */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <FileDigit className="w-3 h-3" /> Aadhaar ID (आधार क्रमांक)
-                </Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFullAadhaar(!showFullAadhaar)}
-                  className="h-6 text-[10px] text-muted-foreground px-2"
-                >
-                  {showFullAadhaar ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
-                  {showFullAadhaar ? 'Hide' : 'Reveal'}
-                </Button>
+            {/* Aadhaar Number with Privacy Masking & PEN Number */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <FileDigit className="w-3 h-3" /> Aadhaar ID (आधार क्रमांक)
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFullAadhaar(!showFullAadhaar)}
+                    className="h-6 text-[10px] text-muted-foreground px-2"
+                  >
+                    {showFullAadhaar ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                    {showFullAadhaar ? 'Hide' : 'Reveal'}
+                  </Button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showFullAadhaar ? 'text' : 'password'}
+                    maxLength={12}
+                    value={editingPlayer.aadharNumber || ''}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                      setEditingPlayer({ ...editingPlayer, aadharNumber: digits });
+                    }}
+                    placeholder="12-digit Aadhaar Number"
+                    className="h-11 border-2 rounded-xl font-mono text-xs tracking-wider"
+                  />
+                  {!showFullAadhaar && editingPlayer.aadharNumber && (
+                    <div className="mt-1 text-[10px] text-muted-foreground font-mono">
+                      Preview: {maskAadhaar(editingPlayer.aadharNumber)}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="relative">
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <FileDigit className="w-3 h-3 text-accent" /> PEN No. (पेन क्रमांक / UDISE+)
+                  </Label>
+                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                </div>
                 <Input
-                  type={showFullAadhaar ? 'text' : 'password'}
-                  maxLength={12}
-                  value={editingPlayer.aadharNumber || ''}
+                  value={editingPlayer.penNumber || editingPlayer.panNumber || ''}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-                    setEditingPlayer({ ...editingPlayer, aadharNumber: digits });
+                    const val = e.target.value;
+                    setEditingPlayer({ ...editingPlayer, penNumber: val, panNumber: val });
                   }}
-                  placeholder="12-digit Aadhaar Number"
+                  placeholder="11-digit PEN Number"
+                  maxLength={20}
                   className="h-11 border-2 rounded-xl font-mono text-xs tracking-wider"
                 />
-                {!showFullAadhaar && editingPlayer.aadharNumber && (
-                  <div className="mt-1 text-[10px] text-muted-foreground font-mono">
-                    Preview: {maskAadhaar(editingPlayer.aadharNumber)}
-                  </div>
-                )}
               </div>
             </div>
 

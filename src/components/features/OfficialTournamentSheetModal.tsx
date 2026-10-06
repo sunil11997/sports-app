@@ -392,8 +392,13 @@ export function OfficialTournamentSheetModal({
                       '';
     const aadhar = formatAadharDisplay(rawAadhar);
 
-    const rawSaral = p.saralId || 
+    const rawSaral = p.penNumber ||
+                     storeMatch?.penNumber ||
+                     p.saralId || 
                      storeMatch?.saralId || 
+                     p.panNumber ||
+                     storeMatch?.panNumber ||
+                     masterMatch?.penNumber ||
                      masterMatch?.saralId || 
                      p.apaarId || 
                      storeMatch?.apaarId || 
@@ -449,6 +454,8 @@ export function OfficialTournamentSheetModal({
       motherName: row.motherName.trim(),
       aadharNumber: cleanAadhar || existing?.aadharNumber || '',
       saralId: cleanSaral || existing?.saralId || '',
+      penNumber: cleanSaral || existing?.penNumber || existing?.panNumber || '',
+      panNumber: cleanSaral || existing?.panNumber || '',
       category: existing?.category || 'athlete',
       updatedAt: new Date().toISOString()
     };
@@ -885,7 +892,7 @@ export function OfficialTournamentSheetModal({
               <th class="col-header" style="width: 12%;">जन्म तारीख</th>
               <th class="col-header" style="width: 14%;">आईचे नाव</th>
               <th class="col-header" style="width: 14%;">आधार कार्ड नं.</th>
-              <th class="col-header" style="width: 12%;">सरल आय.डी.नं.</th>
+              <th class="col-header" style="width: 12%;">पेन नं. (PEN NO.)</th>
             </tr>
           </thead>
           <tbody>
@@ -1625,7 +1632,7 @@ export function OfficialTournamentSheetModal({
                   <th className="p-2 text-center w-28 border-r font-black">जन्म तारीख (DOB)</th>
                   <th className="p-2 text-center w-28 border-r font-black">आईचे नाव (Mother)</th>
                   <th className="p-2 text-center w-36 border-r font-black">आधार कार्ड नं. (Aadhaar)</th>
-                  <th className="p-2 text-center min-w-[150px] border-r font-black">सरल आय.डी.नं.</th>
+                  <th className="p-2 text-center min-w-[150px] border-r font-black">पेन नं. (PEN NO.)</th>
                   <th className="p-2 text-center w-16 font-black">कृती</th>
                 </tr>
               </thead>
@@ -1783,14 +1790,14 @@ export function OfficialTournamentSheetModal({
                           />
                         </td>
 
-                        {/* सरल आय.डी.नं. (Font Normal) */}
+                        {/* पेन नं. (PEN NO.) (Font Normal) */}
                         <td className="p-1.5 border-r">
                           <Input
                             value={row.saralId}
                             onChange={(e) => updateRowField(index, 'saralId', e.target.value)}
                             onBlur={() => handleRowBlur(index)}
                             className="h-8 text-center text-xs font-normal focus:bg-amber-50/40 font-mono"
-                            placeholder="2018 27200116..."
+                            placeholder="PEN No. / 2018..."
                           />
                         </td>
 

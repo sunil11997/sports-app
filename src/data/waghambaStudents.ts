@@ -20,6 +20,7 @@ export interface SchoolStudent {
   age: number;
   apaarId?: string;
   saralId?: string;
+  penNumber?: string;
   bloodGroup: string;
   village: string;
   taluka: string;

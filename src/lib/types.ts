@@ -26,6 +26,7 @@ export interface Player {
   bloodGroup?: string;
   aadharNumber?: string;
   panNumber?: string;
+  penNumber?: string; // Permanent Education Number (पेन क्रमांक)
   mobileNumber?: string;
   generalRegisterNumber?: string;
   address?: string;
