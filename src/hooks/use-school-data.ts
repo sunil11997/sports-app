@@ -1062,7 +1062,7 @@ export function useSchoolData(isActive: boolean = true) {
           age: existing?.age || st.age,
           gender: existing?.gender || st.gender,
           apaarId: st.apaarId || existing?.apaarId || '',
-          saralId: st.apaarId || existing?.saralId || st.rollNo,
+          saralId: st.saralId || existing?.saralId || st.apaarId || st.rollNo,
           village: st.village || existing?.village || '',
           taluka: st.taluka || existing?.taluka || 'बागलाण',
           district: st.district || existing?.district || 'नाशिक',

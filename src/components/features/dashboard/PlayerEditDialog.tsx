@@ -311,6 +311,9 @@ export function PlayerEditDialog({
       ...editingPlayer,
       name: finalName,
       nameMarathi: finalNameMarathi,
+      motherName: editingPlayer.motherName?.trim() || undefined,
+      fatherName: editingPlayer.fatherName?.trim() || undefined,
+      saralId: editingPlayer.saralId?.trim() || undefined,
       category: editingPlayer.category || 'student',
       primarySport: primary || undefined,
       jerseyNumber: jersey || undefined,
@@ -485,6 +488,54 @@ export function PlayerEditDialog({
                   value={editingPlayer.nameMarathi || ''}
                   onChange={(e) => setEditingPlayer({ ...editingPlayer, nameMarathi: e.target.value })}
                   className="h-11 border-2 rounded-xl font-bold text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Parents & Saral ID Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <User className="w-3 h-3" /> Mother&apos;s Name (आईचे नाव)
+                  </Label>
+                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                </div>
+                <Input
+                  value={editingPlayer.motherName || ''}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, motherName: e.target.value })}
+                  placeholder="आईचे नाव / Mother's Name"
+                  className="h-11 border-2 rounded-xl font-bold text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <User className="w-3 h-3" /> Father&apos;s Name (वडिलांचे नाव)
+                  </Label>
+                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                </div>
+                <Input
+                  value={editingPlayer.fatherName || ''}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, fatherName: e.target.value })}
+                  placeholder="वडिलांचे नाव / Father's Name"
+                  className="h-11 border-2 rounded-xl font-bold text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <FileDigit className="w-3 h-3" /> Saral ID No (सरल आयडी क्र.)
+                  </Label>
+                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                </div>
+                <Input
+                  value={editingPlayer.saralId || ''}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, saralId: e.target.value })}
+                  placeholder="19-digit Saral ID Number"
+                  className="h-11 border-2 rounded-xl font-bold text-xs font-mono"
                 />
               </div>
             </div>

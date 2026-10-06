@@ -21,6 +21,7 @@ export const PlayerSchema = z.object({
   panNumber: z.string().optional(),
   motherName: z.string().optional(),
   fatherName: z.string().optional(),
+  saralId: z.string().optional(),
   mobileNumber: z.string().optional(),
   generalRegisterNumber: z.string().optional(),
   address: z.string().optional(),

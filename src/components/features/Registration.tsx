@@ -225,7 +225,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     form.setValue('serialNumber', st.rollNo);
     form.setValue('gender', st.gender);
     form.setValue('dob', st.dob);
-    form.setValue('saralId', st.apaarId || st.rollNo);
+    form.setValue('saralId', st.saralId || st.apaarId || st.rollNo);
     form.setValue('address', st.address || (st.village ? `${st.village}, ता. सुरगाणा` : 'वाघंबा'));
     form.setValue('mobileNumber', st.mobileNumber || '');
     form.setValue('category', 'student');
@@ -305,6 +305,8 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
     form.reset({ 
       ...student, 
+      motherName: student.motherName || '',
+      saralId: student.saralId || '',
       category: (section === 'sports' || (student.sports && student.sports.length > 0) ? 'athlete' : (student.category || 'student')) as "athlete" | "student",
       primarySport: initialPrimarySport,
       jerseyNumber: initialJersey,
@@ -461,6 +463,9 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         ...values,
         name: finalName,
         nameMarathi: finalNameMarathi,
+        motherName: values.motherName?.trim() || '',
+        fatherName: values.fatherName?.trim() || '',
+        saralId: values.saralId?.trim() || '',
         id: values.id || generateId('std'), 
         age: calculatedAge,
         ageCategory,
@@ -556,10 +561,16 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       <Card className="border-2 shadow-2xl rounded-[3rem] bg-white overflow-hidden">
         <CardHeader className="bg-primary/5 border-b p-10">
           <div className="flex items-center gap-6">
-            <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl"><UserPlus className="w-10 h-10" /></div>
+            <div className="p-5 bg-primary rounded-[1.5rem] text-white shadow-xl">
+              {section === 'sports' ? <Trophy className="w-10 h-10" /> : <UserPlus className="w-10 h-10" />}
+            </div>
             <div>
-              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">Enrollment Hub V5.3</CardTitle>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">Institutional Registry v5.3 Stable</p>
+              <CardTitle className="text-4xl font-black text-primary uppercase leading-none">
+                {section === 'sports' ? "Sports Player Registration" : "Student Registration"}
+              </CardTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-3">
+                {section === 'sports' ? "खेळाडू नोंदणी हब (Sports Hub Roster Enrollment)" : "विद्यार्थी नोंदणी हब (Student Registry Hub Enrollment)"}
+              </p>
             </div>
           </div>
         </CardHeader>
@@ -630,7 +641,11 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                         <div className="space-y-6">
                           <div className="flex items-center gap-3 text-primary border-b-2 border-primary/5 pb-2">
                             <UserCircle2 className="w-5 h-5" />
-                            <h3 className="font-black uppercase text-xs tracking-widest">Primary Identity & Parents Info</h3>
+                            <h3 className="font-black uppercase text-xs tracking-widest">
+                              {section === 'sports' 
+                                ? "खेळाडू व पालकांची माहिती (Athlete & Parents Identity)" 
+                                : "विद्यार्थी व पालकांची माहिती (Student & Parents Identity)"}
+                            </h3>
                           </div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                               <FormField control={form.control} name="name" render={({ field }) => (
@@ -703,28 +718,11 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                                 </FormItem>
                               )} />
                            </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <FormField control={form.control} name="fatherName" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
-                                  <span>Father&apos;s Name (वडिलांचे नाव)</span>
-                                  {field.value && !/[\u0900-\u097F]/.test(field.value) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => form.setValue('fatherName', transliterateEnglishToMarathi(field.value))}
-                                      className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
-                                    >
-                                      मराठीत: {transliterateEnglishToMarathi(field.value)}
-                                    </button>
-                                  )}
-                                </FormLabel>
-                                <FormControl><Input placeholder="Father's full name" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
-                              </FormItem>
-                            )} />
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField control={form.control} name="motherName" render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
-                                  <span>Mother&apos;s Name (आईचे नाव)</span>
+                                  <span className="flex items-center gap-1"><User className="w-3 h-3" /> Mother&apos;s Name (आईचे नाव)</span>
                                   {field.value && !/[\u0900-\u097F]/.test(field.value) && (
                                     <button
                                       type="button"
@@ -735,7 +733,36 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                                     </button>
                                   )}
                                 </FormLabel>
-                                <FormControl><Input placeholder="Mother's name" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                                <FormControl><Input placeholder="आईचे नाव / Mother's name (Optional)" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={form.control} name="fatherName" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                  <span className="flex items-center gap-1"><User className="w-3 h-3" /> Father&apos;s Name (वडिलांचे नाव)</span>
+                                  {field.value && !/[\u0900-\u097F]/.test(field.value) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => form.setValue('fatherName', transliterateEnglishToMarathi(field.value))}
+                                      className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
+                                    >
+                                      मराठीत: {transliterateEnglishToMarathi(field.value)}
+                                    </button>
+                                  )}
+                                </FormLabel>
+                                <FormControl><Input placeholder="Father's full name (Optional)" className="h-12 font-bold border-2 rounded-xl" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
+                            <FormField control={form.control} name="saralId" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                  <span className="flex items-center gap-1"><Hash className="w-3 h-3" /> Saral ID No. (सरल आयडी क्र.)</span>
+                                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                                </FormLabel>
+                                <FormControl><Input placeholder="19-digit Saral ID No" className="h-12 font-bold border-2 rounded-xl font-mono" {...field} /></FormControl>
+                                <FormMessage />
                               </FormItem>
                             )} />
                           </div>
@@ -877,8 +904,11 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                             )} />
                             <FormField control={form.control} name="saralId" render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest">Saral ID (विद्यार्थी सरल क्रमांक)</FormLabel>
-                                <FormControl><Input placeholder="19-digit Saral ID" className="h-12 border-2 rounded-xl font-bold" {...field} /></FormControl>
+                                <FormLabel className="font-black text-primary uppercase text-[10px] tracking-widest flex items-center justify-between">
+                                  <span>Saral ID No. (विद्यार्थी सरल क्रमांक)</span>
+                                  <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                                </FormLabel>
+                                <FormControl><Input placeholder="19-digit Saral ID Number / सरल आयडी क्र." className="h-12 border-2 rounded-xl font-bold font-mono" {...field} /></FormControl>
                               </FormItem>
                             )} />
                           </div>

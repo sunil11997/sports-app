@@ -12,6 +12,7 @@ export const StudentFormSchema = z.object({
   nameMarathi: z.string().trim().max(100).optional().default(''),
   fatherName: z.string().trim().max(100).optional().default(''),
   motherName: z.string().trim().max(100).optional().default(''),
+  saralId: z.string().trim().max(50).optional().default(''),
   panNumber: z.string().trim().max(20).optional().default(''),
   gender: z.enum(['Male', 'Female', 'Other'], { required_error: 'Please select a gender' }),
   dob: z.string().refine((val) => {

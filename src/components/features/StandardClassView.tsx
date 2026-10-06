@@ -106,6 +106,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const [newStudentData, setNewStudentData] = useState({
     name: '',
     nameMarathi: '',
+    motherName: '',
+    fatherName: '',
+    saralId: '',
     gender: 'Male' as 'Male' | 'Female',
     dob: '',
     weight: '',
@@ -219,6 +222,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         ...editingPlayer,
         name: finalName || finalNameMarathi,
         nameMarathi: finalNameMarathi || finalName,
+        motherName: editingPlayer.motherName?.trim() || undefined,
+        fatherName: editingPlayer.fatherName?.trim() || undefined,
+        saralId: editingPlayer.saralId?.trim() || undefined,
         bmi: computedBmi,
         age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
         ageCategory: ageValidation ? ageValidation.category : "None",
@@ -262,7 +268,10 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       ageDetailed,
       bmi,
       name: finalName,
-      nameMarathi: finalNameMarathi
+      nameMarathi: finalNameMarathi,
+      motherName: newStudentData.motherName?.trim() || '',
+      fatherName: newStudentData.fatherName?.trim() || '',
+      saralId: newStudentData.saralId?.trim() || '',
     });
 
     toast({
@@ -272,7 +281,7 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     });
     setIsDirectAddOpen(false);
     setNewStudentData({
-      name: '', nameMarathi: '', gender: 'Male', dob: '', weight: '', height: '', sittingHeight: '', serialNumber: '', generalRegisterNumber: '', category: 'student', sports: [], bloodGroup: 'None'
+      name: '', nameMarathi: '', motherName: '', fatherName: '', saralId: '', gender: 'Male', dob: '', weight: '', height: '', sittingHeight: '', serialNumber: '', generalRegisterNumber: '', category: 'student', sports: [], bloodGroup: 'None'
     });
   };
 
@@ -281,6 +290,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       ...prev,
       name: st.name,
       nameMarathi: correctMarathiFullName(st.nameMarathi),
+      motherName: st.motherName || '',
+      fatherName: st.fatherName || '',
+      saralId: st.saralId || st.apaarId || '',
       gender: st.gender,
       dob: st.dob,
       serialNumber: st.rollNo,
@@ -299,6 +311,9 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
       ...prev,
       name: st.name,
       nameMarathi: correctMarathiFullName(st.nameMarathi),
+      motherName: st.motherName || prev.motherName || '',
+      fatherName: st.fatherName || prev.fatherName || '',
+      saralId: st.saralId || st.apaarId || prev.saralId || '',
       gender: st.gender,
       dob: st.dob,
       serialNumber: st.rollNo,
@@ -888,6 +903,30 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">GR Number</Label><Input value={editingPlayer.generalRegisterNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, generalRegisterNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary ml-2">Roll No</Label><Input value={editingPlayer.serialNumber || ""} onChange={(e) => setEditingPlayer({...editingPlayer, serialNumber: e.target.value})} className="h-12 border-2 rounded-xl font-bold" /></div>
                         <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center justify-between">
+                            <span>Mother&apos;s Name (आईचे नाव)</span>
+                            <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक</span>
+                          </Label>
+                          <Input 
+                            value={editingPlayer.motherName || ""} 
+                            onChange={(e) => setEditingPlayer({...editingPlayer, motherName: e.target.value})} 
+                            placeholder="आईचे नाव / Mother's Name"
+                            className="h-12 border-2 rounded-xl font-bold" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary ml-2 flex items-center justify-between">
+                            <span>Saral ID No (सरल आयडी क्र.)</span>
+                            <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक</span>
+                          </Label>
+                          <Input 
+                            value={editingPlayer.saralId || ""} 
+                            onChange={(e) => setEditingPlayer({...editingPlayer, saralId: e.target.value})} 
+                            placeholder="19-digit Saral ID Number"
+                            className="h-12 border-2 rounded-xl font-bold font-mono" 
+                          />
+                        </div>
+                        <div className="space-y-2">
                            <Label className="text-[10px] font-black uppercase text-primary ml-2">Standard</Label>
                            <Select value={editingPlayer.std} onValueChange={(val) => setEditingPlayer({...editingPlayer, std: val})}>
                              <SelectTrigger className="h-12 border-2 rounded-xl font-bold"><SelectValue /></SelectTrigger>
@@ -1113,6 +1152,33 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                     currentStd={std}
                     mode="marathi"
                     inputClassName="h-11 border-2 rounded-xl font-bold text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">आईचे नाव (Mother&apos;s Name)</Label>
+                    <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                  </div>
+                  <Input 
+                    placeholder="उदा. मंदाबाई / Mother's Name" 
+                    value={newStudentData.motherName} 
+                    onChange={e => setNewStudentData({...newStudentData, motherName: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">सरल आयडी क्र. (Saral ID No.)</Label>
+                    <span className="text-[9px] text-muted-foreground font-semibold">ऐच्छिक (Optional)</span>
+                  </div>
+                  <Input 
+                    placeholder="19-digit Saral ID Number" 
+                    value={newStudentData.saralId} 
+                    onChange={e => setNewStudentData({...newStudentData, saralId: e.target.value})} 
+                    className="h-11 border-2 rounded-xl font-bold text-xs font-mono" 
                   />
                 </div>
               </div>
