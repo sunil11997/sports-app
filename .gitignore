@@ -44,4 +44,7 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 
+# android build artifacts & binaries
+*.apk
+app-debug.apk
 /Waghamba-Sports-Hub.apk
