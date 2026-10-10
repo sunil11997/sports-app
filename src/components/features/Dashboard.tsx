@@ -61,8 +61,11 @@ export function Dashboard({
     store.updatePlayer(updated);
     setEditingPlayer(null);
     toast({
-      title: isMarathiView ? 'माहिती अद्ययावत केली' : 'Registry Updated',
-      description: `${updated.name}'s profile has been updated.`,
+      title: isMarathiView ? 'माहिती यशस्वीरित्या जतन झाली!' : 'Information Saved Successfully!',
+      description: isMarathiView
+        ? `${updated.nameMarathi || updated.name} ची माहिती यशस्वीरित्या अद्ययावत झाली.`
+        : `${updated.name}'s profile has been successfully updated.`,
+      className: 'bg-emerald-600 text-white font-bold',
     });
   };
 

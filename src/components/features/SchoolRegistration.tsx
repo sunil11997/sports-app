@@ -57,12 +57,24 @@ export function SchoolRegistration({ store }: { store: any }) {
     }
   };
 
+  const onInvalid = (errors: any) => {
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      const firstKey = errorKeys[0];
+      toast({
+        title: "माहिती अपूर्ण आहे (Form Incomplete)",
+        description: errors[firstKey]?.message || "कृपया आवश्यक माहिती भरा.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     store.saveSchoolProfile({ ...values, teacherSignature: signaturePreview });
     toast({
-      title: "School Registered",
-      description: "Institutional profile and signature saved successfully.",
-      className: "bg-primary text-white font-black"
+      title: "संस्थात्मक माहिती जतन झाली (Institutional Profile Saved)",
+      description: "शाळा आणि शिक्षक माहिती यशस्वीरित्या अद्ययावत केली आहे.",
+      className: "bg-emerald-600 text-white font-black"
     });
   };
 
@@ -80,7 +92,7 @@ export function SchoolRegistration({ store }: { store: any }) {
         </CardHeader>
         <CardContent className="p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {/* Teacher Section */}
                 <div className="space-y-6">
@@ -223,7 +235,10 @@ export function SchoolRegistration({ store }: { store: any }) {
               </div>
 
               <div className="pt-8 flex justify-center">
-                <Button type="submit" className="w-full md:w-80 bg-primary hover:bg-primary/90 text-white rounded-2xl h-16 font-black uppercase tracking-widest shadow-xl active-scale">
+                <Button 
+                  type="submit" 
+                  className="w-full md:w-80 bg-primary hover:bg-primary/90 text-white rounded-2xl h-16 font-black uppercase tracking-widest shadow-xl active-scale cursor-pointer"
+                >
                   <Save className="w-5 h-5 mr-3" /> Initialize Hub <ArrowRight className="ml-3 w-5 h-5" />
                 </Button>
               </div>

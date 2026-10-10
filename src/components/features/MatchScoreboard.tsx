@@ -29,22 +29,17 @@ import {
   History,
   CheckCircle2,
   Volleyball,
-  Mic,
-  MicOff,
-  Coins,
-  Music,
-  Upload,
-  Trash2,
-  PlayCircle,
-  StopCircle,
-  Timer
+  UserCheck,
+  Crown,
+  Shield,
+  Star,
+  PlusCircle,
+  Edit3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 import { sounds } from '@/lib/soundEffects';
-import { marathiAnnouncer, getMarathiNumberWord } from '@/lib/marathiAnnouncer';
 
 class SoundEffects {
   public enabled: boolean = true;
@@ -68,21 +63,6 @@ class SoundEffects {
     if (!this.enabled) return;
     sounds.playBuzzer(1.2);
   }
-
-  public playDoOrDie() {
-    if (!this.enabled) return;
-    sounds.playDoOrDie(2.4);
-  }
-
-  public playCoinFlip() {
-    if (!this.enabled) return;
-    sounds.playCoinFlip();
-  }
-
-  public playFanfare() {
-    if (!this.enabled) return;
-    sounds.playFanfare();
-  }
 }
 
 const sfx = new SoundEffects();
@@ -98,6 +78,21 @@ const SCHOOL_HOUSES = [
   { id: 'custom', name: 'Custom School / Team', short: 'Team', color: '#7c3aed', bg: 'bg-purple-600', text: 'text-purple-600', badge: 'bg-purple-100 text-purple-700' },
 ];
 
+export interface SquadPlayer {
+  id: string;
+  name: string;
+  nameMarathi?: string;
+  jerseyNumber: string;
+  std?: string;
+  raidPoints: number;
+  tacklePoints: number;
+  bonusPoints: number;
+  totalPoints: number;
+  superRaids: number;
+  superTackles: number;
+  isOut?: boolean;
+}
+
 interface MatchScoreboardProps {
   store: any;
   preselectedSport?: string;
@@ -111,13 +106,39 @@ interface ScoreEvent {
   points: number;
   type: string;
   desc: string;
-  raiderName?: string;
-  previousRaidingTeam?: 'A' | 'B';
+  playerId?: string;
+  playerName?: string;
+  jerseyNumber?: string;
+  isDoOrDie?: boolean;
 }
+
+// Default squad generators for Quick Match Setup
+const DEFAULT_SQUAD_A: SquadPlayer[] = [
+  { id: 'p_a1', jerseyNumber: '1', name: 'Rahul Shinde', nameMarathi: 'राहुल शिंदे', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_a2', jerseyNumber: '2', name: 'Sachin Kale', nameMarathi: 'सचिन काळे', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_a3', jerseyNumber: '3', name: 'Ajay Pawar', nameMarathi: 'अजय पवार', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_a4', jerseyNumber: '4', name: 'Vijay Kadam', nameMarathi: 'विजय कदम', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_a5', jerseyNumber: '5', name: 'Amol Jadhav', nameMarathi: 'अमोल जाधव', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_a6', jerseyNumber: '6', name: 'Rohan More', nameMarathi: 'रोहन मोरे', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_a7', jerseyNumber: '7', name: 'Suraj Gavit', nameMarathi: 'सूरज गावित', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+];
+
+const DEFAULT_SQUAD_B: SquadPlayer[] = [
+  { id: 'p_b1', jerseyNumber: '1', name: 'Kiran Gavit', nameMarathi: 'किरण गावित', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_b2', jerseyNumber: '2', name: 'Mayur Thakare', nameMarathi: 'मयूर ठाकरे', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_b3', jerseyNumber: '3', name: 'Akash Chaudhari', nameMarathi: 'आकाश चौधरी', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_b4', jerseyNumber: '4', name: 'Shubham Bhoye', nameMarathi: 'शुभम भोये', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_b5', jerseyNumber: '5', name: 'Yogesh Wagh', nameMarathi: 'योगेश वाघ', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_b6', jerseyNumber: '6', name: 'Vikas Bagul', nameMarathi: 'विकास बागुल', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+  { id: 'p_b7', jerseyNumber: '7', name: 'Vishal Gaikwad', nameMarathi: 'विशाल गायकवाड', raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0, isOut: false },
+];
 
 export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchScoreboardProps) {
   const { toast } = useToast();
   const allPlayers = useMemo(() => store?.data?.players || [], [store]);
+
+  // Active View Tab: 'arena' | 'player_stats' | 'squad_setup'
+  const [activeTab, setActiveTab] = useState<'arena' | 'player_stats' | 'squad_setup'>('arena');
 
   // Sport Mode Selection
   const [sport, setSport] = useState<string>(() => {
@@ -130,8 +151,6 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   // Fullscreen State
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
-  const [voiceAnnounceEnabled, setVoiceAnnounceEnabled] = useState(true);
-  const [matchSecondsElapsed, setMatchSecondsElapsed] = useState<number>(0);
 
   // Teams Configuration
   const [teamAHouse, setTeamAHouse] = useState('shivaji');
@@ -139,14 +158,55 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const [teamACustomName, setTeamACustomName] = useState('Shivaji House');
   const [teamBCustomName, setTeamBCustomName] = useState('Raman House');
 
+  // Player Squads
+  const [squadA, setSquadA] = useState<SquadPlayer[]>(() => {
+    if (allPlayers.length >= 7) {
+      return allPlayers.slice(0, 7).map((p: any, idx: number) => ({
+        id: p.id || `p_a_${idx}`,
+        jerseyNumber: p.jerseyNumber || `${idx + 1}`,
+        name: p.name || `Player A${idx + 1}`,
+        nameMarathi: p.nameMarathi || p.name || `खेळाडू A${idx + 1}`,
+        std: p.std,
+        raidPoints: 0,
+        tacklePoints: 0,
+        bonusPoints: 0,
+        totalPoints: 0,
+        superRaids: 0,
+        superTackles: 0,
+        isOut: false
+      }));
+    }
+    return DEFAULT_SQUAD_A;
+  });
+
+  const [squadB, setSquadB] = useState<SquadPlayer[]>(() => {
+    if (allPlayers.length >= 14) {
+      return allPlayers.slice(7, 14).map((p: any, idx: number) => ({
+        id: p.id || `p_b_${idx}`,
+        jerseyNumber: p.jerseyNumber || `${idx + 1}`,
+        name: p.name || `Player B${idx + 1}`,
+        nameMarathi: p.nameMarathi || p.name || `खेळाडू B${idx + 1}`,
+        std: p.std,
+        raidPoints: 0,
+        tacklePoints: 0,
+        bonusPoints: 0,
+        totalPoints: 0,
+        superRaids: 0,
+        superTackles: 0,
+        isOut: false
+      }));
+    }
+    return DEFAULT_SQUAD_B;
+  });
+
+  // Selected Active Player for each team
+  const [selectedPlayerIdA, setSelectedPlayerIdA] = useState<string>(() => squadA[0]?.id || 'p_a1');
+  const [selectedPlayerIdB, setSelectedPlayerIdB] = useState<string>(() => squadB[0]?.id || 'p_b1');
+
   // Match Half/Period & Match Clock
   const [matchHalf, setMatchHalf] = useState<number>(1); // 1 = 1st Half, 2 = 2nd Half, 3 = Extra Time
-  const [matchDurationSeconds, setMatchDurationSeconds] = useState<number>(1200); // Configurable duration (default 20 mins)
   const [matchSecondsRemaining, setMatchSecondsRemaining] = useState<number>(1200); // Default 20 mins
   const [isMatchClockRunning, setIsMatchClockRunning] = useState<boolean>(false);
-  const [isTimeEditOpen, setIsTimeEditOpen] = useState<boolean>(false);
-  const [timeEditMinutes, setTimeEditMinutes] = useState<number>(20);
-  const [timeEditSeconds, setTimeEditSeconds] = useState<number>(0);
 
   // Points & Statistics
   const [scoreA, setScoreA] = useState<number>(0);
@@ -154,71 +214,28 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const [eventsLog, setEventsLog] = useState<ScoreEvent[]>([]);
 
   // -------------------------------------------------------------
-  // MATCH TOSS (नाणेफेक) STATES & LOGIC
-  // -------------------------------------------------------------
-  const [isTossOpen, setIsTossOpen] = useState(false);
-  const [tossCaller, setTossCaller] = useState<'A' | 'B'>('A');
-  const [tossCall, setTossCall] = useState<'heads' | 'tails'>('heads');
-  const [isFlipping, setIsFlipping] = useState(false);
-  const [tossResult, setTossResult] = useState<'heads' | 'tails' | null>(null);
-  const [tossWinner, setTossWinner] = useState<'A' | 'B' | null>(null);
-  const [tossDecision, setTossDecision] = useState<'raid' | 'court' | 'chase' | 'run' | 'serve' | null>(null);
-
-  // -------------------------------------------------------------
-  // KABADDI SPECIFIC STATES
+  // PRO KABADDI SPECIFIC STATES & RULES
   // -------------------------------------------------------------
   const [raidSeconds, setRaidSeconds] = useState<number>(30);
   const [isRaidRunning, setIsRaidRunning] = useState<boolean>(false);
   const [raidingTeam, setRaidingTeam] = useState<'A' | 'B'>('A');
-  const [emptyRaidsA, setEmptyRaidsA] = useState<number>(0);
-  const [emptyRaidsB, setEmptyRaidsB] = useState<number>(0);
+  const [emptyRaidsA, setEmptyRaidsA] = useState<number>(0); // 0, 1, 2
+  const [emptyRaidsB, setEmptyRaidsB] = useState<number>(0); // 0, 1, 2
   const [defendersA, setDefendersA] = useState<number>(7);
   const [defendersB, setDefendersB] = useState<number>(7);
   const [timeoutsA, setTimeoutsA] = useState<number>(2);
   const [timeoutsB, setTimeoutsB] = useState<number>(2);
   const [timeoutClock, setTimeoutClock] = useState<number | null>(null);
 
-  // Computed: Current Raiding Team's Empty Raids & Do-Or-Die status
-  const currentRaidingEmptyRaids = raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB;
-  const isDoOrDieRaid = sport === 'Kabaddi' && currentRaidingEmptyRaids >= 2;
-
-  // Defending team & Super Tackle status (Manual trigger via button; automatic activation removed)
-  const defendingTeam: 'A' | 'B' = raidingTeam === 'A' ? 'B' : 'A';
-  const defendingDefenders = defendingTeam === 'A' ? defendersA : defendersB;
-  const defendingTeamName = defendingTeam === 'A' ? teamACustomName : teamBCustomName;
-  const [isSuperTackleOn, setIsSuperTackleOn] = useState<boolean>(false);
-
-  // Match Result & Winner Celebration State
-  const [isMatchResultOpen, setIsMatchResultOpen] = useState<boolean>(false);
-  const [matchWinnerInfo, setMatchWinnerInfo] = useState<{
-    winner: 'A' | 'B' | 'TIE';
-    winnerName: string;
-    loserName: string;
-    diff: number;
-    scoreA: number;
-    scoreB: number;
-  } | null>(null);
-
-  // Half Time Modal State
-  const [isHalfTimeModalOpen, setIsHalfTimeModalOpen] = useState<boolean>(false);
-
-  // Uploaded Victory Celebration Music States
-  const [uploadedMusicUrl, setUploadedMusicUrl] = useState<string | null>(null);
-  const [uploadedMusicName, setUploadedMusicName] = useState<string | null>(null);
-  const [isPlayingMusic, setIsPlayingMusic] = useState<boolean>(false);
-  const [isMusicUploadOpen, setIsMusicUploadOpen] = useState<boolean>(false);
-  const victoryAudioRef = useRef<HTMLAudioElement | null>(null);
-
   // -------------------------------------------------------------
   // KHO-KHO SPECIFIC STATES
   // -------------------------------------------------------------
   const [khoTurn, setKhoTurn] = useState<number>(1); // 1, 2, 3, 4
-  const [khoInningSeconds, setKhoInningSeconds] = useState<number>(540); // 9 minutes = 540s (7m = 420s)
+  const [khoInningSeconds, setKhoInningSeconds] = useState<number>(540);
   const [isKhoRunning, setIsKhoRunning] = useState<boolean>(false);
   const [chasingTeam, setChasingTeam] = useState<'A' | 'B'>('A');
-  const [activeBatch, setActiveBatch] = useState<number>(1); // Batch 1 (3 def), Batch 2, Batch 3
+  const [activeBatch, setActiveBatch] = useState<number>(1);
   const [batchDismissedCount, setBatchDismissedCount] = useState<number>(0);
-  const [turnScores, setTurnScores] = useState<Record<string, number>>({ 'T1_A': 0, 'T2_B': 0, 'T3_A': 0, 'T4_B': 0 });
 
   // -------------------------------------------------------------
   // VOLLEYBALL SPECIFIC STATES
@@ -229,11 +246,10 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const [servingTeam, setServingTeam] = useState<'A' | 'B'>('A');
   const [setHistory, setSetHistory] = useState<{ set: number; a: number; b: number }[]>([]);
 
-  // Audio & Marathi Announcer Mute sync
+  // Audio Mute sync
   useEffect(() => {
     sfx.enabled = !soundMuted;
-    marathiAnnouncer.enabled = !soundMuted && voiceAnnounceEnabled;
-  }, [soundMuted, voiceAnnounceEnabled]);
+  }, [soundMuted]);
 
   // Sync House Names
   useEffect(() => {
@@ -246,6 +262,12 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     if (hB && teamBHouse !== 'custom') setTeamBCustomName(hB.name.split(' (')[0]);
   }, [teamBHouse]);
 
+  // Check if current raid is a Do-or-Die raid
+  const isCurrentRaidDoOrDie = useMemo(() => {
+    if (sport !== 'Kabaddi') return false;
+    return raidingTeam === 'A' ? emptyRaidsA === 2 : emptyRaidsB === 2;
+  }, [sport, raidingTeam, emptyRaidsA, emptyRaidsB]);
+
   // -------------------------------------------------------------
   // 30-SECOND KABADDI RAID CLOCK INTERVAL
   // -------------------------------------------------------------
@@ -255,33 +277,25 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       interval = setInterval(() => {
         setRaidSeconds((prev) => {
           const next = prev - 1;
-          // Audio cues
           if (next === 10) sfx.playWarning();
           else if (next <= 5 && next > 0) sfx.playTick();
           else if (next === 0) {
             sfx.playBuzzer();
             setIsRaidRunning(false);
             
-            // In Kabaddi, 30s timeout on 3rd raid (Do-or-Die) means raider is OUT!
-            const isDoOrDieCurrent = (raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB) >= 2;
-            if (isDoOrDieCurrent) {
-              const defTeam = raidingTeam === 'A' ? 'B' : 'A';
-              const rName = raidingTeam === 'A' ? teamACustomName : teamBCustomName;
-              const dName = raidingTeam === 'A' ? teamBCustomName : teamACustomName;
-              addScore(defTeam, 1, 'Do-Or-Die Out');
-              if (raidingTeam === 'A') setEmptyRaidsA(0);
-              else setEmptyRaidsB(0);
-              toast({
-                title: "💀 डू ऑर डाय वेळ संपली! (Do-Or-Die Timeout)",
-                description: `${rName} ची ३० सेकंदांची वेळ संपली & रेडर बाद! ${dName} ला +१ गुण.`,
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "⏰ रेड वेळ संपली (Raid Time Out!)",
-                description: `30 सेकंद पूर्ण झाले आहेत. गुण / आउट तपासा.`,
-                variant: "destructive",
-              });
+            // If raid runs out of time in Kabaddi:
+            if (sport === 'Kabaddi') {
+              if (isCurrentRaidDoOrDie) {
+                // Time-out during Do-or-Die raid = Raider Out, Defending team gets 1 point!
+                const defTeam = raidingTeam === 'A' ? 'B' : 'A';
+                handleDoOrDieFailure(defTeam);
+              } else {
+                toast({
+                  title: "⏰ रेड वेळ संपली (30s Raid Time Out!)",
+                  description: `30 सेकंद पूर्ण झाले आहेत. रिकामी रेड किंवा गुण तपासा.`,
+                  variant: "destructive",
+                });
+              }
             }
           }
           return next;
@@ -289,167 +303,8 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRaidRunning, raidSeconds, raidingTeam, emptyRaidsA, emptyRaidsB, teamACustomName, teamBCustomName, toast]);
-
-  // -------------------------------------------------------------
-  // SUPER TACKLE, THIRD RAID, HALF TIME, MUSIC & MATCH CONCLUSION ACTIONS
-  // -------------------------------------------------------------
-  const toggleSuperTackle = useCallback(() => {
-    setIsSuperTackleOn(prev => {
-      const next = !prev;
-      if (next) {
-        marathiAnnouncer.announceSuperTackle();
-        toast({
-          title: "🛡️ Super Tackle is ON!",
-          description: "Super tackle is on! यशस्वी पकडीस २ गुण.",
-          className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
-        });
-      } else {
-        toast({
-          title: "🛡️ Super Tackle OFF",
-          description: "सुपर टॅकल सामान्य स्थितीत आणले आहे.",
-        });
-      }
-      return next;
-    });
-  }, [toast]);
-
-  const announceSuperTackleNow = useCallback(() => {
-    setIsSuperTackleOn(true);
-    marathiAnnouncer.announceSuperTackle();
-    toast({
-      title: "🛡️ Super Tackle is ON!",
-      description: "Super tackle is on!",
-      className: "bg-purple-900 text-amber-300 font-black border-2 border-amber-400 shadow-2xl animate-pulse"
-    });
-  }, [toast]);
-
-  const toggleThirdRaid = useCallback((targetTeam?: 'A' | 'B') => {
-    const team = targetTeam || raidingTeam;
-    const currentCount = team === 'A' ? emptyRaidsA : emptyRaidsB;
-    const isCurrentlyDOD = currentCount >= 2;
-
-    if (isCurrentlyDOD) {
-      if (team === 'A') setEmptyRaidsA(0);
-      else setEmptyRaidsB(0);
-      toast({
-        title: "Do-or-Die Raid Reset",
-        description: "३ री रेड रद्द केली."
-      });
-    } else {
-      if (team === 'A') setEmptyRaidsA(2);
-      else setEmptyRaidsB(2);
-      marathiAnnouncer.announceDoOrDieRaid();
-      toast({
-        title: "⚡ Third Raid: Do or Die Raid!",
-        description: "Third raid, do or die raid!",
-        className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-2xl animate-bounce"
-      });
-    }
-  }, [raidingTeam, emptyRaidsA, emptyRaidsB, toast]);
-
-  const playVictoryMusic = useCallback(() => {
-    if (soundMuted) return;
-    if (uploadedMusicUrl) {
-      try {
-        if (victoryAudioRef.current) {
-          victoryAudioRef.current.pause();
-          victoryAudioRef.current.currentTime = 0;
-        }
-        const audio = new Audio(uploadedMusicUrl);
-        victoryAudioRef.current = audio;
-        setIsPlayingMusic(true);
-        audio.onended = () => setIsPlayingMusic(false);
-        audio.play().catch(err => {
-          console.warn("Custom music playback error, fallback to fanfare:", err);
-          sfx.playFanfare();
-        });
-      } catch {
-        sfx.playFanfare();
-      }
-    } else {
-      sfx.playFanfare();
-    }
-  }, [soundMuted, uploadedMusicUrl]);
-
-  const stopVictoryMusic = useCallback(() => {
-    if (victoryAudioRef.current) {
-      victoryAudioRef.current.pause();
-      victoryAudioRef.current.currentTime = 0;
-    }
-    setIsPlayingMusic(false);
-  }, []);
-
-  const toggleVictoryMusic = useCallback(() => {
-    if (isPlayingMusic) {
-      stopVictoryMusic();
-    } else {
-      playVictoryMusic();
-    }
-  }, [isPlayingMusic, playVictoryMusic, stopVictoryMusic]);
-
-  const triggerMatchConclusion = useCallback(() => {
-    setIsMatchClockRunning(false);
-    sfx.playWhistle();
-
-    const diff = Math.abs(scoreA - scoreB);
-    const winner: 'A' | 'B' | 'TIE' = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : 'TIE';
-    const wName = winner === 'A' ? teamACustomName : winner === 'B' ? teamBCustomName : 'सामना बरोबरीत';
-    const lName = winner === 'A' ? teamBCustomName : teamACustomName;
-
-    setMatchWinnerInfo({
-      winner,
-      winnerName: wName,
-      loserName: lName,
-      diff,
-      scoreA,
-      scoreB
-    });
-    setIsMatchResultOpen(true);
-
-    // Speak Marathi winner announcement first, and immediately when speech ends, play uploaded/celebration music!
-    marathiAnnouncer.announceMatchWinner(teamACustomName, scoreA, teamBCustomName, scoreB, () => {
-      playVictoryMusic();
-    });
-
-    const wordDiff = getMarathiNumberWord(diff);
-    toast({
-      title: "🏆 दोन्ही हाफ पूर्ण! निकाल जाहीर!",
-      description: winner === 'TIE'
-        ? `सामना बरोबरीत! दोन्ही संघांचे ${scoreA} गुण.`
-        : `${wName} ${diff} (${wordDiff}) गुणांनी सामना जिंकला!`,
-      className: "bg-amber-500 text-slate-950 font-black border-2 border-white shadow-2xl"
-    });
-  }, [teamACustomName, scoreA, teamBCustomName, scoreB, playVictoryMusic, toast]);
-
-  const handleHalfTime = useCallback(() => {
-    setIsMatchClockRunning(false);
-    sfx.playWhistle();
-    marathiAnnouncer.announceHalfTime(teamACustomName, scoreA, teamBCustomName, scoreB);
-    setIsHalfTimeModalOpen(true);
-    toast({
-      title: "⏸️ पहिला हाफ संपला! मध्यंतर (Half Time)",
-      description: `${teamACustomName}: ${scoreA} | ${teamBCustomName}: ${scoreB}. दुसऱ्या हाफसाठी 'दुसरा हाफ सुरू करा' निवडा.`,
-      className: "bg-blue-600 text-white font-black border-2 border-amber-300 shadow-xl"
-    });
-  }, [teamACustomName, scoreA, teamBCustomName, scoreB, toast]);
-
-  const startSecondHalf = useCallback(() => {
-    setIsHalfTimeModalOpen(false);
-    setMatchHalf(2);
-    setMatchSecondsRemaining(matchDurationSeconds);
-    // Switch raiding team for 2nd half
-    setRaidingTeam(prev => prev === 'A' ? 'B' : 'A');
-    setRaidSeconds(30);
-    setIsRaidRunning(false);
-    sfx.playWhistle();
-    setIsMatchClockRunning(true);
-    toast({
-      title: "▶️ दुसरा हाफ सुरू झाला! (2nd Half Started)",
-      description: "सामन्याचा दुसरा हाफ अधिकृतपणे सुरू झाला आहे.",
-      className: "bg-emerald-600 text-white font-black"
-    });
-  }, [matchDurationSeconds, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRaidRunning, raidSeconds, sport, isCurrentRaidDoOrDie, raidingTeam]);
 
   // -------------------------------------------------------------
   // MATCH CLOCK INTERVAL
@@ -458,67 +313,22 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     let interval: any = null;
     if (isMatchClockRunning && matchSecondsRemaining > 0) {
       interval = setInterval(() => {
-        // Track elapsed match seconds for 3-minute periodic Marathi score announcement
-        setMatchSecondsElapsed((prevElapsed) => {
-          const nextElapsed = prevElapsed + 1;
-          if (sport === 'Kabaddi' && nextElapsed > 0 && nextElapsed % 180 === 0) {
-            marathiAnnouncer.announcePeriodicScore(teamACustomName, scoreA, teamBCustomName, scoreB);
-            const wordA = getMarathiNumberWord(scoreA);
-            const wordB = getMarathiNumberWord(scoreB);
-            const diff = Math.abs(scoreA - scoreB);
-            const leadText = scoreA > scoreB
-              ? `${teamACustomName} +${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
-              : scoreB > scoreA
-                ? `${teamBCustomName} +${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
-                : 'दोन्ही संघ बरोबरीत';
-            toast({
-              title: "🎙️ मराठी गुणफलक समालोचन (३-मिनिट समालोचन)",
-              description: `${teamACustomName}: ${scoreA} (${wordA}) | ${teamBCustomName}: ${scoreB} (${wordB}) • ${leadText}`,
-              className: "bg-blue-900 text-amber-300 font-bold border-2 border-amber-400 shadow-xl"
-            });
-          }
-          return nextElapsed;
-        });
-
         setMatchSecondsRemaining((prev) => {
-          const nextTime = prev - 1;
-
-          // Announce Last Minute / Remaining Time in Marathi
-          if (nextTime === 60) {
-            sfx.playWhistle();
-            marathiAnnouncer.announceLastMinute(60);
-            toast({
-              title: "⏱️ शेवटचा १ मिनिट बाकी! (Last 1 Minute)",
-              description: "सामन्याचा शेवटचा एक मिनिट शिल्लक आहे.",
-              className: "bg-red-600 text-white font-black"
-            });
-          } else if (nextTime === 30) {
-            sfx.playWarning();
-            marathiAnnouncer.announceLastMinute(30);
-            toast({
-              title: "⏱️ शेवटचे ३० सेकंद बाकी! (Last 30s)",
-              description: "सामन्याची शेवटची ३० सेकंद शिल्लक आहेत.",
-              className: "bg-amber-600 text-white font-black"
-            });
-          } else if (nextTime === 10) {
-            marathiAnnouncer.announceLastMinute(10);
-          }
-
-          if (nextTime <= 0) {
+          if (prev <= 1) {
             setIsMatchClockRunning(false);
-            if (matchHalf === 1) {
-              setTimeout(() => handleHalfTime(), 100);
-            } else {
-              setTimeout(() => triggerMatchConclusion(), 100);
-            }
+            sfx.playWhistle();
+            toast({
+              title: "🏁 हाफ / सामना वेळ संपला (Half/Match Time End)",
+              description: `अधिकृत शिट्टी वाजली आहे.`,
+            });
             return 0;
           }
-          return nextTime;
+          return prev - 1;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isMatchClockRunning, matchSecondsRemaining, sport, teamACustomName, scoreA, teamBCustomName, scoreB, matchHalf, handleHalfTime, triggerMatchConclusion, toast]);
+  }, [isMatchClockRunning, matchSecondsRemaining, toast]);
 
   // -------------------------------------------------------------
   // KHO-KHO INNING TIMER
@@ -566,125 +376,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   }, [timeoutClock]);
 
   // -------------------------------------------------------------
-  // MATCH DURATION CONTROLS
-  // -------------------------------------------------------------
-  const updateMatchDuration = (mins: number, secs: number = 0) => {
-    const totalSecs = Math.max(10, mins * 60 + secs);
-    setMatchDurationSeconds(totalSecs);
-    setMatchSecondsRemaining(totalSecs);
-    setIsMatchClockRunning(false);
-    setIsTimeEditOpen(false);
-    toast({
-      title: "⏱️ सामना वेळ सेट केली (Match Duration Set)",
-      description: `सामन्याची वेळ ${mins} मिनिटे ${secs > 0 ? `${secs} सेकंद` : ''} करण्यात आली आहे.`,
-    });
-  };
-
-  const adjustMatchTime = (deltaSeconds: number) => {
-    setMatchSecondsRemaining(prev => Math.max(0, prev + deltaSeconds));
-  };
-
-  // -------------------------------------------------------------
-  // MATCH TOSS (नाणेफेक) HANDLERS
-  // -------------------------------------------------------------
-  const handleFlipCoin = () => {
-    if (isFlipping) return;
-    setIsFlipping(true);
-    setTossResult(null);
-    setTossWinner(null);
-    setTossDecision(null);
-    sfx.playCoinFlip();
-
-    setTimeout(() => {
-      const outcome: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
-      setTossResult(outcome);
-      const winner = tossCall === outcome ? tossCaller : (tossCaller === 'A' ? 'B' : 'A');
-      setTossWinner(winner);
-      setIsFlipping(false);
-      sfx.playWhistle();
-
-      const winnerName = winner === 'A' ? teamACustomName : teamBCustomName;
-      toast({
-        title: `🪙 नाणेफेक निकाल: ${outcome === 'heads' ? 'छाप (HEADS)' : 'काटा (TAILS)'}`,
-        description: `अभिनंदन! ${winnerName} ने नाणेफेक जिंकली आहे. आपला निर्णय निवडा.`,
-        className: "bg-amber-500 text-slate-950 font-black border-2 border-amber-300 shadow-xl"
-      });
-    }, 1200);
-  };
-
-  const handleTossDecision = (decision: 'raid' | 'court' | 'chase' | 'run' | 'serve') => {
-    setTossDecision(decision);
-    const winner = tossWinner || tossCaller;
-    const winnerName = winner === 'A' ? teamACustomName : teamBCustomName;
-    const otherTeamName = winner === 'A' ? teamBCustomName : teamACustomName;
-
-    // Announce via voice with Marathi Announcer
-    marathiAnnouncer.announceToss(winnerName, decision, otherTeamName, sport);
-
-    // Apply decision to match state
-    if (sport === 'Kabaddi') {
-      if (decision === 'raid') {
-        setRaidingTeam(winner);
-      } else if (decision === 'court') {
-        setRaidingTeam(winner === 'A' ? 'B' : 'A');
-      }
-    } else if (sport === 'Kho Kho') {
-      if (decision === 'chase') {
-        setChasingTeam(winner);
-      } else if (decision === 'run') {
-        setChasingTeam(winner === 'A' ? 'B' : 'A');
-      }
-    } else if (sport === 'Volleyball' || sport === 'General') {
-      if (decision === 'serve') {
-        setServingTeam(winner);
-      } else if (decision === 'court') {
-        setServingTeam(winner === 'A' ? 'B' : 'A');
-      }
-    }
-
-    // Log to events timeline
-    let decisionLabel = "";
-    if (decision === 'raid') decisionLabel = "पहिली चढाई (Raid First)";
-    else if (decision === 'court') decisionLabel = "मैदानाची बाजू (Court Side)";
-    else if (decision === 'chase') decisionLabel = "पहिली चेसिंग (Chasing First)";
-    else if (decision === 'run') decisionLabel = "डिफेन्स (Running First)";
-    else if (decision === 'serve') decisionLabel = "पहिली सर्व्हिस (Service First)";
-
-    const tossEvent: ScoreEvent = {
-      id: Date.now().toString(),
-      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' }),
-      team: winner,
-      teamName: winnerName,
-      points: 0,
-      type: 'नाणेफेक (Toss)',
-      desc: `🪙 नाणेफेक निकाल: ${winnerName} ने नाणेफेक जिंकून ${decisionLabel} निवडले.`
-    };
-    setEventsLog(prev => [tossEvent, ...prev]);
-
-    toast({
-      title: "🪙 नाणेफेक पूर्ण झाली!",
-      description: `${winnerName} ने ${decisionLabel} निवडले आहे. सामना सुरू करण्यासाठी सज्ज!`,
-      className: "bg-emerald-600 text-white font-bold"
-    });
-
-    setIsTossOpen(false);
-  };
-
-  // -------------------------------------------------------------
   // ACTIONS: KABADDI RAID CLOCK
   // -------------------------------------------------------------
   const startRaidClock = () => {
     if (raidSeconds === 0) setRaidSeconds(30);
     setIsRaidRunning(true);
-
-    if (sport === 'Kabaddi' && (raidingTeam === 'A' ? emptyRaidsA : emptyRaidsB) >= 2) {
-      marathiAnnouncer.announceDoOrDieRaid();
-      toast({
-        title: "⚡ Third Raid: Do or Die Raid! ⚡",
-        description: "Third raid, do or die raid!",
-        className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-2xl animate-bounce"
-      });
-    }
   };
 
   const pauseRaidClock = () => {
@@ -701,87 +397,111 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     }
   };
 
-  // Add Points Function
-  const addScore = (team: 'A' | 'B', points: number, type: string, isDoOrDie: boolean = false) => {
+  // Helper to get active player info
+  const getActivePlayer = (team: 'A' | 'B', targetPlayerId?: string): SquadPlayer | undefined => {
+    const squad = team === 'A' ? squadA : squadB;
+    const pId = targetPlayerId || (team === 'A' ? selectedPlayerIdA : selectedPlayerIdB);
+    return squad.find(p => p.id === pId) || squad[0];
+  };
+
+  // -------------------------------------------------------------
+  // ADD SCORE WITH PLAYER ATTRIBUTION
+  // -------------------------------------------------------------
+  const addScore = (
+    team: 'A' | 'B', 
+    points: number, 
+    type: string, 
+    customPlayerId?: string
+  ) => {
     const teamName = team === 'A' ? teamACustomName : teamBCustomName;
     const opponent = team === 'A' ? 'B' : 'A';
 
+    // Identify player who scored
+    const activePlayer = getActivePlayer(team, customPlayerId);
+    const playerName = activePlayer?.nameMarathi || activePlayer?.name || (team === 'A' ? 'संघ अ खेळाडू' : 'संघ ब खेळाडू');
+    const jerseyNumber = activePlayer?.jerseyNumber || '';
+
+    // Update Team Score
     if (team === 'A') setScoreA(prev => prev + points);
     else setScoreB(prev => prev + points);
 
-    // If defending team scored a point (e.g. tackle / caught raider), adjust label for clear event log
-    const eventType = (sport === 'Kabaddi' && (type === 'Touch Point' || type === 'Point') && team !== raidingTeam)
-      ? 'Tackle Point'
-      : type;
+    // Update Player Stats in Squad
+    if (activePlayer) {
+      const updateSquad = (prevSquad: SquadPlayer[]) => {
+        return prevSquad.map(p => {
+          if (p.id === activePlayer.id) {
+            const isBonus = type.includes('Bonus');
+            const isTackle = type.includes('Tackle');
+            const isSuperTackle = type.includes('Super Tackle');
+            const isSuperRaid = type.includes('Super Raid') || (points >= 3 && !isTackle);
 
-    // Event Log
+            return {
+              ...p,
+              totalPoints: p.totalPoints + points,
+              bonusPoints: isBonus ? p.bonusPoints + points : p.bonusPoints,
+              tacklePoints: isTackle ? p.tacklePoints + points : p.tacklePoints,
+              raidPoints: (!isTackle && !isBonus) ? p.raidPoints + points : isBonus ? p.raidPoints + points : p.raidPoints,
+              superRaids: isSuperRaid ? p.superRaids + 1 : p.superRaids,
+              superTackles: isSuperTackle ? p.superTackles + 1 : p.superTackles,
+            };
+          }
+          return p;
+        });
+      };
+
+      if (team === 'A') setSquadA(updateSquad);
+      else setSquadB(updateSquad);
+    }
+
+    // Build Descriptive Event Log
+    const playerBadgeText = jerseyNumber ? `[#${jerseyNumber} ${playerName}]` : playerName;
     const newEvent: ScoreEvent = {
       id: Date.now().toString(),
       timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' }),
       team,
       teamName,
       points,
-      type: eventType,
-      desc: `${teamName}: +${points} (${eventType})`,
-      previousRaidingTeam: raidingTeam
+      type,
+      playerId: activePlayer?.id,
+      playerName,
+      jerseyNumber,
+      isDoOrDie: isCurrentRaidDoOrDie,
+      desc: `${teamName}: ${playerBadgeText} +${points} (${type})`
     };
     setEventsLog(prev => [newEvent, ...prev]);
 
-    // Kabaddi specific adjustments
+    // -------------------------------------------------------------
+    // KABADDI RULES ADJUSTMENTS
+    // -------------------------------------------------------------
     if (sport === 'Kabaddi') {
-      // IN KABADDI: Raids strictly alternate between Team A and Team B.
-      // Whenever ANY point is scored in the raid (raider scores OR defense tackles),
-      // that raid ends and the raiding position automatically switches to the other team.
-      // E.g. If Team A was raiding: Next raid is ALWAYS Team B.
-      // E.g. If Team B was raiding: Next raid is ALWAYS Team A.
-      const nextRaider: 'A' | 'B' = raidingTeam === 'A' ? 'B' : 'A';
-
-      if (team === raidingTeam) {
-        // Raiding team scored points (Touch, Raid points, Bonus, etc.)
-        // Reset empty raid count for raiding team
-        if (raidingTeam === 'A') setEmptyRaidsA(0);
+      if (type.includes('Raid') || type.includes('Touch') || type.includes('Bonus')) {
+        // Successful Raid (Touch or Bonus): Resets empty raids counter for raiding team
+        if (team === 'A') setEmptyRaidsA(0);
         else setEmptyRaidsB(0);
 
         // Deduct defenders from defending team
-        const touchPoints = type.includes('Bonus') ? Math.max(0, points - 1) : points;
-        if (touchPoints > 0) {
-          if (raidingTeam === 'A') {
-            setDefendersB(prev => Math.max(1, prev - touchPoints));
-          } else {
-            setDefendersA(prev => Math.max(1, prev - touchPoints));
-          }
-        }
-      } else {
-        // Defending team scored points (Tackle, Super Tackle, Raider Out, etc.)
-        // Raider is out: reset empty raid count for raiding team
-        if (raidingTeam === 'A') setEmptyRaidsA(0);
-        else setEmptyRaidsB(0);
-
-        // Deduct 1 defender from the raiding team (the tackled raider is out)
-        if (raidingTeam === 'A') {
-          setDefendersA(prev => Math.max(1, prev - 1));
+        if (team === 'A') {
+          setDefendersB(prev => Math.max(1, prev - (points >= 3 ? points - (type.includes('Bonus') ? 1 : 0) : points)));
         } else {
-          setDefendersB(prev => Math.max(1, prev - 1));
+          setDefendersA(prev => Math.max(1, prev - (points >= 3 ? points - (type.includes('Bonus') ? 1 : 0) : points)));
         }
-      }
-
-      if (type === 'All-Out') {
+      } else if (type.includes('Tackle') || type.includes('Super Tackle')) {
+        // Raider tackled out: defending team gets point
+        // Deduct 1 defender from the raiding team
+        if (team === 'A') {
+          setDefendersB(prev => Math.max(1, prev - 1));
+        } else {
+          setDefendersA(prev => Math.max(1, prev - 1));
+        }
+      } else if (type === 'All-Out') {
         // All out: restore 7 defenders for opponent
         if (opponent === 'A') setDefendersA(7);
         else setDefendersB(7);
         sfx.playWhistle();
       }
 
-      // Auto reset raid clock for next raid & switch raiding team
-      resetRaidClock(nextRaider);
-      setIsSuperTackleOn(false);
-
-      const nextRaiderName = nextRaider === 'A' ? teamACustomName : teamBCustomName;
-      toast({
-        title: `👉 पुढील रेड: ${nextRaiderName} ची रेड!`,
-        description: `${teamName} ला +${points} गुण (${eventType}). आता ${nextRaiderName} ची रेड सुरू आहे.`,
-        className: nextRaider === 'A' ? "bg-red-600 text-white font-bold" : "bg-blue-600 text-white font-bold"
-      });
+      // Auto reset raid clock for next raid
+      resetRaidClock(opponent);
     }
 
     // Kho-Kho adjustments
@@ -789,7 +509,6 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       setBatchDismissedCount(prev => {
         const next = prev + 1;
         if (next >= 3) {
-          // Batch cleared! Next batch in
           setActiveBatch(b => (b % 3) + 1);
           toast({
             title: `🛡️ तुकडी ${activeBatch} ऑल-आउट! (Batch ${activeBatch} Cleared)`,
@@ -827,67 +546,142 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     }
   };
 
-  // Handle Empty Raid
-  const handleEmptyRaid = () => {
-    if (raidingTeam === 'A') {
-      if (emptyRaidsA >= 2) {
-        // This was 3rd raid (Do-Or-Die) and raider did empty raid -> OUT!
-        sfx.playWhistle();
-        addScore('B', 1, 'Do-Or-Die Out');
-        setEmptyRaidsA(0);
-        toast({
-          title: "💀 डू ऑर डाय रेड अयशस्वी! (Do-or-Die Failed)",
-          description: `${teamACustomName} चा रेडर बाद! ${teamBCustomName} ला +१ गुण मिळाला.`,
-          variant: "destructive"
-        });
-        return;
-      }
-      const nextCount = emptyRaidsA + 1;
-      setEmptyRaidsA(nextCount);
-      if (nextCount === 2) {
-        toast({
-          title: "⚠️ सावधान: पुढील रेड 'डू ऑर डाय' असेल!",
-          description: `${teamACustomName} च्या २ रिकाम्या रेड झाल्या आहेत. आता त्यांची पुढील ३ री रेड डू ऑर डाय असेल!`,
-          className: "bg-amber-500 text-slate-950 font-black"
-        });
-      }
-    } else {
-      if (emptyRaidsB >= 2) {
-        // This was 3rd raid (Do-Or-Die) and raider did empty raid -> OUT!
-        sfx.playWhistle();
-        addScore('A', 1, 'Do-Or-Die Out');
-        setEmptyRaidsB(0);
-        toast({
-          title: "💀 डू ऑर डाय रेड अयशस्वी! (Do-or-Die Failed)",
-          description: `${teamBCustomName} चा रेडर बाद! ${teamACustomName} ला +१ गुण मिळाला.`,
-          variant: "destructive"
-        });
-        return;
-      }
-      const nextCount = emptyRaidsB + 1;
-      setEmptyRaidsB(nextCount);
-      if (nextCount === 2) {
-        toast({
-          title: "⚠️ सावधान: पुढील रेड 'डू ऑर डाय' असेल!",
-          description: `${teamBCustomName} च्या २ रिकाम्या रेड झाल्या आहेत. आता त्यांची पुढील ३ री रेड डू ऑर डाय असेल!`,
-          className: "bg-amber-500 text-slate-950 font-black"
-        });
-      }
+  // -------------------------------------------------------------
+  // PRO KABADDI: DO-OR-DIE FAILURE HANDLER
+  // -------------------------------------------------------------
+  const handleDoOrDieFailure = (defendingTeam: 'A' | 'B') => {
+    const failedRaidingTeam = defendingTeam === 'A' ? 'B' : 'A';
+    const failedTeamName = failedRaidingTeam === 'A' ? teamACustomName : teamBCustomName;
+    const defendingTeamName = defendingTeam === 'A' ? teamACustomName : teamBCustomName;
+    const raiderPlayer = getActivePlayer(failedRaidingTeam);
+
+    // Defending team gets 1 tackle/out point
+    if (defendingTeam === 'A') setScoreA(prev => prev + 1);
+    else setScoreB(prev => prev + 1);
+
+    // Defending team tackler gets 1 tackle point
+    const tacklerPlayer = getActivePlayer(defendingTeam);
+    if (tacklerPlayer) {
+      const updateSquad = (prevSquad: SquadPlayer[]) => {
+        return prevSquad.map(p => p.id === tacklerPlayer.id ? { ...p, tacklePoints: p.tacklePoints + 1, totalPoints: p.totalPoints + 1 } : p);
+      };
+      if (defendingTeam === 'A') setSquadA(updateSquad);
+      else setSquadB(updateSquad);
     }
-    resetRaidClock(raidingTeam === 'A' ? 'B' : 'A');
+
+    // Reset empty raids counter
+    if (failedRaidingTeam === 'A') setEmptyRaidsA(0);
+    else setEmptyRaidsB(0);
+
+    // Deduct 1 defender from the failed raiding team
+    if (failedRaidingTeam === 'A') setDefendersA(prev => Math.max(1, prev - 1));
+    else setDefendersB(prev => Math.max(1, prev - 1));
+
+    // Log Event
+    const newEvent: ScoreEvent = {
+      id: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' }),
+      team: defendingTeam,
+      teamName: defendingTeamName,
+      points: 1,
+      type: 'Do-Or-Die Out',
+      isDoOrDie: true,
+      playerId: tacklerPlayer?.id,
+      playerName: tacklerPlayer?.nameMarathi || tacklerPlayer?.name,
+      jerseyNumber: tacklerPlayer?.jerseyNumber,
+      desc: `🚨 डू ऑर डाय रेड निष्फळ! ${failedTeamName} चा रेडर [${raiderPlayer?.nameMarathi || raiderPlayer?.name || 'रेडर'}] बाद ➔ ${defendingTeamName} +1 गुण`
+    };
+    setEventsLog(prev => [newEvent, ...prev]);
+
+    sfx.playBuzzer();
+    toast({
+      title: "🚨 डू ऑर डाय रेड निष्फळ! (Do-or-Die Out)",
+      description: `${failedTeamName} ची ३री रेड निष्फळ ठरल्याने ${defendingTeamName} ला १ गुण मिळाला व रेडर बाद.`,
+      variant: "destructive",
+    });
+
+    // Reset raid clock for defending team's turn
+    resetRaidClock(defendingTeam);
   };
 
-  // Undo Last Event
+  // -------------------------------------------------------------
+  // PRO KABADDI: EMPTY RAID LOGIC
+  // -------------------------------------------------------------
+  const handleEmptyRaid = () => {
+    if (raidingTeam === 'A') {
+      const current = emptyRaidsA;
+      if (current === 0) {
+        // Raid 1 empty -> next will be Raid 2
+        setEmptyRaidsA(1);
+        toast({ title: "⚪ १ली रिकामी रेड (Empty Raid 1)", description: `${teamACustomName} ची १ली रिकामी रेड नोंदवली.` });
+        resetRaidClock('B');
+      } else if (current === 1) {
+        // Raid 2 empty -> 3rd raid MUST BE DO-OR-DIE!
+        setEmptyRaidsA(2);
+        sfx.playWarning();
+        toast({ 
+          title: "⚠️ २री रिकामी रेड! पुढील रेड डू-ऑर-डाय (Do-or-Die Raid Alert!)", 
+          description: `${teamACustomName} ची पुढील ३री रेड 'डू-ऑर-डाय (करो किंवा मरो)' असेल!`,
+          variant: "destructive"
+        });
+        resetRaidClock('B');
+      } else if (current === 2) {
+        // 3rd Raid was DO-OR-DIE and was empty -> Raider OUT! Team B +1 Point
+        handleDoOrDieFailure('B');
+      }
+    } else {
+      const current = emptyRaidsB;
+      if (current === 0) {
+        setEmptyRaidsB(1);
+        toast({ title: "⚪ १ली रिकामी रेड (Empty Raid 1)", description: `${teamBCustomName} ची १ली रिकामी रेड नोंदवली.` });
+        resetRaidClock('A');
+      } else if (current === 1) {
+        setEmptyRaidsB(2);
+        sfx.playWarning();
+        toast({ 
+          title: "⚠️ २री रिकामी रेड! पुढील रेड डू-ऑर-डाय (Do-or-Die Raid Alert!)", 
+          description: `${teamBCustomName} ची पुढील ३री रेड 'डू-ऑर-डाय (करो किंवा मरो)' असेल!`,
+          variant: "destructive"
+        });
+        resetRaidClock('A');
+      } else if (current === 2) {
+        handleDoOrDieFailure('A');
+      }
+    }
+  };
+
+  // -------------------------------------------------------------
+  // UNDO LAST EVENT
+  // -------------------------------------------------------------
   const undoLastEvent = () => {
     if (eventsLog.length === 0) return;
     const last = eventsLog[0];
     if (last.team === 'A') setScoreA(prev => Math.max(0, prev - last.points));
     else setScoreB(prev => Math.max(0, prev - last.points));
-    if (sport === 'Kabaddi' && last.previousRaidingTeam) {
-      setRaidingTeam(last.previousRaidingTeam);
-      setRaidSeconds(30);
-      setIsRaidRunning(false);
+
+    // Rollback player points if attached
+    if (last.playerId) {
+      const rollbackSquad = (prevSquad: SquadPlayer[]) => {
+        return prevSquad.map(p => {
+          if (p.id === last.playerId) {
+            const isBonus = last.type.includes('Bonus');
+            const isTackle = last.type.includes('Tackle');
+            return {
+              ...p,
+              totalPoints: Math.max(0, p.totalPoints - last.points),
+              bonusPoints: isBonus ? Math.max(0, p.bonusPoints - last.points) : p.bonusPoints,
+              tacklePoints: isTackle ? Math.max(0, p.tacklePoints - last.points) : p.tacklePoints,
+              raidPoints: (!isTackle && !isBonus) ? Math.max(0, p.raidPoints - last.points) : p.raidPoints,
+            };
+          }
+          return p;
+        });
+      };
+
+      if (last.team === 'A') setSquadA(rollbackSquad);
+      else setSquadB(rollbackSquad);
     }
+
     setEventsLog(prev => prev.slice(1));
     toast({ title: "कृती पूर्ववत केली (Event Undone)", description: `${last.desc} रद्द करण्यात आले.` });
   };
@@ -914,7 +708,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
 
   // Reset Complete Match
   const resetEntireMatch = () => {
-    if (!window.confirm("तुम्हाला संपूर्ण सामना रिसेट करायचा आहे का? (Reset all match scores?)")) return;
+    if (!window.confirm("तुम्हाला संपूर्ण सामना रिसेट करायचा आहे का? (Reset all match scores & player stats?)")) return;
     setScoreA(0);
     setScoreB(0);
     setEventsLog([]);
@@ -924,11 +718,9 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setEmptyRaidsB(0);
     setDefendersA(7);
     setDefendersB(7);
-    setIsSuperTackleOn(false);
     setTimeoutsA(2);
     setTimeoutsB(2);
-    setMatchSecondsRemaining(matchDurationSeconds);
-    setMatchSecondsElapsed(0);
+    setMatchSecondsRemaining(1200);
     setIsMatchClockRunning(false);
     setKhoTurn(1);
     setKhoInningSeconds(540);
@@ -940,9 +732,11 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
     setSetsWonB(0);
     setSetHistory([]);
     setTimeoutClock(null);
-    setTossWinner(null);
-    setTossDecision(null);
-    setTossResult(null);
+
+    // Reset Player Stats
+    setSquadA(prev => prev.map(p => ({ ...p, raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0 })));
+    setSquadB(prev => prev.map(p => ({ ...p, raidPoints: 0, tacklePoints: 0, bonusPoints: 0, totalPoints: 0, superRaids: 0, superTackles: 0 })));
+
     toast({ title: "सामना रिसेट झाला (Match Reset Completed)" });
   };
 
@@ -957,18 +751,41 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
   const houseAObj = SCHOOL_HOUSES.find(h => h.id === teamAHouse) || SCHOOL_HOUSES[0];
   const houseBObj = SCHOOL_HOUSES.find(h => h.id === teamBHouse) || SCHOOL_HOUSES[1];
 
+  // Top Raider & Top Defender computation
+  const allSquadPlayers = useMemo(() => [...squadA.map(p => ({ ...p, team: 'A', teamName: teamACustomName })), ...squadB.map(p => ({ ...p, team: 'B', teamName: teamBCustomName }))], [squadA, squadB, teamACustomName, teamBCustomName]);
+
+  const topRaider = useMemo(() => {
+    return [...allSquadPlayers].sort((a, b) => b.raidPoints - a.raidPoints)[0];
+  }, [allSquadPlayers]);
+
+  const topDefender = useMemo(() => {
+    return [...allSquadPlayers].sort((a, b) => b.tacklePoints - a.tacklePoints)[0];
+  }, [allSquadPlayers]);
+
+  const topScorer = useMemo(() => {
+    return [...allSquadPlayers].sort((a, b) => b.totalPoints - a.totalPoints)[0];
+  }, [allSquadPlayers]);
+
   // -------------------------------------------------------------
   // WHATSAPP SHARE GENERATOR
   // -------------------------------------------------------------
   const shareMatchOnWhatsApp = () => {
     const leaderText = scoreA > scoreB ? `${teamACustomName} आघाडीवर (+${scoreA - scoreB})` : scoreB > scoreA ? `${teamBCustomName} आघाडीवर (+${scoreB - scoreA})` : "सामना बरोबरीत (Tie)";
-    const text = `🏆 *शासकीय माध्यमिक आश्रम शाळा वाघंबा - क्रीडा निकाल* 🏆\n` +
+    
+    // Top Scorers text
+    const topScorersA = squadA.filter(p => p.totalPoints > 0).sort((a, b) => b.totalPoints - a.totalPoints).map(p => `• #${p.jerseyNumber} ${p.nameMarathi || p.name}: ${p.totalPoints} pts (R:${p.raidPoints}, T:${p.tacklePoints})`).join('\n');
+    const topScorersB = squadB.filter(p => p.totalPoints > 0).sort((a, b) => b.totalPoints - a.totalPoints).map(p => `• #${p.jerseyNumber} ${p.nameMarathi || p.name}: ${p.totalPoints} pts (R:${p.raidPoints}, T:${p.tacklePoints})`).join('\n');
+
+    const text = `🏆 *शासकीय माध्यमिक आश्रम शाळा वाघंबा - प्रो क्रीडा निकाल* 🏆\n` +
       `🏅 *खेळ:* ${sport}\n` +
       `⚔️ *सामना:* ${teamACustomName} vs ${teamBCustomName}\n` +
-      `📊 *गुणफलक (Score):*\n` +
-      `👉 ${teamACustomName}: ${scoreA} गुण\n` +
-      `👉 ${teamBCustomName}: ${scoreB} गुण\n` +
+      `📊 *अंतिम गुणफलक (Score):*\n` +
+      `👉 ${teamACustomName}: *${scoreA} गुण*\n` +
+      `👉 ${teamBCustomName}: *${scoreB} गुण*\n` +
       `🎯 *स्थिती:* ${leaderText}\n\n` +
+      (topScorer && topScorer.totalPoints > 0 ? `🌟 *सर्वोत्कृष्ट खेळाडू (Top Scorer):* #${topScorer.jerseyNumber} ${topScorer.nameMarathi || topScorer.name} (${topScorer.teamName}) - ${topScorer.totalPoints} गुण\n\n` : '') +
+      (topScorersA ? `🎖️ *${teamACustomName} खेळाडू गुण:*\n${topScorersA}\n\n` : '') +
+      (topScorersB ? `🎖️ *${teamBCustomName} खेळाडू गुण:*\n${topScorersB}\n\n` : '') +
       `📅 दिनांक: ${new Date().toLocaleDateString('mr-IN')}\n` +
       `📍 स्थळ: आश्रम शाळा वाघंबा क्रीडा संकुल`;
 
@@ -992,26 +809,57 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
       {/* ----------------- TOP CONTROLS BAR ----------------- */}
       <div className={cn("flex flex-wrap items-center justify-between gap-4 p-4 rounded-3xl border shadow-sm", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-sm">
             <Trophy className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className={cn("font-black text-lg uppercase tracking-tight", isFullscreen ? "text-white" : "text-primary")}>
-                {sport} लाईव्ह गुणफलक
+                {sport} प्रो लाईव्ह गुणफलक
               </h2>
               <Badge className="bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest animate-pulse">
-                LIVE ARENA
+                PKL PRO RULES
               </Badge>
             </div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              शासकीय माध्यमिक आश्रम शाळा वाघंबा &bull; Inter-House Championship
+              शासकीय माध्यमिक आश्रम शाळा वाघंबा &bull; Inter-House Pro Kabaddi League
             </p>
           </div>
         </div>
 
-        {/* Sport Selector & Action Buttons */}
+        {/* View Switcher & Actions */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Navigation Tabs */}
+          <div className="flex bg-muted/60 p-1 rounded-xl border">
+            <button
+              onClick={() => setActiveTab('arena')}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
+                activeTab === 'arena' ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              🏟️ लाईव्ह कोर्ट (Arena)
+            </button>
+            <button
+              onClick={() => setActiveTab('player_stats')}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
+                activeTab === 'player_stats' ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              📊 खेळाडू गुणफलक (Player Stats)
+            </button>
+            <button
+              onClick={() => setActiveTab('squad_setup')}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
+                activeTab === 'squad_setup' ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              👥 संघ रचना (Squad)
+            </button>
+          </div>
+
           <div className="flex bg-muted/60 p-1 rounded-xl border">
             {['Kabaddi', 'Kho Kho', 'Volleyball', 'General'].map(s => (
               <button
@@ -1021,8 +869,8 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
                   resetRaidClock();
                 }}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
-                  sport === s ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                  "px-2.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
+                  sport === s ? "bg-amber-500 text-slate-950 shadow-md font-extrabold" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {s}
@@ -1038,132 +886,6 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             title={soundMuted ? "Unmute Sound" : "Mute Sound"}
           >
             {soundMuted ? <VolumeX className="w-4 h-4 text-red-500" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
-          </Button>
-
-          {/* Marathi Voice Announcer Toggle */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setVoiceAnnounceEnabled(!voiceAnnounceEnabled);
-              toast({
-                title: !voiceAnnounceEnabled ? "🎙️ मराठी समालोचन चालू (Voice ON)" : "🎙️ मराठी समालोचन बंद (Voice OFF)",
-                description: !voiceAnnounceEnabled 
-                  ? "डू ऑर डाय रेड, ३-मिनिट गुणफलक आणि शेवटच्या मिनिटाची उद्घोषणा चालू केली." 
-                  : "मराठी समालोचन आवाज बंद करण्यात आला आहे."
-              });
-            }}
-            className={cn(
-              "rounded-xl h-9 px-3 text-xs font-bold transition-all border",
-              voiceAnnounceEnabled ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40" : "text-slate-400 border-slate-200"
-            )}
-            title={voiceAnnounceEnabled ? "Mute Marathi Announcer" : "Turn ON Marathi Announcer"}
-          >
-            {voiceAnnounceEnabled ? <Mic className="w-4 h-4 mr-1 text-amber-600" /> : <MicOff className="w-4 h-4 mr-1 text-slate-400" />}
-            {voiceAnnounceEnabled ? "मराठी आवाज" : "आवाज बंद"}
-          </Button>
-
-          {/* Match Toss (नाणेफेक) Button */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsTossOpen(true)}
-            className="rounded-xl h-9 px-3 text-xs font-black text-amber-900 bg-amber-100 hover:bg-amber-200 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 shadow-sm"
-            title="लाईव्ह नाणेफेक करा (Perform Match Toss)"
-          >
-            <Coins className="w-4 h-4 mr-1.5 text-amber-600 animate-bounce" />
-            {tossWinner ? "🪙 नाणेफेक निकाल" : "🪙 नाणेफेक (Toss)"}
-          </Button>
-
-          {/* Quick Speak Current Score */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              marathiAnnouncer.announcePeriodicScore(teamACustomName, scoreA, teamBCustomName, scoreB);
-              const diff = Math.abs(scoreA - scoreB);
-              const leadText = scoreA > scoreB
-                ? `${teamACustomName} ${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
-                : scoreB > scoreA
-                  ? `${teamBCustomName} ${diff} (${getMarathiNumberWord(diff)}) गुणांनी आघाडीवर`
-                  : 'दोन्ही संघ बरोबरीत';
-              toast({
-                title: "🎙️ गुणफलक उद्घोषणा (Score Announcement)",
-                description: `${teamACustomName}: ${scoreA} | ${teamBCustomName}: ${scoreB} • ${leadText}`,
-                className: "bg-blue-900 text-amber-300 font-bold border-2 border-amber-400 shadow-xl"
-              });
-            }}
-            className="rounded-xl h-9 px-2.5 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
-            title="सध्याचा गुणफलक व आघाडी मराठीत ऐका (Speak Score & Lead)"
-          >
-            📢 गुण बोला
-          </Button>
-
-          {/* Quick Super Tackle Button */}
-          {sport === 'Kabaddi' && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={toggleSuperTackle}
-              className={cn(
-                "rounded-xl h-9 px-2.5 text-xs font-black shadow-sm flex items-center gap-1 active:scale-95 transition-all",
-                isSuperTackleOn
-                  ? "bg-purple-700 hover:bg-purple-800 text-amber-300 border-amber-400 ring-2 ring-amber-400/50 animate-pulse"
-                  : "text-purple-700 bg-purple-50 border-purple-300 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-700"
-              )}
-              title="सुपर टॅकल ऑन करा आणि मराठीत उद्घोषणा ऐका (Toggle Super Tackle & Announce)"
-            >
-              <Zap className={cn("w-3.5 h-3.5", isSuperTackleOn ? "text-amber-300 fill-amber-300" : "text-amber-500 fill-amber-500")} />
-              {isSuperTackleOn ? "🛡️ सुपर टॅकल ऑन आहे" : "⚡ सुपर टॅकल ऑन"}
-            </Button>
-          )}
-
-          {/* Quick 3rd Raid (Do-or-Die) Button */}
-          {sport === 'Kabaddi' && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => toggleThirdRaid(raidingTeam)}
-              className={cn(
-                "rounded-xl h-9 px-2.5 text-xs font-black shadow-sm flex items-center gap-1 active:scale-95 transition-all",
-                isDoOrDieRaid
-                  ? "bg-red-600 hover:bg-red-700 text-white border-amber-300 ring-2 ring-amber-400/50 animate-pulse"
-                  : "text-red-700 bg-red-50 border-red-300 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:border-red-700"
-              )}
-              title="३ री रेड (डू ऑर डाय) सक्रिय करा आणि मराठीत उद्घोषणा ऐका (Toggle 3rd Raid & Announce)"
-            >
-              <Flame className={cn("w-3.5 h-3.5", isDoOrDieRaid ? "text-amber-300 fill-amber-300" : "text-red-500 fill-red-500")} />
-              {isDoOrDieRaid ? "🔥 ३ री रेड चालू" : "⚡ ३ री रेड (Do-or-Die)"}
-            </Button>
-          )}
-
-          {/* End Match & Announce Winner Option */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={triggerMatchConclusion}
-            className="rounded-xl h-9 px-2.5 text-xs font-black text-amber-900 bg-amber-200 hover:bg-amber-300 border-amber-400 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 shadow-sm flex items-center gap-1 active:scale-95"
-            title="दोन्ही हाफ संपवून निकाल मराठीत जाहीर करा (End Match & Announce Winner in Marathi)"
-          >
-            <Trophy className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-            🏆 निकाल जाहीर
-          </Button>
-
-          {/* Upload Victory Music Button */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsMusicUploadOpen(true)}
-            className={cn(
-              "rounded-xl h-9 px-2.5 text-xs font-black transition-all border flex items-center gap-1 active:scale-95",
-              uploadedMusicUrl 
-                ? "bg-emerald-50 text-emerald-800 border-emerald-400 dark:bg-emerald-950/40" 
-                : "text-slate-600 bg-white border-slate-300 dark:bg-slate-800 dark:text-slate-200"
-            )}
-            title="विजयी झाल्यानंतर वाजणारे संगीत अपलोड करा (Upload Victory Music)"
-          >
-            <Music className="w-3.5 h-3.5 text-pink-500" />
-            {uploadedMusicName ? "🎵 संगीत लोड ✓" : "🎵 विजयी संगीत"}
           </Button>
 
           <Button
@@ -1190,7 +912,7 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
             className="rounded-xl h-9 px-3 text-xs font-bold bg-primary text-white"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4 mr-1.5" /> : <Maximize2 className="w-4 h-4 mr-1.5" />}
-            {isFullscreen ? "सामान्य स्क्रीन" : "स्टेडियम स्क्रीन"}
+            {isFullscreen ? "सामान्य" : "स्टेडियम स्क्रीन"}
           </Button>
         </div>
       </div>
@@ -1220,1826 +942,866 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
         </div>
       )}
 
-      {/* ----------------- DIGITAL SCOREBOARD ARENA ----------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        
-        {/* ================= TEAM A CARD ================= */}
-        <Card className={cn(
-          "lg:col-span-4 p-6 rounded-[2.5rem] border-2 transition-all flex flex-col justify-between relative overflow-hidden shadow-xl",
-          isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200",
-          sport === 'Kabaddi' && raidingTeam === 'A' && "ring-4 ring-orange-500 shadow-orange-500/20"
-        )}>
-          {/* Top Bar: House Selector */}
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <div className="flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded-full", houseAObj.bg)} />
-                <select
-                  value={teamAHouse}
-                  onChange={(e) => setTeamAHouse(e.target.value)}
-                  className="bg-muted/40 font-black text-xs uppercase rounded-xl px-2.5 py-1.5 border border-muted focus:outline-none text-foreground"
-                >
-                  {SCHOOL_HOUSES.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-                </select>
-              </div>
-
-              {sport === 'Kabaddi' && (
-                raidingTeam === 'A' ? (
-                  <Badge className="bg-red-600 text-white font-black text-xs uppercase tracking-wider animate-pulse flex items-center gap-1.5 px-3 py-1 shadow-md ring-2 ring-red-400">
-                    <Flame className="w-3.5 h-3.5 fill-amber-300 text-amber-300 animate-bounce" /> 🔥 रेड सुरू (RAIDING)
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-slate-500 font-bold text-[10px] uppercase border-slate-300">
-                    🛡️ डिफेन्स (Defending)
-                  </Badge>
-                )
-              )}
-            </div>
-
-            <Input 
-              value={teamACustomName}
-              onChange={(e) => setTeamACustomName(e.target.value)}
-              className="font-black text-xl md:text-2xl uppercase tracking-tight border-dashed border-2 rounded-2xl mb-4 text-center bg-transparent"
-              placeholder="Team A Name"
-            />
-
-            {/* BIG SCORE DISPLAY */}
-            <div className="text-center py-4 my-2 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
-              <div className="text-7xl md:text-8xl font-black font-mono tracking-tighter text-primary dark:text-amber-400 select-none">
-                {scoreA}
-              </div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mt-1">
-                एकूण गुण (Total Points)
-              </p>
-            </div>
-
-            {/* Tactical Badges for Kabaddi */}
-            {sport === 'Kabaddi' && (
-              <div className="grid grid-cols-2 gap-2 mt-4 text-center">
-                <div className={cn(
-                  "p-2.5 rounded-2xl border text-xs flex flex-col justify-between transition-all",
-                  (isSuperTackleOn && defendingTeam === 'A')
-                    ? "bg-purple-50 border-purple-400 dark:bg-purple-950/40 dark:border-purple-800 ring-2 ring-purple-500/30 shadow-sm" 
-                    : "bg-muted/40 border-muted"
-                )}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
-                    {isSuperTackleOn && defendingTeam === 'A' ? (
-                      <Badge className="bg-purple-700 text-amber-300 font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
-                        ⚡ सुपर टॅकल ऑन
-                      </Badge>
-                    ) : defendingTeam === 'A' ? (
-                      <button
-                        type="button"
-                        onClick={toggleSuperTackle}
-                        className="text-[8px] font-black text-purple-700 dark:text-purple-400 hover:underline uppercase"
-                        title="सुपर टॅकल ऑन करा"
-                      >
-                        + सुपर टॅकल
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 my-1">
-                    <button
-                      type="button"
-                      onClick={() => setDefendersA(p => Math.max(1, p - 1))}
-                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
-                      title="१ खेळाडू कमी करा (-1 Defender)"
-                    >
-                      -
-                    </button>
-                    <p className={cn(
-                      "text-xl font-black font-mono select-none",
-                      (isSuperTackleOn && defendingTeam === 'A') ? "text-purple-700 dark:text-purple-300" : "text-primary"
-                    )}>
-                      {defendersA} <span className="text-xs font-normal text-muted-foreground">/ 7</span>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setDefendersA(p => Math.min(7, p + 1))}
-                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
-                      title="१ खेळाडू वाढवा (+1 Defender)"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="text-[8px] text-center font-bold">
-                    {isSuperTackleOn && defendingTeam === 'A' ? (
-                      <button
-                        type="button"
-                        onClick={toggleSuperTackle}
-                        className="text-purple-700 dark:text-purple-300 hover:underline"
-                        title="सुपर टॅकल बंद करा"
-                      >
-                        🛡️ सुपर टॅकल ऑन (२ गुण)
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={toggleSuperTackle}
-                        className="text-muted-foreground hover:text-purple-700 transition-colors"
-                        title="सुपर टॅकल ऑन करा आणि आवाज ऐका"
-                      >
-                        सामान्य डिफेन्स &bull; <span className="text-purple-600 font-extrabold underline">सुपर टॅकल ऑन</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className={cn(
-                  "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
-                  emptyRaidsA === 2 ? "bg-red-50 border-red-400 dark:bg-red-950/40 dark:border-red-800 ring-2 ring-red-500/40" : "bg-muted/40 border-muted"
-                )}>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">रेड स्थिती (Raid Track)</p>
-                    {emptyRaidsA === 2 && (
-                      <Badge className="bg-red-600 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1.5 py-0">
-                        ⚡ DO-OR-DIE
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Pro Kabaddi Style 3-Raid Tracker */}
-                  <div className="flex items-center justify-center gap-1.5 my-1">
-                    <button
-                      type="button"
-                      onClick={() => setEmptyRaidsA(prev => prev === 1 ? 0 : 1)}
-                      className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
-                        emptyRaidsA >= 1 
-                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
-                      )}
-                      title="रेड १ रिकामी (Click to toggle)"
-                    >
-                      १
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEmptyRaidsA(prev => prev === 2 ? 1 : 2)}
-                      className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
-                        emptyRaidsA >= 2 
-                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
-                      )}
-                      title="रेड २ रिकामी (Click to toggle)"
-                    >
-                      २
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = emptyRaidsA === 2 ? 0 : 2;
-                        setEmptyRaidsA(next);
-                        if (next === 2) {
-                          marathiAnnouncer.announceDoOrDieRaid();
-                          toast({
-                            title: "⚡ Third Raid: Do or Die Raid!",
-                            description: "Third raid, do or die raid!",
-                            className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-xl"
-                          });
-                        }
-                      }}
-                      className={cn(
-                        "px-2 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all active-scale",
-                        emptyRaidsA === 2 
-                          ? "bg-red-600 text-white animate-pulse shadow-md ring-2 ring-red-400 font-extrabold" 
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
-                      )}
-                      title="३ री रेड: डू ऑर डाय (Click to trigger & announce in Marathi)"
-                    >
-                      ⚡ ३: DO-OR-DIE
-                    </button>
-                  </div>
-                  <p className="text-[8px] text-center text-muted-foreground font-bold">
-                    {emptyRaidsA === 0 ? "दोन्ही रेड सुरक्षित" : emptyRaidsA === 1 ? "१ रिकामी रेड झाली" : "⚠️ ३ री रेड डू ऑर डाय!"}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Kho-Kho Inning Summary */}
-            {sport === 'Kho Kho' && (
-              <div className="mt-4 p-3 rounded-2xl bg-muted/40 border text-center">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">सध्याची स्थिती (Status)</p>
-                <p className="text-sm font-black text-primary">
-                  {chasingTeam === 'A' ? "🏃‍♂️ चेसर संघ (Chasing)" : "🛡️ धावपटू तुकडी (Defenders Running)"}
-                </p>
-              </div>
-            )}
-
-            {/* Volleyball Sets Won */}
-            {sport === 'Volleyball' && (
-              <div className="mt-4 p-3 rounded-2xl bg-muted/40 border text-center flex items-center justify-around">
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">जिंकलेले सेट (Sets)</p>
-                  <p className="text-2xl font-black text-primary">{setsWonA}</p>
-                </div>
-                {servingTeam === 'A' && (
-                  <Badge className="bg-blue-600 text-white font-black text-[10px]">
-                    सर्व्हिस (Serving 🏐)
-                  </Badge>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* POINT BUTTONS KEYPAD */}
-          <div className="space-y-2 pt-4 mt-4 border-t">
-            <div className="grid grid-cols-3 gap-2">
-              <Button 
-                onClick={() => addScore('A', 1, sport === 'Kabaddi' ? 'Touch Point' : 'Point')}
-                className="h-12 font-black text-sm rounded-xl bg-primary hover:bg-primary/90 text-white shadow-md active:scale-95"
-              >
-                +1 गुण
-              </Button>
-              <Button 
-                onClick={() => addScore('A', 2, sport === 'Kabaddi' ? '2 Raid Points' : '+2 Points')}
-                className="h-12 font-black text-sm rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
-              >
-                +2 गुण
-              </Button>
-              <Button 
-                onClick={() => addScore('A', 3, 'Super Raid (+3)')}
-                className="h-12 font-black text-xs rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-95"
-              >
-                सुपर रेड +3
-              </Button>
-            </div>
-
-            {sport === 'Kabaddi' && (
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  onClick={() => addScore('A', 1, 'Bonus Point')}
-                  variant="outline"
-                  className="h-10 font-bold text-xs rounded-xl border-amber-500/40 text-amber-700 hover:bg-amber-50"
-                >
-                  बोनस +1
-                </Button>
-                <Button 
-                  onClick={() => addScore('A', 2, 'Super Tackle (+2)')}
-                  variant="outline"
-                  className="h-10 font-bold text-xs rounded-xl border-purple-500/40 text-purple-700 hover:bg-purple-50"
-                >
-                  सुपर टॅकल +2
-                </Button>
-                <Button 
-                  onClick={() => addScore('A', 2, 'All-Out')}
-                  variant="outline"
-                  className="h-10 font-bold text-xs rounded-xl border-red-500/40 text-red-700 hover:bg-red-50"
-                >
-                  ऑल-आउट +2
-                </Button>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => triggerTimeout('A')}
-                disabled={timeoutsA <= 0}
-                className="text-[11px] font-bold text-muted-foreground hover:text-foreground"
-              >
-                ⏱️ टाइम-आऊट ({timeoutsA} बाकी)
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setRaidingTeam('A')}
-                className="text-[11px] font-bold text-orange-600 hover:text-orange-700"
-              >
-                रेडर बनवा (Set Raider)
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-
-        {/* ================= CENTER MATCH ARENA & TIMERS ================= */}
-        <div className="lg:col-span-4 flex flex-col justify-between gap-4">
-          
-          {/* LIVE SCORE LEAD & STATUS BANNER */}
-          {scoreA !== scoreB ? (
-            <div className={cn(
-              "py-2 px-3.5 rounded-2xl text-center text-xs font-black uppercase tracking-wider flex items-center justify-between border shadow-sm",
-              scoreA > scoreB 
-                ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900" 
-                : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900"
-            )}>
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0" />
-                <span className="truncate">{scoreA > scoreB ? teamACustomName : teamBCustomName} आघाडीवर!</span>
-              </div>
-              <Badge className={cn("text-[10px] font-black shrink-0", scoreA > scoreB ? "bg-red-600 text-white" : "bg-blue-600 text-white")}>
-                +{Math.abs(scoreA - scoreB)} गुण आघाडी (+{getMarathiNumberWord(Math.abs(scoreA - scoreB))})
-              </Badge>
-            </div>
-          ) : (
-            <div className="py-1.5 px-3 rounded-2xl text-center text-[11px] font-bold text-muted-foreground bg-muted/40 border flex items-center justify-center gap-2">
-              <span>दोन्ही संघ बरोबरीत (Level: {scoreA} - {scoreB})</span>
-            </div>
-          )}
-
-          {/* TOSS RESULT STATUS BANNER */}
-          {tossWinner && tossDecision ? (
-            <div className="bg-amber-500/15 border border-amber-500/30 rounded-2xl px-3.5 py-2 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Coins className="w-4 h-4 text-amber-600 shrink-0" />
-                <div className="text-left">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">नाणेफेक निकाल (Toss Result)</p>
-                  <p className="font-black text-amber-800 dark:text-amber-200 text-xs">
-                    {tossWinner === 'A' ? teamACustomName : teamBCustomName} ने जिंकून {
-                      tossDecision === 'raid' ? 'पहिली चढाई' :
-                      tossDecision === 'court' ? 'मैदानाची बाजू' :
-                      tossDecision === 'chase' ? 'पहिली चेसिंग' :
-                      tossDecision === 'run' ? 'डिफेन्स' : 'पहिली सर्व्हिस'
-                    } निवडली
-                  </p>
-                </div>
-              </div>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={() => setIsTossOpen(true)} 
-                className="h-7 text-[10px] px-2 font-black text-amber-800 dark:text-amber-300 hover:bg-amber-200/50 rounded-xl"
-              >
-                बदला
-              </Button>
-            </div>
-          ) : (
-            <div className="bg-amber-50 dark:bg-amber-950/30 border border-dashed border-amber-300/80 rounded-2xl px-3.5 py-2 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
-                <Coins className="w-4 h-4 text-amber-600 animate-bounce shrink-0" />
-                <span className="font-bold text-[11px]">नाणेफेक अद्याप झालेली नाही</span>
-              </div>
-              <Button 
-                size="sm" 
-                onClick={() => setIsTossOpen(true)} 
-                className="h-7 text-[10px] px-3 font-black bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl shadow-sm"
-              >
-                🪙 नाणेफेक करा (Toss Now)
-              </Button>
-            </div>
-          )}
-
-          {/* MATCH HALF / ROUND CLOCK */}
-          <Card className={cn("p-5 sm:p-6 rounded-[2.5rem] border-2 text-center shadow-lg relative", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
-            <div className="flex items-center justify-between mb-2">
-              <Badge variant="outline" className="font-bold text-[10px] uppercase">
-                {sport === 'Kabaddi' ? `हाफ ${matchHalf}` : sport === 'Kho Kho' ? `टर्न ${khoTurn}/4` : `सेट ${volleySet}`}
-              </Badge>
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                सामना वेळ (Match Clock)
-              </span>
-              <div className="flex items-center gap-1">
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  onClick={() => setIsTimeEditOpen(true)}
-                  className="h-6 text-[10px] font-bold px-2 text-primary hover:bg-primary/10 rounded-lg"
-                  title="सामन्याची वेळ बदला / सेट करा (Edit Match Time)"
-                >
-                  ⏱️ वेळ बदला
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  onClick={() => {
-                    if (sport === 'Kabaddi') setMatchHalf(h => h === 1 ? 2 : 1);
-                    else if (sport === 'Kho Kho') setKhoTurn(t => (t % 4) + 1);
-                  }}
-                  className="h-6 text-[10px] font-bold px-2"
-                >
-                  हाफ बदला
-                </Button>
-              </div>
-            </div>
-
-            {/* Time display with direct click to edit & quick +/- 1 min buttons */}
-            <div className="flex items-center justify-center gap-3 py-1">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => adjustMatchTime(-60)}
-                disabled={matchSecondsRemaining < 60}
-                className="h-8 px-2.5 rounded-xl text-[11px] font-black border-slate-300 dark:border-slate-700 active:scale-95"
-                title="-१ मिनिट कमी करा (-1 Min)"
-              >
-                -1m
-              </Button>
-
-              <button
-                type="button"
-                onClick={() => setIsTimeEditOpen(true)}
-                className="text-5xl font-black font-mono tracking-tighter text-slate-800 dark:text-slate-100 hover:text-primary transition-colors cursor-pointer select-none group flex items-center gap-1.5"
-                title="वेळ बदलण्यासाठी क्लिक करा (Click to Edit Match Duration)"
-              >
-                <span>{formatTime(matchSecondsRemaining)}</span>
-                <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary uppercase tracking-widest block font-sans">
-                  ✏️
-                </span>
-              </button>
-
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => adjustMatchTime(60)}
-                className="h-8 px-2.5 rounded-xl text-[11px] font-black border-slate-300 dark:border-slate-700 active:scale-95"
-                title="+१ मिनिट वाढवा (+1 Min)"
-              >
-                +1m
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-bold mb-3">
-              <span>एकूण वेळ: {Math.floor(matchDurationSeconds / 60)} मिनिटे {matchDurationSeconds % 60 > 0 ? `${matchDurationSeconds % 60}s` : ''}</span>
-              <span>&bull;</span>
-              <button 
-                type="button" 
-                onClick={() => setIsTimeEditOpen(true)}
-                className="text-primary hover:underline font-extrabold cursor-pointer"
-              >
-                वेळ बदला (Change)
-              </button>
-            </div>
-
-            <div className="flex items-center justify-center gap-2">
-              <Button
-                size="sm"
-                onClick={() => setIsMatchClockRunning(!isMatchClockRunning)}
-                className={cn(
-                  "rounded-xl h-10 px-5 font-black text-xs tracking-wider shadow-sm",
-                  isMatchClockRunning ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                )}
-              >
-                {isMatchClockRunning ? <Pause className="w-4 h-4 mr-1.5" /> : <Play className="w-4 h-4 mr-1.5" />}
-                {isMatchClockRunning ? "थांबवा (Pause)" : "सुरू करा (Start Clock)"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setIsMatchClockRunning(false);
-                  setMatchSecondsRemaining(matchDurationSeconds);
-                }}
-                className="rounded-xl h-10 px-3 font-bold text-xs"
-                title={`वेळ रिसेट करा (${Math.floor(matchDurationSeconds / 60)} मिनिटे)`}
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Half Management Actions */}
-            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-              {matchHalf === 1 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    size="sm"
-                    onClick={handleHalfTime}
-                    className="rounded-xl h-10 font-black text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md active:scale-95 flex items-center justify-center gap-1"
-                    title="पहिला हाफ संपवून मध्यंतर करा (End 1st Half / Half Time)"
-                  >
-                    <Clock className="w-3.5 h-3.5" /> ⏸️ १ ला हाफ संपवा
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={triggerMatchConclusion}
-                    className="rounded-xl h-10 font-black text-xs bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-95 flex items-center justify-center gap-1"
-                    title="सामना संपवून निकाल जाहीर करा (Finish Match Directly)"
-                  >
-                    <Trophy className="w-3.5 h-3.5" /> 🏁 सामना संपवा
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={triggerMatchConclusion}
-                  className="w-full rounded-xl h-10 font-black text-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md active:scale-95 flex items-center justify-center gap-1.5"
-                  title="सामना संपवून दोन्ही हाफचा निकाल मराठीत जाहीर करा (End Match & Announce Winner)"
-                >
-                  <Trophy className="w-4 h-4 text-white" /> 🏁 दोन्ही हाफ पूर्ण - निकाल जाहीर करा
-                </Button>
-              )}
-            </div>
-          </Card>
-
-          {/* ---------------- 30-SEC RAID CLOCK / INNING CLOCK ---------------- */}
-          {sport === 'Kabaddi' && (
-            <Card className={cn(
-              "p-5 sm:p-6 rounded-[2.5rem] border-4 text-center shadow-2xl relative overflow-hidden transition-all",
-              isDoOrDieRaid 
-                ? "border-red-600 bg-red-950/20 ring-4 ring-red-500/60 shadow-[0_0_40px_rgba(220,38,38,0.4)]" 
-                : raidSeconds <= 5 
-                  ? "border-red-600 bg-red-950/20" 
-                  : raidSeconds <= 10 
-                    ? "border-amber-500 bg-amber-950/10" 
-                    : "border-primary/20",
-              isFullscreen ? "bg-slate-900 text-white" : "bg-white"
-            )}>
-              {/* DO OR DIE RAID ALERT BANNER */}
-              {isDoOrDieRaid && (
-                <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white py-2 px-3 rounded-2xl mb-3 flex items-center justify-between shadow-lg border border-amber-300/40 animate-pulse">
-                  <div className="flex items-center gap-2 text-left">
-                    <Zap className="w-5 h-5 text-amber-300 fill-amber-300 animate-bounce shrink-0" />
-                    <div>
-                      <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-200">
-                        ⚡ डू ऑर डाय रेड (DO OR DIE RAID) ⚡
-                      </p>
-                      <p className="text-[9px] font-bold text-white/90">
-                        २ रिकाम्या रेडनंतर ही ३ री रेड आहे &bull; गुण मिळवणे अनिवार्य!
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        marathiAnnouncer.announceDoOrDieRaid();
-                      }}
-                      className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale flex items-center gap-1"
-                      title="Speak 'Third raid, do or die raid'"
-                    >
-                      <Mic className="w-3 h-3" /> ३ री रेड बोला
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => sfx.playDoOrDie()}
-                      className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale"
-                      title="डू ऑर डाय सायरन वाजवा (Sound Siren)"
-                    >
-                      🚨 सायरन
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* SUPER TACKLE ALERT BANNER */}
-              {isSuperTackleOn && (
-                <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 text-white py-2 px-3 rounded-2xl mb-3 flex items-center justify-between shadow-lg border border-purple-300/40 animate-pulse">
-                  <div className="flex items-center gap-2 text-left">
-                    <ShieldAlert className="w-5 h-5 text-amber-300 fill-amber-300 animate-bounce shrink-0" />
-                    <div>
-                      <p className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-200">
-                        🛡️ सुपर टॅकल ऑन ({defendingTeamName})
-                      </p>
-                      <p className="text-[9px] font-bold text-white/90">
-                        डिफेन्समध्ये {defendingDefenders} खेळाडू &bull; यशस्वी पकडीस +२ गुण!
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      size="sm"
-                      onClick={announceSuperTackleNow}
-                      className="h-7 px-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-[10px] uppercase border border-amber-400/40 shadow shrink-0 active-scale flex items-center gap-1"
-                      title="मराठीत सुपर टॅकल उद्घोषणा करा (Speak Super Tackle in Marathi)"
-                    >
-                      <Mic className="w-3 h-3" /> पुन्हा बोला
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        addScore(defendingTeam, 2, 'Super Tackle (+2)');
-                        sfx.playWhistle();
-                        setIsSuperTackleOn(false);
-                        toast({
-                          title: "🛡️ सुपर टॅकल यशस्वी! (+२ गुण)",
-                          description: `${defendingTeamName} ने यशस्वी सुपर टॅकल करून २ गुण मिळवले!`,
-                          className: "bg-purple-700 text-white font-black"
-                        });
-                      }}
-                      className="h-7 px-2 rounded-xl bg-purple-900 hover:bg-purple-950 text-white font-black text-[10px] uppercase border border-purple-400 shadow shrink-0 active-scale"
-                      title="सुपर टॅकल यशस्वी: डिफेन्सला +२ गुण द्या"
-                    >
-                      +२ गुण
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setIsSuperTackleOn(false)}
-                      className="h-7 px-1.5 text-[10px] text-white/80 hover:text-white hover:bg-purple-800"
-                      title="सुपर टॅकल बंद करा"
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between mb-1">
-                <span className={cn(
-                  "text-[10px] font-black uppercase tracking-widest flex items-center gap-1",
-                  isDoOrDieRaid ? "text-red-600 animate-pulse font-extrabold" : "text-orange-600"
-                )}>
-                  <Flame className="w-3.5 h-3.5" /> {isDoOrDieRaid ? "⚡ ३ री रेड: डू ऑर डाय" : "३० सेकंद प्रो रेडर घड्याळ"}
-                </span>
-                <div className="flex items-center gap-2">
-                  {!isSuperTackleOn && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={toggleSuperTackle}
-                      className="h-6 px-2 text-[9px] font-black rounded-lg text-purple-700 bg-purple-50 hover:bg-purple-100 border-purple-300 shadow-xs flex items-center gap-1"
-                      title="सुपर टॅकल ऑन करा आणि आवाज ऐका"
-                    >
-                      <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                      ⚡ सुपर टॅकल ऑन
-                    </Button>
-                  )}
-                  <span className={cn(
-                    "text-[10px] font-bold",
-                    isDoOrDieRaid ? "text-red-600 font-black" : "text-muted-foreground"
-                  )}>
-                    {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड {isDoOrDieRaid && "(डू ऑर डाय)"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Interactive Raid Turn Selector */}
-              <div className="grid grid-cols-2 gap-2 my-2 p-1.5 rounded-2xl bg-muted/60 border">
-                <button
-                  type="button"
-                  onClick={() => resetRaidClock('A')}
-                  className={cn(
-                    "py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm",
-                    raidingTeam === 'A'
-                      ? "bg-red-600 text-white shadow-md ring-2 ring-red-400"
-                      : "bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-white"
-                  )}
-                >
-                  <Flame className={cn("w-3.5 h-3.5", raidingTeam === 'A' ? "text-amber-300 animate-bounce" : "text-muted-foreground")} />
-                  <span className="truncate">🔴 {teamACustomName} ची रेड</span>
-                  {raidingTeam === 'A' && <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full shrink-0">सुरू</span>}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => resetRaidClock('B')}
-                  className={cn(
-                    "py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm",
-                    raidingTeam === 'B'
-                      ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400"
-                      : "bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-white"
-                  )}
-                >
-                  <Flame className={cn("w-3.5 h-3.5", raidingTeam === 'B' ? "text-amber-300 animate-bounce" : "text-muted-foreground")} />
-                  <span className="truncate">🔵 {teamBCustomName} ची रेड</span>
-                  {raidingTeam === 'B' && <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full shrink-0">सुरू</span>}
-                </button>
-              </div>
-
-              {/* HUGE DIGITAL DIGITS */}
-              <div className={cn(
-                "text-8xl md:text-9xl font-black font-mono tracking-tighter select-none my-2 transition-colors",
-                isDoOrDieRaid 
-                  ? "text-red-600 animate-pulse" 
-                  : raidSeconds <= 5 
-                    ? "text-red-600 animate-pulse" 
-                    : raidSeconds <= 10 
-                      ? "text-amber-500" 
-                      : "text-primary dark:text-emerald-400"
-              )}>
-                {raidSeconds.toString().padStart(2, '0')}
-              </div>
-
-              {/* DO-OR-DIE QUICK ACTION BUTTONS */}
-              {isDoOrDieRaid && (
-                <div className="grid grid-cols-2 gap-2 my-2">
-                  <Button
-                    onClick={() => {
-                      addScore(raidingTeam, 1, 'Do-Or-Die Touch');
-                      toast({
-                        title: "🎉 डू ऑर डाय यशस्वी! (Success!)",
-                        description: `${raidingTeam === 'A' ? teamACustomName : teamBCustomName} ने डू ऑर डाय रेडमध्ये गुण मिळवला!`,
-                        className: "bg-emerald-600 text-white font-bold"
-                      });
-                    }}
-                    className="h-11 rounded-xl font-black text-xs uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active-scale flex items-center justify-center gap-1"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> ✅ डू ऑर डाय गुण (+१)
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      const defTeam = raidingTeam === 'A' ? 'B' : 'A';
-                      sfx.playWhistle();
-                      addScore(defTeam, 1, 'Do-Or-Die Out');
-                      if (raidingTeam === 'A') setEmptyRaidsA(0);
-                      else setEmptyRaidsB(0);
-                      toast({
-                        title: "💀 डू ऑर डाय अयशस्वी! (Raider Out)",
-                        description: `${raidingTeam === 'A' ? teamACustomName : teamBCustomName} चा रेडर बाद! विपक्षी संघाला +१ गुण.`,
-                        variant: "destructive"
-                      });
-                    }}
-                    className="h-11 rounded-xl font-black text-xs uppercase bg-red-600 hover:bg-red-700 text-white shadow-md active-scale flex items-center justify-center gap-1"
-                  >
-                    <ShieldAlert className="w-4 h-4" /> ❌ रेडर बाद (विपक्षी +१)
-                  </Button>
-                </div>
-              )}
-
-              {/* RAID CONTROL BUTTONS */}
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <Button
-                  onClick={isRaidRunning ? pauseRaidClock : startRaidClock}
-                  className={cn(
-                    "h-14 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-lg active-scale",
-                    isRaidRunning 
-                      ? "bg-amber-600 hover:bg-amber-700" 
-                      : isDoOrDieRaid 
-                        ? "bg-red-600 hover:bg-red-700 animate-pulse" 
-                        : "bg-emerald-600 hover:bg-emerald-700"
-                  )}
-                >
-                  {isRaidRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                  {isRaidRunning ? "थांबवा" : isDoOrDieRaid ? "⚡ रेड सुरू (Do-or-Die)" : "रेड सुरू"}
-                </Button>
-
-                <Button
-                  onClick={() => resetRaidClock(raidingTeam === 'A' ? 'B' : 'A')}
-                  className="h-14 rounded-2xl font-black text-xs uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-lg active-scale"
-                >
-                  <RotateCcw className="w-4 h-4 mr-1" /> ३०s रिसेट
-                </Button>
-
-                <Button
-                  onClick={handleEmptyRaid}
-                  variant="outline"
-                  className={cn(
-                    "h-14 rounded-2xl font-black text-[11px] uppercase tracking-wider border hover:bg-muted active-scale",
-                    isDoOrDieRaid ? "border-red-500 text-red-600 bg-red-50 dark:bg-red-950/40" : "border-slate-300 dark:border-slate-700"
-                  )}
-                >
-                  {isDoOrDieRaid ? "डू ऑर डाय बाद (Empty)" : "रिकामी रेड (Empty)"}
-                </Button>
-              </div>
-
-              {/* Sound Effect Test Triggers */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-3 pt-3 border-t">
-                <Button size="sm" variant="ghost" onClick={() => sfx.playWhistle()} className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">
-                  🔊 शिट्टी (Whistle)
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => sfx.playBuzzer()} className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">
-                  📢 बजर (Buzzer)
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => sfx.playDoOrDie()} className="h-7 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50">
-                  ⚡ सायरन (Do-or-Die Siren)
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => toggleThirdRaid(raidingTeam)}
-                  className={cn(
-                    "h-7 text-[10px] font-black rounded-xl border transition-all",
-                    isDoOrDieRaid ? "bg-red-600 text-white hover:bg-red-700 border-red-600" : "text-amber-700 border-amber-400 hover:bg-amber-50"
-                  )}
-                  title="३ री रेड (डू-ऑर-डाय) सुरू / बंद करा आणि मराठीत उद्घोषणा ऐका"
-                >
-                  {isDoOrDieRaid ? "✕ Do-or-Die बंद" : "⚡ ३ री रेड (Do-or-Die) बोला"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={toggleSuperTackle}
-                  className={cn(
-                    "h-7 text-[10px] font-black rounded-xl border transition-all",
-                    isSuperTackleOn ? "bg-purple-700 text-amber-300 hover:bg-purple-800 border-amber-400" : "text-purple-700 border-purple-300 hover:bg-purple-50"
-                  )}
-                  title="सुपर टॅकल ऑन / बंद करा आणि मराठीत उद्घोषणा ऐका"
-                >
-                  {isSuperTackleOn ? "🛡️ सुपर टॅकल ऑन (बंद करा)" : "⚡ सुपर टॅकल ऑन करा"}
-                </Button>
-              </div>
-            </Card>
-          )}
-
-          {/* ---------------- KHO-KHO INNING & BATCH CLOCK ---------------- */}
-          {sport === 'Kho Kho' && (
-            <Card className={cn("p-6 rounded-[2.5rem] border-2 text-center shadow-xl", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">
-                  खो-खो टर्न घड्याळ (Turn Clock)
-                </span>
-                <Badge className="bg-purple-100 text-purple-800 font-bold text-[10px]">
-                  तुकडी {activeBatch} (३ खेळाडू)
-                </Badge>
-              </div>
-
-              <div className="text-7xl font-black font-mono tracking-tighter text-purple-700 dark:text-purple-300 my-2">
-                {formatTime(khoInningSeconds)}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 mt-4">
-                <Button
-                  onClick={() => setIsKhoRunning(!isKhoRunning)}
-                  className={cn(
-                    "h-12 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-md",
-                    isKhoRunning ? "bg-amber-600" : "bg-purple-600 hover:bg-purple-700"
-                  )}
-                >
-                  {isKhoRunning ? <Pause className="w-4 h-4 mr-1.5" /> : <Play className="w-4 h-4 mr-1.5" />}
-                  {isKhoRunning ? "थांबवा" : "टर्न सुरू"}
-                </Button>
-                <Button
-                  onClick={() => {
-                    setIsKhoRunning(false);
-                    setKhoInningSeconds(540);
-                    setChasingTeam(prev => prev === 'A' ? 'B' : 'A');
-                  }}
-                  variant="outline"
-                  className="h-12 rounded-2xl font-black text-xs uppercase"
-                >
-                  <RotateCcw className="w-4 h-4 mr-1.5" /> ९m रिसेट
-                </Button>
-              </div>
-
-              <div className="mt-4 p-3 rounded-2xl bg-muted/30 border text-left flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">तुकडीतील बाद खेळाडू</p>
-                  <p className="text-sm font-black text-primary">{batchDismissedCount} / 3 Out</p>
-                </div>
-                <Button 
-                  size="sm"
-                  onClick={() => {
-                    const cTeam = chasingTeam;
-                    addScore(cTeam, 1, 'Defender Out');
-                  }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl"
-                >
-                  +1 खेळाडू बाद (Touch)
-                </Button>
-              </div>
-            </Card>
-          )}
-
-          {/* BOTTOM GLOBAL ACTIONS */}
-          <div className="flex items-center justify-between gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={undoLastEvent}
-              disabled={eventsLog.length === 0}
-              className="rounded-2xl h-11 px-4 text-xs font-black uppercase text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> शेवटची नोंद रद्द (Undo)
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={resetEntireMatch}
-              className="rounded-2xl h-11 px-4 text-xs font-black uppercase text-red-600 hover:bg-red-50"
-            >
-              सामना रिसेट (Reset All)
-            </Button>
-          </div>
-        </div>
-
-
-        {/* ================= TEAM B CARD ================= */}
-        <Card className={cn(
-          "lg:col-span-4 p-6 rounded-[2.5rem] border-2 transition-all flex flex-col justify-between relative overflow-hidden shadow-xl",
-          isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200",
-          sport === 'Kabaddi' && raidingTeam === 'B' && "ring-4 ring-orange-500 shadow-orange-500/20"
-        )}>
-          {/* Top Bar: House Selector */}
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <div className="flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded-full", houseBObj.bg)} />
-                <select
-                  value={teamBHouse}
-                  onChange={(e) => setTeamBHouse(e.target.value)}
-                  className="bg-muted/40 font-black text-xs uppercase rounded-xl px-2.5 py-1.5 border border-muted focus:outline-none text-foreground"
-                >
-                  {SCHOOL_HOUSES.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-                </select>
-              </div>
-
-              {sport === 'Kabaddi' && (
-                raidingTeam === 'B' ? (
-                  <Badge className="bg-blue-600 text-white font-black text-xs uppercase tracking-wider animate-pulse flex items-center gap-1.5 px-3 py-1 shadow-md ring-2 ring-blue-400">
-                    <Flame className="w-3.5 h-3.5 fill-amber-300 text-amber-300 animate-bounce" /> 🔥 रेड सुरू (RAIDING)
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-slate-500 font-bold text-[10px] uppercase border-slate-300">
-                    🛡️ डिफेन्स (Defending)
-                  </Badge>
-                )
-              )}
-            </div>
-
-            <Input 
-              value={teamBCustomName}
-              onChange={(e) => setTeamBCustomName(e.target.value)}
-              className="font-black text-xl md:text-2xl uppercase tracking-tight border-dashed border-2 rounded-2xl mb-4 text-center bg-transparent"
-              placeholder="Team B Name"
-            />
-
-            {/* BIG SCORE DISPLAY */}
-            <div className="text-center py-4 my-2 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
-              <div className="text-7xl md:text-8xl font-black font-mono tracking-tighter text-primary dark:text-amber-400 select-none">
-                {scoreB}
-              </div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mt-1">
-                एकूण गुण (Total Points)
-              </p>
-            </div>
-
-            {/* Tactical Badges for Kabaddi */}
-            {sport === 'Kabaddi' && (
-              <div className="grid grid-cols-2 gap-2 mt-4 text-center">
-                <div className={cn(
-                  "p-2.5 rounded-2xl border text-xs flex flex-col justify-between transition-all",
-                  (isSuperTackleOn && defendingTeam === 'B')
-                    ? "bg-purple-50 border-purple-400 dark:bg-purple-950/40 dark:border-purple-800 ring-2 ring-purple-500/30 shadow-sm" 
-                    : "bg-muted/40 border-muted"
-                )}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
-                    {isSuperTackleOn && defendingTeam === 'B' ? (
-                      <Badge className="bg-purple-700 text-amber-300 font-black text-[8px] uppercase tracking-wider animate-pulse px-1 py-0">
-                        ⚡ सुपर टॅकल ऑन
-                      </Badge>
-                    ) : defendingTeam === 'B' ? (
-                      <button
-                        type="button"
-                        onClick={toggleSuperTackle}
-                        className="text-[8px] font-black text-purple-700 dark:text-purple-400 hover:underline uppercase"
-                        title="सुपर टॅकल ऑन करा"
-                      >
-                        + सुपर टॅकल
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 my-1">
-                    <button
-                      type="button"
-                      onClick={() => setDefendersB(p => Math.max(1, p - 1))}
-                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
-                      title="१ खेळाडू कमी करा (-1 Defender)"
-                    >
-                      -
-                    </button>
-                    <p className={cn(
-                      "text-xl font-black font-mono select-none",
-                      (isSuperTackleOn && defendingTeam === 'B') ? "text-purple-700 dark:text-purple-300" : "text-primary"
-                    )}>
-                      {defendersB} <span className="text-xs font-normal text-muted-foreground">/ 7</span>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setDefendersB(p => Math.min(7, p + 1))}
-                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-black select-none active:scale-90 transition-transform"
-                      title="१ खेळाडू वाढवा (+1 Defender)"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="text-[8px] text-center font-bold">
-                    {isSuperTackleOn && defendingTeam === 'B' ? (
-                      <button
-                        type="button"
-                        onClick={toggleSuperTackle}
-                        className="text-purple-700 dark:text-purple-300 hover:underline"
-                        title="सुपर टॅकल बंद करा"
-                      >
-                        🛡️ सुपर टॅकल ऑन (२ गुण)
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={toggleSuperTackle}
-                        className="text-muted-foreground hover:text-purple-700 transition-colors"
-                        title="सुपर टॅकल ऑन करा आणि आवाज ऐका"
-                      >
-                        सामान्य डिफेन्स &bull; <span className="text-purple-600 font-extrabold underline">सुपर टॅकल ऑन</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className={cn(
-                  "p-2.5 rounded-2xl border text-xs transition-all flex flex-col justify-between",
-                  emptyRaidsB === 2 ? "bg-red-50 border-red-400 dark:bg-red-950/40 dark:border-red-800 ring-2 ring-red-500/40" : "bg-muted/40 border-muted"
-                )}>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">रेड स्थिती (Raid Track)</p>
-                    {emptyRaidsB === 2 && (
-                      <Badge className="bg-red-600 text-white font-black text-[8px] uppercase tracking-wider animate-pulse px-1.5 py-0">
-                        ⚡ DO-OR-DIE
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Pro Kabaddi Style 3-Raid Tracker */}
-                  <div className="flex items-center justify-center gap-1.5 my-1">
-                    <button
-                      type="button"
-                      onClick={() => setEmptyRaidsB(prev => prev === 1 ? 0 : 1)}
-                      className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
-                        emptyRaidsB >= 1 
-                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
-                      )}
-                      title="रेड १ रिकामी (Click to toggle)"
-                    >
-                      १
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEmptyRaidsB(prev => prev === 2 ? 1 : 2)}
-                      className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all active-scale",
-                        emptyRaidsB >= 2 
-                          ? "bg-red-600 text-white shadow-sm ring-2 ring-red-300" 
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
-                      )}
-                      title="रेड २ रिकामी (Click to toggle)"
-                    >
-                      २
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = emptyRaidsB === 2 ? 0 : 2;
-                        setEmptyRaidsB(next);
-                        if (next === 2) {
-                          marathiAnnouncer.announceDoOrDieRaid();
-                          toast({
-                            title: "⚡ Third Raid: Do or Die Raid!",
-                            description: "Third raid, do or die raid!",
-                            className: "bg-red-600 text-white font-black border-2 border-amber-300 shadow-xl"
-                          });
-                        }
-                      }}
-                      className={cn(
-                        "px-2 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all active-scale",
-                        emptyRaidsB === 2 
-                          ? "bg-red-600 text-white animate-pulse shadow-md ring-2 ring-red-400 font-extrabold" 
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
-                      )}
-                      title="३ री रेड: डू ऑर डाय (Click to trigger & announce in Marathi)"
-                    >
-                      ⚡ ३: DO-OR-DIE
-                    </button>
-                  </div>
-                  <p className="text-[8px] text-center text-muted-foreground font-bold">
-                    {emptyRaidsB === 0 ? "दोन्ही रेड सुरक्षित" : emptyRaidsB === 1 ? "१ रिकामी रेड झाली" : "⚠️ ३ री रेड डू ऑर डाय!"}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Kho-Kho Inning Summary */}
-            {sport === 'Kho Kho' && (
-              <div className="mt-4 p-3 rounded-2xl bg-muted/40 border text-center">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">सध्याची स्थिती (Status)</p>
-                <p className="text-sm font-black text-primary">
-                  {chasingTeam === 'B' ? "🏃‍♂️ चेसर संघ (Chasing)" : "🛡️ धावपटू तुकडी (Defenders Running)"}
-                </p>
-              </div>
-            )}
-
-            {/* Volleyball Sets Won */}
-            {sport === 'Volleyball' && (
-              <div className="mt-4 p-3 rounded-2xl bg-muted/40 border text-center flex items-center justify-around">
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">जिंकलेले सेट (Sets)</p>
-                  <p className="text-2xl font-black text-primary">{setsWonB}</p>
-                </div>
-                {servingTeam === 'B' && (
-                  <Badge className="bg-blue-600 text-white font-black text-[10px]">
-                    सर्व्हिस (Serving 🏐)
-                  </Badge>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* POINT BUTTONS KEYPAD */}
-          <div className="space-y-2 pt-4 mt-4 border-t">
-            <div className="grid grid-cols-3 gap-2">
-              <Button 
-                onClick={() => addScore('B', 1, sport === 'Kabaddi' ? 'Touch Point' : 'Point')}
-                className="h-12 font-black text-sm rounded-xl bg-primary hover:bg-primary/90 text-white shadow-md active:scale-95"
-              >
-                +1 गुण
-              </Button>
-              <Button 
-                onClick={() => addScore('B', 2, sport === 'Kabaddi' ? '2 Raid Points' : '+2 Points')}
-                className="h-12 font-black text-sm rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
-              >
-                +2 गुण
-              </Button>
-              <Button 
-                onClick={() => addScore('B', 3, 'Super Raid (+3)')}
-                className="h-12 font-black text-xs rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-95"
-              >
-                सुपर रेड +3
-              </Button>
-            </div>
-
-            {sport === 'Kabaddi' && (
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  onClick={() => addScore('B', 1, 'Bonus Point')}
-                  variant="outline"
-                  className="h-10 font-bold text-xs rounded-xl border-amber-500/40 text-amber-700 hover:bg-amber-50"
-                >
-                  बोनस +1
-                </Button>
-                <Button 
-                  onClick={() => addScore('B', 2, 'Super Tackle (+2)')}
-                  variant="outline"
-                  className="h-10 font-bold text-xs rounded-xl border-purple-500/40 text-purple-700 hover:bg-purple-50"
-                >
-                  सुपर टॅकल +2
-                </Button>
-                <Button 
-                  onClick={() => addScore('B', 2, 'All-Out')}
-                  variant="outline"
-                  className="h-10 font-bold text-xs rounded-xl border-red-500/40 text-red-700 hover:bg-red-50"
-                >
-                  ऑल-आउट +2
-                </Button>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => triggerTimeout('B')}
-                disabled={timeoutsB <= 0}
-                className="text-[11px] font-bold text-muted-foreground hover:text-foreground"
-              >
-                ⏱️ टाइम-आऊट ({timeoutsB} बाकी)
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setRaidingTeam('B')}
-                className="text-[11px] font-bold text-orange-600 hover:text-orange-700"
-              >
-                रेडर बनवा (Set Raider)
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-      </div>
-
-
-      {/* ----------------- MATCH TIMELINE & EVENT LOGS ----------------- */}
-      <Card className="p-6 rounded-[2.5rem] border shadow-sm bg-white">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-primary" />
-            <h3 className="font-black text-base uppercase tracking-tight text-primary">
-              लाईव्ह सामना घडामोडी (Match Action Timeline)
-            </h3>
-          </div>
-          <span className="text-[11px] font-bold text-muted-foreground">
-            {eventsLog.length} नोंदी (Events Logged)
-          </span>
-        </div>
-
-        {eventsLog.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground text-xs font-bold italic">
-            सामन्याची गुण नोंदणी सुरू करा. सर्व नोंदी येथे वेळेसह नोंदवल्या जातील.
-          </div>
-        ) : (
-          <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
-            {eventsLog.map((event) => (
-              <div 
-                key={event.id}
-                className="flex items-center justify-between p-3 rounded-2xl bg-muted/40 border text-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-mono font-bold text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-lg">
-                    {event.timestamp}
-                  </span>
-                  <span className={cn("font-black uppercase", event.team === 'A' ? "text-red-600" : "text-blue-600")}>
-                    {event.teamName}
-                  </span>
-                  <span className="font-medium text-foreground">
-                    {event.desc}
-                  </span>
-                </div>
-                <Badge className="bg-primary text-white font-black text-[10px]">
-                  +{event.points} गुण
-                </Badge>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* ----------------- EDIT MATCH TIME MODAL ----------------- */}
-      <Dialog open={isTimeEditOpen} onOpenChange={setIsTimeEditOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-slate-900 border-2">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2 text-primary">
-              <Clock className="w-5 h-5 text-amber-500" /> सामन्याची वेळ सेट करा (Set Match Duration)
-            </DialogTitle>
-            <DialogDescription className="text-xs font-bold text-muted-foreground">
-              खेळ व वयोगटानुसार सामन्याचा वेळ निवडा किंवा स्वतःची वेळ मिनिटे व सेकंदात नोंदवा.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Presets */}
-          <div className="space-y-4 pt-2">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
-                लोकप्रिय वेळ पर्याय (Quick Presets):
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "५ मिनिटे", mins: 5, desc: "सराव सामना" },
-                  { label: "७ मिनिटे", mins: 7, desc: "U14 ज्युनिअर" },
-                  { label: "१० मिनिटे", mins: 10, desc: "शालेय स्पर्धा" },
-                  { label: "१५ मिनिटे", mins: 15, desc: "हाफ टाईम" },
-                  { label: "२० मिनिटे", mins: 20, desc: "DSO वरिष्ठ" },
-                  { label: "३० मिनिटे", mins: 30, desc: "पूर्ण वेळ" },
-                ].map((preset) => (
-                  <button
-                    key={preset.mins}
-                    type="button"
-                    onClick={() => {
-                      setTimeEditMinutes(preset.mins);
-                      setTimeEditSeconds(0);
-                      updateMatchDuration(preset.mins, 0);
-                    }}
-                    className={cn(
-                      "p-2.5 rounded-2xl border text-center transition-all active:scale-95",
-                      matchDurationSeconds === preset.mins * 60
-                        ? "bg-primary text-white border-primary shadow-md"
-                        : "bg-muted/40 hover:bg-muted border-muted text-foreground"
-                    )}
-                  >
-                    <p className="text-xs font-black">{preset.label}</p>
-                    <p className={cn("text-[9px]", matchDurationSeconds === preset.mins * 60 ? "text-white/80" : "text-muted-foreground")}>
-                      {preset.desc}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Custom Input */}
-            <div className="border-t pt-4">
-              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
-                इच्छित वेळ नोंदवा (Custom Minutes & Seconds):
-              </p>
+      {/* ---------------------------------------------------------------------------------- */}
+      {/* TAB 1: MAIN DIGITAL SCOREBOARD ARENA */}
+      {/* ---------------------------------------------------------------------------------- */}
+      {activeTab === 'arena' && (
+        <>
+          {/* ================= PRO KABADDI DO-OR-DIE BANNER ALERT ================= */}
+          {sport === 'Kabaddi' && isCurrentRaidDoOrDie && (
+            <div className="bg-gradient-to-r from-red-600 via-orange-600 to-red-600 text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between animate-pulse border-4 border-amber-300">
               <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">मिनिटे (Minutes)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="120"
-                    value={timeEditMinutes}
-                    onChange={(e) => setTimeEditMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="font-black text-center text-lg h-11 rounded-xl"
-                  />
+                <div className="p-2 bg-white/20 rounded-2xl">
+                  <Flame className="w-8 h-8 text-amber-300 fill-amber-300 animate-bounce" />
                 </div>
-                <span className="text-2xl font-black text-muted-foreground mt-4">:</span>
-                <div className="flex-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">सेकंद (Seconds)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={timeEditSeconds}
-                    onChange={(e) => setTimeEditSeconds(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
-                    className="font-black text-center text-lg h-11 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button
-                  onClick={() => updateMatchDuration(timeEditMinutes, timeEditSeconds)}
-                  className="flex-1 h-11 rounded-xl font-black bg-primary text-white hover:bg-primary/90 shadow-md"
-                >
-                  वेळ लागू करा (Apply Time)
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsTimeEditOpen(false)}
-                  className="h-11 rounded-xl font-bold"
-                >
-                  रद्द करा
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* ----------------- MATCH TOSS MODAL ----------------- */}
-      <Dialog open={isTossOpen} onOpenChange={setIsTossOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-slate-900 border-2">
-          <DialogHeader className="text-center sm:text-left">
-            <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center justify-center sm:justify-start gap-2 text-primary">
-              <Coins className="w-6 h-6 text-amber-500 animate-bounce" />
-              लाईव्ह सामना नाणेफेक (Match Toss)
-            </DialogTitle>
-            <DialogDescription className="text-xs font-bold text-muted-foreground text-center sm:text-left">
-              सामन्याच्या सुरुवातीला अधिकृत नाणेफेक करा व पहिली चढाई/सर्व्हिस किंवा मैदान बाजू निश्चित करा.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            {/* Step 1: Select Calling Team */}
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
-                १. नाणेफेक कोण कॉल करेल? (Calling Team):
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTossCaller('A')}
-                  className={cn(
-                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs",
-                    tossCaller === 'A'
-                      ? "bg-red-600 text-white border-red-600 shadow-md ring-2 ring-red-300"
-                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
-                  )}
-                >
-                  🔴 {teamACustomName}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTossCaller('B')}
-                  className={cn(
-                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs",
-                    tossCaller === 'B'
-                      ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-300"
-                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
-                  )}
-                >
-                  🔵 {teamBCustomName}
-                </button>
-              </div>
-            </div>
-
-            {/* Step 2: Select Call (Heads / Tails) */}
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-2">
-                २. कॉल काय निवडला? (Call Choice):
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTossCall('heads')}
-                  className={cn(
-                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs flex items-center justify-center gap-2",
-                    tossCall === 'heads'
-                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
-                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
-                  )}
-                >
-                  🪙 छाप (HEADS)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTossCall('tails')}
-                  className={cn(
-                    "p-3 rounded-2xl border text-center transition-all active:scale-95 font-black text-xs flex items-center justify-center gap-2",
-                    tossCall === 'tails'
-                      ? "bg-amber-500 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
-                      : "bg-muted/40 hover:bg-muted border-muted text-foreground"
-                  )}
-                >
-                  🪙 काटा (TAILS)
-                </button>
-              </div>
-            </div>
-
-            {/* Coin Animation Area */}
-            <div className="text-center py-6 bg-slate-50 dark:bg-slate-950/60 rounded-3xl border border-dashed border-amber-400/60 my-2 flex flex-col items-center justify-center">
-              <div className={cn(
-                "w-20 h-20 rounded-full border-4 border-amber-400 shadow-2xl flex items-center justify-center bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 text-slate-950 font-black text-xl transition-all select-none",
-                isFlipping ? "animate-spin scale-110 shadow-amber-400/50" : "scale-100"
-              )}>
-                {isFlipping ? (
-                  <Coins className="w-10 h-10 text-slate-950 animate-pulse" />
-                ) : tossResult ? (
-                  tossResult === 'heads' ? "छाप" : "काटा"
-                ) : (
-                  "₹"
-                )}
-              </div>
-
-              {isFlipping && (
-                <p className="text-xs font-black text-amber-600 mt-3 animate-pulse uppercase tracking-wider">
-                  नाणे हवेत फिरत आहे... (Flipping Coin...)
-                </p>
-              )}
-
-              {!isFlipping && tossResult && (
-                <div className="mt-3 text-center animate-in zoom-in-90 duration-300">
-                  <Badge className="bg-emerald-600 text-white font-black text-xs uppercase px-3 py-1 mb-1">
-                    निकाल: {tossResult === 'heads' ? 'छाप (HEADS)' : 'काटा (TAILS)'}
-                  </Badge>
-                  <p className="text-sm font-black text-primary">
-                    🏆 {tossWinner === 'A' ? teamACustomName : teamBCustomName} ने नाणेफेक जिंकली!
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-amber-300 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      PRO KABADDI RULE: 3RD RAID
+                    </span>
+                    <span className="text-xs font-bold text-amber-200">
+                      (२ रिकाम्या रेडनंतर ३री रेड)
+                    </span>
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight">
+                    🚨 {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची &quot;डू-ऑर-डाय&quot; (DO-OR-DIE) रेड!
+                  </h3>
+                  <p className="text-xs font-medium text-amber-100">
+                    या रेडमध्ये रेडरने गुण घेतला नाही तर रेडर बाद होईल व प्रतिस्पर्धी संघाला १ गुण मिळेल!
                   </p>
                 </div>
-              )}
+              </div>
+              <Badge className="bg-white text-red-700 text-sm font-black px-4 py-2 uppercase tracking-widest hidden md:inline-flex shadow-lg">
+                गुण आवश्यक (Must Score)
+              </Badge>
             </div>
+          )}
 
-            {/* Action Buttons */}
-            {!tossWinner ? (
-              <Button
-                onClick={handleFlipCoin}
-                disabled={isFlipping}
-                className="w-full h-12 rounded-2xl font-black text-sm uppercase tracking-wider bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-lg active:scale-95 flex items-center justify-center gap-2"
-              >
-                <Coins className="w-5 h-5" /> नाणे उडवा (Flip Coin)
-              </Button>
-            ) : (
-              <div className="space-y-2 border-t pt-3 animate-in fade-in duration-300">
-                <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground text-center">
-                  {tossWinner === 'A' ? teamACustomName : teamBCustomName} ची निवड काय?
-                </p>
-                
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            
+            {/* ================= TEAM A CARD ================= */}
+            <Card className={cn(
+              "lg:col-span-4 p-6 rounded-[2.5rem] border-2 transition-all flex flex-col justify-between relative overflow-hidden shadow-xl",
+              isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200",
+              sport === 'Kabaddi' && raidingTeam === 'A' && "ring-4 ring-orange-500 shadow-orange-500/20"
+            )}>
+              <div>
+                {/* Top Bar: House Selector */}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("w-4 h-4 rounded-full", houseAObj.bg)} />
+                    <select
+                      value={teamAHouse}
+                      onChange={(e) => setTeamAHouse(e.target.value)}
+                      className="bg-muted/40 font-black text-xs uppercase rounded-xl px-2.5 py-1.5 border border-muted focus:outline-none text-foreground"
+                    >
+                      {SCHOOL_HOUSES.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                    </select>
+                  </div>
+
+                  {sport === 'Kabaddi' && raidingTeam === 'A' && (
+                    <Badge className={cn("text-white font-black text-[10px] uppercase tracking-wider animate-pulse flex items-center gap-1", emptyRaidsA === 2 ? "bg-red-600" : "bg-orange-600")}>
+                      <Flame className="w-3 h-3 fill-current" /> {emptyRaidsA === 2 ? "🚨 DO-OR-DIE RAID" : "रेड सुरू (Raiding)"}
+                    </Badge>
+                  )}
+                </div>
+
+                <Input 
+                  value={teamACustomName}
+                  onChange={(e) => setTeamACustomName(e.target.value)}
+                  className="font-black text-xl md:text-2xl uppercase tracking-tight border-dashed border-2 rounded-2xl mb-3 text-center bg-transparent"
+                  placeholder="Team A Name"
+                />
+
+                {/* BIG SCORE DISPLAY */}
+                <div className="text-center py-4 my-2 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
+                  <div className="text-7xl md:text-8xl font-black font-mono tracking-tighter text-primary dark:text-amber-400 select-none">
+                    {scoreA}
+                  </div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mt-1">
+                    एकूण गुण (Total Points)
+                  </p>
+                </div>
+
+                {/* Tactical Badges for Kabaddi: Court Players & Pro Raid Progression */}
                 {sport === 'Kabaddi' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={() => handleTossDecision('raid')}
-                      className="h-12 rounded-xl font-black text-xs bg-orange-600 hover:bg-orange-700 text-white shadow-md active:scale-95"
+                  <div className="space-y-2 mt-3">
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
+                        <p className="text-lg font-black text-primary">{defendersA} / 7</p>
+                        <span className="text-[9px] font-bold text-muted-foreground">
+                          {defendersA <= 3 ? "🛡️ सुपर टॅकल Active" : defendersB >= 6 ? "⭐ बोनस Active" : ""}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">रेड क्रम (Raid Count)</p>
+                        <div className="flex items-center justify-center gap-1.5 my-1">
+                          <span className={cn("w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center font-bold", emptyRaidsA >= 1 ? "bg-amber-500 text-white border-amber-600" : "bg-muted text-muted-foreground")}>1</span>
+                          <span className={cn("w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center font-bold", emptyRaidsA >= 2 ? "bg-orange-600 text-white border-orange-700" : "bg-muted text-muted-foreground")}>2</span>
+                          <span className={cn("w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center font-bold", emptyRaidsA === 2 ? "bg-red-600 text-white border-red-700 animate-pulse" : "bg-muted text-muted-foreground")}>3</span>
+                        </div>
+                        <p className={cn("text-[10px] font-black uppercase", emptyRaidsA === 2 ? "text-red-600 animate-pulse font-extrabold" : "text-muted-foreground")}>
+                          {emptyRaidsA === 0 ? "रेड १ (Normal)" : emptyRaidsA === 1 ? "१ रिकामी (1 Empty)" : "🚨 डू-ऑर-डाय (D.O.D.)"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* ACTIVE RAIDER / PLAYER SELECTOR CHIPS */}
+                    <div className="p-2.5 rounded-2xl bg-primary/5 border border-primary/20">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-wider flex items-center gap-1">
+                          <UserCheck className="w-3.5 h-3.5" /> सध्याचा खेळाडू (Active Player):
+                        </span>
+                        <span className="text-[9px] font-bold text-muted-foreground">
+                          {squadA.find(p => p.id === selectedPlayerIdA)?.totalPoints || 0} गुण
+                        </span>
+                      </div>
+                      
+                      <select 
+                        value={selectedPlayerIdA}
+                        onChange={(e) => setSelectedPlayerIdA(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 font-bold text-xs rounded-xl p-2 border border-slate-300 dark:border-slate-700 focus:outline-none"
+                      >
+                        {squadA.map(p => (
+                          <option key={p.id} value={p.id}>
+                            #{p.jerseyNumber} {p.nameMarathi || p.name} ({p.totalPoints} pts - R:{p.raidPoints} T:{p.tacklePoints})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* POINT BUTTONS KEYPAD */}
+              <div className="space-y-2 pt-4 mt-3 border-t">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    onClick={() => addScore('A', 1, sport === 'Kabaddi' ? 'Touch Point' : 'Point')}
+                    className="h-12 font-black text-sm rounded-xl bg-primary hover:bg-primary/90 text-white shadow-md active:scale-95"
+                  >
+                    +1 गुण (Touch)
+                  </Button>
+                  <Button 
+                    onClick={() => addScore('A', 2, sport === 'Kabaddi' ? '2 Raid Points' : '+2 Points')}
+                    className="h-12 font-black text-sm rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
+                  >
+                    +2 गुण (2 Pts)
+                  </Button>
+                  <Button 
+                    onClick={() => addScore('A', 3, 'Super Raid (+3)')}
+                    className="h-12 font-black text-xs rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-95"
+                  >
+                    सुपर रेड +3
+                  </Button>
+                </div>
+
+                {sport === 'Kabaddi' && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button 
+                      onClick={() => addScore('A', 1, 'Bonus Point')}
+                      variant="outline"
+                      className="h-10 font-bold text-xs rounded-xl border-amber-500/40 text-amber-700 hover:bg-amber-50"
                     >
-                      🔥 पहिली चढाई (Raid First)
+                      ⭐ बोनस +1
                     </Button>
-                    <Button
-                      onClick={() => handleTossDecision('court')}
-                      className="h-12 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
+                    <Button 
+                      onClick={() => addScore('A', 2, 'Super Tackle (+2)')}
+                      variant="outline"
+                      className="h-10 font-bold text-xs rounded-xl border-purple-500/40 text-purple-700 hover:bg-purple-50"
                     >
-                      🛡️ कोर्ट बाजू (Court Side)
+                      🛡️ सुपर टॅकल +2
+                    </Button>
+                    <Button 
+                      onClick={() => addScore('A', 2, 'All-Out')}
+                      variant="outline"
+                      className="h-10 font-bold text-xs rounded-xl border-red-500/40 text-red-700 hover:bg-red-50"
+                    >
+                      💥 ऑल-आउट +2
                     </Button>
                   </div>
                 )}
 
-                {sport === 'Kho Kho' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={() => handleTossDecision('chase')}
-                      className="h-12 rounded-xl font-black text-xs bg-purple-600 hover:bg-purple-700 text-white shadow-md active:scale-95"
-                    >
-                      🏃‍♂️ पहिली चेसिंग (Chase First)
-                    </Button>
-                    <Button
-                      onClick={() => handleTossDecision('run')}
-                      className="h-12 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
-                    >
-                      🛡️ डिफेन्स (Running First)
-                    </Button>
-                  </div>
-                )}
-
-                {(sport === 'Volleyball' || sport === 'General') && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={() => handleTossDecision('serve')}
-                      className="h-12 rounded-xl font-black text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md active:scale-95"
-                    >
-                      🏐 पहिली सर्व्हिस (Serve First)
-                    </Button>
-                    <Button
-                      onClick={() => handleTossDecision('court')}
-                      className="h-12 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
-                    >
-                      🛡️ कोर्ट बाजू (Court Side)
-                    </Button>
-                  </div>
-                )}
-
-                <div className="flex justify-center pt-2">
+                <div className="flex items-center justify-between pt-1">
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={handleFlipCoin}
-                    className="text-xs font-bold text-muted-foreground hover:text-foreground"
+                    onClick={() => triggerTimeout('A')}
+                    disabled={timeoutsA <= 0}
+                    className="text-[11px] font-bold text-muted-foreground hover:text-foreground"
                   >
-                    पुन्हा नाणे उडवा (Re-flip)
+                    ⏱️ टाइम-आऊट ({timeoutsA} बाकी)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setRaidingTeam('A')}
+                    className="text-[11px] font-bold text-orange-600 hover:text-orange-700"
+                  >
+                    रेडर बनवा (Set Raider)
                   </Button>
                 </div>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </Card>
 
-      {/* ----------------- MATCH RESULT & VICTORY DIALOG ----------------- */}
-      <Dialog
-        open={isMatchResultOpen}
-        onOpenChange={(open) => {
-          setIsMatchResultOpen(open);
-          if (!open) stopVictoryMusic();
-        }}
-      >
-        <DialogContent className="max-w-md rounded-[2.5rem] p-6 text-center border-2 border-amber-400/50 bg-gradient-to-b from-amber-50 via-white to-amber-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 shadow-2xl">
-          <DialogHeader>
-            <div className="w-16 h-16 mx-auto mb-2 rounded-3xl bg-amber-500/20 flex items-center justify-center text-amber-500 border-2 border-amber-400 shadow-inner animate-bounce">
-              <Trophy className="w-9 h-9" />
-            </div>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-amber-300">
-              {matchWinnerInfo?.winner === 'TIE' ? "सामना बरोबरीत! (Match Tied)" : "🏆 सामना निकाल: विजयी संघ!"}
-            </DialogTitle>
-            <DialogDescription className="text-xs font-bold text-muted-foreground">
-              दोन्ही हाफ पूर्ण झाले असून अंतिम निकाल अधिकृतपणे जाहीर करण्यात आला आहे.
-            </DialogDescription>
-          </DialogHeader>
 
-          {matchWinnerInfo && (
-            <div className="space-y-4 my-2">
-              {/* Winner Announcement Banner */}
-              <div className="p-4 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg">
-                {matchWinnerInfo.winner === 'TIE' ? (
-                  <div>
-                    <h3 className="text-2xl font-black uppercase">सामना बरोबरीत!</h3>
-                    <p className="text-sm font-bold text-amber-100 mt-1">
-                      दोन्ही संघांनी प्रत्येकी {matchWinnerInfo.scoreA} गुण मिळवले.
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-200 block">
-                      🎉 सामना विजेता संघ
+            {/* ================= CENTER MATCH ARENA & TIMERS ================= */}
+            <div className="lg:col-span-4 flex flex-col justify-between gap-4">
+              
+              {/* MATCH HALF / ROUND CLOCK */}
+              <Card className={cn("p-5 rounded-[2.5rem] border-2 text-center shadow-lg", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="outline" className="font-bold text-[10px] uppercase">
+                    {sport === 'Kabaddi' ? `हाफ ${matchHalf}` : sport === 'Kho Kho' ? `टर्न ${khoTurn}/4` : `सेट ${volleySet}`}
+                  </Badge>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    सामना वेळ (Match Clock)
+                  </span>
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => {
+                      if (sport === 'Kabaddi') setMatchHalf(h => h === 1 ? 2 : 1);
+                      else if (sport === 'Kho Kho') setKhoTurn(t => (t % 4) + 1);
+                    }}
+                    className="h-6 text-[10px] font-bold px-2"
+                  >
+                    बदला
+                  </Button>
+                </div>
+
+                <div className="text-5xl font-black font-mono tracking-tighter text-slate-800 dark:text-slate-100 py-1">
+                  {formatTime(matchSecondsRemaining)}
+                </div>
+
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    onClick={() => setIsMatchClockRunning(!isMatchClockRunning)}
+                    className={cn(
+                      "rounded-xl h-10 px-5 font-black text-xs tracking-wider",
+                      isMatchClockRunning ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    )}
+                  >
+                    {isMatchClockRunning ? <Pause className="w-4 h-4 mr-1.5" /> : <Play className="w-4 h-4 mr-1.5" />}
+                    {isMatchClockRunning ? "थांबवा (Pause)" : "सुरू करा (Start Clock)"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsMatchClockRunning(false);
+                      setMatchSecondsRemaining(1200);
+                    }}
+                    className="rounded-xl h-10 px-3 font-bold text-xs"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </Card>
+
+              {/* ---------------- 30-SEC RAID CLOCK / INNING CLOCK ---------------- */}
+              {sport === 'Kabaddi' && (
+                <Card className={cn(
+                  "p-5 rounded-[2.5rem] border-4 text-center shadow-2xl relative overflow-hidden transition-all",
+                  isCurrentRaidDoOrDie ? "border-red-600 bg-red-950/20" : raidSeconds <= 5 ? "border-red-600 bg-red-950/10" : raidSeconds <= 10 ? "border-amber-500 bg-amber-950/10" : "border-primary/20",
+                  isFullscreen ? "bg-slate-900 text-white" : "bg-white"
+                )}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex items-center gap-1", isCurrentRaidDoOrDie ? "text-red-600 animate-pulse font-extrabold" : "text-orange-600")}>
+                      <Flame className="w-3.5 h-3.5" /> {isCurrentRaidDoOrDie ? "🚨 DO-OR-DIE RAID" : "३० सेकंद प्रो रेडर घड्याळ"}
                     </span>
-                    <h3 className="text-3xl font-black uppercase tracking-tight text-white drop-shadow-md my-1">
-                      {matchWinnerInfo.winnerName}
-                    </h3>
-                    <p className="text-sm font-black text-amber-100">
-                      {matchWinnerInfo.diff} ({getMarathiNumberWord(matchWinnerInfo.diff)}) गुणांनी दणदणीत विजय!
-                    </p>
+                    <span className="text-[10px] font-bold text-muted-foreground">
+                      {raidingTeam === 'A' ? teamACustomName : teamBCustomName} ची रेड
+                    </span>
+                  </div>
+
+                  {/* HUGE DIGITAL DIGITS */}
+                  <div className={cn(
+                    "text-8xl md:text-9xl font-black font-mono tracking-tighter select-none my-1 transition-colors",
+                    isCurrentRaidDoOrDie ? "text-red-600 animate-pulse" : raidSeconds <= 5 ? "text-red-600 animate-pulse" : raidSeconds <= 10 ? "text-amber-500" : "text-primary dark:text-emerald-400"
+                  )}>
+                    {raidSeconds.toString().padStart(2, '0')}
+                  </div>
+
+                  {/* Current Active Raider name banner */}
+                  <div className="text-xs font-black text-muted-foreground mb-3 truncate">
+                    रेडर: <span className="text-foreground">#{getActivePlayer(raidingTeam)?.jerseyNumber} {getActivePlayer(raidingTeam)?.nameMarathi || getActivePlayer(raidingTeam)?.name}</span>
+                  </div>
+
+                  {/* RAID CONTROL BUTTONS */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      onClick={isRaidRunning ? pauseRaidClock : startRaidClock}
+                      className={cn(
+                        "h-12 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-lg active-scale",
+                        isRaidRunning ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                      )}
+                    >
+                      {isRaidRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+                      {isRaidRunning ? "थांबवा" : "रेड सुरू"}
+                    </Button>
+
+                    <Button
+                      onClick={() => resetRaidClock(raidingTeam === 'A' ? 'B' : 'A')}
+                      className="h-12 rounded-2xl font-black text-xs uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-lg active-scale"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" /> ३०s रिसेट
+                    </Button>
+
+                    <Button
+                      onClick={handleEmptyRaid}
+                      variant="outline"
+                      className={cn(
+                        "h-12 rounded-2xl font-black text-[11px] uppercase tracking-wider hover:bg-muted",
+                        isCurrentRaidDoOrDie ? "border-red-600 text-red-600 bg-red-50 hover:bg-red-100 font-extrabold animate-pulse" : "border-slate-300 dark:border-slate-700"
+                      )}
+                    >
+                      {isCurrentRaidDoOrDie ? "❌ D.O.D. बाद (Out)" : "रिकामी रेड (Empty)"}
+                    </Button>
+                  </div>
+
+                  {/* Sound Effect Test Triggers */}
+                  <div className="flex items-center justify-center gap-2 mt-3 pt-2 border-t">
+                    <Button size="sm" variant="ghost" onClick={() => sfx.playWhistle()} className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">
+                      🔊 शिट्टी (Whistle)
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => sfx.playBuzzer()} className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">
+                      📢 बजर (Buzzer)
+                    </Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* ---------------- KHO-KHO INNING & BATCH CLOCK ---------------- */}
+              {sport === 'Kho Kho' && (
+                <Card className={cn("p-5 rounded-[2.5rem] border-2 text-center shadow-xl", isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200")}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">
+                      खो-खो टर्न घड्याळ (Turn Clock)
+                    </span>
+                    <Badge className="bg-purple-100 text-purple-800 font-bold text-[10px]">
+                      तुकडी {activeBatch} (३ खेळाडू)
+                    </Badge>
+                  </div>
+
+                  <div className="text-7xl font-black font-mono tracking-tighter text-purple-700 dark:text-purple-300 my-2">
+                    {formatTime(khoInningSeconds)}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <Button
+                      onClick={() => setIsKhoRunning(!isKhoRunning)}
+                      className={cn(
+                        "h-12 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-md",
+                        isKhoRunning ? "bg-amber-600" : "bg-purple-600 hover:bg-purple-700"
+                      )}
+                    >
+                      {isKhoRunning ? <Pause className="w-4 h-4 mr-1.5" /> : <Play className="w-4 h-4 mr-1.5" />}
+                      {isKhoRunning ? "थांबवा" : "टर्न सुरू"}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsKhoRunning(false);
+                        setKhoInningSeconds(540);
+                        setChasingTeam(prev => prev === 'A' ? 'B' : 'A');
+                      }}
+                      variant="outline"
+                      className="h-12 rounded-2xl font-black text-xs uppercase"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1.5" /> ९m रिसेट
+                    </Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* BOTTOM GLOBAL ACTIONS */}
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={undoLastEvent}
+                  disabled={eventsLog.length === 0}
+                  className="rounded-2xl h-11 px-4 text-xs font-black uppercase text-muted-foreground hover:text-foreground"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> शेवटची नोंद रद्द (Undo)
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={resetEntireMatch}
+                  className="rounded-2xl h-11 px-4 text-xs font-black uppercase text-red-600 hover:bg-red-50"
+                >
+                  सामना रिसेट (Reset All)
+                </Button>
+              </div>
+            </div>
+
+
+            {/* ================= TEAM B CARD ================= */}
+            <Card className={cn(
+              "lg:col-span-4 p-6 rounded-[2.5rem] border-2 transition-all flex flex-col justify-between relative overflow-hidden shadow-xl",
+              isFullscreen ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200",
+              sport === 'Kabaddi' && raidingTeam === 'B' && "ring-4 ring-orange-500 shadow-orange-500/20"
+            )}>
+              <div>
+                {/* Top Bar: House Selector */}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("w-4 h-4 rounded-full", houseBObj.bg)} />
+                    <select
+                      value={teamBHouse}
+                      onChange={(e) => setTeamBHouse(e.target.value)}
+                      className="bg-muted/40 font-black text-xs uppercase rounded-xl px-2.5 py-1.5 border border-muted focus:outline-none text-foreground"
+                    >
+                      {SCHOOL_HOUSES.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                    </select>
+                  </div>
+
+                  {sport === 'Kabaddi' && raidingTeam === 'B' && (
+                    <Badge className={cn("text-white font-black text-[10px] uppercase tracking-wider animate-pulse flex items-center gap-1", emptyRaidsB === 2 ? "bg-red-600" : "bg-orange-600")}>
+                      <Flame className="w-3 h-3 fill-current" /> {emptyRaidsB === 2 ? "🚨 DO-OR-DIE RAID" : "रेड सुरू (Raiding)"}
+                    </Badge>
+                  )}
+                </div>
+
+                <Input 
+                  value={teamBCustomName}
+                  onChange={(e) => setTeamBCustomName(e.target.value)}
+                  className="font-black text-xl md:text-2xl uppercase tracking-tight border-dashed border-2 rounded-2xl mb-3 text-center bg-transparent"
+                  placeholder="Team B Name"
+                />
+
+                {/* BIG SCORE DISPLAY */}
+                <div className="text-center py-4 my-2 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
+                  <div className="text-7xl md:text-8xl font-black font-mono tracking-tighter text-primary dark:text-amber-400 select-none">
+                    {scoreB}
+                  </div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] mt-1">
+                    एकूण गुण (Total Points)
+                  </p>
+                </div>
+
+                {/* Tactical Badges for Kabaddi: Court Players & Pro Raid Progression */}
+                {sport === 'Kabaddi' && (
+                  <div className="space-y-2 mt-3">
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">कोर्टवरील खेळाडू</p>
+                        <p className="text-lg font-black text-primary">{defendersB} / 7</p>
+                        <span className="text-[9px] font-bold text-muted-foreground">
+                          {defendersB <= 3 ? "🛡️ सुपर टॅकल Active" : defendersA >= 6 ? "⭐ बोनस Active" : ""}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-2xl bg-muted/40 border text-xs">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">रेड क्रम (Raid Count)</p>
+                        <div className="flex items-center justify-center gap-1.5 my-1">
+                          <span className={cn("w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center font-bold", emptyRaidsB >= 1 ? "bg-amber-500 text-white border-amber-600" : "bg-muted text-muted-foreground")}>1</span>
+                          <span className={cn("w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center font-bold", emptyRaidsB >= 2 ? "bg-orange-600 text-white border-orange-700" : "bg-muted text-muted-foreground")}>2</span>
+                          <span className={cn("w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center font-bold", emptyRaidsB === 2 ? "bg-red-600 text-white border-red-700 animate-pulse" : "bg-muted text-muted-foreground")}>3</span>
+                        </div>
+                        <p className={cn("text-[10px] font-black uppercase", emptyRaidsB === 2 ? "text-red-600 animate-pulse font-extrabold" : "text-muted-foreground")}>
+                          {emptyRaidsB === 0 ? "रेड १ (Normal)" : emptyRaidsB === 1 ? "१ रिकामी (1 Empty)" : "🚨 डू-ऑर-डाय (D.O.D.)"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* ACTIVE RAIDER / PLAYER SELECTOR CHIPS */}
+                    <div className="p-2.5 rounded-2xl bg-primary/5 border border-primary/20">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-wider flex items-center gap-1">
+                          <UserCheck className="w-3.5 h-3.5" /> सध्याचा खेळाडू (Active Player):
+                        </span>
+                        <span className="text-[9px] font-bold text-muted-foreground">
+                          {squadB.find(p => p.id === selectedPlayerIdB)?.totalPoints || 0} गुण
+                        </span>
+                      </div>
+                      
+                      <select 
+                        value={selectedPlayerIdB}
+                        onChange={(e) => setSelectedPlayerIdB(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 font-bold text-xs rounded-xl p-2 border border-slate-300 dark:border-slate-700 focus:outline-none"
+                      >
+                        {squadB.map(p => (
+                          <option key={p.id} value={p.id}>
+                            #{p.jerseyNumber} {p.nameMarathi || p.name} ({p.totalPoints} pts - R:{p.raidPoints} T:{p.tacklePoints})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Score summary comparison */}
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800/80 border text-center">
-                <div className={cn("p-2.5 rounded-xl", matchWinnerInfo.winner === 'A' ? "bg-amber-100 dark:bg-amber-950/60 border border-amber-300" : "")}>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamACustomName}</p>
-                  <p className="text-3xl font-black font-mono text-slate-900 dark:text-white">{matchWinnerInfo.scoreA}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(matchWinnerInfo.scoreA)})</p>
+              {/* POINT BUTTONS KEYPAD */}
+              <div className="space-y-2 pt-4 mt-3 border-t">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    onClick={() => addScore('B', 1, sport === 'Kabaddi' ? 'Touch Point' : 'Point')}
+                    className="h-12 font-black text-sm rounded-xl bg-primary hover:bg-primary/90 text-white shadow-md active:scale-95"
+                  >
+                    +1 गुण (Touch)
+                  </Button>
+                  <Button 
+                    onClick={() => addScore('B', 2, sport === 'Kabaddi' ? '2 Raid Points' : '+2 Points')}
+                    className="h-12 font-black text-sm rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md active:scale-95"
+                  >
+                    +2 गुण (2 Pts)
+                  </Button>
+                  <Button 
+                    onClick={() => addScore('B', 3, 'Super Raid (+3)')}
+                    className="h-12 font-black text-xs rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md active:scale-95"
+                  >
+                    सुपर रेड +3
+                  </Button>
                 </div>
-                <div className={cn("p-2.5 rounded-xl", matchWinnerInfo.winner === 'B' ? "bg-amber-100 dark:bg-amber-950/60 border border-amber-300" : "")}>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamBCustomName}</p>
-                  <p className="text-3xl font-black font-mono text-slate-900 dark:text-white">{matchWinnerInfo.scoreB}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(matchWinnerInfo.scoreB)})</p>
-                </div>
-              </div>
 
-              {/* Celebration Victory Music Controls */}
-              <div className="p-3 rounded-2xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300/80 flex items-center justify-between gap-2">
-                <div className="text-left overflow-hidden">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-amber-900 dark:text-amber-200">
-                    <Music className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span className="truncate">
-                      {uploadedMusicName ? uploadedMusicName : "डीफॉल्ट बिगुल (Victory Fanfare)"}
-                    </span>
+                {sport === 'Kabaddi' && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button 
+                      onClick={() => addScore('B', 1, 'Bonus Point')}
+                      variant="outline"
+                      className="h-10 font-bold text-xs rounded-xl border-amber-500/40 text-amber-700 hover:bg-amber-50"
+                    >
+                      ⭐ बोनस +1
+                    </Button>
+                    <Button 
+                      onClick={() => addScore('B', 2, 'Super Tackle (+2)')}
+                      variant="outline"
+                      className="h-10 font-bold text-xs rounded-xl border-purple-500/40 text-purple-700 hover:bg-purple-50"
+                    >
+                      🛡️ सुपर टॅकल +2
+                    </Button>
+                    <Button 
+                      onClick={() => addScore('B', 2, 'All-Out')}
+                      variant="outline"
+                      className="h-10 font-bold text-xs rounded-xl border-red-500/40 text-red-700 hover:bg-red-50"
+                    >
+                      💥 ऑल-आउट +2
+                    </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-semibold">
-                    {isPlayingMusic ? "🎶 विजयी संगीत सुरू आहे..." : "सामना संपल्यावर वाजणारे संगीत"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
+                )}
+
+                <div className="flex items-center justify-between pt-1">
                   <Button
                     size="sm"
-                    onClick={toggleVictoryMusic}
+                    variant="ghost"
+                    onClick={() => triggerTimeout('B')}
+                    disabled={timeoutsB <= 0}
+                    className="text-[11px] font-bold text-muted-foreground hover:text-foreground"
+                  >
+                    ⏱️ टाइम-आऊट ({timeoutsB} बाकी)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setRaidingTeam('B')}
+                    className="text-[11px] font-bold text-orange-600 hover:text-orange-700"
+                  >
+                    रेडर बनवा (Set Raider)
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+          </div>
+
+          {/* ----------------- MATCH TIMELINE & EVENT LOGS ----------------- */}
+          <Card className="p-6 rounded-[2.5rem] border shadow-sm bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                <h3 className="font-black text-base uppercase tracking-tight text-primary">
+                  लाईव्ह सामना घडामोडी (Match Action Timeline with Player Details)
+                </h3>
+              </div>
+              <span className="text-[11px] font-bold text-muted-foreground">
+                {eventsLog.length} नोंदी (Events Logged)
+              </span>
+            </div>
+
+            {eventsLog.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-xs font-bold italic">
+                सामन्याची गुण नोंदणी सुरू करा. प्रत्येक खेळाडूने घेतलेले गुण व प्रो कबड्डी डू-ऑर-डाय घडामोडी येथे वेळेसह दिसतील.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                {eventsLog.map((event) => (
+                  <div 
+                    key={event.id}
                     className={cn(
-                      "h-8 px-3 rounded-xl font-black text-xs text-white shadow active:scale-95",
-                      isPlayingMusic ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
+                      "flex items-center justify-between p-3 rounded-2xl border text-xs",
+                      event.isDoOrDie ? "bg-red-50 border-red-200" : "bg-muted/40"
                     )}
                   >
-                    {isPlayingMusic ? <StopCircle className="w-3.5 h-3.5 mr-1" /> : <PlayCircle className="w-3.5 h-3.5 mr-1" />}
-                    {isPlayingMusic ? "थांबवा" : "वाजवा"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsMusicUploadOpen(true)}
-                    className="h-8 px-2 rounded-xl text-xs font-bold border-amber-300"
-                    title="नवीन संगीत बदला"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-2">
-                <Button
-                  onClick={() => {
-                    marathiAnnouncer.announceMatchWinner(teamACustomName, scoreA, teamBCustomName, scoreB, () => {
-                      playVictoryMusic();
-                    });
-                  }}
-                  className="w-full h-11 rounded-2xl font-black text-xs uppercase bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-md active:scale-95 flex items-center justify-center gap-1.5"
-                >
-                  <Mic className="w-4 h-4 text-slate-950" /> 📢 निकाल पुन्हा मराठीत ऐका (Speak Result)
-                </Button>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={shareMatchOnWhatsApp}
-                    className="h-10 rounded-xl font-bold text-xs text-emerald-700 bg-emerald-50 border-emerald-300 hover:bg-emerald-100"
-                  >
-                    <Share2 className="w-3.5 h-3.5 mr-1" /> WhatsApp शेअर
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={printOfficialScorecard}
-                    className="h-10 rounded-xl font-bold text-xs"
-                  >
-                    <Printer className="w-3.5 h-3.5 mr-1" /> A4 गुणपत्रिका
-                  </Button>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    stopVictoryMusic();
-                    setIsMatchResultOpen(false);
-                  }}
-                  className="w-full text-xs font-bold text-muted-foreground hover:text-foreground mt-1"
-                >
-                  बंद करा (Close)
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* ----------------- HALF TIME / 1ST HALF COMPLETE DIALOG ----------------- */}
-      <Dialog open={isHalfTimeModalOpen} onOpenChange={setIsHalfTimeModalOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-6 text-center border-2 border-blue-400/50 bg-gradient-to-b from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 shadow-2xl">
-          <DialogHeader>
-            <div className="w-16 h-16 mx-auto mb-2 rounded-3xl bg-blue-500/20 flex items-center justify-center text-blue-600 border-2 border-blue-400 shadow-inner">
-              <Timer className="w-9 h-9" />
-            </div>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-blue-300">
-              ⏸️ पहिला हाफ संपला! मध्यंतर (HALF TIME)
-            </DialogTitle>
-            <DialogDescription className="text-xs font-bold text-muted-foreground">
-              पहिल्या हाफची वेळ पूर्ण झाली असून दोन्ही संघांचे गुण खालीलप्रमाणे आहेत.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 my-2">
-            {/* Score Comparison */}
-            <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800/80 border text-center">
-              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamACustomName}</p>
-                <p className="text-4xl font-black font-mono text-slate-900 dark:text-white">{scoreA}</p>
-                <p className="text-[10px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(scoreA)})</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">{teamBCustomName}</p>
-                <p className="text-4xl font-black font-mono text-slate-900 dark:text-white">{scoreB}</p>
-                <p className="text-[10px] font-bold text-muted-foreground">गुण ({getMarathiNumberWord(scoreB)})</p>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-blue-100/80 dark:bg-blue-950/40 text-blue-950 dark:text-blue-200 text-xs font-bold">
-              {scoreA > scoreB
-                ? `⚡ ${teamACustomName} +${scoreA - scoreB} (${getMarathiNumberWord(scoreA - scoreB)}) गुणांनी आघाडीवर आहे.`
-                : scoreB > scoreA
-                  ? `⚡ ${teamBCustomName} +${scoreB - scoreA} (${getMarathiNumberWord(scoreB - scoreA)}) गुणांनी आघाडीवर आहे.`
-                  : "⚡ दोन्ही संघ सध्या बरोबरीत आहेत."}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2 pt-2">
-              <Button
-                onClick={() => {
-                  marathiAnnouncer.announceHalfTime(teamACustomName, scoreA, teamBCustomName, scoreB);
-                }}
-                variant="outline"
-                className="w-full h-10 rounded-xl font-bold text-xs text-blue-700 bg-blue-50 border-blue-300 hover:bg-blue-100 flex items-center justify-center gap-1.5"
-              >
-                <Mic className="w-4 h-4" /> 📢 मध्यंतर निकाल मराठीत ऐका
-              </Button>
-
-              <Button
-                onClick={startSecondHalf}
-                className="w-full h-12 rounded-2xl font-black text-sm uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg active:scale-95 flex items-center justify-center gap-1.5"
-              >
-                <Play className="w-4 h-4" /> ▶️ दुसरा हाफ सुरू करा (Start 2nd Half)
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setIsHalfTimeModalOpen(false);
-                  triggerMatchConclusion();
-                }}
-                className="w-full text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 mt-1"
-              >
-                सामना येथेच पूर्ण संपवा (Conclude Match Now)
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* ----------------- VICTORY MUSIC UPLOAD DIALOG ----------------- */}
-      <Dialog open={isMusicUploadOpen} onOpenChange={setIsMusicUploadOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-6 text-center border-2 border-purple-400/50 bg-gradient-to-b from-purple-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 shadow-2xl">
-          <DialogHeader>
-            <div className="w-16 h-16 mx-auto mb-2 rounded-3xl bg-purple-500/20 flex items-center justify-center text-purple-600 border-2 border-purple-400 shadow-inner">
-              <Music className="w-9 h-9" />
-            </div>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-purple-300">
-              🎵 विजयी संगीत (Victory Celebration Music)
-            </DialogTitle>
-            <DialogDescription className="text-xs font-bold text-muted-foreground">
-              सामना संपल्यावर व मराठीत निकाल जाहीर झाल्यानंतर हे संगीत आपोआप वाजवले जाईल.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 my-2 text-left">
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border space-y-3">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
-                ऑडिओ / गाणे निवडा (Select MP3 / Audio File):
-              </label>
-              <input
-                type="file"
-                accept="audio/*,.mp3,.wav,.ogg,.m4a"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (uploadedMusicUrl) URL.revokeObjectURL(uploadedMusicUrl);
-                    const url = URL.createObjectURL(file);
-                    setUploadedMusicUrl(url);
-                    setUploadedMusicName(file.name);
-                    toast({
-                      title: "🎵 संगीत अपलोड झाले!",
-                      description: `"${file.name}" हे गाणे विजयानंतर वाजवण्यासाठी सेट केले आहे.`,
-                      className: "bg-purple-600 text-white font-bold"
-                    });
-                  }
-                }}
-                className="w-full text-xs font-bold file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer border rounded-xl p-2 bg-muted/40"
-              />
-
-              {uploadedMusicName ? (
-                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 flex items-center justify-between gap-2">
-                  <div className="overflow-hidden">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">सध्याचे सेट केलेले गाणे:</p>
-                    <p className="text-xs font-black text-purple-900 dark:text-purple-200 truncate">{uploadedMusicName}</p>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-bold text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-lg">
+                        {event.timestamp}
+                      </span>
+                      <span className={cn("font-black uppercase", event.team === 'A' ? "text-red-600" : "text-blue-600")}>
+                        {event.teamName}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {event.desc}
+                      </span>
+                    </div>
+                    <Badge className={cn("text-white font-black text-[10px]", event.isDoOrDie ? "bg-red-600" : "bg-primary")}>
+                      +{event.points} गुण
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      size="sm"
-                      onClick={toggleVictoryMusic}
-                      className={cn(
-                        "h-8 px-2.5 rounded-lg text-xs font-bold text-white",
-                        isPlayingMusic ? "bg-red-600 hover:bg-red-700" : "bg-purple-600 hover:bg-purple-700"
-                      )}
-                    >
-                      {isPlayingMusic ? <StopCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        stopVictoryMusic();
-                        if (uploadedMusicUrl) URL.revokeObjectURL(uploadedMusicUrl);
-                        setUploadedMusicUrl(null);
-                        setUploadedMusicName(null);
-                        toast({ title: "अपलोड केलेले गाणे हटवले (डीफॉल्ट बिगुल सेट)" });
-                      }}
-                      className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      title="गाणे काढा"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                ))}
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      {/* ---------------------------------------------------------------------------------- */}
+      {/* TAB 2: PLAYER PERFORMANCE SCORECARD & LEADERBOARD */}
+      {/* ---------------------------------------------------------------------------------- */}
+      {activeTab === 'player_stats' && (
+        <div className="space-y-6">
+          {/* Top Performers Spotlight Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Top Scorer */}
+            <Card className="p-5 rounded-3xl border bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/30">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                  🌟 सर्वोच्च गुणपटू (Top Scorer)
+                </span>
+                <Crown className="w-5 h-5 text-amber-500" />
+              </div>
+              {topScorer && topScorer.totalPoints > 0 ? (
+                <div>
+                  <h4 className="text-xl font-black text-foreground">#{topScorer.jerseyNumber} {topScorer.nameMarathi || topScorer.name}</h4>
+                  <p className="text-xs font-bold text-muted-foreground">{topScorer.teamName}</p>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-amber-600">{topScorer.totalPoints}</span>
+                    <span className="text-xs font-bold text-muted-foreground">एकूण गुण</span>
                   </div>
                 </div>
               ) : (
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-[11px] font-semibold text-amber-900 dark:text-amber-200">
-                  ℹ️ कोणतेही गाणे अपलोड न केल्यास, विजयानंतर प्रो कबड्डी स्टाईल बिगुल (Fanfare Synthesizer) आपोआप वाजेल.
-                </div>
+                <p className="text-xs text-muted-foreground italic py-4">अद्याप गुण नोंदवले नाहीत.</p>
               )}
-            </div>
+            </Card>
 
-            <div className="space-y-2 pt-1">
-              <Button
-                onClick={() => setIsMusicUploadOpen(false)}
-                className="w-full h-11 rounded-xl font-black text-xs uppercase bg-purple-600 hover:bg-purple-700 text-white shadow-md"
-              >
-                जतन करा आणि बंद करा (Save & Close)
-              </Button>
-            </div>
+            {/* Top Raider */}
+            <Card className="p-5 rounded-3xl border bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/30">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-orange-700 bg-orange-100 px-2.5 py-1 rounded-full">
+                  ⚡ सर्वोत्कृष्ट रेडर (Top Raider)
+                </span>
+                <Flame className="w-5 h-5 text-orange-500" />
+              </div>
+              {topRaider && topRaider.raidPoints > 0 ? (
+                <div>
+                  <h4 className="text-xl font-black text-foreground">#{topRaider.jerseyNumber} {topRaider.nameMarathi || topRaider.name}</h4>
+                  <p className="text-xs font-bold text-muted-foreground">{topRaider.teamName}</p>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-orange-600">{topRaider.raidPoints}</span>
+                    <span className="text-xs font-bold text-muted-foreground">रेड गुण ({topRaider.bonusPoints} बोनस)</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic py-4">अद्याप रेड गुण नाहीत.</p>
+              )}
+            </Card>
+
+            {/* Top Defender */}
+            <Card className="p-5 rounded-3xl border bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/30">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full">
+                  🛡️ सर्वोत्कृष्ट पकडपटू (Top Defender)
+                </span>
+                <Shield className="w-5 h-5 text-purple-500" />
+              </div>
+              {topDefender && topDefender.tacklePoints > 0 ? (
+                <div>
+                  <h4 className="text-xl font-black text-foreground">#{topDefender.jerseyNumber} {topDefender.nameMarathi || topDefender.name}</h4>
+                  <p className="text-xs font-bold text-muted-foreground">{topDefender.teamName}</p>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-purple-600">{topDefender.tacklePoints}</span>
+                    <span className="text-xs font-bold text-muted-foreground">पकड गुण</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic py-4">अद्याप टॅकल गुण नाहीत.</p>
+              )}
+            </Card>
+
           </div>
-        </DialogContent>
-      </Dialog>
+
+          {/* TEAM A & TEAM B DETAILED PLAYER TABLES */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Team A Table */}
+            <Card className="p-5 rounded-3xl border shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className={cn("w-3.5 h-3.5 rounded-full", houseAObj.bg)} />
+                  <h3 className="font-black text-base uppercase text-primary">
+                    {teamACustomName} - खेळाडू गुणफलक
+                  </h3>
+                </div>
+                <Badge className="bg-primary text-white font-black text-xs">
+                  एकूण: {scoreA} गुण
+                </Badge>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b text-muted-foreground font-black text-[10px] uppercase">
+                      <th className="py-2 px-1">#</th>
+                      <th className="py-2 px-2">खेळाडू नाव</th>
+                      <th className="py-2 px-1 text-center">रेड</th>
+                      <th className="py-2 px-1 text-center">बोनस</th>
+                      <th className="py-2 px-1 text-center">टॅकल</th>
+                      <th className="py-2 px-1 text-right font-black">एकूण</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y font-bold">
+                    {squadA.map(p => (
+                      <tr key={p.id} className={cn("hover:bg-muted/30 transition-colors", p.totalPoints > 0 && "bg-amber-50/50 dark:bg-amber-950/20")}>
+                        <td className="py-2.5 px-1 font-mono font-black text-primary">#{p.jerseyNumber}</td>
+                        <td className="py-2.5 px-2">
+                          <p className="font-black text-foreground">{p.nameMarathi || p.name}</p>
+                          {p.std && <p className="text-[10px] text-muted-foreground">इ. {p.std}</p>}
+                        </td>
+                        <td className="py-2.5 px-1 text-center text-orange-600 font-black">{p.raidPoints}</td>
+                        <td className="py-2.5 px-1 text-center text-amber-600">{p.bonusPoints}</td>
+                        <td className="py-2.5 px-1 text-center text-purple-600 font-black">{p.tacklePoints}</td>
+                        <td className="py-2.5 px-1 text-right font-black text-sm text-primary">
+                          {p.totalPoints}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            {/* Team B Table */}
+            <Card className="p-5 rounded-3xl border shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className={cn("w-3.5 h-3.5 rounded-full", houseBObj.bg)} />
+                  <h3 className="font-black text-base uppercase text-primary">
+                    {teamBCustomName} - खेळाडू गुणफलक
+                  </h3>
+                </div>
+                <Badge className="bg-primary text-white font-black text-xs">
+                  एकूण: {scoreB} गुण
+                </Badge>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b text-muted-foreground font-black text-[10px] uppercase">
+                      <th className="py-2 px-1">#</th>
+                      <th className="py-2 px-2">खेळाडू नाव</th>
+                      <th className="py-2 px-1 text-center">रेड</th>
+                      <th className="py-2 px-1 text-center">बोनस</th>
+                      <th className="py-2 px-1 text-center">टॅकल</th>
+                      <th className="py-2 px-1 text-right font-black">एकूण</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y font-bold">
+                    {squadB.map(p => (
+                      <tr key={p.id} className={cn("hover:bg-muted/30 transition-colors", p.totalPoints > 0 && "bg-amber-50/50 dark:bg-amber-950/20")}>
+                        <td className="py-2.5 px-1 font-mono font-black text-primary">#{p.jerseyNumber}</td>
+                        <td className="py-2.5 px-2">
+                          <p className="font-black text-foreground">{p.nameMarathi || p.name}</p>
+                          {p.std && <p className="text-[10px] text-muted-foreground">इ. {p.std}</p>}
+                        </td>
+                        <td className="py-2.5 px-1 text-center text-orange-600 font-black">{p.raidPoints}</td>
+                        <td className="py-2.5 px-1 text-center text-amber-600">{p.bonusPoints}</td>
+                        <td className="py-2.5 px-1 text-center text-purple-600 font-black">{p.tacklePoints}</td>
+                        <td className="py-2.5 px-1 text-right font-black text-sm text-primary">
+                          {p.totalPoints}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------------------------------------- */}
+      {/* TAB 3: SQUAD ROSTER & JERSEY CUSTOMIZATION */}
+      {/* ---------------------------------------------------------------------------------- */}
+      {activeTab === 'squad_setup' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Team A Squad Setup */}
+          <Card className="p-5 rounded-3xl border shadow-sm">
+            <h3 className="font-black text-base uppercase mb-4 text-primary">
+              👥 {teamACustomName} खेळाडू यादी व जर्सी क्र.
+            </h3>
+            <div className="space-y-3">
+              {squadA.map((p, idx) => (
+                <div key={p.id} className="flex items-center gap-2 p-2 rounded-2xl bg-muted/30 border">
+                  <Input 
+                    value={p.jerseyNumber}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSquadA(prev => prev.map((pl, i) => i === idx ? { ...pl, jerseyNumber: val } : pl));
+                    }}
+                    className="w-16 font-mono font-black text-center h-9 text-xs"
+                    placeholder="#"
+                  />
+                  <Input 
+                    value={p.nameMarathi || p.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSquadA(prev => prev.map((pl, i) => i === idx ? { ...pl, nameMarathi: val, name: val } : pl));
+                    }}
+                    className="flex-1 font-bold h-9 text-xs"
+                    placeholder="खेळाडूचे नाव"
+                  />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Team B Squad Setup */}
+          <Card className="p-5 rounded-3xl border shadow-sm">
+            <h3 className="font-black text-base uppercase mb-4 text-primary">
+              👥 {teamBCustomName} खेळाडू यादी व जर्सी क्र.
+            </h3>
+            <div className="space-y-3">
+              {squadB.map((p, idx) => (
+                <div key={p.id} className="flex items-center gap-2 p-2 rounded-2xl bg-muted/30 border">
+                  <Input 
+                    value={p.jerseyNumber}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSquadB(prev => prev.map((pl, i) => i === idx ? { ...pl, jerseyNumber: val } : pl));
+                    }}
+                    className="w-16 font-mono font-black text-center h-9 text-xs"
+                    placeholder="#"
+                  />
+                  <Input 
+                    value={p.nameMarathi || p.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSquadB(prev => prev.map((pl, i) => i === idx ? { ...pl, nameMarathi: val, name: val } : pl));
+                    }}
+                    className="flex-1 font-bold h-9 text-xs"
+                    placeholder="खेळाडूचे नाव"
+                  />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* ----------------- PRINT-ONLY OFFICIAL A4 SCORECARD ----------------- */}
       <div className="hidden print:block fixed inset-0 bg-white p-8 z-[9999] text-black">
@@ -3047,12 +1809,12 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
           <h1 className="text-2xl font-black uppercase">शासकीय माध्यमिक आश्रम शाळा वाघंबा</h1>
           <p className="text-sm font-bold">तालुका - सुरगाणा, जिल्हा - नाशिक &bull; क्रीडा व शारीरिक शिक्षण विभाग</p>
           <h2 className="text-lg font-black uppercase tracking-wider mt-2 bg-black text-white py-1 px-4 inline-block">
-            अधिकृत सामना गुणपत्रिका (OFFICIAL MATCH SCORECARD)
+            अधिकृत प्रो सामना गुणपत्रिका (OFFICIAL MATCH & PLAYER SCORECARD)
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-xs font-bold border border-black p-4 mb-6">
-          <div><strong>खेळ / प्रकार (Sport):</strong> {sport}</div>
+        <div className="grid grid-cols-2 gap-4 text-xs font-bold border border-black p-4 mb-4">
+          <div><strong>खेळ / प्रकार (Sport):</strong> {sport} (Pro Rules)</div>
           <div><strong>दिनांक (Date):</strong> {new Date().toLocaleDateString('mr-IN')}</div>
           <div><strong>संघ अ (Team A):</strong> {teamACustomName}</div>
           <div><strong>संघ ब (Team B):</strong> {teamBCustomName}</div>
@@ -3060,30 +1822,86 @@ export function MatchScoreboard({ store, preselectedSport = 'Kabaddi' }: MatchSc
           <div><strong>अंतिम गुण (Final Score):</strong> {teamACustomName} ({scoreA}) - {teamBCustomName} ({scoreB})</div>
         </div>
 
-        <h3 className="font-black text-xs uppercase mb-2">गुण नोंदणी तपशील (Point Progression):</h3>
+        {/* Player Point Distribution Table */}
+        <h3 className="font-black text-xs uppercase mb-2">खेळाडू गुण तपशील (Player-wise Points Breakdown):</h3>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <h4 className="font-bold text-[11px] mb-1">{teamACustomName} ({scoreA} गुण)</h4>
+            <table className="w-full text-[10px] border-collapse border border-black">
+              <thead>
+                <tr className="bg-gray-100 border-b border-black">
+                  <th className="border border-black p-1">#</th>
+                  <th className="border border-black p-1 text-left">खेळाडू नाव</th>
+                  <th className="border border-black p-1 text-center">रेड</th>
+                  <th className="border border-black p-1 text-center">टॅकल</th>
+                  <th className="border border-black p-1 text-right">एकूण</th>
+                </tr>
+              </thead>
+              <tbody>
+                {squadA.map(p => (
+                  <tr key={p.id} className="border-b border-gray-300">
+                    <td className="border border-black p-1 text-center">#{p.jerseyNumber}</td>
+                    <td className="border border-black p-1">{p.nameMarathi || p.name}</td>
+                    <td className="border border-black p-1 text-center">{p.raidPoints}</td>
+                    <td className="border border-black p-1 text-center">{p.tacklePoints}</td>
+                    <td className="border border-black p-1 text-right font-bold">{p.totalPoints}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-[11px] mb-1">{teamBCustomName} ({scoreB} गुण)</h4>
+            <table className="w-full text-[10px] border-collapse border border-black">
+              <thead>
+                <tr className="bg-gray-100 border-b border-black">
+                  <th className="border border-black p-1">#</th>
+                  <th className="border border-black p-1 text-left">खेळाडू नाव</th>
+                  <th className="border border-black p-1 text-center">रेड</th>
+                  <th className="border border-black p-1 text-center">टॅकल</th>
+                  <th className="border border-black p-1 text-right">एकूण</th>
+                </tr>
+              </thead>
+              <tbody>
+                {squadB.map(p => (
+                  <tr key={p.id} className="border-b border-gray-300">
+                    <td className="border border-black p-1 text-center">#{p.jerseyNumber}</td>
+                    <td className="border border-black p-1">{p.nameMarathi || p.name}</td>
+                    <td className="border border-black p-1 text-center">{p.raidPoints}</td>
+                    <td className="border border-black p-1 text-center">{p.tacklePoints}</td>
+                    <td className="border border-black p-1 text-right font-bold">{p.totalPoints}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h3 className="font-black text-xs uppercase mb-2">सामना कृती नोंदी (Match Action Progression):</h3>
         <table className="w-full text-[10px] border-collapse border border-black mb-12">
           <thead>
             <tr className="bg-gray-100 border-b border-black">
               <th className="border border-black p-1 text-left">वेळ</th>
               <th className="border border-black p-1 text-left">संघ</th>
-              <th className="border border-black p-1 text-left">प्रकार</th>
+              <th className="border border-black p-1 text-left">तपशील व खेळाडू</th>
               <th className="border border-black p-1 text-right">गुण</th>
             </tr>
           </thead>
           <tbody>
-            {eventsLog.slice(0, 20).map((e) => (
+            {eventsLog.slice(0, 25).map((e) => (
               <tr key={e.id} className="border-b border-gray-300">
                 <td className="border border-black p-1">{e.timestamp}</td>
                 <td className="border border-black p-1 font-bold">{e.teamName}</td>
-                <td className="border border-black p-1">{e.type}</td>
+                <td className="border border-black p-1">{e.desc}</td>
                 <td className="border border-black p-1 text-right font-bold">+{e.points}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="grid grid-cols-3 gap-8 text-center text-xs font-bold pt-16">
-          <div className="border-t border-black pt-2">पंच / रेफरी स्वाक्षरी</div>
+        <div className="grid grid-cols-3 gap-8 text-center text-xs font-bold pt-12">
+          <div className="border-t border-black pt-2">पंच / मुख्य रेफरी स्वाक्षरी</div>
           <div className="border-t border-black pt-2">क्रीडा शिक्षक स्वाक्षरी</div>
           <div className="border-t border-black pt-2">मुख्याध्यापक / शाळा शिक्का</div>
         </div>

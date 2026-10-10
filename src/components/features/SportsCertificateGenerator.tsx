@@ -139,19 +139,35 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
 
   const handleSaveCertEdit = () => {
     if (!editingPlayerForCert) return;
+    const sanitizedGr = sanitizeGrNumber(editingPlayerForCert.generalRegisterNumber, '');
+    const certData = {
+      nameMarathi: editingPlayerForCert.nameMarathi,
+      name: editingPlayerForCert.name,
+      generalRegisterNumber: sanitizedGr,
+      std: editingPlayerForCert.std,
+      rankId: editingPlayerForCert.rankId
+    };
+
     setCertOverrides(prev => ({
       ...prev,
-      [editingPlayerForCert.id]: {
-        nameMarathi: editingPlayerForCert.nameMarathi,
-        name: editingPlayerForCert.name,
-        generalRegisterNumber: sanitizeGrNumber(editingPlayerForCert.generalRegisterNumber, ''),
-        std: editingPlayerForCert.std,
-        rankId: editingPlayerForCert.rankId
-      }
+      [editingPlayerForCert.id]: certData
     }));
+
+    // Update underlying player in institutional store registry
+    const origPlayer = allPlayers.find((p: any) => p.id === editingPlayerForCert.id);
+    if (origPlayer && store?.updatePlayer) {
+      store.updatePlayer({
+        ...origPlayer,
+        name: editingPlayerForCert.name || origPlayer.name,
+        nameMarathi: editingPlayerForCert.nameMarathi || origPlayer.nameMarathi,
+        generalRegisterNumber: sanitizedGr || origPlayer.generalRegisterNumber,
+        std: editingPlayerForCert.std || origPlayer.std,
+      });
+    }
+
     toast({
-      title: "प्रमाणपत्र माहिती जतन झाली! ✅",
-      description: `${editingPlayerForCert.nameMarathi} ची प्रमाणपत्र माहिती अद्ययावत केली.`,
+      title: "Your information successfully updated",
+      description: `${editingPlayerForCert.nameMarathi || editingPlayerForCert.name} ची माहिती यशस्वीरित्या अद्ययावत झाली.`,
       className: "bg-emerald-600 text-white font-black"
     });
     setEditingPlayerForCert(null);
@@ -1075,15 +1091,17 @@ export function SportsCertificateGenerator({ store, preselectedSport }: { store:
 
               <div className="flex items-center gap-2 pt-3">
                 <Button
+                  type="button"
                   onClick={handleSaveCertEdit}
-                  className="flex-1 h-11 rounded-xl font-black text-xs uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center justify-center gap-1.5"
+                  className="flex-1 h-11 rounded-xl font-black text-xs uppercase bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                 >
                   <Check className="w-4 h-4" /> बदल जतन करा (Save Changes)
                 </Button>
                 <Button
+                  type="button"
                   variant="ghost"
                   onClick={() => setEditingPlayerForCert(null)}
-                  className="h-11 rounded-xl text-xs font-bold text-slate-600"
+                  className="h-11 rounded-xl text-xs font-bold text-slate-600 cursor-pointer"
                 >
                   रद्द करा
                 </Button>

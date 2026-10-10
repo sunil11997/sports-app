@@ -43,7 +43,10 @@ import {
   Medal,
   Award,
   Activity,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import type { Player } from '@/lib/types';
 import {
   getAgeValidation,
@@ -164,7 +167,9 @@ export function PlayerEditDialog({
   onClose,
   onSave,
 }: PlayerEditDialogProps) {
+  const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(player);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFullAadhaar, setShowFullAadhaar] = useState(false);
   const [activeCam, setActiveCam] = useState<'profile' | 'aadhar' | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
@@ -179,6 +184,17 @@ export function PlayerEditDialog({
     setEditingPlayer(player ? { ...player } : null);
   }, [player]);
 
+  // Clean unmount for low RAM devices to prevent camera memory leaks
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => {
+          try { track.stop(); } catch (e) {}
+        });
+      }
+    };
+  }, [stream]);
+
   const ageValidation = useMemo(
     () => getAgeValidation(editingPlayer?.dob),
     [editingPlayer?.dob]
@@ -186,7 +202,12 @@ export function PlayerEditDialog({
 
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+      stream.getTracks().forEach((track) => {
+        try { track.stop(); } catch (e) {}
+      });
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setStream(null);
     setActiveCam(null);
@@ -287,53 +308,84 @@ export function PlayerEditDialog({
     onClose();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!editingPlayer) return;
 
-    const finalName = (editingPlayer.name || '').trim();
-    const finalNameMarathi =
-      (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+    try {
+      setIsSubmitting(true);
+      const finalName = (editingPlayer.name || '').trim();
+      const finalNameMarathi =
+        (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
 
-    const primary = editingPlayer.primarySport || editingPlayer.sports?.[0] || '';
-    const jersey = (editingPlayer.jerseyNumber || '').replace(/[^0-9]/g, '');
-    const pos = (editingPlayer.position || '').trim();
+      if (!finalName && !finalNameMarathi) {
+        toast({
+          title: "नाव आवश्यक आहे (Name Required)",
+          description: "कृपया विद्यार्थ्यांचे नाव प्रविष्ट करा.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-    const updatedJerseyNumbers = {
-      ...(editingPlayer.jerseyNumbers || {}),
-      ...(primary && jersey ? { [primary]: jersey } : {})
-    };
-    const updatedPositions = {
-      ...(editingPlayer.positions || {}),
-      ...(primary && pos ? { [primary]: pos } : {})
-    };
+      const primary = editingPlayer.primarySport || editingPlayer.sports?.[0] || '';
+      const jersey = (editingPlayer.jerseyNumber || '').replace(/[^0-9]/g, '');
+      const pos = (editingPlayer.position || '').trim();
 
-    const updated: Player = {
-      ...editingPlayer,
-      name: finalName,
-      nameMarathi: finalNameMarathi,
-      motherName: editingPlayer.motherName?.trim() || undefined,
-      fatherName: editingPlayer.fatherName?.trim() || undefined,
-      saralId: editingPlayer.saralId?.trim() || undefined,
-      category: editingPlayer.category || 'student',
-      primarySport: primary || undefined,
-      jerseyNumber: jersey || undefined,
-      jerseyNumbers: Object.keys(updatedJerseyNumbers).length > 0 ? updatedJerseyNumbers : undefined,
-      position: pos || undefined,
-      positions: Object.keys(updatedPositions).length > 0 ? updatedPositions : undefined,
-      age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
-      ageCategory: ageValidation ? ageValidation.category : 'None',
-      ageDetailed: ageValidation ? ageValidation.ageString : '',
-    };
+      const updatedJerseyNumbers = {
+        ...(editingPlayer.jerseyNumbers || {}),
+        ...(primary && jersey ? { [primary]: jersey } : {})
+      };
+      const updatedPositions = {
+        ...(editingPlayer.positions || {}),
+        ...(primary && pos ? { [primary]: pos } : {})
+      };
 
-    stopCamera();
-    onSave(updated);
+      const updated: Player = {
+        ...editingPlayer,
+        name: finalName || finalNameMarathi,
+        nameMarathi: finalNameMarathi || finalName,
+        motherName: editingPlayer.motherName?.trim() || '',
+        fatherName: editingPlayer.fatherName?.trim() || '',
+        saralId: editingPlayer.saralId?.trim() || '',
+        category: editingPlayer.category || 'student',
+        primarySport: primary || '',
+        jerseyNumber: jersey || '',
+        jerseyNumbers: Object.keys(updatedJerseyNumbers).length > 0 ? updatedJerseyNumbers : {},
+        position: pos || '',
+        positions: Object.keys(updatedPositions).length > 0 ? updatedPositions : {},
+        age: ageValidation ? ageValidation.ageYears : (editingPlayer.age || 0),
+        ageCategory: ageValidation ? ageValidation.category : (editingPlayer.ageCategory || 'None'),
+        ageDetailed: ageValidation ? ageValidation.ageString : (editingPlayer.ageDetailed || ''),
+      };
+
+      stopCamera();
+      if (onSave) {
+        await onSave(updated);
+      }
+      toast({
+        title: "माहिती यशस्वीरित्या जतन झाली! (Information Saved Successfully!)",
+        description: `${updated.nameMarathi || updated.name} ची संस्थात्मक माहिती यशस्वीरित्या अद्ययावत केली.`,
+        className: "bg-emerald-600 text-white font-bold"
+      });
+      handleClose();
+    } catch (err: any) {
+      console.warn("Notice during player save:", err);
+      toast({
+        title: "जतन करताना त्रुटी आली (Save Error)",
+        description: "माहिती जतन करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.",
+        variant: "destructive"
+      });
+      handleClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!editingPlayer) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[850px] rounded-2xl sm:rounded-[3rem] p-0 overflow-hidden h-[90vh] sm:h-[85vh] flex flex-col border-none shadow-3xl bg-white">
+      <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-[850px] rounded-2xl sm:rounded-[3rem] p-0 overflow-hidden max-h-[92dvh] h-[92dvh] sm:h-[85vh] flex flex-col border-none shadow-3xl bg-white gap-0">
         <DialogHeader className="bg-primary p-4 sm:p-8 text-white shrink-0">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0">
@@ -350,7 +402,7 @@ export function PlayerEditDialog({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 p-4 sm:p-8">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-8 touch-pan-y scrollbar-thin">
           <div className="space-y-6 max-w-2xl mx-auto">
             {/* Visual Documents Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -995,14 +1047,34 @@ export function PlayerEditDialog({
               )}
             </div>
           </div>
-        </ScrollArea>
-
-        <DialogFooter className="p-4 sm:p-6 bg-slate-50 border-t shrink-0 flex items-center justify-between gap-3">
-          <Button variant="ghost" onClick={handleClose} className="h-11 rounded-xl font-bold text-xs">
-            Cancel
+        </div>
+ 
+        <DialogFooter className="p-4 sm:p-6 bg-slate-50 border-t shrink-0 flex flex-row items-center justify-between gap-3 z-10 sticky bottom-0">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleClose}
+            className="h-11 rounded-xl font-bold text-xs"
+          >
+            Cancel (रद्द करा)
           </Button>
-          <Button onClick={handleSubmit} className="h-11 px-8 rounded-xl font-black text-xs uppercase tracking-wider shadow-md">
-            Save Changes
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="h-11 px-8 rounded-xl font-black text-xs uppercase tracking-wider shadow-md bg-primary hover:bg-primary/90 text-white active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                जतन करत आहे...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                Save Changes (बदल जतन करा)
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

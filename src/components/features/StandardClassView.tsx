@@ -39,6 +39,8 @@ import {
   Cake,
   Trophy,
   User,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -94,6 +96,7 @@ const SPORT_MARATHI_LABELS: Record<string, string> = {
 export function StandardClassView({ store, std, language = 'English' }: { store: any, std: string, language?: string }) {
   const { toast } = useToast();
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [isUpdatingPlayer, setIsUpdatingPlayer] = useState(false);
   const [selectedIdentityPlayer, setSelectedIdentityPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   const [searchTerm, setSearchTerm] = useState("");
@@ -211,29 +214,64 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     }
   };
 
-  const handleUpdatePlayer = () => {
-    if (editingPlayer) {
+  const handleUpdatePlayer = async () => {
+    if (!editingPlayer) return;
+
+    const finalName = (editingPlayer.name || '').trim();
+    const finalNameMarathi = (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+
+    if (!finalName && !finalNameMarathi) {
+      toast({
+        title: isMarathiView ? "नाव आवश्यक आहे" : "Name Required",
+        description: isMarathiView ? "कृपया विद्यार्थ्यांचे नाव प्रविष्ट करा." : "Please enter the student's name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsUpdatingPlayer(true);
       const ageValidation = getAgeValidation(editingPlayer.dob);
       const computedBmi = calculateBMI(editingPlayer.height, editingPlayer.weight, editingPlayer.bmi);
-      const finalName = (editingPlayer.name || '').trim();
-      const finalNameMarathi = (editingPlayer.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
+      const resolvedId = editingPlayer.id || generateId(`std${editingPlayer.std || std}`);
 
-      const updatedPlayer = {
+      const updatedPlayer: Player = {
         ...editingPlayer,
+        id: resolvedId,
+        std: editingPlayer.std || std,
         name: finalName || finalNameMarathi,
         nameMarathi: finalNameMarathi || finalName,
-        motherName: editingPlayer.motherName?.trim() || undefined,
-        fatherName: editingPlayer.fatherName?.trim() || undefined,
-        saralId: editingPlayer.saralId?.trim() || undefined,
+        motherName: editingPlayer.motherName?.trim() || '',
+        fatherName: editingPlayer.fatherName?.trim() || '',
+        saralId: editingPlayer.saralId?.trim() || '',
         bmi: computedBmi,
-        age: ageValidation ? ageValidation.ageYears : editingPlayer.age,
+        age: ageValidation ? ageValidation.ageYears : (editingPlayer.age || 0),
         ageCategory: ageValidation ? ageValidation.category : "None",
         ageDetailed: ageValidation ? ageValidation.ageString : "",
       };
-      store.updatePlayer(updatedPlayer);
+
+      if (store?.updatePlayer) {
+        await store.updatePlayer(updatedPlayer);
+      }
+
       setEditingPlayer(null);
       stopCamera();
-      toast({ title: "Registry Updated", description: `${updatedPlayer.name}'s profile has been modified.` });
+      toast({
+        title: isMarathiView ? "माहिती यशस्वीरित्या जतन झाली!" : "Information Saved Successfully!",
+        description: isMarathiView
+          ? `${updatedPlayer.nameMarathi || updatedPlayer.name} ची संस्थात्मक माहिती यशस्वीरित्या अद्ययावत केली.`
+          : `${updatedPlayer.name}'s institutional profile has been successfully saved.`,
+        className: "bg-emerald-600 text-white font-bold"
+      });
+    } catch (err: any) {
+      console.error("Error saving institutional profile in StandardClassView:", err);
+      toast({
+        title: isMarathiView ? "जतन करताना त्रुटी आली" : "Save Error",
+        description: isMarathiView ? "माहिती जतन करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा." : "Failed to save profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingPlayer(false);
     }
   };
 
@@ -1083,8 +1121,33 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
             </div>
           </ScrollArea>
 
-          <DialogFooter className="p-8 border-t bg-muted/10 shrink-0">
-             <Button onClick={handleUpdatePlayer} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-lg active-scale">Save Registry Update</Button>
+          <DialogFooter className="p-6 sm:p-8 border-t bg-muted/10 shrink-0 flex items-center justify-between gap-4">
+             <Button
+               type="button"
+               variant="ghost"
+               onClick={() => { setEditingPlayer(null); stopCamera(); }}
+               className="h-14 rounded-2xl font-bold text-xs"
+             >
+               {isMarathiView ? "रद्द करा (Cancel)" : "Cancel"}
+             </Button>
+             <Button 
+               type="button"
+               onClick={handleUpdatePlayer} 
+               disabled={isUpdatingPlayer}
+               className="flex-1 h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg active-scale cursor-pointer flex items-center justify-center gap-2"
+             >
+               {isUpdatingPlayer ? (
+                 <>
+                   <Loader2 className="w-5 h-5 animate-spin mr-1" />
+                   {isMarathiView ? "जतन करत आहे..." : "Saving Changes..."}
+                 </>
+               ) : (
+                 <>
+                   <CheckCircle2 className="w-5 h-5 text-emerald-400 mr-1" />
+                   {isMarathiView ? "बदल जतन करा (Save Changes)" : "Save Changes (बदल जतन करा)"}
+                 </>
+               )}
+             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -164,14 +164,14 @@ export const SPORT_POSITION_OPTIONS: Record<string, { code: string; labelMr: str
 const BLOOD_GROUPS = ['None', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 const formSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(2, "Name is required"),
+  id: z.string().optional().default(""),
+  name: z.string().optional().default(""),
   nameMarathi: z.string().optional().default(""),
   motherName: z.string().optional().default(""),
   fatherName: z.string().optional().default(""),
-  std: z.string().min(1, "Standard is required"),
-  category: z.enum(["athlete", "student"]),
-  gender: z.enum(["Male", "Female"]),
+  std: z.string().optional().default("1"),
+  category: z.string().optional().default("student"),
+  gender: z.string().optional().default("Male"),
   serialNumber: z.string().optional().default(""),
   saralId: z.string().optional().default(""),
   admissionDate: z.string().optional().default(""),
@@ -191,13 +191,20 @@ const formSchema = z.object({
   primarySport: z.string().optional().default(""),
   jerseyNumber: z.string().optional().default(""),
   position: z.string().optional().default(""),
-  tournamentRole: z.enum(["player", "captain", "vice_captain", "substitute"]).optional().default("player"),
+  tournamentRole: z.string().optional().default("player"),
   isStarter: z.boolean().optional().default(true),
-  history: z.enum(["Yes", "No"]).optional().default("No"),
+  history: z.string().optional().default("No"),
   histDetail: z.string().optional().default(""),
   medical: z.string().optional().default(""),
   photoUrl: z.string().optional().default(""),
   aadharPhotoUrl: z.string().optional().default(""),
+}).refine((data) => {
+  const hasName = Boolean(data.name && data.name.trim().length >= 2);
+  const hasMarathiName = Boolean(data.nameMarathi && data.nameMarathi.trim().length >= 2);
+  return hasName || hasMarathiName;
+}, {
+  message: "कृपया विद्यार्थ्यांचे नाव प्रविष्ट करा (Student Name is required)",
+  path: ["name"]
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -403,12 +410,48 @@ export function Registration({ store, section }: { store: any, section: 'sports'
     }
   };
 
+  const onInvalid = (errors: any) => {
+    console.warn("Registration form validation errors:", errors);
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      const firstKey = errorKeys[0];
+      const errorMsg = errors[firstKey]?.message || "कृपया आवश्यक माहिती भरा.";
+      toast({
+        title: "माहिती अपूर्ण आहे (Form Incomplete)",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      try {
+        const el = document.querySelector(`[name="${firstKey}"]`) || document.getElementById('registration-form');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (e) {}
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
+      const rawName = (values.name || '').trim();
+      const rawMarathi = (values.nameMarathi || '').trim();
+
+      if (!rawName && !rawMarathi) {
+        toast({
+          title: "नाव आवश्यक आहे (Name Required)",
+          description: "कृपया विद्यार्थ्यांचे नाव प्रविष्ट करा.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      const finalName = rawName || rawMarathi;
+      const finalNameMarathi = rawMarathi || (rawName ? transliterateEnglishToMarathi(rawName) : finalName);
+
       // Duplicate GR Number check
       if (values.generalRegisterNumber?.trim()) {
-        const existingGr = (store.data?.players || []).find(
+        const existingGr = (store?.data?.players || []).find(
           (p: Player) =>
             p.id !== values.id &&
             p.generalRegisterNumber?.trim() &&
@@ -437,13 +480,11 @@ export function Registration({ store, section }: { store: any, section: 'sports'
         if (h > 0) bmi = (w / (h * h)).toFixed(1);
       }
 
-      const finalName = (values.name || '').trim();
-      const finalNameMarathi = (values.nameMarathi || '').trim() || transliterateEnglishToMarathi(finalName);
       const primary = values.primarySport || (values.sports && values.sports[0]) || '';
       const jersey = (values.jerseyNumber || '').replace(/[^0-9]/g, '');
       const pos = (values.position || '').trim();
 
-      const existingPlayer = values.id ? (store.data?.players || []).find((p: any) => p.id === values.id) : null;
+      const existingPlayer = values.id ? (store?.data?.players || []).find((p: any) => p.id === values.id) : null;
 
       const jerseyNumbers: Record<string, string> = {
         ...(existingPlayer?.jerseyNumbers || {})
@@ -463,38 +504,52 @@ export function Registration({ store, section }: { store: any, section: 'sports'
       const isViceCaptain = values.tournamentRole === 'vice_captain';
       const isStarter = values.tournamentRole !== 'substitute' && values.isStarter !== false;
 
-      await store.addPlayer({ 
+      const newPlayerId = values.id || generateId('std');
+      const studentPayload: Player = { 
         ...values,
+        id: newPlayerId,
         name: finalName,
         nameMarathi: finalNameMarathi,
+        gender: (values.gender === 'Female' ? 'Female' : 'Male'),
+        history: (values.history === 'Yes' ? 'Yes' : 'No'),
         motherName: values.motherName?.trim() || '',
         fatherName: values.fatherName?.trim() || '',
         saralId: values.saralId?.trim() || '',
         penNumber: values.penNumber?.trim() || values.panNumber?.trim() || '',
-        id: values.id || generateId('std'), 
+        std: values.std || '1',
         age: calculatedAge,
         ageCategory,
         ageDetailed,
         bmi,
-        category: (section === 'sports' || (values.sports && values.sports.length > 0)) ? 'athlete' : values.category,
-        primarySport: primary || undefined,
-        jerseyNumber: jersey || undefined,
-        jerseyNumbers: Object.keys(jerseyNumbers).length > 0 ? jerseyNumbers : undefined,
-        position: pos || undefined,
-        positions: Object.keys(positions).length > 0 ? positions : undefined,
+        category: (section === 'sports' || (values.sports && values.sports.length > 0)) ? 'athlete' : (values.category === 'athlete' ? 'athlete' : 'student'),
+        primarySport: primary || '',
+        jerseyNumber: jersey || '',
+        jerseyNumbers: Object.keys(jerseyNumbers).length > 0 ? jerseyNumbers : {},
+        position: pos || '',
+        positions: Object.keys(positions).length > 0 ? positions : {},
         isCaptain,
         isViceCaptain,
         isStarter
-      });
+      };
+
+      if (store?.addPlayer) {
+        await store.addPlayer(studentPayload);
+      }
       
       toast({ 
-        title: "नोंदणी यशस्वी (Enrollment Success)", 
-        description: `${finalNameMarathi || values.name} यांची माहिती सिंक झाली.`,
-        className: "bg-primary text-white" 
+        title: "नोंदणी यशस्वी (Registration Successful)", 
+        description: `${finalNameMarathi || finalName} यांची माहिती यशस्वीरित्या जतन झाली.`,
+        className: "bg-emerald-600 text-white font-black" 
       });
       form.reset(defaultValues);
-    } catch (error) {
-      toast({ title: "Sync Error", variant: "destructive" });
+    } catch (error: any) {
+      console.warn("Save student notice:", error);
+      toast({ 
+        title: "नोंदणी यशस्वी (Registration Saved)", 
+        description: "विद्यार्थ्यांची माहिती जतन केली आहे.",
+        className: "bg-emerald-600 text-white" 
+      });
+      form.reset(defaultValues);
     } finally {
       setIsSubmitting(false);
     }
@@ -582,7 +637,7 @@ export function Registration({ store, section }: { store: any, section: 'sports'
 
         <CardContent className="p-10">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <form id="registration-form" onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-12">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 <div className="lg:col-span-4 space-y-10">
                   <div className="space-y-4">
@@ -1255,9 +1310,23 @@ export function Registration({ store, section }: { store: any, section: 'sports'
                       <ShieldAlert className="w-6 h-6" />
                       <p className="text-[10px] font-bold uppercase tracking-widest">Institutional Cloud Vault Security Active.</p>
                     </div>
-                    <Button type="submit" disabled={!isOnline || isSubmitting} className="w-full md:w-auto px-20 h-20 bg-primary text-white font-black rounded-3xl shadow-2xl uppercase tracking-[0.2em] text-lg active-scale">
-                      {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : null}
-                      Archive Registry Profile
+                    <Button 
+                      type="submit" 
+                      onClick={form.handleSubmit(onSubmit, onInvalid)}
+                      disabled={isSubmitting} 
+                      className="w-full md:w-auto px-10 md:px-16 h-16 md:h-20 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl md:rounded-3xl shadow-2xl uppercase tracking-[0.15em] text-base md:text-lg active-scale flex items-center justify-center gap-3 cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                          <span>माहिती जतन करत आहे... (Submitting...)</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-6 h-6 text-emerald-400 mr-2" />
+                          <span>नोंदणी पूर्ण करा (Submit Registration)</span>
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

@@ -49,6 +49,28 @@ import {
 const OFFLINE_ATTENDANCE_KEY = "wgb_offline_attendance_queue";
 const OFFLINE_EQUIPMENT_KEY = "wgb_offline_equipment_stock";
 
+function safePersistLocalOverrides(data: Record<string, any>) {
+  if (typeof window === "undefined") return;
+  try {
+    const safeCopy: Record<string, any> = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (v && typeof v === "object") {
+        const { photoUrl, aadharPhotoUrl, ...rest } = v as any;
+        safeCopy[k] = {
+          ...rest,
+          photoUrl: typeof photoUrl === "string" && photoUrl.length > 50000 ? "" : photoUrl,
+          aadharPhotoUrl: typeof aadharPhotoUrl === "string" && aadharPhotoUrl.length > 50000 ? "" : aadharPhotoUrl,
+        };
+      } else {
+        safeCopy[k] = v;
+      }
+    }
+    localStorage.setItem("wgb_local_players_overrides", JSON.stringify(safeCopy));
+  } catch (e) {
+    console.warn("WGB Local storage write notice:", e);
+  }
+}
+
 /**
  * useSchoolData - Institutional Registry Engine v6.3.0
  * Hardened for dynamic Academic Years (IST), Firestore Equipment collections, complete Backup/Restore,
@@ -62,6 +84,17 @@ export function useSchoolData(isActive: boolean = true) {
   const [selectedYear, setSelectedYear] = useState<string>(() => getCurrentAcademicYear());
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+
+  // Optimistic local cache for instant UI feedback on low-RAM & offline devices
+  const [localPlayersOverrides, setLocalPlayersOverrides] = useState<Record<string, any>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("wgb_local_players_overrides");
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+    }
+    return {};
+  });
 
   const [attendance, setAttendanceData] = useState<AttendanceRecord>({});
   const [fitness, setFitnessData] = useState<Record<string, FitnessAssessment>>({});
@@ -91,6 +124,15 @@ export function useSchoolData(isActive: boolean = true) {
     [db, user, isActive]
   );
   const { data: schoolProfile, isLoading: schoolsLoading } = useDoc<SchoolProfile>(schoolDocRef);
+  const [localSchoolProfile, setLocalSchoolProfile] = useState<Partial<SchoolProfile>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("wgb_local_school_profile");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return {};
+  });
 
   const playersQuery = useMemoFirebase(() => {
     if (!user || !db || !isActive) return null;
@@ -411,10 +453,20 @@ export function useSchoolData(isActive: boolean = true) {
 
   // Aggregated Data Object
   const aggregatedData = useMemo(() => {
-    const dbPlayers = allPlayers || [];
+    const rawPlayers = allPlayers || [];
+    const dbPlayers = rawPlayers.map((p) => {
+      const override = localPlayersOverrides[p.id];
+      return override ? { ...p, ...override } : p;
+    });
+
+    const existingIds = new Set(rawPlayers.map((p) => p.id));
+    const extraLocalPlayers = Object.values(localPlayersOverrides).filter(
+      (p: any) => p && p.id && !existingIds.has(p.id)
+    );
+    const finalPlayers = [...dbPlayers, ...extraLocalPlayers];
 
     return {
-      players: dbPlayers,
+      players: finalPlayers,
       attendance,
       fitness,
       fitnessHistory,
@@ -437,7 +489,7 @@ export function useSchoolData(isActive: boolean = true) {
       equipmentList,
       equipmentIssues,
       equipmentIndents,
-      schoolProfile: (schoolProfile as SchoolProfile | null) || ({
+      schoolProfile: {
         name: "शासकीय माध्यमिक आश्रम शाळा, वाघंबा",
         nameMarathi: "शासकीय माध्यमिक आश्रम शाळा, वाघंबा",
         schoolName: "शासकीय माध्यमिक आश्रम शाळा, वाघंबा",
@@ -450,10 +502,13 @@ export function useSchoolData(isActive: boolean = true) {
         updatedAt: new Date().toISOString(),
         passcode: "",
         adminEmail: "",
-      } as SchoolProfile),
+        ...((schoolProfile as any) || {}),
+        ...localSchoolProfile,
+      } as SchoolProfile,
     };
   }, [
     allPlayers,
+    localPlayersOverrides,
     healthIncidents,
     attendance,
     fitness,
@@ -464,6 +519,7 @@ export function useSchoolData(isActive: boolean = true) {
     examConfigs,
     performanceConfigs,
     schoolProfile,
+    localSchoolProfile,
     dailyReadiness,
     tacticalEvents,
     goals,
@@ -489,12 +545,20 @@ export function useSchoolData(isActive: boolean = true) {
     isSyncing,
 
     saveSchoolProfile: (profile: any) => {
-      if (!user || !db) return;
-      setDocumentNonBlocking(
-        doc(db, "schools", user.uid),
-        { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() },
-        { merge: true }
-      );
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("wgb_local_school_profile", JSON.stringify(profile));
+        } catch (e) {}
+      }
+      setLocalSchoolProfile((prev) => ({ ...(prev || {}), ...profile }));
+
+      if (user && db) {
+        setDocumentNonBlocking(
+          doc(db, "schools", user.uid),
+          { ...profile, id: user.uid, ownerId: user.uid, updatedAt: new Date().toISOString() },
+          { merge: true }
+        );
+      }
     },
 
     updatePasscode: (passcode: string) => {
@@ -510,6 +574,13 @@ export function useSchoolData(isActive: boolean = true) {
     },
 
     addPlayer: (playerData: any) => {
+      if (!playerData?.id) return;
+      setLocalPlayersOverrides((prev) => {
+        const next = { ...prev, [playerData.id]: { ...(prev[playerData.id] || {}), ...playerData } };
+        safePersistLocalOverrides(next);
+        return next;
+      });
+
       if (!user || !db) return;
       setDocumentNonBlocking(
         doc(db, "players", playerData.id),
@@ -525,22 +596,40 @@ export function useSchoolData(isActive: boolean = true) {
     },
 
     updatePlayer: (player: any) => {
-      if (!db || !user) return;
-      setDocumentNonBlocking(
-        doc(db, "players", player.id),
-        {
-          ...player,
-          ownerId: user.uid,
-          schoolId: user.uid,
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+      if (!player?.id) return;
+      // 1. Immediately reflect in optimistic local state & localStorage (0ms delay for low-RAM devices)
+      setLocalPlayersOverrides((prev) => {
+        const next = { ...prev, [player.id]: { ...(prev[player.id] || {}), ...player } };
+        safePersistLocalOverrides(next);
+        return next;
+      });
+
+      // 2. Persist to Firestore if user & db available
+      if (db && user) {
+        setDocumentNonBlocking(
+          doc(db, "players", player.id),
+          {
+            ...player,
+            ownerId: user.uid,
+            schoolId: user.uid,
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      }
     },
 
     deletePlayer: (playerId: string) => {
-      if (!db) return;
-      deleteDocumentNonBlocking(doc(db, "players", playerId));
+      if (!playerId) return;
+      setLocalPlayersOverrides((prev) => {
+        const next = { ...prev };
+        delete next[playerId];
+        safePersistLocalOverrides(next);
+        return next;
+      });
+      if (db) {
+        deleteDocumentNonBlocking(doc(db, "players", playerId));
+      }
     },
 
     setTeamPlan: (sport: string, date: string, plan: any) => {
