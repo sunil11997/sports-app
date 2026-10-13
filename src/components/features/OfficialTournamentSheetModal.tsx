@@ -829,6 +829,7 @@ export function OfficialTournamentSheetModal({
       <tr>
         <td class="text-center font-normal">${r.srNo || '-'}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -841,7 +842,7 @@ export function OfficialTournamentSheetModal({
       </tr>
     `).join('') : `
       <tr>
-        <td colspan="11" class="text-center py-6 text-muted font-normal">या वयोगटासाठी खेळाडू यादी उपलब्ध नाही</td>
+        <td colspan="12" class="text-center py-6 text-muted font-normal">या वयोगटासाठी खेळाडू यादी उपलब्ध नाही</td>
       </tr>
     `;
 
@@ -851,21 +852,21 @@ export function OfficialTournamentSheetModal({
           <thead>
             <!-- ROW 1: DEPARTMENT NAME (BOLD) -->
             <tr>
-              <th colspan="11" class="header-line-1">
+              <th colspan="12" class="header-line-1">
                 ${departmentName}
               </th>
             </tr>
 
             <!-- ROW 2: PROJECT NAME (BOLD) -->
             <tr>
-              <th colspan="11" class="header-line-2">
+              <th colspan="12" class="header-line-2">
                 ${projectName}
               </th>
             </tr>
 
             <!-- ROW 3: SCHOOL NAME (BOLD) -->
             <tr>
-              <th colspan="11" class="header-line-3">
+              <th colspan="12" class="header-line-3">
                 ${schoolName}
               </th>
             </tr>
@@ -878,24 +879,25 @@ export function OfficialTournamentSheetModal({
               <th colspan="4" class="meta-bar-cell text-center">
                 खेळ प्रकार :- ${sportName}
               </th>
-              <th colspan="3" class="meta-bar-cell text-center">
+              <th colspan="4" class="meta-bar-cell text-center">
                 सन:- ${academicYear}
               </th>
             </tr>
 
-            <!-- ROW 5: COLUMN HEADERS (BOLD) - 11 MARATHI COLUMNS -->
+            <!-- ROW 5: COLUMN HEADERS (BOLD) - 12 MARATHI COLUMNS -->
             <tr>
-              <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-              <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+              <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 6%;">इयत्ता</th>
               <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
               <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-              <th class="col-header" style="width: 10%;">आईचे नाव</th>
+              <th class="col-header" style="width: 9%;">आईचे नाव</th>
               <th class="col-header" style="width: 11%;">आधार क्र.</th>
-              <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-              <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-              <th class="col-header" style="width: 6%;">तालुका</th>
-              <th class="col-header" style="width: 8%;">वयोगट</th>
-              <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+              <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+              <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+              <th class="col-header" style="width: 5%;">तालुका</th>
+              <th class="col-header" style="width: 5%;">वयोगट</th>
+              <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
             </tr>
           </thead>
           <tbody>
@@ -959,6 +961,7 @@ export function OfficialTournamentSheetModal({
       <tr>
         <td class="text-center font-normal">${startSr + i}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -975,9 +978,9 @@ export function OfficialTournamentSheetModal({
       <div class="sheet-page">
         <table class="official-outer-box">
           <thead>
-            <tr><th colspan="11" class="header-line-1">${departmentName}</th></tr>
-            <tr><th colspan="11" class="header-line-2">${projectName}</th></tr>
-            <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+            <tr><th colspan="12" class="header-line-1">${departmentName}</th></tr>
+            <tr><th colspan="12" class="header-line-2">${projectName}</th></tr>
+            <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
             <tr>
               <th colspan="4" class="meta-bar-cell text-left">
                 वयोगट :- १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)
@@ -985,33 +988,34 @@ export function OfficialTournamentSheetModal({
               <th colspan="4" class="meta-bar-cell text-center">
                 खेळ प्रकार :- ${sportLabelMr}
               </th>
-              <th colspan="3" class="meta-bar-cell text-center">
+              <th colspan="4" class="meta-bar-cell text-center">
                 सन:- ${academicYear}
               </th>
             </tr>
             <tr>
-              <th colspan="11" style="background: #e2e8f0; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt;">
+              <th colspan="12" style="background: #e2e8f0; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt;">
                 👦 १. मुले संघ (Boys Squad - १२ खेळाडू)
               </th>
             </tr>
             <tr>
-              <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-              <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+              <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 6%;">इयत्ता</th>
               <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
               <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-              <th class="col-header" style="width: 10%;">आईचे नाव</th>
+              <th class="col-header" style="width: 9%;">आईचे नाव</th>
               <th class="col-header" style="width: 11%;">आधार क्र.</th>
-              <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-              <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-              <th class="col-header" style="width: 6%;">तालुका</th>
-              <th class="col-header" style="width: 8%;">वयोगट</th>
-              <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+              <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+              <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+              <th class="col-header" style="width: 5%;">तालुका</th>
+              <th class="col-header" style="width: 5%;">वयोगट</th>
+              <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
             </tr>
           </thead>
           <tbody>
             ${renderRows(finalBoys, 1, 'Male')}
             <tr>
-              <td colspan="11" style="background: #fce7f3; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt; color: #9d174d;">
+              <td colspan="12" style="background: #fce7f3; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt; color: #9d174d;">
                 👧 २. मुली संघ (Girls Squad - १२ खेळाडू)
               </td>
             </tr>
@@ -1065,6 +1069,7 @@ export function OfficialTournamentSheetModal({
       <tr>
         <td class="text-center font-normal">${i + 1}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -1081,9 +1086,9 @@ export function OfficialTournamentSheetModal({
       <div class="sheet-page">
         <table class="official-outer-box">
           <thead>
-            <tr><th colspan="11" class="header-line-1">${departmentName}</th></tr>
-            <tr><th colspan="11" class="header-line-2">${projectName}</th></tr>
-            <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+            <tr><th colspan="12" class="header-line-1">${departmentName}</th></tr>
+            <tr><th colspan="12" class="header-line-2">${projectName}</th></tr>
+            <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
             <tr>
               <th colspan="4" class="meta-bar-cell text-left">
                 वयोगट :- १२ मुले संघ (Boys 12 Squad)
@@ -1091,22 +1096,23 @@ export function OfficialTournamentSheetModal({
               <th colspan="4" class="meta-bar-cell text-center">
                 खेळ प्रकार :- ${sportLabelMr}
               </th>
-              <th colspan="3" class="meta-bar-cell text-center">
+              <th colspan="4" class="meta-bar-cell text-center">
                 सन:- ${academicYear}
               </th>
             </tr>
             <tr>
-              <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-              <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+              <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 6%;">इयत्ता</th>
               <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
               <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-              <th class="col-header" style="width: 10%;">आईचे नाव</th>
+              <th class="col-header" style="width: 9%;">आईचे नाव</th>
               <th class="col-header" style="width: 11%;">आधार क्र.</th>
-              <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-              <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-              <th class="col-header" style="width: 6%;">तालुका</th>
-              <th class="col-header" style="width: 8%;">वयोगट</th>
-              <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+              <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+              <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+              <th class="col-header" style="width: 5%;">तालुका</th>
+              <th class="col-header" style="width: 5%;">वयोगट</th>
+              <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
             </tr>
           </thead>
           <tbody>
@@ -1158,6 +1164,7 @@ export function OfficialTournamentSheetModal({
       <tr>
         <td class="text-center font-normal">${i + 1}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -1174,9 +1181,9 @@ export function OfficialTournamentSheetModal({
       <div class="sheet-page">
         <table class="official-outer-box">
           <thead>
-            <tr><th colspan="11" class="header-line-1">${departmentName}</th></tr>
-            <tr><th colspan="11" class="header-line-2">${projectName}</th></tr>
-            <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+            <tr><th colspan="12" class="header-line-1">${departmentName}</th></tr>
+            <tr><th colspan="12" class="header-line-2">${projectName}</th></tr>
+            <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
             <tr>
               <th colspan="4" class="meta-bar-cell text-left">
                 वयोगट :- १२ मुली संघ (Girls 12 Squad)
@@ -1184,22 +1191,23 @@ export function OfficialTournamentSheetModal({
               <th colspan="4" class="meta-bar-cell text-center">
                 खेळ प्रकार :- ${sportLabelMr}
               </th>
-              <th colspan="3" class="meta-bar-cell text-center">
+              <th colspan="4" class="meta-bar-cell text-center">
                 सन:- ${academicYear}
               </th>
             </tr>
             <tr>
-              <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-              <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+              <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 6%;">इयत्ता</th>
               <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
               <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-              <th class="col-header" style="width: 10%;">आईचे नाव</th>
+              <th class="col-header" style="width: 9%;">आईचे नाव</th>
               <th class="col-header" style="width: 11%;">आधार क्र.</th>
-              <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-              <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-              <th class="col-header" style="width: 6%;">तालुका</th>
-              <th class="col-header" style="width: 8%;">वयोगट</th>
-              <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+              <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+              <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+              <th class="col-header" style="width: 5%;">तालुका</th>
+              <th class="col-header" style="width: 5%;">वयोगट</th>
+              <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
             </tr>
           </thead>
           <tbody>
@@ -1231,6 +1239,7 @@ export function OfficialTournamentSheetModal({
       <tr>
         <td class="text-center font-normal">${r.srNo || '-'}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -1243,7 +1252,7 @@ export function OfficialTournamentSheetModal({
       </tr>
     `).join('') : `
       <tr>
-        <td colspan="11" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
+        <td colspan="12" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
       </tr>
     `;
 
@@ -1251,29 +1260,30 @@ export function OfficialTournamentSheetModal({
       <div class="sheet-page">
         <table class="official-outer-box">
           <thead>
-            <tr><th colspan="11" class="header-line-1">${departmentName}</th></tr>
-            <tr><th colspan="11" class="header-line-2">${projectName}</th></tr>
-            <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+            <tr><th colspan="12" class="header-line-1">${departmentName}</th></tr>
+            <tr><th colspan="12" class="header-line-2">${projectName}</th></tr>
+            <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
             <tr>
               <th colspan="6" class="meta-bar-cell text-left">
                 शालेय क्रीडा स्पर्धा सन :- ${academicYear} | एकूण सहभागी खेळाडू मास्टर यादी (सर्व खेळ)
               </th>
-              <th colspan="5" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
+              <th colspan="6" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
                 एकूण खेळाडू: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls})
               </th>
             </tr>
             <tr>
-              <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-              <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+              <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 6%;">इयत्ता</th>
               <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
               <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-              <th class="col-header" style="width: 10%;">आईचे नाव</th>
+              <th class="col-header" style="width: 9%;">आईचे नाव</th>
               <th class="col-header" style="width: 11%;">आधार क्र.</th>
-              <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-              <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-              <th class="col-header" style="width: 6%;">तालुका</th>
-              <th class="col-header" style="width: 8%;">वयोगट</th>
-              <th class="col-header" style="width: 10%;">खेळाचा प्रकार</th>
+              <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+              <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+              <th class="col-header" style="width: 5%;">तालुका</th>
+              <th class="col-header" style="width: 5%;">वयोगट</th>
+              <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
             </tr>
           </thead>
           <tbody>
@@ -2750,6 +2760,7 @@ export function OfficialTournamentSheetModal({
                 <tr>
                   <th className="p-2 text-center w-28 border-r font-black">अनु. क्र. (Sr No)</th>
                   <th className="p-2 border-r min-w-[190px] font-black">खेळाडूचे पूर्ण नाव</th>
+                  <th className="p-2 text-center w-20 border-r font-black">इयत्ता (Std)</th>
                   <th className="p-2 text-center w-24 border-r font-black">ज.रजि.नं. (GR)</th>
                   <th className="p-2 text-center w-28 border-r font-black">जन्मतारीख (DOB)</th>
                   <th className="p-2 text-center w-28 border-r font-black">आईचे नाव (Mother)</th>
@@ -2766,7 +2777,7 @@ export function OfficialTournamentSheetModal({
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-normal">
                 {activeRows.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="text-center py-12 text-muted-foreground font-normal">
+                    <td colSpan={14} className="text-center py-12 text-muted-foreground font-normal">
                       या वयोगटासाठी Skill Hub मध्ये गुण नोंदवलेले खेळाडू आढळले नाहीत. वरील &quot;+ खेळाडू ओळ&quot; किंवा &quot;👥 रोस्टरमधून जोडा&quot; वर क्लिक करा.
                     </td>
                   </tr>
@@ -2824,6 +2835,17 @@ export function OfficialTournamentSheetModal({
                               </span>
                             )}
                           </div>
+                        </td>
+
+                        {/* इयत्ता */}
+                        <td className="p-1.5 border-r">
+                          <Input
+                            value={row.std}
+                            onChange={(e) => updateRowField(index, 'std', e.target.value)}
+                            onBlur={() => handleRowBlur(index)}
+                            className="h-8 text-center text-xs font-normal focus:bg-amber-50/40 w-16 mx-auto"
+                            placeholder="इयत्ता"
+                          />
                         </td>
 
                         {/* जनरल रजिस्टर नं. */}

@@ -658,6 +658,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       return {
         srNo: customSrNumbers[p.id] || String(idx + 1),
         studentName: resolved.studentName,
+        std: resolved.std,
         grNo: resolved.grNo,
         dob: resolved.dob,
         motherName: resolved.motherName,
@@ -675,6 +676,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       rowsToPrint.push({
         srNo: String(idx),
         studentName: '',
+        std: '-',
         grNo: '-',
         dob: '-',
         motherName: '-',
@@ -691,6 +693,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <tr>
         <td class="text-center font-normal">${r.srNo}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo}</td>
         <td class="text-center font-normal">${r.dob}</td>
         <td class="text-center font-normal">${r.motherName}</td>
@@ -722,26 +725,27 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="page-container">
             <table class="official-outer-box">
               <thead>
-                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr><th colspan="12" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
                 <tr>
                   <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${catLabelMr}</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportLabelMr}</th>
-                  <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
+                  <th colspan="4" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
                 <tr>
-                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 6%;">इयत्ता</th>
                   <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
                   <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 9%;">आईचे नाव</th>
                   <th class="col-header" style="width: 11%;">आधार क्र.</th>
-                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-                  <th class="col-header" style="width: 6%;">तालुका</th>
-                  <th class="col-header" style="width: 8%;">वयोगट</th>
-                  <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+                  <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 5%;">तालुका</th>
+                  <th class="col-header" style="width: 5%;">वयोगट</th>
+                  <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>
@@ -810,6 +814,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <tr>
         <td class="text-center font-normal">${startSr + i}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -841,37 +846,38 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="page-container">
             <table class="official-outer-box">
               <thead>
-                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr><th colspan="12" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
                 <tr>
                   <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${combinedCatLabel} १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
-                  <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
+                  <th colspan="4" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
                 <tr>
-                  <th colspan="11" style="background: #e2e8f0; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt;">
+                  <th colspan="12" style="background: #e2e8f0; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt;">
                     👦 १. मुले संघ (${boysCatLabel} - १२ खेळाडू)
                   </th>
                 </tr>
                 <tr>
-                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 6%;">इयत्ता</th>
                   <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
                   <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 9%;">आईचे नाव</th>
                   <th class="col-header" style="width: 11%;">आधार क्र.</th>
-                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-                  <th class="col-header" style="width: 6%;">तालुका</th>
-                  <th class="col-header" style="width: 8%;">वयोगट</th>
-                  <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+                  <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 5%;">तालुका</th>
+                  <th class="col-header" style="width: 5%;">वयोगट</th>
+                  <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>
                 ${renderRows(finalBoys, 1)}
                 <tr>
-                  <td colspan="11" style="background: #fce7f3; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt; color: #9d174d;">
+                  <td colspan="12" style="background: #fce7f3; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt; color: #9d174d;">
                     👧 २. मुली संघ (${girlsCatLabel} - १२ खेळाडू)
                   </td>
                 </tr>
@@ -1007,6 +1013,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <tr>
         <td class="text-center font-normal">${i + 1}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -1038,26 +1045,27 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="page-container">
             <table class="official-outer-box">
               <thead>
-                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr><th colspan="12" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
                 <tr>
                   <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${boysCatLabel} (१२ खेळाडू संघ)</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
-                  <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
+                  <th colspan="4" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
                 <tr>
-                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 6%;">इयत्ता</th>
                   <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
                   <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 9%;">आईचे नाव</th>
                   <th class="col-header" style="width: 11%;">आधार क्र.</th>
-                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-                  <th class="col-header" style="width: 6%;">तालुका</th>
-                  <th class="col-header" style="width: 8%;">वयोगट</th>
-                  <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+                  <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 5%;">तालुका</th>
+                  <th class="col-header" style="width: 5%;">वयोगट</th>
+                  <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>
@@ -1125,6 +1133,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <tr>
         <td class="text-center font-normal">${i + 1}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -1156,26 +1165,27 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="page-container">
             <table class="official-outer-box">
               <thead>
-                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr><th colspan="12" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
                 <tr>
                   <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${girlsCatLabel} (१२ खेळाडू संघ)</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
-                  <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
+                  <th colspan="4" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
                 <tr>
-                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 6%;">इयत्ता</th>
                   <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
                   <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 9%;">आईचे नाव</th>
                   <th class="col-header" style="width: 11%;">आधार क्र.</th>
-                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-                  <th class="col-header" style="width: 6%;">तालुका</th>
-                  <th class="col-header" style="width: 8%;">वयोगट</th>
-                  <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+                  <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 5%;">तालुका</th>
+                  <th class="col-header" style="width: 5%;">वयोगट</th>
+                  <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>
@@ -1217,6 +1227,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <tr>
         <td class="text-center font-normal">${r.srNo || '-'}</td>
         <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
         <td class="text-center font-normal">${r.grNo || '-'}</td>
         <td class="text-center font-normal">${r.dob || '-'}</td>
         <td class="text-center font-normal">${r.motherName || '-'}</td>
@@ -1229,7 +1240,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       </tr>
     `).join('') : `
       <tr>
-        <td colspan="11" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
+        <td colspan="12" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
       </tr>
     `;
 
@@ -1252,29 +1263,30 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="page-container">
             <table class="official-outer-box">
               <thead>
-                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
-                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr><th colspan="12" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
                 <tr>
                   <th colspan="6" class="meta-bar-cell text-left">
                     शालेय क्रीडा स्पर्धा सन :- २०२६-२७ | एकूण सहभागी खेळाडू मास्टर यादी (सर्व खेळ)
                   </th>
-                  <th colspan="5" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
+                  <th colspan="6" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
                     एकूण खेळाडू: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls})
                   </th>
                 </tr>
                 <tr>
-                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
-                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 4%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 6%;">इयत्ता</th>
                   <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
                   <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 9%;">आईचे नाव</th>
                   <th class="col-header" style="width: 11%;">आधार क्र.</th>
-                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
-                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
-                  <th class="col-header" style="width: 6%;">तालुका</th>
-                  <th class="col-header" style="width: 8%;">वयोगट</th>
-                  <th class="col-header" style="width: 10%;">खेळाचा प्रकार</th>
+                  <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 5%;">तालुका</th>
+                  <th class="col-header" style="width: 5%;">वयोगट</th>
+                  <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>

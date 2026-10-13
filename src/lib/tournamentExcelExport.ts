@@ -22,6 +22,7 @@ export const DEFAULT_SCHOOL_MR = 'शासकीय माध्यमिक �
 export const OFFICIAL_MARATHI_COLUMNS = [
   'अनु. क्र.',
   'खेळाडूचे पूर्ण नाव',
+  'इयत्ता',
   'जनरल रजिस्टर नं.',
   'जन्मतारीख',
   'आईचे नाव',
@@ -42,18 +43,19 @@ function sanitizeSheetName(name: string): string {
 }
 
 /**
- * Build a professionally styled worksheet with the exact 11 Marathi columns:
+ * Build a professionally styled worksheet with the exact 12 Marathi columns:
  * 1. अनु. क्र.
  * 2. खेळाडूचे पूर्ण नाव
- * 3. जनरल रजिस्टर नं.
- * 4. जन्मतारीख
- * 5. आईचे नाव
- * 6. आधार क्र.
- * 7. शाळेचे नाव
- * 8. यु-डायस क्रमांक (27200116503)
- * 9. तालुका (बागलाण)
- * 10. वयोगट (१४ / १७ / १९ वर्षाखालील मुले किंवा मुली)
- * 11. खेळाचा प्रकार
+ * 3. इयत्ता
+ * 4. जनरल रजिस्टर नं.
+ * 5. जन्मतारीख
+ * 6. आईचे नाव
+ * 7. आधार क्र.
+ * 8. शाळेचे नाव
+ * 9. यु-डायस क्रमांक (27200116503)
+ * 10. तालुका (बागलाण)
+ * 11. वयोगट (१४ / १७ / १९ वर्षाखालील मुले किंवा मुली)
+ * 12. खेळाचा प्रकार
  */
 export function buildOfficialWorksheet(
   categoryLabel: string,
@@ -97,15 +99,16 @@ export function buildOfficialWorksheet(
       '',
       `यु-डायस: ${defaultUdise} | तालुका: ${defaultTaluka}`,
       '',
+      '',
       ''
     ],
     // Row 4: Clean spacing gap
     [],
-    // Row 5: Column Headers (Exact 11 Marathi Headers)
+    // Row 5: Column Headers (Exact 12 Marathi Headers)
     [...OFFICIAL_MARATHI_COLUMNS]
   ];
 
-  const totalCols = 10; // 0 to 10 = 11 columns
+  const totalCols = 11; // 0 to 11 = 12 columns
   const merges: XLSX.Range[] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
@@ -134,6 +137,7 @@ export function buildOfficialWorksheet(
       '-',
       '-',
       '-',
+      '-',
       defaultSchool,
       defaultUdise,
       defaultTaluka,
@@ -148,6 +152,7 @@ export function buildOfficialWorksheet(
 
       const sr = r.srNo || String(idx + 1);
       const name = resolved.studentName || r.studentName || '';
+      const std = resolved.std || r.std || '-';
       const gr = resolved.grNo || r.grNo || '-';
       const dob = (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (r.dob ? formatDobDDMMYYYY(r.dob) : '-');
       const mother = (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (r.motherName || '-'));
@@ -167,6 +172,7 @@ export function buildOfficialWorksheet(
       wsData.push([
         sr,
         name,
+        std,
         gr,
         dob,
         mother,
@@ -197,6 +203,7 @@ export function buildOfficialWorksheet(
       '',
       '',
       '',
+      '',
       `मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)\n(${defaultSchool})`,
       '',
       '',
@@ -207,7 +214,7 @@ export function buildOfficialWorksheet(
 
     // Merges for signature blocks
     merges.push({ s: { r: signRowIndex, c: 1 }, e: { r: signRowIndex, c: 4 } });
-    merges.push({ s: { r: signRowIndex, c: 6 }, e: { r: signRowIndex, c: 10 } });
+    merges.push({ s: { r: signRowIndex, c: 7 }, e: { r: signRowIndex, c: totalCols } });
   }
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -216,6 +223,7 @@ export function buildOfficialWorksheet(
   ws['!cols'] = [
     { wch: 8 },  // अनु. क्र.
     { wch: 32 }, // खेळाडूचे पूर्ण नाव
+    { wch: 12 }, // इयत्ता
     { wch: 16 }, // जनरल रजिस्टर नं.
     { wch: 14 }, // जन्मतारीख
     { wch: 22 }, // आईचे नाव
@@ -231,14 +239,14 @@ export function buildOfficialWorksheet(
   ws['!rows'] = rowHeights;
 
   // Format all data cells explicitly to string type where appropriate to avoid Excel formatting bugs
-  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:K10');
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:L10');
   for (let R = range.s.r; R <= range.e.r; ++R) {
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
       const cell = ws[cellRef];
       if (cell && cell.v !== undefined) {
-        // Aadhaar, UDISE, GR No, Sr No as strings
-        if (C === 2 || C === 5 || C === 7) {
+        // GR No, Aadhaar, UDISE as strings
+        if (C === 3 || C === 6 || C === 8) {
           cell.t = 's';
           cell.v = String(cell.v);
         }
@@ -249,6 +257,9 @@ export function buildOfficialWorksheet(
   return ws;
 }
 
+/**
+ * Build 12 Players Combined Worksheet (Section 1: Boys 12, Section 2: Girls 12)
+ */
 /**
  * Build 12 Players Combined Worksheet (Section 1: Boys 12, Section 2: Girls 12)
  */
@@ -278,6 +289,7 @@ export function buildCombined12BoysGirlsWorksheet(
       '',
       `यु-डायस: ${defaultUdise} | तालुका: ${defaultTaluka}`,
       '',
+      '',
       ''
     ],
     [],
@@ -286,7 +298,7 @@ export function buildCombined12BoysGirlsWorksheet(
     [...OFFICIAL_MARATHI_COLUMNS]
   ];
 
-  const totalCols = 10;
+  const totalCols = 11;
   const merges: XLSX.Range[] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
@@ -313,6 +325,7 @@ export function buildCombined12BoysGirlsWorksheet(
     const resolved = resolveStudentDetails(b, sportMr, 'मुले');
     const sr = String(idx + 1);
     const name = resolved.studentName || b.studentName || '';
+    const std = resolved.std || b.std || '-';
     const gr = resolved.grNo || b.grNo || '-';
     const dob = (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (b.dob ? formatDobDDMMYYYY(b.dob) : '-');
     const mother = (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (b.motherName || '-'));
@@ -322,7 +335,7 @@ export function buildCombined12BoysGirlsWorksheet(
     const taluka = resolved.taluka || defaultTaluka;
     const vyogat = getPlayerAgeCategoryLabel(b, 'Male');
 
-    wsData.push([sr, name, gr, dob, mother, aadhar, school, udise, taluka, vyogat, sportMr]);
+    wsData.push([sr, name, std, gr, dob, mother, aadhar, school, udise, taluka, vyogat, sportMr]);
     rowHeights.push({ hpt: 22 });
   });
 
@@ -344,6 +357,7 @@ export function buildCombined12BoysGirlsWorksheet(
     const resolved = resolveStudentDetails(g, sportMr, 'मुली');
     const sr = String(idx + 1);
     const name = resolved.studentName || g.studentName || '';
+    const std = resolved.std || g.std || '-';
     const gr = resolved.grNo || g.grNo || '-';
     const dob = (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (g.dob ? formatDobDDMMYYYY(g.dob) : '-');
     const mother = (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (g.motherName || '-'));
@@ -353,7 +367,7 @@ export function buildCombined12BoysGirlsWorksheet(
     const taluka = resolved.taluka || defaultTaluka;
     const vyogat = getPlayerAgeCategoryLabel(g, 'Female');
 
-    wsData.push([sr, name, gr, dob, mother, aadhar, school, udise, taluka, vyogat, sportMr]);
+    wsData.push([sr, name, std, gr, dob, mother, aadhar, school, udise, taluka, vyogat, sportMr]);
     rowHeights.push({ hpt: 22 });
   });
 
@@ -371,6 +385,7 @@ export function buildCombined12BoysGirlsWorksheet(
     '',
     '',
     '',
+    '',
     `मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)\n(${defaultSchool})`,
     '',
     '',
@@ -380,13 +395,14 @@ export function buildCombined12BoysGirlsWorksheet(
   rowHeights.push({ hpt: 42 });
 
   merges.push({ s: { r: signRow, c: 1 }, e: { r: signRow, c: 4 } });
-  merges.push({ s: { r: signRow, c: 6 }, e: { r: signRow, c: 10 } });
+  merges.push({ s: { r: signRow, c: 7 }, e: { r: signRow, c: totalCols } });
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
   ws['!cols'] = [
     { wch: 8 },  // अनु. क्र.
     { wch: 32 }, // खेळाडूचे पूर्ण नाव
+    { wch: 12 }, // इयत्ता
     { wch: 16 }, // जनरल रजिस्टर नं.
     { wch: 14 }, // जन्मतारीख
     { wch: 22 }, // आईचे नाव
@@ -665,6 +681,7 @@ export function exportUniqueTournamentPlayersExcel(
       ...p,
       srNo: String(idx + 1),
       studentName: resolved.studentName || p.studentName || '',
+      std: resolved.std || p.std || '-',
       grNo: resolved.grNo || p.grNo || '-',
       dob: (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (p.dob ? formatDobDDMMYYYY(p.dob) : '-'),
       motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (p.motherName || '-')),
