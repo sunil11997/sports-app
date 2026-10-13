@@ -7,7 +7,29 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Medal, Shirt, Target, FileText, Trophy, Hash, Star } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
+import { 
+  Printer, 
+  Medal, 
+  Shirt, 
+  Target, 
+  FileText, 
+  Trophy, 
+  Hash, 
+  Star, 
+  FileSpreadsheet, 
+  Users, 
+  ChevronDown, 
+  Download,
+  Sparkles
+} from 'lucide-react';
 import { getAgeValidation, getOfficialSchoolName, getTeacherName, sanitizeGrNumber } from '@/lib/utils';
 import { 
   OfficialTournamentSheetModal, 
@@ -15,11 +37,57 @@ import {
   isAthleticsSixSport,
   getPlayerSkillMarksAndRank,
   getPlayerGameActivity,
-  SPORT_MARATHI_MAP
+  SPORT_MARATHI_MAP,
+  SheetRow
 } from './OfficialTournamentSheetModal';
+import { 
+  exportSingleCategoryToExcel, 
+  exportGame12PlayersBoysGirlsExcel,
+  exportEveryGame12PlayersWorkbookToExcel,
+  exportUniqueTournamentPlayersExcel,
+  TournamentExcelMetadata,
+  DEFAULT_UDISE,
+  DEFAULT_TALUKA,
+  DEFAULT_SCHOOL_MR
+} from '@/lib/tournamentExcelExport';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
+
+export const CATEGORY_MARATHI_MAP: Record<string, string> = {
+  'Girls U14': '१४ वर्षाखालील मुली',
+  'Boys U14': '१४ वर्षाखालील मुले',
+  'Girls U17': '१७ वर्षाखालील मुली',
+  'Boys U17': '१७ वर्षाखालील मुले',
+  'Girls Senior': '१९ वर्षाखालील मुली',
+  'Boys Senior': '१९ वर्षाखालील मुले',
+  'Age Pending': 'इतर'
+};
+
+function formatDobDDMMYYYY(dob?: string): string {
+  if (!dob || dob === '-' || dob === '---') return '-';
+  const clean = String(dob).trim();
+  if (clean.includes('/')) return clean;
+  if (clean.includes('-')) {
+    const parts = clean.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      }
+      return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+    }
+  }
+  return clean;
+}
+
+function formatAadharDisplay(aadhar?: string): string {
+  if (!aadhar || aadhar === '-' || aadhar === '---') return '-';
+  const digits = String(aadhar).replace(/\D/g, '');
+  if (digits.length === 12) {
+    return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8, 12)}`;
+  }
+  return String(aadhar).trim();
+}
 
 const SPORTS_LIST = [
   'Kabaddi',
@@ -55,6 +123,74 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     }));
     setModalPlayers(playersWithCustomSr);
     setIsOfficialModalOpen(true);
+  };
+
+  const handleExportCategoryExcel = (category: string, playersList: any[]) => {
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const teacherName = getTeacherName(schoolProfile);
+    const schoolName = getOfficialSchoolName(schoolProfile, true);
+    const sportMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+    const catLabelMr = CATEGORY_MARATHI_MAP[category] || category;
+
+    const topTwelve = playersList.slice(0, 12);
+    const rows = topTwelve.map((p, idx) => ({
+      id: p.id,
+      srNo: customSrNumbers[p.id] || String(idx + 1),
+      studentName: p.nameMarathi || p.name || '',
+      std: p.std ? `इ. ${p.std} वी` : '-',
+      grNo: String(p.generalRegisterNumber || p.serialNumber || '-'),
+      dob: formatDobDDMMYYYY(p.dob),
+      motherName: p.motherName || '-',
+      aadhar: formatAadharDisplay(p.aadharNumber),
+      saralId: p.penNumber || p.saralId || p.panNumber || '-',
+      schoolName: schoolName || DEFAULT_SCHOOL_MR,
+      uDise: DEFAULT_UDISE,
+      taluka: DEFAULT_TALUKA,
+      gameActivity: p.gameActivity || p.position || '',
+      skillScore: p.skillScore || '-',
+      skillScoreNum: p.skillScoreNum || 0,
+      skillRank: p.markRank || (idx + 1),
+      sportOrEvent: sportMr,
+      ageCategoryLabel: catLabelMr
+    }));
+
+    while (rows.length < 12) {
+      const idx = rows.length + 1;
+      rows.push({
+        id: `blank_${idx}`,
+        srNo: String(idx),
+        studentName: '',
+        std: '-',
+        grNo: '-',
+        dob: '-',
+        motherName: '-',
+        aadhar: '-',
+        saralId: '-',
+        schoolName: schoolName || DEFAULT_SCHOOL_MR,
+        uDise: DEFAULT_UDISE,
+        taluka: DEFAULT_TALUKA,
+        gameActivity: '',
+        skillScore: '-',
+        skillScoreNum: 0,
+        skillRank: idx,
+        sportOrEvent: sportMr,
+        ageCategoryLabel: catLabelMr
+      });
+    }
+
+    const meta: TournamentExcelMetadata = {
+      departmentName: "आदिवासी विकास विभाग नाशिक",
+      projectName: "एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक",
+      schoolName: schoolName || DEFAULT_SCHOOL_MR,
+      sportName: sportMr,
+      selectedSportKey: selectedSport,
+      academicYear: "2026-27",
+      teacherName: teacherName || "क्रीडा शिक्षक",
+      uDise: DEFAULT_UDISE,
+      taluka: DEFAULT_TALUKA
+    };
+
+    exportSingleCategoryToExcel(catLabelMr, rows, meta);
   };
 
   useEffect(() => {
@@ -178,241 +314,718 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     return groups;
   }, [selectedSport, store, categories, getCategory, isAthletics]);
 
+  // Extract 12 boys and 12 girls for a specific sport (First Boys, Then Girls)
+  const getSelectedSport12Squads = useCallback((sportKey: string) => {
+    const allStorePlayers: any[] = store?.data?.players || [];
+    const sportMr = SPORT_MARATHI_MAP[sportKey] || sportKey;
+    const isTargetAthletics = isAthleticsSixSport(sportKey);
+
+    const filterAndScore = (genderType: 'Male' | 'Female') => {
+      let pool = allStorePlayers.filter((p: any) => {
+        if (p.category && p.category !== 'athlete') return false;
+        const isFem = p.gender === 'Female' || p.gender === 'मुली' || p.gender === 'female' || p.gender === 'F';
+        return genderType === 'Female' ? isFem : !isFem;
+      });
+
+      const scored = pool.map(p => {
+        const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+        const isInSport = Boolean(
+          p.sports && Array.isArray(p.sports) && (p.sports.includes(sportKey) || (isTargetAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')))
+        );
+        return {
+          ...p,
+          skillScoreNum: skillInfo.score,
+          skillScoreDisplay: skillInfo.scoreDisplay,
+          hasSkillMark: skillInfo.hasMark,
+          isInSport
+        };
+      });
+
+      const withMarks = scored.filter(p => p.hasSkillMark && (p.isInSport || isTargetAthletics));
+      withMarks.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+
+      const withoutMarks = scored.filter(p => !p.hasSkillMark && (p.isInSport || isTargetAthletics));
+      withoutMarks.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+      const otherEligible = scored.filter(p => !p.isInSport && !isTargetAthletics);
+      otherEligible.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+      let finalList = [...withMarks, ...withoutMarks];
+      if (finalList.length < 12) {
+        finalList = [...finalList, ...otherEligible.slice(0, 12 - finalList.length)];
+      }
+
+      return finalList.slice(0, 12).map((p, idx): SheetRow => ({
+        id: p.id || `p-${idx}`,
+        srNo: customSrNumbers[p.id] || String(idx + 1),
+        studentName: (p.nameMarathi && p.nameMarathi.trim()) ? p.nameMarathi.trim() : (p.name || ''),
+        std: p.std ? `इ. ${p.std} वी` : '-',
+        grNo: String(p.generalRegisterNumber || p.serialNumber || '-'),
+        dob: formatDobDDMMYYYY(p.dob),
+        motherName: p.motherName || '-',
+        aadhar: formatAadharDisplay(p.aadharNumber),
+        saralId: p.penNumber || p.saralId || p.panNumber || '-',
+        schoolName: DEFAULT_SCHOOL_MR,
+        uDise: DEFAULT_UDISE,
+        taluka: DEFAULT_TALUKA,
+        sportOrEvent: sportMr,
+        gameActivity: p.gameActivity || p.position || '',
+        skillScore: p.skillScore || '-',
+        skillScoreNum: p.skillScoreNum || 0,
+        skillRank: idx + 1,
+        ageCategoryLabel: genderType === 'Female' ? 'मुली' : 'मुले',
+        gender: genderType
+      }));
+    };
+
+    const boysRows = filterAndScore('Male');
+    const girlsRows = filterAndScore('Female');
+    return { boysRows, girlsRows, sportMr };
+  }, [store, customSrNumbers]);
+
+  // Master Tournament Unique Players Calculation (deduplicated, first boys then girls, total count)
+  const getUniqueTournamentPlayersList = useMemo(() => {
+    const tournamentSports = [
+      'Kabaddi',
+      'Kho Kho',
+      'Volleyball',
+      'Handball',
+      'Running',
+      'Long Jump',
+      'Shot Put',
+      'Javelin Throw'
+    ];
+
+    const seenPlayerKeys = new Set<string>();
+    const uniqueBoys: SheetRow[] = [];
+    const uniqueGirls: SheetRow[] = [];
+    const playerSportsMap = new Map<string, Set<string>>();
+
+    tournamentSports.forEach(spKey => {
+      const { boysRows, girlsRows } = getSelectedSport12Squads(spKey);
+      const spMr = SPORT_MARATHI_MAP[spKey] || spKey;
+
+      [...boysRows, ...girlsRows].forEach(p => {
+        const key = p.id || p.grNo || p.studentName;
+        if (!key || !p.studentName || !p.studentName.trim() || p.studentName === '-') return;
+
+        if (!playerSportsMap.has(key)) {
+          playerSportsMap.set(key, new Set());
+        }
+        playerSportsMap.get(key)!.add(spMr);
+
+        if (!seenPlayerKeys.has(key)) {
+          seenPlayerKeys.add(key);
+          const isGirl = p.gender === 'Female' || p.ageCategoryLabel === 'मुली';
+          if (isGirl) uniqueGirls.push(p);
+          else uniqueBoys.push(p);
+        }
+      });
+    });
+
+    const allStorePlayers: any[] = store?.data?.players || [];
+    allStorePlayers.forEach(p => {
+      if (p.category === 'athlete') {
+        const key = p.id || p.generalRegisterNumber || p.nameMarathi || p.name;
+        if (!key || seenPlayerKeys.has(key)) return;
+        seenPlayerKeys.add(key);
+        const isGirl = p.gender === 'Female' || p.gender === 'मुली' || p.gender === 'female' || p.gender === 'F';
+        const sportMr = (p.sports && Array.isArray(p.sports) && p.sports.length > 0)
+          ? p.sports.map((s: string) => SPORT_MARATHI_MAP[s] || s).join(', ')
+          : (SPORT_MARATHI_MAP[selectedSport] || selectedSport);
+
+        const filledRow: SheetRow = {
+          id: p.id,
+          srNo: '1',
+          studentName: (p.nameMarathi && p.nameMarathi.trim()) ? p.nameMarathi.trim() : (p.name || ''),
+          std: p.std ? `इ. ${p.std} वी` : '-',
+          grNo: String(p.generalRegisterNumber || p.serialNumber || '-'),
+          dob: formatDobDDMMYYYY(p.dob),
+          motherName: p.motherName || '-',
+          aadhar: formatAadharDisplay(p.aadharNumber),
+          saralId: p.penNumber || p.saralId || p.panNumber || '-',
+          schoolName: DEFAULT_SCHOOL_MR,
+          uDise: DEFAULT_UDISE,
+          taluka: DEFAULT_TALUKA,
+          sportOrEvent: sportMr,
+          gameActivity: p.gameActivity || p.position || '',
+          skillScore: '-',
+          skillScoreNum: 0,
+          skillRank: 1,
+          ageCategoryLabel: isGirl ? 'मुली' : 'मुले',
+          gender: isGirl ? 'Female' : 'Male'
+        };
+
+        if (isGirl) uniqueGirls.push(filledRow);
+        else uniqueBoys.push(filledRow);
+      }
+    });
+
+    uniqueBoys.sort((a, b) => (parseInt(a.std.replace(/\D/g, '') || '0') - parseInt(b.std.replace(/\D/g, '') || '0')) || a.studentName.localeCompare(b.studentName));
+    uniqueGirls.sort((a, b) => (parseInt(a.std.replace(/\D/g, '') || '0') - parseInt(b.std.replace(/\D/g, '') || '0')) || a.studentName.localeCompare(b.studentName));
+
+    const combined: SheetRow[] = [];
+    uniqueBoys.forEach((b, idx) => {
+      const key = b.id || b.grNo || b.studentName;
+      const games = playerSportsMap.get(key);
+      const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : b.sportOrEvent;
+      combined.push({
+        ...b,
+        srNo: String(idx + 1),
+        sportOrEvent: gameStr,
+        ageCategoryLabel: 'मुले (Boys)'
+      });
+    });
+
+    const boysOffset = uniqueBoys.length;
+    uniqueGirls.forEach((g, idx) => {
+      const key = g.id || g.grNo || g.studentName;
+      const games = playerSportsMap.get(key);
+      const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : g.sportOrEvent;
+      combined.push({
+        ...g,
+        srNo: String(boysOffset + idx + 1),
+        sportOrEvent: gameStr,
+        ageCategoryLabel: 'मुली (Girls)'
+      });
+    });
+
+    return {
+      uniquePlayers: combined,
+      summary: {
+        total: combined.length,
+        boys: uniqueBoys.length,
+        girls: uniqueGirls.length
+      }
+    };
+  }, [store, getSelectedSport12Squads, selectedSport]);
+
+  const getOfficialPrintStyles = () => `
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
+    @media print {
+      @page { size: A4 landscape; margin: 0.5cm; }
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; padding: 0 !important; }
+      .official-outer-box { border: 2px solid #000000 !important; box-shadow: none !important; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans Devanagari', 'Mangal', 'Arial Unicode MS', sans-serif;
+      color: #000000;
+      background-color: #f8fafc;
+      margin: 0;
+      padding: 10px;
+      font-size: 10.5pt;
+      line-height: 1.25;
+    }
+    .print-toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 99999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .btn {
+      padding: 8px 18px;
+      font-size: 11pt;
+      font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-close { background: #475569; color: #ffffff; }
+    .btn-print { background: #d97706; color: #ffffff; }
+    .page-container { margin-top: 55px; }
+    .official-outer-box {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid #000000;
+      background: #ffffff;
+    }
+    .official-outer-box th, .official-outer-box td {
+      border: 1px solid #000000;
+      padding: 4px 5px;
+      vertical-align: middle;
+    }
+    .header-line-1 { font-size: 13.5pt; font-weight: 900 !important; text-align: center; padding: 5px 4px; }
+    .header-line-2 { font-size: 12pt; font-weight: 800 !important; text-align: center; padding: 4px 4px; }
+    .header-line-3 { font-size: 11.5pt; font-weight: 800 !important; text-align: center; padding: 4px 4px; }
+    .meta-bar-cell { font-size: 10.5pt; font-weight: 900 !important; padding: 5px 8px; }
+    .col-header { font-size: 10pt; font-weight: 900 !important; text-align: center; padding: 5px 3px; background: #ffffff; }
+    .font-normal { font-weight: 400 !important; font-size: 10pt; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; padding-left: 6px !important; }
+    .footer-sign-section { margin-top: 20px; display: flex; justify-content: space-between; padding: 0 20px; font-size: 10pt; font-weight: 800; }
+    .sign-box { text-align: center; min-width: 220px; }
+  `;
+
+  // Quick Print for a specific category using the exact 11 Marathi columns requested:
+  // 1. अनु. क्र. 2. खेळाडूचे पूर्ण नाव 3. जनरल रजिस्टर नं. 4. जन्मतारीख 5. आईचे नाव
+  // 6. आधार क्र. 7. शाळेचे नाव 8. यु-डायस क्रमांक 9. तालुका 10. वयोगट 11. खेळाचा प्रकार
   const handlePrint = (category: string) => {
     const groupPlayers = processedGroups[category] || [];
     const topTwelve = groupPlayers.slice(0, 12);
 
-    // Ensure strictly 12 player rows for the official tournament squad sheet
-    const rowsToPrint: any[] = [...topTwelve];
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
+    const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
+    const sportLabelMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+    const catLabelMr = CATEGORY_MARATHI_MAP[category] || category;
+
+    // Build strictly 12 player rows
+    const rowsToPrint: any[] = topTwelve.map((p, idx) => ({
+      srNo: customSrNumbers[p.id] || String(idx + 1),
+      studentName: (p.nameMarathi && p.nameMarathi.trim()) ? p.nameMarathi.trim() : p.name,
+      grNo: String(p.generalRegisterNumber || p.serialNumber || '-'),
+      dob: formatDobDDMMYYYY(p.dob),
+      motherName: p.motherName || '-',
+      aadhar: formatAadharDisplay(p.aadharNumber),
+      schoolName: schoolName,
+      uDise: DEFAULT_UDISE,
+      taluka: DEFAULT_TALUKA,
+      ageCategoryLabel: catLabelMr,
+      sportOrEvent: sportLabelMr
+    }));
+
     while (rowsToPrint.length < 12) {
+      const idx = rowsToPrint.length + 1;
       rowsToPrint.push({
-        id: `blank_${rowsToPrint.length + 1}`,
-        isBlank: true,
-        name: '',
-        nameMarathi: '',
-        std: '-',
+        srNo: String(idx),
+        studentName: '',
+        grNo: '-',
         dob: '-',
-        generalRegisterNumber: '-',
-        serialNumber: '-',
-        aadharNumber: '-',
+        motherName: '-',
+        aadhar: '-',
+        schoolName: schoolName,
+        uDise: DEFAULT_UDISE,
+        taluka: DEFAULT_TALUKA,
+        ageCategoryLabel: catLabelMr,
+        sportOrEvent: sportLabelMr
       });
     }
 
-    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
-    const schoolName = getOfficialSchoolName(schoolProfile, true);
-    const teacherName = getTeacherName(schoolProfile);
-    const signatureSrc = schoolProfile?.teacherSignature || TEACHER_SIGN_B64;
-    const sportLabelMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+    const rowsHtml = rowsToPrint.map(r => `
+      <tr>
+        <td class="text-center font-normal">${r.srNo}</td>
+        <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal">${r.grNo}</td>
+        <td class="text-center font-normal">${r.dob}</td>
+        <td class="text-center font-normal">${r.motherName}</td>
+        <td class="text-center font-normal" style="font-size: 8.5pt;">${r.aadhar}</td>
+        <td class="text-center font-normal" style="font-size: 8.5pt;">${r.schoolName}</td>
+        <td class="text-center font-normal" style="font-size: 8.5pt;">${r.uDise}</td>
+        <td class="text-center font-normal">${r.taluka}</td>
+        <td class="text-center font-normal">${r.ageCategoryLabel}</td>
+        <td class="text-center font-normal" style="font-weight: 700;">${r.sportOrEvent}</td>
+      </tr>
+    `).join('');
 
     const printContent = `
       <!DOCTYPE html>
-      <html>
+      <html lang="mr">
         <head>
-          <title>Tournament Entry - ${selectedSport} - ${category}</title>
+          <title>${sportLabelMr} - ${catLabelMr} (2026-27) - अधिकृत क्रीडा स्पर्धा शीट</title>
           <meta charset="utf-8" />
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
-            @media print { 
-              @page { size: A4 portrait; margin: 0.8cm; } 
-              .no-print { display: none !important; }
-              body { padding-top: 0 !important; background: #fff !important; }
-              .paper { border: none !important; box-shadow: none !important; padding: 0 !important; }
-            }
-            * { box-sizing: border-box; }
-            body { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; padding: 15px; color: #0f172a; line-height: 1.35; font-size: 11px; background: #f8fafc; }
-            .paper { max-width: 800px; margin: 0 auto; background: #ffffff; border: 2px solid #1e3a8a; border-radius: 6px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-            
-            .letterhead {
-              text-align: center;
-              border-bottom: 2px solid #1e3a8a;
-              padding-bottom: 8px;
-              margin-bottom: 12px;
-            }
-            .govt-title { font-size: 13px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; }
-            .school-title { font-size: 18px; font-weight: 900; color: #1e3a8a; margin: 2px 0; }
-            .meta-row { display: flex; justify-content: center; gap: 24px; font-size: 10.5px; font-weight: 800; color: #334155; margin-top: 2px; }
-            .dispatch-row { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 800; color: #0f172a; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #cbd5e1; }
-            
-            .form-heading {
-              text-align: center;
-              font-size: 13px;
-              font-weight: 900;
-              color: #ffffff;
-              background: #1e3a8a;
-              padding: 6px 12px;
-              border-radius: 4px;
-              margin: 10px 0;
-              letter-spacing: 0.5px;
-            }
-
-            .info-bar {
-              display: flex;
-              justify-content: space-between;
-              background: #f1f5f9;
-              border: 1px solid #cbd5e1;
-              padding: 6px 12px;
-              border-radius: 5px;
-              font-weight: 800;
-              font-size: 11px;
-              margin-bottom: 12px;
-            }
-
-            table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 20px; }
-            th, td { border: 1px solid #94a3b8; padding: 5px 6px; text-align: left; vertical-align: middle; }
-            th { background-color: #f1f5f9; font-weight: 900; text-transform: uppercase; font-size: 9.5px; color: #1e293b; text-align: center; }
-            td.center { text-align: center; }
-
-            .sign-grid {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-end;
-              margin-top: 30px;
-              padding: 0 10px;
-            }
-            .sign-block { text-align: center; width: 220px; font-size: 10.5px; font-weight: 800; }
-            .sign-block img { height: 38px; max-width: 150px; object-fit: contain; margin-bottom: 2px; }
-
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; }
-            .btn { cursor: pointer; padding: 8px 18px; border-radius: 6px; font-weight: 800; font-size: 12px; border: none; }
-            .btn-back { background: rgba(255,255,255,0.2); color: white; }
-            .btn-print { background: #f59e0b; color: white; }
-          </style>
+          <style>${getOfficialPrintStyles()}</style>
         </head>
-        <body style="padding-top: 70px;">
-          <div class="no-print print-controls">
-            <button onclick="window.close()" class="btn btn-back">&larr; मागे जा (CLOSE)</button>
-            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (PRINT TOURNAMENT SHEET)</button>
+        <body>
+          <div class="no-print print-toolbar">
+            <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
+            <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
+              ${sportLabelMr} &bull; ${catLabelMr} (सन २०२६-२७) &bull; अधिकृत १२ खेळाडू संघ
+            </div>
+            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (Print)</button>
           </div>
-
-          <div class="paper">
-            <!-- OFFICIAL LETTERHEAD -->
-            <div class="letterhead">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
-                <div style="width: 80px; text-align: left;">
-                  <img src="${TRIBAL_DEV_LOGO_B64}" alt="Adivasi Vikas Logo" style="width: 75px; height: 75px; object-fit: contain;" />
-                </div>
-                <div style="flex: 1; text-align: center;">
-                  <div class="govt-title">महाराष्ट्र शासन</div>
-                  <div class="school-title">${schoolName}</div>
-                  <div class="meta-row">
-                    <span>SSC Index No – 13.12.058</span>
-                    <span>Udise No.- 27200116503</span>
-                  </div>
-                  <div style="font-size: 10px; font-weight: 700; color: #475569; margin-top: 2px;">
-                    Email id – govt.waghamba2020@gmail.com
-                  </div>
-                </div>
-                <div style="width: 80px; text-align: right;">
-                  <img src="${AMRIT_MAHOTSAV_LOGO_B64}" alt="Amrit Mahotsav Logo" style="width: 75px; height: 75px; object-fit: contain;" />
-                </div>
-              </div>
-              <div class="dispatch-row">
-                <span>जा.क्र. ________ /२०२६ वाघंबा</span>
-                <span>दिनांक: ____/____/२०२६</span>
-              </div>
-            </div>
-
-            <!-- PROJECT & SCHOOL INFO -->
-            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 5px; padding: 5px 10px; margin-bottom: 8px; font-size: 10px; font-weight: 800; line-height: 1.45;">
-              <div>• <strong>प्रकल्पाचे नाव:</strong> एकात्मिक आदिवासी विकास प्रकल्प कळवण, ता. कळवण, जि. नाशिक</div>
-              <div>• <strong>शाळेचे पूर्ण नाव व पत्ता:</strong> ${schoolName}</div>
-              <div>• <strong>दूरध्वनी क्रमांक:</strong> ०२५५५-२९९०१५ / ९४२०४५८२४६</div>
-            </div>
-
-            <!-- FORM HEADING -->
-            <div class="form-heading">
-              शालेय क्रीडा स्पर्धा संघ प्रवेश पत्र (OFFICIAL TOURNAMENT SQUAD ENTRY FORM)
-            </div>
-
-            <div class="info-bar">
-              <span>🏆 खेळ: <strong>${sportLabelMr.toUpperCase()} (${selectedSport.toUpperCase()})</strong></span>
-              <span>🎯 वयोगट: <strong>${category.toUpperCase()}</strong></span>
-              <span>👥 खेळाडू संख्या: <strong>12 Athletes (अधिकृत १२ खेळाडू संघ)</strong></span>
-            </div>
-
-            <table>
+          <div class="page-container">
+            <table class="official-outer-box">
               <thead>
+                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
                 <tr>
-                  <th style="width: 38px;">अ.क्र</th>
-                  <th style="width: 50px;">जर्सी नं.</th>
-                  <th style="width: 70px;">G.R. NO.</th>
-                  <th>खेळाडूचे नाव (PLAYER NAME)</th>
-                  <th style="width: 55px;">इयत्ता</th>
-                  <th style="width: 85px;">जन्म तारीख</th>
-                  <th style="width: 110px;">आधार क्रमांक</th>
-                  <th style="width: 70px;">सही</th>
+                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${catLabelMr}</th>
+                  <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportLabelMr}</th>
+                  <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
+                </tr>
+                <tr>
+                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
+                  <th class="col-header" style="width: 8%;">जन्मतारीख</th>
+                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 11%;">आधार क्र.</th>
+                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 6%;">तालुका</th>
+                  <th class="col-header" style="width: 8%;">वयोगट</th>
+                  <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>
-                ${rowsToPrint.map((p, i) => {
-                  if (p.isBlank) {
-                    return `
-                    <tr>
-                      <td class="center"><strong>${i + 1}</strong></td>
-                      <td class="center" style="color: #94a3b8;">-</td>
-                      <td class="center" style="color: #94a3b8;">-</td>
-                      <td>&nbsp;</td>
-                      <td class="center" style="color: #94a3b8;">-</td>
-                      <td class="center" style="color: #94a3b8;">-</td>
-                      <td class="center" style="color: #94a3b8;">-</td>
-                      <td></td>
-                    </tr>
-                    `;
-                  }
-                  const displayName = p.nameMarathi && p.nameMarathi.trim() ? p.nameMarathi.trim() : p.name;
-                  const jersey = p.jerseyNumbers?.[selectedSport] || p.jerseyNumber || '-';
-                  const srNo = customSrNumbers[p.id] || String(i + 1);
-                  
-                  return `
-                  <tr>
-                    <td class="center"><strong>${srNo}</strong></td>
-                    <td class="center" style="font-weight: 900; color: #1e3a8a; background: #f8fafc;">#${jersey}</td>
-                    <td class="center"><strong>${sanitizeGrNumber(p.generalRegisterNumber, p.serialNumber || '---')}</strong></td>
-                    <td><strong>${displayName}</strong></td>
-                    <td class="center"><strong>${p.std} वी</strong></td>
-                    <td class="center">${p.dob || (getAgeValidation(p.dob)?.ageYears || p.age || '---')}</td>
-                    <td class="center">${p.aadharNumber || '---'}</td>
-                    <td></td>
-                  </tr>
-                `;
-                }).join('')}
+                ${rowsHtml}
               </tbody>
             </table>
-
-            <!-- SIGNATURE BLOCKS -->
-            <div class="sign-grid">
-              <div class="sign-block">
-                <img src="${signatureSrc}" alt="Teacher Signature" />
-                <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">क्रीडा शिक्षक स्वाक्षरी</div>
-                <div style="font-size: 9.5px; color: #64748b;">(${teacherName})</div>
+            <div class="footer-sign-section">
+              <div class="sign-box">
+                <br/><br/>
+                <div>क्रीडा शिक्षक (स्वाक्षरी)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(${teacherName})</div>
               </div>
-              <div class="sign-block">
-                <div style="height: 38px;"></div>
-                <div style="border-top: 1.5px dashed #475569; padding-top: 4px;">मुख्याध्यापक सही व शिक्का</div>
-                <div style="font-size: 9.5px; color: #64748b;">(शासकीय माध्यमिक आश्रम शाळा वाघंबा)</div>
+              <div class="sign-box">
+                <br/><br/>
+                <div>मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(शा. मा. आ. शाळा वाघांबा)</div>
               </div>
             </div>
           </div>
         </body>
       </html>
     `;
+
     const win = window.open('', '_blank');
-    win?.document.write(printContent);
-    win?.document.close();
+    if (win) {
+      win.document.write(printContent);
+      win.document.close();
+    }
   };
+
+  // Print 12 Players Official Squad Sheet: First Boys (12 players), then Girls (12 players)
+  const handlePrintGame12BoysGirls = () => {
+    const { boysRows, girlsRows, sportMr } = getSelectedSport12Squads(selectedSport);
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
+    const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
+
+    const padTo12 = (list: SheetRow[], genderLabel: string) => {
+      const padded = [...list.slice(0, 12)];
+      while (padded.length < 12) {
+        padded.push({
+          id: `blank_${genderLabel}_${padded.length + 1}`,
+          srNo: String(padded.length + 1),
+          studentName: '',
+          std: '-',
+          grNo: '-',
+          dob: '-',
+          motherName: '-',
+          aadhar: '-',
+          saralId: '-',
+          schoolName: schoolName,
+          uDise: DEFAULT_UDISE,
+          taluka: DEFAULT_TALUKA,
+          sportOrEvent: sportMr,
+          ageCategoryLabel: genderLabel,
+          gender: genderLabel === 'मुली' ? 'Female' : 'Male'
+        });
+      }
+      return padded;
+    };
+
+    const finalBoys = padTo12(boysRows, 'मुले');
+    const finalGirls = padTo12(girlsRows, 'मुली');
+
+    const renderRows = (rows: SheetRow[], startSr: number) => rows.map((r, i) => `
+      <tr>
+        <td class="text-center font-normal">${startSr + i}</td>
+        <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal">${r.grNo || '-'}</td>
+        <td class="text-center font-normal">${r.dob || '-'}</td>
+        <td class="text-center font-normal">${r.motherName || '-'}</td>
+        <td class="text-center font-normal font-mono" style="font-size: 8.5pt;">${r.aadhar || '-'}</td>
+        <td class="text-center font-normal" style="font-size: 8.5pt;">${r.schoolName || DEFAULT_SCHOOL_MR}</td>
+        <td class="text-center font-normal font-mono" style="font-size: 8.5pt;">${r.uDise || DEFAULT_UDISE}</td>
+        <td class="text-center font-normal">${r.taluka || DEFAULT_TALUKA}</td>
+        <td class="text-center font-normal">${r.ageCategoryLabel || '-'}</td>
+        <td class="text-center font-normal" style="font-weight: 700;">${r.sportOrEvent || sportMr}</td>
+      </tr>
+    `).join('');
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="mr">
+        <head>
+          <title>${sportMr} - १२ खेळाडू संघ (प्रथम मुले, नंतर मुली) - २०२६-२७</title>
+          <meta charset="utf-8" />
+          <style>${getOfficialPrintStyles()}</style>
+        </head>
+        <body>
+          <div class="no-print print-toolbar">
+            <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
+            <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
+              ${sportMr} &bull; १२ खेळाडू संघ (प्रथम मुले, नंतर मुली) &bull; सन २०२६-२७
+            </div>
+            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (Print)</button>
+          </div>
+          <div class="page-container">
+            <table class="official-outer-box">
+              <thead>
+                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr>
+                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)</th>
+                  <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
+                  <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
+                </tr>
+                <tr>
+                  <th colspan="11" style="background: #e2e8f0; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt;">
+                    👦 १. मुले संघ (Boys Squad - १२ खेळाडू)
+                  </th>
+                </tr>
+                <tr>
+                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
+                  <th class="col-header" style="width: 8%;">जन्मतारीख</th>
+                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 11%;">आधार क्र.</th>
+                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 6%;">तालुका</th>
+                  <th class="col-header" style="width: 8%;">वयोगट</th>
+                  <th class="col-header" style="width: 8%;">खेळाचा प्रकार</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRows(finalBoys, 1)}
+                <tr>
+                  <td colspan="11" style="background: #fce7f3; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt; color: #9d174d;">
+                    👧 २. मुली संघ (Girls Squad - १२ खेळाडू)
+                  </td>
+                </tr>
+                ${renderRows(finalGirls, 1)}
+              </tbody>
+            </table>
+            <div class="footer-sign-section">
+              <div class="sign-box">
+                <br/><br/>
+                <div>क्रीडा शिक्षक (स्वाक्षरी)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(${teacherName})</div>
+              </div>
+              <div class="sign-box">
+                <br/><br/>
+                <div>मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(शा. मा. आ. शाळा वाघांबा)</div>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(printHtml);
+      win.document.close();
+    }
+  };
+
+  // Export 12 Players for Selected Sport: First Boys, then Girls (.xlsx)
+  const handleExportGame12BoysGirlsExcel = () => {
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
+    const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
+    const sportMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+
+    const meta: TournamentExcelMetadata = {
+      departmentName: "आदिवासी विकास विभाग नाशिक",
+      projectName: "एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक",
+      schoolName,
+      sportName: sportMr,
+      selectedSportKey: selectedSport,
+      academicYear: "2026-27",
+      teacherName,
+      uDise: DEFAULT_UDISE,
+      taluka: DEFAULT_TALUKA
+    };
+
+    const { boysRows, girlsRows } = getSelectedSport12Squads(selectedSport);
+    exportGame12PlayersBoysGirlsExcel(selectedSport, boysRows, girlsRows, meta);
+  };
+
+  // Print Master Tournament Unique Players Entry Sheet (deduplicated, first boys then girls, with count)
+  const handlePrintUniqueTournamentPlayers = () => {
+    const { uniquePlayers, summary } = getUniqueTournamentPlayersList;
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
+    const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
+
+    const rowsHtml = uniquePlayers.length > 0 ? uniquePlayers.map(r => `
+      <tr>
+        <td class="text-center font-normal">${r.srNo || '-'}</td>
+        <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
+        <td class="text-center font-normal">${r.grNo || '-'}</td>
+        <td class="text-center font-normal">${r.dob || '-'}</td>
+        <td class="text-center font-normal">${r.motherName || '-'}</td>
+        <td class="text-center font-normal font-mono" style="font-size: 8.5pt;">${r.aadhar || '-'}</td>
+        <td class="text-center font-normal" style="font-size: 8.5pt;">${r.schoolName || DEFAULT_SCHOOL_MR}</td>
+        <td class="text-center font-normal font-mono" style="font-size: 8.5pt;">${r.uDise || DEFAULT_UDISE}</td>
+        <td class="text-center font-normal">${r.taluka || DEFAULT_TALUKA}</td>
+        <td class="text-center font-normal">${r.ageCategoryLabel || '-'}</td>
+        <td class="text-center font-normal" style="font-weight: 700; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
+      </tr>
+    `).join('') : `
+      <tr>
+        <td colspan="11" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
+      </tr>
+    `;
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="mr">
+        <head>
+          <title>एकूण सहभागी खेळाडू मास्टर यादी (अद्वितीय मुले व मुली) - सन २०२६-२७</title>
+          <meta charset="utf-8" />
+          <style>${getOfficialPrintStyles()}</style>
+        </head>
+        <body>
+          <div class="no-print print-toolbar">
+            <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
+            <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
+              एकूण खेळाडू संख्या: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls}) - कोणतीही पुनरावृत्ती नाही
+            </div>
+            <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (Print)</button>
+          </div>
+          <div class="page-container">
+            <table class="official-outer-box">
+              <thead>
+                <tr><th colspan="11" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
+                <tr>
+                  <th colspan="6" class="meta-bar-cell text-left">
+                    शालेय क्रीडा स्पर्धा सन :- २०२६-२७ | एकूण सहभागी खेळाडू मास्टर यादी (सर्व खेळ)
+                  </th>
+                  <th colspan="5" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
+                    एकूण खेळाडू: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls})
+                  </th>
+                </tr>
+                <tr>
+                  <th class="col-header" style="width: 5%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 18%;">खेळाडूचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
+                  <th class="col-header" style="width: 8%;">जन्मतारीख</th>
+                  <th class="col-header" style="width: 10%;">आईचे नाव</th>
+                  <th class="col-header" style="width: 11%;">आधार क्र.</th>
+                  <th class="col-header" style="width: 15%;">शाळेचे नाव</th>
+                  <th class="col-header" style="width: 9%;">यु-डायस क्रमांक</th>
+                  <th class="col-header" style="width: 6%;">तालुका</th>
+                  <th class="col-header" style="width: 8%;">वयोगट</th>
+                  <th class="col-header" style="width: 10%;">खेळाचा प्रकार</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+            <div class="footer-sign-section">
+              <div class="sign-box">
+                <br/><br/>
+                <div>क्रीडा शिक्षक (स्वाक्षरी)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(${teacherName})</div>
+              </div>
+              <div class="sign-box">
+                <br/><br/>
+                <div>मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(शा. मा. आ. शाळा वाघांबा)</div>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(printHtml);
+      win.document.close();
+    }
+  };
+
+  // Export Master Tournament Unique Players Entry Sheet (.xlsx)
+  const handleExportUniqueTournamentPlayersExcel = () => {
+    const { uniquePlayers, summary } = getUniqueTournamentPlayersList;
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
+    const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
+
+    const meta: TournamentExcelMetadata = {
+      departmentName: "आदिवासी विकास विभाग नाशिक",
+      projectName: "एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक",
+      schoolName,
+      sportName: "सर्व खेळ",
+      selectedSportKey: "All",
+      academicYear: "2026-27",
+      teacherName,
+      uDise: DEFAULT_UDISE,
+      taluka: DEFAULT_TALUKA
+    };
+
+    exportUniqueTournamentPlayersExcel(uniquePlayers, meta, summary);
+  };
+
+  // Export Every Game's 12 Players (Boys then Girls) into a master multi-tab workbook
+  const handleExportEveryGame12Excel = () => {
+    const tournamentSports = [
+      { key: 'Kabaddi', labelMr: 'कबड्डी' },
+      { key: 'Kho Kho', labelMr: 'खो खो' },
+      { key: 'Volleyball', labelMr: 'व्हॉलीबॉल' },
+      { key: 'Handball', labelMr: 'हॅन्डबॉल' },
+      { key: 'Running', labelMr: 'धावणे' },
+      { key: 'Long Jump', labelMr: 'लांब उडी' },
+      { key: 'Shot Put', labelMr: 'गोळाफेक' },
+      { key: 'Javelin Throw', labelMr: 'भालाफेक' }
+    ];
+
+    const sportsData = tournamentSports.map(s => {
+      const { boysRows, girlsRows } = getSelectedSport12Squads(s.key);
+      return {
+        sportKey: s.key,
+        sportNameMr: s.labelMr,
+        boysRows,
+        girlsRows
+      };
+    });
+
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
+    const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
+
+    const meta: TournamentExcelMetadata = {
+      departmentName: "आदिवासी विकास विभाग नाशिक",
+      projectName: "एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक",
+      schoolName,
+      sportName: "सर्व खेळ",
+      selectedSportKey: "All",
+      academicYear: "2026-27",
+      teacherName,
+      uDise: DEFAULT_UDISE,
+      taluka: DEFAULT_TALUKA
+    };
+
+    exportEveryGame12PlayersWorkbookToExcel(sportsData, meta);
+  };
+
+  const { summary: uniqueSummary } = getUniqueTournamentPlayersList;
 
   return (
     <div className="space-y-6">
       {!preselectedSport && (
-        <div className="bg-primary/5 p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <div className="bg-white p-4 rounded-[1.5rem] border-2 border-primary/10 shadow-inner">
-              <Medal className="w-10 h-10 text-primary" />
+        <div className="bg-primary/5 p-6 sm:p-8 rounded-[3rem] border-2 border-primary/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="bg-white p-3.5 sm:p-4 rounded-[1.5rem] border-2 border-primary/10 shadow-inner">
+              <Medal className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Tournament Selection</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-primary uppercase tracking-tight">Tournament Selection</h2>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                Skill Hub गुण रँकिंग व अधिकृत स्पर्धा प्रवेश पत्र
+                Skill Hub गुण रँकिंग व अधिकृत स्पर्धा प्रवेश पत्र (११ रकाने मराठी फॉरमॅट)
               </p>
               
               <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -427,7 +1040,109 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                   }}
                 >
                   <Shirt className="w-3.5 h-3.5 text-emerald-600" />
-                  🎽 जर्सी व पोझिशन (Jersey & Positions)
+                  🎽 जर्सी व पोझिशन
+                </Button>
+
+                {/* 12 PLAYERS BOYS THEN GIRLS DROPDOWN */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
+                      title="१२ खेळाडू संघ: प्रथम मुले, नंतर मुली प्रिंट व एक्सेल पर्याय"
+                    >
+                      <Users className="w-3.5 h-3.5 text-white" />
+                      👥 १२ खेळाडू (मुले व मुली)
+                      <ChevronDown className="w-3 h-3 text-white/80" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64 p-2">
+                    <DropdownMenuLabel className="text-xs font-bold text-slate-700">
+                      १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handlePrintGame12BoysGirls}
+                      className="gap-2 cursor-pointer text-xs font-bold text-slate-900 focus:bg-blue-50"
+                    >
+                      <Printer className="w-4 h-4 text-blue-600" />
+                      🖨️ प्रिंट / पीडीएफ (१२ मुले व १२ मुली)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={handleExportGame12BoysGirlsExcel}
+                      className="gap-2 cursor-pointer text-xs font-bold text-emerald-800 focus:bg-emerald-50"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                      📊 एक्सेल (.xlsx) डाउनलोड
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* DEDUPLICATED TOTAL PLAYERS DROPDOWN */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
+                      title="कोणताही खेळाडू दुबार न घेता एकूण सहभागी खेळाडूंची संख्या व यादी"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      🎯 एकूण खेळाडू: {uniqueSummary.total}
+                      <ChevronDown className="w-3 h-3 text-white/80" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-72 p-2">
+                    <DropdownMenuLabel className="text-xs font-bold text-slate-800">
+                      एकूण खेळाडू संख्या: {uniqueSummary.total}
+                      <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                        (👦 मुले: {uniqueSummary.boys} | 👧 मुली: {uniqueSummary.girls}) - कोणतीही पुनरावृत्ती नाही
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handlePrintUniqueTournamentPlayers}
+                      className="gap-2 cursor-pointer text-xs font-bold text-slate-900 focus:bg-amber-50"
+                    >
+                      <Printer className="w-4 h-4 text-amber-600" />
+                      🖨️ प्रिंट / पीडीएफ (मास्टर यादी)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={handleExportUniqueTournamentPlayersExcel}
+                      className="gap-2 cursor-pointer text-xs font-bold text-emerald-800 focus:bg-emerald-50"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                      📊 एक्सेल (.xlsx) मास्टर यादी डाउनलोड
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* EVERY GAME 12 PLAYERS WORKBOOK */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
+                  onClick={handleExportEveryGame12Excel}
+                  title="सर्व खेळांचे १२ खेळाडू (मुले व मुली) एकत्रित एक्सेल वर्कबुक डाउनलोड करा"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-amber-300" />
+                  📚 सर्व खेळ १२ खेळाडू (Excel)
+                </Button>
+
+                {/* OFFICIAL SHEET MODAL BUTTON */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black border-none rounded-xl h-8 gap-1.5 shadow-md"
+                  onClick={() => handleOpenOfficialSheet('Girls U14', store?.data?.players)}
+                >
+                  <FileText className="w-3.5 h-3.5 text-slate-950" />
+                  📋 अधिकृत स्पर्धा शीट (Official Sheet)
                 </Button>
 
                 <Button
@@ -576,14 +1291,25 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
               >
                 <FileText className="w-4 h-4" /> 📋 अधिकृत क्रीडा स्पर्धा शीट (Official Sheet)
               </Button>
-              <Button 
-                onClick={() => handlePrint(cat)} 
-                disabled={processedGroups[cat].length === 0} 
-                variant="outline" 
-                className="w-full h-9 bg-white text-primary font-black uppercase text-xs tracking-widest border-2 shadow-sm rounded-xl"
-              >
-                <Printer className="w-3.5 h-3.5 mr-1.5" /> Quick Squad List Print
-              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  onClick={() => handleExportCategoryExcel(cat, processedGroups[cat])} 
+                  disabled={processedGroups[cat].length === 0} 
+                  variant="outline" 
+                  className="w-full h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black uppercase text-xs border border-emerald-300 shadow-xs rounded-xl flex items-center justify-center gap-1.5"
+                  title="हा वयोगट थेट एक्सेल (.xlsx) फाईलमध्ये डाउनलोड करा"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" /> 📊 एक्सेल (.xlsx)
+                </Button>
+                <Button 
+                  onClick={() => handlePrint(cat)} 
+                  disabled={processedGroups[cat].length === 0} 
+                  variant="outline" 
+                  className="w-full h-9 bg-white text-primary font-black uppercase text-xs tracking-widest border-2 shadow-sm rounded-xl flex items-center justify-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5 mr-1" /> Quick Print
+                </Button>
+              </div>
             </div>
           </Card>
         ))}
