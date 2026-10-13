@@ -28,7 +28,8 @@ import {
   Users, 
   ChevronDown, 
   Download,
-  Sparkles
+  Sparkles,
+  Filter
 } from 'lucide-react';
 import { getAgeValidation, getOfficialSchoolName, getTeacherName, sanitizeGrNumber } from '@/lib/utils';
 import { 
@@ -56,7 +57,8 @@ import {
 import {
   resolveStudentDetails,
   getPlayerAgeCategoryLabel,
-  formatAadharGrouped
+  formatAadharGrouped,
+  getStudentUnderCategory
 } from '@/lib/tournamentStudentResolver';
 
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
@@ -236,27 +238,27 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
   const isAthletics = isAthleticsSixSport(selectedSport);
 
+  // Underwise List Filter State: allows showing ONLY the selected under list
+  const [selectedUnderFilter, setSelectedUnderFilter] = useState<'all' | 'U14' | 'U17' | 'U19'>('all');
+
   const getCategory = useCallback((p: any) => {
-    const ageVal = getAgeValidation(p.dob);
-    let age = ageVal ? ageVal.ageYears : (parseInt(p.age) || 0);
-
-    // Fallback: If exact DOB was unparseable, infer standard-based category
-    // (In Maharashtra school sports: Std 1-7 is U14, Std 8-10 is U17, Std 11-12 is Senior)
-    if (!age || age <= 0 || isNaN(age)) {
-      const stdNum = parseInt(String(p.std || '').replace(/\D/g, ''), 10);
-      if (stdNum > 0 && stdNum <= 7) age = 13;
-      else if (stdNum >= 8 && stdNum <= 10) age = 16;
-      else if (stdNum >= 11) age = 18;
-    }
-
-    if (!age || age <= 0 || isNaN(age)) return 'Age Pending';
-    const gender = (p.gender === 'Female' || p.gender === 'female' || p.gender === 'F') ? 'Girls' : 'Boys';
-    if (age < 14) return `${gender} U14`;
-    if (age < 17) return `${gender} U17`;
-    return `${gender} Senior`;
+    return getStudentUnderCategory(p).rosterCategoryKey;
   }, []);
 
-  const categories = useMemo(() => ['Girls U14', 'Boys U14', 'Girls U17', 'Boys U17', 'Girls Senior', 'Boys Senior', 'Age Pending'], []);
+  const categories = useMemo(() => ['Girls U14', 'Boys U14', 'Girls U17', 'Boys U17', 'Girls Senior', 'Boys Senior'], []);
+
+  const displayedCategories = useMemo(() => {
+    if (selectedUnderFilter === 'U14') return ['Girls U14', 'Boys U14'];
+    if (selectedUnderFilter === 'U17') return ['Girls U17', 'Boys U17'];
+    if (selectedUnderFilter === 'U19') return ['Girls Senior', 'Boys Senior'];
+    return categories;
+  }, [selectedUnderFilter, categories]);
+
+  const activeUnderLabel = useMemo(() => {
+    if (selectedUnderFilter === 'U17') return '१७ वर्षाखालील';
+    if (selectedUnderFilter === 'U19') return '१९ वर्षाखालील';
+    return '१४ वर्षाखालील';
+  }, [selectedUnderFilter]);
   
   // Process groups:
   // USER REQUIREMENT: Show players who were given marks from Skill Hub, sorted strictly by their mark ranking!
@@ -265,20 +267,18 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     const allPlayers: any[] = store?.data?.players || [];
 
     let playersInSport = allPlayers.filter((p: any) => {
-      // In tournament rosters, strictly include sport players/athletes
-      if (p.category && p.category !== 'athlete') return false;
       if (!p.sports) return false;
       if (Array.isArray(p.sports) && p.sports.includes(selectedSport)) return true;
       if (typeof p.sports === 'string' && p.sports.includes(selectedSport)) return true;
-      if (isAthletics && ((Array.isArray(p.sports) && p.sports.includes('Athletics')) || p.category === 'athlete')) {
+      if (isAthletics && (Array.isArray(p.sports) && p.sports.includes('Athletics'))) {
         return true;
       }
       return false;
     });
 
-    // Fallback: If no player specifically assigned to this sport yet, include the school's athletes
+    // Fallback: If no player specifically assigned to this sport yet, include all players
     if (playersInSport.length === 0) {
-      playersInSport = allPlayers.filter((p: any) => p.category === 'athlete');
+      playersInSport = allPlayers;
     }
 
     playersInSport.forEach((p: any) => {
@@ -316,12 +316,11 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
       let finalList = [...withMarks, ...withoutMarks];
 
-      // If fewer than 12 players in this sport for this category, fill up to 12 from other athletes in the same category
+      // If fewer than 12 players in this sport for this category, fill up to 12 from other athletes in the exact same category
       if (finalList.length < 12) {
         const existingIds = new Set(finalList.map(p => p.id));
         const categoryOtherAthletes = allPlayers.filter(p => {
           if (existingIds.has(p.id)) return false;
-          if (p.category && p.category !== 'athlete') return false;
           return getCategory(p) === cat;
         });
         categoryOtherAthletes.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
@@ -352,22 +351,24 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   }, [selectedSport, store, categories, getCategory, isAthletics]);
 
   // Extract 12 boys and 12 girls for a specific sport (First Boys, Then Girls)
-  const getSelectedSport12Squads = useCallback((sportKey: string) => {
+  // Strictly filtered by targetAgeType so there is NEVER a cross-under mismatch!
+  const getSelectedSport12Squads = useCallback((sportKey: string, targetAgeType?: 'U14' | 'U17' | 'U19') => {
     const allStorePlayers: any[] = store?.data?.players || [];
     const sportMr = SPORT_MARATHI_MAP[sportKey] || sportKey;
     const isTargetAthletics = isAthleticsSixSport(sportKey);
+    const resolvedAgeType: 'U14' | 'U17' | 'U19' = targetAgeType || (selectedUnderFilter !== 'all' ? selectedUnderFilter : 'U14');
 
     const filterAndScore = (genderType: 'Male' | 'Female') => {
       let pool = allStorePlayers.filter((p: any) => {
-        if (p.category && p.category !== 'athlete') return false;
-        const isFem = p.gender === 'Female' || p.gender === 'मुली' || p.gender === 'female' || p.gender === 'F';
-        return genderType === 'Female' ? isFem : !isFem;
+        const studentCat = getStudentUnderCategory(p);
+        if (studentCat.ageType !== resolvedAgeType) return false;
+        return genderType === 'Female' ? studentCat.gender === 'Female' : studentCat.gender === 'Male';
       });
 
       const scored = pool.map(p => {
         const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
         const isInSport = Boolean(
-          p.sports && Array.isArray(p.sports) && (p.sports.includes(sportKey) || (isTargetAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')))
+          p.sports && Array.isArray(p.sports) && (p.sports.includes(sportKey) || (isTargetAthletics && p.sports.includes('Athletics')))
         );
         return {
           ...p,
@@ -421,8 +422,20 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
     const boysRows = filterAndScore('Male');
     const girlsRows = filterAndScore('Female');
-    return { boysRows, girlsRows, sportMr };
-  }, [store, customSrNumbers]);
+    const boysCatLabel = resolvedAgeType === 'U14' ? '१४ वर्षाखालील मुले' : resolvedAgeType === 'U17' ? '१७ वर्षाखालील मुले' : '१९ वर्षाखालील मुले';
+    const girlsCatLabel = resolvedAgeType === 'U14' ? '१४ वर्षाखालील मुली' : resolvedAgeType === 'U17' ? '१७ वर्षाखालील मुली' : '१९ वर्षाखालील मुली';
+    const combinedCatLabel = resolvedAgeType === 'U14' ? '१४ वर्षाखालील' : resolvedAgeType === 'U17' ? '१७ वर्षाखालील' : '१९ वर्षाखालील';
+
+    return { 
+      boysRows, 
+      girlsRows, 
+      sportMr, 
+      ageType: resolvedAgeType,
+      boysCatLabel,
+      girlsCatLabel,
+      combinedCatLabel
+    };
+  }, [store, customSrNumbers, selectedUnderFilter]);
 
   // Master Tournament Unique Players Calculation (deduplicated, first boys then girls, total count)
   const getUniqueTournamentPlayersList = useMemo(() => {
@@ -759,9 +772,9 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     }
   };
 
-  // Print 12 Players Official Squad Sheet: First Boys (12 players), then Girls (12 players)
+  // Print 12 Players Official Squad Sheet: First Boys (12 players), then Girls (12 players) (Underwise)
   const handlePrintGame12BoysGirls = () => {
-    const { boysRows, girlsRows, sportMr } = getSelectedSport12Squads(selectedSport);
+    const { boysRows, girlsRows, sportMr, boysCatLabel, girlsCatLabel, combinedCatLabel } = getSelectedSport12Squads(selectedSport);
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
@@ -784,14 +797,14 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           taluka: DEFAULT_TALUKA,
           sportOrEvent: sportMr,
           ageCategoryLabel: genderLabel,
-          gender: genderLabel === 'मुली' ? 'Female' : 'Male'
+          gender: genderLabel.includes('मुली') ? 'Female' : 'Male'
         });
       }
       return padded;
     };
 
-    const finalBoys = padTo12(boysRows, 'मुले');
-    const finalGirls = padTo12(girlsRows, 'मुली');
+    const finalBoys = padTo12(boysRows, boysCatLabel);
+    const finalGirls = padTo12(girlsRows, girlsCatLabel);
 
     const renderRows = (rows: SheetRow[], startSr: number) => rows.map((r, i) => `
       <tr>
@@ -813,7 +826,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <!DOCTYPE html>
       <html lang="mr">
         <head>
-          <title>${sportMr} - १२ खेळाडू संघ (प्रथम मुले, नंतर मुली) - २०२६-२७</title>
+          <title>${sportMr} - ${combinedCatLabel} १२ खेळाडू संघ (प्रथम मुले, नंतर मुली) - २०२६-२७</title>
           <meta charset="utf-8" />
           <style>${getOfficialPrintStyles()}</style>
         </head>
@@ -821,7 +834,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="no-print print-toolbar">
             <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
             <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
-              ${sportMr} &bull; १२ खेळाडू संघ (प्रथम मुले, नंतर मुली) &bull; सन २०२६-२७
+              ${sportMr} &bull; ${combinedCatLabel} १२ खेळाडू संघ (प्रथम मुले, नंतर मुली) &bull; सन २०२६-२७
             </div>
             <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (Print)</button>
           </div>
@@ -832,13 +845,13 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
                 <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
                 <tr>
-                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)</th>
+                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${combinedCatLabel} १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
                   <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
                 <tr>
                   <th colspan="11" style="background: #e2e8f0; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt;">
-                    👦 १. मुले संघ (Boys Squad - १२ खेळाडू)
+                    👦 १. मुले संघ (${boysCatLabel} - १२ खेळाडू)
                   </th>
                 </tr>
                 <tr>
@@ -859,7 +872,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 ${renderRows(finalBoys, 1)}
                 <tr>
                   <td colspan="11" style="background: #fce7f3; font-weight: 900; text-align: left; padding: 4px 8px; font-size: 10pt; color: #9d174d;">
-                    👧 २. मुली संघ (Girls Squad - १२ खेळाडू)
+                    👧 २. मुली संघ (${girlsCatLabel} - १२ खेळाडू)
                   </td>
                 </tr>
                 ${renderRows(finalGirls, 1)}
@@ -894,7 +907,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
-    const sportMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+    const { boysRows, girlsRows, sportMr, combinedCatLabel } = getSelectedSport12Squads(selectedSport);
 
     const meta: TournamentExcelMetadata = {
       departmentName: "आदिवासी विकास विभाग नाशिक",
@@ -905,10 +918,10 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       academicYear: "2026-27",
       teacherName,
       uDise: DEFAULT_UDISE,
-      taluka: DEFAULT_TALUKA
+      taluka: DEFAULT_TALUKA,
+      categoryLabel: combinedCatLabel
     };
 
-    const { boysRows, girlsRows } = getSelectedSport12Squads(selectedSport);
     exportGame12PlayersBoysGirlsExcel(selectedSport, boysRows, girlsRows, meta);
   };
 
@@ -917,7 +930,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
-    const sportMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+    const { boysRows, sportMr, boysCatLabel } = getSelectedSport12Squads(selectedSport);
 
     const meta: TournamentExcelMetadata = {
       departmentName: "आदिवासी विकास विभाग नाशिक",
@@ -928,10 +941,10 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       academicYear: "2026-27",
       teacherName,
       uDise: DEFAULT_UDISE,
-      taluka: DEFAULT_TALUKA
+      taluka: DEFAULT_TALUKA,
+      categoryLabel: boysCatLabel
     };
 
-    const { boysRows } = getSelectedSport12Squads(selectedSport);
     exportBoysOnly12Excel(selectedSport, boysRows, meta);
   };
 
@@ -940,7 +953,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
-    const sportMr = SPORT_MARATHI_MAP[selectedSport] || selectedSport;
+    const { girlsRows, sportMr, girlsCatLabel } = getSelectedSport12Squads(selectedSport);
 
     const meta: TournamentExcelMetadata = {
       departmentName: "आदिवासी विकास विभाग नाशिक",
@@ -951,16 +964,16 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       academicYear: "2026-27",
       teacherName,
       uDise: DEFAULT_UDISE,
-      taluka: DEFAULT_TALUKA
+      taluka: DEFAULT_TALUKA,
+      categoryLabel: girlsCatLabel
     };
 
-    const { girlsRows } = getSelectedSport12Squads(selectedSport);
     exportGirlsOnly12Excel(selectedSport, girlsRows, meta);
   };
 
   // Print 12 Boys Only
   const handlePrint12BoysOnly = () => {
-    const { boysRows, sportMr } = getSelectedSport12Squads(selectedSport);
+    const { boysRows, sportMr, boysCatLabel } = getSelectedSport12Squads(selectedSport);
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
@@ -982,7 +995,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           uDise: DEFAULT_UDISE,
           taluka: DEFAULT_TALUKA,
           sportOrEvent: sportMr,
-          ageCategoryLabel: '१४ वर्षाखालील मुले',
+          ageCategoryLabel: boysCatLabel,
           gender: 'Male'
         });
       }
@@ -1010,7 +1023,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <!DOCTYPE html>
       <html lang="mr">
         <head>
-          <title>${sportMr} - १२ मुले संघ - सन २०२६-२७</title>
+          <title>${sportMr} - ${boysCatLabel} (१२ खेळाडू संघ) - सन २०२६-२७</title>
           <meta charset="utf-8" />
           <style>${getOfficialPrintStyles()}</style>
         </head>
@@ -1018,7 +1031,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="no-print print-toolbar">
             <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
             <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
-              👦 ${sportMr} &bull; १२ मुले संघ &bull; सन २०२६-२७
+              👦 ${sportMr} &bull; ${boysCatLabel} &bull; १२ खेळाडू संघ &bull; सन २०२६-२७
             </div>
             <button onclick="window.print()" class="btn btn-print">🖨️ १२ मुले संघ प्रिंट करा (Print 12 Boys)</button>
           </div>
@@ -1029,7 +1042,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
                 <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
                 <tr>
-                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- १२ मुले संघ (Boys Squad)</th>
+                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${boysCatLabel} (१२ खेळाडू संघ)</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
                   <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
@@ -1077,7 +1090,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
 
   // Print 12 Girls Only
   const handlePrint12GirlsOnly = () => {
-    const { girlsRows, sportMr } = getSelectedSport12Squads(selectedSport);
+    const { girlsRows, sportMr, girlsCatLabel } = getSelectedSport12Squads(selectedSport);
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
@@ -1099,7 +1112,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           uDise: DEFAULT_UDISE,
           taluka: DEFAULT_TALUKA,
           sportOrEvent: sportMr,
-          ageCategoryLabel: '१४ वर्षाखालील मुली',
+          ageCategoryLabel: girlsCatLabel,
           gender: 'Female'
         });
       }
@@ -1107,6 +1120,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
     };
 
     const finalGirls = padTo12(girlsRows);
+
     const rowsHtml = finalGirls.map((r, i) => `
       <tr>
         <td class="text-center font-normal">${i + 1}</td>
@@ -1127,7 +1141,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       <!DOCTYPE html>
       <html lang="mr">
         <head>
-          <title>${sportMr} - १२ मुली संघ - सन २०२६-२७</title>
+          <title>${sportMr} - ${girlsCatLabel} (१२ खेळाडू संघ) - सन २०२६-२७</title>
           <meta charset="utf-8" />
           <style>${getOfficialPrintStyles()}</style>
         </head>
@@ -1135,7 +1149,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="no-print print-toolbar">
             <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
             <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
-              👧 ${sportMr} &bull; १२ मुली संघ &bull; सन २०२६-२७
+              👧 ${sportMr} &bull; ${girlsCatLabel} &bull; १२ खेळाडू संघ &bull; सन २०२६-२७
             </div>
             <button onclick="window.print()" class="btn btn-print">🖨️ १२ मुली संघ प्रिंट करा (Print 12 Girls)</button>
           </div>
@@ -1146,7 +1160,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                 <tr><th colspan="11" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
                 <tr><th colspan="11" class="header-line-3">${schoolName}</th></tr>
                 <tr>
-                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- १२ मुली संघ (Girls Squad)</th>
+                  <th colspan="4" class="meta-bar-cell text-left">वयोगट :- ${girlsCatLabel} (१२ खेळाडू संघ)</th>
                   <th colspan="4" class="meta-bar-cell text-center">खेळ प्रकार :- ${sportMr}</th>
                   <th colspan="3" class="meta-bar-cell text-center">सन:- २०२६-२७</th>
                 </tr>
@@ -1397,13 +1411,13 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                       title="१२ खेळाडू संघ: प्रथम मुले, नंतर मुली प्रिंट व एक्सेल पर्याय"
                     >
                       <Users className="w-3.5 h-3.5 text-white" />
-                      👥 १२ खेळाडू (मुले व मुली)
+                      👥 १२ खेळाडू ({activeUnderLabel})
                       <ChevronDown className="w-3 h-3 text-white/80" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-72 p-2">
                     <DropdownMenuLabel className="text-xs font-bold text-slate-700">
-                      १२ खेळाडू संघ पर्याय (मुले / मुली / एकत्र)
+                      १२ खेळाडू संघ पर्याय ({activeUnderLabel})
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
@@ -1411,21 +1425,21 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                       className="gap-2 cursor-pointer text-xs font-bold text-slate-900 focus:bg-blue-50"
                     >
                       <Printer className="w-4 h-4 text-blue-600" />
-                      🖨️ 👦 फक्त १२ मुले संघ प्रिंट
+                      🖨️ 👦 फक्त १२ मुले संघ प्रिंट ({activeUnderLabel})
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={handlePrint12GirlsOnly}
                       className="gap-2 cursor-pointer text-xs font-bold text-slate-900 focus:bg-pink-50"
                     >
                       <Printer className="w-4 h-4 text-pink-600" />
-                      🖨️ 👧 फक्त १२ मुली संघ प्रिंट
+                      🖨️ 👧 फक्त १२ मुली संघ प्रिंट ({activeUnderLabel})
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={handlePrintGame12BoysGirls}
                       className="gap-2 cursor-pointer text-xs font-bold text-slate-900 focus:bg-amber-50"
                     >
                       <Printer className="w-4 h-4 text-amber-600" />
-                      🖨️ 👥 १२ मुले व १२ मुली एकत्र प्रिंट
+                      🖨️ 👥 १२ मुले व १२ मुली एकत्र प्रिंट ({activeUnderLabel})
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
@@ -1433,14 +1447,14 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                       className="gap-2 cursor-pointer text-xs font-bold text-blue-800 focus:bg-blue-50"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-blue-600" />
-                      📊 👦 फक्त १२ मुले संघ एक्सेल (.xlsx)
+                      📊 👦 फक्त १२ मुले संघ एक्सेल ({activeUnderLabel})
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={handleExport12GirlsOnlyExcel}
                       className="gap-2 cursor-pointer text-xs font-bold text-pink-800 focus:bg-pink-50"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-pink-600" />
-                      📊 👧 फक्त १२ मुली संघ एक्सेल (.xlsx)
+                      📊 👧 फक्त १२ मुली संघ एक्सेल ({activeUnderLabel})
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={handleExportGame12BoysGirlsExcel}
@@ -1587,14 +1601,94 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
         </div>
       )}
 
+      {/* UNDERWISE LIST FILTER TABS */}
+      <div className="bg-slate-900/5 border-2 border-slate-200/90 p-3 sm:p-4 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-slate-900 text-white rounded-xl shadow-xs">
+            <Filter className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black uppercase text-slate-900 tracking-wider">
+              वयोगट यादी निवडा (Underwise List Filter)
+            </div>
+            <div className="text-[11px] text-muted-foreground font-semibold">
+              फक्त निवडलेल्या वयोगटाचे खेळाडू आणि संघ पाहण्यासाठी खालील टॅब निवडा
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={selectedUnderFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => setSelectedUnderFilter('all')}
+            className={`h-8 sm:h-9 rounded-xl px-3 sm:px-4 text-xs font-black transition-all ${
+              selectedUnderFilter === 'all'
+                ? 'bg-slate-950 text-white shadow-md'
+                : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+            }`}
+          >
+            🌐 सर्व वयोगट (All)
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant={selectedUnderFilter === 'U14' ? 'default' : 'outline'}
+            onClick={() => setSelectedUnderFilter('U14')}
+            className={`h-8 sm:h-9 rounded-xl px-3 sm:px-4 text-xs font-black transition-all ${
+              selectedUnderFilter === 'U14'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white hover:bg-blue-50 text-blue-800 border-blue-200'
+            }`}
+          >
+            👦👧 १४ वर्षाखालील (U-14)
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant={selectedUnderFilter === 'U17' ? 'default' : 'outline'}
+            onClick={() => setSelectedUnderFilter('U17')}
+            className={`h-8 sm:h-9 rounded-xl px-3 sm:px-4 text-xs font-black transition-all ${
+              selectedUnderFilter === 'U17'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200'
+            }`}
+          >
+            👦👧 १७ वर्षाखालील (U-17)
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant={selectedUnderFilter === 'U19' ? 'default' : 'outline'}
+            onClick={() => setSelectedUnderFilter('U19')}
+            className={`h-8 sm:h-9 rounded-xl px-3 sm:px-4 text-xs font-black transition-all ${
+              selectedUnderFilter === 'U19'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-white hover:bg-purple-50 text-purple-800 border-purple-200'
+            }`}
+          >
+            👦👧 १९ वर्षाखालील (U-19)
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {categories.map(cat => (
+        {displayedCategories.map(cat => (
           <Card key={cat} className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl flex flex-col min-h-[460px] max-h-[620px]">
             <div className="bg-muted/40 p-5 border-b flex justify-between items-center">
               <div>
-                <span className="text-lg font-black uppercase text-primary">{cat}</span>
+                <span className="text-lg font-black uppercase text-primary">
+                  {CATEGORY_MARATHI_MAP[cat] || cat}
+                </span>
+                <span className="text-xs font-bold text-muted-foreground ml-2">
+                  ({cat})
+                </span>
                 <div className="text-[10px] text-muted-foreground font-bold">
-                  Skill Hub गुण रँकिंगनुसार क्रमवारी
+                  Skill Hub गुण रँकिंगनुसार क्रमवारी &bull; अधिकृत वयोगट
                 </div>
               </div>
               <Badge className="bg-primary text-white font-black">{processedGroups[cat].length} ATHLETES</Badge>

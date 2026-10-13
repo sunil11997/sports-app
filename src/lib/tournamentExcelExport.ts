@@ -12,6 +12,7 @@ export interface TournamentExcelMetadata {
   teacherName?: string;
   uDise?: string;
   taluka?: string;
+  categoryLabel?: string;
 }
 
 export const DEFAULT_UDISE = '27200116503';
@@ -267,7 +268,7 @@ export function buildCombined12BoysGirlsWorksheet(
     [meta.projectName || 'एकात्मिक आदिवासी विकास प्रकल्प, कळवण ता.कळवण जि.नाशिक'],
     [defaultSchool],
     [
-      `वयोगट :- १२ खेळाडू संघ (प्रथम मुले, नंतर मुली)`,
+      `वयोगट :- ${meta.categoryLabel ? `${meta.categoryLabel} ` : ''}१२ खेळाडू संघ (प्रथम मुले, नंतर मुली)`,
       '',
       '',
       `खेळ प्रकार :- ${sportMr}`,
@@ -281,7 +282,7 @@ export function buildCombined12BoysGirlsWorksheet(
     ],
     [],
     // Section 1 Header: 12 Boys
-    [`👦 १. मुले संघ (Boys Squad - १२ खेळाडू)`],
+    [`👦 १. मुले संघ (${meta.categoryLabel ? `${meta.categoryLabel} ` : ''}१२ खेळाडू)`],
     [...OFFICIAL_MARATHI_COLUMNS]
   ];
 
@@ -331,7 +332,7 @@ export function buildCombined12BoysGirlsWorksheet(
 
   // Section 2 Header: 12 Girls
   const girlsSectionRow = wsData.length;
-  wsData.push([`👧 २. मुली संघ (Girls Squad - १२ खेळाडू)`]);
+  wsData.push([`👧 २. मुली संघ (${meta.categoryLabel ? `${meta.categoryLabel} ` : ''}१२ खेळाडू)`]);
   merges.push({ s: { r: girlsSectionRow, c: 0 }, e: { r: girlsSectionRow, c: totalCols } });
   rowHeights.push({ hpt: 24 });
 
@@ -442,8 +443,9 @@ export function exportBoysOnly12Excel(
     sportOrEvent: sportMr
   }));
 
+  const catLabel = meta.categoryLabel ? `${meta.categoryLabel} (१२ खेळाडू संघ)` : '१२ मुले संघ (Boys 12 Squad)';
   const ws = buildOfficialWorksheet(
-    '१२ मुले संघ (Boys 12 Squad)',
+    catLabel,
     top12Boys,
     meta,
     { is12Only: true, headerSportName: sportMr }
@@ -471,8 +473,9 @@ export function exportGirlsOnly12Excel(
     sportOrEvent: sportMr
   }));
 
+  const catLabel = meta.categoryLabel ? `${meta.categoryLabel} (१२ खेळाडू संघ)` : '१२ मुली संघ (Girls 12 Squad)';
   const ws = buildOfficialWorksheet(
-    '१२ मुली संघ (Girls 12 Squad)',
+    catLabel,
     top12Girls,
     meta,
     { is12Only: true, headerSportName: sportMr }
@@ -519,8 +522,9 @@ export function exportGame12PlayersBoysGirlsExcel(
 
   // Tab 2: Boys 12 Only
   if (top12Boys.length > 0) {
+    const boysCatLabel = meta.categoryLabel ? `${meta.categoryLabel} मुले संघ (१२ खेळाडू)` : '१२ मुले संघ (Boys 12 Squad)';
     const boysWs = buildOfficialWorksheet(
-      '१२ मुले संघ (Boys 12 Squad)',
+      boysCatLabel,
       top12Boys,
       meta,
       { is12Only: true, headerSportName: sportMr }
@@ -530,8 +534,9 @@ export function exportGame12PlayersBoysGirlsExcel(
 
   // Tab 3: Girls 12 Only
   if (top12Girls.length > 0) {
+    const girlsCatLabel = meta.categoryLabel ? `${meta.categoryLabel} मुली संघ (१२ खेळाडू)` : '१२ मुली संघ (Girls 12 Squad)';
     const girlsWs = buildOfficialWorksheet(
-      '१२ मुली संघ (Girls 12 Squad)',
+      girlsCatLabel,
       top12Girls,
       meta,
       { is12Only: true, headerSportName: sportMr }

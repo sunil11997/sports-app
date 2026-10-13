@@ -718,11 +718,11 @@ export function getAgeValidation(dobString: string | undefined | null, customRef
     statusText = `Overage: Exceeds 19 yrs on 31/12/${refYear} (${years}y ${months}m)`;
     eligibilityType = 'Overage';
   } else if (dobNum > u14End) {
-    // Younger than 11 years
-    category = "Underage (कमी वयाचा)";
-    eligible = false;
-    statusText = `Underage for competitive U-14 (<11 yrs on 31/12/${refYear})`;
-    eligibilityType = 'Underage';
+    // Under 14 (Younger students in school sports are eligible for U-14)
+    category = "Under 14 (U14)";
+    eligible = true;
+    statusText = `Eligible for U-14 (Age ${years}y on 31/12/${refYear})`;
+    eligibilityType = 'U14';
   } else {
     category = "None";
     eligible = false;

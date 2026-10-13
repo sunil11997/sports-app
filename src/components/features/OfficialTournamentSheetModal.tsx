@@ -68,7 +68,8 @@ import {
 import {
   resolveStudentDetails,
   getPlayerAgeCategoryLabel,
-  formatAadharGrouped
+  formatAadharGrouped,
+  getStudentUnderCategory
 } from '@/lib/tournamentStudentResolver';
 
 export interface SheetRow {
@@ -521,35 +522,10 @@ export function OfficialTournamentSheetModal({
     const isAthletics = ATHLETICS_DISCIPLINES.includes(sportKey);
 
     OFFICIAL_CATEGORIES.forEach(catDef => {
-      // 1. Filter strictly by gender and athlete category
+      // 1. Filter strictly by canonical Under category and gender
       let pool = allStorePlayers.filter((p: any) => {
-        if (p.category && p.category !== 'athlete') return false;
-        const isFem = p.gender === 'Female' || p.gender === 'मुली';
-        return catDef.gender === 'Female' ? isFem : !isFem;
-      });
-
-      // 2. Filter strictly by age cut-off (31 Dec 2026)
-      pool = pool.filter((p: any) => {
-        const ageVal = getAgeValidation(p.dob, 2026);
-        if (ageVal) {
-          if (catDef.ageType === 'U14') return ageVal.eligibilityType === 'U14';
-          if (catDef.ageType === 'U17') return ageVal.eligibilityType === 'U17';
-          if (catDef.ageType === 'U19') return ageVal.eligibilityType === 'U19';
-        }
-        const age = parseInt(p.age) || 0;
-        if (age > 0) {
-          if (catDef.ageType === 'U14') return age < 14;
-          if (catDef.ageType === 'U17') return age >= 14 && age < 17;
-          if (catDef.ageType === 'U19') return age >= 17 && age <= 19;
-        }
-        // Standard-based eligibility fallback when exact DOB parsing is pending
-        const stdNum = parseInt(String(p.std).replace(/\D/g, '')) || 0;
-        if (stdNum > 0) {
-          if (catDef.ageType === 'U14') return stdNum <= 7;
-          if (catDef.ageType === 'U17') return stdNum >= 8 && stdNum <= 10;
-          if (catDef.ageType === 'U19') return stdNum > 10;
-        }
-        return false;
+        const studentCat = getStudentUnderCategory(p);
+        return studentCat.gender === catDef.gender && studentCat.ageType === catDef.ageType;
       });
 
       // 3. For each player, retrieve their game-specific activities and Skill Hub marks
@@ -591,18 +567,23 @@ export function OfficialTournamentSheetModal({
 
       // Fallback: If still empty, use basePlayers if matching initial category
       if (filtered.length === 0 && basePlayers && basePlayers.length > 0 && getInitialCategoryKey(initialCategory) === catDef.key) {
-        filtered = basePlayers.map(p => {
-          const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
-          const activity = getPlayerGameActivity(p, sportKey, store);
-          return {
-            ...p,
-            skillScoreNum: skillInfo.score,
-            skillScoreDisplay: skillInfo.scoreDisplay,
-            hasSkillMark: skillInfo.hasMark,
-            gameActivity: activity,
-            isInSport: true
-          };
-        });
+        filtered = basePlayers
+          .filter(p => {
+            const studentCat = getStudentUnderCategory(p);
+            return studentCat.gender === catDef.gender && studentCat.ageType === catDef.ageType;
+          })
+          .map(p => {
+            const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+            const activity = getPlayerGameActivity(p, sportKey, store);
+            return {
+              ...p,
+              skillScoreNum: skillInfo.score,
+              skillScoreDisplay: skillInfo.scoreDisplay,
+              hasSkillMark: skillInfo.hasMark,
+              gameActivity: activity,
+              isInSport: true
+            };
+          });
       }
 
       // Map to SheetRow with initial Sr No = Mark Ranking (1, 2, 3...)
@@ -1692,23 +1673,26 @@ export function OfficialTournamentSheetModal({
     }
   };
 
-  // Helper to extract 12 boys and 12 girls for a specific sport
-  const getSportBoysAndGirls12Squads = useCallback((targetSportKey: string) => {
+  // Helper to extract 12 boys and 12 girls for a specific sport (Strictly Underwise)
+  const getSportBoysAndGirls12Squads = useCallback((targetSportKey: string, targetAgeType?: 'U14' | 'U17' | 'U19') => {
     const allStorePlayers: any[] = store?.data?.players || [];
     const sportMr = SPORT_MARATHI_MAP[targetSportKey] || targetSportKey;
     const isTargetAthletics = ATHLETICS_DISCIPLINES.includes(targetSportKey);
 
+    const activeCatDef = OFFICIAL_CATEGORIES.find(c => c.key === activeCategoryKey);
+    const resolvedAgeType: 'U14' | 'U17' | 'U19' = targetAgeType || (activeCatDef?.ageType as 'U14' | 'U17' | 'U19') || 'U14';
+
     const filterAndScore = (genderType: 'Male' | 'Female') => {
       let pool = allStorePlayers.filter((p: any) => {
-        if (p.category && p.category !== 'athlete') return false;
-        const isFem = p.gender === 'Female' || p.gender === 'मुली' || p.gender === 'female' || p.gender === 'F';
-        return genderType === 'Female' ? isFem : !isFem;
+        const studentCat = getStudentUnderCategory(p);
+        if (studentCat.ageType !== resolvedAgeType) return false;
+        return genderType === 'Female' ? studentCat.gender === 'Female' : studentCat.gender === 'Male';
       });
 
       const scored = pool.map(p => {
         const skillInfo = getPlayerSkillMarksAndRank(p, targetSportKey, store);
         const isInSport = Boolean(
-          p.sports && Array.isArray(p.sports) && (p.sports.includes(targetSportKey) || (isTargetAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')))
+          p.sports && Array.isArray(p.sports) && (p.sports.includes(targetSportKey) || (isTargetAthletics && p.sports.includes('Athletics')))
         );
         return {
           ...p,
@@ -1750,9 +1734,20 @@ export function OfficialTournamentSheetModal({
 
     const boysRows = filterAndScore('Male');
     const girlsRows = filterAndScore('Female');
+    const boysCatLabel = resolvedAgeType === 'U14' ? '१४ वर्षाखालील मुले' : resolvedAgeType === 'U17' ? '१७ वर्षाखालील मुले' : '१९ वर्षाखालील मुले';
+    const girlsCatLabel = resolvedAgeType === 'U14' ? '१४ वर्षाखालील मुली' : resolvedAgeType === 'U17' ? '१७ वर्षाखालील मुली' : '१९ वर्षाखालील मुली';
+    const combinedCatLabel = resolvedAgeType === 'U14' ? '१४ वर्षाखालील' : resolvedAgeType === 'U17' ? '१७ वर्षाखालील' : '१९ वर्षाखालील';
 
-    return { boysRows, girlsRows, sportMr };
-  }, [store, playerToSheetRow, schoolName]);
+    return { 
+      boysRows, 
+      girlsRows, 
+      sportMr, 
+      ageType: resolvedAgeType,
+      boysCatLabel,
+      girlsCatLabel,
+      combinedCatLabel
+    };
+  }, [store, playerToSheetRow, schoolName, activeCategoryKey]);
 
   // Master Tournament Unique Players Calculation:
   // "dont add in the list same student in the same porpose that list is the i want to know how many plyer are going to play"

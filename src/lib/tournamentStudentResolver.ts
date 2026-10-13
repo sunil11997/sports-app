@@ -63,65 +63,15 @@ export function formatAadharGrouped(aadhar?: string): string {
   return String(aadhar).trim();
 }
 
-/**
- * Accurately determines the official Marathi Age Group (वयोगट)
- * Strictly returns '१४ वर्षाखालील मुले/मुली', '१७ वर्षाखालील मुले/मुली', or '१९ वर्षाखालील मुले/मुली'
- * NEVER returns just 'मुले' or 'मुली'.
- */
-export function getPlayerAgeCategoryLabel(player: any, genderFallback?: string): string {
-  const isGirl = player.gender === 'Female' || 
-                 player.gender === 'मुली' || 
-                 player.gender === 'female' || 
-                 player.gender === 'F' || 
-                 genderFallback === 'Female' || 
-                 genderFallback === 'मुली';
-  const suffix = isGirl ? 'मुली' : 'मुले';
+export type UnderAgeType = 'U14' | 'U17' | 'U19';
 
-  // 1. If explicit category already set (e.g. '14 वर्षाखालील मुले')
-  if (player.ageCategoryLabel && typeof player.ageCategoryLabel === 'string') {
-    const raw = player.ageCategoryLabel.trim();
-    if (raw.includes('14') || raw.includes('१४')) return `१४ वर्षाखालील ${suffix}`;
-    if (raw.includes('17') || raw.includes('१७')) return `१७ वर्षाखालील ${suffix}`;
-    if (raw.includes('19') || raw.includes('१९')) return `१९ वर्षाखालील ${suffix}`;
-  }
-
-  // 2. Check DOB age cut-off as per official SGFI / Maharashtra School Sports rules (cut-off: 31 Dec 2026)
-  if (player.dob && player.dob !== '-' && player.dob !== '---') {
-    const ageVal = getAgeValidation(player.dob, 2026);
-    if (ageVal) {
-      if (ageVal.eligibilityType === 'U14') return `१४ वर्षाखालील ${suffix}`;
-      if (ageVal.eligibilityType === 'U17') return `१७ वर्षाखालील ${suffix}`;
-      if (ageVal.eligibilityType === 'U19') return `१९ वर्षाखालील ${suffix}`;
-      if (ageVal.ageYears > 0) {
-        if (ageVal.ageYears < 14) return `१४ वर्षाखालील ${suffix}`;
-        if (ageVal.ageYears < 17) return `१७ वर्षाखालील ${suffix}`;
-        return `१९ वर्षाखालील ${suffix}`;
-      }
-    }
-  }
-
-  // 3. Fallback based on Standard (इयत्ता) in school sports
-  // Std 1 to 7 = Under 14
-  // Std 8 to 10 = Under 17
-  // Std 11 to 12 = Under 19
-  const rawStd = String(player.std || '');
-  const stdNum = parseInt(rawStd.replace(/\D/g, ''), 10);
-  if (stdNum > 0) {
-    if (stdNum <= 7) return `१४ वर्षाखालील ${suffix}`;
-    if (stdNum <= 10) return `१७ वर्षाखालील ${suffix}`;
-    return `१९ वर्षाखालील ${suffix}`;
-  }
-
-  // 4. Fallback based on age property
-  const ageNum = parseInt(String(player.age || '').replace(/\D/g, ''), 10);
-  if (ageNum > 0) {
-    if (ageNum < 14) return `१४ वर्षाखालील ${suffix}`;
-    if (ageNum < 17) return `१७ वर्षाखालील ${suffix}`;
-    return `१९ वर्षाखालील ${suffix}`;
-  }
-
-  // Default for middle school
-  return `१४ वर्षाखालील ${suffix}`;
+export interface UnderCategoryInfo {
+  ageType: UnderAgeType;
+  gender: 'Male' | 'Female';
+  key: 'u14_girls' | 'u14_boys' | 'u17_girls' | 'u17_boys' | 'u19_girls' | 'u19_boys';
+  rosterCategoryKey: 'Girls U14' | 'Boys U14' | 'Girls U17' | 'Boys U17' | 'Girls Senior' | 'Boys Senior';
+  marathiLabel: string;
+  shortLabel: string;
 }
 
 /**
@@ -140,62 +90,246 @@ export function findStudentInMasterRegistry(p: any): SchoolStudent | undefined {
   if (id) {
     const byId = WAGHAMBA_STUDENTS_DATA.find(s => s.id === id);
     if (byId) return byId;
+  }
 
-    // Pattern match in ID (e.g., wgb-std8-12 or std8_12)
-    const idParts = id.match(/std(\d+)[-_](\d+)/i) || id.match(/_std(\d+)_(\d+)/i);
-    if (idParts && idParts[1] && idParts[2]) {
-      const parsedStd = idParts[1];
-      const parsedRoll = String(parseInt(idParts[2], 10));
+  // 2. Parse std & roll from synthetic ID (e.g. user_std8_05 -> std 8, roll 5)
+  if (id && id.includes('std')) {
+    const match = id.match(/std(\d+)[-_](\d+)/i);
+    if (match) {
+      const parsedStd = match[1];
+      const parsedRoll = String(parseInt(match[2], 10));
       const byParsed = WAGHAMBA_STUDENTS_DATA.find(s => s.std === parsedStd && (s.rollNo === parsedRoll || s.serialNumber === parsedRoll));
       if (byParsed) return byParsed;
     }
   }
 
-  // 2. RollNo / GR + Standard match
-  if (gr && std && gr !== '-' && gr !== '---') {
+  // 3. Exact Roll No + Standard match
+  if (gr && std) {
     const byRollStd = WAGHAMBA_STUDENTS_DATA.find(s => (s.rollNo === gr || s.serialNumber === gr) && s.std === std);
     if (byRollStd) return byRollStd;
   }
 
-  // 3. Exact Marathi Name match
+  // 4. Exact Marathi Name match
   if (marathiName) {
     const exactMr = WAGHAMBA_STUDENTS_DATA.find(s => s.nameMarathi === marathiName);
     if (exactMr) return exactMr;
 
-    // Substring / Token match
-    const tokens: string[] = marathiName.split(/\s+/).filter(Boolean);
-    if (tokens.length >= 2) {
+    // Fuzzy token match in Marathi
+    const mrTokens = marathiName.split(/\s+/).filter((t: string) => t.length > 2);
+    if (mrTokens.length >= 2) {
       const byTokens = WAGHAMBA_STUDENTS_DATA.find(s => {
-        if (std && s.std !== std) return false;
-        return tokens.every((tok: string) => s.nameMarathi.includes(tok));
+        if (!s.nameMarathi) return false;
+        const matches = mrTokens.filter((t: string) => s.nameMarathi.includes(t));
+        return matches.length >= 2;
       });
       if (byTokens) return byTokens;
     }
   }
 
-  // 4. English Name token match
+  // 5. English Name match
   if (rawName) {
     const exactEn = WAGHAMBA_STUDENTS_DATA.find(s => s.name.toLowerCase() === rawName);
     if (exactEn) return exactEn;
 
-    const enTokens: string[] = rawName.split(/\s+/).filter(Boolean);
+    // Fuzzy English token match
+    const enTokens = rawName.split(/\s+/).filter((t: string) => t.length > 2);
     if (enTokens.length >= 2) {
       const byEnTokens = WAGHAMBA_STUDENTS_DATA.find(s => {
-        if (std && s.std !== std) return false;
-        const sLower = s.name.toLowerCase();
-        return enTokens.every((tok: string) => sLower.includes(tok));
+        const sEn = s.name.toLowerCase();
+        const matches = enTokens.filter((t: string) => sEn.includes(t));
+        return matches.length >= 2;
       });
       if (byEnTokens) return byEnTokens;
     }
   }
 
-  // 5. RollNo match only if unique
-  if (gr && gr !== '-' && gr !== '---') {
+  // 6. Roll No match if unique
+  if (gr) {
     const rollMatches = WAGHAMBA_STUDENTS_DATA.filter(s => s.rollNo === gr || s.serialNumber === gr);
     if (rollMatches.length === 1) return rollMatches[0];
   }
 
   return undefined;
+}
+
+/**
+ * Canonically determines a student's official Under (वयोगट) Category
+ * (१४ वर्षाखालील / १७ वर्षाखालील / १९ वर्षाखालील) with zero cross-contamination.
+ */
+export function getStudentUnderCategory(player: any, genderFallback?: string): UnderCategoryInfo {
+  const masterStudent = findStudentInMasterRegistry(player);
+  
+  // Resolve Gender
+  const isGirl = player.gender === 'Female' || 
+                 player.gender === 'मुली' || 
+                 player.gender === 'female' || 
+                 player.gender === 'F' || 
+                 genderFallback === 'Female' || 
+                 genderFallback === 'मुली' ||
+                 masterStudent?.gender === 'Female';
+  const gender: 'Male' | 'Female' = isGirl ? 'Female' : 'Male';
+  const suffix = isGirl ? 'मुली' : 'मुले';
+
+  // 1. If explicit category already marked on player
+  const explicit = String(player.ageCategoryLabel || player.categoryLabel || '').trim();
+  if (explicit) {
+    if (explicit.includes('14') || explicit.includes('१४') || explicit.toLowerCase().includes('u14')) {
+      return {
+        ageType: 'U14',
+        gender,
+        key: isGirl ? 'u14_girls' : 'u14_boys',
+        rosterCategoryKey: isGirl ? 'Girls U14' : 'Boys U14',
+        marathiLabel: `१४ वर्षाखालील ${suffix}`,
+        shortLabel: '१४ वर्षाखालील'
+      };
+    }
+    if (explicit.includes('17') || explicit.includes('१७') || explicit.toLowerCase().includes('u17')) {
+      return {
+        ageType: 'U17',
+        gender,
+        key: isGirl ? 'u17_girls' : 'u17_boys',
+        rosterCategoryKey: isGirl ? 'Girls U17' : 'Boys U17',
+        marathiLabel: `१७ वर्षाखालील ${suffix}`,
+        shortLabel: '१७ वर्षाखालील'
+      };
+    }
+    if (explicit.includes('19') || explicit.includes('१९') || explicit.toLowerCase().includes('u19') || explicit.toLowerCase().includes('senior')) {
+      return {
+        ageType: 'U19',
+        gender,
+        key: isGirl ? 'u19_girls' : 'u19_boys',
+        rosterCategoryKey: isGirl ? 'Girls Senior' : 'Boys Senior',
+        marathiLabel: `१९ वर्षाखालील ${suffix}`,
+        shortLabel: '१९ वर्षाखालील'
+      };
+    }
+  }
+
+  // 2. Check DOB (from player or master registry)
+  const dobCandidate = player.dob || masterStudent?.dob;
+  if (dobCandidate && dobCandidate !== '-' && dobCandidate !== '---') {
+    const ageVal = getAgeValidation(dobCandidate, 2026);
+    if (ageVal) {
+      if (ageVal.eligibilityType === 'U14' || (ageVal.ageYears > 0 && ageVal.ageYears < 14)) {
+        return {
+          ageType: 'U14',
+          gender,
+          key: isGirl ? 'u14_girls' : 'u14_boys',
+          rosterCategoryKey: isGirl ? 'Girls U14' : 'Boys U14',
+          marathiLabel: `१४ वर्षाखालील ${suffix}`,
+          shortLabel: '१४ वर्षाखालील'
+        };
+      }
+      if (ageVal.eligibilityType === 'U17' || (ageVal.ageYears >= 14 && ageVal.ageYears < 17)) {
+        return {
+          ageType: 'U17',
+          gender,
+          key: isGirl ? 'u17_girls' : 'u17_boys',
+          rosterCategoryKey: isGirl ? 'Girls U17' : 'Boys U17',
+          marathiLabel: `१७ वर्षाखालील ${suffix}`,
+          shortLabel: '१७ वर्षाखालील'
+        };
+      }
+      if (ageVal.eligibilityType === 'U19' || ageVal.ageYears >= 17) {
+        return {
+          ageType: 'U19',
+          gender,
+          key: isGirl ? 'u19_girls' : 'u19_boys',
+          rosterCategoryKey: isGirl ? 'Girls Senior' : 'Boys Senior',
+          marathiLabel: `१९ वर्षाखालील ${suffix}`,
+          shortLabel: '१९ वर्षाखालील'
+        };
+      }
+    }
+  }
+
+  // 3. Fallback based on Standard (इयत्ता) in Maharashtra school sports:
+  // Std 1 to 7 = Under 14
+  // Std 8 to 10 = Under 17
+  // Std 11 to 12 = Under 19
+  const rawStd = String(player.std || masterStudent?.std || '');
+  const stdNum = parseInt(rawStd.replace(/\D/g, ''), 10);
+  if (stdNum > 0) {
+    if (stdNum <= 7) {
+      return {
+        ageType: 'U14',
+        gender,
+        key: isGirl ? 'u14_girls' : 'u14_boys',
+        rosterCategoryKey: isGirl ? 'Girls U14' : 'Boys U14',
+        marathiLabel: `१४ वर्षाखालील ${suffix}`,
+        shortLabel: '१४ वर्षाखालील'
+      };
+    }
+    if (stdNum <= 10) {
+      return {
+        ageType: 'U17',
+        gender,
+        key: isGirl ? 'u17_girls' : 'u17_boys',
+        rosterCategoryKey: isGirl ? 'Girls U17' : 'Boys U17',
+        marathiLabel: `१७ वर्षाखालील ${suffix}`,
+        shortLabel: '१७ वर्षाखालील'
+      };
+    }
+    return {
+      ageType: 'U19',
+      gender,
+      key: isGirl ? 'u19_girls' : 'u19_boys',
+      rosterCategoryKey: isGirl ? 'Girls Senior' : 'Boys Senior',
+      marathiLabel: `१९ वर्षाखालील ${suffix}`,
+      shortLabel: '१९ वर्षाखालील'
+    };
+  }
+
+  // 4. Fallback based on player's age property
+  const ageNum = parseInt(String(player.age || masterStudent?.age || '').replace(/\D/g, ''), 10);
+  if (ageNum > 0) {
+    if (ageNum < 14) {
+      return {
+        ageType: 'U14',
+        gender,
+        key: isGirl ? 'u14_girls' : 'u14_boys',
+        rosterCategoryKey: isGirl ? 'Girls U14' : 'Boys U14',
+        marathiLabel: `१४ वर्षाखालील ${suffix}`,
+        shortLabel: '१४ वर्षाखालील'
+      };
+    }
+    if (ageNum < 17) {
+      return {
+        ageType: 'U17',
+        gender,
+        key: isGirl ? 'u17_girls' : 'u17_boys',
+        rosterCategoryKey: isGirl ? 'Girls U17' : 'Boys U17',
+        marathiLabel: `१७ वर्षाखालील ${suffix}`,
+        shortLabel: '१७ वर्षाखालील'
+      };
+    }
+    return {
+      ageType: 'U19',
+      gender,
+      key: isGirl ? 'u19_girls' : 'u19_boys',
+      rosterCategoryKey: isGirl ? 'Girls Senior' : 'Boys Senior',
+      marathiLabel: `१९ वर्षाखालील ${suffix}`,
+      shortLabel: '१९ वर्षाखालील'
+    };
+  }
+
+  // Default: middle school U14
+  return {
+    ageType: 'U14',
+    gender,
+    key: isGirl ? 'u14_girls' : 'u14_boys',
+    rosterCategoryKey: isGirl ? 'Girls U14' : 'Boys U14',
+    marathiLabel: `१४ वर्षाखालील ${suffix}`,
+    shortLabel: '१४ वर्षाखालील'
+  };
+}
+
+/**
+ * Accurately determines the official Marathi Age Group (वयोगट)
+ * Strictly returns '१४ वर्षाखालील मुले/मुली', '१७ वर्षाखालील मुले/मुली', or '१९ वर्षाखालील मुले/मुली'
+ */
+export function getPlayerAgeCategoryLabel(player: any, genderFallback?: string): string {
+  return getStudentUnderCategory(player, genderFallback).marathiLabel;
 }
 
 /**
@@ -320,10 +454,13 @@ export function resolveStudentDetails(p: any, defaultSportMr: string = '', defau
   const gender = isGirl ? 'Female' : 'Male';
 
   // Age Category (वयोगट)
-  const ageCategoryLabel = getPlayerAgeCategoryLabel(
+  const underInfo = getStudentUnderCategory(
     { ...p, dob: rawDob || p.dob, std: stdNum || p.std, gender },
     gender
   );
+  const ageCategoryLabel = (defaultCategoryLabel && (defaultCategoryLabel.includes('१४') || defaultCategoryLabel.includes('१७') || defaultCategoryLabel.includes('१९')))
+    ? defaultCategoryLabel
+    : underInfo.marathiLabel;
 
   // Sport
   const sportOrEvent = p.sportOrEvent || defaultSportMr || '-';
