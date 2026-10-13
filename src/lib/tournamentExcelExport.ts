@@ -668,11 +668,19 @@ export function exportEveryGame12PlayersWorkbookToExcel(
 export function exportUniqueTournamentPlayersExcel(
   uniquePlayers: SheetRow[],
   meta: TournamentExcelMetadata,
-  summary: { total: number; boys: number; girls: number }
+  summary: { total: number; boys: number; girls: number },
+  genderFilter: 'all' | 'boys' | 'girls' = 'all'
 ) {
   const wb = XLSX.utils.book_new();
 
-  const formattedPlayers = uniquePlayers.map((p, idx) => {
+  let targetPlayers = uniquePlayers;
+  if (genderFilter === 'boys') {
+    targetPlayers = uniquePlayers.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
+  } else if (genderFilter === 'girls') {
+    targetPlayers = uniquePlayers.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
+  }
+
+  const formattedPlayers = targetPlayers.map((p, idx) => {
     const isGirl = p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली'));
     const defaultCat = isGirl ? '१४ वर्षाखालील मुली' : '१४ वर्षाखालील मुले';
     const resolved = resolveStudentDetails(p, p.sportOrEvent || 'सर्व खेळ', defaultCat);
@@ -694,19 +702,39 @@ export function exportUniqueTournamentPlayersExcel(
     };
   });
 
+  const title = genderFilter === 'boys' 
+    ? 'सहभागी मुले खेळाडू मास्टर यादी (सर्व खेळ)' 
+    : genderFilter === 'girls'
+    ? 'सहभागी मुली खेळाडू मास्टर यादी (सर्व खेळ)'
+    : 'एकूण सहभागी खेळाडू मास्टर यादी (अद्वितीय मुले व मुली)';
+
+  const countNote = genderFilter === 'boys'
+    ? `एकूण मुले खेळाडू संख्या: ${summary.boys || formattedPlayers.length}`
+    : genderFilter === 'girls'
+    ? `एकूण मुली खेळाडू संख्या: ${summary.girls || formattedPlayers.length}`
+    : `एकूण खेळाडू संख्या: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls}) - कोणतीही पुनरावृत्ती नाही`;
+
+  const sheetName = genderFilter === 'boys' 
+    ? 'सहभागी_मुले_खेळाडू' 
+    : genderFilter === 'girls' 
+    ? 'सहभागी_मुली_खेळाडू' 
+    : 'एकूण_सहभागी_खेळाडू';
+
   const ws = buildOfficialWorksheet(
-    'एकूण सहभागी खेळाडू मास्टर यादी (अद्वितीय मुले व मुली)',
+    title,
     formattedPlayers,
     meta,
     {
       is12Only: false,
-      customNote: `एकूण खेळाडू संख्या: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls}) - कोणतीही पुनरावृत्ती नाही`,
+      customNote: countNote,
       headerSportName: 'सर्व स्पर्धा खेळ'
     }
   );
 
-  XLSX.utils.book_append_sheet(wb, ws, 'एकूण_सहभागी_खेळाडू');
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-  const filename = `शालेय_क्रीडा_स्पर्धा_एकूण_${summary.total}_खेळाडू_मास्टर_यादी_${meta.academicYear || '2026-27'}.xlsx`;
+  const fileCount = genderFilter === 'boys' ? summary.boys : genderFilter === 'girls' ? summary.girls : summary.total;
+  const genderSuffix = genderFilter === 'boys' ? 'मुले_खेळाडू' : genderFilter === 'girls' ? 'मुली_खेळाडू' : 'खेळाडू';
+  const filename = `शालेय_क्रीडा_स्पर्धा_एकूण_${fileCount}_${genderSuffix}_मास्टर_यादी_${meta.academicYear || '2026-27'}.xlsx`;
   XLSX.writeFile(wb, filename);
 }

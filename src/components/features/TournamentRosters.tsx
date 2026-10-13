@@ -1217,38 +1217,95 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   };
 
   // Print Master Tournament Unique Players Entry Sheet (deduplicated, first boys then girls, with count)
-  const handlePrintUniqueTournamentPlayers = () => {
+  // Print Master Tournament Unique Players Entry Sheet (ONLY Student Name, GR No, and Sport)
+  // User requirement: "IN THAT EXCELL SHEET WHERE ALL PLAEER ARE SHOWING IN THAT PDF ONLY SHOW STUDENTS NAAME THIER RESITER NUMBER AND WHICH GAME THAT PLAYER PLAYING AND ALSO ADD A OPTION TO PRINT ONLY ALL MALE PLYER AND ALSO OPTION FOR PRINT ONLY FEMALE PLAYER ONLY"
+  const handlePrintUniqueTournamentPlayers = (genderFilter?: 'all' | 'boys' | 'girls' | React.MouseEvent) => {
+    const filter = (genderFilter === 'boys' || genderFilter === 'girls') ? genderFilter : 'all';
     const { uniquePlayers, summary } = getUniqueTournamentPlayersList;
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
     const teacherName = getTeacherName(schoolProfile) || "क्रीडा शिक्षक";
 
-    const rowsHtml = uniquePlayers.length > 0 ? uniquePlayers.map(r => `
-      <tr>
-        <td class="text-center font-normal">${r.srNo || '-'}</td>
-        <td class="font-normal text-left">${r.studentName ? r.studentName : '&nbsp;'}</td>
-        <td class="text-center font-normal font-bold">${r.std || '-'}</td>
-        <td class="text-center font-normal">${r.grNo || '-'}</td>
-        <td class="text-center font-normal">${r.dob || '-'}</td>
-        <td class="text-center font-normal">${r.motherName || '-'}</td>
-        <td class="text-center font-normal font-mono" style="font-size: 8.5pt;">${r.aadhar || '-'}</td>
-        <td class="text-center font-normal" style="font-size: 8.5pt;">${r.schoolName || DEFAULT_SCHOOL_MR}</td>
-        <td class="text-center font-normal font-mono" style="font-size: 8.5pt;">${r.uDise || DEFAULT_UDISE}</td>
-        <td class="text-center font-normal">${r.taluka || DEFAULT_TALUKA}</td>
-        <td class="text-center font-normal">${r.ageCategoryLabel || '-'}</td>
-        <td class="text-center font-normal" style="font-weight: 700; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
-      </tr>
-    `).join('') : `
-      <tr>
-        <td colspan="12" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
-      </tr>
-    `;
+    let playersToRender = uniquePlayers;
+    let metaLeft = `शालेय क्रीडा स्पर्धा सन :- २०२६-२७ | एकूण सहभागी खेळाडू मास्टर यादी (सर्व खेळ)`;
+    let metaRight = `एकूण खेळाडू: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls})`;
+    let docTitle = `शालेय क्रीडा स्पर्धा सन २०२६-२७ - एकूण ${summary.total} सहभागी खेळाडू मास्टर यादी`;
+
+    if (filter === 'boys') {
+      playersToRender = uniquePlayers.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
+      metaLeft = `शालेय क्रीडा स्पर्धा सन :- २०२६-२७ | सहभागी मुले खेळाडू मास्टर यादी (सर्व खेळ)`;
+      metaRight = `एकूण मुले खेळाडू संख्या: ${summary.boys || playersToRender.length}`;
+      docTitle = `सहभागी मुले खेळाडू मास्टर यादी (एकूण ${summary.boys}) - सन २०२६-२७`;
+    } else if (filter === 'girls') {
+      playersToRender = uniquePlayers.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
+      metaLeft = `शालेय क्रीडा स्पर्धा सन :- २०२६-२७ | सहभागी मुली खेळाडू मास्टर यादी (सर्व खेळ)`;
+      metaRight = `एकूण मुली खेळाडू संख्या: ${summary.girls || playersToRender.length}`;
+      docTitle = `सहभागी मुली खेळाडू मास्टर यादी (एकूण ${summary.girls}) - सन २०२६-२७`;
+    }
+
+    let rowsHtml = '';
+    if (playersToRender.length === 0) {
+      rowsHtml = `
+        <tr>
+          <td colspan="4" class="text-center py-6 text-muted font-normal">खेळाडू यादी उपलब्ध नाही</td>
+        </tr>
+      `;
+    } else if (genderFilter === 'all') {
+      const boys = playersToRender.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
+      const girls = playersToRender.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
+
+      const boysRows = boys.map((r, i) => `
+        <tr>
+          <td class="text-center font-normal">${i + 1}</td>
+          <td class="font-normal text-left" style="font-weight: 600;">${r.studentName ? r.studentName : '&nbsp;'}</td>
+          <td class="text-center font-normal font-mono" style="font-weight: 600;">${r.grNo || '-'}</td>
+          <td class="text-center font-normal" style="font-weight: 700; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
+        </tr>
+      `).join('');
+
+      const girlsRows = girls.map((r, i) => `
+        <tr>
+          <td class="text-center font-normal">${i + 1}</td>
+          <td class="font-normal text-left" style="font-weight: 600;">${r.studentName ? r.studentName : '&nbsp;'}</td>
+          <td class="text-center font-normal font-mono" style="font-weight: 600;">${r.grNo || '-'}</td>
+          <td class="text-center font-normal" style="font-weight: 700; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
+        </tr>
+      `).join('');
+
+      rowsHtml = `
+        ${boys.length > 0 ? `
+          <tr>
+            <th colspan="4" style="background: #e0f2fe; color: #0369a1; text-align: left; font-size: 10.5pt; font-weight: 800; padding: 6px 10px; border: 1px solid #000000;">
+              👦 १. मुले खेळाडू यादी (एकूण मुले: ${boys.length})
+            </th>
+          </tr>
+          ${boysRows}
+        ` : ''}
+        ${girls.length > 0 ? `
+          <tr>
+            <th colspan="4" style="background: #fce7f3; color: #be185d; text-align: left; font-size: 10.5pt; font-weight: 800; padding: 6px 10px; border: 1px solid #000000;">
+              👧 २. मुली खेळाडू यादी (एकूण मुली: ${girls.length})
+            </th>
+          </tr>
+          ${girlsRows}
+        ` : ''}
+      `;
+    } else {
+      rowsHtml = playersToRender.map((r, i) => `
+        <tr>
+          <td class="text-center font-normal">${i + 1}</td>
+          <td class="font-normal text-left" style="font-weight: 600;">${r.studentName ? r.studentName : '&nbsp;'}</td>
+          <td class="text-center font-normal font-mono" style="font-weight: 600;">${r.grNo || '-'}</td>
+          <td class="text-center font-normal" style="font-weight: 700; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
+        </tr>
+      `).join('');
+    }
 
     const printHtml = `
       <!DOCTYPE html>
       <html lang="mr">
         <head>
-          <title>एकूण सहभागी खेळाडू मास्टर यादी (अद्वितीय मुले व मुली) - सन २०२६-२७</title>
+          <title>${docTitle}</title>
           <meta charset="utf-8" />
           <style>${getOfficialPrintStyles()}</style>
         </head>
@@ -1256,53 +1313,45 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
           <div class="no-print print-toolbar">
             <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
             <div style="font-weight: 800; font-size: 12pt; color: #f8fafc;">
-              एकूण खेळाडू संख्या: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls}) - कोणतीही पुनरावृत्ती नाही
+              🎯 ${docTitle}
             </div>
             <button onclick="window.print()" class="btn btn-print">🖨️ प्रिंट / पीडीएफ डाउनलोड (Print)</button>
           </div>
-          <div class="page-container">
+          <div class="page-container" style="max-width: 900px;">
             <table class="official-outer-box">
               <thead>
-                <tr><th colspan="12" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
-                <tr><th colspan="12" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
-                <tr><th colspan="12" class="header-line-3">${schoolName}</th></tr>
+                <tr><th colspan="4" class="header-line-1">आदिवासी विकास विभाग नाशिक</th></tr>
+                <tr><th colspan="4" class="header-line-2">एकात्मिक आदिवासी विकास प्रकल्प,कळवण ता.कळवण जि.नाशिक</th></tr>
+                <tr><th colspan="4" class="header-line-3">${schoolName}</th></tr>
                 <tr>
-                  <th colspan="6" class="meta-bar-cell text-left">
-                    शालेय क्रीडा स्पर्धा सन :- २०२६-२७ | एकूण सहभागी खेळाडू मास्टर यादी (सर्व खेळ)
+                  <th colspan="2" class="meta-bar-cell text-left">
+                    ${metaLeft}
                   </th>
-                  <th colspan="6" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
-                    एकूण खेळाडू: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls})
+                  <th colspan="2" class="meta-bar-cell text-right" style="color: #047857; font-size: 11pt;">
+                    ${metaRight}
                   </th>
                 </tr>
                 <tr>
-                  <th class="col-header" style="width: 4%;">अनु. क्र.</th>
-                  <th class="col-header" style="width: 17%;">खेळाडूचे पूर्ण नाव</th>
-                  <th class="col-header" style="width: 6%;">इयत्ता</th>
-                  <th class="col-header" style="width: 8%;">जनरल रजिस्टर नं.</th>
-                  <th class="col-header" style="width: 8%;">जन्मतारीख</th>
-                  <th class="col-header" style="width: 9%;">आईचे नाव</th>
-                  <th class="col-header" style="width: 11%;">आधार क्र.</th>
-                  <th class="col-header" style="width: 14%;">शाळेचे नाव</th>
-                  <th class="col-header" style="width: 8%;">यु-डायस क्रमांक</th>
-                  <th class="col-header" style="width: 5%;">तालुका</th>
-                  <th class="col-header" style="width: 5%;">वयोगट</th>
-                  <th class="col-header" style="width: 5%;">खेळाचा प्रकार</th>
+                  <th class="col-header" style="width: 8%;">अनु. क्र.</th>
+                  <th class="col-header" style="width: 44%;">विद्यार्थ्याचे पूर्ण नाव</th>
+                  <th class="col-header" style="width: 22%;">जनरल रजिस्टर नं.</th>
+                  <th class="col-header" style="width: 26%;">खेळाचा प्रकार</th>
                 </tr>
               </thead>
               <tbody>
                 ${rowsHtml}
               </tbody>
             </table>
-            <div class="footer-sign-section">
-              <div class="sign-box">
+            <div class="footer-sign-section" style="margin-top: 25px; display: flex; justify-content: space-between; page-break-inside: avoid;">
+              <div class="sign-box" style="text-align: center; width: 40%;">
                 <br/><br/>
-                <div>क्रीडा शिक्षक (स्वाक्षरी)</div>
+                <div style="font-weight: 700;">क्रीडा शिक्षक (स्वाक्षरी)</div>
                 <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(${teacherName})</div>
               </div>
-              <div class="sign-box">
+              <div class="sign-box" style="text-align: center; width: 45%;">
                 <br/><br/>
-                <div>मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)</div>
-                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(शा. मा. आ. शाळा वाघांबा)</div>
+                <div style="font-weight: 700;">मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 3px; font-weight: normal;">(${schoolName})</div>
               </div>
             </div>
           </div>
@@ -1318,7 +1367,8 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
   };
 
   // Export Master Tournament Unique Players Entry Sheet (.xlsx)
-  const handleExportUniqueTournamentPlayersExcel = () => {
+  const handleExportUniqueTournamentPlayersExcel = (genderFilter?: 'all' | 'boys' | 'girls' | React.MouseEvent) => {
+    const filter = (genderFilter === 'boys' || genderFilter === 'girls') ? genderFilter : 'all';
     const { uniquePlayers, summary } = getUniqueTournamentPlayersList;
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, true) || DEFAULT_SCHOOL_MR;
@@ -1336,7 +1386,7 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
       taluka: DEFAULT_TALUKA
     };
 
-    exportUniqueTournamentPlayersExcel(uniquePlayers, meta, summary);
+    exportUniqueTournamentPlayersExcel(uniquePlayers, meta, summary, filter);
   };
 
   // Export Every Game's 12 Players (Boys then Girls) into a master multi-tab workbook
@@ -1493,27 +1543,56 @@ export function TournamentRosters({ store, preselectedSport }: { store: any, pre
                       <ChevronDown className="w-3 h-3 text-white/80" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-72 p-2">
+                  <DropdownMenuContent align="start" className="w-80 p-2">
                     <DropdownMenuLabel className="text-xs font-bold text-slate-800">
-                      एकूण खेळाडू संख्या: {uniqueSummary.total}
+                      🎯 एकूण सहभागी खेळाडू मास्टर यादी
                       <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
-                        (👦 मुले: {uniqueSummary.boys} | 👧 मुली: {uniqueSummary.girls}) - कोणतीही पुनरावृत्ती नाही
+                        एकूण: {uniqueSummary.total} (👦 मुले: {uniqueSummary.boys} | 👧 मुली: {uniqueSummary.girls})
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      onClick={handlePrintUniqueTournamentPlayers}
+                      onClick={() => handlePrintUniqueTournamentPlayers('all')}
                       className="gap-2 cursor-pointer text-xs font-bold text-slate-900 focus:bg-amber-50"
                     >
                       <Printer className="w-4 h-4 text-amber-600" />
-                      🖨️ प्रिंट / पीडीएफ (मास्टर यादी)
+                      🖨️ 👥 सर्व खेळाडू प्रिंट (मुले व मुली एकत्र)
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={handleExportUniqueTournamentPlayersExcel}
+                      onClick={() => handlePrintUniqueTournamentPlayers('boys')}
+                      className="gap-2 cursor-pointer text-xs font-bold text-blue-900 focus:bg-blue-50"
+                    >
+                      <Printer className="w-4 h-4 text-blue-600" />
+                      🖨️ 👦 फक्त मुले खेळाडू प्रिंट ({uniqueSummary.boys} मुले)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handlePrintUniqueTournamentPlayers('girls')}
+                      className="gap-2 cursor-pointer text-xs font-bold text-pink-900 focus:bg-pink-50"
+                    >
+                      <Printer className="w-4 h-4 text-pink-600" />
+                      🖨️ 👧 फक्त मुली खेळाडू प्रिंट ({uniqueSummary.girls} मुली)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => handleExportUniqueTournamentPlayersExcel('all')}
                       className="gap-2 cursor-pointer text-xs font-bold text-emerald-800 focus:bg-emerald-50"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                      📊 एक्सेल (.xlsx) मास्टर यादी डाउनलोड
+                      📊 👥 सर्व खेळाडू मास्टर एक्सेल (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleExportUniqueTournamentPlayersExcel('boys')}
+                      className="gap-2 cursor-pointer text-xs font-bold text-blue-800 focus:bg-blue-50"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                      📊 👦 फक्त मुले खेळाडू मास्टर एक्सेल (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleExportUniqueTournamentPlayersExcel('girls')}
+                      className="gap-2 cursor-pointer text-xs font-bold text-pink-800 focus:bg-pink-50"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-pink-600" />
+                      📊 👧 फक्त मुली खेळाडू मास्टर एक्सेल (.xlsx)
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
