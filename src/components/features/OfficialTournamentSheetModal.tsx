@@ -1767,7 +1767,11 @@ export function OfficialTournamentSheetModal({
       const withoutMarks = scored.filter(p => !p.hasSkillMark && (p.isInSport || isTargetAthletics));
       withoutMarks.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
 
-      const otherEligible = scored.filter(p => !p.isInSport && !isTargetAthletics);
+      const otherEligible = scored.filter(p => 
+        !p.isInSport && 
+        !isTargetAthletics && 
+        (p.category === 'athlete' || (Array.isArray(p.sports) && p.sports.length > 0))
+      );
       otherEligible.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
 
       let finalList = [...withMarks, ...withoutMarks];
@@ -1808,7 +1812,7 @@ export function OfficialTournamentSheetModal({
   }, [store, playerToSheetRow, schoolName, activeCategoryKey]);
 
   // Master Tournament Unique Players Calculation:
-  // "dont add in the list same student in the same porpose that list is the i want to know how many plyer are going to play"
+  // Strictly only players from top 12 squads across tournament sports (deduplicated, first boys then girls, no general students)
   const getUniqueTournamentPlayersData = useMemo(() => {
     const tournamentSports = [
       'Kabaddi',
@@ -1821,64 +1825,67 @@ export function OfficialTournamentSheetModal({
       'Javelin Throw'
     ];
 
+    const ageTypes: ('U14' | 'U17' | 'U19')[] = ['U14', 'U17', 'U19'];
+
     const seenPlayerKeys = new Set<string>();
     const uniqueBoys: SheetRow[] = [];
     const uniqueGirls: SheetRow[] = [];
     const playerSportsMap = new Map<string, Set<string>>();
 
-    tournamentSports.forEach(spKey => {
-      const { boysRows, girlsRows } = getSportBoysAndGirls12Squads(spKey);
-      const spMr = SPORT_MARATHI_MAP[spKey] || spKey;
-
-      [...boysRows, ...girlsRows].forEach(p => {
-        const key = p.id || p.grNo || p.studentName;
-        if (!key || p.studentName === '-- या वयोगटासाठी खेळाडू यादी उपलब्ध नाही --' || !p.studentName.trim()) return;
-
-        if (!playerSportsMap.has(key)) {
-          playerSportsMap.set(key, new Set());
-        }
-        playerSportsMap.get(key)!.add(spMr);
-
-        if (!seenPlayerKeys.has(key)) {
-          seenPlayerKeys.add(key);
-          const isGirl = p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली'));
-          if (isGirl) {
-            uniqueGirls.push(p);
-          } else {
-            uniqueBoys.push(p);
-          }
-        }
-      });
-    });
-
-    const allStorePlayers: any[] = store?.data?.players || [];
-    allStorePlayers.forEach(p => {
-      if (p.category === 'athlete') {
-        const key = p.id || p.generalRegisterNumber || p.nameMarathi || p.name;
-        if (!key || seenPlayerKeys.has(key)) return;
-        seenPlayerKeys.add(key);
-        const isGirl = p.gender === 'Female' || p.gender === 'मुली' || p.gender === 'female' || p.gender === 'F';
-        const row = playerToSheetRow(p, 0);
-        const sportMr = (p.sports && Array.isArray(p.sports) && p.sports.length > 0)
-          ? p.sports.map((s: string) => SPORT_MARATHI_MAP[s] || s).join(', ')
-          : (SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey);
-
-        const filledRow: SheetRow = {
-          ...row,
-          sportOrEvent: sportMr,
-          schoolName: schoolName || DEFAULT_SCHOOL_MR,
-          uDise: DEFAULT_UDISE,
-          taluka: DEFAULT_TALUKA,
-          ageCategoryLabel: isGirl ? 'मुली' : 'मुले',
-          gender: isGirl ? 'Female' : 'Male'
-        };
-
-        if (isGirl) {
-          uniqueGirls.push(filledRow);
-        } else {
-          uniqueBoys.push(filledRow);
-        }
+    const getStudentDedupeKey = (p: SheetRow | any): string => {
+      const gr = String(p.grNo || p.generalRegisterNumber || '').trim();
+      if (gr && gr !== '-' && gr !== '0' && gr !== '---') {
+        return `gr_${gr.replace(/\s+/g, '')}`;
       }
+      const name = String(p.studentName || p.nameMarathi || p.name || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+      if (name && name !== '-' && !name.includes('उपलब्ध नाही')) {
+        return `name_${name}`;
+      }
+      return p.id ? `id_${p.id}` : '';
+    };
+
+    ageTypes.forEach(ageType => {
+      tournamentSports.forEach(spKey => {
+        const { boysRows, girlsRows } = getSportBoysAndGirls12Squads(spKey, ageType);
+        const spMr = SPORT_MARATHI_MAP[spKey] || spKey;
+
+        const squad12Boys = boysRows.slice(0, 12);
+        const squad12Girls = girlsRows.slice(0, 12);
+
+        [...squad12Boys, ...squad12Girls].forEach((p: SheetRow | any) => {
+          if (!p.studentName || !p.studentName.trim() || p.studentName === '-' || p.studentName.includes('उपलब्ध नाही')) {
+            return;
+          }
+
+          // Strictly sport players (category athlete or has sports or isInSport)
+          const pAny = p as any;
+          const isSportPlayer = pAny.category === 'athlete' || (Array.isArray(pAny.sports) && pAny.sports.length > 0) || Boolean(pAny.isInSport) || Boolean(p.sportOrEvent);
+          if (!isSportPlayer) {
+            return;
+          }
+
+          const key = getStudentDedupeKey(p);
+          if (!key) return;
+
+          if (!playerSportsMap.has(key)) {
+            playerSportsMap.set(key, new Set());
+          }
+          playerSportsMap.get(key)!.add(spMr);
+
+          if (!seenPlayerKeys.has(key)) {
+            seenPlayerKeys.add(key);
+            const isGirl = p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली'));
+            if (isGirl) {
+              uniqueGirls.push(p);
+            } else {
+              uniqueBoys.push(p);
+            }
+          }
+        });
+      });
     });
 
     uniqueBoys.sort((a, b) => (parseInt(a.std.replace(/\D/g, '') || '0') - parseInt(b.std.replace(/\D/g, '') || '0')) || a.studentName.localeCompare(b.studentName));
@@ -1886,9 +1893,9 @@ export function OfficialTournamentSheetModal({
 
     const combinedUnique: SheetRow[] = [];
     uniqueBoys.forEach((b, idx) => {
-      const key = b.id || b.grNo || b.studentName;
+      const key = getStudentDedupeKey(b);
       const games = playerSportsMap.get(key);
-      const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : b.sportOrEvent;
+      const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : (b.sportOrEvent || '-');
       const catLabel = getPlayerAgeCategoryLabel(b, 'Male');
       const resolved = resolveStudentDetails(b, gameStr, catLabel);
 
@@ -1901,15 +1908,16 @@ export function OfficialTournamentSheetModal({
         motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (b.motherName || '-')),
         aadhar: (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (b.aadhar || '-')),
         sportOrEvent: gameStr,
-        ageCategoryLabel: resolved.ageCategoryLabel || catLabel
+        ageCategoryLabel: resolved.ageCategoryLabel || catLabel,
+        gender: 'Male'
       });
     });
 
     const boysOffset = uniqueBoys.length;
     uniqueGirls.forEach((g, idx) => {
-      const key = g.id || g.grNo || g.studentName;
+      const key = getStudentDedupeKey(g);
       const games = playerSportsMap.get(key);
-      const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : g.sportOrEvent;
+      const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : (g.sportOrEvent || '-');
       const catLabel = getPlayerAgeCategoryLabel(g, 'Female');
       const resolved = resolveStudentDetails(g, gameStr, catLabel);
 
@@ -1922,7 +1930,8 @@ export function OfficialTournamentSheetModal({
         motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (g.motherName || '-')),
         aadhar: (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (g.aadhar || '-')),
         sportOrEvent: gameStr,
-        ageCategoryLabel: resolved.ageCategoryLabel || catLabel
+        ageCategoryLabel: resolved.ageCategoryLabel || catLabel,
+        gender: 'Female'
       });
     });
 
@@ -1934,7 +1943,7 @@ export function OfficialTournamentSheetModal({
         girls: uniqueGirls.length
       }
     };
-  }, [store, getSportBoysAndGirls12Squads, playerToSheetRow, schoolName, selectedSportKey]);
+  }, [getSportBoysAndGirls12Squads]);
 
   // Metadata for Excel Export
   const getExcelMetadata = (): TournamentExcelMetadata => ({

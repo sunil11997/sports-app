@@ -659,11 +659,149 @@ export function exportEveryGame12PlayersWorkbookToExcel(
 }
 
 /**
- * Master Tournament Participation Sheet:
- * Lists all UNIQUE players selected across all squads / purposes.
- * - Deduplicated by student ID / GR No / name (each student appears strictly ONCE)
- * - Ordered: FIRST ALL BOYS, THEN ALL GIRLS
- * - Displays exact player count prominently: "एकूण खेळाडू संख्या: XX (मुले: YY, मुली: ZZ)"
+ * Build clean 4-column Master Submission Worksheet for Game Management:
+ * 1. अनु. क्र.
+ * 2. खेळाडूचे पूर्ण नाव
+ * 3. जनरल रजिस्टर नं.
+ * 4. खेळाचा प्रकार (सहभागी खेळ)
+ */
+export function buildMasterPlayersWorksheet(
+  title: string,
+  players: SheetRow[],
+  meta: TournamentExcelMetadata,
+  summary: { total: number; boys: number; girls: number },
+  genderFilter: 'all' | 'boys' | 'girls' = 'all'
+): XLSX.WorkSheet {
+  const defaultSchool = meta.schoolName || DEFAULT_SCHOOL_MR;
+  const teacherDisplayName = meta.teacherName || 'क्रीडा शिक्षक';
+  const academicYear = meta.academicYear || '2026-27';
+
+  const metaRight = genderFilter === 'boys'
+    ? `एकूण मुले खेळाडू: ${summary.boys || players.length}`
+    : genderFilter === 'girls'
+    ? `एकूण मुली खेळाडू: ${summary.girls || players.length}`
+    : `एकूण खेळाडू संख्या: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls})`;
+
+  const wsData: (string | number)[][] = [
+    [meta.departmentName || 'आदिवासी विकास विभाग नाशिक'],
+    [meta.projectName || 'एकात्मिक आदिवासी विकास प्रकल्प, कळवण ता.कळवण जि.नाशिक'],
+    [defaultSchool],
+    [
+      `शालेय क्रीडा स्पर्धा सन :- ${academicYear} | ${title}`,
+      '',
+      metaRight,
+      ''
+    ],
+    [],
+    // Column Headers (4 Columns: Sr No, Player Name, GR No, Game)
+    ['अनु. क्र.', 'खेळाडूचे पूर्ण नाव', 'जनरल रजिस्टर नं.', 'खेळाचा प्रकार']
+  ];
+
+  const merges: XLSX.Range[] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+    { s: { r: 3, c: 2 }, e: { r: 3, c: 3 } },
+  ];
+
+  const rowHeights: { hpt: number }[] = [
+    { hpt: 28 }, // 0
+    { hpt: 22 }, // 1
+    { hpt: 22 }, // 2
+    { hpt: 22 }, // 3
+    { hpt: 10 }, // 4 gap
+    { hpt: 26 }, // 5 headers
+  ];
+
+  if (players.length === 0) {
+    wsData.push(['१', '-- खेळाडू यादी उपलब्ध नाही --', '-', '-']);
+    rowHeights.push({ hpt: 22 });
+  } else if (genderFilter === 'all') {
+    const boys = players.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
+    const girls = players.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
+
+    if (boys.length > 0) {
+      const boysSecIdx = wsData.length;
+      wsData.push([`👦 १. मुले खेळाडू यादी (एकूण मुले: ${boys.length})`, '', '', '']);
+      merges.push({ s: { r: boysSecIdx, c: 0 }, e: { r: boysSecIdx, c: 3 } });
+      rowHeights.push({ hpt: 24 });
+
+      boys.forEach((b, idx) => {
+        wsData.push([idx + 1, b.studentName || '', b.grNo || '-', b.sportOrEvent || '-']);
+        rowHeights.push({ hpt: 22 });
+      });
+    }
+
+    if (girls.length > 0) {
+      if (boys.length > 0) {
+        wsData.push([]);
+        rowHeights.push({ hpt: 10 });
+      }
+      const girlsSecIdx = wsData.length;
+      wsData.push([`👧 २. मुली खेळाडू यादी (एकूण मुली: ${girls.length})`, '', '', '']);
+      merges.push({ s: { r: girlsSecIdx, c: 0 }, e: { r: girlsSecIdx, c: 3 } });
+      rowHeights.push({ hpt: 24 });
+
+      girls.forEach((g, idx) => {
+        wsData.push([idx + 1, g.studentName || '', g.grNo || '-', g.sportOrEvent || '-']);
+        rowHeights.push({ hpt: 22 });
+      });
+    }
+  } else {
+    players.forEach((p, idx) => {
+      wsData.push([idx + 1, p.studentName || '', p.grNo || '-', p.sportOrEvent || '-']);
+      rowHeights.push({ hpt: 22 });
+    });
+  }
+
+  // Signatures
+  wsData.push([]);
+  rowHeights.push({ hpt: 14 });
+  wsData.push([]);
+  rowHeights.push({ hpt: 14 });
+
+  const signRow = wsData.length;
+  wsData.push([
+    '',
+    `क्रीडा शिक्षक (स्वाक्षरी)\n(${teacherDisplayName})`,
+    '',
+    `मुख्याध्यापक / प्राचार्य (स्वाक्षरी व शिक्का)\n(${defaultSchool})`
+  ]);
+  rowHeights.push({ hpt: 42 });
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  ws['!cols'] = [
+    { wch: 10 }, // अनु. क्र.
+    { wch: 38 }, // खेळाडूचे पूर्ण नाव
+    { wch: 22 }, // जनरल रजिस्टर नं.
+    { wch: 28 }, // खेळाचा प्रकार
+  ];
+
+  ws['!merges'] = merges;
+  ws['!rows'] = rowHeights;
+
+  // Make sure GR No is treated as text
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:D10');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[cellRef];
+      if (cell && cell.v !== undefined && C === 2) {
+        cell.t = 's';
+        cell.v = String(cell.v);
+      }
+    }
+  }
+
+  return ws;
+}
+
+/**
+ * Master Tournament Participation Sheet for Game Management Submission:
+ * Lists all UNIQUE players on the 12-player teams (no duplicate entries).
+ * Columns: Sr No, Player Name, GR No, Sport
  */
 export function exportUniqueTournamentPlayersExcel(
   uniquePlayers: SheetRow[],
@@ -698,7 +836,8 @@ export function exportUniqueTournamentPlayersExcel(
       uDise: resolved.uDise || p.uDise || meta.uDise || DEFAULT_UDISE,
       taluka: resolved.taluka || p.taluka || meta.taluka || DEFAULT_TALUKA,
       ageCategoryLabel: resolved.ageCategoryLabel || getPlayerAgeCategoryLabel(p, isGirl ? 'Female' : 'Male'),
-      sportOrEvent: p.sportOrEvent || resolved.sportOrEvent || 'सर्व खेळ'
+      sportOrEvent: p.sportOrEvent || resolved.sportOrEvent || 'सर्व खेळ',
+      gender: isGirl ? 'Female' : 'Male'
     };
   });
 
@@ -706,13 +845,7 @@ export function exportUniqueTournamentPlayersExcel(
     ? 'सहभागी मुले खेळाडू मास्टर यादी (सर्व खेळ)' 
     : genderFilter === 'girls'
     ? 'सहभागी मुली खेळाडू मास्टर यादी (सर्व खेळ)'
-    : 'एकूण सहभागी खेळाडू मास्टर यादी (अद्वितीय मुले व मुली)';
-
-  const countNote = genderFilter === 'boys'
-    ? `एकूण मुले खेळाडू संख्या: ${summary.boys || formattedPlayers.length}`
-    : genderFilter === 'girls'
-    ? `एकूण मुली खेळाडू संख्या: ${summary.girls || formattedPlayers.length}`
-    : `एकूण खेळाडू संख्या: ${summary.total} (👦 मुले: ${summary.boys} | 👧 मुली: ${summary.girls}) - कोणतीही पुनरावृत्ती नाही`;
+    : 'एकूण सहभागी खेळाडू मास्टर यादी (सर्व खेळ)';
 
   const sheetName = genderFilter === 'boys' 
     ? 'सहभागी_मुले_खेळाडू' 
@@ -720,20 +853,22 @@ export function exportUniqueTournamentPlayersExcel(
     ? 'सहभागी_मुली_खेळाडू' 
     : 'एकूण_सहभागी_खेळाडू';
 
-  const ws = buildOfficialWorksheet(
+  // Build clean 4-column Master Sheet for Game Management Submission
+  const ws = buildMasterPlayersWorksheet(
     title,
     formattedPlayers,
     meta,
-    {
-      is12Only: false,
-      customNote: countNote,
-      headerSportName: 'सर्व स्पर्धा खेळ'
-    }
+    summary,
+    genderFilter
   );
 
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-  const fileCount = genderFilter === 'boys' ? summary.boys : genderFilter === 'girls' ? summary.girls : summary.total;
+  const fileCount = genderFilter === 'boys' 
+    ? (summary.boys || formattedPlayers.length) 
+    : genderFilter === 'girls' 
+    ? (summary.girls || formattedPlayers.length) 
+    : (summary.total || formattedPlayers.length);
   const genderSuffix = genderFilter === 'boys' ? 'मुले_खेळाडू' : genderFilter === 'girls' ? 'मुली_खेळाडू' : 'खेळाडू';
   const filename = `शालेय_क्रीडा_स्पर्धा_एकूण_${fileCount}_${genderSuffix}_मास्टर_यादी_${meta.academicYear || '2026-27'}.xlsx`;
   XLSX.writeFile(wb, filename);
