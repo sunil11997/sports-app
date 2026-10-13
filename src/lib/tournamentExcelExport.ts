@@ -148,7 +148,7 @@ export function buildOfficialWorksheet(
       const sr = r.srNo || String(idx + 1);
       const name = resolved.studentName || r.studentName || '';
       const gr = resolved.grNo || r.grNo || '-';
-      const dob = resolved.dob || r.dob || '-';
+      const dob = (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (r.dob ? formatDobDDMMYYYY(r.dob) : '-');
       const mother = (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (r.motherName || '-'));
       const aadhar = (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (r.aadhar || '-'));
       const school = resolved.schoolName || r.schoolName || defaultSchool;
@@ -313,7 +313,7 @@ export function buildCombined12BoysGirlsWorksheet(
     const sr = String(idx + 1);
     const name = resolved.studentName || b.studentName || '';
     const gr = resolved.grNo || b.grNo || '-';
-    const dob = resolved.dob || b.dob || '-';
+    const dob = (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (b.dob ? formatDobDDMMYYYY(b.dob) : '-');
     const mother = (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (b.motherName || '-'));
     const aadhar = (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (b.aadhar || '-'));
     const school = resolved.schoolName || defaultSchool;
@@ -344,7 +344,7 @@ export function buildCombined12BoysGirlsWorksheet(
     const sr = String(idx + 1);
     const name = resolved.studentName || g.studentName || '';
     const gr = resolved.grNo || g.grNo || '-';
-    const dob = resolved.dob || g.dob || '-';
+    const dob = (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (g.dob ? formatDobDDMMYYYY(g.dob) : '-');
     const mother = (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (g.motherName || '-'));
     const aadhar = (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (g.aadhar || '-'));
     const school = resolved.schoolName || defaultSchool;
@@ -661,7 +661,7 @@ export function exportUniqueTournamentPlayersExcel(
       srNo: String(idx + 1),
       studentName: resolved.studentName || p.studentName || '',
       grNo: resolved.grNo || p.grNo || '-',
-      dob: resolved.dob || p.dob || '-',
+      dob: (resolved.dob && resolved.dob !== '-') ? formatDobDDMMYYYY(resolved.dob) : (p.dob ? formatDobDDMMYYYY(p.dob) : '-'),
       motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (p.motherName || '-')),
       aadhar: (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (p.aadhar || '-')),
       schoolName: resolved.schoolName || p.schoolName || meta.schoolName || DEFAULT_SCHOOL_MR,

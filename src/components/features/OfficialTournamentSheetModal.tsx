@@ -257,22 +257,26 @@ export function parseStdToNumberOrString(val: string | undefined): string {
 }
 
 export function formatDobDDMMYYYY(dob: string | undefined): string {
-  if (!dob) return '';
+  if (!dob || dob === '-' || dob === '---') return '';
   const trimmed = dob.trim();
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) return trimmed;
-  const isoMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if (isoMatch) {
-    const yyyy = isoMatch[1];
-    const mm = isoMatch[2].padStart(2, '0');
-    const dd = isoMatch[3].padStart(2, '0');
-    return `${dd}/${mm}/${yyyy}`;
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(trimmed)) return trimmed;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) return trimmed.replace(/\//g, '.');
+  const dotSlashHyphenMatch = trimmed.match(/^(\d{1,4})[./-](\d{1,2})[./-](\d{1,4})$/);
+  if (dotSlashHyphenMatch) {
+    const p1 = dotSlashHyphenMatch[1];
+    const p2 = dotSlashHyphenMatch[2].padStart(2, '0');
+    const p3 = dotSlashHyphenMatch[3];
+    if (p1.length === 4) {
+      return `${p3.padStart(2, '0')}.${p2}.${p1}`;
+    }
+    return `${p1.padStart(2, '0')}.${p2}.${p3}`;
   }
   const d = new Date(trimmed);
   if (!isNaN(d.getTime())) {
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const yyyy = d.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
+    return `${dd}.${mm}.${yyyy}`;
   }
   return trimmed;
 }
@@ -280,7 +284,7 @@ export function formatDobDDMMYYYY(dob: string | undefined): string {
 export function convertDDMMYYYYToISO(dob: string | undefined): string {
   if (!dob) return '';
   const trimmed = dob.trim();
-  const match = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  const match = trimmed.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
   if (match) {
     const dd = match[1].padStart(2, '0');
     const mm = match[2].padStart(2, '0');
@@ -2845,7 +2849,7 @@ export function OfficialTournamentSheetModal({
                             onChange={(e) => updateRowField(index, 'dob', e.target.value)}
                             onBlur={() => handleRowBlur(index)}
                             className="h-8 text-center text-xs font-normal focus:bg-amber-50/40"
-                            placeholder="DD/MM/YYYY"
+                            placeholder="DD.MM.YYYY"
                           />
                         </td>
 

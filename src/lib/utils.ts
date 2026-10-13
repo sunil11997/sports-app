@@ -638,11 +638,18 @@ export function getAgeValidation(dobString: string | undefined | null, customRef
     birthMonth = parseInt(match[2], 10) - 1; // 0-indexed
     birthDay = parseInt(match[3], 10);
   } else {
-    const dobDate = new Date(dobString);
-    if (isNaN(dobDate.getTime())) return null;
-    birthYear = dobDate.getFullYear();
-    birthMonth = dobDate.getMonth();
-    birthDay = dobDate.getDate();
+    const ddmmyyyyMatch = dobString.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+    if (ddmmyyyyMatch) {
+      birthDay = parseInt(ddmmyyyyMatch[1], 10);
+      birthMonth = parseInt(ddmmyyyyMatch[2], 10) - 1; // 0-indexed
+      birthYear = parseInt(ddmmyyyyMatch[3], 10);
+    } else {
+      const dobDate = new Date(dobString);
+      if (isNaN(dobDate.getTime())) return null;
+      birthYear = dobDate.getFullYear();
+      birthMonth = dobDate.getMonth();
+      birthDay = dobDate.getDate();
+    }
   }
 
   // Reference Date: 31 December of specified or current academic reference year
