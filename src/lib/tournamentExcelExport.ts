@@ -651,11 +651,26 @@ export function exportUniqueTournamentPlayersExcel(
 ) {
   const wb = XLSX.utils.book_new();
 
-  const formattedPlayers = uniquePlayers.map((p, idx) => ({
-    ...p,
-    srNo: String(idx + 1),
-    ageCategoryLabel: getPlayerAgeCategoryLabel(p, p.gender || (p.ageCategoryLabel?.includes('मुली') ? 'Female' : 'Male'))
-  }));
+  const formattedPlayers = uniquePlayers.map((p, idx) => {
+    const isGirl = p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली'));
+    const defaultCat = isGirl ? '१४ वर्षाखालील मुली' : '१४ वर्षाखालील मुले';
+    const resolved = resolveStudentDetails(p, p.sportOrEvent || 'सर्व खेळ', defaultCat);
+
+    return {
+      ...p,
+      srNo: String(idx + 1),
+      studentName: resolved.studentName || p.studentName || '',
+      grNo: resolved.grNo || p.grNo || '-',
+      dob: resolved.dob || p.dob || '-',
+      motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (p.motherName || '-')),
+      aadhar: (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (p.aadhar || '-')),
+      schoolName: resolved.schoolName || p.schoolName || meta.schoolName || DEFAULT_SCHOOL_MR,
+      uDise: resolved.uDise || p.uDise || meta.uDise || DEFAULT_UDISE,
+      taluka: resolved.taluka || p.taluka || meta.taluka || DEFAULT_TALUKA,
+      ageCategoryLabel: resolved.ageCategoryLabel || getPlayerAgeCategoryLabel(p, isGirl ? 'Female' : 'Male'),
+      sportOrEvent: p.sportOrEvent || resolved.sportOrEvent || 'सर्व खेळ'
+    };
+  });
 
   const ws = buildOfficialWorksheet(
     'एकूण सहभागी खेळाडू मास्टर यादी (अद्वितीय मुले व मुली)',

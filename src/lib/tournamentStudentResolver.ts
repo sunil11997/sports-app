@@ -105,19 +105,28 @@ export function findStudentInMasterRegistry(p: any): SchoolStudent | undefined {
   if (!p) return undefined;
 
   const id = (p.id || '').trim();
-  const rawName = (p.name || '').trim().toLowerCase();
-  const marathiName = (p.nameMarathi || '').trim();
-  const gr = String(p.generalRegisterNumber || p.serialNumber || p.rollNo || '').trim();
+  const rawName = (p.name || p.studentName || '').trim().toLowerCase();
+  const marathiName = (p.nameMarathi || p.studentName || '').trim();
+  const gr = String(p.grNo || p.generalRegisterNumber || p.serialNumber || p.rollNo || '').trim();
   const std = String(p.std || '').replace(/\D/g, '').trim();
 
   // 1. Direct ID match
   if (id) {
     const byId = WAGHAMBA_STUDENTS_DATA.find(s => s.id === id);
     if (byId) return byId;
+
+    // Pattern match in ID (e.g., wgb-std8-12 or std8_12)
+    const idParts = id.match(/std(\d+)[-_](\d+)/i) || id.match(/_std(\d+)_(\d+)/i);
+    if (idParts && idParts[1] && idParts[2]) {
+      const parsedStd = idParts[1];
+      const parsedRoll = String(parseInt(idParts[2], 10));
+      const byParsed = WAGHAMBA_STUDENTS_DATA.find(s => s.std === parsedStd && (s.rollNo === parsedRoll || s.serialNumber === parsedRoll));
+      if (byParsed) return byParsed;
+    }
   }
 
-  // 2. RollNo + Standard match
-  if (gr && std) {
+  // 2. RollNo / GR + Standard match
+  if (gr && std && gr !== '-' && gr !== '---') {
     const byRollStd = WAGHAMBA_STUDENTS_DATA.find(s => (s.rollNo === gr || s.serialNumber === gr) && s.std === std);
     if (byRollStd) return byRollStd;
   }
@@ -155,7 +164,7 @@ export function findStudentInMasterRegistry(p: any): SchoolStudent | undefined {
   }
 
   // 5. RollNo match only if unique
-  if (gr) {
+  if (gr && gr !== '-' && gr !== '---') {
     const rollMatches = WAGHAMBA_STUDENTS_DATA.filter(s => s.rollNo === gr || s.serialNumber === gr);
     if (rollMatches.length === 1) return rollMatches[0];
   }
@@ -165,6 +174,7 @@ export function findStudentInMasterRegistry(p: any): SchoolStudent | undefined {
 
 /**
  * Resolves full student data ensuring:
+ * - grNo is populated (from generalRegisterNumber, grNo, serialNumber, rollNo, or master registry)
  * - motherName is populated (from player, master registry, or Marathi name decomposition)
  * - aadhar is populated (from aadharNumber, apaarId, master registry apaarId)
  * - ageCategoryLabel has exact '१४/१७/१९ वर्षाखालील मुले/मुली'
@@ -189,6 +199,7 @@ export function resolveStudentDetails(p: any, defaultSportMr: string = '', defau
 
   // Student Full Name
   let studentName = p.nameMarathi?.trim() || 
+                    p.studentName?.trim() ||
                     masterStudent?.nameMarathi?.trim() || 
                     p.name || 
                     masterStudent?.name || 
@@ -200,8 +211,37 @@ export function resolveStudentDetails(p: any, defaultSportMr: string = '', defau
   const stdNum = String(rawStd).replace(/\D/g, '');
   const std = stdNum ? `इ. ${stdNum} वी` : (rawStd || '-');
 
-  // G.R. Number
-  const grNo = String(p.generalRegisterNumber || masterStudent?.rollNo || p.serialNumber || masterStudent?.serialNumber || '-');
+  // G.R. Number resolution (जनरल रजिस्टर नं.)
+  const cleanGrCandidate = (val: any): string => {
+    if (!val) return '';
+    const str = String(val).trim();
+    if (!str || str === '-' || str === '---' || str === 'None' || str === 'null' || str === 'undefined') return '';
+    if (str.includes('@') || str.includes('.com') || str.includes('mailto:')) return '';
+    return str;
+  };
+
+  let grNo = cleanGrCandidate(p.generalRegisterNumber) ||
+             cleanGrCandidate(p.grNo) ||
+             cleanGrCandidate(p.serialNumber) ||
+             cleanGrCandidate(p.rollNo) ||
+             cleanGrCandidate(masterStudent?.rollNo) ||
+             cleanGrCandidate(masterStudent?.serialNumber) ||
+             cleanGrCandidate(masterStudent?.saralId);
+
+  // If still not resolved, try parsing roll from ID (e.g. wgb-std8-12 -> 12)
+  if (!grNo && p.id) {
+    const idMatch = String(p.id).match(/std\d+[-_](\d+)/i) || String(p.id).match(/_(\d+)$/);
+    if (idMatch && idMatch[1]) {
+      const num = parseInt(idMatch[1], 10);
+      if (!isNaN(num) && num > 0) {
+        grNo = String(num);
+      }
+    }
+  }
+
+  if (!grNo) {
+    grNo = '-';
+  }
 
   // Date of Birth
   const rawDob = p.dob || masterStudent?.dob || '';

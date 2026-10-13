@@ -1832,11 +1832,19 @@ export function OfficialTournamentSheetModal({
       const key = b.id || b.grNo || b.studentName;
       const games = playerSportsMap.get(key);
       const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : b.sportOrEvent;
+      const catLabel = getPlayerAgeCategoryLabel(b, 'Male');
+      const resolved = resolveStudentDetails(b, gameStr, catLabel);
+
       combinedUnique.push({
         ...b,
         srNo: String(idx + 1),
+        studentName: resolved.studentName || b.studentName,
+        grNo: resolved.grNo || b.grNo || '-',
+        dob: resolved.dob || b.dob || '-',
+        motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (b.motherName || '-')),
+        aadhar: (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (b.aadhar || '-')),
         sportOrEvent: gameStr,
-        ageCategoryLabel: getPlayerAgeCategoryLabel(b, 'Male')
+        ageCategoryLabel: resolved.ageCategoryLabel || catLabel
       });
     });
 
@@ -1845,11 +1853,19 @@ export function OfficialTournamentSheetModal({
       const key = g.id || g.grNo || g.studentName;
       const games = playerSportsMap.get(key);
       const gameStr = games && games.size > 0 ? Array.from(games).join(', ') : g.sportOrEvent;
+      const catLabel = getPlayerAgeCategoryLabel(g, 'Female');
+      const resolved = resolveStudentDetails(g, gameStr, catLabel);
+
       combinedUnique.push({
         ...g,
         srNo: String(boysOffset + idx + 1),
+        studentName: resolved.studentName || g.studentName,
+        grNo: resolved.grNo || g.grNo || '-',
+        dob: resolved.dob || g.dob || '-',
+        motherName: (resolved.motherName && resolved.motherName !== '-' ? resolved.motherName : (g.motherName || '-')),
+        aadhar: (resolved.aadhar && resolved.aadhar !== '-' ? resolved.aadhar : (g.aadhar || '-')),
         sportOrEvent: gameStr,
-        ageCategoryLabel: getPlayerAgeCategoryLabel(g, 'Female')
+        ageCategoryLabel: resolved.ageCategoryLabel || catLabel
       });
     });
 
