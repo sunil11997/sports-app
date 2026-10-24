@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { 
   Sparkles, 
   Activity, 
@@ -30,7 +29,7 @@ import {
 } from 'lucide-react';
 import { getYogaPtGuide } from '@/lib/yogaPtKnowledge';
 import { 
-  STRUCTURED_COACHING_DRILLS, 
+  getCoachingDrillSpecs,
   OFFICIAL_SPORTS_RULES, 
   type StructuredDrill,
   type SportOfficialRules
@@ -44,97 +43,84 @@ interface YogaPtGuideModalProps {
 }
 
 export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGuideModalProps) {
+  const isDirectRules = !!(guideName && (OFFICIAL_SPORTS_RULES[guideName] || guideName === sport));
   const [activeTab, setActiveTab] = useState<'drill' | 'rules'>('drill');
+
+  useEffect(() => {
+    if (guideName) {
+      const isRules = !!OFFICIAL_SPORTS_RULES[guideName] || guideName === sport;
+      setActiveTab(isRules ? 'rules' : 'drill');
+    }
+  }, [guideName, sport]);
+
   if (!guideName) return null;
 
   // 1. Check for Yoga / PT Mass specific guide
   const yogaGuide = getYogaPtGuide(guideName);
+  const isYogaOrPt = yogaGuide?.category === 'Yoga' || yogaGuide?.category === 'PT Mass';
 
-  // 2. Check for Structured Coaching Drill
-  let structuredDrill: StructuredDrill | null = null;
-  const targetSport = sport || (guideName.includes("Kabaddi") ? "Kabaddi" : guideName.includes("Kho") ? "Kho Kho" : guideName.includes("Volley") ? "Volleyball" : null);
-
-  if (targetSport && STRUCTURED_COACHING_DRILLS[targetSport]) {
-    structuredDrill = STRUCTURED_COACHING_DRILLS[targetSport].find(
-      (d) =>
-        d.nameEn.toLowerCase() === guideName.toLowerCase() ||
-        d.nameMr.toLowerCase() === guideName.toLowerCase() ||
-        guideName.toLowerCase().includes(d.nameEn.toLowerCase()) ||
-        d.nameEn.toLowerCase().includes(guideName.toLowerCase())
-    ) || null;
-  }
-
-  // Fallback search across all sports if not found
-  if (!structuredDrill) {
-    for (const s of Object.keys(STRUCTURED_COACHING_DRILLS)) {
-      const match = STRUCTURED_COACHING_DRILLS[s].find(
-        (d) =>
-          d.nameEn.toLowerCase() === guideName.toLowerCase() ||
-          guideName.toLowerCase().includes(d.nameEn.toLowerCase()) ||
-          d.nameEn.toLowerCase().includes(guideName.toLowerCase())
-      );
-      if (match) {
-        structuredDrill = match;
-        break;
-      }
-    }
-  }
-
-  // 3. Official Rules for the sport
-  const officialRuleKey = targetSport || (structuredDrill ? structuredDrill.sport : null);
-  const officialRules: SportOfficialRules | null = officialRuleKey && OFFICIAL_SPORTS_RULES[officialRuleKey] 
-    ? OFFICIAL_SPORTS_RULES[officialRuleKey] 
+  // 2. Fetch authoritative Structured Coaching Drill Specifications
+  const structuredDrill: StructuredDrill | null = !isYogaOrPt 
+    ? getCoachingDrillSpecs(guideName, sport) 
     : null;
+
+  // 3. Official SGFI Rules for the sport
+  const targetSportKey = sport || structuredDrill?.sport || (OFFICIAL_SPORTS_RULES[guideName] ? guideName : 'Kabaddi');
+  const officialRules: SportOfficialRules | null = OFFICIAL_SPORTS_RULES[targetSportKey] || null;
+
+  const displayTitleMr = structuredDrill?.nameMr || yogaGuide?.nameMarathi || (officialRules ? `${officialRules.sport} अधिकृत नियम` : guideName);
+  const displayTitleEn = structuredDrill?.nameEn || yogaGuide?.name || (officialRules ? `${officialRules.sport} Official Rules` : guideName);
+  const categoryLabel = structuredDrill?.category || yogaGuide?.category || 'Fundamental Protocol';
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[720px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[90vh]">
-        {/* Header Banner */}
-        <DialogHeader className="bg-gradient-to-r from-primary via-primary/95 to-slate-900 p-8 text-white relative shrink-0">
-          <div className="flex items-center gap-5 relative z-10">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30 shadow-xl shrink-0">
+      <DialogContent className="sm:max-w-[760px] w-[95vw] rounded-[2.5rem] p-0 overflow-hidden border-2 border-primary/20 shadow-3xl flex flex-col h-[90vh] max-h-[850px] bg-white">
+        {/* Header Banner - Fixed at Top */}
+        <DialogHeader className="bg-gradient-to-r from-primary via-primary/95 to-slate-900 p-6 sm:p-8 text-white relative shrink-0">
+          <div className="flex items-center gap-4 sm:gap-5 relative z-10">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30 shadow-xl shrink-0">
               {yogaGuide?.category === 'Yoga' ? (
-                <Sparkles className="w-8 h-8 text-amber-300 animate-pulse" />
+                <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-amber-300 animate-pulse" />
+              ) : activeTab === 'rules' ? (
+                <Scale className="w-7 h-7 sm:w-8 sm:h-8 text-amber-300" />
               ) : structuredDrill ? (
-                <Trophy className="w-8 h-8 text-amber-300 animate-bounce" />
+                <Trophy className="w-7 h-7 sm:w-8 sm:h-8 text-amber-300" />
               ) : (
-                <Activity className="w-8 h-8 text-emerald-300" />
+                <Activity className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-300" />
               )}
             </div>
-            <div className="space-y-1.5 min-w-0">
+            <div className="space-y-1.5 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="bg-white/20 text-white text-[9px] font-black uppercase tracking-widest px-3 py-0.5 border border-white/30 backdrop-blur-md">
-                  {structuredDrill ? `${structuredDrill.sport} • ${structuredDrill.category}` : yogaGuide?.category || 'Sports Drill'} Protocol
+                <Badge className="bg-white/20 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 border border-white/30 backdrop-blur-md">
+                  {targetSportKey} • {categoryLabel}
                 </Badge>
-                {structuredDrill && (
-                  <Badge variant="outline" className="text-amber-200 border-amber-300/40 text-[9px] font-bold">
-                    SGFI / Federation Standard
-                  </Badge>
-                )}
+                <Badge variant="outline" className="text-amber-200 border-amber-300/40 text-[9px] font-bold">
+                  SGFI / Federation Standard
+                </Badge>
                 {(structuredDrill?.durationMin || yogaGuide?.duration) && (
                   <span className="text-[10px] font-bold text-amber-200 flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {structuredDrill ? `${structuredDrill.durationMin} Min` : yogaGuide?.duration}
                   </span>
                 )}
               </div>
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight text-white truncate">
-                {structuredDrill ? structuredDrill.nameMr : yogaGuide?.nameMarathi || guideName}
+              <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white truncate">
+                {displayTitleMr}
               </DialogTitle>
               <p className="text-[11px] font-bold text-white/80 uppercase tracking-widest truncate">
-                {structuredDrill ? structuredDrill.nameEn : yogaGuide?.name || guideName} • राष्ट्रीय क्रीडा मार्गदर्शन
+                {displayTitleEn} • राष्ट्रीय क्रीडा मार्गदर्शन
               </p>
             </div>
           </div>
 
-          {/* Sub Navigation Tabs if Official Rules Exist */}
+          {/* Sub Navigation Tabs */}
           {officialRules && (
-            <div className="flex gap-2 mt-4 pt-4 border-t border-white/10 relative z-10">
+            <div className="flex gap-2 mt-4 pt-3 border-t border-white/10 relative z-10">
               <button
                 type="button"
                 onClick={() => setActiveTab('drill')}
                 className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                   activeTab === 'drill' 
-                    ? 'bg-amber-400 text-slate-950 shadow-md' 
+                    ? 'bg-amber-400 text-slate-950 shadow-md font-extrabold' 
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
               >
@@ -145,7 +131,7 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
                 onClick={() => setActiveTab('rules')}
                 className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   activeTab === 'rules' 
-                    ? 'bg-amber-400 text-slate-950 shadow-md' 
+                    ? 'bg-amber-400 text-slate-950 shadow-md font-extrabold' 
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
               >
@@ -157,32 +143,33 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full translate-x-1/3 -translate-y-1/3 blur-2xl pointer-events-none" />
         </DialogHeader>
 
-        {/* Scrollable Content Body */}
-        <ScrollArea className="flex-1 p-6 md:p-8 space-y-6">
+        {/* Scrollable Content Body - Native Smooth Scroll on All Devices */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-7 md:p-8 space-y-6 overscroll-contain">
           {activeTab === 'rules' && officialRules ? (
+            /* OFFICIAL SGFI RULES TAB */
             <div className="space-y-6 text-xs animate-in fade-in duration-300">
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-3">
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 shadow-xs">
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
                   <Trophy className="w-4 h-4 text-amber-600" /> नियामक संस्था व स्वरूप (Governing Body)
                 </span>
                 <p className="font-extrabold text-slate-900 text-sm">
                   {officialRules.governingBody}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200 text-[11px]">
-                  <div>
-                    <span className="font-black text-muted-foreground uppercase text-[9px] block">मैदान माप (Dimensions):</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-200 text-[11px]">
+                  <div className="bg-white p-3 rounded-xl border border-slate-200">
+                    <span className="font-black text-primary uppercase text-[9px] block">मैदान माप (Court Dimensions):</span>
                     <span className="font-bold text-slate-800">{officialRules.courtDimensions}</span>
                   </div>
-                  <div>
-                    <span className="font-black text-muted-foreground uppercase text-[9px] block">संघातील खेळाडू (Team Size):</span>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200">
+                    <span className="font-black text-primary uppercase text-[9px] block">संघातील खेळाडू (Team Squad Size):</span>
                     <span className="font-bold text-slate-800">{officialRules.teamSize}</span>
                   </div>
-                  <div>
-                    <span className="font-black text-muted-foreground uppercase text-[9px] block">कालावधी (Match Duration):</span>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200">
+                    <span className="font-black text-primary uppercase text-[9px] block">कालावधी (Match Duration):</span>
                     <span className="font-bold text-slate-800">{officialRules.matchDuration}</span>
                   </div>
-                  <div>
-                    <span className="font-black text-muted-foreground uppercase text-[9px] block">वयोमर्यादा संदर्भ (Age Cutoff):</span>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200">
+                    <span className="font-black text-primary uppercase text-[9px] block">वयोमर्यादा संदर्भ (Age Cutoff):</span>
                     <span className="font-bold text-slate-800">{officialRules.officialAgeCutoff}</span>
                   </div>
                 </div>
@@ -199,7 +186,7 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
                       <span className="w-5 h-5 rounded-md bg-primary/10 text-primary font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                         {i + 1}
                       </span>
-                      <p className="font-bold text-slate-800 text-[11px]">{eq}</p>
+                      <p className="font-bold text-slate-800 text-[11px] leading-relaxed">{eq}</p>
                     </div>
                   ))}
                 </div>
@@ -208,7 +195,7 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
               {/* Official Rules */}
               <div className="space-y-3">
                 <h4 className="font-black text-slate-900 uppercase text-xs tracking-wider flex items-center gap-2">
-                  <Scale className="w-4 h-4 text-amber-600" /> महत्वाचे अधिकृत नियम (Official Rules)
+                  <Scale className="w-4 h-4 text-amber-600" /> महत्वाचे अधिकृत नियम (Official Federation Rules)
                 </h4>
                 <div className="space-y-2">
                   {officialRules.officialRules.map((rule, i) => (
@@ -236,10 +223,10 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
               </div>
             </div>
           ) : structuredDrill ? (
-            /* Structured Drill Card View */
+            /* STRUCTURED DRILL SPECS TAB */
             <div className="space-y-6 text-xs animate-in fade-in duration-300">
-              {/* Setup & Objective */}
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-3">
+              {/* Setup & Objective Banner */}
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 shadow-xs">
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
                   <Target className="w-4 h-4 text-accent" /> उद्दिष्ट व मैदान मांडणी (Objective & Setup)
                 </span>
@@ -247,20 +234,20 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
                   {structuredDrill.objective}
                 </p>
                 <div className="p-3 bg-white rounded-xl border border-slate-200 text-[11px]">
-                  <strong className="text-primary font-black uppercase text-[10px] block mb-1">मैदान मांडणी (Setup):</strong>
+                  <strong className="text-primary font-black uppercase text-[10px] block mb-1">मैदान मांडणी व साहित्य (Setup):</strong>
                   <span className="font-semibold text-slate-700">{structuredDrill.setup}</span>
                 </div>
-                <div className="flex items-center gap-4 pt-2 text-[11px] font-bold text-slate-800">
+                <div className="flex flex-wrap items-center gap-4 pt-2 text-[11px] font-bold text-slate-800">
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-600" /> कालावधी: {structuredDrill.durationMin} मिनिटे</span>
                   <span className="flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-rose-600" /> आवर्तने: {structuredDrill.repetitions}</span>
-                  <span className="flex items-center gap-1"><Activity className="w-3.5 h-3.5 text-emerald-600" /> विश्रांती: {structuredDrill.restSeconds}s</span>
+                  <span className="flex items-center gap-1"><Activity className="w-3.5 h-3.5 text-emerald-600" /> विश्रांती: {structuredDrill.restSeconds} सेकंद</span>
                 </div>
               </div>
 
               {/* Coaching Cues */}
               <div className="space-y-3">
                 <h4 className="font-black text-primary uppercase text-xs tracking-wider flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> प्रशिक्षक सूचना (Coaching Cues)
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> प्रशिक्षक सूचना (Pedagogical Coaching Cues)
                 </h4>
                 <div className="space-y-2">
                   {structuredDrill.coachingCues.map((cue, idx) => (
@@ -313,11 +300,11 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
                 </div>
               </div>
 
-              {/* Safety Precautions & Success Criteria */}
+              {/* Safety Precautions & Measurable Success Criteria */}
               <div className="space-y-3">
                 <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200/80 space-y-2">
                   <h4 className="font-black text-emerald-900 uppercase text-[10px] tracking-widest flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> सुरक्षा व इजा प्रतिबंध (Safety & Precautions)
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> सुरक्षा व इजा प्रतिबंध (Safety & Injury Prevention)
                   </h4>
                   <ul className="space-y-1.5 pl-1">
                     {structuredDrill.safetyPrecautions.map((safe, idx) => (
@@ -343,9 +330,9 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
               </div>
             </div>
           ) : yogaGuide ? (
-            /* Yoga / PT Mass Standard Guide */
+            /* YOGA / PT MASS GUIDE TAB */
             <div className="space-y-6 text-xs animate-in fade-in duration-300">
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-2">
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4 text-accent" /> स्वरूप व प्रास्ताविक (Overview)
                 </span>
@@ -413,19 +400,18 @@ export function YogaPtGuideModal({ guideName, sport, isOpen, onClose }: YogaPtGu
               <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto" />
               <h4 className="font-black text-base text-primary uppercase">{guideName}</h4>
               <p className="text-xs text-muted-foreground font-medium">
-                या प्रकाराची सविस्तर प्रात्यक्षिक माहिती लवकरच अपडेट केली जाईल. (Detailed guide pending)
+                या प्रकाराची सविस्तर माहिती उपलब्ध आहे. वरील टॅब निवडा.
               </p>
             </div>
           )}
-          <ScrollBar orientation="vertical" />
-        </ScrollArea>
+        </div>
 
-        {/* Footer */}
-        <DialogFooter className="p-5 bg-slate-100/80 border-t shrink-0 flex justify-between items-center">
+        {/* Footer - Fixed at Bottom */}
+        <DialogFooter className="p-4 sm:p-5 bg-slate-100/90 border-t shrink-0 flex justify-between items-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">
             National Coaching & Rules Registry
           </span>
-          <Button onClick={onClose} className="bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs h-11 px-8 rounded-xl shadow-md">
+          <Button onClick={onClose} className="bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs h-10 px-8 rounded-xl shadow-md">
             समजले (Understood)
           </Button>
         </DialogFooter>
