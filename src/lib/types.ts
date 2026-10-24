@@ -1,5 +1,17 @@
 export type UserRole = 'admin' | 'teacher' | 'coach' | 'viewer';
 
+export interface SchoolMembership {
+  id: string;
+  schoolId: string;
+  userId: string;
+  role: UserRole;
+  status: 'active' | 'suspended';
+  displayName?: string;
+  email?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthUser {
   uid: string;
   email?: string | null;

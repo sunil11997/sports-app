@@ -1,26 +1,12 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Inter, Poppins } from "next/font/google";
 
 import ServiceWorkerRegister from "./sw-register";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { PWAProvider } from "@/components/providers/pwa-provider";
 import { InstallAppModal } from "@/components/pwa/InstallAppModal";
 import { Toaster } from "@/components/ui/toaster";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-poppins",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Waghamba Sports Hub",
@@ -51,7 +37,7 @@ export default function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased font-sans overflow-x-clip min-h-screen w-full max-w-full" suppressHydrationWarning>
         <FirebaseClientProvider>
           <PWAProvider>

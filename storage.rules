@@ -2,50 +2,97 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Auth & Tenant validation helpers
+    // --- Authentication & Tenant Validation Helpers ---
     function isAuthenticated() {
       return request.auth != null && request.auth.uid != null;
     }
-    
-    function isSchoolAuthorized(schoolId) {
+
+    function isDirectSchoolOwner(schoolId) {
       return isAuthenticated() && (
         request.auth.uid == schoolId ||
-        firestore.exists(/databases/(default)/documents/schools/$(schoolId)) &&
-        firestore.get(/databases/(default)/documents/schools/$(schoolId)).data.ownerId == request.auth.uid ||
-        firestore.exists(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid))
+        (firestore.exists(/databases/(default)/documents/schools/$(schoolId)) &&
+         firestore.get(/databases/(default)/documents/schools/$(schoolId)).data.ownerId == request.auth.uid)
       );
     }
 
+    // Active Membership Check: Pending or Suspended members are strictly denied
+    function hasValidMembership(schoolId) {
+      return isAuthenticated() && (
+        isDirectSchoolOwner(schoolId) ||
+        (firestore.exists(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid)) &&
+         firestore.get(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid)).data.status == 'active')
+      );
+    }
+
+    // Server-enforced Role Resolver
+    function getUserRole(schoolId) {
+      return isDirectSchoolOwner(schoolId)
+        ? 'admin'
+        : (firestore.exists(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid)) &&
+           firestore.get(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid)).data.status == 'active'
+            ? firestore.get(/databases/(default)/documents/school_members/$(schoolId + '_' + request.auth.uid)).data.role
+            : 'none');
+    }
+
+    function isAdmin(schoolId) {
+      return isAuthenticated() && getUserRole(schoolId) == 'admin';
+    }
+
+    function isTeacherOrAbove(schoolId) {
+      return isAuthenticated() && getUserRole(schoolId) in ['admin', 'teacher'];
+    }
+
+    function isCoachOrAbove(schoolId) {
+      return isAuthenticated() && getUserRole(schoolId) in ['admin', 'teacher', 'coach'];
+    }
+
+    // --- Strict Payload Validation Helpers ---
     function isValidImage() {
-      return request.resource.contentType.matches('image/.*') &&
-             request.resource.size < 5 * 1024 * 1024; // 5MB maximum for photos
+      return request.resource != null &&
+             request.resource.contentType.matches('image/(jpeg|png|webp|gif)') &&
+             request.resource.size > 0 &&
+             request.resource.size <= 5 * 1024 * 1024; // 5MB maximum for photos
     }
 
     function isValidDocument() {
-      return (request.resource.contentType.matches('image/.*') ||
+      return request.resource != null &&
+             (request.resource.contentType.matches('image/(jpeg|png|webp)') ||
               request.resource.contentType == 'application/pdf') &&
-             request.resource.size < 10 * 1024 * 1024; // 10MB maximum for PDFs
+             request.resource.size > 0 &&
+             request.resource.size <= 10 * 1024 * 1024; // 10MB maximum for documents
     }
 
-    // 1. School Tenant Documents & Media
+    // 1. School Official Signatures (Restricted High-Risk Asset)
+    match /schools/{schoolId}/signatures/{allPaths=**} {
+      allow read: if isTeacherOrAbove(schoolId);
+      allow write: if isAdmin(schoolId) && isValidImage();
+    }
+
+    // 2. School General Documents & Media
     match /schools/{schoolId}/{allPaths=**} {
-      allow read: if isSchoolAuthorized(schoolId);
-      allow write: if isSchoolAuthorized(schoolId) && isValidDocument();
+      allow read: if hasValidMembership(schoolId);
+      allow write: if isTeacherOrAbove(schoolId) && isValidDocument();
     }
 
-    // 2. Player Photos & Identity Documents
+    // 3. Player Identity & Sensitive Medical Documents (Restricted to Teachers/Admins)
+    match /players/{schoolId}/{playerId}/identity/{allPaths=**} {
+      allow read: if isTeacherOrAbove(schoolId);
+      allow write: if isTeacherOrAbove(schoolId) && isValidDocument();
+    }
+
+    // 4. Player Roster Photos
     match /players/{schoolId}/{playerId}/{allPaths=**} {
-      allow read: if isSchoolAuthorized(schoolId);
-      allow write: if isSchoolAuthorized(schoolId) && isValidImage();
+      allow read: if hasValidMembership(schoolId);
+      allow write: if isTeacherOrAbove(schoolId) && isValidImage();
     }
 
-    // 3. Official Sports Rule PDFs & Knowledge Documents
+    // 5. Official Sports Rule PDFs & Knowledge Documents
     match /game_rules/{schoolId}/{allPaths=**} {
-      allow read: if isSchoolAuthorized(schoolId);
-      allow write: if isSchoolAuthorized(schoolId) && isValidDocument();
+      allow read: if hasValidMembership(schoolId);
+      allow write: if isCoachOrAbove(schoolId) && isValidDocument();
     }
 
-    // 4. Default Deny
+    // 6. Default Deny
     match /{allPaths=**} {
       allow read, write: if false;
     }

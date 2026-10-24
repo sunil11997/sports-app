@@ -11,7 +11,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "cap:sync": "npm run build && npx cap sync android",
-    "build:apk": "powershell -ExecutionPolicy Bypass -File ./scripts/build-apk.ps1"
+    "build:apk": "powershell -ExecutionPolicy Bypass -File ./scripts/build-apk.ps1",
+    "test": "npx -y tsx src/lib/__tests__/run-tests.ts"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",

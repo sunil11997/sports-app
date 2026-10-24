@@ -625,7 +625,7 @@ export interface AgeValidation {
   eligibilityType: 'U14' | 'U17' | 'U19' | 'Overage' | 'Underage' | 'Pending';
 }
 
-export function getAgeValidation(dobString: string | undefined | null, customRefYear?: number): AgeValidation | null {
+export function getAgeValidation(dobString: string | undefined | null, customRefYear?: number | string): AgeValidation | null {
   if (!dobString) return null;
   
   let birthYear: number;
@@ -653,7 +653,7 @@ export function getAgeValidation(dobString: string | undefined | null, customRef
   }
 
   // Reference Date: 31 December of specified or current academic reference year
-  const refYear = customRefYear || 2026;
+  const refYear: number = typeof customRefYear === "string" ? (parseInt(customRefYear, 10) || 2026) : (customRefYear || 2026);
   const refMonth = 11; // 0-indexed December
   const refDay = 31;
 
@@ -882,6 +882,38 @@ export const SPORT_POSITIONS_MAP: Record<string, SportPositionDef[]> = {
     { id: 'shot_put', nameEn: 'Shot Put', nameMr: 'गोळाफेक (Shot Put)', shortCode: 'SP', category: 'Field' },
     { id: 'javelin', nameEn: 'Javelin Throw', nameMr: 'भालाफेक (Javelin Throw)', shortCode: 'JT', category: 'Field' },
     { id: 'disc_throw', nameEn: 'Discus Throw', nameMr: 'थाळीफेक (Discus Throw)', shortCode: 'DT', category: 'Field' },
+  ],
+  'Cricket': [
+    { id: 'opening_batter', nameEn: 'Opening Batter', nameMr: 'सलामीवीर फलंदाज (Opening Batter)', shortCode: 'OB', category: 'Attack' },
+    { id: 'top_order_batter', nameEn: 'Top-Order Batter', nameMr: 'वरच्या फळीतील फलंदाज (Top Order)', shortCode: 'TB', category: 'Attack' },
+    { id: 'middle_order_batter', nameEn: 'Middle-Order Batter', nameMr: 'मधल्या फळीतील फलंदाज (Middle Order)', shortCode: 'MB', category: 'Attack' },
+    { id: 'all_rounder', nameEn: 'All-Rounder', nameMr: 'अष्टपैलू खेळाडू (All-Rounder)', shortCode: 'AR', category: 'Specialist' },
+    { id: 'wicket_keeper', nameEn: 'Wicket-Keeper', nameMr: 'यष्टीरक्षक (Wicket Keeper)', shortCode: 'WK', category: 'Specialist' },
+    { id: 'pace_bowler', nameEn: 'Fast Bowler', nameMr: 'जलदगती गोलंदाज (Fast Bowler)', shortCode: 'PB', category: 'Defense' },
+    { id: 'spin_bowler', nameEn: 'Spin Bowler', nameMr: 'फिरकी गोलंदाज (Spin Bowler)', shortCode: 'SB', category: 'Defense' },
+  ],
+  'Football': [
+    { id: 'goalkeeper', nameEn: 'Goalkeeper', nameMr: 'गोलरक्षक (Goalkeeper)', shortCode: 'GK', category: 'Defense' },
+    { id: 'center_back', nameEn: 'Center Back / Stopper', nameMr: 'मध्य बचावपटू (Center Back)', shortCode: 'CB', category: 'Defense' },
+    { id: 'full_back_left', nameEn: 'Left Back', nameMr: 'डावा बचावपटू (Left Back)', shortCode: 'LB', category: 'Defense' },
+    { id: 'full_back_right', nameEn: 'Right Back', nameMr: 'उजवा बचावपटू (Right Back)', shortCode: 'RB', category: 'Defense' },
+    { id: 'central_midfielder', nameEn: 'Central Midfielder / Playmaker', nameMr: 'मध्य फळी (Midfielder)', shortCode: 'CM', category: 'Setter' },
+    { id: 'winger_left', nameEn: 'Left Winger', nameMr: 'डावा विंगर (Left Wing)', shortCode: 'LW', category: 'Attack' },
+    { id: 'winger_right', nameEn: 'Right Winger', nameMr: 'उजवा विंगर (Right Wing)', shortCode: 'RW', category: 'Attack' },
+    { id: 'striker', nameEn: 'Center Forward / Striker', nameMr: 'स्ट्रायकर / मुख्य आक्रमक (Striker)', shortCode: 'CF', category: 'Attack' },
+  ],
+  'Badminton': [
+    { id: 'singles_specialist', nameEn: 'Singles Player', nameMr: 'एकेरी खेळाडू (Singles)', shortCode: 'SGL', category: 'Specialist' },
+    { id: 'doubles_front', nameEn: 'Doubles Front-Court', nameMr: 'दुहेरी नेट खेळाडू (Front Court)', shortCode: 'DF', category: 'Attack' },
+    { id: 'doubles_back', nameEn: 'Doubles Back-Court / Smasher', nameMr: 'दुहेरी स्मॅश खेळाडू (Back Court)', shortCode: 'DB', category: 'Attack' },
+    { id: 'all_court', nameEn: 'All-Court Player', nameMr: 'ऑल-कोर्ट खेळाडू (All-Court)', shortCode: 'AC', category: 'Specialist' },
+  ],
+  'Basketball': [
+    { id: 'point_guard', nameEn: 'Point Guard (Playmaker)', nameMr: 'पॉईंट गार्ड (Point Guard)', shortCode: 'PG', category: 'Setter' },
+    { id: 'shooting_guard', nameEn: 'Shooting Guard', nameMr: 'शूटिंग गार्ड (Shooting Guard)', shortCode: 'SG', category: 'Attack' },
+    { id: 'small_forward', nameEn: 'Small Forward', nameMr: 'स्मॉल फॉरवर्ड (Small Forward)', shortCode: 'SF', category: 'Attack' },
+    { id: 'power_forward', nameEn: 'Power Forward', nameMr: 'पॉवर फॉरवर्ड (Power Forward)', shortCode: 'PF', category: 'Attack' },
+    { id: 'center', nameEn: 'Center / Post', nameMr: 'सेंटर / मुख्य डिफेंडर (Center)', shortCode: 'C', category: 'Defense' },
   ],
   'Handball': [
     { id: 'goalkeeper', nameEn: 'Goalkeeper', nameMr: 'गोलरक्षक (Goalkeeper)', shortCode: 'GK', category: 'Defense' },

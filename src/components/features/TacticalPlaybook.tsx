@@ -248,6 +248,123 @@ export const REALTIME_FORMATIONS: Record<string, TacticalFormation[]> = {
       ]
     }
   ],
+  'Cricket': [
+    {
+      id: 'cric_powerplay_ring',
+      name: 'Powerplay Attacking Ring (2 Catchers, 7 Infielders)',
+      nameMr: 'पॉवरप्ले आक्रमक रिंग (कव्हर व स्लिप ट्रॅप)',
+      sport: 'Cricket',
+      type: 'Defense',
+      desc: 'पॉवरप्लेच्या पहिल्या ४-५ षटकांत फलंदाजावर दबाव आणून विकेट मिळवण्यासाठी इनफील्ड दाट ठेवणे.',
+      situation: 'सुरुवातीच्या षटकांत नवीन चेंडू स्विंग होत असताना किंवा विकेट मिळवायची असताना.',
+      coachInstructions: [
+        'स्लिप आणि गलीने पुढच्या दिशेने किंचित वाकून सजग राहावे.',
+        'कव्हर आणि मिड-ऑफने ३०-यार्ड रेषेवर वेगाने चेंडू अडवून १ धाव रोखावी.',
+        'गोलंदाजाने ऑफ-स्टंपच्या बाहेर गुड-लेंथवर चेंडू ठेवून ड्राईव्हला प्रवृत्त करावे.'
+      ],
+      players: [
+        { id: 'WK', role: 'Wicket-Keeper', roleMr: 'यष्टीरक्षक', x: 50, y: 18, team: 'home' },
+        { id: 'SL1', role: 'First Slip', roleMr: '१ली स्लिप', x: 44, y: 19, team: 'home' },
+        { id: 'GUL', role: 'Gully', roleMr: 'गली', x: 36, y: 24, team: 'home' },
+        { id: 'PT', role: 'Point', roleMr: 'पॉईंट', x: 26, y: 35, team: 'home' },
+        { id: 'CV', role: 'Cover', roleMr: 'कव्हर', x: 30, y: 46, team: 'home' },
+        { id: 'MO', role: 'Mid-Off', roleMr: 'मिड-ऑफ', x: 42, y: 52, team: 'home' },
+        { id: 'BW', role: 'Bowler', roleMr: 'गोलंदाज', x: 50, y: 58, team: 'home' },
+        { id: 'MN', role: 'Mid-On', roleMr: 'मिड-ऑन', x: 58, y: 52, team: 'home' },
+        { id: 'MW', role: 'Mid-Wicket', roleMr: 'मिड-विकेट', x: 70, y: 46, team: 'home' },
+        { id: 'SQ', role: 'Square Leg', roleMr: 'स्क्वेअर लेग', x: 74, y: 35, team: 'home' },
+        { id: 'FF', role: 'Fine Leg', roleMr: 'फाईन लेग', x: 62, y: 22, team: 'home' },
+      ],
+      arrows: [
+        { from: [50, 58], to: [50, 24], color: '#f59e0b', label: 'Outswing Line' },
+        { from: [30, 46], to: [42, 32], color: '#10b981', label: 'Cut Off Single' }
+      ]
+    }
+  ],
+  'Football': [
+    {
+      id: 'foot_4_3_3_press',
+      name: '4-3-3 High Press & Wing Width',
+      nameMr: '४-३-३ आक्रमक हाय-प्रेस व विंग अटॅक',
+      sport: 'Football',
+      type: 'Offense',
+      desc: 'प्रतिस्पर्ध्याच्या डिफेन्सवर उच्च दाबाने प्रेसिंग करून बॉल जिंकणे व विंगर्सद्वारे गोल करणे.',
+      situation: 'जेव्हा प्रतिस्पर्धी संघ गोलकीपरकडून संथ पासिंग करून खेळ सुरू करतो.',
+      coachInstructions: [
+        'स्ट्रायकरने विरोधी मध्यरक्षकाचा पासिंग अँगल ब्लॉक करावा.',
+        'दोन्ही विंगर्सने साईडलाईनला रुंदी देऊन क्रॉसिंगचे चान्सेस बनवावेत.',
+        'मध्य फळीने दुसऱ्या चेंडूवर ताबा मिळवण्यासाठी आक्रमक व्हावे.'
+      ],
+      players: [
+        { id: 'GK', role: 'Goalkeeper', roleMr: 'गोलरक्षक', x: 50, y: 8, team: 'home' },
+        { id: 'LB', role: 'Left Back', roleMr: 'डावा बॅक', x: 20, y: 22, team: 'home' },
+        { id: 'CB1', role: 'Center Back L', roleMr: 'मध्य डावा', x: 40, y: 20, team: 'home' },
+        { id: 'CB2', role: 'Center Back R', roleMr: 'मध्य उजवा', x: 60, y: 20, team: 'home' },
+        { id: 'RB', role: 'Right Back', roleMr: 'उजवा बॅक', x: 80, y: 22, team: 'home' },
+        { id: 'DM', role: 'Def Midfielder', roleMr: 'डिफेंसिव मिड', x: 50, y: 34, team: 'home' },
+        { id: 'CM1', role: 'Central Mid L', roleMr: 'मध्य फळी डावा', x: 35, y: 44, team: 'home' },
+        { id: 'CM2', role: 'Central Mid R', roleMr: 'मध्य फळी उजवा', x: 65, y: 44, team: 'home' },
+        { id: 'LW', role: 'Left Winger', roleMr: 'डावा विंगर', x: 18, y: 56, team: 'home' },
+        { id: 'ST', role: 'Striker', roleMr: 'स्ट्रायकर', x: 50, y: 62, team: 'home' },
+        { id: 'RW', role: 'Right Winger', roleMr: 'उजवा विंगर', x: 82, y: 56, team: 'home' },
+      ],
+      arrows: [
+        { from: [18, 56], to: [38, 62], color: '#3b82f6', label: 'Cross to Box' },
+        { from: [50, 62], to: [50, 70], color: '#ef4444', label: 'Goal Strike' }
+      ]
+    }
+  ],
+  'Badminton': [
+    {
+      id: 'bad_front_back',
+      name: 'Attacking Front-and-Back Doubles',
+      nameMr: 'फ्रंट-बॅक आक्रमक दुहेरी फॉर्मेशन',
+      sport: 'Badminton',
+      type: 'Offense',
+      desc: 'पुढील खेळाडू नेटवर ड्रॉप व टॅप मारेल, मागील खेळाडू बेसलाईनवरून जंप स्मॅश मारेल.',
+      situation: 'जेव्हा आपल्याला आक्रमक लिफ्ट मिळते आणि प्रतिस्पर्धी बचाव करत असतो.',
+      coachInstructions: [
+        'पुढील खेळाडूने रॅकेट डोळ्यांच्या उंचीवर ठेवून नेट डोमिनेट करावे.',
+        'मागील खेळाडूने उंचावरून स्टीप स्मॅश मारून पॉईंट फिनिश करावा.',
+        'बचावात जाताच लगेच साईड-बाय-साईड पोझिशनमध्ये शिफ्ट व्हावे.'
+      ],
+      players: [
+        { id: 'P1', role: 'Net Controller', roleMr: 'पुढील नेट खेळाडू', x: 50, y: 38, team: 'home' },
+        { id: 'P2', role: 'Rear Smasher', roleMr: 'मागील स्मॅश खेळाडू', x: 50, y: 16, team: 'home' },
+      ],
+      arrows: [
+        { from: [50, 16], to: [50, 55], color: '#ef4444', label: 'Steep Smash' },
+        { from: [50, 38], to: [50, 48], color: '#10b981', label: 'Net Kill Tap' }
+      ]
+    }
+  ],
+  'Basketball': [
+    {
+      id: 'bask_2_3_zone',
+      name: '2-3 Zone Wall Defense',
+      nameMr: '२-३ झोन डिफेन्स (पेंट संरक्षण)',
+      sport: 'Basketball',
+      type: 'Defense',
+      desc: 'बास्केटखाली ३ उंच खेळाडूंची फळी आणि पेरीमीटरवर २ चपळ गार्ड्सचा कडेकोट बंदोबस्त.',
+      situation: 'जेव्हा प्रतिस्पर्धी संघ इनसाईट ड्राईव्ह जास्त करतो किंवा आपले खेळाडू फाउल संकटात असतात.',
+      coachInstructions: [
+        'वरच्या २ गार्ड्सने बॉलच्या दिशेने जलद स्लाइड करावी, पासिंग लेन कापाव्यात.',
+        'तळातील ३ खेळाडूंनी रिबाऊंडसाठी बॉक्स-आऊट न चुकता करावे.',
+        'पेंटमध्ये कोणताही अनकंटेस्टेड ले-अप जाऊ देऊ नका.'
+      ],
+      players: [
+        { id: 'PG', role: 'Point Guard', roleMr: 'पॉईंट गार्ड', x: 38, y: 44, team: 'home' },
+        { id: 'SG', role: 'Shooting Guard', roleMr: 'शूटिंग गार्ड', x: 62, y: 44, team: 'home' },
+        { id: 'SF', role: 'Small Forward', roleMr: 'स्मॉल फॉरवर्ड', x: 24, y: 24, team: 'home' },
+        { id: 'C', role: 'Center', roleMr: 'सेंटर', x: 50, y: 20, team: 'home' },
+        { id: 'PF', role: 'Power Forward', roleMr: 'पॉवर फॉरवर्ड', x: 76, y: 24, team: 'home' },
+      ],
+      arrows: [
+        { from: [38, 44], to: [48, 44], color: '#3b82f6', label: 'Guard Shift' },
+        { from: [50, 20], to: [50, 30], color: '#ef4444', label: 'Box-Out & Rebound' }
+      ]
+    }
+  ],
   'Handball': [
     {
       id: 'hb_6_0_wall',

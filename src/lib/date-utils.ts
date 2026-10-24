@@ -33,6 +33,24 @@ export function getCurrentAcademicYear(dateInput: Date = new Date()): string {
 }
 
 /**
+ * Resolves the official SGFI / Maharashtra DSO competition cutoff year
+ * from an academic year string or defaults to the current active school year.
+ * Example: "2026-27" -> 2026 (Cutoff Date: 31st December 2026)
+ */
+export function getCompetitionCutoffYear(academicYearOrYear?: string | number): number {
+  if (typeof academicYearOrYear === "number") {
+    return academicYearOrYear;
+  }
+  if (typeof academicYearOrYear === "string" && academicYearOrYear.trim()) {
+    const match = academicYearOrYear.trim().match(/^(\d{4})/);
+    if (match) return parseInt(match[1], 10);
+  }
+  const curr = getCurrentAcademicYear();
+  const m = curr.match(/^(\d{4})/);
+  return m ? parseInt(m[1], 10) : new Date().getFullYear();
+}
+
+/**
  * Returns a list of academic years for dropdowns and historical filtering.
  */
 export function getAvailableAcademicYears(

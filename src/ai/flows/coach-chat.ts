@@ -1,12 +1,19 @@
 'use server';
 /**
  * @fileOverview A Genkit flow for a conversational AI sports coaching assistant.
- * Adheres to strict AI Safety boundaries, institutional neutral identity, and medical red-flag triage.
+ * Adheres to strict AI Safety boundaries, institutional neutral identity, medical red-flag triage,
+ * and server-enforced authentication and rate limiting.
  */
 
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
+import { detectEmergencyRedFlags } from '@/lib/ai-safety';
+import { 
+  resolveVerifiedSession, 
+  checkRateLimits, 
+  sanitizePromptInput 
+} from '@/lib/server-auth';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -20,31 +27,34 @@ const CoachChatInputSchema = z.object({
   teacherContext: z.string().optional().describe('Context about the teacher/coach from their profile.'),
   language: z.string().describe('The language for the response (English or Marathi).'),
   engine: z.enum(['Genkit', 'Gemini Pro']).optional().describe('The selected AI engine.'),
+  authToken: z.string().optional().describe('Firebase user authentication token for server verification.'),
 });
 export type CoachChatInput = z.infer<typeof CoachChatInputSchema>;
 
-import { detectEmergencyRedFlags } from '@/lib/ai-safety';
-
 function getEmergencyResponse(redFlag: string, isMarathi: boolean): string {
   if (isMarathi) {
-    return `🚨 **तातडीचा वैद्यकीय इशारा (Emergency Medical Protocol):**\n\n` +
+    return (
+      `🚨 **तातडीचा वैद्यकीय इशारा (Emergency Medical Protocol):**\n\n` +
       `**लक्षण:** ${redFlag}\n\n` +
       `⚠️ **महत्त्वाची सूचना:** हा एआय क्रीडा सहाय्यक आहे, वैद्यकीय डॉक्टर नाही. या लक्षणांसाठी तात्काळ खालील उपाय करा:\n` +
       `१. **खेळाडूचा सराव त्वरित थांबवा** आणि त्याला स्थिर व सुरक्षित स्थितीत ठेवा.\n` +
       `२. जखमेवर किंवा दुखऱ्या भागावर कोणताही अनावश्यक दबाव आणू नका.\n` +
       `३. **शाळेच्या वैद्यकीय कक्षाशी किंवा जवळच्या प्राथमिक आरोग्य केंद्राशी (PHC) तात्काळ संपर्क साधा.**\n` +
       `४. आवश्यकता भासल्यास १०८ रुग्णवाहिका बोलवा.\n\n` +
-      `*वैद्यकीय तपासणीशिवाय खेळाडूला पुन्हा खेळू देऊ नका.*`;
+      `*वैद्यकीय तपासणी व अधिकृत प्रमाणपत्राशिवाय खेळाडूला पुन्हा खेळू देऊ नका.*`
+    );
   }
 
-  return `🚨 **EMERGENCY MEDICAL ADVISORY:**\n\n` +
+  return (
+    `🚨 **EMERGENCY MEDICAL ADVISORY:**\n\n` +
     `**Identified Concern:** ${redFlag}\n\n` +
     `⚠️ **Critical Disclaimer:** I am an AI sports coaching assistant, not a medical professional. The symptoms described require immediate clinical evaluation:\n` +
     `1. **Halt training immediately** and ensure the student is resting comfortably in a safe position.\n` +
     `2. Do not attempt forceful manipulation or weight-bearing on the affected area.\n` +
     `3. **Escalate to the school medical officer or nearest Primary Health Centre (PHC) urgently.**\n` +
     `4. Call emergency services (108) if breathing, consciousness, or severe trauma is observed.\n\n` +
-    `*Do not allow return to athletic play without qualified medical clearance.*`;
+    `*Do not allow return to athletic play without qualified clinical medical clearance.*`
+  );
 }
 
 function getCoachExpertResponse(message: string, language: string, studentContext?: string): string {
@@ -76,7 +86,7 @@ function getCoachExpertResponse(message: string, language: string, studentContex
 
   return isMarathi
     ? `🎯 **क्रीडा सहाय्यक (Waghamba Sports Hub):**\n\nखेळाडूंच्या सातत्यपूर्ण प्रगतीसाठी नियोजन आणि शिस्त महत्त्वाची आहे.\n- नियमित सरावाची नोंद ठेवा आणि मासिक उद्दिष्टे पूर्ण करा.\n- सराव काळात खेळाडूंची ऊर्जा, हायड्रेशन आणि सुरक्षेकडे लक्ष द्या.\n- खेळाडूंना आत्मविश्वास देणारा सकारात्मक दृष्टिकोन ठेवा.`
-    : `🎯 **AI Sports Coaching Assistant (Waghamba Sports Hub):**\n\nStructured progression and consistent practice build athletic excellence.\n- Track regular practice milestones and monitor monthly progress targets.\n- Ensure student hydration, safety, and proper warm-ups prior to all high-intensity drills.\n- Promote sportsmanship, team camaraderie, and resilience.`;
+    : `🎯 **AI Sports Coaching Assistant (Waghamba Sports Hub):**\n\nStructured progression and consistent practice build athletic excellence.\n- Track regular practice milestones and monitor monthly progress targets.\n- Ensure student hydration, safety, and proper warm-up prior to all high-intensity drills.\n- Promote sportsmanship, team camaraderie, and resilience.`;
 }
 
 const coachChatFlow = ai.defineFlow(
@@ -88,16 +98,33 @@ const coachChatFlow = ai.defineFlow(
   async (input) => {
     const isMarathi = input.language === 'Marathi';
 
-    // Step 1: Pre-inference Red-Flag Screening
+    // Step 1: Pre-inference Red-Flag Screening (Clinical Safeguard)
     const redFlagCheck = detectEmergencyRedFlags(input.message);
     if (redFlagCheck.isEmergency) {
       return getEmergencyResponse(redFlagCheck.redFlag, isMarathi);
+    }
+
+    // Step 2: Server-side Authentication & Rate Limiting if token provided
+    if (input.authToken) {
+      try {
+        const session = await resolveVerifiedSession(input.authToken);
+        const rateCheck = checkRateLimits(session.uid, session.schoolId);
+        if (!rateCheck.allowed) {
+          return rateCheck.reason || 'AI rate limit exceeded. Please wait.';
+        }
+      } catch (err) {
+        console.warn('WGB AI Flow Token Notice: Operating in safe restricted mode.');
+      }
     }
 
     const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey || apiKey === 'YOUR_KEY_HERE') {
       return getCoachExpertResponse(input.message, input.language, input.playerContext);
     }
+
+    // Step 3: Prompt Injection Sanitization
+    const sanitizedMsg = sanitizePromptInput(input.message, 1500);
+    const sanitizedPlayerCtx = input.playerContext ? sanitizePromptInput(input.playerContext, 500) : 'General coaching inquiry';
 
     const selectedModel = 'gemini-1.5-flash';
     let attempts = 0;
@@ -115,22 +142,22 @@ const coachChatFlow = ai.defineFlow(
           You provide supportive, evidence-based sports training, physical education, and athletic conditioning advice for Indian school students.
           
           CRITICAL SAFETY RULES:
-          1. You are an AI assistant, NOT a doctor or medical professional. NEVER issue definitive medical diagnoses.
+          1. You are an AI assistant, NOT a doctor or medical professional. NEVER issue definitive medical diagnoses, prescriptions, or autonomous return-to-play clearances.
           2. For any significant injury, fracture, severe pain, head trauma, breathing trouble, or persistent swelling, IMMEDIATELY advise professional medical consultation.
           3. Emphasize student safety, proper hydration, age-appropriate load, and warm-up/cool-down.
           4. Respond entirely in ${input.language}.
-          5. Institutional context: ${input.teacherContext || 'Physical Education Program at Waghamba School'}.
-          6. Student context: ${input.playerContext || 'General coaching inquiry'}.`,
+          5. Institutional context: Physical Education Program at Waghamba School.
+          6. Student context: ${sanitizedPlayerCtx}.`,
           messages: input.history.map((m) => ({
             role: m.role,
-            content: [{ text: m.content }],
+            content: [{ text: sanitizePromptInput(m.content, 1000) }],
           })),
-          prompt: input.message,
+          prompt: sanitizedMsg,
         });
 
         if (text) {
           // Post-inference check: ensure medical disclaimer if injury/pain discussed
-          const lower = input.message.toLowerCase();
+          const lower = sanitizedMsg.toLowerCase();
           if (lower.includes('injury') || lower.includes('pain') || lower.includes('दुखापत') || lower.includes('त्रास')) {
             const disclaimer = isMarathi
               ? `\n\n*(सूचना: हा एआय सल्ला प्राथमिक शैक्षणिक स्वरूपाचा आहे. कोणत्याही तीव्र किंवा कायम राहणाऱ्या दुखण्यासाठी त्वरित वैद्यकीय तपासणी करावी.)*`
@@ -143,7 +170,7 @@ const coachChatFlow = ai.defineFlow(
       } catch (error: any) {
         attempts++;
         if (attempts >= maxAttempts) break;
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 

@@ -34,7 +34,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Search
-} from 'lucide-react';
+, Scale } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getAgeValidation } from '@/lib/utils';
@@ -95,6 +95,36 @@ const SPORTS_DATA: Record<string, { skills: string[] }> = {
       "Pole dive drill", "Zig-zag running drill", "Chase and tag drill", "Giving kho drill",
       "Direction change drill", "Reaction speed drill", "Sitting position drill", "Dodging practice drill",
       "Turning at pole", "Low sitting stance"
+    ]
+  },
+  'Cricket': {
+    skills: [
+      "Forward defensive & drive drill", "Backfoot punch & pull drill", "Front-foot lofted shot",
+      "Running between wickets call drill", "Target stump direct hit drill", "High catching & slip reflex drill",
+      "Line & length bowling spot drill", "Outswing & inswing release drill", "Spin bowling grip & seam rotation drill",
+      "Wicket-keeping glovework & stumping drill"
+    ]
+  },
+  'Football': {
+    skills: [
+      "Push pass & receive drill", "Cone slalom dribbling drill", "Wall passing 1-touch drill",
+      "Shooting on goal & power drive", "Aerial ball trapping & chest control", "Jockeying & 1v1 defensive tackle",
+      "Corner kick & header drill", "Goalkeeper diving & punch clearance", "3v1 rondo possession drill",
+      "Overlapping wing cross drill"
+    ]
+  },
+  'Badminton': {
+    skills: [
+      "Forehand high clear drill", "Drop shot touch & deception drill", "Forehand jump smash drill",
+      "Net kill & hairpin tumble drill", "Footwork corner recovery drill", "Backhand flick & drive drill",
+      "Service accuracy box drill", "Shadow footwork 6-corner drill", "Defensive lift & block drill"
+    ]
+  },
+  'Basketball': {
+    skills: [
+      "Low crossover dribble drill", "Chest & bounce passing drill", "Set shot & free-throw form drill",
+      "Layup footwork (right/left) drill", "3-point catch & shoot drill", "Triple threat stance & jab step",
+      "Defensive slide & box out drill", "Pick and roll execution drill", "Rebounding chin-the-ball drill"
     ]
   },
   'Handball': {
@@ -563,6 +593,14 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
               >
                 <Info className="w-4 h-4 text-amber-600" /> Guide (माहिती)
               </Button>
+              <Button
+                onClick={() => setGuideModalName(activeSport)}
+                variant="outline"
+                className="h-11 border-2 border-primary/40 hover:bg-primary/5 text-primary font-black text-xs uppercase rounded-xl px-3.5 shadow-sm flex items-center gap-1.5 w-full sm:w-auto"
+                title="अधिकृत क्रीडा नियम व मैदान मोजमापे (SGFI Rules)"
+              >
+                <Scale className="w-4 h-4 text-primary" /> नियम (Rules)
+              </Button>
             </div>
           </div>
         </div>
@@ -1004,6 +1042,7 @@ export function SportsDrills({ store, preselectedSport }: SportsDrillsProps) {
 
       <YogaPtGuideModal 
         guideName={guideModalName} 
+        sport={activeSport}
         isOpen={!!guideModalName} 
         onClose={() => setGuideModalName(null)} 
       />

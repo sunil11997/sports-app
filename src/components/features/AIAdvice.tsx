@@ -9,7 +9,10 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Loader2, 
+  Loader2,
+  Award,
+  CheckCircle2,
+  Check, 
   BrainCircuit, 
   Printer, 
   Zap, 
@@ -18,7 +21,9 @@ import {
   ClipboardCopy,
   ExternalLink
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 import { playerRecommendation, type PlayerRecommendationOutput } from '@/ai/flows/player-recommendation';
 import { coachChat } from '@/ai/flows/coach-chat';
 import { usePWA } from '@/components/providers/pwa-provider';
@@ -31,12 +36,22 @@ interface ChatMessage {
 
 export function AIAdvice({ store }: { store: any }) {
   const { toast } = useToast();
+  const { user } = useUser();
   const { isOnline } = usePWA();
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [language, setLanguage] = useState("English");
   const [aiEngine, setAiEngine] = useState<'Genkit' | 'Gemini Pro'>('Genkit');
   const [loading, setLoading] = useState(false);
   const [advice, setAdvice] = useState<PlayerRecommendationOutput | null>(null);
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [approvedPlan, setApprovedPlan] = useState<{ approvedBy: string; approvedAt: string; notes: string } | null>(null);
+  const [coachNotes, setCoachNotes] = useState('');
+  const [checklist, setChecklist] = useState({
+    baselineVerified: false,
+    equipmentVerified: false,
+    healthVerified: false,
+    ageCutoffVerified: false,
+  });
   
   const [activeTab, setActiveTab] = useState("report");
   const [chatInput, setChatInput] = useState("");
@@ -47,6 +62,9 @@ export function AIAdvice({ store }: { store: any }) {
   useEffect(() => {
     setAdvice(null);
     setChatHistory([]);
+    setApprovedPlan(null);
+    setCoachNotes("");
+    setChecklist({ baselineVerified: false, equipmentVerified: false, healthVerified: false, ageCutoffVerified: false });
   }, [selectedPlayerId]);
 
   useEffect(() => {
@@ -54,6 +72,41 @@ export function AIAdvice({ store }: { store: any }) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatHistory, chatLoading]);
+
+  const isChecklistComplete = checklist.baselineVerified && checklist.equipmentVerified && checklist.healthVerified && checklist.ageCutoffVerified;
+
+  const handleApprovePlan = () => {
+    if (!isChecklistComplete) {
+      toast({ title: "Checklist Incomplete", description: "Please complete all 4 safety & readiness checkpoints.", variant: "destructive" });
+      return;
+    }
+    const coachName = store.data.schoolProfile?.teacherName || store.data.schoolProfile?.name || "Head Coach";
+    const approvedData = {
+      approvedBy: coachName,
+      approvedAt: new Date().toISOString(),
+      notes: coachNotes
+    };
+    setApprovedPlan(approvedData);
+    setIsApprovalModalOpen(false);
+
+    // Save as official certified goal / plan record in store if available
+    if (store?.setGoal && selectedPlayerId) {
+      store.setGoal({
+        playerId: selectedPlayerId,
+        month: new Date().toISOString().slice(0, 7),
+        metric: 'AI_Periodization_Strategy',
+        target: 'Coach Certified Plan',
+        current: 'Active',
+        notes: `Coach: ${coachName} | Approved: ${new Date().toLocaleDateString()} | Notes: ${coachNotes || 'Standard'}`,
+      });
+    }
+
+    toast({
+      title: "🎯 योजना प्रमाणित झाली! (Strategy Certified)",
+      description: `योजना मुख्य प्रशिक्षक ${coachName} यांच्याद्वारे अधिकृतपणे प्रमाणित करण्यात आली आहे.`,
+      className: "bg-emerald-600 text-white font-bold"
+    });
+  };
 
   const handleSendChat = async () => {
     if (!chatInput.trim() || chatLoading) return;
@@ -69,9 +122,10 @@ export function AIAdvice({ store }: { store: any }) {
 
     try {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
-      const context = p ? `Player: ${p.name}, Std: ${p.std}, Age: ${p.age}.` : "General inquiry.";
-      const profile = store.data.schoolProfile;
-      const tContext = `Teacher: ${profile.teacherName}, School: ${profile.schoolName}, Role: ${profile.role}`;
+      const context = p ? `Athlete: Athlete-${p.id.slice(-4)}, Std: Class ${p.std}, Age: ${p.age}.` : "General coaching inquiry.";
+      const profile = store.data.schoolProfile || {};
+      const tContext = `PE Program: ${profile.schoolName || 'Ashram Sports Hub'}`;
+      const token = user ? await user.getIdToken() : undefined;
       
       const response = await coachChat({
         message: userMsg,
@@ -79,7 +133,8 @@ export function AIAdvice({ store }: { store: any }) {
         playerContext: context,
         teacherContext: tContext,
         language: language,
-        engine: aiEngine
+        engine: aiEngine,
+        authToken: token,
       });
       setChatHistory(prev => [...prev, { role: 'model', content: response }]);
     } catch (error) {
@@ -105,11 +160,13 @@ export function AIAdvice({ store }: { store: any }) {
       const p = store.data.players.find((player: any) => player.id === selectedPlayerId);
       const fit = store.data.fitness[selectedPlayerId] || {};
       const computedBmi = calculateBMI(p.height, p.weight, p.bmi);
+      const token = user ? await user.getIdToken() : undefined;
       
       const input = {
         id: p.id, name: p.name, gender: p.gender, std: p.std, age: p.age.toString(), height: p.height, weight: p.weight, bmi: computedBmi,
         sports: p.sports || [], history: p.history, medical: p.medical || "None", language: language, engine: (aiEngine === 'Gemini Pro' ? 'Gemini' : 'Genkit') as any,
-        fitnessScore: fit.score || "N/A", fitnessStatus: fit.status || "N/A"
+        fitnessScore: fit.score || "N/A", fitnessStatus: fit.status || "N/A",
+        authToken: token,
       };
 
       const result = await playerRecommendation(input);
@@ -129,9 +186,9 @@ export function AIAdvice({ store }: { store: any }) {
     const computedBmi = calculateBMI(p.height, p.weight, p.bmi);
 
     const contextString = `
-Athlete Profile Analysis - Ashram Shala Waghamba
+Athlete Profile Analysis - Sports Hub
 ------------------------------------------------
-Name: ${p.name} (Std ${p.std})
+Athlete Tag: Athlete-${p.id.slice(-4)} (Class ${p.std})
 Gender: ${p.gender} | Age: ${p.age}
 Height: ${p.height || '-'}cm | Weight: ${p.weight || '-'}kg | BMI: ${computedBmi}
 Primary Sports: ${(p.sports || []).join(', ')}
@@ -139,10 +196,9 @@ Institutional Fitness Score: ${fit.score || 'N/A'}%
 Category: ${fit.status || 'Pending Assessment'}
 
 Technical Mastery Data:
-Kabaddi Skill Rating: ${skills.score || '0'}%
-Medical Notes: ${p.medical || 'None recorded'}
+Sport Skill Rating: ${skills.score || '0'}%
 
-PROMPT: Please act as an elite sports scientist and head coach. Based on the data above, provide a specialized 30-day training periodization and nutritional blueprint optimized for a rural student-athlete at Ashram Shala Waghamba. Focus on explosive power and injury prevention.
+PROMPT: Please act as an elite sports scientist and youth coach. Based on the physical benchmarks above, provide a specialized 30-day training periodization and nutritional blueprint. Focus on explosive power, motor skill mastery, and injury prevention. Note: Do not provide medical diagnoses or prescriptions.
     `.trim();
 
     navigator.clipboard.writeText(contextString);
@@ -265,10 +321,42 @@ PROMPT: Please act as an elite sports scientist and head coach. Based on the dat
             <Card className="border-4 border-accent shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
               <CardHeader className="bg-accent/10 border-b-2 flex flex-row justify-between items-center">
                 <CardTitle className="text-xl font-black text-primary">REPORT PREVIEW</CardTitle>
-                <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-accent"><Printer className="mr-2 h-4 w-4" /> Print PDF</Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={handlePrint} className="rounded-xl font-bold border-accent"><Printer className="mr-2 h-4 w-4" /> Print PDF</Button>
+                  <Button 
+                    onClick={() => setIsApprovalModalOpen(true)} 
+                    className="rounded-xl font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{approvedPlan ? "Certified Plan ✓" : "Review & Approve"}</span>
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6 p-4 bg-primary/5 rounded-2xl border">
+              <CardContent className="p-8 space-y-6">
+                {approvedPlan && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-emerald-50 border-2 border-emerald-500 rounded-3xl shadow-sm animate-in fade-in duration-300">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <Award className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-emerald-950 uppercase">प्रशिक्षकांद्वारे प्रमाणित योजना (Coach Certified Plan)</span>
+                          <Badge className="bg-emerald-600 text-white font-black text-[9px] uppercase px-2 py-0.5">Approved</Badge>
+                        </div>
+                        <p className="text-xs font-bold text-emerald-800 mt-0.5">
+                          प्रमाणित करणारे: <span className="font-black text-emerald-950">{approvedPlan.approvedBy}</span> • दिनांक: {new Date(approvedPlan.approvedAt).toLocaleDateString()}
+                        </p>
+                        {approvedPlan.notes && (
+                          <p className="text-xs italic text-emerald-900 mt-1 bg-white/60 px-2.5 py-1 rounded-lg border border-emerald-200">
+                            &ldquo;{approvedPlan.notes}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border">
                   <ShieldCheck className="w-5 h-5 text-primary" />
                   <p className="text-[10px] font-black uppercase text-primary tracking-widest">Generated by Institutional AI Intelligence</p>
                 </div>
