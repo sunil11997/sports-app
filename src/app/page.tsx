@@ -46,7 +46,8 @@ import {
   Package,
   Sun,
   Lock,
-  Award
+  Award,
+  Utensils
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -203,7 +204,8 @@ export default function WaghambaApp() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [otpUser, setOtpUser] = useState<string | null>(null);
   
-  const schoolData = useSchoolData(true);
+  const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
+  const schoolData = useSchoolData(true, activeTab);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const { isInstallable, isStandalone, installApp, setIsInstallModalOpen, triggerInstall } = usePWA();
@@ -545,6 +547,16 @@ export default function WaghambaApp() {
               </h1>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+              {/* Ashram Mess Nutrition Button */}
+              <button 
+                onClick={() => setIsNutritionModalOpen(true)} 
+                className="h-8 w-8 sm:w-auto px-0 sm:px-3 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-wide border border-amber-500/30 transition-all active-scale"
+                title="आश्रम शाळा पोषण आहार नियोजन (Mess Nutrition)"
+              >
+                <Utensils className="w-3.5 h-3.5 text-amber-600" />
+                <span className="hidden sm:inline">पोषण आहार</span>
+              </button>
+
               {/* High Contrast Ground Mode Toggle Button */}
               <button 
                 onClick={toggleGroundMode}

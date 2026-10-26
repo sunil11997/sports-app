@@ -33,6 +33,7 @@ import {
   getTeacherName, 
   transliterateEnglishToMarathi 
 } from '@/lib/utils';
+import { getAthleteRTPStatus } from '@/lib/returnToPlay';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
 import { OfficialTournamentSheetModal } from './OfficialTournamentSheetModal';
@@ -72,21 +73,24 @@ export function TeamEligibilityRoster({ store, preselectedSport }: { store: any;
 
   // Compute player validations
   const evaluatedPlayers = useMemo(() => {
+    const healthIncidents = store?.data?.healthIncidents || [];
     return players.map((p: any) => {
       const ageVal = getAgeValidation(p.dob, refYear);
       const marathiName = p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name;
       const position = p.positions?.[selectedSport !== 'All' ? selectedSport : p.sports?.[0]] || '-';
       const jersey = p.jerseyNumbers?.[selectedSport !== 'All' ? selectedSport : p.sports?.[0]] || p.jerseyNumber || '-';
+      const rtpStatus = getAthleteRTPStatus(p.id, healthIncidents);
 
       return {
         ...p,
         marathiName,
         ageVal,
+        rtpStatus,
         currentPosition: position,
         currentJersey: jersey
       };
     });
-  }, [players, refYear, selectedSport]);
+  }, [players, refYear, selectedSport, store?.data?.healthIncidents]);
 
   // Filtered list
   const filteredPlayers = useMemo(() => {
@@ -709,6 +713,12 @@ export function TeamEligibilityRoster({ store, preselectedSport }: { store: any;
                         {!ageVal && (
                           <Badge variant="outline" className="text-slate-500 text-[10px]">
                             DOB तपासा
+                          </Badge>
+                        )}
+
+                        {player.rtpStatus && !player.rtpStatus.isEligibleForMatch && (
+                          <Badge className="bg-rose-50 text-rose-700 border border-rose-300 font-bold text-[9px] px-2 py-0.5 mt-1 block">
+                            {player.rtpStatus.statusBadgeMr}
                           </Badge>
                         )}
                       </td>

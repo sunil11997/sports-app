@@ -58,6 +58,9 @@ export function InjuryLogger({ store }: { store: any }) {
       const player = players.find((p: any) => p.id === selectedPlayerId);
       const today = format(new Date(), 'yyyy-MM-dd');
       
+      const isSevere = severity.includes('Severe') || severity.includes('तीव्र');
+      const initialStage = isSevere ? 1 : 2;
+
       const incident = {
         id: generateId('inj'),
         playerId: selectedPlayerId,
@@ -65,16 +68,18 @@ export function InjuryLogger({ store }: { store: any }) {
         playerNameAtTimeOfRecord: player?.name || "Unknown",
         date: today,
         description: `[INJURY LOG] भाग: ${selectedBodyPart}, प्रकार: ${selectedInjuryType}, तीव्रता: ${severity}`,
-        severity: severity.includes('Severe') ? 'Critical' : 'Minor',
-        category: 'athlete'
+        severity: isSevere ? 'Critical' : 'Minor',
+        category: 'athlete',
+        rtpStage: initialStage,
+        resolved: false
       };
 
       await store.addHealthIncident(incident);
       
       toast({ 
-        title: "यशस्वी", 
-        description: `${selectedBodyPart} वरील ${selectedInjuryType} ची नोंद जतन झाली!`,
-        className: "bg-emerald-600 text-white" 
+        title: "🏥 दुखापत नोंद व पुनर्वसन सुरू!", 
+        description: `${player?.name || 'खेळाडू'} - ${selectedBodyPart} (${selectedInjuryType}) ची नोंद झाली. खेळाडू ६-टप्पे पुनर्वसन प्रोटोकॉल (Stage ${initialStage}) मध्ये दाखल झाला आहे.`,
+        className: "bg-emerald-600 text-white font-bold" 
       });
 
       setSelectedBodyPart(null);

@@ -78,7 +78,7 @@ function safePersistLocalOverrides(data: Record<string, any>) {
  * Hardened for dynamic Academic Years (IST), Firestore Equipment collections, complete Backup/Restore,
  * and persistent IndexedDB offline mutation queue with real-time status events.
  */
-export function useSchoolData(isActive: boolean = true) {
+export function useSchoolData(isActive: boolean = true, activeTabScope?: string) {
   const db = useFirestore();
   const { user } = useUser();
   const syncLockRef = useRef(false);
@@ -467,7 +467,7 @@ export function useSchoolData(isActive: boolean = true) {
       window.removeEventListener("wgb-offline-sync-status", handleStatus);
       unsubs.forEach((unsub) => unsub());
     };
-  }, [db, user, targetSchoolId, selectedYear, syncOfflineAttendance, isActive]);
+  }, [db, user, targetSchoolId, selectedYear, syncOfflineAttendance, isActive, activeTabScope]);
 
   // Aggregated Data Object
   const aggregatedData = useMemo(() => {

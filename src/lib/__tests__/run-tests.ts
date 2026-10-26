@@ -35,6 +35,23 @@ import {
   OFFICIAL_SPORTS_RULES,
   STRUCTURED_COACHING_DRILLS,
 } from '../../data/sportCoachingKnowledge';
+import {
+  evaluateKheloIndiaFitness,
+  TALENT_TIER_DETAILS,
+} from '../kheloIndiaNorms';
+import {
+  getAthleteRTPStatus,
+  RTP_STAGES,
+} from '../returnToPlay';
+import {
+  calculateAgeOnCutoff,
+  generateVerificationQrSvgUri,
+  generateSgfiFormAHtml,
+} from '../dsoFormAGenerator';
+import {
+  ASHRAM_MESS_WEEKLY_MENU,
+  TOURNAMENT_DAY_FUELING_TIMELINE,
+} from '../../data/ashramMessNutrition';
 
 let passed = 0;
 let failed = 0;
@@ -314,6 +331,148 @@ console.log('\n--- Suite 6: Athlete Development & Dynamic Cutoff Calculation ---
   assert(getCurrentAcademicYear(new Date('2026-08-15')) === '2026-27', 'Aug 2026 maps to 2026-27 academic year');
   assert(getCurrentAcademicYear(new Date('2027-02-15')) === '2026-27', 'Feb 2027 maps to 2026-27 academic year');
   assert(getCompetitionCutoffYear('2026-27') === 2026, 'Cutoff year for 2026-27 academic session is 2026');
+}
+
+// --- Suite 7: SAI Khelo India National Fitness Battery & Talent Identification ---
+{
+  console.log('\n--- Suite 7: SAI Khelo India National Fitness Battery & Talent Identification ---');
+
+  // Elite 14yo boy with 6.5s 50m sprint (Top 10% national norm)
+  const eliteSprint = evaluateKheloIndiaFitness({
+    age: 14,
+    gender: 'Male',
+    run50m: 6.5,
+    run600m: 118,
+    sitAndReach: 32,
+    sitUps: 36
+  });
+  assert(eliteSprint.tier === 'talent', 'Elite 14yo sprinter identified as national talent');
+  assert(eliteSprint.isTalentIdentified === true, 'Talent identification flag is true for top 15%');
+  assert(eliteSprint.tierInfo.badgeMr.includes('राष्ट्रीय गुणवत्ता'), 'Renders Devanagari National Talent badge');
+  assert(eliteSprint.overallPercentile >= 85, 'Overall percentile is in top tier (>=85)');
+
+  // 14yo girl with state-level endurance (148s in 600m)
+  const stateGirl = evaluateKheloIndiaFitness({
+    age: 14,
+    gender: 'Female',
+    run50m: 7.7,
+    run600m: 148,
+    sitAndReach: 28
+  });
+  assert(stateGirl.isStatePotential === true, 'Girl with 148s 600m identified with state/national potential');
+  assert(stateGirl.componentScores.enduranceScore !== undefined && stateGirl.componentScores.enduranceScore >= 75, 'Cardiovascular endurance score >= 75');
+
+  // Baseline with no tests entered defaults safely to developing
+  const emptyEval = evaluateKheloIndiaFitness({ age: 13, gender: 'Male' });
+  assert(emptyEval.tier === 'proficient' || emptyEval.tier === 'average' || emptyEval.tier === 'developing', 'Neutral assessment returns safe default');
+}
+
+// --- Suite 8: Clinical 6-Stage Return-to-Play Protocol & Safety Locking ---
+{
+  console.log('\n--- Suite 8: Clinical 6-Stage Return-to-Play Protocol & Safety Locking ---');
+
+  // Athlete without any health incident
+  const healthyStatus = getAthleteRTPStatus('p_healthy_1', []);
+  assert(healthyStatus.isEligibleForMatch === true, 'Healthy athlete without injury is eligible for match');
+  assert(healthyStatus.currentStage === 6, 'Healthy athlete is in Stage 6 (Competition Clearance)');
+
+  // Athlete with active severe ankle sprain
+  const injuredIncident = {
+    id: 'inj_test_1',
+    playerId: 'p_injured_1',
+    description: '[INJURY LOG] भाग: Ankle, प्रकार: Sprain, तीव्रता: Severe (तीव्र)',
+    severity: 'Critical',
+    rtpStage: 1,
+    resolved: false,
+    date: '2026-10-24'
+  };
+  const injuredStatus = getAthleteRTPStatus('p_injured_1', [injuredIncident]);
+  assert(injuredStatus.isEligibleForMatch === false, 'Athlete with active Stage 1 injury is strictly locked from matches');
+  assert(injuredStatus.currentStage === 1, 'Severe injury initializes at RTP Stage 1 (Rest)');
+  assert(injuredStatus.statusBadgeMr.includes('दुखापत पुनर्वसन'), 'Displays Marathi rehab badge');
+  assert(Boolean(injuredStatus.warningNoticeMr), 'Warning notice is present for coach awareness');
+
+  // Intermediate Stages 1 to 5 must remain competition ineligible
+  for (let s = 1; s <= 5; s++) {
+    const stageInfo = RTP_STAGES[s];
+    assert(stageInfo.competitionEligible === false, `RTP Stage ${s} strictly prohibits competition`);
+  }
+  assert(RTP_STAGES[6].competitionEligible === true, 'Only RTP Stage 6 allows competitive tournament clearance');
+
+  // Once marked resolved, athlete is restored to Stage 6
+  const resolvedIncident = { ...injuredIncident, resolved: true, rtpStage: 6 };
+  const clearedStatus = getAthleteRTPStatus('p_injured_1', [resolvedIncident]);
+  assert(clearedStatus.isEligibleForMatch === true, 'Athlete with resolved incident is cleared for match play');
+}
+
+// --- Suite 9: SGFI / DSO Form-A Official Eligibility Dossier & QR Verification ---
+{
+  console.log('\n--- Suite 9: SGFI / DSO Form-A Official Eligibility Dossier & QR Verification ---');
+
+  // Age on cutoff (31 Dec 2026) for student born 15-08-2012 (14y 4m)
+  const ageStr = calculateAgeOnCutoff('2012-08-15', 2026);
+  assert(ageStr.includes('१४ वर्षे') || ageStr.includes('14 वर्षे'), `Cutoff age calculated as ${ageStr}`);
+
+  // Tamper-proof SVG QR Code Data URI
+  const qrUri = generateVerificationQrSvgUri({
+    schoolUdise: '27020309801',
+    sport: 'Kabaddi',
+    category: '१४ वर्षाखालील मुले',
+    academicYear: '2026-27',
+    playerCount: 12
+  });
+  assert(qrUri.startsWith('data:image/svg+xml'), 'Verification QR generates standard SVG data URI');
+  assert(qrUri.includes('27020309801'), 'QR payload embeds official school UDISE');
+  assert(qrUri.includes('SGFI'), 'QR payload specifies SGFI federation marker');
+
+  // Complete HTML Dossier Generation
+  const htmlDossier = generateSgfiFormAHtml({
+    schoolName: 'शासकीय माध्यमिक आश्रम शाळा वाघंबा',
+    departmentName: 'आदिवासी विकास विभाग नाशिक',
+    projectName: 'एकात्मिक आदिवासी विकास प्रकल्प, कळवण',
+    taluka: 'बागलाण',
+    district: 'नाशिक',
+    uDise: '27020309801',
+    sportName: 'कबड्डी',
+    ageCategoryLabel: '१४ वर्षाखालील मुले',
+    academicYear: '2026-27',
+    cutoffDate: '31/12/2026',
+    rows: [{
+      id: 'row_1',
+      srNo: '1',
+      studentName: 'सचिन राहुल काळे',
+      motherName: 'सुनीता',
+      std: '8',
+      grNo: '1420',
+      dob: '2012-08-15',
+      aadhar: 'XXXX-XXXX-4589',
+      saralId: '2702030980112001'
+    }],
+    teacherName: 'श्री. के. डी. पवार'
+  });
+  assert(htmlDossier.includes('FORM - A'), 'Dossier specifies official FORM - A title');
+  assert(htmlDossier.includes('मुख्याध्यापक अधिकृत प्रमाणपत्र'), 'Dossier includes statutory Headmaster verification clause');
+  assert(htmlDossier.includes('जनरल रजिस्टर (G.R.)'), 'Statutory verification cites General Register records');
+}
+
+// --- Suite 10: Ashram Shala Sports Nutrition & Mess Rations ---
+{
+  console.log('\n--- Suite 10: Ashram Shala Sports Nutrition & Mess Rations ---');
+
+  assert(ASHRAM_MESS_WEEKLY_MENU.length >= 3, 'Weekly mess menu covers school days');
+  
+  // Verify authentic tribal development hostel rations
+  const mondayBreakfast = ASHRAM_MESS_WEEKLY_MENU[0].breakfast;
+  assert(mondayBreakfast.itemsMr.some(it => it.includes('मूग') || it.includes('उसळ')), 'Breakfast includes sprouted pulses (उसळ)');
+  
+  const mondayLunch = ASHRAM_MESS_WEEKLY_MENU[0].lunch;
+  assert(mondayLunch.itemsMr.some(it => it.includes('भाकरी')), 'Lunch includes local millet bhakri (बाजरी/ज्वारी)');
+
+  // Verify tournament timeline
+  assert(TOURNAMENT_DAY_FUELING_TIMELINE.length === 4, 'Tournament day timeline has 4 key windows');
+  const postMatch = TOURNAMENT_DAY_FUELING_TIMELINE[3];
+  assert(postMatch.timeBeforeMatch.includes('३० मिनिटांत'), 'Includes 30-minute post-match recovery window');
+  assert(postMatch.itemsAvailableInAshramMr.some(it => it.includes('अंडी') || it.includes('उसळ') || it.includes('चिक्की')), 'Recovery items grounded in ashram mess rations');
 }
 
 console.log('\n================================================================');

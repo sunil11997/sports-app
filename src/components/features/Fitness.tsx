@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -20,13 +19,16 @@ import {
   Zap,
   Timer,
   Ruler,
-  ChevronLeft
+  ChevronLeft,
+  Award,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn, shareToWhatsApp, getAgeValidation, calculateBMI, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import { format } from 'date-fns';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 import { usePWA } from '@/components/providers/pwa-provider';
+import { evaluateKheloIndiaFitness, TALENT_TIER_DETAILS, type TalentTier } from '@/lib/kheloIndiaNorms';
 
 const GENERAL_CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -45,6 +47,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [localMarathiView, setLocalMarathiView] = useState(language === 'Marathi');
+  const [filterTidOnly, setFilterTidOnly] = useState(false);
 
   useEffect(() => {
     setLocalMarathiView(language === 'Marathi');
@@ -55,6 +58,19 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     return p.std;
   }, []);
 
+  // Compute talent candidates
+  const talentCounts = useMemo(() => {
+    const players = store.data.players || [];
+    let talentCount = 0;
+    players.forEach((p: any) => {
+      const fit = store.data.fitness?.[p.id] || {};
+      if (fit.kheloIndiaTier === 'talent' || fit.kheloIndiaTier === 'state' || (parseInt(fit.score || '0') >= 75)) {
+        talentCount++;
+      }
+    });
+    return talentCount;
+  }, [store.data.players, store.data.fitness]);
+
   const filteredPlayers = useMemo(() => {
     if (!store.data.players) return [];
     const query = searchTerm.trim().toLowerCase();
@@ -63,6 +79,12 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       .filter((p: any) => {
         const matchesTab = activeCategory === 'all' || getPlayerCategory(p) === activeCategory;
         if (!matchesTab) return false;
+
+        const fit = store.data.fitness?.[p.id] || {};
+        if (filterTidOnly) {
+          const isTalent = fit.kheloIndiaTier === 'talent' || fit.kheloIndiaTier === 'state' || (parseInt(fit.score || '0') >= 75);
+          if (!isTalent) return false;
+        }
 
         if (!query) return true;
         const name = (p.name || "").toLowerCase();
@@ -77,51 +99,43 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
         if (stdA !== stdB) return stdA - stdB;
         return (parseInt(a.serialNumber || '0') || 0) - (parseInt(b.serialNumber || '0') || 0);
       });
-  }, [store.data.players, activeCategory, getPlayerCategory, searchTerm]);
+  }, [store.data.players, store.data.fitness, activeCategory, getPlayerCategory, searchTerm, filterTidOnly]);
 
   const handleAutoSave = async (playerId: string) => {
+    const player = (store.data.players || []).find((p: any) => p.id === playerId);
     const current = { ...(assessments[playerId] || store.data.fitness?.[playerId] || {}) };
     setIsSaving(playerId);
     
-    const validMetrics: number[] = [];
+    // Evaluate against official SAI Khelo India Norms
+    const evalResult = evaluateKheloIndiaFitness({
+      age: player?.age,
+      gender: player?.gender,
+      run50m: current.run50m,
+      run600m: current.run600m,
+      sitAndReach: current.sitAndReach,
+      sitUps: current.sitUps,
+      shuttleRun: current.shuttleRun,
+      boardJump: current.boardJump,
+    });
 
-    const shuttleRun = parseFloat(current.shuttleRun || '');
-    if (!isNaN(shuttleRun) && shuttleRun > 0) {
-      validMetrics.push(Math.max(0, Math.min(100, 100 - (shuttleRun * 4))));
-    }
+    const hasAnyMetric = Boolean(
+      current.shuttleRun || current.boardJump || current.run50m || 
+      current.run600m || current.sitAndReach || current.sitUps
+    );
 
-    const boardJump = parseFloat(current.boardJump || '');
-    if (!isNaN(boardJump) && boardJump > 0) {
-      validMetrics.push(Math.max(0, Math.min(100, boardJump * 0.4)));
-    }
-
-    const run50m = parseFloat(current.run50m || '');
-    if (!isNaN(run50m) && run50m > 0) {
-      validMetrics.push(Math.max(0, Math.min(100, 100 - (run50m * 5))));
-    }
-
-    const run600m = parseFloat(current.run600m || '');
-    if (!isNaN(run600m) && run600m > 0) {
-      validMetrics.push(Math.max(0, Math.min(100, 100 - (run600m * 0.5))));
-    }
-
-    const sitAndReach = parseFloat(current.sitAndReach || '');
-    if (!isNaN(sitAndReach) && sitAndReach > 0) {
-      validMetrics.push(Math.max(0, Math.min(100, sitAndReach * 2)));
-    }
-
-    const sitUps = parseFloat(current.sitUps || '');
-    if (!isNaN(sitUps) && sitUps > 0) {
-      validMetrics.push(Math.max(0, Math.min(100, sitUps * 2)));
-    }
-
-    if (validMetrics.length === 0) {
+    if (!hasAnyMetric) {
       current.score = '';
       current.status = 'प्रलंबित (Pending)';
+      current.kheloIndiaTier = 'developing';
+      current.kheloIndiaPercentile = 0;
     } else {
-      const avgScore = validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length;
-      current.score = Math.round(avgScore).toString();
-      current.status = avgScore >= 80 ? 'Elite' : avgScore >= 60 ? 'Optimal' : 'Developing';
+      current.score = evalResult.overallPercentile.toString();
+      current.status = evalResult.tierInfo.badgeMr.split(' ')[1] || 'Active';
+      current.kheloIndiaBadge = evalResult.tierInfo.badgeMr;
+      current.kheloIndiaTier = evalResult.tier;
+      current.kheloIndiaPercentile = evalResult.overallPercentile;
+      current.strengths = evalResult.strengthsMr;
+      current.recommendations = evalResult.recommendationsMr;
     }
 
     await store.setFitness(playerId, { ...current, playerId, month: format(new Date(), 'yyyy-MM') });
@@ -136,45 +150,49 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
     const schoolName = getOfficialSchoolName(schoolProfile, isM);
     const reportTitle = isM 
-      ? `विद्यार्थी शारीरिक क्षमता व बी.एम.आय. चाचणी अहवाल - ${activeCategory === 'all' ? 'सर्व इयत्ता' : 'इयत्ता ' + activeCategory}`
-      : `Student Physical Fitness & BMI Registry - ${activeCategory === 'all' ? 'All Classes' : 'Standard ' + activeCategory}`;
+      ? `विद्यार्थी शारीरिक क्षमता व खेलो इंडिया टॅलेंट मूल्यांकन अहवाल - ${activeCategory === 'all' ? 'सर्व इयत्ता' : 'इयत्ता ' + activeCategory}`
+      : `Student Physical Fitness & SAI Khelo India Talent Assessment - ${activeCategory === 'all' ? 'All Classes' : 'Standard ' + activeCategory}`;
     const signatureBlockHtml = getPrintSignatureBlockHtml(schoolProfile, isM);
 
     const printContent = `
       <html>
         <head>
-          <title>Fitness Registry - ${format(new Date(), 'dd/MM/yyyy')}</title>
+          <title>SAI Khelo India Fitness Registry - ${format(new Date(), 'dd/MM/yyyy')}</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+Devanagari:wght@400;700;900&display=swap');
             @media print { 
-              @page { size: landscape; margin: 1cm; } 
+              @page { size: landscape; margin: 0.8cm; } 
               .no-print { display: none !important; } 
               body { padding-top: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
-            body { font-family: 'Inter', sans-serif; padding: 20px; font-size: 10px; color: #111; }
-            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
-            .school-name { font-size: 18px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; }
-            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 5px; text-decoration: underline; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1.5px solid #1e3a8a !important; padding: 6px; text-align: center; }
-            th { background-color: #1e3a8a !important; color: #ffffff !important; font-weight: 900; text-transform: uppercase; font-size: 8.5px; }
-            .name-cell { text-align: left; font-weight: 900; min-width: 150px; text-transform: uppercase; }
-            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-            .btn { cursor: pointer; padding: 12px 25px; border-radius: 12px; font-weight: 900; text-transform: uppercase; font-size: 12px; border: none; transition: all 0.2s; }
+            body { font-family: 'Noto Sans Devanagari', 'Inter', sans-serif; padding: 15px; font-size: 9.5px; color: #111; }
+            .header { text-align: center; border-bottom: 4px double #1e3a8a; padding-bottom: 8px; margin-bottom: 12px; }
+            .dept-title { font-size: 11px; font-weight: 800; color: #b45309; }
+            .school-name { font-size: 16px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin: 3px 0; }
+            .report-type { font-weight: 800; text-align: center; text-transform: uppercase; font-size: 11px; color: #0f766e; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1.5px solid #1e3a8a !important; padding: 5px; text-align: center; }
+            th { background-color: #1e3a8a !important; color: #ffffff !important; font-weight: 900; text-transform: uppercase; font-size: 8px; }
+            .name-cell { text-align: left; font-weight: 900; min-width: 140px; }
+            .badge-cell { font-weight: 800; font-size: 8.5px; }
+            .print-controls { position: fixed; top: 0; left: 0; right: 0; background: #1e3a8a; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+            .btn { cursor: pointer; padding: 10px 20px; border-radius: 10px; font-weight: 900; text-transform: uppercase; font-size: 11px; border: none; }
             .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
-            .btn-print { background: #f59e0b; color: white; box-shadow: 0 4px 10px rgba(245,158,11,0.3); }
-            .btn:active { scale: 0.95; }
+            .btn-print { background: #f59e0b; color: white; }
           </style>
         </head>
-        <body style="padding-top: 80px;">
+        <body style="padding-top: 70px;">
           <div class="no-print print-controls">
             <button onclick="window.close()" class="btn btn-back">&larr; ${isM ? 'मागे जा' : 'GO BACK'}</button>
             <button onclick="window.print()" class="btn btn-print">${isM ? 'प्रिंट करा' : 'CONFIRM PRINT'}</button>
           </div>
           <div class="header">
+            <div class="dept-title">महाराष्ट्र शासन • आदिवासी विकास विभाग (क्रीडा व शारीरिक शिक्षण)</div>
             <div class="school-name">${schoolName}</div>
             <div class="report-type">${reportTitle}</div>
-            <div style="font-size: 10px; font-weight: 700; margin-top: 5px;">Date: ${format(new Date(), 'dd MMMM yyyy')} | Fitness & BMI Audit Registry</div>
+            <div style="font-size: 9px; font-weight: 700; color: #475569; margin-top: 3px;">
+              Date: ${format(new Date(), 'dd MMMM yyyy')} | SAI Khelo India Battery Assessment Registry
+            </div>
           </div>
           <table>
             <thead>
@@ -187,12 +205,12 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                 <th>BMI</th>
                 <th>10x6 SHUTTLE</th>
                 <th>BOARD JUMP</th>
-                <th>50m RUN</th>
-                <th>600m RUN</th>
+                <th>50m RUN (s)</th>
+                <th>600m RUN (s)</th>
                 <th>SIT & REACH</th>
                 <th>SIT-UPS</th>
-                <th>SCORE %</th>
-                <th>STATUS</th>
+                <th>PERCENTILE</th>
+                <th>KHELO INDIA NORM / TALENT TIER</th>
               </tr>
             </thead>
             <tbody>
@@ -202,6 +220,9 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                 const heightVal = p.height || fit.height || '-';
                 const weightVal = p.weight || fit.weight || '-';
                 const bmiVal = calculateBMI(heightVal !== '-' ? heightVal : null, weightVal !== '-' ? weightVal : null, p.bmi || fit.bmi);
+                const tier = (fit.kheloIndiaTier as TalentTier) || 'developing';
+                const tierInfo = TALENT_TIER_DETAILS[tier] || TALENT_TIER_DETAILS.developing;
+
                 return `
                   <tr>
                     <td>${p.serialNumber || i+1}</td>
@@ -217,7 +238,7 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                     <td>${fit.sitAndReach || '-'}</td>
                     <td>${fit.sitUps || '-'}</td>
                     <td><strong>${fit.score || '0'}%</strong></td>
-                    <td><strong>${fit.status || 'Active'}</strong></td>
+                    <td class="badge-cell"><strong>${tierInfo.badgeMr}</strong></td>
                   </tr>
                 `;
               }).join('')}
@@ -236,10 +257,13 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
 
   const handleWhatsAppShare = (player: any) => {
     const fit = store.data.fitness?.[player.id] || {};
+    const tier = (fit.kheloIndiaTier as TalentTier) || 'developing';
+    const tierInfo = TALENT_TIER_DETAILS[tier] || TALENT_TIER_DETAILS.developing;
+
     shareToWhatsApp({
       phone: player.mobileNumber,
-      schoolName: store.data.schoolProfile.schoolName,
-      teacherName: store.data.schoolProfile.teacherName,
+      schoolName: store.data.schoolProfile?.schoolName,
+      teacherName: store.data.schoolProfile?.teacherName,
       studentName: localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name,
       std: player.std,
       age: player.age,
@@ -247,8 +271,8 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
       bmi: player.bmi || "---",
       height: player.height || "---",
       weight: player.weight || "---",
-      reportType: "शारीरिक चाचणी (Fitness Hub)",
-      reportData: `स्कोअर: ${fit.score || '0'}%\nस्टेटस: ${fit.status || 'Pending'}`
+      reportType: "शारीरिक क्षमता व खेलो इंडिया टॅलेंट कार्ड (Fitness Hub)",
+      reportData: `स्कोअर: ${fit.score || '0'}% (${tierInfo.badgeMr})\nतपशील: ५० मी. स्प्रिंट: ${fit.run50m || '-'}s | ६०० मी: ${fit.run600m || '-'}s`
     });
   };
 
@@ -262,61 +286,91 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 sm:gap-6 bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[3rem] border shadow-xl">
         <div className="flex items-center gap-3 sm:gap-6 flex-1">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 bg-accent/10 rounded-xl sm:rounded-[2rem] flex items-center justify-center border-2 border-accent/20 shadow-inner shrink-0">
-            <Flame className="w-7 h-7 sm:w-10 sm:h-10 text-accent animate-pulse" />
+          <div className="w-14 h-14 sm:w-20 sm:h-20 bg-amber-500/10 rounded-xl sm:rounded-[2rem] flex items-center justify-center border-2 border-amber-500/20 shadow-inner shrink-0 text-amber-500">
+            <Trophy className="w-7 h-7 sm:w-10 sm:h-10 animate-pulse" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-3xl font-black text-primary uppercase tracking-tight">Institutional Fitness Hub</h2>
-            <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 sm:mt-1">Registry Engine v6.0 Stable</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-primary uppercase tracking-tight">
+                {localMarathiView ? "शारीरिक क्षमता व खेलो इंडिया टॅलेंट हब" : "SAI Khelo India Fitness & Talent Hub"}
+              </h2>
+              <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 font-bold text-[10px]">
+                SAI Norms
+              </Badge>
+            </div>
+            <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 sm:mt-1">
+              National Fitness Battery • Talent Identification Engine v6.4
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-[500px]">
-            <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-7 sm:h-7 text-primary/40" />
+          <div className="relative flex-1 lg:w-[450px]">
+            <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-primary/40" />
             <Input 
               placeholder={localMarathiView ? "नाव किंवा GR ने शोधा..." : "Find Student by Name or GR..."} 
-              className="pl-11 sm:pl-16 h-12 sm:h-16 lg:h-20 rounded-xl sm:rounded-[1.5rem] border-2 border-primary/10 bg-muted/20 font-bold sm:font-black text-xs sm:text-lg lg:text-xl shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/40" 
+              className="pl-11 sm:pl-14 h-12 sm:h-16 rounded-xl sm:rounded-2xl border-2 border-primary/10 bg-muted/20 font-bold text-xs sm:text-base shadow-inner focus:bg-white transition-all placeholder:text-muted-foreground/40" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
             />
           </div>
-          <Button onClick={handlePrint} className="h-12 sm:h-16 lg:h-20 px-4 sm:px-8 lg:px-10 bg-primary hover:bg-primary/90 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm shadow-xl active-scale transition-all shrink-0">
-            <Printer className="w-4 h-4 sm:w-6 sm:h-6 sm:mr-2" />
+          <Button onClick={handlePrint} className="h-12 sm:h-16 px-4 sm:px-6 bg-primary hover:bg-primary/90 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm shadow-xl active-scale transition-all shrink-0">
+            <Printer className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
             <span className="hidden sm:inline">Export Report</span>
             <span className="sm:hidden">Export</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 p-2 bg-muted/40 rounded-xl sm:rounded-[2rem] border shadow-inner overflow-x-auto scrollbar-hide">
-        {GENERAL_CATEGORIES.map(cat => (
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2 bg-muted/40 rounded-xl sm:rounded-[2rem] border shadow-inner">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1">
+          {GENERAL_CATEGORIES.map(cat => (
+            <Button
+              key={cat.id}
+              variant={activeCategory === cat.id ? "default" : "ghost"}
+              size="sm"
+              className={cn(
+                "h-8 sm:h-10 rounded-lg sm:rounded-xl px-3 sm:px-5 text-[10px] sm:text-[11px] font-black uppercase transition-all whitespace-nowrap shrink-0",
+                activeCategory === cat.id ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:bg-white'
+              )}
+              onClick={() => setActiveCategory(cat.id)}
+            >
+              {cat.label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
           <Button
-            key={cat.id}
-            variant={activeCategory === cat.id ? "default" : "ghost"}
             size="sm"
+            variant={filterTidOnly ? "default" : "outline"}
+            onClick={() => setFilterTidOnly(!filterTidOnly)}
             className={cn(
-              "h-9 sm:h-11 rounded-lg sm:rounded-xl px-4 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase transition-all whitespace-nowrap shrink-0",
-              activeCategory === cat.id ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:bg-white'
+              "h-8 sm:h-9 text-[10px] sm:text-xs font-black rounded-xl gap-1.5 shadow-sm transition-all",
+              filterTidOnly 
+                ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border-amber-600" 
+                : "border-amber-300 text-amber-700 hover:bg-amber-50"
             )}
-            onClick={() => setActiveCategory(cat.id)}
           >
-            {cat.label}
+            <Sparkles className="w-3.5 h-3.5" />
+            {localMarathiView ? "🏆 राष्ट्रीय गुणवत्ता शोध (TID)" : "🏆 Talent Identified (TID)"}
+            <Badge className="ml-1 bg-amber-600 text-white px-1.5 py-0 text-[9px] rounded-full">
+              {talentCounts}
+            </Badge>
           </Button>
-        ))}
-        <div className="ml-auto flex items-center px-2 shrink-0">
-           <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 h-7 sm:h-8 flex items-center gap-1.5 px-3 rounded-full text-[9px] sm:text-[10px]">
-              <RefreshCw className={cn("w-3 h-3", isOnline && "animate-spin")} />
-              {isOnline ? 'CLOUD SYNC' : 'OFFLINE MODE'}
-           </Badge>
+
+          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 h-8 flex items-center gap-1.5 px-3 rounded-full text-[9px] sm:text-[10px]">
+            <RefreshCw className={cn("w-3 h-3", isOnline && "animate-spin")} />
+            {isOnline ? 'CLOUD SYNC' : 'OFFLINE'}
+          </Badge>
         </div>
       </div>
 
-      <Card className="border-2 rounded-2xl sm:rounded-[3rem] overflow-hidden bg-white shadow-2xl relative">
+      <Card className="border-2 rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-white shadow-2xl relative">
         <div className="overflow-x-auto scrollbar-hide relative max-h-[70vh] overflow-y-auto">
           <Table className="min-w-max border-collapse">
             <TableHeader className="bg-slate-100 sticky top-0 z-50 shadow-sm border-b">
-              <TableRow className="h-14 sm:h-20">
-                <TableHead className="px-3 sm:px-10 font-black uppercase w-[150px] sm:w-[250px] sticky left-0 top-0 bg-slate-200 z-[60] border-r text-xs">
+              <TableRow className="h-14 sm:h-18">
+                <TableHead className="px-3 sm:px-8 font-black uppercase w-[160px] sm:w-[240px] sticky left-0 top-0 bg-slate-200 z-[60] border-r text-xs">
                    Student Profile
                 </TableHead>
                 <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
@@ -326,58 +380,72 @@ export function Fitness({ store, section, language = 'English' }: { store: any, 
                    <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-amber-500" />Board Jump
                 </TableHead>
                 <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Timer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-blue-500" />50m Speed
+                   <Timer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-blue-500" />50m Speed (s)
                 </TableHead>
                 <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-emerald-500" />600m Run
+                   <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-emerald-500" />600m Run (s)
                 </TableHead>
                 <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Ruler className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-purple-500" />Sit & Reach
+                   <Ruler className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-purple-500" />Sit & Reach (cm)
                 </TableHead>
                 <TableHead className="px-2 font-black text-[9px] uppercase text-center w-[90px] sm:w-[110px] sticky top-0 bg-slate-100 z-40 border-r">
-                   <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-rose-500" />Sit-Ups
+                   <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-rose-500" />Sit-Ups (reps)
                 </TableHead>
-                <TableHead className="px-3 sm:px-6 font-black uppercase text-center w-[100px] sm:w-[130px] bg-primary/10 sticky top-0 z-40 border-r text-xs">
-                   Fitness %
+                <TableHead className="px-3 sm:px-6 font-black uppercase text-center w-[150px] sm:w-[190px] bg-amber-500/10 sticky top-0 z-40 border-r text-xs">
+                   SAI Khelo India Norm
                 </TableHead>
                 <TableHead className="px-2 sm:px-4 font-black uppercase text-center w-[70px] sm:w-[80px] sticky top-0 bg-slate-100 z-40 text-xs">
-                   Report
+                   Share
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPlayers.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-40 opacity-20 font-black uppercase text-xl sm:text-2xl tracking-[0.3em]">No registry entries</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-32 opacity-40 font-black uppercase text-base sm:text-lg">
+                    {filterTidOnly 
+                      ? "कोणताही राष्ट्रीय/राज्य गुणवत्ता खेळाडू सापडला नाही. आधी फिटनेस चाचणी नोंदवा." 
+                      : "No registry entries"}
+                  </TableCell>
+                </TableRow>
               ) : filteredPlayers.map((player: any) => {
                 const current = assessments[player.id] || store.data.fitness?.[player.id] || {};
                 const isPulse = lastSavedId === player.id;
                 const isSyncing = isSaving === player.id;
+                const tier = (current.kheloIndiaTier as TalentTier) || 'developing';
+                const tierInfo = TALENT_TIER_DETAILS[tier] || TALENT_TIER_DETAILS.developing;
+
                 return (
-                  <TableRow key={player.id} className={cn("border-b h-14 sm:h-20 transition-all", isPulse && "bg-emerald-50 animate-success-pulse", isSyncing && "bg-muted/50")}>
-                    <TableCell className="px-3 sm:px-10 font-black sticky left-0 bg-white z-20 uppercase text-xs border-r group-hover:bg-muted/5 transition-colors">
+                  <TableRow key={player.id} className={cn("border-b h-14 sm:h-18 transition-all", isPulse && "bg-emerald-50 animate-success-pulse", isSyncing && "bg-muted/50")}>
+                    <TableCell className="px-3 sm:px-8 font-black sticky left-0 bg-white z-20 uppercase text-xs border-r group-hover:bg-muted/5 transition-colors">
                       <div className="flex flex-col">
-                        <span className="text-primary leading-none truncate max-w-[130px] sm:max-w-[200px]">{localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}</span>
-                        <span className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-wider sm:tracking-widest">Roll #{player.serialNumber || '0'} &bull; Std {player.std}</span>
+                        <span className="text-primary leading-none truncate max-w-[130px] sm:max-w-[200px]">
+                          {localMarathiView ? (player.nameMarathi || transliterateEnglishToMarathi(player.name) || player.name) : player.name}
+                        </span>
+                        <span className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-wider">
+                          Roll #{player.serialNumber || '0'} &bull; Std {player.std} &bull; Age {player.age}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
-                    <TableCell className="p-0 border-r"><Input type="number" className="h-14 sm:h-20 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
-                    <TableCell className="p-3 sm:p-6 text-center bg-primary/5 border-r">
-                      <div className="flex flex-col items-center justify-center">
-                        <span className="text-lg sm:text-2xl font-black text-primary leading-none">{current.score || '0'}%</span>
-                        <Badge className={cn(
-                          "mt-1 sm:mt-2 text-[7px] sm:text-[8px] font-black uppercase border-0 px-2 sm:px-3",
-                          current.status === 'Elite' ? "bg-amber-400 text-white" : "bg-emerald-500 text-white"
-                        )}>{current.status || 'Active'}</Badge>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-18 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.shuttleRun || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'shuttleRun', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-14 sm:h-18 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.boardJump || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'boardJump', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-18 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.run50m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run50m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-18 text-center border-0 bg-transparent text-xs sm:text-sm focus:bg-white" value={current.run600m || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'run600m', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" step="0.1" className="h-14 sm:h-18 text-center border-0 bg-transparent text-xs sm:text-sm focus:bg-white" value={current.sitAndReach || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitAndReach', e.target.value)} /></TableCell>
+                    <TableCell className="p-0 border-r"><Input type="number" className="h-14 sm:h-18 text-center border-0 bg-transparent text-xs sm:text-sm font-black focus:bg-white" value={current.sitUps || ''} onBlur={() => handleAutoSave(player.id)} onChange={(e) => handleChange(player.id, 'sitUps', e.target.value)} /></TableCell>
+                    <TableCell className="p-2 sm:p-4 text-center bg-amber-500/5 border-r">
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="text-base sm:text-xl font-black text-primary leading-none">
+                          {current.score ? `${current.score}%` : '---'}
+                        </span>
+                        <Badge className={cn("text-[8px] sm:text-[9px] font-bold border px-2 py-0.5 whitespace-nowrap", tierInfo.colorClass)}>
+                          {tierInfo.badgeMr.split(' ')[0]} {tierInfo.badgeMr.split(' ')[1]}
+                        </Badge>
                       </div>
                     </TableCell>
                     <TableCell className="p-1 sm:p-2 text-center">
-                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 sm:h-12 sm:w-12 shadow-inner border border-transparent hover:border-emerald-100">
-                        <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppShare(player)} disabled={!player.mobileNumber} className="text-emerald-600 hover:bg-emerald-50 rounded-full h-8 w-8 sm:h-10 sm:w-10 shadow-inner border border-transparent hover:border-emerald-100">
+                        <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

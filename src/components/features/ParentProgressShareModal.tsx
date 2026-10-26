@@ -19,8 +19,12 @@ import {
   User, 
   Printer, 
   Shirt,
-  MessageSquare
+  MessageSquare,
+  Copy,
+  Phone,
+  Smartphone
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { cn, getAgeValidation, getOfficialSchoolName, getTeacherName, calculateBMI, transliterateEnglishToMarathi } from '@/lib/utils';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { TRIBAL_DEV_LOGO_B64, AMRIT_MAHOTSAV_LOGO_B64 } from '@/lib/headerLogos';
@@ -36,8 +40,10 @@ export function ParentProgressShareModal({
   store: any; 
   initialPlayerId?: string;
 }) {
+  const { toast } = useToast();
   const players = useMemo(() => store?.data?.players || [], [store?.data?.players]);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(initialPlayerId || players[0]?.id || '');
+  const [templateType, setTemplateType] = useState<'selection' | 'progress' | 'health'>('selection');
   const [customTeacherRemark, setCustomTeacherRemark] = useState<string>('खेळाडूची मैदानावरील उपस्थिती व सराव अत्यंत उत्तम आहे. आगामी क्रीडा स्पर्धेसाठी निवड योग्य.');
 
   const player = useMemo(() => {
@@ -58,15 +64,24 @@ export function ParentProgressShareModal({
   const position = player?.positions?.[mainSport] || 'खेळाडू';
   const marathiName = player?.nameMarathi || transliterateEnglishToMarathi(player?.name) || player?.name;
 
-  // Compute WhatsApp message
-  const whatsappText = useMemo(() => {
+  // Compute Parent Update message based on template
+  const parentMessageText = useMemo(() => {
     if (!player) return '';
 
-    return `*${schoolName}*\n*विद्यार्थी क्रीडा व शारीरिक प्रगती अहवाल (Sports & Fitness Report Card)*\n\n*विद्यार्थ्याचे नाव:* ${marathiName} (${player.name})\n*इयत्ता:* ${player.std} वी | *हजेरी क्रमांक/GR:* ${player.generalRegisterNumber || player.serialNumber || '-'}\n*वय / वयोगट:* ${ageVal?.ageYears || player.age} वर्षे (${ageVal?.category || player.ageCategory || 'U17'})\n------------------------------\n🏅 *क्रीडा प्रकार:* ${player.sports?.join(', ') || 'क्रीडा सराव'}\n🎽 *जर्सी क्रमांक:* #${jersey} | *स्थान / पोझिशन:* ${position}\n💪 *शारीरिक तंदुरुस्ती स्कोअर:* ${fitness.score}/100 [${fitness.status || 'Good'}]\n📏 *उंची / वजन / BMI:* ${player.height || '-'} cm | ${player.weight || '-'} kg | BMI: ${player.bmi || '-'}\n------------------------------\n📝 *क्रीडा शिक्षकांचा अभिप्राय:* ${customTeacherRemark}\n\n*क्रीडा शिक्षक:* ${teacherName}\n*वाघंबा स्पोर्ट्स हब डिजिटल प्रणाली*`;
-  }, [player, marathiName, ageVal, jersey, position, fitness, customTeacherRemark, schoolName, teacherName]);
+    if (templateType === 'selection') {
+      return `*${schoolName}*\n🏆 *शालेय क्रीडा स्पर्धा संघ निवड अभिनंदन पत्र*\n\nआदरणीय पालक,\nआपल्या पाल्याची (कु. *${marathiName}* - ${player.name}, इ. ${player.std} वी) शासकीय माध्यमिक आश्रम शाळा, वाघंबा तर्फे आगामी जिल्हास्तरीय (DSO) *${mainSport}* क्रीडा स्पर्धेसाठी (${ageVal?.category || 'U17'} वयोगट) शाळेच्या अधिकृत संघात निवड झाली आहे.\n\n🎽 *जर्सी क्रमांक:* #${jersey} | *पोझिशन:* ${position}\n\nसर्व सराव सत्रांना पाल्याने उपस्थित राहावे.\nअभिनंदन व हार्दिक शुभेच्छा!\n\n*क्रीडा शिक्षक:* ${teacherName}\n*शासकीय माध्यमिक आश्रम शाळा, वाघंबा*`;
+    }
+
+    if (templateType === 'health') {
+      return `*${schoolName}*\n🩺 *विद्यार्थी आरोग्य व प्रथमोपचार सूचना*\n\nआदरणीय पालक,\nआपला पाल्य (कु. *${marathiName}*, इ. ${player.std} वी) यास आज मैदानावर सराव दरम्यान हलकी दुखापत झाली. शाळेच्या आरोग्य कक्षात तातडीने प्रथमोपचार व आवश्यक काळजी घेण्यात आली असून काळजीचे कोणतेही कारण नाही.\n\n📝 *शिक्षकांचा सल्ला:* ${customTeacherRemark || '२ दिवस विश्रांती सुचवली आहे.'}\n\n*क्रीडा शिक्षक / आरोग्य कक्ष:* ${teacherName}`;
+    }
+
+    // Default: Progress Report
+    return `*${schoolName}*\n📊 *विद्यार्थी क्रीडा व शारीरिक प्रगती अहवाल (Sports Report)*\n\n*विद्यार्थ्याचे नाव:* ${marathiName} (${player.name})\n*इयत्ता:* ${player.std} वी | *हजेरी क्रमांक/GR:* ${player.generalRegisterNumber || player.serialNumber || '-'}\n*वय / वयोगट:* ${ageVal?.ageYears || player.age} वर्षे (${ageVal?.category || player.ageCategory || 'U17'})\n------------------------------\n🏅 *क्रीडा प्रकार:* ${player.sports?.join(', ') || 'क्रीडा सराव'}\n🎽 *जर्सी क्रमांक:* #${jersey} | *स्थान / पोझिशन:* ${position}\n💪 *शारीरिक तंदुरुस्ती स्कोअर:* ${fitness.score}/100 [${fitness.status || 'Good'}]\n📏 *उंची / वजन / BMI:* ${player.height || '-'} cm | ${player.weight || '-'} kg | BMI: ${player.bmi || '-'}\n------------------------------\n📝 *क्रीडा शिक्षकांचा अभिप्राय:* ${customTeacherRemark}\n\n*क्रीडा शिक्षक:* ${teacherName}\n*वाघंबा स्पोर्ट्स हब डिजिटल प्रणाली*`;
+  }, [player, marathiName, ageVal, jersey, position, fitness, customTeacherRemark, schoolName, teacherName, templateType, mainSport]);
 
   const handleSendWhatsApp = () => {
-    const encoded = encodeURIComponent(whatsappText);
+    const encoded = encodeURIComponent(parentMessageText);
     const mobile = (player?.mobileNumber || '').replace(/[^0-9]/g, '');
     const url = mobile.length === 10 
       ? `https://wa.me/91${mobile}?text=${encoded}` 
@@ -75,6 +90,24 @@ export function ParentProgressShareModal({
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
+  };
+
+  const handleSendSMS = () => {
+    const encoded = encodeURIComponent(parentMessageText);
+    const mobile = (player?.mobileNumber || '').replace(/[^0-9]/g, '');
+    const url = mobile.length === 10 ? `sms:${mobile}?body=${encoded}` : `sms:?body=${encoded}`;
+    if (typeof window !== 'undefined') {
+      window.location.href = url;
+    }
+  };
+
+  const handleCopyText = () => {
+    navigator.clipboard.writeText(parentMessageText);
+    toast({
+      title: "कॉपी झाले!",
+      description: "मराठी संदेश क्लिपबोर्डवर कॉपी झाला आहे.",
+      className: "bg-emerald-600 text-white font-bold"
+    });
   };
 
   const handlePrintCard = () => {
@@ -194,11 +227,53 @@ export function ParentProgressShareModal({
         <DialogHeader>
           <DialogTitle className="text-xl font-black text-primary uppercase flex items-center gap-2">
             <Share2 className="w-5 h-5 text-emerald-600" />
-            पालक WhatsApp प्रगती कार्ड (Parent Progress Share)
+            पालक संवाद व क्रीडा संदेश (Parent Communication Hub)
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 my-2 text-xs">
+          {/* Template Selector Pills */}
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700">संदेश प्रकार निवडा (Select Message Template):</label>
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted/60 rounded-xl border">
+              <button
+                type="button"
+                onClick={() => setTemplateType('selection')}
+                className={cn(
+                  "py-1.5 px-2 rounded-lg font-bold text-[10px] transition-all flex items-center justify-center gap-1",
+                  templateType === 'selection' 
+                    ? "bg-amber-500 text-slate-950 shadow-sm font-black" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Trophy className="w-3 h-3 text-amber-700" /> स्पर्धा निवड
+              </button>
+              <button
+                type="button"
+                onClick={() => setTemplateType('progress')}
+                className={cn(
+                  "py-1.5 px-2 rounded-lg font-bold text-[10px] transition-all flex items-center justify-center gap-1",
+                  templateType === 'progress' 
+                    ? "bg-emerald-600 text-white shadow-sm font-black" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Activity className="w-3 h-3 text-emerald-200" /> मासिक प्रगती
+              </button>
+              <button
+                type="button"
+                onClick={() => setTemplateType('health')}
+                className={cn(
+                  "py-1.5 px-2 rounded-lg font-bold text-[10px] transition-all flex items-center justify-center gap-1",
+                  templateType === 'health' 
+                    ? "bg-rose-600 text-white shadow-sm font-black" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <HeartPulse className="w-3 h-3 text-rose-200" /> आरोग्य सूचना
+              </button>
+            </div>
+          </div>
           {/* Player Selector */}
           <div className="space-y-1">
             <label className="font-bold text-slate-700">विद्यार्थी निवडा (Select Student)</label>
@@ -254,13 +329,22 @@ export function ParentProgressShareModal({
             </Card>
           )}
 
-          {/* WhatsApp Text Preview Box */}
+          {/* Message Text Preview Box */}
           <div className="space-y-1">
-            <label className="font-bold text-slate-700 flex items-center gap-1">
-              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> संदेश पूर्वावलोकन (WhatsApp Message Text)
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-700 flex items-center gap-1">
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> संदेश पूर्वावलोकन (Marathi Message Text)
+              </label>
+              <button
+                type="button"
+                onClick={handleCopyText}
+                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Copy className="w-3 h-3" /> कॉपी करा
+              </button>
+            </div>
             <div className="bg-slate-900 text-emerald-300 font-mono text-[11px] p-3.5 rounded-xl whitespace-pre-line max-h-44 overflow-y-auto leading-relaxed border border-slate-800">
-              {whatsappText}
+              {parentMessageText}
             </div>
           </div>
         </div>
@@ -273,11 +357,18 @@ export function ParentProgressShareModal({
           >
             <Printer className="w-4 h-4 mr-1.5" /> A5 कार्ड प्रिंट
           </Button>
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={onClose} className="rounded-xl text-xs">बंद करा</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSendSMS}
+              className="border-blue-400 text-blue-700 hover:bg-blue-50 font-bold text-xs rounded-xl h-11 px-3 gap-1.5"
+              title="साध्या फोनवर एसएमएस पाठवा"
+            >
+              <Smartphone className="w-3.5 h-3.5" /> SMS पाठवा
+            </Button>
             <Button
               onClick={handleSendWhatsApp}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-lg gap-2 h-11 px-6"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-lg gap-2 h-11 px-5"
             >
               <Send className="w-4 h-4" /> WhatsApp वर पाठवा
             </Button>

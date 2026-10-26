@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { cn, parseMedicalLog, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import { generateId } from '@/lib/id-generator';
+import { getAthleteRTPStatus, RTP_STAGES, type RTPStageDefinition } from '@/lib/returnToPlay';
 
 // ==========================================
 // 1. REALISTIC ANATOMICAL BODY REGIONS
@@ -842,6 +843,39 @@ COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\
     });
   };
 
+  // Advance 6-Stage Return-to-Play Progression
+  const handleAdvanceRTPStage = (incidentId: string, targetStage: number) => {
+    const target = (store.data.healthIncidents || []).find((h: any) => h.id === incidentId);
+    if (!target) return;
+
+    const newStage = Math.max(1, Math.min(6, targetStage));
+    const stageInfo = RTP_STAGES[newStage];
+    const isCleared = newStage === 6;
+
+    const updated = {
+      ...target,
+      rtpStage: newStage,
+      resolved: isCleared,
+      resolvedDate: isCleared ? format(new Date(), 'yyyy-MM-dd') : target.resolvedDate,
+      description: isCleared 
+        ? `${target.description}\n[RTP COMPLETE: Stage 6 - सामन्यात खेळण्यास अधिकृत मुभा]`
+        : `${target.description}\n[RTP PROGRESSION: ${stageInfo.nameMr} (${format(new Date(), 'dd/MM/yyyy')})]`
+    };
+
+    if (store.updateHealthIncident) {
+      store.updateHealthIncident(updated);
+    } else {
+      store.deleteHealthIncident(incidentId);
+      store.addHealthIncident(updated);
+    }
+
+    toast({
+      title: isCleared ? "✅ खेळण्यास अधिकृत मुभा (Fit to Play)" : `📈 पुनर्वसन टप्पा सुधारणा (${stageInfo.nameMr})`,
+      description: `${target.playerName} - ${stageInfo.objectiveMr}`,
+      className: isCleared ? "bg-emerald-600 text-white font-bold" : "bg-blue-600 text-white font-bold"
+    });
+  };
+
   // Print Official Medical Incident Report
   const handlePrint = () => {
     const isM = isMarathi;
@@ -1513,6 +1547,50 @@ COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\
                         <div className="bg-slate-50 p-2.5 rounded-xl border text-[11px] font-medium text-slate-800 space-y-1">
                           <p><strong>प्रथमोपचार:</strong> {parsed.protocol || parsed.medicine}</p>
                           <p className="text-[10px] text-muted-foreground"><strong>पुनरागमन:</strong> {parsed.expectedReturn}</p>
+                        </div>
+
+                        {/* 6-Stage Return-to-Play Protocol Stepper */}
+                        <div className="pt-1 border-t border-slate-100 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-black uppercase text-slate-700 flex items-center gap-1">
+                              <Activity className="w-3 h-3 text-primary" />
+                              {isMarathi ? "६-टप्पे पुनर्वसन प्रगती (RTP):" : "6-Stage Return-to-Play:"}
+                            </span>
+                            <Badge className={cn("text-[8px] font-bold py-0 px-1.5", isResolved ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800")}>
+                              {isResolved ? "टप्पा ६: मुभा (Fit)" : `टप्पा ${inc.rtpStage || (isCrit ? 1 : 2)}`}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-6 gap-1">
+                            {[1, 2, 3, 4, 5, 6].map((stg) => {
+                              const currStg = isResolved ? 6 : (inc.rtpStage || (isCrit ? 1 : 2));
+                              const isActive = currStg === stg;
+                              const isPast = currStg >= stg;
+                              return (
+                                <button
+                                  key={stg}
+                                  type="button"
+                                  onClick={() => handleAdvanceRTPStage(inc.id, stg)}
+                                  className={cn(
+                                    "h-6 rounded-md text-[9px] font-black transition-all flex items-center justify-center border",
+                                    isActive 
+                                      ? "bg-primary text-white border-primary shadow-sm ring-1 ring-primary/40"
+                                      : isPast 
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                        : "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100"
+                                  )}
+                                  title={`टप्पा ${stg}: ${RTP_STAGES[stg]?.nameMr}`}
+                                >
+                                  {stg === 6 ? '✓' : `T${stg}`}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <p className="text-[8.5px] text-muted-foreground font-medium truncate">
+                            {isResolved 
+                              ? "खेळाडू पूर्ण तंदुरुस्त असून सामन्यात खेळण्यास अधिकृत मुभा आहे."
+                              : `${RTP_STAGES[inc.rtpStage || (isCrit ? 1 : 2)]?.nameMr}: ${RTP_STAGES[inc.rtpStage || (isCrit ? 1 : 2)]?.objectiveMr}`}
+                          </p>
                         </div>
                       </Card>
                     );

@@ -46,12 +46,14 @@ import {
   Activity,
   FileSpreadsheet,
   Download,
-  ChevronDown
+  ChevronDown,
+  ShieldCheck
 } from 'lucide-react';
-import { transliterateEnglishToMarathi, getAgeValidation } from '@/lib/utils';
+import { transliterateEnglishToMarathi, getAgeValidation, getTeacherName } from '@/lib/utils';
 import { WAGHAMBA_STUDENTS_DATA, SchoolStudent } from '@/data/waghambaStudents';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
 import { DETAILED_SKILLS_DATA } from './SportsSkills';
+import { generateSgfiFormAHtml } from '@/lib/dsoFormAGenerator';
 import {
   exportSingleCategoryToExcel,
   exportGame12PlayersBoysGirlsExcel,
@@ -1653,6 +1655,36 @@ export function OfficialTournamentSheetModal({
     }
   };
 
+  // Print Official SGFI / DSO Form-A Player Eligibility Dossier
+  const handlePrintSgfiFormA = () => {
+    const schoolProfile = store?.data?.schoolProfile || store?.schoolProfile;
+    const printHtml = generateSgfiFormAHtml({
+      schoolName: schoolName || 'शासकीय माध्यमिक आश्रम शाळा वाघंबा',
+      departmentName: departmentName || 'आदिवासी विकास विभाग नाशिक',
+      projectName: projectName || 'एकात्मिक आदिवासी विकास प्रकल्प, कळवण',
+      taluka: schoolProfile?.taluka || 'बागलाण',
+      district: schoolProfile?.district || 'नाशिक',
+      uDise: schoolProfile?.uDise || '27020309801',
+      sportName: sportName || selectedSportKey,
+      ageCategoryLabel: customAgeGroup || '१४ वर्षाखालील',
+      academicYear: academicYear || '2026-27',
+      cutoffDate: `31/12/${academicYear.split('-')[0] || '2026'}`,
+      rows: activeRows,
+      teacherName: getTeacherName(schoolProfile) || 'क्रीडा शिक्षक',
+      headmasterName: schoolProfile?.headmasterName || 'मुख्याध्यापक'
+    });
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(printHtml);
+      win.document.close();
+      setTimeout(() => {
+        win.focus();
+        win.print();
+      }, 350);
+    }
+  };
+
   // Print ALL 6 Athletics Events together on a single consolidated printable sheet:
   // Javelin Throw, Disc Throw, Shot Put, Running, Long Jump, High Jump
   const handlePrintConsolidatedAthletics = () => {
@@ -3228,6 +3260,14 @@ export function OfficialTournamentSheetModal({
                 title="चालू खेळाचे १२ मुले व १२ मुली संघ प्रिंट करा"
               >
                 <Trophy className="w-4 h-4 text-amber-300" /> 👥 १२ खेळाडू (मुले व मुली)
+              </Button>
+
+              <Button
+                onClick={handlePrintSgfiFormA}
+                className="h-10 px-4 rounded-xl font-black text-xs uppercase tracking-wider bg-rose-700 hover:bg-rose-800 text-white shadow-md gap-1.5"
+                title="अधिकृत SGFI / DSO Form-A खेळाडू पात्रता पत्रक प्रिंट करा"
+              >
+                <ShieldCheck className="w-4 h-4 text-amber-300" /> 🏆 SGFI फॉर्म-अ (Form-A)
               </Button>
 
               <Button
