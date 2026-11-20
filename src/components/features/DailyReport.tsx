@@ -37,9 +37,11 @@ import {
   UserX,
   ZoomIn,
   Sun,
-  Moon
+  Moon,
+  Building2
 } from 'lucide-react';
 import { PracticePhotoViewer } from './PracticePhotoViewer';
+import { SchoolActivitiesDossierModal } from './SchoolActivitiesDossierModal';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn, parseMedicalLog, transliterateEnglishToMarathi } from '@/lib/utils';
@@ -56,6 +58,9 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
   // Absentee Modal State
   const [showAbsenteeModal, setShowAbsenteeModal] = useState(false);
   const [absentModalSession, setAbsentModalSession] = useState<'Morning' | 'Evening' | 'Both'>('Both');
+
+  // Official Office Submission Dossier Modal State
+  const [showDossierModal, setShowDossierModal] = useState(false);
 
   // Custom Quick Log state
   const [customSport, setCustomSport] = useState(preselectedSport || "Yoga");
@@ -883,12 +888,15 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
               />
             </div>
             
-            <div className="flex gap-2 self-stretch sm:self-end w-full sm:w-auto">
-              <Button onClick={handlePrint} className="flex-1 sm:flex-initial bg-primary hover:bg-primary/90 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-6">
-                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> प्रिंट / PDF
+            <div className="flex flex-wrap gap-2 self-stretch sm:self-end w-full sm:w-auto">
+              <Button onClick={() => setShowDossierModal(true)} className="flex-1 sm:flex-initial bg-indigo-700 hover:bg-indigo-800 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-5 border border-indigo-500">
+                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5 text-amber-300" /> कार्यालयीन अहवाल (Office Dossier)
               </Button>
-              <Button onClick={handleShareWhatsApp} className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-6">
-                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> शाळा ग्रुप
+              <Button onClick={handlePrint} className="flex-1 sm:flex-initial bg-primary hover:bg-primary/90 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-5">
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" /> प्रिंट / PDF
+              </Button>
+              <Button onClick={handleShareWhatsApp} className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-wider shadow-lg active-scale px-3 sm:px-5">
+                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" /> शाळा ग्रुप
               </Button>
             </div>
           </div>
@@ -1734,6 +1742,14 @@ export function DailyReport({ store, section, language = 'Marathi', preselectedS
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Official Comprehensive Office Submission Dossier Modal */}
+      <SchoolActivitiesDossierModal
+        isOpen={showDossierModal}
+        onClose={() => setShowDossierModal(false)}
+        store={store}
+        defaultDate={reportDate}
+      />
     </div>
   );
 }

@@ -47,7 +47,8 @@ import {
   Sun,
   Lock,
   Award,
-  Utensils
+  Utensils,
+  Building2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -727,6 +728,7 @@ export default function WaghambaApp() {
               {subTab === "list" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {[
+                      { id: "office-dossier", label: "Official Office Dossier", desc: "शासकीय कार्यालय अहवाल (Daily Reports, Photos and Medical)", icon: Building2, color: "bg-indigo-700" },
                       { id: "sports-certificates", label: "Sports Certificates", desc: "प्रावीण्य व सहभाग प्रमाणपत्रे प्रिंट करा", icon: Award, color: "bg-amber-600" },
                       { id: "sports-report-cards", label: "Sports Report Cards", desc: "वार्षिक क्रीडा प्रगती पुस्तक (A4 & WhatsApp)", icon: FileText, color: "bg-emerald-700" },
                       { id: "tournament-fixtures", label: "Tournament Fixtures", desc: "स्पर्धा वेळापत्रक, बाद फेरी व गुणतालिका", icon: Trophy, color: "bg-blue-700" },
@@ -780,7 +782,7 @@ export default function WaghambaApp() {
                     {subTab === "position-jersey" && <PlayerPositionJerseyManager store={schoolData} />}
                     {subTab === "scoreboard-module" && <MatchScoreboard store={schoolData} />}
                     {subTab === "icard-module" && <PlayerIDCardManager store={schoolData} section={selectedSection || 'general'} />}
-                    {subTab === "daily-report" && <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />}
+                    {(subTab === "daily-report" || subTab === "office-dossier") && <DailyReport store={schoolData} section={selectedSection || 'sports'} language={language} />}
                     {subTab === "classes" && <ClassesSection store={schoolData} language={language} />}
                     {subTab === "hall-of-fame" && <HallOfFame store={schoolData} />}
                     {subTab === "leaderboard" && <Gamification store={schoolData} />}

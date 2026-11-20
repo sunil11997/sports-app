@@ -8,14 +8,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Printer, 
-  Trash2
+  Trash2,
+  Building2,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { generateId } from '@/lib/id-generator';
+import { SchoolActivitiesDossierModal } from './SchoolActivitiesDossierModal';
 
 export function SchoolActivities({ store, section }: { store: any, section: 'sports' | 'general' }) {
   const { toast } = useToast();
+  const [showDossierModal, setShowDossierModal] = useState(false);
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [std, setStd] = useState("1");
   const [type, setType] = useState("Morning Drills");
@@ -113,7 +117,12 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
       </div>
 
       <div className="lg:col-span-2 space-y-6">
-        <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Institutional History</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 className="text-2xl font-black text-primary uppercase tracking-tight">Institutional History</h3>
+          <Button onClick={() => setShowDossierModal(true)} className="bg-indigo-700 hover:bg-indigo-800 text-white font-black text-xs uppercase h-10 px-4 rounded-xl shadow-md self-start sm:self-auto">
+            <Building2 className="w-4 h-4 mr-2 text-amber-300" /> कार्यालयीन अहवाल (Official Office Dossier)
+          </Button>
+        </div>
         {activitiesList.map((act: any) => (
           <Card key={act.id} className="border-2 rounded-[2rem] overflow-hidden bg-white shadow-lg group">
             <div className="p-8">
@@ -132,6 +141,13 @@ export function SchoolActivities({ store, section }: { store: any, section: 'spo
           </Card>
         ))}
       </div>
+
+      <SchoolActivitiesDossierModal
+        isOpen={showDossierModal}
+        onClose={() => setShowDossierModal(false)}
+        store={store}
+        defaultCategory={section}
+      />
     </div>
   );
 }

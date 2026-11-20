@@ -89,6 +89,35 @@ export async function getPhotosByDateFromIDB(date: string): Promise<GeoPhoto[]> 
   return result;
 }
 
+export async function getAllPhotosFromIDB(): Promise<GeoPhoto[]> {
+  const photosMap = new Map<string, GeoPhoto>();
+
+  try {
+    const db = await openDB();
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const idbPhotos = (req.result || []) as GeoPhoto[];
+        idbPhotos.forEach(p => photosMap.set(p.id, p));
+        resolve();
+      };
+      req.onerror = () => resolve();
+    });
+  } catch (err) {
+    console.warn('Failed to load all photos from IndexedDB:', err);
+  }
+
+  const result = Array.from(photosMap.values());
+  result.sort((a, b) => {
+    const dateComp = (b.date || '').localeCompare(a.date || '');
+    if (dateComp !== 0) return dateComp;
+    return (b.timestamp || b.id || '').localeCompare(a.timestamp || a.id || '');
+  });
+  return result;
+}
+
 export async function deletePhotoFromIDB(id: string, date: string): Promise<void> {
   // Clean up legacy localStorage if present
   if (typeof window !== 'undefined') {

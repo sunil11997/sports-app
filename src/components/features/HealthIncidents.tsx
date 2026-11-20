@@ -42,13 +42,15 @@ import {
   Search,
   Check,
   Edit3,
-  ExternalLink
+  ExternalLink,
+  Building2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { cn, parseMedicalLog, transliterateEnglishToMarathi, getOfficialSchoolName, getPrintSignatureBlockHtml } from '@/lib/utils';
 import { generateId } from '@/lib/id-generator';
 import { getAthleteRTPStatus, RTP_STAGES, type RTPStageDefinition } from '@/lib/returnToPlay';
+import { SchoolActivitiesDossierModal } from './SchoolActivitiesDossierModal';
 
 // ==========================================
 // 1. REALISTIC ANATOMICAL BODY REGIONS
@@ -661,6 +663,7 @@ export function HealthIncidents({
   const [bodyView, setBodyView] = useState<'front' | 'back'>('front');
   const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'active' | 'resolved'>('all');
   const [isMounted, setIsMounted] = useState(false);
+  const [showDossierModal, setShowDossierModal] = useState(false);
 
   // Lightbox / Modal
   const [viewingPhotoUrl, setViewingPhotoUrl] = useState<string | null>(null);
@@ -1003,7 +1006,13 @@ COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-3">
+        <div className="relative z-10 flex flex-wrap items-center gap-3">
+          <Button 
+            onClick={() => setShowDossierModal(true)}
+            className="bg-indigo-700 hover:bg-indigo-800 text-white font-black h-12 px-6 rounded-2xl uppercase text-xs tracking-wider shadow-xl active-scale border border-indigo-400"
+          >
+            <Building2 className="w-4 h-4 mr-2 text-amber-300" /> कार्यालयीन सर्व अहवाल (Official Dossier)
+          </Button>
           <Button 
             onClick={handlePrint}
             className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black h-12 px-6 rounded-2xl uppercase text-xs tracking-wider shadow-xl active-scale"
@@ -1686,6 +1695,14 @@ COACH REMARKS: ${description || 'Standard on-field record.'}${attachedPhoto ? `\
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Official Office Submission Dossier Modal */}
+      <SchoolActivitiesDossierModal
+        isOpen={showDossierModal}
+        onClose={() => setShowDossierModal(false)}
+        store={store}
+        defaultCategory={section}
+      />
 
     </div>
   );
