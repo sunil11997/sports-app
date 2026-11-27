@@ -42,6 +42,16 @@ const DEFAULT_LABELS = {
   swadhyay: 'SWAD',
 };
 
+const DEFAULT_LABELS_MR = {
+  nirikshan: 'निरीक्षण',
+  tondikam: 'तोंडी काम',
+  pratyashike: 'प्रात्यक्षिके',
+  upkram: 'उपक्रम',
+  prakalp: 'प्रकल्प',
+  chachani: 'चाचणी',
+  swadhyay: 'स्वाध्याय',
+};
+
 const STD10_PHYSICAL_LABELS = {
   nirikshan: '50M RUN',
   tondikam: '600M RUN',
@@ -50,6 +60,16 @@ const STD10_PHYSICAL_LABELS = {
   prakalp: 'YOGA / PT',
   chachani: 'PRACTICAL',
   swadhyay: 'ORAL / VIVA',
+};
+
+const STD10_PHYSICAL_LABELS_MR = {
+  nirikshan: '५० मी. धावणे',
+  tondikam: '६०० मी. धावणे',
+  pratyashike: 'लांब उडी',
+  upkram: 'गोळाफेक',
+  prakalp: 'योग / कवायत',
+  chachani: 'प्रात्यक्षिक',
+  swadhyay: 'तोंडी / तोंडओळख',
 };
 
 const ASSESSMENT_FIELDS = [
@@ -115,9 +135,19 @@ export function StandardRegistry({
 
   const currentLabels = useMemo(() => {
     const configId = `${std}_${activeTerm}`;
-    const baseDefaults = isStd10 ? STD10_PHYSICAL_LABELS : DEFAULT_LABELS;
-    return store.data.examConfigs[configId] || baseDefaults;
-  }, [store.data.examConfigs, std, activeTerm, isStd10]);
+    if (store.data.examConfigs[configId]) {
+      return store.data.examConfigs[configId];
+    }
+    if (isStd10) {
+      return isMarathiView ? STD10_PHYSICAL_LABELS_MR : STD10_PHYSICAL_LABELS;
+    }
+    return isMarathiView ? DEFAULT_LABELS_MR : DEFAULT_LABELS;
+  }, [store.data.examConfigs, std, activeTerm, isStd10, isMarathiView]);
+
+  const hasAnyMark = (id: string, recordOverride?: Record<string, any>) => {
+    const r = recordOverride || termRecords[id] || {};
+    return ASSESSMENT_FIELDS.some((f) => String(r[f] ?? '').trim() !== '');
+  };
 
   useEffect(() => {
     if (!store.isLoaded) return;
@@ -508,17 +538,23 @@ export function StandardRegistry({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl sm:text-3xl font-black text-primary uppercase tracking-tight">
-                {isStd10 ? 'Std 10 Physical Exam Test' : `Std ${std} Exam Hub`}
+                {isStd10
+                  ? isMarathiView
+                    ? 'इयत्ता १० वी शारीरिक शिक्षण परीक्षा'
+                    : 'Std 10 Physical Exam Test'
+                  : isMarathiView
+                    ? `इयत्ता ${std} वी परीक्षा विभाग`
+                    : `Std ${std} Exam Hub`}
               </h2>
               {isStd10 && (
                 <Badge className="bg-emerald-600 text-white font-black text-[10px] uppercase px-3 py-1 rounded-full">
-                  100 Marks • Auto-Grade
+                  {isMarathiView ? '१०० गुण • स्वयंचलित श्रेणी' : '100 Marks • Auto-Grade'}
                 </Badge>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-3 mt-1.5">
               <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 bg-primary/5">
-                Max {maxMarks} Marks
+                {isMarathiView ? `एकूण ${maxMarks} गुण` : `Max ${maxMarks} Marks`}
               </Badge>
               <button
                 onClick={() => {
@@ -527,7 +563,7 @@ export function StandardRegistry({
                 }}
                 className="text-[10px] font-black text-primary uppercase flex items-center gap-1 hover:underline bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10"
               >
-                <Settings2 className="w-3 h-3" /> Edit 7 Tabs
+                <Settings2 className="w-3 h-3" /> {isMarathiView ? '७ रकाने बदला' : 'Edit 7 Tabs'}
               </button>
               <div className="flex bg-muted/40 p-1 rounded-xl border">
                 <Button
@@ -565,14 +601,14 @@ export function StandardRegistry({
               onClick={() => setActiveTerm('First')}
               className="rounded-xl px-5 font-black uppercase text-xs shadow-none"
             >
-              First Term
+              {isMarathiView ? 'प्रथम सत्र' : 'First Term'}
             </Button>
             <Button
               variant={activeTerm === 'Second' ? 'default' : 'ghost'}
               onClick={() => setActiveTerm('Second')}
               className="rounded-xl px-5 font-black uppercase text-xs shadow-none"
             >
-              Second Term
+              {isMarathiView ? 'द्वितीय सत्र' : 'Second Term'}
             </Button>
           </div>
         </div>
@@ -587,7 +623,7 @@ export function StandardRegistry({
         >
           <Download className="w-4 h-4 text-emerald-700" />
           <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-          Export Exam Excel (.xlsx)
+          {isMarathiView ? 'एक्सेल डाउनलोड (.xlsx)' : 'Export Exam Excel (.xlsx)'}
         </Button>
 
         <Button
@@ -596,7 +632,7 @@ export function StandardRegistry({
           className="h-12 px-5 rounded-2xl border-2 border-blue-600/30 bg-blue-50 hover:bg-blue-100 text-blue-900 font-black uppercase text-xs tracking-wider flex items-center gap-2"
         >
           <Upload className="w-4 h-4 text-blue-700" />
-          Import Edited Excel
+          {isMarathiView ? 'एक्सेल अपलोड करा' : 'Import Edited Excel'}
         </Button>
         <input
           ref={excelInputRef}
@@ -612,14 +648,14 @@ export function StandardRegistry({
           className="h-12 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-xs tracking-wider shadow-md"
         >
           {isSavingAll ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-          Save All ({playersInStd.length})
+          {isMarathiView ? `सर्व जतन करा (${playersInStd.length})` : `Save All (${playersInStd.length})`}
         </Button>
 
         <Button
           onClick={handlePrintTerm}
           className="h-12 flex-1 min-w-[180px] rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase text-xs tracking-widest shadow-md active-scale"
         >
-          <Printer className="w-4 h-4 mr-2" /> Print Term Sheet
+          <Printer className="w-4 h-4 mr-2" /> {isMarathiView ? 'गुणपत्रक प्रिंट करा' : 'Print Term Sheet'}
         </Button>
       </div>
 
@@ -627,14 +663,14 @@ export function StandardRegistry({
         <Table className="min-w-max border-collapse">
           <TableHeader className="bg-muted/80 sticky top-0 z-20">
             <TableRow>
-              <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[220px] sticky left-0 bg-muted/95 z-30">
-                Student Name
+              <TableHead className="border-r h-14 px-4 font-black text-[10px] uppercase w-[230px] sticky left-0 bg-muted/95 z-30">
+                {isMarathiView ? 'विद्यार्थ्याचे नाव व श्रेणी' : 'Student Name & Live Grade'}
               </TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">
-                Ht (cm)
+                {isMarathiView ? 'उंची (cm)' : 'Ht (cm)'}
               </TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[70px]">
-                Wt (kg)
+                {isMarathiView ? 'वजन (kg)' : 'Wt (kg)'}
               </TableHead>
               {ASSESSMENT_FIELDS.map((field) => (
                 <TableHead
@@ -643,20 +679,20 @@ export function StandardRegistry({
                     setEditingLabels(currentLabels);
                     setIsLabelDialogOpen(true);
                   }}
-                  title="Click to rename tab"
-                  className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[80px] text-blue-700 cursor-pointer hover:bg-blue-50 transition-colors"
+                  title={isMarathiView ? 'नाव बदलण्यासाठी क्लिक करा' : 'Click to rename tab'}
+                  className="border-r h-14 px-2 font-black text-[9px] uppercase text-center w-[82px] text-blue-700 cursor-pointer hover:bg-blue-50 transition-colors"
                 >
                   {currentLabels[field]}
                 </TableHead>
               ))}
               <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[75px] bg-primary/10">
-                TOTAL /{maxMarks}
+                {isMarathiView ? `एकूण /${maxMarks}` : `TOTAL /${maxMarks}`}
               </TableHead>
               <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-emerald-50 text-emerald-800">
-                GRADE
+                {isMarathiView ? 'श्रेणी' : 'GRADE'}
               </TableHead>
               <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[100px] sticky right-0 bg-muted/95 z-30">
-                Actions
+                {isMarathiView ? 'कृती' : 'Actions'}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -664,21 +700,42 @@ export function StandardRegistry({
             {playersInStd.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={13} className="text-center py-20 font-black uppercase opacity-20">
-                  No matching entries found.
+                  {isMarathiView ? 'कोणताही विद्यार्थी सापडला नाही.' : 'No matching entries found.'}
                 </TableCell>
               </TableRow>
             ) : (
               playersInStd.map((p: any) => {
                 const r = termRecords[p.id] || {};
                 const total = calculateTotal(p.id);
-                const grade = getGrade(total);
+                const entered = hasAnyMark(p.id);
+                const grade = entered ? getGrade(total) : '---';
                 const dName = isMarathiView
                   ? p.nameMarathi || transliterateEnglishToMarathi(p.name) || p.name
                   : p.name;
                 return (
-                  <TableRow key={p.id} className="border-b h-14 group">
-                    <TableCell className="border-r p-2 text-xs font-black sticky left-0 bg-white z-10 truncate w-[220px]">
-                      {dName.toUpperCase()}
+                  <TableRow key={p.id} className="border-b h-16 group">
+                    <TableCell className="border-r px-3 py-1.5 sticky left-0 bg-white z-10 w-[230px]">
+                      <div className="text-xs font-black truncate max-w-[205px]">
+                        {dName.toUpperCase()}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] font-black text-primary">
+                          {total}/{maxMarks}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[9px] font-black px-1.5 py-0',
+                            !entered
+                              ? 'border-slate-200 text-slate-400'
+                              : isStd10 && total < 35
+                                ? 'border-destructive/40 text-destructive bg-destructive/5'
+                                : 'border-emerald-400 text-emerald-800 bg-emerald-50'
+                          )}
+                        >
+                          {grade}
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="border-r p-0">
                       <Input
@@ -764,23 +821,27 @@ export function StandardRegistry({
         <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
           <DialogHeader className="bg-primary p-7 text-white relative">
             <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-3 relative z-10">
-              <Settings2 className="w-6 h-6 text-accent" /> Edit 7 Assessment Tabs
+              <Settings2 className="w-6 h-6 text-accent" /> {isMarathiView ? '७ रकान्यांची नावे बदला' : 'Edit 7 Assessment Tabs'}
             </DialogTitle>
             <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em] relative z-10">
-              Standard {std} &bull; {activeTerm} Term {isStd10 ? '• Physical Exam (100 Marks)' : ''}
+              {isMarathiView ? `इयत्ता ${std} वी` : `Standard ${std}`} &bull;{' '}
+              {activeTerm === 'First' ? (isMarathiView ? 'प्रथम सत्र' : 'First Term') : isMarathiView ? 'द्वितीय सत्र' : 'Second Term'}{' '}
+              {isStd10 ? (isMarathiView ? '• शारीरिक परीक्षा (१०० गुण)' : '• Physical Exam (100 Marks)') : ''}
             </p>
           </DialogHeader>
 
           <div className="p-6 sm:p-7 space-y-4">
             <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
-              Customize the 7 editable test/assessment tab names for this standard. Excel exports will automatically use these names.
+              {isMarathiView
+                ? 'या इयत्तेसाठी ७ मूल्यमापन रकान्यांची नावे बदला. एक्सेल डाउनलोडमध्ये हीच नावे येतील.'
+                : 'Customize the 7 editable test/assessment tab names for this standard. Excel exports will automatically use these names.'}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {ASSESSMENT_FIELDS.map((field: AssessmentField, idx: number) => (
                 <div key={field} className="space-y-1">
                   <Label className="text-[9px] font-black uppercase text-primary ml-1 tracking-widest">
-                    Tab {idx + 1} ({field})
+                    {isMarathiView ? `रकाना ${idx + 1}` : `Tab ${idx + 1} (${field})`}
                   </Label>
                   <Input
                     value={editingLabels[field] || ''}
@@ -801,13 +862,13 @@ export function StandardRegistry({
               onClick={() => setIsLabelDialogOpen(false)}
               className="flex-1 font-black uppercase text-[10px] h-12 rounded-2xl"
             >
-              Discard
+              {isMarathiView ? 'रद्द करा' : 'Discard'}
             </Button>
             <Button
               onClick={handleSaveLabels}
               className="flex-1 bg-primary text-white h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active-scale"
             >
-              Save 7 Tabs
+              {isMarathiView ? '७ रकाने जतन करा' : 'Save 7 Tabs'}
             </Button>
           </DialogFooter>
         </DialogContent>

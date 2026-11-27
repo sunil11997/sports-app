@@ -33,6 +33,8 @@ export function ExamsHub({ store, language = 'English' }: { store: any, language
     });
   }, [classSummaries, showHigherStds]);
 
+  const isM = language === 'Marathi';
+
   if (selectedStd) {
     return (
       <div className="space-y-6">
@@ -41,7 +43,7 @@ export function ExamsHub({ store, language = 'English' }: { store: any, language
           onClick={() => setSelectedStd(null)}
           className="font-black uppercase text-xs tracking-widest text-primary hover:bg-primary/5 rounded-full px-6 h-10 border border-primary/10"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Exams Hub
+          <ArrowLeft className="w-4 h-4 mr-2" /> {isM ? 'परीक्षा केंद्राकडे परत' : 'Back to Exams Hub'}
         </Button>
         <StandardRegistry store={store} std={selectedStd} language={language} />
       </div>
@@ -55,9 +57,13 @@ export function ExamsHub({ store, language = 'English' }: { store: any, language
           <div className="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl border border-primary/10">
             <FileText className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-4xl font-black text-primary uppercase tracking-tight">Institutional Exam Hub</h2>
+          <h2 className="text-4xl font-black text-primary uppercase tracking-tight">
+            {isM ? 'शासकीय परीक्षा व गुणदान विभाग' : 'Institutional Exam Hub'}
+          </h2>
           <p className="text-lg font-medium text-muted-foreground max-w-2xl mx-auto">
-            Official term-wise result management and academic performance scoring for Standards 1-12.
+            {isM
+              ? 'इयत्ता १ ते १० वी साठी सत्रनिहाय गुणदान, इयत्ता १० वी १०० गुणांची शारीरिक शिक्षण परीक्षा व एक्सेल गुणपत्रक.'
+              : 'Official term-wise result management, Std 10 100-mark physical exam grading, and Excel marks sheets.'}
           </p>
         </div>
       </div>
