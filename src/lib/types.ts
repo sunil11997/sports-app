@@ -78,6 +78,9 @@ export interface Player {
   faceDescriptors?: number[][]; // Multiple enrolled face descriptors (optional)
   faceEnrolledAt?: string; // ISO date timestamp of face registration
   faceEnrolledPhotoUrl?: string; // Captured snapshot during face enrollment
+  status?: 'active' | 'tc_issued' | 'left' | 'alumni';
+  tcDate?: string;
+  tcReason?: string;
   schoolId?: string;
   ownerId?: string;
   createdAt?: string;

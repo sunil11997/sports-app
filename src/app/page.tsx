@@ -726,43 +726,105 @@ export default function WaghambaApp() {
 
             <TabsContent value="students" className="mt-0 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
               {subTab === "list" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {[
-                      { id: "office-dossier", label: "Official Office Dossier", desc: "शासकीय कार्यालय अहवाल (Daily Reports, Photos and Medical)", icon: Building2, color: "bg-indigo-700" },
-                      { id: "sports-certificates", label: "Sports Certificates", desc: "प्रावीण्य व सहभाग प्रमाणपत्रे प्रिंट करा", icon: Award, color: "bg-amber-600" },
-                      { id: "sports-report-cards", label: "Sports Report Cards", desc: "वार्षिक क्रीडा प्रगती पुस्तक (A4 & WhatsApp)", icon: FileText, color: "bg-emerald-700" },
-                      { id: "tournament-fixtures", label: "Tournament Fixtures", desc: "स्पर्धा वेळापत्रक, बाद फेरी व गुणतालिका", icon: Trophy, color: "bg-blue-700" },
-                      { id: "equipment-inventory", label: "Equipment & Kit Inventory", desc: "साहित्य नोंद, वाटप-जमा व वार्षिक मागणी", icon: Package, color: "bg-amber-700" },
-                      { id: "parent-share", label: "Parent WhatsApp Cards", desc: "पालक प्रगती व फिटनेस अहवाल पाठवा", icon: Share2, color: "bg-emerald-600" },
-                      { id: "eligibility-roster", label: "DSO Eligibility Roster", desc: "Age Cut-off & U14/U17/U19 Validator", icon: ShieldCheck, color: "bg-blue-800" },
-                      { id: "position-jersey", label: "Jersey & Position Chart", desc: "Tactical Indian Sports Tracker", icon: Shirt, color: "bg-emerald-700" },
-                      { id: "scoreboard-module", label: "Live Match Scoreboard", desc: "Digital Kabaddi, Volleyball & Kho-Kho Board", icon: Trophy, color: "bg-amber-500" },
-                      { id: "icard-module", label: "Official ID Cards", desc: "Player Identity & Printable Forms", icon: IdCard, color: "bg-blue-900" },
-                      { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
-                      { id: "classes", label: "Students Registry", desc: "Std-wise Profiles", icon: ClipboardList, color: "bg-blue-600" },
-                      { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
-                      { id: "leaderboard", label: "Monthly Medals", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
-                      { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
-                      { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
-                      { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
-                      { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
-                      { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
-                      { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
-                      { id: "promotion", label: "Standard Promotion", desc: "Move students forward", icon: CircleArrowUp, color: "bg-rose-500" },
-                    ].map(item => (
-                      <Card key={item.id} onClick={() => {
-                        if (item.id === "icard-module") setActiveTab("icard");
-                        else if (item.id === "parent-share") setIsParentShareOpen(true);
-                        else setSubTab(item.id);
-                      }} className="border-2 rounded-2xl sm:rounded-[2.5rem] p-5 sm:p-8 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-md hover:shadow-xl bg-white relative overflow-hidden">
-                        <div className={cn("w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 text-white shadow-md", item.color)}>
-                          <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
-                        </div>
-                        <h3 className="text-base sm:text-xl font-black text-primary uppercase tracking-tight">{item.label}</h3>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-wider">{item.desc}</p>
-                        <ChevronRight className="absolute bottom-5 right-5 sm:bottom-8 sm:right-8 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
-                      </Card>
-                    ))}
+                <div className="space-y-8">
+                  {/* Pinned Daily Actions */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest text-primary">
+                        Pinned Daily Actions
+                      </h3>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                        Quick Access
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {[
+                        { id: "classes", label: "Students Registry", desc: "Std-wise Profiles & Marks", icon: ClipboardList, color: "bg-blue-600" },
+                        { id: "attendance", label: "Attendance Registry", desc: "Daily Presence Tracking", icon: CalendarDays, color: "bg-blue-500" },
+                        { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
+                        { id: "promotion", label: "Standard Promotion", desc: "Move Students & Archive TC", icon: CircleArrowUp, color: "bg-rose-500" },
+                      ].map(item => (
+                        <Card key={`pinned-${item.id}`} onClick={() => setSubTab(item.id)} className="border-2 border-primary/20 rounded-2xl p-4 sm:p-5 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-md hover:shadow-xl bg-gradient-to-br from-white to-primary/5 relative overflow-hidden">
+                          <div className="flex items-center gap-3.5">
+                            <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-md shrink-0", item.color)}>
+                              <item.icon className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-sm sm:text-base font-black text-primary uppercase tracking-tight truncate">{item.label}</h4>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">{item.desc}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Grouped Module Sections */}
+                  {[
+                    {
+                      title: "Core Registry & Admin",
+                      items: [
+                        { id: "classes", label: "Students Registry", desc: "Std-wise Profiles & Exam Marks", icon: ClipboardList, color: "bg-blue-600" },
+                        { id: "promotion", label: "Standard Promotion", desc: "Move students forward / TC", icon: CircleArrowUp, color: "bg-rose-500" },
+                        { id: "icard-module", label: "Official ID Cards", desc: "Player Identity & Printable Forms", icon: IdCard, color: "bg-blue-900" },
+                        { id: "parent-share", label: "Parent WhatsApp Cards", desc: "पालक प्रगती व फिटनेस अहवाल पाठवा", icon: Share2, color: "bg-emerald-600" },
+                      ],
+                    },
+                    {
+                      title: "Health & Attendance",
+                      items: [
+                        { id: "attendance", label: "Attendance Registry", desc: "Presence tracking", icon: CalendarDays, color: "bg-blue-500" },
+                        { id: "fitness", label: "Fitness Evaluations", desc: "Physical test scores", icon: Activity, color: "bg-emerald-500" },
+                        { id: "exams", label: "Institutional Exams", desc: "Term-wise grading", icon: FileText, color: "bg-amber-500" },
+                        { id: "monthly-progress", label: "Monthly Progress", desc: "Athletic Metrics Registry", icon: TrendingUp, color: "bg-emerald-600" },
+                        { id: "ai", label: "AI Coaching Hub", desc: "Predictive Analytics", icon: BrainCircuit, color: "bg-purple-600" },
+                      ],
+                    },
+                    {
+                      title: "Sports & Tournaments",
+                      items: [
+                        { id: "tournament-fixtures", label: "Tournament Fixtures", desc: "स्पर्धा वेळापत्रक, बाद फेरी व गुणतालिका", icon: Trophy, color: "bg-blue-700" },
+                        { id: "eligibility-roster", label: "DSO Eligibility Roster", desc: "Age Cut-off & U14/U17/U19 Validator", icon: ShieldCheck, color: "bg-blue-800" },
+                        { id: "position-jersey", label: "Jersey & Position Chart", desc: "Tactical Indian Sports Tracker", icon: Shirt, color: "bg-emerald-700" },
+                        { id: "scoreboard-module", label: "Live Match Scoreboard", desc: "Digital Kabaddi, Volleyball & Kho-Kho Board", icon: Trophy, color: "bg-amber-500" },
+                        { id: "equipment-inventory", label: "Equipment & Kit Inventory", desc: "साहित्य नोंद, वाटप-जमा व वार्षिक मागणी", icon: Package, color: "bg-amber-700" },
+                      ],
+                    },
+                    {
+                      title: "Certificates & Reports",
+                      items: [
+                        { id: "office-dossier", label: "Official Office Dossier", desc: "शासकीय कार्यालय अहवाल (Daily Reports, Photos and Medical)", icon: Building2, color: "bg-indigo-700" },
+                        { id: "daily-report", label: "Daily Activity Report", desc: "Yoga, PT Mass & Drills Log", icon: FileText, color: "bg-amber-600" },
+                        { id: "sports-certificates", label: "Sports Certificates", desc: "प्रावीण्य व सहभाग प्रमाणपत्रे प्रिंट करा", icon: Award, color: "bg-amber-600" },
+                        { id: "sports-report-cards", label: "Sports Report Cards", desc: "वार्षिक क्रीडा प्रगती पुस्तक (A4 & WhatsApp)", icon: FileText, color: "bg-emerald-700" },
+                        { id: "hall-of-fame", label: "Hall of Fame", desc: "Top 5 Per Class", icon: Crown, color: "bg-amber-600" },
+                        { id: "leaderboard", label: "Monthly Medals", desc: "Digital Appreciation", icon: Medal, color: "bg-amber-500" },
+                        { id: "performance", label: "History Dossier", desc: "Consolidated Records", icon: History, color: "bg-indigo-500" },
+                      ],
+                    },
+                  ].map((group) => (
+                    <div key={group.title} className="space-y-3">
+                      <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest text-muted-foreground px-1 border-b border-primary/10 pb-2">
+                        {group.title}
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        {group.items.map(item => (
+                          <Card key={item.id} onClick={() => {
+                            if (item.id === "icard-module") setActiveTab("icard");
+                            else if (item.id === "parent-share") setIsParentShareOpen(true);
+                            else setSubTab(item.id);
+                          }} className="border-2 rounded-2xl sm:rounded-[2.5rem] p-5 sm:p-7 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-md hover:shadow-xl bg-white relative overflow-hidden">
+                            <div className={cn("w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 text-white shadow-md", item.color)}>
+                              <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
+                            </div>
+                            <h4 className="text-base sm:text-lg font-black text-primary uppercase tracking-tight">{item.label}</h4>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-wider">{item.desc}</p>
+                            <ChevronRight className="absolute bottom-5 right-5 sm:bottom-7 sm:right-7 text-primary/20 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="space-y-6">

@@ -41,6 +41,9 @@ import {
   User,
   Loader2,
   CheckCircle2,
+  Archive,
+  RotateCcw,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -53,6 +56,14 @@ import { cn, getAgeValidation, getLocalizedAgeCategory, calculateBMI, transliter
 import type { Player } from '@/lib/types';
 import { PlayerIdentityModal } from '@/components/features/PlayerIdentityModal';
 import { StudentPdfAutoSuggest } from '@/components/features/StudentPdfAutoSuggest';
+import { StudentExcelModal } from '@/components/features/StudentExcelModal';
+import {
+  type StudentAuditFilter,
+  matchesAuditFilter,
+  getAuditCounts,
+  findDuplicateStudentIds,
+  isPlayerArchived,
+} from '@/lib/student-audit-utils';
 import { correctMarathiFullName } from '@/lib/marathiNameHelper';
 import type { SchoolStudent } from '@/data/waghambaStudents';
 import { generateId } from '@/lib/id-generator';
@@ -100,6 +111,8 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const [selectedIdentityPlayer, setSelectedIdentityPlayer] = useState<Player | null>(null);
   const [isMarathiView, setIsMarathiView] = useState(language === 'Marathi');
   const [searchTerm, setSearchTerm] = useState("");
+  const [auditFilter, setAuditFilter] = useState<StudentAuditFilter>('all');
+  const [isExcelOpen, setIsExcelOpen] = useState(false);
 
   // Direct Add & Quick Entry Modal States
   const [isDirectAddOpen, setIsDirectAddOpen] = useState(false);
@@ -141,20 +154,28 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     setIsMarathiView(language === 'Marathi');
   }, [language]);
 
+  const stdPlayers = useMemo(() => {
+    return (store.data.players || []).filter((p: any) => p.std === std);
+  }, [store.data.players, std]);
+
+  const auditCounts = useMemo(() => getAuditCounts(stdPlayers), [stdPlayers]);
+
   const students = useMemo(() => {
-    return [...(store.data.players || [])]
-      .filter((p: any) => p.std === std)
+    return [...stdPlayers]
+      .filter((p: any) => matchesAuditFilter(p, auditFilter))
       .filter((p: any) => {
         const query = searchTerm.toLowerCase();
         return (p.name || "").toLowerCase().includes(query) || 
                (p.nameMarathi || "").includes(searchTerm) ||
-               (p.generalRegisterNumber || "").includes(searchTerm);
+               (p.generalRegisterNumber || "").includes(searchTerm) ||
+               (p.saralId || "").toLowerCase().includes(query) ||
+               (p.apaarId || "").toLowerCase().includes(query);
       })
       .sort((a: any, b: any) => {
         if (a.gender !== b.gender) return a.gender === 'Male' ? -1 : 1;
         return (parseInt(a.serialNumber) || 0) - (parseInt(b.serialNumber) || 0);
       });
-  }, [store.data.players, std, searchTerm]);
+  }, [stdPlayers, auditFilter, searchTerm]);
 
   const getBmiStatus = (bmi: number) => {
     if (bmi < 18.5) return { en: "Underweight", mr: "कमी वजन" };
@@ -250,6 +271,18 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
         ageDetailed: ageValidation ? ageValidation.ageString : "",
       };
 
+      const duplicates = findDuplicateStudentIds(store?.data?.players || [], updatedPlayer, updatedPlayer.id);
+      if (duplicates.length > 0) {
+        const first = duplicates[0];
+        toast({
+          title: isMarathiView ? `दुहेरी ${first.field} आढळला` : `Duplicate ${first.field} Detected`,
+          description: `${first.value} is already assigned to ${first.existingName} (Std ${first.existingStd}).`,
+          variant: "destructive"
+        });
+        setIsUpdatingPlayer(false);
+        return;
+      }
+
       if (store?.updatePlayer) {
         await store.updatePlayer(updatedPlayer);
       }
@@ -275,6 +308,22 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
     }
   };
 
+  const handleArchivePlayer = (player: Player) => {
+    const archived = isPlayerArchived(player);
+    if (archived) {
+      store.updatePlayer({ ...player, status: 'active', tcDate: '', tcReason: '' });
+      toast({ title: isMarathiView ? "विद्यार्थी पुन्हा सक्रिय केला" : "Student Restored", className: "bg-emerald-600 text-white font-bold" });
+      return;
+    }
+    const msg = isMarathiView
+      ? `${player.nameMarathi || player.name} ला "शाळा सोडली / TC" म्हणून संग्रहित करायचे का?`
+      : `Archive ${player.name} as Left School / TC Issued? (Preserves G.R. history)`;
+    if (confirm(msg)) {
+      store.updatePlayer({ ...player, status: 'tc_issued', tcDate: new Date().toISOString().slice(0, 10) });
+      toast({ title: isMarathiView ? "TC / शाळा सोडली नोंद झाली" : "Student Archived (TC Issued)" });
+    }
+  };
+
   const handleDeletePlayer = (playerId: string) => {
     if (confirm("Are you sure you want to PERMANENTLY DELETE this student from the institutional registry?")) {
       store.deletePlayer(playerId);
@@ -285,6 +334,16 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
   const handleDirectAddStudent = async () => {
     if (!newStudentData.name && !newStudentData.nameMarathi) {
       toast({ title: isMarathiView ? "नाव टाका" : "Name Required", description: "कृपया विद्यार्थ्यांचे नाव टाका.", variant: "destructive" });
+      return;
+    }
+    const duplicates = findDuplicateStudentIds(store?.data?.players || [], newStudentData);
+    if (duplicates.length > 0) {
+      const first = duplicates[0];
+      toast({
+        title: isMarathiView ? `दुहेरी ${first.field} आढळला` : `Duplicate ${first.field} Detected`,
+        description: `${first.value} is already assigned to ${first.existingName} (Std ${first.existingStd}).`,
+        variant: "destructive"
+      });
       return;
     }
     const ageVal = getAgeValidation(newStudentData.dob);
@@ -597,7 +656,46 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
            <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-5 font-black uppercase text-[11px] shadow-lg active-scale flex items-center gap-1.5">
              <Printer className="w-4 h-4" /> {isMarathiView ? 'प्रिंट' : 'Print Roster'}
            </Button>
+           <Button onClick={() => setIsExcelOpen(true)} variant="outline" className="border-2 border-emerald-600/30 text-emerald-800 hover:bg-emerald-50 rounded-xl h-11 px-4 font-black uppercase text-[11px] shadow-sm active-scale flex items-center gap-1.5">
+             <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Excel / CSV
+           </Button>
         </div>
+      </div>
+
+      {/* Data Completeness & Audit Filter Chips */}
+      <div className="flex flex-wrap items-center gap-2 px-1">
+        {([
+          { id: 'all', label: isMarathiView ? 'सर्व सक्रिय' : 'All Active', count: auditCounts.active },
+          { id: 'boys', label: isMarathiView ? 'मुले' : 'Boys', count: auditCounts.boys },
+          { id: 'girls', label: isMarathiView ? 'मुली' : 'Girls', count: auditCounts.girls },
+          { id: 'missing-apaar', label: 'Missing APAAR', count: auditCounts.missingApaar, alert: auditCounts.missingApaar > 0 },
+          { id: 'missing-pen-saral', label: 'Missing PEN/Saral', count: auditCounts.missingPenSaral, alert: auditCounts.missingPenSaral > 0 },
+          { id: 'missing-photo', label: 'Missing Photo', count: auditCounts.missingPhoto, alert: auditCounts.missingPhoto > 0 },
+          { id: 'missing-dob', label: 'Missing DOB', count: auditCounts.missingDob, alert: auditCounts.missingDob > 0 },
+          { id: 'archived', label: 'TC / Left', count: auditCounts.archived },
+        ] as Array<{ id: StudentAuditFilter; label: string; count: number; alert?: boolean }>).map((chip) => {
+          const active = auditFilter === chip.id;
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              onClick={() => setAuditFilter(chip.id)}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider border transition-all flex items-center gap-1.5',
+                active
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : chip.alert
+                    ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-primary/40'
+              )}
+            >
+              <span>{chip.label}</span>
+              <span className={cn('px-1.5 py-0.5 rounded-full text-[10px]', active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700')}>
+                {chip.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="border-2 rounded-[2.5rem] overflow-hidden bg-white shadow-xl overflow-x-auto scrollbar-hide">
@@ -706,6 +804,15 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
                         </Button>
                         <Button variant="ghost" size="icon" className="rounded-full text-primary h-9 w-9" onClick={() => setEditingPlayer(student)}>
                           <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full text-amber-600 hover:bg-amber-50 h-9 w-9"
+                          onClick={() => handleArchivePlayer(student)}
+                          title={isPlayerArchived(student) ? "Restore Student" : "Archive (TC / Left School)"}
+                        >
+                          {isPlayerArchived(student) ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
                         </Button>
                         <Button variant="ghost" size="icon" className="rounded-full text-destructive h-9 w-9" onClick={() => handleDeletePlayer(student.id)}>
                           <Trash2 className="w-4 h-4" />
@@ -1639,6 +1746,13 @@ export function StandardClassView({ store, std, language = 'English' }: { store:
           onClose={() => setSelectedIdentityPlayer(null)}
         />
       )}
+
+      <StudentExcelModal
+        isOpen={isExcelOpen}
+        onClose={() => setIsExcelOpen(false)}
+        store={store}
+        defaultStd={std}
+      />
     </div>
   );
 }

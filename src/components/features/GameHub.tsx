@@ -1,13 +1,20 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { 
-  Trophy, 
-  Target, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Trophy,
+  Target,
   ArrowLeft,
   ChevronRight,
   ShieldCheck,
@@ -22,15 +29,14 @@ import {
   Layout,
   Star,
   Users,
-  CalendarDays,
   Sparkles,
-  Contact,
   FileBadge,
   BookOpen,
   Shirt,
   Package,
   Award,
-  FileText
+  FileText,
+  MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlayerIDCardManager } from './PlayerIDCardManager';
@@ -53,6 +59,9 @@ import { EquipmentInventoryHub } from './EquipmentInventoryHub';
 import { SportsCertificateGenerator } from './SportsCertificateGenerator';
 import { StudentSportsReportCard } from './StudentSportsReportCard';
 import { TournamentFixturesHub } from './TournamentFixturesHub';
+import { DailyPracticePlanner } from './DailyPracticePlanner';
+import { AutoPracticePlanner } from './AutoPracticePlanner';
+import { Attendance } from './Attendance';
 
 const GAMES = [
   { id: 'Yoga', label: 'Yoga & Pranayama', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -70,13 +79,63 @@ const GAMES = [
   { id: 'High Jump', label: 'High Jump', icon: Medal, color: 'text-amber-600', bg: 'bg-amber-50' },
 ];
 
+const TEAM_SPORTS = new Set(['Kabaddi', 'Volleyball', 'Handball', 'Kho Kho']);
+
+function SubViewSwitcher({
+  options,
+  active,
+  onChange,
+}: {
+  options: Array<{ id: string; label: string; icon?: React.ComponentType<{ className?: string }> }>;
+  active: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-primary/10 shadow-sm mb-4">
+      {options.map((opt) => {
+        const Icon = opt.icon;
+        const isActive = active === opt.id;
+        return (
+          <Button
+            key={opt.id}
+            type="button"
+            variant={isActive ? 'default' : 'ghost'}
+            onClick={() => onChange(opt.id)}
+            className={cn(
+              'h-9 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-1.5',
+              isActive ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:bg-primary/5'
+            )}
+          >
+            {Icon && <Icon className="w-3.5 h-3.5" />}
+            {opt.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function GameHub({ store }: { store: any }) {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('squad');
+  const [squadSub, setSquadSub] = useState<string>('eligibility');
+  const [practiceSub, setPracticeSub] = useState<string>('daily-practice');
+  const [matchSub, setMatchSub] = useState<string>('fixtures');
+  const [certSub, setCertSub] = useState<string>('certificates');
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleSelectGame = (gameId: string) => {
+    setSelectedGame(gameId);
+    setActiveTab('squad');
+    setSquadSub('eligibility');
+    setPracticeSub('daily-practice');
+    setMatchSub('fixtures');
+    setCertSub('certificates');
+  };
 
   if (!isMounted) return null;
 
@@ -84,8 +143,8 @@ export function GameHub({ store }: { store: any }) {
   if (selectedGame === 'Yoga' || selectedGame === 'PT Mass') {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-        <button 
-          onClick={() => setSelectedGame(null)} 
+        <button
+          onClick={() => setSelectedGame(null)}
           className="flex items-center gap-2 font-black text-xs uppercase text-primary hover:bg-primary/10 px-5 py-2.5 rounded-xl border-2 transition-all w-fit bg-white shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" /> मुख्य क्रीडा सूची (Back to All Games)
@@ -96,140 +155,190 @@ export function GameHub({ store }: { store: any }) {
   }
 
   if (selectedGame) {
+    const isTeamSport = TEAM_SPORTS.has(selectedGame);
+
+    const squadOptions = [
+      { id: 'eligibility', label: 'DSO Eligibility', icon: ShieldCheck },
+      { id: 'tournament', label: 'Tournament Squad', icon: Trophy },
+      ...(isTeamSport
+        ? [
+            { id: 'teams', label: 'Team Builder', icon: Users },
+            { id: 'jerseys', label: 'Jersey & Positions', icon: Shirt },
+          ]
+        : []),
+      { id: 'id-cards', label: 'ID Cards', icon: FileBadge },
+    ];
+
+    const practiceOptions = [
+      { id: 'daily-practice', label: 'Ground Practice Log', icon: Activity },
+      { id: 'auto-practice', label: 'Auto Ground Planner', icon: Sparkles },
+      { id: 'attendance', label: 'Ground Attendance', icon: ShieldCheck },
+      { id: 'drills', label: 'Drills (सराव प्रकार)', icon: Zap },
+      { id: 'skills', label: 'Practice Skills', icon: Target },
+      { id: 'library', label: 'Rules & Library (नियम व PDF)', icon: BookOpen },
+    ];
+
+    const matchOptions = [
+      { id: 'fixtures', label: 'Fixtures & Standings', icon: Trophy },
+      ...(isTeamSport ? [{ id: 'scoreboard', label: 'Live Scoreboard', icon: Activity }] : []),
+    ];
+
+    const certOptions = [
+      { id: 'certificates', label: 'Certificates (प्रमाणपत्रे)', icon: Award },
+      { id: 'report-cards', label: 'Report Card (प्रगती पुस्तक)', icon: FileText },
+      { id: 'reports', label: 'Daily Report (दैनिक अहवाल)', icon: Activity },
+    ];
+
     return (
-      <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-6 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 border-primary/10 shadow-sm">
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
+        {/* Sport Header */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 border-primary/10 shadow-sm">
           <div className="flex items-center gap-3 sm:gap-4">
-            <button 
-              onClick={() => setSelectedGame(null)} 
+            <button
+              onClick={() => setSelectedGame(null)}
               className="rounded-full h-10 w-10 sm:h-12 sm:w-12 hover:bg-primary/5 text-primary flex items-center justify-center shrink-0"
+              title="Back to All Games"
             >
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="h-8 sm:h-10 w-px bg-muted mx-1 sm:mx-2" />
+            <div className="h-8 sm:h-10 w-px bg-muted mx-1" />
             <div>
-              <h2 className="text-xl sm:text-3xl font-black text-primary uppercase tracking-tight leading-none">{selectedGame} Hub</h2>
-              <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider sm:tracking-[0.2em] mt-1 sm:mt-2">Institutional Sports Registry</p>
+              <h2 className="text-xl sm:text-3xl font-black text-primary uppercase tracking-tight leading-none">
+                {selectedGame} Hub
+              </h2>
+              <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5">
+                {isTeamSport ? 'Team Sport • Ashram Shala Sports Deck' : 'Individual Track & Field • Ashram Shala Sports Deck'}
+              </p>
             </div>
           </div>
+
           <div className="flex items-center gap-2 self-start md:self-center">
-            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
-            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-700 tracking-wider sm:tracking-widest bg-emerald-50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">Pro Coaching Active</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-10 px-4 rounded-xl border-2 font-black text-xs uppercase tracking-wider flex items-center gap-2"
+                >
+                  <MoreHorizontal className="w-4 h-4" /> More / Pro Tools
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5">
+                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Optional Coaching Tools
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('readiness')} className="rounded-xl font-bold text-xs cursor-pointer">
+                  <HeartPulse className="w-4 h-4 mr-2 text-emerald-600" /> Daily Readiness
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('goals')} className="rounded-xl font-bold text-xs cursor-pointer">
+                  <Target className="w-4 h-4 mr-2 text-amber-600" /> Targets & Goals
+                </DropdownMenuItem>
+                {isTeamSport && (
+                  <>
+                    <DropdownMenuItem onClick={() => setActiveTab('playbook')} className="rounded-xl font-bold text-xs cursor-pointer">
+                      <Layout className="w-4 h-4 mr-2 text-blue-600" /> Tactical Playbook
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab('tactics')} className="rounded-xl font-bold text-xs cursor-pointer">
+                      <BrainCircuit className="w-4 h-4 mr-2 text-purple-600" /> Match Decisions
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem onClick={() => setActiveTab('equipment')} className="rounded-xl font-bold text-xs cursor-pointer">
+                  <Package className="w-4 h-4 mr-2 text-amber-700" /> Equipment Inventory
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        <Tabs defaultValue="readiness" className="space-y-6 sm:space-y-8">
-          <div className="w-full overflow-x-auto scrollbar-hide pb-2">
-            <TabsList className="bg-muted/40 p-1 sm:p-1.5 rounded-full border border-border/60 flex items-center w-max min-w-full sm:min-w-0">
-              <TabsTrigger value="certificates" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-400/40 shadow-sm">
-                <Award className="w-3.5 h-3.5 text-amber-300" /> Certificates (प्रमाणपत्रे)
+        {/* 5 Practical Core Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="w-full overflow-x-auto scrollbar-hide pb-1">
+            <TabsList className="bg-muted/40 p-1.5 rounded-2xl border border-border/60 flex items-center w-max min-w-full sm:min-w-0 gap-1">
+              <TabsTrigger
+                value="squad"
+                className="rounded-xl px-4 sm:px-6 py-2.5 font-black uppercase text-[10px] sm:text-xs tracking-wider data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-4 h-4" /> Squad & DSO Roster
               </TabsTrigger>
-              <TabsTrigger value="report-cards" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-emerald-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-emerald-400/40 shadow-sm">
-                <FileText className="w-3.5 h-3.5 text-emerald-300" /> Report Card (क्रीडा प्रगती पुस्तक)
+              <TabsTrigger
+                value="practice"
+                className="rounded-xl px-4 sm:px-6 py-2.5 font-black uppercase text-[10px] sm:text-xs tracking-wider data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5"
+              >
+                <Zap className="w-4 h-4" /> Practice & Drills
               </TabsTrigger>
-              <TabsTrigger value="fixtures" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-blue-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-blue-400/40 shadow-sm">
-                <Trophy className="w-3.5 h-3.5 text-amber-300" /> Fixtures & Standings (वेळापत्रक व गुणतालिका)
+              <TabsTrigger
+                value="matches"
+                className="rounded-xl px-4 sm:px-6 py-2.5 font-black uppercase text-[10px] sm:text-xs tracking-wider data-[state=active]:bg-blue-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5"
+              >
+                <Trophy className="w-4 h-4" /> Matches & Scoreboard
               </TabsTrigger>
-              <TabsTrigger value="equipment" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-500/40 shadow-sm">
-                <Package className="w-3.5 h-3.5 text-amber-400" /> Equipment (साहित्य नोंद)
+              <TabsTrigger
+                value="injury"
+                className="rounded-xl px-4 sm:px-6 py-2.5 font-black uppercase text-[10px] sm:text-xs tracking-wider data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5"
+              >
+                <ShieldAlert className="w-4 h-4" /> Injury Hub
               </TabsTrigger>
-              <TabsTrigger value="eligibility" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-blue-800 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-blue-500/40 shadow-sm">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Eligibility (वय पात्रता तक्ता)
-              </TabsTrigger>
-              <TabsTrigger value="jerseys" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-emerald-700 data-[state=active]:text-amber-300 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-emerald-500/40 shadow-sm">
-                <Shirt className="w-3.5 h-3.5 text-amber-400" /> Jersey & Positions (जर्सी व पोझिशन)
-              </TabsTrigger>
-              <TabsTrigger value="scoreboard" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-500/40 shadow-sm">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" /> Scoreboard (लाईव्ह गुणफलक)
-              </TabsTrigger>
-              <TabsTrigger value="id-cards" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-blue-900 data-[state=active]:text-amber-400 whitespace-nowrap flex items-center gap-1.5 sm:gap-2 border-2 border-amber-400/30">
-                <FileBadge className="w-4 h-4 text-amber-400" /> ID Cards (ओळखपत्रे)
-              </TabsTrigger>
-              <TabsTrigger value="readiness" className="rounded-full px-4 sm:px-8 py-2 sm:py-3 font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5 sm:gap-2">
-                <HeartPulse className="w-3.5 h-3.5" /> Readiness
-              </TabsTrigger>
-              <TabsTrigger value="goals" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Target className="w-3.5 h-3.5" /> Targets
-              </TabsTrigger>
-              <TabsTrigger value="playbook" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-accent data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Layout className="w-3.5 h-3.5" /> Playbook
-              </TabsTrigger>
-              <TabsTrigger value="tactics" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <BrainCircuit className="w-3.5 h-3.5" /> Decisions
-              </TabsTrigger>
-              <TabsTrigger value="injury" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-destructive data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <ShieldAlert className="w-3.5 h-3.5" /> Injury Hub
-              </TabsTrigger>
-              <TabsTrigger value="skills" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Skills</TabsTrigger>
-              <TabsTrigger value="drills" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-emerald-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-amber-400" /> Drills (सराव प्रकार)
-              </TabsTrigger>
-              <TabsTrigger value="library" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-indigo-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <BookOpen className="w-3.5 h-3.5 text-amber-400" /> Library (नियम व PDF)
-              </TabsTrigger>
-              <TabsTrigger value="teams" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Teams</TabsTrigger>
-              <TabsTrigger value="tournament" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white whitespace-nowrap">Tournament</TabsTrigger>
-              <TabsTrigger value="reports" className="rounded-full px-8 py-3 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-slate-700 data-[state=active]:text-white whitespace-nowrap flex items-center gap-2">
-                <Activity className="w-3.5 h-3.5" /> Auto Reports
+              <TabsTrigger
+                value="certificates"
+                className="rounded-xl px-4 sm:px-6 py-2.5 font-black uppercase text-[10px] sm:text-xs tracking-wider data-[state=active]:bg-amber-600 data-[state=active]:text-white whitespace-nowrap flex items-center gap-1.5"
+              >
+                <Award className="w-4 h-4" /> Certificates & Reports
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="squad" className="mt-0">
+            <SubViewSwitcher options={squadOptions} active={squadSub} onChange={setSquadSub} />
+            {squadSub === 'eligibility' && <TeamEligibilityRoster store={store} preselectedSport={selectedGame} />}
+            {squadSub === 'tournament' && <TournamentRosters store={store} preselectedSport={selectedGame} />}
+            {squadSub === 'teams' && isTeamSport && <Teams store={store} preselectedSport={selectedGame} />}
+            {squadSub === 'jerseys' && isTeamSport && <PlayerPositionJerseyManager store={store} preselectedSport={selectedGame} />}
+            {squadSub === 'id-cards' && <PlayerIDCardManager store={store} preselectedSport={selectedGame} />}
+          </TabsContent>
+
+          <TabsContent value="practice" className="mt-0">
+            <SubViewSwitcher options={practiceOptions} active={practiceSub} onChange={setPracticeSub} />
+            {practiceSub === 'daily-practice' && <DailyPracticePlanner store={store} preselectedSport={selectedGame} />}
+            {practiceSub === 'auto-practice' && <AutoPracticePlanner store={store} preselectedSport={selectedGame} />}
+            {practiceSub === 'attendance' && <Attendance store={store} section="sports" />}
+            {practiceSub === 'drills' && <SportsDrills store={store} preselectedSport={selectedGame} />}
+            {practiceSub === 'skills' && <SportsSkills store={store} section="sports" preselectedSport={selectedGame} />}
+            {practiceSub === 'library' && <SportsLibrary store={store} type="rules" preselectedSport={selectedGame} />}
+          </TabsContent>
+
+          <TabsContent value="matches" className="mt-0">
+            <SubViewSwitcher options={matchOptions} active={matchSub} onChange={setMatchSub} />
+            {matchSub === 'fixtures' && <TournamentFixturesHub store={store} preselectedSport={selectedGame} />}
+            {matchSub === 'scoreboard' && isTeamSport && <MatchScoreboard store={store} preselectedSport={selectedGame} />}
+          </TabsContent>
+
+          <TabsContent value="injury" className="mt-0">
+            <HealthIncidents store={store} section="sports" preselectedSport={selectedGame} />
+          </TabsContent>
+
           <TabsContent value="certificates" className="mt-0">
-            <SportsCertificateGenerator store={store} preselectedSport={selectedGame || undefined} />
+            <SubViewSwitcher options={certOptions} active={certSub} onChange={setCertSub} />
+            {certSub === 'certificates' && <SportsCertificateGenerator store={store} preselectedSport={selectedGame} />}
+            {certSub === 'report-cards' && <StudentSportsReportCard store={store} preselectedSport={selectedGame} />}
+            {certSub === 'reports' && <DailyReport store={store} section="sports" preselectedSport={selectedGame} />}
           </TabsContent>
-          <TabsContent value="report-cards" className="mt-0">
-            <StudentSportsReportCard store={store} preselectedSport={selectedGame || undefined} />
+
+          {/* Optional Pro Tools accessed via More dropdown */}
+          <TabsContent value="readiness" className="mt-0">
+            <DailyReadiness store={store} preselectedSport={selectedGame} />
           </TabsContent>
-          <TabsContent value="fixtures" className="mt-0">
-            <TournamentFixturesHub store={store} preselectedSport={selectedGame || undefined} />
+          <TabsContent value="goals" className="mt-0">
+            <GoalTracker store={store} preselectedSport={selectedGame} />
+          </TabsContent>
+          <TabsContent value="playbook" className="mt-0">
+            <TacticalPlaybook store={store} preselectedSport={selectedGame} />
+          </TabsContent>
+          <TabsContent value="tactics" className="mt-0">
+            <TacticalAnalytics store={store} preselectedSport={selectedGame} />
           </TabsContent>
           <TabsContent value="equipment" className="mt-0">
             <EquipmentInventoryHub store={store} />
-          </TabsContent>
-          <TabsContent value="eligibility" className="mt-0">
-            <TeamEligibilityRoster store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="jerseys" className="mt-0">
-            <PlayerPositionJerseyManager store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="scoreboard" className="mt-0">
-            <MatchScoreboard store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="id-cards" className="mt-0">
-            <PlayerIDCardManager store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="readiness" className="mt-0">
-            <DailyReadiness store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="goals" className="mt-0">
-            <GoalTracker store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="playbook" className="mt-0">
-            <TacticalPlaybook store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="tactics" className="mt-0">
-            <TacticalAnalytics store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="injury" className="mt-0">
-            <HealthIncidents store={store} section="sports" preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="skills" className="mt-0">
-            <SportsSkills store={store} section="sports" preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="drills" className="mt-0">
-            <SportsDrills store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="library" className="mt-0">
-            <SportsLibrary store={store} type="rules" preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="teams" className="mt-0">
-            <Teams store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="tournament" className="mt-0">
-            <TournamentRosters store={store} preselectedSport={selectedGame || undefined} />
-          </TabsContent>
-          <TabsContent value="reports" className="mt-0">
-            <DailyReport store={store} section="sports" preselectedSport={selectedGame || undefined} />
           </TabsContent>
         </Tabs>
       </div>
@@ -245,7 +354,7 @@ export function GameHub({ store }: { store: any }) {
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-primary uppercase tracking-tight">Institutional Game Hub</h2>
           <p className="text-xs sm:text-lg font-medium text-muted-foreground max-w-2xl mx-auto italic">
-            Select a discipline to access technical mastery, tactical playbooks, and injury logs.
+            Select a discipline to manage DSO squads, ground drills, matches, injuries, and certificates.
           </p>
         </div>
       </div>
@@ -254,9 +363,9 @@ export function GameHub({ store }: { store: any }) {
         {GAMES.map((game) => {
           const GameIcon = game.icon;
           return (
-            <Card 
-              key={game.id} 
-              onClick={() => setSelectedGame(game.id)}
+            <Card
+              key={game.id}
+              onClick={() => handleSelectGame(game.id)}
               className="border-2 rounded-2xl sm:rounded-[3rem] p-5 sm:p-10 hover:border-primary transition-all cursor-pointer group active:scale-95 shadow-xl bg-white relative overflow-hidden text-center"
             >
               <div className={cn("w-14 h-14 sm:w-20 sm:h-20 mx-auto rounded-xl sm:rounded-[1.5rem] flex items-center justify-center mb-4 sm:mb-6 transition-transform group-hover:scale-110 duration-500", game.bg)}>

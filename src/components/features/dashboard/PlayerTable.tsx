@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Archive, RotateCcw } from 'lucide-react';
 import type { Player } from '@/lib/types';
 import {
   getAgeValidation,
@@ -14,11 +14,13 @@ import {
   transliterateEnglishToMarathi,
 } from '@/lib/utils';
 import { maskAadhaar } from '@/lib/privacy-utils';
+import { isPlayerArchived } from '@/lib/student-audit-utils';
 
 interface PlayerTableProps {
   players: Player[];
   isMarathiView: boolean;
   onEditPlayer: (player: Player) => void;
+  onArchivePlayer?: (player: Player) => void;
   onDeletePlayer: (playerId: string) => void;
 }
 
@@ -26,6 +28,7 @@ export function PlayerTable({
   players,
   isMarathiView,
   onEditPlayer,
+  onArchivePlayer,
   onDeletePlayer,
 }: PlayerTableProps) {
   return (
@@ -142,6 +145,21 @@ export function PlayerTable({
                         >
                           <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </Button>
+                        {onArchivePlayer && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onArchivePlayer(p)}
+                            className="h-8 w-8 sm:h-9 sm:w-9 text-amber-600 hover:bg-amber-50 rounded-lg"
+                            title={isPlayerArchived(p) ? "Restore Student" : "Archive (TC / Left School)"}
+                          >
+                            {isPlayerArchived(p) ? (
+                              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            ) : (
+                              <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            )}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
