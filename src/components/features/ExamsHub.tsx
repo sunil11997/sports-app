@@ -7,21 +7,31 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, ArrowLeft, FileText, Users } from 'lucide-react';
 import { StandardRegistry } from './StandardRegistry';
+import { isPlayerArchived } from '@/lib/student-audit-utils';
 
 export function ExamsHub({ store, language = 'English' }: { store: any, language?: string }) {
   const [selectedStd, setSelectedStd] = useState<string | null>(null);
+  const [showHigherStds, setShowHigherStds] = useState(false);
 
   const classSummaries = useMemo(() => {
     const summary: Record<string, number> = {};
     for (let i = 1; i <= 12; i++) {
       summary[i.toString()] = 0;
     }
-    // Exam hub shows ALL students (including athletes)
+    // Exam hub shows ALL active students (excluding TC/Left archived)
     (store.data.players || []).forEach((p: any) => {
-      if (summary[p.std] !== undefined) summary[p.std]++;
+      if (!isPlayerArchived(p) && summary[p.std] !== undefined) summary[p.std]++;
     });
     return summary;
   }, [store.data.players]);
+
+  const visibleStds = useMemo(() => {
+    return Object.entries(classSummaries).filter(([std, count]) => {
+      const num = parseInt(std, 10);
+      if (num <= 10) return true;
+      return showHigherStds || count > 0;
+    });
+  }, [classSummaries, showHigherStds]);
 
   if (selectedStd) {
     return (
@@ -52,8 +62,23 @@ export function ExamsHub({ store, language = 'English' }: { store: any, language
         </div>
       </div>
 
+      <div className="flex items-center justify-between px-1">
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+          Showing Std 1 – {showHigherStds ? '12' : '10'}
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowHigherStds((prev) => !prev)}
+          className="text-xs font-black uppercase text-primary rounded-xl"
+        >
+          {showHigherStds ? 'Hide Std 11–12' : 'Show Std 11–12'}
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {Object.entries(classSummaries).map(([std, count]) => (
+        {visibleStds.map(([std, count]) => (
           <Card 
             key={std} 
             onClick={() => setSelectedStd(std)}
