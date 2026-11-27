@@ -685,14 +685,8 @@ export function StandardRegistry({
                   {currentLabels[field]}
                 </TableHead>
               ))}
-              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[75px] bg-primary/10">
-                {isMarathiView ? `एकूण /${maxMarks}` : `TOTAL /${maxMarks}`}
-              </TableHead>
-              <TableHead className="border-r h-14 px-2 font-black text-[10px] uppercase text-center w-[85px] bg-emerald-50 text-emerald-800">
-                {isMarathiView ? 'श्रेणी' : 'GRADE'}
-              </TableHead>
-              <TableHead className="h-14 px-2 font-black text-[10px] uppercase text-right w-[100px] sticky right-0 bg-muted/95 z-30">
-                {isMarathiView ? 'कृती' : 'Actions'}
+              <TableHead className="h-14 px-3 font-black text-[10px] uppercase text-center w-[180px] sticky right-0 bg-muted/95 z-30 border-l">
+                {isMarathiView ? `एकूण /${maxMarks} • श्रेणी` : `TOTAL /${maxMarks} • GRADE`}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -769,45 +763,51 @@ export function StandardRegistry({
                         />
                       </TableCell>
                     ))}
-                    <TableCell className="border-r p-0 text-center bg-primary/5 font-black text-primary">
-                      {total}
-                    </TableCell>
-                    <TableCell className="border-r p-1 text-center bg-emerald-50/40">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          'font-black text-[10px]',
-                          isStd10 && total < 35
-                            ? 'border-destructive/40 text-destructive bg-destructive/5'
-                            : 'border-emerald-400 text-emerald-800 bg-emerald-50'
-                        )}
-                      >
-                        {grade}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="p-0 sticky right-0 bg-white z-10 flex items-center justify-end h-14 px-2 gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleWhatsAppShare(p)}
-                        disabled={!p.mobileNumber}
-                        className="text-emerald-600 hover:bg-emerald-50"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="hover:bg-primary hover:text-white"
-                        onClick={() => handleSave(p)}
-                        disabled={isSaving === p.id}
-                      >
-                        {isSaving === p.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Save className="w-4 h-4" />
-                        )}
-                      </Button>
+                    <TableCell className="p-0 sticky right-0 bg-white z-10 border-l w-[180px]">
+                      <div className="flex items-center justify-between h-16 px-2.5 gap-1.5">
+                        <div className="flex flex-col items-start">
+                          <span className="text-xs font-black text-primary leading-none">
+                            {total}/{maxMarks}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'font-black text-[10px] mt-1 px-1.5 py-0',
+                              !entered
+                                ? 'border-slate-200 text-slate-400'
+                                : isStd10 && total < 35
+                                  ? 'border-destructive/40 text-destructive bg-destructive/5'
+                                  : 'border-emerald-400 text-emerald-800 bg-emerald-50'
+                            )}
+                          >
+                            {grade}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleWhatsAppShare(p)}
+                            disabled={!p.mobileNumber}
+                            className="h-8 w-8 text-emerald-600 hover:bg-emerald-50"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-primary hover:text-white"
+                            onClick={() => handleSave(p)}
+                            disabled={isSaving === p.id}
+                          >
+                            {isSaving === p.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Save className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
