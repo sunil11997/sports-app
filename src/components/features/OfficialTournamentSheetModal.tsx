@@ -47,8 +47,15 @@ import {
   FileSpreadsheet,
   Download,
   ChevronDown,
-  ShieldCheck
+  ShieldCheck,
+  Home
 } from 'lucide-react';
+import {
+  loadAllSavedTournamentSheets,
+  getSavedTournamentSheet,
+  saveTournamentSheet,
+  clearSavedTournamentSheet
+} from '@/lib/tournamentSheetStorage';
 import { transliterateEnglishToMarathi, getAgeValidation, getTeacherName } from '@/lib/utils';
 import { WAGHAMBA_STUDENTS_DATA, SchoolStudent } from '@/data/waghambaStudents';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
@@ -518,100 +525,114 @@ export function OfficialTournamentSheetModal({
     }));
   }, [store, playerToSheetRow]);
 
-  // Build sheets for all 6 categories from store players
-  const initializeCategorySheets = useCallback((sportKey: string, basePlayers?: any[]) => {
+  // Compute default category squad rows from store players (when no saved edits exist or on explicit reset)
+  const computeDefaultCategorySquad = useCallback((sportKey: string, catDef: UnderCategoryDef, basePlayers?: any[]): SheetRow[] => {
     const allStorePlayers: any[] = store?.data?.players || [];
-    const newSheets: Record<string, SheetRow[]> = {};
     const isAthletics = ATHLETICS_DISCIPLINES.includes(sportKey);
 
+    // 1. Filter strictly by canonical Under category and gender
+    let pool = allStorePlayers.filter((p: any) => {
+      const studentCat = getStudentUnderCategory(p);
+      return studentCat.gender === catDef.gender && studentCat.ageType === catDef.ageType;
+    });
+
+    // 2. For each player, retrieve their game-specific activities and Skill Hub marks
+    const scoredPlayers = pool.map(p => {
+      const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+      const activity = getPlayerGameActivity(p, sportKey, store);
+      const isInSport = Boolean(
+        p.sports && Array.isArray(p.sports) && (p.sports.includes(sportKey) || (isAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')))
+      );
+
+      return {
+        ...p,
+        skillScoreNum: skillInfo.score,
+        skillScoreDisplay: skillInfo.scoreDisplay,
+        hasSkillMark: skillInfo.hasMark,
+        gameActivity: activity,
+        isInSport
+      };
+    });
+
+    // 3. Form complete tournament squad (up to 12 players for team sports):
+    const withMarksInSport = scoredPlayers.filter(p => p.hasSkillMark && (p.isInSport || isAthletics));
+    withMarksInSport.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
+
+    const otherInSport = scoredPlayers.filter(p => !p.hasSkillMark && (p.isInSport || isAthletics));
+    otherInSport.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+    const otherAthletes = scoredPlayers.filter(p => !p.isInSport && !isAthletics);
+    otherAthletes.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
+
+    let filtered = [...withMarksInSport, ...otherInSport];
+    if (filtered.length < 12) {
+      filtered = [...filtered, ...otherAthletes.slice(0, 12 - filtered.length)];
+    }
+
+    if (filtered.length === 0 && basePlayers && basePlayers.length > 0 && getInitialCategoryKey(initialCategory) === catDef.key) {
+      filtered = basePlayers
+        .filter(p => {
+          const studentCat = getStudentUnderCategory(p);
+          return studentCat.gender === catDef.gender && studentCat.ageType === catDef.ageType;
+        })
+        .map(p => {
+          const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
+          const activity = getPlayerGameActivity(p, sportKey, store);
+          return {
+            ...p,
+            skillScoreNum: skillInfo.score,
+            skillScoreDisplay: skillInfo.scoreDisplay,
+            hasSkillMark: skillInfo.hasMark,
+            gameActivity: activity,
+            isInSport: true
+          };
+        });
+    }
+
+    return filtered.map((p, i) => {
+      const row = playerToSheetRow(p, i);
+      return {
+        ...row,
+        srNo: String(i + 1),
+        sportOrEvent: SPORT_MARATHI_MAP[sportKey] || sportKey,
+        gameActivity: p.gameActivity,
+        skillScore: p.skillScoreDisplay,
+        skillScoreNum: p.skillScoreNum,
+        skillRank: i + 1,
+        ageCategoryLabel: catDef.shortLabel
+      };
+    });
+  }, [store, playerToSheetRow, initialCategory]);
+
+  // Build sheets for all 6 categories: FIRST checks saved user edits in localStorage
+  // so any edited cells/rows are ALWAYS preserved as-is when switching sheets or sports!
+  const initializeCategorySheets = useCallback((sportKey: string, basePlayers?: any[]) => {
+    const newSheets: Record<string, SheetRow[]> = {};
+    const savedAll = loadAllSavedTournamentSheets();
+    const savedForSport = savedAll[sportKey] || {};
+
     OFFICIAL_CATEGORIES.forEach(catDef => {
-      // 1. Filter strictly by canonical Under category and gender
-      let pool = allStorePlayers.filter((p: any) => {
-        const studentCat = getStudentUnderCategory(p);
-        return studentCat.gender === catDef.gender && studentCat.ageType === catDef.ageType;
-      });
-
-      // 3. For each player, retrieve their game-specific activities and Skill Hub marks
-      const scoredPlayers = pool.map(p => {
-        const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
-        const activity = getPlayerGameActivity(p, sportKey, store);
-        const isInSport = Boolean(
-          p.sports && Array.isArray(p.sports) && (p.sports.includes(sportKey) || (isAthletics && (p.sports.includes('Athletics') || p.category === 'athlete')))
-        );
-
-        return {
-          ...p,
-          skillScoreNum: skillInfo.score,
-          skillScoreDisplay: skillInfo.scoreDisplay,
-          hasSkillMark: skillInfo.hasMark,
-          gameActivity: activity,
-          isInSport
-        };
-      });
-
-      // 4. Form complete tournament squad (up to 12 players for team sports):
-      // Primary: Players with marks from Skill Hub for this specific game
-      const withMarksInSport = scoredPlayers.filter(p => p.hasSkillMark && (p.isInSport || isAthletics));
-      withMarksInSport.sort((a, b) => b.skillScoreNum - a.skillScoreNum);
-
-      // Secondary: Other players assigned to this sport without marks yet
-      const otherInSport = scoredPlayers.filter(p => !p.hasSkillMark && (p.isInSport || isAthletics));
-      otherInSport.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
-
-      // Tertiary: Other eligible athletes in this age category
-      const otherAthletes = scoredPlayers.filter(p => !p.isInSport && !isAthletics);
-      otherAthletes.sort((a, b) => (parseInt(a.std || '0') - parseInt(b.std || '0')) || (a.name || '').localeCompare(b.name || ''));
-
-      let filtered = [...withMarksInSport, ...otherInSport];
-      // If fewer than 12 players, fill up to 12 from other athletes in the same age category
-      if (filtered.length < 12) {
-        filtered = [...filtered, ...otherAthletes.slice(0, 12 - filtered.length)];
+      // 1. If teacher already has saved edits for this sport & category, load them intact!
+      if (savedForSport[catDef.key] && Array.isArray(savedForSport[catDef.key]) && savedForSport[catDef.key].length > 0) {
+        newSheets[catDef.key] = savedForSport[catDef.key];
+        return;
       }
 
-      // Fallback: If still empty, use basePlayers if matching initial category
-      if (filtered.length === 0 && basePlayers && basePlayers.length > 0 && getInitialCategoryKey(initialCategory) === catDef.key) {
-        filtered = basePlayers
-          .filter(p => {
-            const studentCat = getStudentUnderCategory(p);
-            return studentCat.gender === catDef.gender && studentCat.ageType === catDef.ageType;
-          })
-          .map(p => {
-            const skillInfo = getPlayerSkillMarksAndRank(p, sportKey, store);
-            const activity = getPlayerGameActivity(p, sportKey, store);
-            return {
-              ...p,
-              skillScoreNum: skillInfo.score,
-              skillScoreDisplay: skillInfo.scoreDisplay,
-              hasSkillMark: skillInfo.hasMark,
-              gameActivity: activity,
-              isInSport: true
-            };
-          });
-      }
-
-      // Map to SheetRow with initial Sr No = Mark Ranking (1, 2, 3...)
-      newSheets[catDef.key] = filtered.map((p, i) => {
-        const row = playerToSheetRow(p, i);
-        return {
-          ...row,
-          srNo: String(i + 1), // Sr No corresponds to their mark rank
-          sportOrEvent: SPORT_MARATHI_MAP[sportKey] || sportKey,
-          gameActivity: p.gameActivity,
-          skillScore: p.skillScoreDisplay,
-          skillScoreNum: p.skillScoreNum,
-          skillRank: i + 1,
-          ageCategoryLabel: catDef.shortLabel
-        };
-      });
+      // 2. Otherwise generate the default squad
+      newSheets[catDef.key] = computeDefaultCategorySquad(sportKey, catDef, basePlayers);
     });
 
     setCategorySheets(newSheets);
 
-    // If it's an athletics sport, also build the consolidated sheet for all 6 events
+    // If it's an athletics sport, check saved consolidated rows
     if (ATHLETICS_DISCIPLINES.includes(sportKey)) {
-      setAthleticsConsolidatedRows(buildConsolidatedAthleticsRows());
+      if (savedForSport['AthleticsConsolidated'] && Array.isArray(savedForSport['AthleticsConsolidated']) && savedForSport['AthleticsConsolidated'].length > 0) {
+        setAthleticsConsolidatedRows(savedForSport['AthleticsConsolidated']);
+      } else {
+        setAthleticsConsolidatedRows(buildConsolidatedAthleticsRows());
+      }
     }
-  }, [store, playerToSheetRow, initialCategory, buildConsolidatedAthleticsRows]);
+  }, [computeDefaultCategorySquad, buildConsolidatedAthleticsRows]);
 
   // Sync strictly on modal open or sport change (does NOT re-trigger on user typing!)
   useEffect(() => {
@@ -650,15 +671,17 @@ export function OfficialTournamentSheetModal({
     ? athleticsConsolidatedRows 
     : (categorySheets[activeCategoryKey] || []);
 
-  // Update rows for active category or consolidated view
+  // Update rows for active category or consolidated view AND persist to localStorage
   const updateActiveRows = (newRows: SheetRow[]) => {
     if (isConsolidatedAthleticsView) {
       setAthleticsConsolidatedRows(newRows);
+      saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', newRows);
     } else {
       setCategorySheets(prev => ({
         ...prev,
         [activeCategoryKey]: newRows
       }));
+      saveTournamentSheet(selectedSportKey, activeCategoryKey, newRows);
     }
   };
 
@@ -758,7 +781,24 @@ export function OfficialTournamentSheetModal({
   };
 
   const resetCurrentCategory = () => {
-    initializeCategorySheets(selectedSportKey);
+    if (isConsolidatedAthleticsView) {
+      clearSavedTournamentSheet(selectedSportKey, 'AthleticsConsolidated');
+      const def = buildConsolidatedAthleticsRows();
+      setAthleticsConsolidatedRows(def);
+      setLastSyncStatus("मैदानी स्पर्धा शीट मूळ स्थितीत रीसेट केली (Reset to Default)");
+    } else {
+      clearSavedTournamentSheet(selectedSportKey, activeCategoryKey);
+      const catDef = OFFICIAL_CATEGORIES.find(c => c.key === activeCategoryKey);
+      if (catDef) {
+        const defaultRows = computeDefaultCategorySquad(selectedSportKey, catDef);
+        setCategorySheets(prev => ({
+          ...prev,
+          [activeCategoryKey]: defaultRows
+        }));
+      }
+      setLastSyncStatus("सध्याची शीट मूळ स्थितीत रीसेट केली (Reset to Default)");
+    }
+    setTimeout(() => setLastSyncStatus(null), 3000);
   };
 
   // Add student from picker into active category sheet
@@ -1773,6 +1813,13 @@ export function OfficialTournamentSheetModal({
     const resolvedAgeType: 'U14' | 'U17' | 'U19' = targetAgeType || (activeCatDef?.ageType as 'U14' | 'U17' | 'U19') || 'U14';
 
     const filterAndScore = (genderType: 'Male' | 'Female') => {
+      // 1. Check if teacher has edited & saved this specific category squad in localStorage!
+      const catKey = `${resolvedAgeType.toLowerCase()}_${genderType === 'Female' ? 'girls' : 'boys'}`;
+      const savedSheet = getSavedTournamentSheet(targetSportKey, catKey);
+      if (savedSheet && Array.isArray(savedSheet) && savedSheet.length > 0) {
+        return savedSheet.slice(0, 12);
+      }
+
       let pool = allStorePlayers.filter((p: any) => {
         const studentCat = getStudentUnderCategory(p);
         if (studentCat.ageType !== resolvedAgeType) return false;
@@ -2245,6 +2292,384 @@ export function OfficialTournamentSheetModal({
     exportAllCategoriesWorkbookToExcel(categorySheets, meta);
   };
 
+  // Helper to fetch player parent mobile number for official hostel registers
+  const getPlayerParentMobile = useCallback((row: SheetRow | any): string => {
+    if (row.mobileNumber && row.mobileNumber !== '-' && row.mobileNumber !== '---') {
+      return String(row.mobileNumber).trim();
+    }
+    const allStorePlayers: any[] = store?.data?.players || [];
+    const fromStore = allStorePlayers.find(p => 
+      (row.id && p.id === row.id) ||
+      (row.grNo && (String(p.generalRegisterNumber).trim() === String(row.grNo).trim() || String(p.serialNumber).trim() === String(row.grNo).trim())) ||
+      (row.studentName && p.nameMarathi && p.nameMarathi.includes(String(row.studentName).trim()))
+    );
+    if (fromStore?.mobileNumber && fromStore.mobileNumber !== '-' && fromStore.mobileNumber !== '---') {
+      return String(fromStore.mobileNumber).trim();
+    }
+    const master = findMasterStudent(row);
+    if (master?.mobileNumber && master.mobileNumber !== '-' && master.mobileNumber !== '---') {
+      return String(master.mobileNumber).trim();
+    }
+    if (master?.parentMobile1 && master.parentMobile1 !== '-' && master.parentMobile1 !== '---') {
+      return String(master.parentMobile1).trim();
+    }
+    return '-';
+  }, [store, findMasterStudent]);
+
+  // CSS for Hostel Player Information Sheet strictly guaranteed for ONE SINGLE A4 PAGE
+  const getHostelPrintStyles = () => `
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap');
+    
+    @page {
+      size: A4 portrait;
+      margin: 4mm 5mm 3mm 5mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000;
+      font-family: 'Noto Sans Devanagari', 'Mangal', 'Arial Unicode MS', sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .no-print {
+      display: block;
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        padding: 0 !important;
+      }
+      .hostel-sheet-page {
+        max-height: 288mm !important;
+        height: auto !important;
+        overflow: hidden !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+    }
+
+    .print-toolbar {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 6px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .btn {
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-close {
+      background: #334155;
+      color: white;
+    }
+    .btn-close:hover {
+      background: #475569;
+    }
+    .btn-print {
+      background: #10b981;
+      color: #022c22;
+      font-weight: 800;
+    }
+    .btn-print:hover {
+      background: #059669;
+      color: white;
+    }
+
+    .hostel-sheet-page {
+      width: 100%;
+      max-width: 200mm;
+      margin: 0 auto;
+      padding: 0;
+      background: #ffffff;
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+
+    .official-outer-box {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000000;
+      font-family: inherit;
+      table-layout: fixed;
+    }
+
+    .official-outer-box th, .official-outer-box td {
+      border: 1px solid #000000;
+    }
+
+    .header-line-1 {
+      text-align: center;
+      font-weight: 900;
+      color: #0f172a;
+      background: #ffffff;
+    }
+
+    .header-line-2 {
+      text-align: center;
+      font-weight: 700;
+      color: #334155;
+      background: #ffffff;
+    }
+
+    .header-line-3 {
+      text-align: center;
+      font-weight: 900;
+      background: #ffffff;
+    }
+
+    .meta-bar-cell {
+      border: 1px solid #000000;
+      font-weight: 700;
+    }
+
+    .col-header {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 800;
+      text-align: center;
+      border: 1px solid #000000;
+    }
+
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-normal { font-weight: 400; }
+    .font-mono { font-family: monospace; }
+
+    .hostel-footer-signatures {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .hostel-sign-item {
+      text-align: center;
+      width: 32%;
+    }
+
+    .sign-title {
+      font-weight: 800;
+      font-size: 8.5pt;
+      color: #0f172a;
+    }
+
+    .sign-name {
+      font-size: 7.5pt;
+      color: #475569;
+      margin-top: 2px;
+    }
+  `;
+
+  // Generate Hostel Player Information Sheet (वसतिगृह खेळाडू माहिती पत्रक)
+  // Strictly formatted for ONE SINGLE A4 PAGE for the hostel rector / warden
+  const generateHostelSheetHtml = (genderFilter: 'boys' | 'girls' | 'all' = 'all') => {
+    const teacherName = store?.data?.schoolProfile?.teacherName || "क्रीडा शिक्षक";
+    const { uniquePlayers, summary } = getUniqueTournamentPlayersData;
+
+    let playersToRender = uniquePlayers;
+    let titleBadge = '👫 वसतिगृह मुले व मुली खेळाडू माहिती पत्रक (सर्व वयोगट)';
+
+    if (genderFilter === 'boys') {
+      playersToRender = uniquePlayers.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
+      titleBadge = `👦 वसतिगृह मुले खेळाडू माहिती पत्रक (सर्व वयोगट - एकूण ${playersToRender.length} मुले)`;
+    } else if (genderFilter === 'girls') {
+      playersToRender = uniquePlayers.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
+      titleBadge = `👧 वसतिगृह मुली खेळाडू माहिती पत्रक (सर्व वयोगट - एकूण ${playersToRender.length} मुली)`;
+    } else {
+      titleBadge = `👫 वसतिगृह मुले व मुली खेळाडू माहिती पत्रक (एकूण ${playersToRender.length}: ${summary.boys} मुले, ${summary.girls} मुली)`;
+    }
+
+    const rowCount = playersToRender.length;
+    // Dynamic ultra-compact font and padding to guarantee strictly ONE page:
+    const fontSize = rowCount > 35 ? '7pt' : rowCount > 25 ? '7.6pt' : rowCount > 16 ? '8.2pt' : '8.8pt';
+    const cellPadding = rowCount > 35 ? '1.5px 2px' : rowCount > 25 ? '2.2px 3px' : rowCount > 16 ? '3px 4px' : '4px 6px';
+
+    const renderTableRows = (list: SheetRow[]) => {
+      if (list.length === 0) {
+        return `
+          <tr>
+            <td colspan="8" class="text-center py-6 text-muted font-normal">वसतिगृह खेळाडू यादी उपलब्ध नाही</td>
+          </tr>
+        `;
+      }
+
+      return list.map((r, i) => {
+        const parentMobile = getPlayerParentMobile(r);
+        return `
+          <tr style="height: auto;">
+            <td class="text-center font-bold" style="padding: ${cellPadding}; font-size: ${fontSize};">${i + 1}</td>
+            <td class="text-left font-bold" style="padding: ${cellPadding}; font-size: ${fontSize}; color: #0f172a;">${r.studentName || '-'}</td>
+            <td class="text-center font-semibold" style="padding: ${cellPadding}; font-size: ${fontSize};">${r.std || '-'}</td>
+            <td class="text-center font-mono font-semibold" style="padding: ${cellPadding}; font-size: ${fontSize};">${r.grNo || '-'}</td>
+            <td class="text-center font-bold" style="padding: ${cellPadding}; font-size: ${fontSize}; color: #0369a1;">${r.ageCategoryLabel || '-'}</td>
+            <td class="text-center font-bold" style="padding: ${cellPadding}; font-size: ${fontSize}; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
+            <td class="text-center font-mono" style="padding: ${cellPadding}; font-size: ${fontSize};">${parentMobile}</td>
+            <td class="text-center" style="padding: ${cellPadding}; font-size: ${fontSize}; border-right: 1px solid #000;">&nbsp;</td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    let tableContent = '';
+    if (genderFilter === 'all') {
+      const boys = playersToRender.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
+      const girls = playersToRender.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
+
+      tableContent = `
+        ${boys.length > 0 ? `
+          <tr style="background: #f0f9ff;">
+            <th colspan="8" style="background: #e0f2fe; color: #0369a1; text-align: left; font-size: 8.5pt; font-weight: 800; padding: 2px 6px; border: 1px solid #000000;">
+              👦 १. मुले वसतिगृह खेळाडू यादी (१४, १७ व १९ वर्षांखालील - एकूण ${boys.length} मुले)
+            </th>
+          </tr>
+          ${renderTableRows(boys)}
+        ` : ''}
+        ${girls.length > 0 ? `
+          <tr style="background: #fdf2f8;">
+            <th colspan="8" style="background: #fce7f3; color: #be185d; text-align: left; font-size: 8.5pt; font-weight: 800; padding: 2px 6px; border: 1px solid #000000;">
+              👧 २. मुली वसतिगृह खेळाडू यादी (१४, १७ व १९ वर्षांखालील - एकूण ${girls.length} मुली)
+            </th>
+          </tr>
+          ${renderTableRows(girls)}
+        ` : ''}
+      `;
+    } else {
+      tableContent = renderTableRows(playersToRender);
+    }
+
+    return `
+      <div class="hostel-sheet-page">
+        <table class="official-outer-box" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+          <thead>
+            <tr><th colspan="8" class="header-line-1" style="font-size: 11pt; padding: 2px 0;">${departmentName}</th></tr>
+            <tr><th colspan="8" class="header-line-2" style="font-size: 9.5pt; padding: 1px 0;">${projectName}</th></tr>
+            <tr><th colspan="8" class="header-line-3" style="font-size: 10.5pt; padding: 2px 0; color: #b91c1c;">${schoolName || DEFAULT_SCHOOL_MR}</th></tr>
+            <tr>
+              <th colspan="8" style="background: #0f172a; color: #ffffff; text-align: center; font-size: 9.5pt; font-weight: 900; padding: 3px 0; border: 1px solid #000;">
+                शालेय क्रीडा स्पर्धा २०२६-२७ &bull; वसतिगृह निवासी खेळाडू माहिती पत्रक
+              </th>
+            </tr>
+            <tr>
+              <th colspan="5" class="meta-bar-cell text-left" style="font-size: 8.5pt; padding: 2px 5px; background: #f8fafc;">
+                ${titleBadge}
+              </th>
+              <th colspan="3" class="meta-bar-cell text-right" style="font-size: 8.5pt; padding: 2px 5px; background: #f8fafc; font-weight: bold;">
+                सन: ${academicYear} | प्रत: वसतिगृह अधीक्षक
+              </th>
+            </tr>
+            <tr style="background: #f1f5f9;">
+              <th class="col-header" style="width: 5%; font-size: 8pt; padding: 3px 1px;">अ.क्र.</th>
+              <th class="col-header" style="width: 27%; font-size: 8pt; padding: 3px 2px;">खेळाडूचे पूर्ण नाव</th>
+              <th class="col-header" style="width: 7%; font-size: 8pt; padding: 3px 1px;">इयत्ता</th>
+              <th class="col-header" style="width: 8%; font-size: 8pt; padding: 3px 1px;">ज.र.क्र.</th>
+              <th class="col-header" style="width: 13%; font-size: 8pt; padding: 3px 2px;">वयोगट (१४/१७/१९)</th>
+              <th class="col-header" style="width: 15%; font-size: 8pt; padding: 3px 2px;">खेळ प्रकार</th>
+              <th class="col-header" style="width: 13%; font-size: 8pt; padding: 3px 2px;">पालक मो. क्र.</th>
+              <th class="col-header" style="width: 12%; font-size: 8pt; padding: 3px 1px;">खोली क्र./सही</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableContent}
+          </tbody>
+        </table>
+
+        <!-- STRICT 1-PAGE GUARANTEE SIGNATURE ROW -->
+        <div class="hostel-footer-signatures">
+          <div class="hostel-sign-item">
+            <div style="height: 22px;"></div>
+            <div class="sign-title">१. क्रीडा शिक्षक</div>
+            <div class="sign-name">(${teacherName})</div>
+          </div>
+          <div class="hostel-sign-item">
+            <div style="height: 22px;"></div>
+            <div class="sign-title">२. वसतिगृह अधीक्षक (मुले / मुली)</div>
+            <div class="sign-name">(शासकीय वसतिगृह वाघांबा)</div>
+          </div>
+          <div class="hostel-sign-item">
+            <div style="height: 22px;"></div>
+            <div class="sign-title">३. मुख्याध्यापक / प्राचार्य</div>
+            <div class="sign-name">(शा. मा. आ. शाळा वाघांबा)</div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  // Print Hostel Player Information Sheet on strictly ONE SINGLE A4 PAGE
+  const handlePrintHostelSheet = (genderFilter: 'boys' | 'girls' | 'all') => {
+    const content = generateHostelSheetHtml(genderFilter);
+    const scopeTitle = genderFilter === 'boys' 
+      ? 'मुले वसतिगृह खेळाडू माहिती पत्रक (Boys Only - 1 Page)' 
+      : genderFilter === 'girls' 
+      ? 'मुली वसतिगृह खेळाडू माहिती पत्रक (Girls Only - 1 Page)' 
+      : 'मुले व मुली एकत्रित वसतिगृह खेळाडू माहिती पत्रक (Both - 1 Page)';
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="mr">
+        <head>
+          <title>${scopeTitle} - शासकीय आश्रमशाळा व वसतिगृह वाघांबा (${academicYear})</title>
+          <meta charset="utf-8" />
+          <style>${getHostelPrintStyles()}</style>
+        </head>
+        <body>
+          <div class="no-print print-toolbar">
+            <button onclick="window.close()" class="btn btn-close">← मागे जा (Close)</button>
+            <div style="font-weight: 800; font-size: 11pt; color: #f8fafc;">
+              🏠 ${scopeTitle} &bull; सन ${academicYear} (तंतोतंत १ पान)
+            </div>
+            <button onclick="window.print()" class="btn btn-print">🖨️ १ पानावर प्रिंट करा (Print 1 Page)</button>
+          </div>
+          <div class="hostel-page-container" style="padding-top: 4px;">
+            ${content}
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(printHtml);
+      win.document.close();
+      setTimeout(() => {
+        win.focus();
+      }, 250);
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -2520,6 +2945,71 @@ export function OfficialTournamentSheetModal({
                 <Printer className="w-4 h-4" />
                 🖨️ चालू शीट प्रिंट
               </Button>
+
+              {/* Hostel Player Information Sheet Dropdown (Strictly 1 A4 Page) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="h-10 px-3.5 rounded-xl font-black text-xs uppercase tracking-wider bg-teal-700 hover:bg-teal-800 text-white shadow-md gap-1.5 border-none"
+                    title="वसतिगृह अधीक्षकांसाठी तंतोतंत १ पानाचे खेळाडू माहिती पत्रक (सर्व वयोगट)"
+                  >
+                    <Home className="w-4 h-4 text-emerald-300" />
+                    🏠 वसतिगृह पत्रक (1 Page) ▼
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 p-2 rounded-2xl shadow-2xl border-2">
+                  <DropdownMenuLabel className="text-xs font-black text-slate-800 flex items-center gap-2">
+                    <Home className="w-4 h-4 text-teal-600" />
+                    वसतिगृह खेळाडू माहिती पत्रक
+                    <span className="text-[10px] font-normal text-muted-foreground block">
+                      सर्व वयोगट (14/17/19) &bull; तंतोतंत १ पान (Hostel Sheet)
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => handlePrintHostelSheet('boys')}
+                    className="p-2.5 rounded-xl cursor-pointer hover:bg-blue-50 focus:bg-blue-50 transition-colors"
+                  >
+                    <div className="flex flex-col">
+                      <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                        <Printer className="w-3.5 h-3.5 text-blue-600" />
+                        👦 फक्त मुले वसतिगृह पत्रक (Boys - 1 Page)
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        सर्व वयोगटातील मुले खेळाडू - एकाच A4 पानावर प्रिंट
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handlePrintHostelSheet('girls')}
+                    className="p-2.5 rounded-xl cursor-pointer hover:bg-pink-50 focus:bg-pink-50 transition-colors"
+                  >
+                    <div className="flex flex-col">
+                      <div className="text-xs font-bold text-pink-900 flex items-center gap-1.5">
+                        <Printer className="w-3.5 h-3.5 text-pink-600" />
+                        👧 फक्त मुली वसतिगृह पत्रक (Girls - 1 Page)
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        सर्व वयोगटातील मुली खेळाडू - एकाच A4 पानावर प्रिंट
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handlePrintHostelSheet('all')}
+                    className="p-2.5 rounded-xl cursor-pointer hover:bg-emerald-50 focus:bg-emerald-50 transition-colors"
+                  >
+                    <div className="flex flex-col">
+                      <div className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                        <Printer className="w-3.5 h-3.5 text-emerald-600" />
+                        👫 मुले व मुली एकत्रित पत्रक (Both - 1 Page)
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        सर्व मुले व मुली खेळाडू एकत्रित - तंतोतंत एकाच पानावर
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Master All / Boys / Girls Unique Tournament Players Dropdown */}
               <DropdownMenu>
