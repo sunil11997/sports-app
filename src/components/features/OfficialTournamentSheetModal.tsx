@@ -332,13 +332,13 @@ export interface SheetTableRowProps {
   schoolName?: string;
   sportName?: string;
   customAgeGroup?: string;
-  onUpdateField: (index: number, field: keyof SheetRow, value: string) => void;
-  onRowBlur: (index: number) => void;
+  onDraftChange: (index: number, updatedRow: SheetRow) => void;
   onMoveRow: (index: number, direction: 'up' | 'down') => void;
   onDeleteRow: (index: number) => void;
 }
 
-// Memoized Table Row Component: Prevents all 20+ rows from re-rendering on every keystroke!
+// Memoized Table Row Component with local draft state:
+// Typing ONLY updates this single row — 0ms lag, zero parent modal re-renders, zero hangs!
 export const SheetTableRow = React.memo(function SheetTableRow({
   row,
   index,
@@ -347,11 +347,22 @@ export const SheetTableRow = React.memo(function SheetTableRow({
   schoolName,
   sportName,
   customAgeGroup,
-  onUpdateField,
-  onRowBlur,
+  onDraftChange,
   onMoveRow,
   onDeleteRow
 }: SheetTableRowProps) {
+  const [localRow, setLocalRow] = useState<SheetRow>(row);
+
+  useEffect(() => {
+    setLocalRow(row);
+  }, [row]);
+
+  const handleFieldChange = (field: keyof SheetRow, value: string) => {
+    const next = { ...localRow, [field]: value };
+    setLocalRow(next);
+    onDraftChange(index, next);
+  };
+
   return (
     <tr className={`hover:bg-slate-50/80 transition-colors ${isBeyond12 ? 'bg-amber-50/30' : ''}`}>
       {/* अनु. क्र. with quick edit input and Up/Down arrows */}
@@ -378,10 +389,10 @@ export const SheetTableRow = React.memo(function SheetTableRow({
             </button>
           </div>
           <Input
-            value={row.srNo}
-            onChange={(e) => onUpdateField(index, 'srNo', e.target.value)}
+            value={localRow.srNo}
+            onChange={(e) => handleFieldChange('srNo', e.target.value)}
             className="h-8 w-14 text-center font-bold text-xs px-1 bg-amber-50 border-amber-300 focus:bg-white focus:ring-2 focus:ring-amber-500 shadow-xs"
-            title="अनुक्रमांक थेट बदला - बदल सेव्ह राहील"
+            title="अनुक्रमांक थेट बदला - सेव्ह बटणावर क्लिक करून जतन करा"
           />
         </div>
       </td>
@@ -390,9 +401,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       <td className="p-1.5 border-r">
         <div className="flex items-center gap-1.5">
           <Input
-            value={row.studentName}
-            onChange={(e) => onUpdateField(index, 'studentName', e.target.value)}
-            onBlur={() => onRowBlur(index)}
+            value={localRow.studentName}
+            onChange={(e) => handleFieldChange('studentName', e.target.value)}
             className="h-8 text-xs font-normal text-slate-800 focus:bg-amber-50/40"
             placeholder="खेळाडूचे पूर्ण नाव"
           />
@@ -407,9 +417,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* इयत्ता */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.std}
-          onChange={(e) => onUpdateField(index, 'std', e.target.value)}
-          onBlur={() => onRowBlur(index)}
+          value={localRow.std}
+          onChange={(e) => handleFieldChange('std', e.target.value)}
           className="h-8 text-center text-xs font-normal focus:bg-amber-50/40 w-16 mx-auto"
           placeholder="इयत्ता"
         />
@@ -418,9 +427,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* जनरल रजिस्टर नं. */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.grNo}
-          onChange={(e) => onUpdateField(index, 'grNo', e.target.value)}
-          onBlur={() => onRowBlur(index)}
+          value={localRow.grNo}
+          onChange={(e) => handleFieldChange('grNo', e.target.value)}
           className="h-8 text-center text-xs font-normal focus:bg-amber-50/40"
           placeholder="GR No"
         />
@@ -429,9 +437,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* जन्मतारीख */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.dob}
-          onChange={(e) => onUpdateField(index, 'dob', e.target.value)}
-          onBlur={() => onRowBlur(index)}
+          value={localRow.dob}
+          onChange={(e) => handleFieldChange('dob', e.target.value)}
           className="h-8 text-center text-xs font-normal focus:bg-amber-50/40"
           placeholder="DD.MM.YYYY"
         />
@@ -440,9 +447,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* आईचे नाव */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.motherName}
-          onChange={(e) => onUpdateField(index, 'motherName', e.target.value)}
-          onBlur={() => onRowBlur(index)}
+          value={localRow.motherName}
+          onChange={(e) => handleFieldChange('motherName', e.target.value)}
           className="h-8 text-center text-xs font-normal focus:bg-amber-50/40"
           placeholder="आईचे नाव"
         />
@@ -451,9 +457,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* आधार क्र. */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.aadhar}
-          onChange={(e) => onUpdateField(index, 'aadhar', e.target.value)}
-          onBlur={() => onRowBlur(index)}
+          value={localRow.aadhar}
+          onChange={(e) => handleFieldChange('aadhar', e.target.value)}
           className="h-8 text-center text-xs font-normal focus:bg-amber-50/40 font-mono"
           placeholder="XXXX XXXX XXXX"
         />
@@ -462,8 +467,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* शाळेचे नाव */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.schoolName || schoolName || DEFAULT_SCHOOL_MR}
-          onChange={(e) => onUpdateField(index, 'schoolName', e.target.value)}
+          value={localRow.schoolName || schoolName || DEFAULT_SCHOOL_MR}
+          onChange={(e) => handleFieldChange('schoolName', e.target.value)}
           className="h-8 text-xs font-normal focus:bg-amber-50/40"
           placeholder="शाळेचे नाव"
         />
@@ -472,8 +477,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* यु-डायस क्रमांक (27200116503) */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.uDise || DEFAULT_UDISE}
-          onChange={(e) => onUpdateField(index, 'uDise', e.target.value)}
+          value={localRow.uDise || DEFAULT_UDISE}
+          onChange={(e) => handleFieldChange('uDise', e.target.value)}
           className="h-8 text-center text-xs font-mono font-bold text-amber-900 bg-amber-50/50"
           placeholder="27200116503"
         />
@@ -482,8 +487,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* तालुका (बागलाण) */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.taluka || DEFAULT_TALUKA}
-          onChange={(e) => onUpdateField(index, 'taluka', e.target.value)}
+          value={localRow.taluka || DEFAULT_TALUKA}
+          onChange={(e) => handleFieldChange('taluka', e.target.value)}
           className="h-8 text-center text-xs font-bold text-blue-900 bg-blue-50/50"
           placeholder="बागलाण"
         />
@@ -492,8 +497,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* वयोगट */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.ageCategoryLabel || customAgeGroup}
-          onChange={(e) => onUpdateField(index, 'ageCategoryLabel', e.target.value)}
+          value={localRow.ageCategoryLabel || customAgeGroup}
+          onChange={(e) => handleFieldChange('ageCategoryLabel', e.target.value)}
           className="h-8 text-center text-xs font-normal focus:bg-amber-50/40"
           placeholder="उदा. 14 वर्षाखालील मुले"
         />
@@ -502,8 +507,8 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       {/* खेळाचा प्रकार */}
       <td className="p-1.5 border-r">
         <Input
-          value={row.sportOrEvent || sportName}
-          onChange={(e) => onUpdateField(index, 'sportOrEvent', e.target.value)}
+          value={localRow.sportOrEvent || sportName}
+          onChange={(e) => handleFieldChange('sportOrEvent', e.target.value)}
           className="h-8 text-center text-xs font-bold text-emerald-900 bg-emerald-50/50"
           placeholder="खेळाचा प्रकार"
         />
@@ -513,11 +518,11 @@ export const SheetTableRow = React.memo(function SheetTableRow({
       <td className="p-1.5 border-r text-center">
         <div className="flex items-center justify-center gap-1">
           <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-black text-[11px] px-2 py-0.5">
-            {row.skillScore !== '-' ? `${row.skillScore}` : '-'}
+            {localRow.skillScore !== '-' ? `${localRow.skillScore}` : '-'}
           </Badge>
-          {row.skillRank && (
+          {localRow.skillRank && (
             <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-black text-[10px] px-1.5 py-0.5">
-              #{row.skillRank}
+              #{localRow.skillRank}
             </Badge>
           )}
         </div>
@@ -884,8 +889,60 @@ export function OfficialTournamentSheetModal({
     };
   }, []);
 
-  // Handle switching category
+  // Active category rows (or consolidated athletics rows if toggled)
+  const activeRows = useMemo(() => {
+    return isConsolidatedAthleticsView 
+      ? athleticsConsolidatedRows 
+      : (categorySheets[activeCategoryKey] || []);
+  }, [isConsolidatedAthleticsView, athleticsConsolidatedRows, categorySheets, activeCategoryKey]);
+
+  // Draft management: keeps all typed edits in a fast mutable ref (0ms, zero modal re-renders!)
+  // until the teacher clicks "Save" or switches tabs/exports.
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const draftRowsRef = useRef<SheetRow[]>(activeRows);
+  const hasUnsavedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    draftRowsRef.current = activeRows;
+    hasUnsavedRef.current = false;
+    setHasUnsavedChanges(false);
+  }, [activeRows]);
+
+  // Update rows for active category or consolidated view AND persist to localStorage
+  const updateActiveRows = useCallback((newRows: SheetRow[], immediate = true) => {
+    draftRowsRef.current = newRows;
+    hasUnsavedRef.current = false;
+    setHasUnsavedChanges(false);
+    if (isConsolidatedAthleticsView) {
+      setAthleticsConsolidatedRows(newRows);
+      saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', newRows, immediate);
+    } else {
+      setCategorySheets(prev => ({
+        ...prev,
+        [activeCategoryKey]: newRows
+      }));
+      saveTournamentSheet(selectedSportKey, activeCategoryKey, newRows, immediate);
+    }
+  }, [isConsolidatedAthleticsView, selectedSportKey, activeCategoryKey]);
+
+  // Commit any pending draft edits from draftRowsRef into state & browser localStorage
+  const commitDraftToStorage = useCallback(() => {
+    if (!hasUnsavedRef.current) return;
+    const rowsToSave = draftRowsRef.current || [];
+    updateActiveRows(rowsToSave, true);
+  }, [updateActiveRows]);
+
+  // Explicit Save Button handler requested by user
+  const handleSaveSheetToBrowser = useCallback(() => {
+    const rowsToSave = draftRowsRef.current || activeRows;
+    updateActiveRows(rowsToSave, true);
+    setLastSyncStatus("✅ सर्व बदल ब्राउझरमध्ये सुरक्षित सेव्ह झाले! (Saved in Browser)");
+    setTimeout(() => setLastSyncStatus(null), 3500);
+  }, [activeRows, updateActiveRows]);
+
+  // Handle switching category (auto-commit any pending edits first)
   const handleSelectCategory = (catKey: string) => {
+    commitDraftToStorage();
     setActiveCategoryKey(catKey);
     setIsConsolidatedAthleticsView(false);
     const catDef = OFFICIAL_CATEGORIES.find(c => c.key === catKey);
@@ -894,98 +951,34 @@ export function OfficialTournamentSheetModal({
     }
   };
 
-  // Active category rows (or consolidated athletics rows if toggled)
-  const activeRows = useMemo(() => {
-    return isConsolidatedAthleticsView 
-      ? athleticsConsolidatedRows 
-      : (categorySheets[activeCategoryKey] || []);
-  }, [isConsolidatedAthleticsView, athleticsConsolidatedRows, categorySheets, activeCategoryKey]);
-
-  // Update rows for active category or consolidated view AND persist to localStorage
-  const updateActiveRows = useCallback((newRows: SheetRow[]) => {
-    if (isConsolidatedAthleticsView) {
-      setAthleticsConsolidatedRows(newRows);
-      saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', newRows);
-    } else {
-      setCategorySheets(prev => ({
-        ...prev,
-        [activeCategoryKey]: newRows
-      }));
-      saveTournamentSheet(selectedSportKey, activeCategoryKey, newRows);
+  // Called on every keystroke inside SheetTableRow — NEVER triggers modal re-renders or storage writes!
+  const handleDraftChange = useCallback((index: number, updatedRow: SheetRow) => {
+    const base = draftRowsRef.current ? [...draftRowsRef.current] : [];
+    base[index] = updatedRow;
+    draftRowsRef.current = base;
+    if (!hasUnsavedRef.current) {
+      hasUnsavedRef.current = true;
+      setHasUnsavedChanges(true);
     }
-  }, [isConsolidatedAthleticsView, selectedSportKey, activeCategoryKey]);
-
-  // Fast Functional Row Operations: Updates in-memory immediately for 0ms typing lag!
-  // CRITICAL: NEVER trigger whole-app profile sync while typing!
-  const updateRowField = useCallback((index: number, field: keyof SheetRow, value: string) => {
-    if (isConsolidatedAthleticsView) {
-      setAthleticsConsolidatedRows(prev => {
-        const next = [...prev];
-        next[index] = { ...next[index], [field]: value };
-        saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', next);
-        return next;
-      });
-    } else {
-      setCategorySheets(prev => {
-        const currentList = prev[activeCategoryKey] || [];
-        const next = [...currentList];
-        next[index] = { ...next[index], [field]: value };
-        saveTournamentSheet(selectedSportKey, activeCategoryKey, next);
-        return {
-          ...prev,
-          [activeCategoryKey]: next
-        };
-      });
-    }
-  }, [isConsolidatedAthleticsView, selectedSportKey, activeCategoryKey]);
-
-  // Sync to student profile ONLY when the teacher blurs (leaves) the input field
-  const handleRowBlur = useCallback((index: number) => {
-    flushSavedTournamentSheets();
-    const row = isConsolidatedAthleticsView 
-      ? athleticsConsolidatedRows[index] 
-      : categorySheets[activeCategoryKey]?.[index];
-    if (row) {
-      syncRowToStudentProfile(row);
-    }
-  }, [isConsolidatedAthleticsView, athleticsConsolidatedRows, categorySheets, activeCategoryKey, syncRowToStudentProfile]);
+  }, []);
 
   const moveRow = useCallback((index: number, direction: 'up' | 'down') => {
+    const currentList = [...(draftRowsRef.current || activeRows)];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0) return;
-    if (isConsolidatedAthleticsView) {
-      setAthleticsConsolidatedRows(prev => {
-        if (targetIndex >= prev.length) return prev;
-        const next = [...prev];
-        const temp = next[index];
-        next[index] = next[targetIndex];
-        next[targetIndex] = temp;
-        saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', next);
-        return next;
-      });
-    } else {
-      setCategorySheets(prev => {
-        const currentList = prev[activeCategoryKey] || [];
-        if (targetIndex >= currentList.length) return prev;
-        const next = [...currentList];
-        const temp = next[index];
-        next[index] = next[targetIndex];
-        next[targetIndex] = temp;
-        saveTournamentSheet(selectedSportKey, activeCategoryKey, next);
-        return {
-          ...prev,
-          [activeCategoryKey]: next
-        };
-      });
-    }
-  }, [isConsolidatedAthleticsView, selectedSportKey, activeCategoryKey]);
+    if (targetIndex < 0 || targetIndex >= currentList.length) return;
+    const temp = currentList[index];
+    currentList[index] = currentList[targetIndex];
+    currentList[targetIndex] = temp;
+    updateActiveRows(currentList);
+  }, [activeRows, updateActiveRows]);
 
   const autoRenumber = useCallback(() => {
-    updateActiveRows(activeRows.map((row, i) => ({ ...row, srNo: String(i + 1) })));
+    const currentList = draftRowsRef.current || activeRows;
+    updateActiveRows(currentList.map((row, i) => ({ ...row, srNo: String(i + 1) })));
   }, [activeRows, updateActiveRows]);
 
   const sortBySrNo = useCallback(() => {
-    const next = [...activeRows];
+    const next = [...(draftRowsRef.current || activeRows)];
     next.sort((a, b) => {
       const numA = parseInt(a.srNo) || 0;
       const numB = parseInt(b.srNo) || 0;
@@ -995,7 +988,7 @@ export function OfficialTournamentSheetModal({
   }, [activeRows, updateActiveRows]);
 
   const sortBySkillHubRanking = useCallback(() => {
-    const next = [...activeRows];
+    const next = [...(draftRowsRef.current || activeRows)];
     next.sort((a, b) => (b.skillScoreNum || 0) - (a.skillScoreNum || 0));
     const renumbered = next.map((r, i) => ({
       ...r,
@@ -1006,10 +999,11 @@ export function OfficialTournamentSheetModal({
   }, [activeRows, updateActiveRows]);
 
   const addBlankRow = useCallback(() => {
+    const currentList = draftRowsRef.current || activeRows;
     const isGirl = activeCategoryKey.includes('girl');
     const newRow: SheetRow = {
       id: `custom-row-${Date.now()}`,
-      srNo: "1",
+      srNo: String(currentList.length + 1),
       studentName: "",
       std: "इ. ८ वी",
       grNo: "",
@@ -1024,52 +1018,17 @@ export function OfficialTournamentSheetModal({
       gameActivity: isAthleticsSport ? "भालाफेक / धावणे" : "चढाईपटू (Raider)",
       skillScore: "-",
       skillScoreNum: 0,
-      skillRank: 1,
+      skillRank: currentList.length + 1,
       ageCategoryLabel: customAgeGroup || (isGirl ? 'मुली' : 'मुले'),
       gender: isGirl ? 'Female' : 'Male'
     };
-    if (isConsolidatedAthleticsView) {
-      setAthleticsConsolidatedRows(prev => {
-        newRow.srNo = String(prev.length + 1);
-        newRow.skillRank = prev.length + 1;
-        const next = [...prev, newRow];
-        saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', next);
-        return next;
-      });
-    } else {
-      setCategorySheets(prev => {
-        const currentList = prev[activeCategoryKey] || [];
-        newRow.srNo = String(currentList.length + 1);
-        newRow.skillRank = currentList.length + 1;
-        const next = [...currentList, newRow];
-        saveTournamentSheet(selectedSportKey, activeCategoryKey, next);
-        return {
-          ...prev,
-          [activeCategoryKey]: next
-        };
-      });
-    }
-  }, [activeCategoryKey, isConsolidatedAthleticsView, schoolName, selectedSportKey, isAthleticsSport, customAgeGroup]);
+    updateActiveRows([...currentList, newRow]);
+  }, [activeCategoryKey, activeRows, schoolName, selectedSportKey, isAthleticsSport, customAgeGroup, updateActiveRows]);
 
   const deleteRow = useCallback((index: number) => {
-    if (isConsolidatedAthleticsView) {
-      setAthleticsConsolidatedRows(prev => {
-        const next = prev.filter((_, i) => i !== index);
-        saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', next);
-        return next;
-      });
-    } else {
-      setCategorySheets(prev => {
-        const currentList = prev[activeCategoryKey] || [];
-        const next = currentList.filter((_, i) => i !== index);
-        saveTournamentSheet(selectedSportKey, activeCategoryKey, next);
-        return {
-          ...prev,
-          [activeCategoryKey]: next
-        };
-      });
-    }
-  }, [isConsolidatedAthleticsView, selectedSportKey, activeCategoryKey]);
+    const currentList = draftRowsRef.current || activeRows;
+    updateActiveRows(currentList.filter((_, i) => i !== index));
+  }, [activeRows, updateActiveRows]);
 
   const resetCurrentCategory = () => {
     if (isConsolidatedAthleticsView) {
@@ -1094,47 +1053,22 @@ export function OfficialTournamentSheetModal({
 
   // Add student from picker into active category sheet
   const handleAddFromStudentPicker = useCallback((student: any) => {
+    const currentList = draftRowsRef.current || activeRows;
     const skillInfo = getPlayerSkillMarksAndRank(student, selectedSportKey, store);
     const activity = getPlayerGameActivity(student, selectedSportKey, store);
-    const baseRow = playerToSheetRow(student, 0);
-
-    if (isConsolidatedAthleticsView) {
-      setAthleticsConsolidatedRows(prev => {
-        const newRow: SheetRow = {
-          ...baseRow,
-          srNo: String(prev.length + 1),
-          sportOrEvent: SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey,
-          gameActivity: activity,
-          skillScore: skillInfo.scoreDisplay,
-          skillScoreNum: skillInfo.score,
-          skillRank: prev.length + 1
-        };
-        const next = [...prev, newRow];
-        saveTournamentSheet(selectedSportKey, 'AthleticsConsolidated', next);
-        return next;
-      });
-    } else {
-      setCategorySheets(prev => {
-        const currentList = prev[activeCategoryKey] || [];
-        const newRow: SheetRow = {
-          ...baseRow,
-          srNo: String(currentList.length + 1),
-          sportOrEvent: SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey,
-          gameActivity: activity,
-          skillScore: skillInfo.scoreDisplay,
-          skillScoreNum: skillInfo.score,
-          skillRank: currentList.length + 1
-        };
-        const next = [...currentList, newRow];
-        saveTournamentSheet(selectedSportKey, activeCategoryKey, next);
-        return {
-          ...prev,
-          [activeCategoryKey]: next
-        };
-      });
-    }
+    const baseRow = playerToSheetRow(student, currentList.length);
+    const newRow: SheetRow = {
+      ...baseRow,
+      srNo: String(currentList.length + 1),
+      sportOrEvent: SPORT_MARATHI_MAP[selectedSportKey] || selectedSportKey,
+      gameActivity: activity,
+      skillScore: skillInfo.scoreDisplay,
+      skillScoreNum: skillInfo.score,
+      skillRank: currentList.length + 1
+    };
+    updateActiveRows([...currentList, newRow]);
     setIsPickerOpen(false);
-  }, [activeCategoryKey, isConsolidatedAthleticsView, playerToSheetRow, selectedSportKey, store]);
+  }, [activeRows, playerToSheetRow, selectedSportKey, store, updateActiveRows]);
 
   // Generate HTML for a single category sheet matching user requirements:
   // Heading will be same: Department, Project, School, Subheader
@@ -1973,13 +1907,15 @@ export function OfficialTournamentSheetModal({
 
   // Print Active Sheet
   const handlePrintActiveSheet = () => {
+    commitDraftToStorage();
     // If user is in Consolidated Athletics view, print the consolidated sheet
     if (isConsolidatedAthleticsView) {
       handlePrintConsolidatedAthletics();
       return;
     }
 
-    const content = generateSingleSheetTableHtml(customAgeGroup, activeRows, false);
+    const rowsToPrint = draftRowsRef.current || activeRows;
+    const content = generateSingleSheetTableHtml(customAgeGroup, rowsToPrint, false);
     const limitNotice = is12PlayersOnly ? `(फक्त पहिले १२ खेळाडू - Official Squad)` : '';
 
     const printHtml = `
@@ -2367,12 +2303,14 @@ export function OfficialTournamentSheetModal({
 
   // Export Active Sheet to Excel (.xlsx)
   const handleExportActiveSheetExcel = () => {
+    commitDraftToStorage();
     if (isConsolidatedAthleticsView) {
       handleExportConsolidatedAthleticsExcel();
       return;
     }
     const meta = getExcelMetadata();
-    exportSingleCategoryToExcel(customAgeGroup, activeRows, meta);
+    const rowsToExport = draftRowsRef.current || activeRows;
+    exportSingleCategoryToExcel(customAgeGroup, rowsToExport, meta);
   };
 
   // Export 12 Players for Selected Sport: First Boys, then Girls (.xlsx)
@@ -2999,6 +2937,7 @@ export function OfficialTournamentSheetModal({
   };
 
   const handleModalClose = () => {
+    commitDraftToStorage();
     flushSavedTournamentSheets();
     onClose();
   };
@@ -3661,6 +3600,20 @@ export function OfficialTournamentSheetModal({
 
             <div className="flex flex-wrap items-center gap-1.5">
               <Button
+                onClick={handleSaveSheetToBrowser}
+                size="sm"
+                className={`h-8 rounded-lg text-xs font-black gap-1.5 shadow-sm transition-all ${
+                  hasUnsavedChanges
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 animate-pulse'
+                    : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                }`}
+                title="शीटमध्ये केलेले सर्व बदल ब्राउझरमध्ये सेव्ह करा"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {hasUnsavedChanges ? '💾 बदल सेव्ह करा (Save)*' : '💾 सेव्ह करा (Save)'}
+              </Button>
+
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={handleExportActiveSheetExcel}
@@ -3769,8 +3722,7 @@ export function OfficialTournamentSheetModal({
                       schoolName={schoolName}
                       sportName={sportName}
                       customAgeGroup={customAgeGroup}
-                      onUpdateField={updateRowField}
-                      onRowBlur={handleRowBlur}
+                      onDraftChange={handleDraftChange}
                       onMoveRow={moveRow}
                       onDeleteRow={deleteRow}
                     />
@@ -3785,14 +3737,27 @@ export function OfficialTournamentSheetModal({
             <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                अ.क्र. (Sr No) थेट बदलता येतो. Skill Hub कौशल्य गुण व रँकिंगनुसार यादी तयार आहे.
+                सर्व माहिती एडिट केल्यानंतर <strong>&quot;💾 सेव्ह करा (Save)&quot;</strong> बटणावर क्लिक करा.
                 {is12PlayersOnly && !isConsolidatedAthleticsView && " सांघिक खेळांसाठी प्रिंटमध्ये १२ खेळाडू मर्यादा लागू असते."}
               </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={handleModalClose} className="rounded-xl font-bold text-xs h-10">
-                रद्द करा (Close)
+                बंद करा (Close)
+              </Button>
+
+              <Button
+                onClick={handleSaveSheetToBrowser}
+                className={`h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider shadow-md gap-2 transition-all ${
+                  hasUnsavedChanges
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 animate-pulse'
+                    : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                }`}
+                title="सर्व संपादित माहिती ब्राउझरमध्ये सेव्ह करा"
+              >
+                <Save className="w-4 h-4" />
+                {hasUnsavedChanges ? '💾 बदल सेव्ह करा (Save in Browser)*' : '💾 सेव्ह करा (Save in Browser)'}
               </Button>
 
               <DropdownMenu>
