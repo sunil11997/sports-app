@@ -117,3 +117,69 @@ export function clearAllSavedTournamentSheets(): void {
   isDirty = true;
   flushSavedTournamentSheets();
 }
+
+// --- Hostel Player Information Sheet Persistence ---
+const HOSTEL_STORAGE_KEY = 'wgb_hostel_player_sheets_v1';
+
+export interface HostelPlayerRow {
+  id: string;
+  srNo: string;
+  studentName: string;
+  std: string;
+  grNo: string;
+  ageCategoryLabel: string;
+  sportOrEvent: string;
+  parentMobile: string;
+  roomOrSign: string;
+  gender: 'Male' | 'Female';
+}
+
+export interface SavedHostelLists {
+  boys?: HostelPlayerRow[];
+  girls?: HostelPlayerRow[];
+  both?: HostelPlayerRow[];
+}
+
+let inMemoryHostelStore: SavedHostelLists | null = null;
+
+export function loadSavedHostelLists(): SavedHostelLists {
+  if (inMemoryHostelStore !== null) return inMemoryHostelStore;
+  if (typeof window === 'undefined') {
+    inMemoryHostelStore = {};
+    return inMemoryHostelStore;
+  }
+  try {
+    const raw = localStorage.getItem(HOSTEL_STORAGE_KEY);
+    inMemoryHostelStore = raw ? (JSON.parse(raw) as SavedHostelLists) : {};
+  } catch (err) {
+    console.warn('Failed to load hostel lists from localStorage:', err);
+    inMemoryHostelStore = {};
+  }
+  return inMemoryHostelStore;
+}
+
+export function saveHostelList(section: 'boys' | 'girls' | 'both', rows: HostelPlayerRow[]): void {
+  const store = loadSavedHostelLists();
+  store[section] = rows;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(HOSTEL_STORAGE_KEY, JSON.stringify(store));
+    } catch (err) {
+      console.warn('Failed to save hostel list to localStorage:', err);
+    }
+  }
+}
+
+export function clearSavedHostelList(section: 'boys' | 'girls' | 'both'): void {
+  const store = loadSavedHostelLists();
+  if (store[section]) {
+    delete store[section];
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(HOSTEL_STORAGE_KEY, JSON.stringify(store));
+      } catch (err) {
+        console.warn('Failed to clear hostel list from localStorage:', err);
+      }
+    }
+  }
+}

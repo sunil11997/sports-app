@@ -55,8 +55,11 @@ import {
   getSavedTournamentSheet,
   saveTournamentSheet,
   clearSavedTournamentSheet,
-  flushSavedTournamentSheets
+  flushSavedTournamentSheets,
+  HostelPlayerRow,
+  loadSavedHostelLists
 } from '@/lib/tournamentSheetStorage';
+import { HostelSheetEditorModal } from './HostelSheetEditorModal';
 import { transliterateEnglishToMarathi, getAgeValidation, getTeacherName } from '@/lib/utils';
 import { WAGHAMBA_STUDENTS_DATA, SchoolStudent } from '@/data/waghambaStudents';
 import { TEACHER_SIGN_B64 } from '@/lib/teacherSignature';
@@ -606,6 +609,7 @@ export function OfficialTournamentSheetModal({
   // Student Picker Dialog state
   const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
   const [pickerSearch, setPickerSearch] = useState<string>('');
+  const [isHostelEditorOpen, setIsHostelEditorOpen] = useState<boolean>(false);
 
   // Check if current sport requires strictly 12 players on printed sheet
   const is12PlayersOnly = is12SquadSport(selectedSportKey, sportName);
@@ -2759,23 +2763,66 @@ export function OfficialTournamentSheetModal({
     }
   `;
 
+  // Default Hostel Boys & Girls Lists derived from all age groups (U14, U17, U19)
+  const { defaultHostelBoys, defaultHostelGirls } = useMemo(() => {
+    const { uniquePlayers } = getUniqueTournamentPlayersData;
+    const toHostelRow = (r: SheetRow, idx: number, gender: 'Male' | 'Female'): HostelPlayerRow => ({
+      id: r.id || `hostel-${gender}-${idx}`,
+      srNo: String(idx + 1),
+      studentName: r.studentName || '-',
+      std: r.std || '-',
+      grNo: r.grNo || '-',
+      ageCategoryLabel: r.ageCategoryLabel || (gender === 'Female' ? '१४ वर्षाखालील मुली' : '१४ वर्षाखालील मुले'),
+      sportOrEvent: r.sportOrEvent || '-',
+      parentMobile: getPlayerParentMobile(r),
+      roomOrSign: '',
+      gender
+    });
+
+    const boysList = uniquePlayers
+      .filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')))
+      .map((r, i) => toHostelRow(r, i, 'Male'));
+
+    const girlsList = uniquePlayers
+      .filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')))
+      .map((r, i) => toHostelRow(r, i, 'Female'));
+
+    return { defaultHostelBoys: boysList, defaultHostelGirls: girlsList };
+  }, [getUniqueTournamentPlayersData, getPlayerParentMobile]);
+
   // Generate Hostel Player Information Sheet (वसतिगृह खेळाडू माहिती पत्रक)
   // Strictly formatted for ONE SINGLE A4 PAGE for the hostel rector / warden
-  const generateHostelSheetHtml = (genderFilter: 'boys' | 'girls' | 'all' = 'all') => {
+  const generateHostelSheetHtml = (genderFilter: 'boys' | 'girls' | 'all' = 'all', overrideRows?: HostelPlayerRow[]) => {
     const teacherName = store?.data?.schoolProfile?.teacherName || "क्रीडा शिक्षक";
-    const { uniquePlayers, summary } = getUniqueTournamentPlayersData;
+    const savedHostel = loadSavedHostelLists();
 
-    let playersToRender = uniquePlayers;
+    let playersToRender: HostelPlayerRow[] = [];
+    if (overrideRows) {
+      playersToRender = overrideRows;
+    } else if (genderFilter === 'boys') {
+      playersToRender = (savedHostel.boys && savedHostel.boys.length > 0) ? savedHostel.boys : defaultHostelBoys;
+    } else if (genderFilter === 'girls') {
+      playersToRender = (savedHostel.girls && savedHostel.girls.length > 0) ? savedHostel.girls : defaultHostelGirls;
+    } else {
+      if (savedHostel.both && savedHostel.both.length > 0) {
+        playersToRender = savedHostel.both;
+      } else {
+        const b = (savedHostel.boys && savedHostel.boys.length > 0) ? savedHostel.boys : defaultHostelBoys;
+        const g = (savedHostel.girls && savedHostel.girls.length > 0) ? savedHostel.girls : defaultHostelGirls;
+        playersToRender = [...b, ...g];
+      }
+    }
+
+    const boysCount = playersToRender.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले'))).length;
+    const girlsCount = playersToRender.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली'))).length;
+
     let titleBadge = '👫 वसतिगृह मुले व मुली खेळाडू माहिती पत्रक (सर्व वयोगट)';
-
     if (genderFilter === 'boys') {
-      playersToRender = uniquePlayers.filter(p => p.gender === 'Male' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुले')));
       titleBadge = `👦 वसतिगृह मुले खेळाडू माहिती पत्रक (सर्व वयोगट - एकूण ${playersToRender.length} मुले)`;
     } else if (genderFilter === 'girls') {
-      playersToRender = uniquePlayers.filter(p => p.gender === 'Female' || (p.ageCategoryLabel && p.ageCategoryLabel.includes('मुली')));
       titleBadge = `👧 वसतिगृह मुली खेळाडू माहिती पत्रक (सर्व वयोगट - एकूण ${playersToRender.length} मुली)`;
     } else {
-      titleBadge = `👫 वसतिगृह मुले व मुली खेळाडू माहिती पत्रक (एकूण ${playersToRender.length}: ${summary.boys} मुले, ${summary.girls} मुली)`;
+      titleBadge = `👫 वसतिगृह मुले व मुली खेळाडू माहिती पत्रक (एकूण ${playersToRender.length}: ${boysCount} मुले, ${girlsCount} मुली)`;
     }
 
     const rowCount = playersToRender.length;
@@ -2783,7 +2830,7 @@ export function OfficialTournamentSheetModal({
     const fontSize = rowCount > 35 ? '7pt' : rowCount > 25 ? '7.6pt' : rowCount > 16 ? '8.2pt' : '8.8pt';
     const cellPadding = rowCount > 35 ? '1.5px 2px' : rowCount > 25 ? '2.2px 3px' : rowCount > 16 ? '3px 4px' : '4px 6px';
 
-    const renderTableRows = (list: SheetRow[]) => {
+    const renderTableRows = (list: HostelPlayerRow[]) => {
       if (list.length === 0) {
         return `
           <tr>
@@ -2793,7 +2840,8 @@ export function OfficialTournamentSheetModal({
       }
 
       return list.map((r, i) => {
-        const parentMobile = getPlayerParentMobile(r);
+        const parentMobile = r.parentMobile || '-';
+        const roomOrSign = r.roomOrSign || '&nbsp;';
         return `
           <tr style="height: auto;">
             <td class="text-center font-bold" style="padding: ${cellPadding}; font-size: ${fontSize};">${i + 1}</td>
@@ -2803,7 +2851,7 @@ export function OfficialTournamentSheetModal({
             <td class="text-center font-bold" style="padding: ${cellPadding}; font-size: ${fontSize}; color: #0369a1;">${r.ageCategoryLabel || '-'}</td>
             <td class="text-center font-bold" style="padding: ${cellPadding}; font-size: ${fontSize}; color: #1e3a8a;">${r.sportOrEvent || '-'}</td>
             <td class="text-center font-mono" style="padding: ${cellPadding}; font-size: ${fontSize};">${parentMobile}</td>
-            <td class="text-center" style="padding: ${cellPadding}; font-size: ${fontSize}; border-right: 1px solid #000;">&nbsp;</td>
+            <td class="text-center" style="padding: ${cellPadding}; font-size: ${fontSize}; border-right: 1px solid #000;">${roomOrSign}</td>
           </tr>
         `;
       }).join('');
@@ -2895,8 +2943,8 @@ export function OfficialTournamentSheetModal({
   };
 
   // Print Hostel Player Information Sheet on strictly ONE SINGLE A4 PAGE
-  const handlePrintHostelSheet = (genderFilter: 'boys' | 'girls' | 'all') => {
-    const content = generateHostelSheetHtml(genderFilter);
+  const handlePrintHostelSheet = (genderFilter: 'boys' | 'girls' | 'all', overrideRows?: HostelPlayerRow[]) => {
+    const content = generateHostelSheetHtml(genderFilter, overrideRows);
     const scopeTitle = genderFilter === 'boys' 
       ? 'मुले वसतिगृह खेळाडू माहिती पत्रक (Boys Only - 1 Page)' 
       : genderFilter === 'girls' 
@@ -3237,6 +3285,21 @@ export function OfficialTournamentSheetModal({
                       सर्व वयोगट (14/17/19) &bull; तंतोतंत १ पान (Hostel Sheet)
                     </span>
                   </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setIsHostelEditorOpen(true)}
+                    className="p-2.5 rounded-xl cursor-pointer bg-teal-50 hover:bg-teal-100 focus:bg-teal-100 transition-colors mb-1 border border-teal-200"
+                  >
+                    <div className="flex flex-col">
+                      <div className="text-xs font-black text-teal-900 flex items-center gap-1.5">
+                        <UserPlus className="w-3.5 h-3.5 text-teal-700" />
+                        ✏️ वसतिगृह यादी संपादित करा (Edit List)
+                      </div>
+                      <span className="text-[10px] text-teal-700 font-semibold">
+                        मुले, मुली व एकत्रित यादीतील खेळाडू निवडा / काढा / बदला
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => handlePrintHostelSheet('boys')}
@@ -4000,6 +4063,18 @@ export function OfficialTournamentSheetModal({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Interactive Hostel Player List Editor (Boys / Girls / Both) */}
+      <HostelSheetEditorModal
+        isOpen={isHostelEditorOpen}
+        onClose={() => setIsHostelEditorOpen(false)}
+        defaultBoys={defaultHostelBoys}
+        defaultGirls={defaultHostelGirls}
+        allSchoolStudents={store?.data?.players || []}
+        getStudentAgeCategoryLabel={getPlayerAgeCategoryLabel}
+        getStudentMobile={(s) => getPlayerParentMobile(s)}
+        onPrintHostelSection={(section, overrideRows) => handlePrintHostelSheet(section, overrideRows)}
+      />
     </>
   );
 }
